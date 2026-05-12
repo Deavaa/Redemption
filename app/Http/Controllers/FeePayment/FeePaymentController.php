@@ -20,7 +20,7 @@ class FeePaymentController extends Controller
     }
     public function store(Request $r){
         $r->validate(["fee_id"=>"required|exists:fees,id","student_id"=>"required|exists:students,id","amount_paid"=>"required|numeric|min:0","payment_date"=>"required|date","payment_method"=>"required|in:cash,bank,mobile,cheque,online","status"=>"required|in:paid,partial,pending,overdue"]);
-        FeePayment::create($r->all());
+        FeePayment::create($r->only(['fee_id','student_id','amount_paid','payment_date','payment_method','transaction_id','receipt_number','status']));
         return redirect()->route("admin.fee-payments.index")->with("success","Payment recorded");
     }
     public function show(FeePayment $item){ return view("admin.FeePayment.show", compact("item")); }
@@ -31,7 +31,7 @@ class FeePaymentController extends Controller
     }
     public function update(Request $r, FeePayment $item){
         $r->validate(["fee_id"=>"required|exists:fees,id","student_id"=>"required|exists:students,id","amount_paid"=>"required|numeric|min:0","payment_date"=>"required|date","payment_method"=>"required|in:cash,bank,mobile,cheque,online","status"=>"required|in:paid,partial,pending,overdue"]);
-        $item->update($r->all());
+        $item->update($r->only(['fee_id','student_id','amount_paid','payment_date','payment_method','transaction_id','receipt_number','status']));
         return redirect()->route("admin.fee-payments.index")->with("success","Updated");
     }
     public function destroy(FeePayment $item){ $item->delete(); return back()->with("success","Deleted"); }

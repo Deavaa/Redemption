@@ -39,10 +39,10 @@ class TeamMemberController extends Controller
         return redirect()->route("admin.team-members.index")->with('success','Team member created successfully');
     }
 
-    public function show(TeamMember $item) { return view('admin.TeamMember.show', compact('item')); }
-    public function edit(TeamMember $item) { return view('admin.TeamMember.edit', compact('item')); }
+    public function show(TeamMember $team_member) { return view('admin.TeamMember.show', ['item' => $team_member]); }
+    public function edit(TeamMember $team_member) { return view('admin.TeamMember.edit', ['item' => $team_member]); }
 
-    public function update(Request $r, TeamMember $item)
+    public function update(Request $r, TeamMember $team_member)
     {
         $r->validate([
             'name' => 'required|string|max:255',
@@ -57,9 +57,9 @@ class TeamMemberController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $item->update($r->only(['name','designation','department','qualification','experience','phone','email','photo','bio','sort_order','is_active']));
+        $team_member->update($r->only(['name','designation','department','qualification','experience','phone','email','photo','bio','sort_order','is_active']));
         return redirect()->route("admin.team-members.index")->with('success','Team member updated successfully');
     }
 
-    public function destroy(TeamMember $item) { $item->delete(); return back()->with('success','Team member deleted successfully'); }
+    public function destroy(TeamMember $team_member) { $team_member->delete(); return back()->with('success','Team member deleted successfully'); }
 }
