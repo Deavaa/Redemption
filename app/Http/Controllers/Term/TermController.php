@@ -26,6 +26,7 @@ class TermController extends Controller
         $r->validate([
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
+            'term_number' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             
@@ -35,7 +36,7 @@ class TermController extends Controller
             Term::where('is_active', true)->update(['is_active' => false]);
         }
 
-        Term::create($r->only(['name', 'academic_year_id', 'start_date', 'end_date', 'is_active']));
+        Term::create($r->only(['name', 'academic_year_id', 'term_number', 'start_date', 'end_date', 'is_active']));
         return redirect()->route('admin.terms.index')->with('success', 'Term created.');
     }
 
@@ -56,16 +57,17 @@ class TermController extends Controller
         $r->validate([
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
+            'term_number' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             
         ]);
 
         if ($r->boolean('is_active')) {
-            Term::where('status', 'current')->where('id', '!=', $term->id)->update(['status' => 'active']);
+            Term::where('is_active', true)->where('id', '!=', $term->id)->update(['is_active' => false]);
         }
 
-        $term->update($r->only(['name', 'academic_year_id', 'start_date', 'end_date', 'is_active']));
+        $term->update($r->only(['name', 'academic_year_id', 'term_number', 'start_date', 'end_date', 'is_active']));
         return redirect()->route('admin.terms.index')->with('success', 'Term updated.');
     }
 

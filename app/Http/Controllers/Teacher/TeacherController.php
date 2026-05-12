@@ -30,7 +30,7 @@ class TeacherController extends Controller
             'department'    => 'nullable|string|max:255',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
-            'status'        => 'nullable|in:Active,Inactive,On Leave',
+            'status'        => 'nullable|in:active,inactive',
         ]);
 
         try {
@@ -72,7 +72,7 @@ class TeacherController extends Controller
             'department'    => 'nullable|string|max:255',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
-            'status'        => 'nullable|in:Active,Inactive,On Leave',
+            'status'        => 'nullable|in:active,inactive',
         ]);
 
         $item->update($validated);

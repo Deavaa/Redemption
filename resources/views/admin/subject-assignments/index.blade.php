@@ -31,7 +31,7 @@
             <td>{{ $a->classRoom->name ?? 'N/A' }}</td>
             <td>@if($isCore)<span class="section-all"><i class="bi bi-collection me-1"></i>All</span>@else<span class="section-specific">{{ $a->section->name ?? 'N/A' }}</span>@endif</td>
             <td><span class="{{ $isCore ? 'type-badge-core' : 'type-badge-elective' }}">{{ $isCore ? 'Core' : 'Elective' }}</span></td>
-            <td>{{ $a->teacher->name ?? 'N/A' }}</td>
+            <td>{{ $a->teacher->full_name ?? 'N/A' }}</td>
             <td class="small">{{ $a->academicYear->name ?? 'N/A' }}</td>
             <td><div class="btn-group btn-group-sm"><a href="{{ route('admin.subject-assignments.edit', $a) }}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i></a>
             <button type="button" class="btn btn-outline-danger btn-delete-single" data-id="{{ $a->id }}"><i class="bi bi-trash"></i></button></div></td>

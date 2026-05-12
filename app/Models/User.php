@@ -18,7 +18,7 @@ class User extends Authenticatable
     public function leaves() { return $this->hasMany(Leave::class, 'employee_id'); }
     public function payrolls() { return $this->hasMany(Payroll::class, 'employee_id'); }
     public function approvedLeaves() { return $this->hasMany(Leave::class, 'approved_by'); }
-    public function classes() { return $this->hasMany(Classroom::class, 'teacher_id'); }
+    public function teacherProfile() { return $this->hasOne(Teacher::class, 'email', 'email'); }
     public function isAdmin() { return $this->role === 'admin'; }
     public function isTeacher() { return $this->role === 'teacher'; }
 }

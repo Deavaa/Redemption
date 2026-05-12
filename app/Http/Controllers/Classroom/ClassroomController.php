@@ -32,9 +32,10 @@ class ClassroomController extends Controller
             'academic_year_id' => 'required|exists:academic_years,id',
             'branch_id' => 'required|exists:branches,id',
             'capacity' => 'nullable|integer|min:1',
+            'numeric_name' => 'nullable|string|max:255',
             'teacher_id' => 'nullable|exists:teachers,id',
         ]);
-        $class = Classroom::create($request->only('name','academic_year_id','branch_id','capacity','teacher_id'));
+        $class = Classroom::create($request->only('name','academic_year_id','branch_id','capacity','numeric_name','teacher_id'));
         if ($request->has('sections')) {
             foreach ($request->sections as $sec) {
                 if (!empty($sec['name'])) {
@@ -64,10 +65,11 @@ class ClassroomController extends Controller
             'academic_year_id' => 'required|exists:academic_years,id',
             'branch_id' => 'required|exists:branches,id',
             'capacity' => 'nullable|integer|min:1',
+            'numeric_name' => 'nullable|string|max:255',
             'teacher_id' => 'nullable|exists:teachers,id',
         ]);
         $class = Classroom::findOrFail($id);
-        $class->update($request->only('name','academic_year_id','branch_id','capacity','teacher_id'));
+        $class->update($request->only('name','academic_year_id','branch_id','capacity','numeric_name','teacher_id'));
         if ($request->has('sections')) {
             $existingIds = [];
             foreach ($request->sections as $sec) {

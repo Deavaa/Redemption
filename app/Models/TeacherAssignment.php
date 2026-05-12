@@ -9,6 +9,6 @@ class TeacherAssignment extends Model
     public function subject() { return $this->belongsTo(Subject::class); }
     public function classRoom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
     public function section() { return $this->belongsTo(Section::class); }
-    public function teacher() { return $this->belongsTo(\App\Models\User::class, 'teacher_id'); }
+    public function teacher() { return $this->belongsTo(\App\Models\Teacher::class, 'teacher_id'); }
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
 }

@@ -1,13 +1,13 @@
 <?php
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
+use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\Subject;
 use App\Models\AcademicYear;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 class SubjectAssignmentController extends Controller
 {
     public function index(Request $request) {
@@ -24,11 +24,11 @@ class SubjectAssignmentController extends Controller
     public function create() {
         $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
-        $teachers=DB::table('users')->whereIn('role',['teacher','admin'])->orderBy('name')->select('id','name')->get();
+        $teachers=Teacher::orderBy('first_name')->select('id','first_name','last_name')->get();
         return view('admin.subject-assignments.create',compact('academicYears','classes','subjects','teachers'));
     }
     public function store(Request $request) {
-        $request->validate(['academic_year_id'=>'required|exists:academic_years,id','subject_id'=>'required|exists:subjects,id','class_ids'=>'required|array|min:1','class_ids.*'=>'exists:classes,id','teacher_id'=>'nullable|exists:users,id','assignment_type'=>'required|in:core,elective']);
+        $request->validate(['academic_year_id'=>'required|exists:academic_years,id','subject_id'=>'required|exists:subjects,id','class_ids'=>'required|array|min:1','class_ids.*'=>'exists:classes,id','teacher_id'=>'nullable|exists:teachers,id','assignment_type'=>'required|in:core,elective']);
         if ($request->assignment_type==='elective') $request->validate(['section_ids'=>'required|array|min:1','section_ids.*'=>'exists:sections,id']);
         $subject=Subject::find($request->subject_id); $ayId=$request->academic_year_id; $teacherId=$request->teacher_id;
         $subjectId=$request->subject_id; $type=$request->assignment_type; $created=0;
@@ -52,12 +52,12 @@ class SubjectAssignmentController extends Controller
         $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
         $sections=Section::where('class_id',$subject_assignment->class_id)->orderBy('name','asc')->get();
-        $teachers=DB::table('users')->whereIn('role',['teacher','admin'])->orderBy('name')->select('id','name')->get();
+        $teachers=Teacher::orderBy('first_name')->select('id','first_name','last_name')->get();
         $assignment=$subject_assignment;
         return view('admin.subject-assignments.edit',compact('academicYears','classes','subjects','sections','teachers','assignment'));
     }
     public function update(Request $request, TeacherAssignment $subject_assignment) {
-        $request->validate(['academic_year_id'=>'required|exists:academic_years,id','subject_id'=>'required|exists:subjects,id','class_id'=>'required|exists:classes,id','section_id'=>'nullable|exists:sections,id','teacher_id'=>'nullable|exists:users,id']);
+        $request->validate(['academic_year_id'=>'required|exists:academic_years,id','subject_id'=>'required|exists:subjects,id','class_id'=>'required|exists:classes,id','section_id'=>'nullable|exists:sections,id','teacher_id'=>'nullable|exists:teachers,id']);
         $data = $request->only(['academic_year_id','subject_id','class_id','section_id']);
         if ($request->filled('teacher_id')) {
             $data['teacher_id'] = $request->teacher_id;
