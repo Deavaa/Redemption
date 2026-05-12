@@ -1,0 +1,14 @@
+@extends("layouts.admin")
+@section("page-title","New IdCard")
+@section("content")
+<div class="container-fluid py-4"><div class="d-flex flex-wrap justify-content-between align-items-center mb-4"><div><h4 class="fw-bold mb-1"><i class="bi bi-plus-circle me-2"></i>New IdCard</h4><nav aria-label="breadcrumb"><ol class="breadcrumb mb-0"><li class="breadcrumb-item"><a href="{{route('admin.dashboard')}}" class="text-decoration-none text-muted">Dashboard</a></li><li class="breadcrumb-item"><a href="{{route('admin.id-cards.index')}}" class="text-decoration-none text-muted">IdCards</a></li><li class="breadcrumb-item active text-gold">New</li></ol></nav></div></div>
+<form method="POST" action="{{route('admin.id-cards.store')}}">@csrf
+<div class="card border-0 shadow-sm"><div class="card-header bg-white py-3" style="border-top:3px solid #c9a84c;"><h5 class="mb-0 fw-semibold">Details</h5></div><div class="card-body"><div class="row g-3"><div class="col-md-6"><label class="form-label fw-medium">Student id</label><input type="text" name="student_id" class="form-control">@error('student_id')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-6"><label class="form-label fw-medium">Card number</label><input type="text" name="card_number" class="form-control">@error('card_number')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-4"><label class="form-label fw-medium">Type</label><select name="type" class="form-select"><option value="">Select...</option><option value="student">Student</option><option value="staff">Staff</option></select>@error('type')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-6"><label class="form-label fw-medium">Issue date</label><input type="date" name="issue_date" class="form-control">@error('issue_date')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-12"><label class="form-label fw-medium">Expiry date</label><input type="date" name="expiry_date" class="form-control">@error('expiry_date')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-4"><label class="form-label fw-medium">Status</label><select name="status" class="form-select"><option value="">Select...</option><option value="active">Active</option><option value="expired">Expired</option></select>@error('status')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+</div></div></div>
+<div class="my-4"><button type="submit" class="btn btn-gold me-2"><i class="bi bi-check-lg me-1"></i>Save</button><a href="{{route('admin.id-cards.index')}}" class="btn btn-outline-secondary">Cancel</a></div></form></div>
+@endsection

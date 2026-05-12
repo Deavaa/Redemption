@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'Admin') | School of Redemption</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
+    @stack('styles')
+</head>
+
+<body class="@yield('body-class')">
+    <div class="admin-wrapper">
+        <nav class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
+                    <span class="sidebar-brand-pre">School of</span>
+                    <span class="sidebar-brand-name">REDEMPTION</span>
+                </a>
+            </div>
+            @php
+                $academicRoutes = [
+                    'admin.academic-years.*',
+                    'admin.terms.*',
+                    'admin.subjects.*',
+                    'admin.subject-assignments.*',
+                    'admin.exams.*',
+                    'admin.mark-entries.*',
+                ];
+                $peopleRoutes = ['admin.students.*', 'admin.teachers.*', 'admin.staff.*', 'admin.team-members.*'];
+                $websiteRoutes = ['admin.sliders.*', 'admin.gallery-*', 'admin.branches.*', 'admin.contact-messages.*'];
+                $isAcademicActive = request()->routeIs($academicRoutes);
+                $isPeopleActive = request()->routeIs($peopleRoutes);
+                $isWebsiteActive = request()->routeIs($websiteRoutes);
+            @endphp
+            <ul class="sidebar-menu">
+                <li class="menu-header">MAIN</li>
+                <li class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><a
+                        href="{{ route('admin.dashboard') }}"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                </li>
+
+                <li class="menu-header">ACADEMIC</li>
+                <li class="{{ $isAcademicActive ? 'active' : '' }}">
+                    <a href="#academicSubmenu" data-bs-toggle="collapse"><i
+                            class="bi bi-mortarboard"></i><span>Academic</span><i
+                            class="fas fa-chevron-down ms-auto"></i></a>
+                    <ul class="collapse {{ $isAcademicActive ? 'show' : '' }}" id="academicSubmenu">
+                        <li><a href="{{ route('admin.academic-years.index') }}"><i class="bi bi-calendar-range"></i>
+                                Academic Years</a></li>
+                        <li><a href="{{ route('admin.terms.index') }}"><i class="bi bi-bookmark"></i> Terms</a></li>
+                        <li><a href="{{ route('admin.subjects.index') }}"><i class="bi bi-book"></i> Subjects</a></li>
+                        <li><a href="{{ route('admin.subject-assignments.index') }}"><i class="bi bi-link-45deg"></i>
+                                Assign Subjects</a></li>
+                        <li><a href="{{ route('admin.exams.index') }}"><i class="bi bi-journal-text"></i> Exams</a>
+                        </li>
+                        <li><a href="{{ route('admin.classrooms.index') }}"><i class="bi bi-building"></i> Classes</a>
+                        </li>
+                        <li><a href="{{ route('admin.mark-entries.index') }}"><i class="bi bi-pencil-square"></i> Mark
+                                Entry</a></li>
+                    </ul>
+                </li>
+
+                <li class="menu-header">PEOPLE</li>
+                <li class="{{ $isPeopleActive ? 'active' : '' }}">
+                    <a href="#peopleSubmenu" data-bs-toggle="collapse"><i class="fas fa-users"></i><span>People</span><i
+                            class="fas fa-chevron-down ms-auto"></i></a>
+                    <ul class="collapse {{ $isPeopleActive ? 'show' : '' }}" id="peopleSubmenu">
+                        <li><a href="{{ route('admin.students.index') }}"><i class="fas fa-user-graduate"></i>
+                                Students</a></li>
+                        <li><a href="{{ route('admin.teachers.index') }}"><i class="fas fa-chalkboard-teacher"></i>
+                                Teachers</a></li>
+                        <li><a href="{{ route('admin.staff.index') }}"><i class="bi bi-person-badge"></i> Staff</a>
+                        </li>
+                        <li><a href="{{ route('admin.team-members.index') }}"><i class="fas fa-users"></i> Team
+                                Members</a></li>
+                    </ul>
+                </li>
+
+                <li class="menu-header">WEBSITE</li>
+                <li class="{{ $isWebsiteActive ? 'active' : '' }}">
+                    <a href="#websiteSubmenu" data-bs-toggle="collapse"><i
+                            class="fas fa-globe"></i><span>Website</span><i class="fas fa-chevron-down ms-auto"></i></a>
+                    <ul class="collapse {{ $isWebsiteActive ? 'show' : '' }}" id="websiteSubmenu">
+                        <li><a href="{{ route('admin.sliders.index') }}"><i class="fas fa-images"></i> Sliders</a></li>
+                        <li><a href="{{ route('admin.gallery-images.index') }}"><i class="fas fa-image"></i> Gallery
+                                Images</a></li>
+                        <li><a href="{{ route('admin.gallery-videos.index') }}"><i class="fas fa-video"></i> Gallery
+                                Videos</a></li>
+                        <li><a href="{{ route('admin.branches.index') }}"><i class="fas fa-map-marker-alt"></i>
+                                Branches</a></li>
+                        <li><a href="{{ route('admin.contact-messages.index') }}"><i class="fas fa-envelope"></i>
+                                Messages</a></li>
+                    </ul>
+                </li>
+
+                <li class="menu-header">SETTINGS</li>
+                <li class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><a
+                        href="{{ route('admin.settings.index') }}"><i class="fas fa-cog"></i><span>Settings</span></a>
+                </li>
+            </ul>
+        </nav>
+        <div class="sidebar-backdrop d-none" id="sidebarBackdrop"></div>
+        <div class="admin-main">
+            <nav class="admin-topbar">
+                <div class="topbar-left">
+                    <span class="text-muted">Welcome, <strong>{{ Auth::user()->name }}</strong></span>
+                    <div class="dropdown">
+                        <button class="btn btn-link dropdown-toggle" data-bs-toggle="dropdown"><i
+                                class="fas fa-user-circle fa-lg"></i></button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url('/') }}"><i
+                                        class="fas fa-external-link-alt me-2"></i>View Website</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}">@csrf<button
+                                        class="dropdown-item text-danger"><i
+                                            class="fas fa-sign-out-alt me-2"></i>Logout</button></form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-link sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            </nav>
+            <div class="admin-content p-4">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show"><i
+                            class="fas fa-check-circle me-2"></i>{{ session('success') }}<button type="button"
+                            class="btn-close" data-bs-dismiss="alert"></button></div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show"><i
+                            class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}<button type="button"
+                            class="btn-close" data-bs-dismiss="alert"></button></div>
+                @endif
+                @yield('content')
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sidebar = document.getElementById('adminSidebar');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+
+        function setSidebarVisibility(show) {
+            if (!sidebar) return;
+            sidebar.classList.toggle('show', show);
+            if (sidebarBackdrop) {
+                sidebarBackdrop.classList.toggle('d-none', !show);
+            }
+        }
+
+        sidebarToggle?.addEventListener('click', () => {
+            setSidebarVisibility(!sidebar.classList.contains('show'));
+        });
+
+        sidebarBackdrop?.addEventListener('click', () => {
+            setSidebarVisibility(false);
+        });
+
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                const isCollapseToggle = link.hasAttribute('data-bs-toggle') || (link.getAttribute(
+                    'href') || '').startsWith('#');
+                if (window.innerWidth < 768 && !isCollapseToggle) {
+                    setSidebarVisibility(false);
+                }
+            });
+        });
+
+        // Ensure sidebar is visible on desktop
+        if (window.innerWidth >= 768) {
+            setSidebarVisibility(true);
+        }
+
+        // Keep sidebar visible on students page only on desktop
+        if (window.innerWidth >= 768 && document.body.classList.contains('page-admin-students')) {
+            setSidebarVisibility(true);
+        }
+    </script>
+    @stack('scripts')
+    @yield('scripts')
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+@extends("layouts.admin")
+@section("page-title","Edit MarkEntry")
+@section("content")
+<div class="container-fluid py-4"><div class="d-flex flex-wrap justify-content-between align-items-center mb-4"><div><h4 class="fw-bold mb-1"><i class="bi bi-pencil-square me-2"></i>Edit MarkEntry</h4><nav aria-label="breadcrumb"><ol class="breadcrumb mb-0"><li class="breadcrumb-item"><a href="{{route('admin.dashboard')}}" class="text-decoration-none text-muted">Dashboard</a></li><li class="breadcrumb-item"><a href="{{route('admin.mark-entries.index')}}" class="text-decoration-none text-muted">MarkEntrys</a></li><li class="breadcrumb-item active text-gold">Edit</li></ol></nav></div></div>
+<form method="POST" action="{{route('admin.mark-entries.update',$item->id)}}">@csrf @method('PUT')
+<div class="card border-0 shadow-sm"><div class="card-header bg-white py-3" style="border-top:3px solid #c9a84c;"><h5 class="mb-0 fw-semibold">Details</h5></div><div class="card-body"><div class="row g-3"><div class="col-md-6"><label class="form-label fw-medium">Student id</label><input type="text" name="student_id" class="form-control" value="{{$item->student_id}}">@error('student_id')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-6"><label class="form-label fw-medium">Exam id</label><input type="text" name="exam_id" class="form-control" value="{{$item->exam_id}}">@error('exam_id')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-6"><label class="form-label fw-medium">Subject id</label><input type="text" name="subject_id" class="form-control" value="{{$item->subject_id}}">@error('subject_id')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-6"><label class="form-label fw-medium">Marks obtained</label><input type="number" name="marks_obtained" class="form-control" step="any" value="{{$item->marks_obtained}}">@error('marks_obtained')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-12"><label class="form-label fw-medium">Max marks</label><input type="number" name="max_marks" class="form-control" step="any" value="{{$item->max_marks}}">@error('max_marks')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-12"><label class="form-label fw-medium">Remarks</label><textarea name="remarks" class="form-control" rows="3">{{$item->remarks}}</textarea>@error('remarks')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+</div></div></div>
+<div class="my-4"><button type="submit" class="btn btn-gold me-2"><i class="bi bi-check-lg me-1"></i>Update</button><a href="{{route('admin.mark-entries.index')}}" class="btn btn-outline-secondary">Cancel</a></div></form></div>
+@endsection

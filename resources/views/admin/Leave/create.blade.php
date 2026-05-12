@@ -1,0 +1,14 @@
+@extends("layouts.admin")
+@section("page-title","New Leave")
+@section("content")
+<div class="container-fluid py-4"><div class="d-flex flex-wrap justify-content-between align-items-center mb-4"><div><h4 class="fw-bold mb-1"><i class="bi bi-plus-circle me-2"></i>New Leave</h4><nav aria-label="breadcrumb"><ol class="breadcrumb mb-0"><li class="breadcrumb-item"><a href="{{route('admin.dashboard')}}" class="text-decoration-none text-muted">Dashboard</a></li><li class="breadcrumb-item"><a href="{{route('admin.leaves.index')}}" class="text-decoration-none text-muted">Leaves</a></li><li class="breadcrumb-item active text-gold">New</li></ol></nav></div></div>
+<form method="POST" action="{{route('admin.leaves.store')}}">@csrf
+<div class="card border-0 shadow-sm"><div class="card-header bg-white py-3" style="border-top:3px solid #c9a84c;"><h5 class="mb-0 fw-semibold">Details</h5></div><div class="card-body"><div class="row g-3"><div class="col-md-6"><label class="form-label fw-medium">Employee id</label><input type="text" name="employee_id" class="form-control">@error('employee_id')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-4"><label class="form-label fw-medium">Type</label><select name="type" class="form-select"><option value="">Select...</option><option value="sick">Sick</option><option value="annual">Annual</option><option value="emergency">Emergency</option></select>@error('type')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-6"><label class="form-label fw-medium">Start date</label><input type="date" name="start_date" class="form-control">@error('start_date')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-6"><label class="form-label fw-medium">End date</label><input type="date" name="end_date" class="form-control">@error('end_date')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-12"><label class="form-label fw-medium">Reason</label><textarea name="reason" class="form-control" rows="3"></textarea>@error('reason')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+<div class="col-md-4"><label class="form-label fw-medium">Status</label><select name="status" class="form-select"><option value="">Select...</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>@error('status')<div class="text-danger small mt-1">{{$message}}</div>@enderror</div>
+</div></div></div>
+<div class="my-4"><button type="submit" class="btn btn-gold me-2"><i class="bi bi-check-lg me-1"></i>Save</button><a href="{{route('admin.leaves.index')}}" class="btn btn-outline-secondary">Cancel</a></div></form></div>
+@endsection
