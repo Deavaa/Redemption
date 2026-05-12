@@ -1,113 +1,523 @@
 @extends('layouts.admin')
-@section('title','Add Academic Year')
+@section('title', 'Add Academic Year')
+
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
-<h4 class="mb-0">Add Academic Year</h4>
-<a href="{{route('admin.academic-years.index')}}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back</a>
+<div class="modern-page">
+    {{-- Page Header --}}
+    <div class="modern-page-header">
+        <div class="modern-page-header-left">
+            <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                <ol>
+                    <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
+                    <li><a href="{{ route('admin.academic-years.index') }}">Academic Years</a></li>
+                    <li class="active">Add New</li>
+                </ol>
+            </nav>
+            <h1 class="modern-page-title">Add New Academic Year</h1>
+            <p class="modern-page-subtitle">Create a new academic calendar year</p>
+        </div>
+        <div class="modern-page-header-right">
+            <a href="{{ route('admin.academic-years.index') }}" class="btn-modern btn-modern-outline">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to List</span>
+            </a>
+        </div>
+    </div>
+
+    {{-- Form Card --}}
+    <div class="modern-card">
+        <form method="POST" action="{{ route('admin.academic-years.store') }}">
+            @csrf
+
+            {{-- Basic Information --}}
+            <div class="modern-form-section">
+                <div class="modern-form-section-header">
+                    <div class="modern-form-section-icon modern-form-section-icon-blue">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div>
+                        <h3 class="modern-form-section-title">Academic Year Details</h3>
+                        <p class="modern-form-section-desc">Enter the year name and date range</p>
+                    </div>
+                </div>
+                <div class="modern-form-section-body">
+                    <div class="modern-form-grid">
+                        <div class="modern-form-group modern-form-span-2">
+                            <label class="modern-form-label" for="name">
+                                Year Name <span class="modern-required">*</span>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-font modern-input-icon"></i>
+                                <input type="text"
+                                    name="name"
+                                    id="name"
+                                    class="modern-input {{ $errors->has('name') ? 'is-invalid' : '' }}"
+                                    value="{{ old('name') }}"
+                                    placeholder="e.g. 2025/2026 Academic Year"
+                                    required
+                                    autofocus>
+                            </div>
+                            @error('name')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="start_date">
+                                Start Date <span class="modern-required">*</span>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-calendar-alt modern-input-icon"></i>
+                                <input type="date"
+                                    name="start_date"
+                                    id="start_date"
+                                    class="modern-input {{ $errors->has('start_date') ? 'is-invalid' : '' }}"
+                                    value="{{ old('start_date') }}"
+                                    onchange="updateEthiopianDate('start')"
+                                    required>
+                            </div>
+                            <div id="ethiopian_start_date" class="modern-eth-hint" style="display:none;">
+                                <i class="fas fa-calendar-alt"></i>
+                                Ethiopian: <strong id="ethiopian_start_text"></strong>
+                            </div>
+                            @error('start_date')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="end_date">
+                                End Date <span class="modern-required">*</span>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-calendar-alt modern-input-icon"></i>
+                                <input type="date"
+                                    name="end_date"
+                                    id="end_date"
+                                    class="modern-input {{ $errors->has('end_date') ? 'is-invalid' : '' }}"
+                                    value="{{ old('end_date') }}"
+                                    onchange="updateEthiopianDate('end')"
+                                    required>
+                            </div>
+                            <div id="ethiopian_end_date" class="modern-eth-hint" style="display:none;">
+                                <i class="fas fa-calendar-alt"></i>
+                                Ethiopian: <strong id="ethiopian_end_text"></strong>
+                            </div>
+                            @error('end_date')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group modern-form-span-2">
+                            <div class="modern-toggle-wrapper">
+                                <label class="modern-toggle">
+                                    <input type="checkbox" name="is_current" id="is_current" value="1" {{ old('is_current') == '1' ? 'checked' : '' }}>
+                                    <span class="modern-toggle-slider"></span>
+                                </label>
+                                <div class="modern-toggle-info">
+                                    <span class="modern-toggle-title">Set as Current Academic Year</span>
+                                    <span class="modern-toggle-desc">Mark this as the active academic year (only one can be current)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Form Actions --}}
+            <div class="modern-form-actions">
+                <a href="{{ route('admin.academic-years.index') }}" class="btn-modern btn-modern-ghost">
+                    Cancel
+                </a>
+                <button type="submit" class="btn-modern btn-modern-primary">
+                    <i class="fas fa-check"></i>
+                    <span>Create Academic Year</span>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
-<div class="sc">
-<form method="POST" action="{{route('admin.academic-years.store')}}">
-@csrf
-<div class="mb-3">
-<label class="form-label fw-bold">Year Name *</label>
-<input type="text" name="name" class="form-control" placeholder="e.g. 2016 EFY" value="{{old('name')}}" required>
-</div>
-<div class="row">
-<div class="col-md-6">
-<div class="mb-3">
-<label class="form-label fw-bold">Start Date *</label>
-<div class="input-group mb-2">
-<span class="input-group-text"><i class="fas fa-calendar"></i></span>
-<input type="date" name="start_date" id="start_date" class="form-control" value="{{old('start_date')}}" onchange="gregToEth('start')" required>
-</div>
-<div class="mt-2 p-2 rounded" style="background:#f8f4e8;border-left:4px solid #c9a84c">
-<small class="text-muted d-block">Ethiopian Date:</small>
-<div class="row g-2 mt-1">
-<div class="col-4"><select id="start_et_month" class="form-select form-select-sm" onchange="ethToGreg('start')"><option value="">Month</option></select></div>
-<div class="col-3"><input type="number" id="start_et_day" class="form-control form-control-sm" min="1" max="30" placeholder="Day" onchange="ethToGreg('start')"></div>
-<div class="col-5"><input type="number" id="start_et_year" class="form-control form-control-sm" placeholder="Year" onchange="ethToGreg('start')"></div>
-</div>
-</div>
-</div>
-</div>
-<div class="col-md-6">
-<div class="mb-3">
-<label class="form-label fw-bold">End Date *</label>
-<div class="input-group mb-2">
-<span class="input-group-text"><i class="fas fa-calendar"></i></span>
-<input type="date" name="end_date" id="end_date" class="form-control" value="{{old('end_date')}}" onchange="gregToEth('end')" required>
-</div>
-<div class="mt-2 p-2 rounded" style="background:#f8f4e8;border-left:4px solid #c9a84c">
-<small class="text-muted d-block">Ethiopian Date:</small>
-<div class="row g-2 mt-1">
-<div class="col-4"><select id="end_et_month" class="form-select form-select-sm" onchange="ethToGreg('end')"><option value="">Month</option></select></div>
-<div class="col-3"><input type="number" id="end_et_day" class="form-control form-control-sm" min="1" max="30" placeholder="Day" onchange="ethToGreg('end')"></div>
-<div class="col-5"><input type="number" id="end_et_year" class="form-control form-control-sm" placeholder="Year" onchange="ethToGreg('end')"></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="mb-4">
-<div class="form-check form-switch">
-<input class="form-check-input" type="checkbox" name="is_current" id="is_current" value="1" {{old('is_current')=='1'?'checked':''}}>
-<label class="form-check-label fw-bold" for="is_current">Set as Current Academic Year</label>
-</div>
-</div>
-<button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Academic Year</button>
-</form>
-</div>
-@endsection
+
+@push('styles')
+<style>
+/* Modern Page Layout */
+.modern-page { animation: fadeSlideIn 0.4s ease-out; }
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modern-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.modern-page-header-left { flex: 1; }
+
+.modern-page-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.modern-page-subtitle {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0.25rem 0 0;
+}
+
+/* Breadcrumb */
+.modern-breadcrumb ol {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.5rem;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    align-items: center;
+}
+
+.modern-breadcrumb li { color: #adb5bd; }
+.modern-breadcrumb li a { color: #6c757d; text-decoration: none; transition: color 0.2s; }
+.modern-breadcrumb li a:hover { color: #4361ee; }
+.modern-breadcrumb li + li::before { content: '/'; margin-right: 0.5rem; color: #dee2e6; }
+.modern-breadcrumb li.active { color: #4361ee; font-weight: 500; }
+
+/* Card */
+.modern-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+}
+
+/* Form Section */
+.modern-form-section { border-bottom: 1px solid #f0f0f0; }
+.modern-form-section:last-of-type { border-bottom: none; }
+
+.modern-form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem 2rem 0.75rem;
+}
+
+.modern-form-section-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.modern-form-section-icon-blue { background: #eef2ff; color: #4361ee; }
+
+.modern-form-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.modern-form-section-desc {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    margin: 0.15rem 0 0;
+}
+
+.modern-form-section-body { padding: 1.25rem 2rem 1.75rem; }
+
+/* Form Grid */
+.modern-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.modern-form-span-2 { grid-column: span 2; }
+
+/* Form Group */
+.modern-form-group { display: flex; flex-direction: column; }
+
+.modern-form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.45rem;
+    font-size: 0.88rem;
+}
+
+.modern-form-label small {
+    font-weight: 400;
+    color: #9ca3af;
+    font-size: 0.78rem;
+}
+
+.modern-required { color: #ef4444; font-weight: 700; }
+
+/* Input */
+.modern-input-wrapper { position: relative; }
+
+.modern-input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.modern-input {
+    width: 100%;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem 0.7rem 2.5rem;
+    font-size: 0.9rem;
+    color: #1a1a2e;
+    background: #fff;
+    transition: all 0.2s;
+}
+
+.modern-input:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.modern-input::placeholder { color: #c5c9d2; }
+
+.modern-input.is-invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.modern-form-error {
+    display: block;
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
+    font-weight: 500;
+}
+
+/* Ethiopian Date Hint */
+.modern-eth-hint {
+    margin-top: 0.4rem;
+    padding: 0.4rem 0.65rem;
+    background: #f8f4e8;
+    border-left: 3px solid #d97706;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #92400e;
+}
+
+.modern-eth-hint i { color: #d97706; margin-right: 0.25rem; }
+
+/* Toggle */
+.modern-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+}
+
+.modern-toggle {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.modern-toggle input { opacity: 0; width: 0; height: 0; }
+
+.modern-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #d1d5db;
+    border-radius: 50px;
+    transition: 0.3s;
+}
+
+.modern-toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 20px; width: 20px;
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.modern-toggle input:checked + .modern-toggle-slider { background: #4361ee; }
+.modern-toggle input:checked + .modern-toggle-slider::before { transform: translateX(22px); }
+
+.modern-toggle-info { display: flex; flex-direction: column; }
+.modern-toggle-title { font-weight: 600; color: #374151; font-size: 0.88rem; }
+.modern-toggle-desc { font-size: 0.78rem; color: #9ca3af; }
+
+/* Form Actions */
+.modern-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #f0f0f0;
+    background: #fafbfc;
+}
+
+/* Modern Button */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.35rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.btn-modern-primary {
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
+}
+
+.btn-modern-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
+    color: #fff;
+}
+
+.btn-modern-outline {
+    background: transparent;
+    color: #6b7280;
+    border: 1.5px solid #e5e7eb;
+}
+
+.btn-modern-outline:hover {
+    border-color: #4361ee;
+    color: #4361ee;
+    background: #f8f9ff;
+}
+
+.btn-modern-ghost {
+    background: transparent;
+    color: #6b7280;
+    padding: 0.65rem 1rem;
+}
+
+.btn-modern-ghost:hover {
+    color: #1a1a2e;
+    background: #f3f4f6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modern-page-header { flex-direction: column; align-items: stretch; }
+    .modern-page-title { font-size: 1.35rem; }
+    .modern-form-grid { grid-template-columns: 1fr; }
+    .modern-form-span-2 { grid-column: span 1; }
+    .modern-form-section-body { padding: 1rem 1.25rem 1.5rem; }
+    .modern-form-section-header { padding: 1.25rem 1.25rem 0.75rem; }
+    .modern-form-actions { padding: 1rem 1.25rem; flex-direction: column; }
+    .btn-modern { justify-content: center; width: 100%; }
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
-var EM=['Meskerem','Tikimt','Hidar','Tahsas','Tir','Yekatit','Megabit','Miazia','Ginbot','Sene','Hamle','Nehase','Pagume'];
-function initMonths(){
-var s1=document.getElementById('start_et_month');
-var s2=document.getElementById('end_et_month');
-for(var i=0;i<13;i++){
-var o1=document.createElement('option');o1.value=i+1;o1.text=EM[i];s1.appendChild(o1);
-var o2=document.createElement('option');o2.value=i+1;o2.text=EM[i];s2.appendChild(o2);
+// Ethiopian date conversion
+const ethiopianMonths = [
+    'Meskerem', 'Tikimt', 'Hidar', 'Tahsas',
+    'Tir', 'Yekatit', 'Megabit', 'Miyazia',
+    'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'
+];
+
+function gregorianToEthiopian(dateStr) {
+    const date = new Date(dateStr + 'T12:00:00');
+    let gYear = date.getFullYear();
+    let gMonth = date.getMonth() + 1;
+    let gDay = date.getDate();
+
+    let ethYear = gYear - 8;
+    const isGregorianLeapYearEve = ((gYear % 4) === 3);
+    const ethNewYearDay = isGregorianLeapYearEve ? 12 : 11;
+
+    if (gMonth < 9 || (gMonth === 9 && gDay < ethNewYearDay)) {
+        ethYear = ethYear - 1;
+    }
+
+    const isGregorianLeap = (gYear % 4 === 0);
+    const gregorianDaysInMonth = [0, 31, (isGregorianLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    let dayOfYear = gDay;
+    for (let m = 1; m < gMonth; m++) {
+        dayOfYear += gregorianDaysInMonth[m];
+    }
+
+    let newYearDayOfYear = ethNewYearDay;
+    for (let m = 1; m < 9; m++) {
+        newYearDayOfYear += gregorianDaysInMonth[m];
+    }
+
+    let daysSinceNewYear = dayOfYear - newYearDayOfYear;
+    if (daysSinceNewYear < 0) {
+        const prevYearDays = isGregorianLeapYearEve ? 366 : 365;
+        daysSinceNewYear = prevYearDays + daysSinceNewYear;
+    }
+
+    let ethMonth = 1;
+    let ethDay = daysSinceNewYear + 1;
+
+    const isEthiopianLeapYear = ((ethYear + 1) % 4) === 0;
+    const daysInPagume = isEthiopianLeapYear ? 6 : 5;
+
+    while (ethMonth <= 12 && ethDay > (ethMonth === 13 ? daysInPagume : 30)) {
+        ethDay -= (ethMonth === 13 ? daysInPagume : 30);
+        ethMonth++;
+    }
+
+    return {
+        year: ethYear,
+        month: ethMonth,
+        day: ethDay,
+        monthName: ethiopianMonths[ethMonth - 1],
+        formatted: ethDay + ' ' + ethiopianMonths[ethMonth - 1] + ', ' + ethYear
+    };
 }
+
+function updateEthiopianDate(type) {
+    const dateInput = document.getElementById(type + '_date');
+    const ethiopianDiv = document.getElementById('ethiopian_' + type + '_date');
+    const ethiopianText = document.getElementById('ethiopian_' + type + '_text');
+
+    if (dateInput.value) {
+        const ethiopian = gregorianToEthiopian(dateInput.value);
+        ethiopianText.textContent = ethiopian.formatted;
+        ethiopianDiv.style.display = 'block';
+    } else {
+        ethiopianDiv.style.display = 'none';
+    }
 }
-function gregToJDN(y,m,d){
-var a=Math.floor((14-m)/12);var yy=y+4800-a;var mm=m+12*a-3;
-return d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;
-}
-function jdnToGreg(j){
-var a=j+32044;var b=Math.floor((4*a+3)/146097);var c=a-Math.floor(146097*b/4);
-var dd=Math.floor((4*c+3)/1461);var e=c-Math.floor(1461*dd/4);var m=Math.floor((5*e+2)/153);
-var day=e-Math.floor((153*m+2)/5)+1;var month=m+3-12*Math.floor(m/10);
-var year=100*b+dd-4800+Math.floor(m/10);
-return year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-}
-function gregToEth(p){
-var v=document.getElementById(p+'_date').value;
-if(!v)return;
-var pp=v.split('-');var j=gregToJDN(parseInt(pp[0]),parseInt(pp[1]),parseInt(pp[2]));
-var r=j-1724221;var n=Math.floor(r/1461);var d=r%1461;
-var ey,ed;
-if(d<365){ey=4*n+1;ed=d;}
-else if(d<730){ey=4*n+2;ed=d-365;}
-else if(d<1096){ey=4*n+3;ed=d-730;}
-else{ey=4*n+4;ed=d-1096;}
-var em=Math.floor(ed/30)+1;var edn=(ed%30)+1;
-document.getElementById(p+'_et_month').value=em;
-document.getElementById(p+'_et_day').value=edn;
-document.getElementById(p+'_et_year').value=ey;
-}
-function ethToGreg(p){
-var em=document.getElementById(p+'_et_month').value;
-var ed=document.getElementById(p+'_et_day').value;
-var ey=document.getElementById(p+'_et_year').value;
-if(!em||!ed||!ey)return;
-em=parseInt(em);ed=parseInt(ed);ey=parseInt(ey);
-var doy=(em-1)*30+(ed-1);
-var n=Math.floor((ey-1)/4);var yic=(ey-1)%4;
-var cs=n*1461;var ys;
-if(yic===0)ys=0;else if(yic===1)ys=365;else if(yic===2)ys=730;else ys=1096;
-var j=cs+ys+doy+1724221;
-document.getElementById(p+'_date').value=jdnToGreg(j);
-}
-initMonths();
 </script>
 @endpush
+@endsection

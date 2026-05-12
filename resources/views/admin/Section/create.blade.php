@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Edit Subject')
+@section('title', 'Add Section')
 
 @section('content')
 <div class="modern-page">
@@ -9,15 +9,15 @@
             <nav aria-label="breadcrumb" class="modern-breadcrumb">
                 <ol>
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
-                    <li><a href="{{ route('admin.subjects.index') }}">Subjects</a></li>
-                    <li class="active">Edit</li>
+                    <li><a href="{{ route('admin.sections.index') }}">Sections</a></li>
+                    <li class="active">Add New</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Edit Subject</h1>
-            <p class="modern-page-subtitle">Update subject information for <strong>{{ $data->name }}</strong></p>
+            <h1 class="modern-page-title">Add New Section</h1>
+            <p class="modern-page-subtitle">Create a new class section with teacher assignment</p>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.subjects.index') }}" class="btn-modern btn-modern-outline">
+            <a href="{{ route('admin.sections.index') }}" class="btn-modern btn-modern-outline">
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to List</span>
             </a>
@@ -26,34 +26,34 @@
 
     {{-- Form Card --}}
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.subjects.update', $data->id) }}">
-            @csrf @method('PUT')
+        <form method="POST" action="{{ route('admin.sections.store') }}">
+            @csrf
 
-            {{-- Subject Details --}}
+            {{-- Section Info --}}
             <div class="modern-form-section">
                 <div class="modern-form-section-header">
                     <div class="modern-form-section-icon modern-form-section-icon-blue">
-                        <i class="fas fa-book"></i>
+                        <i class="fas fa-info-circle"></i>
                     </div>
                     <div>
-                        <h3 class="modern-form-section-title">Subject Details</h3>
-                        <p class="modern-form-section-desc">Update subject name, code, and classification</p>
+                        <h3 class="modern-form-section-title">Section Info</h3>
+                        <p class="modern-form-section-desc">Enter the section name, class, and teacher assignment</p>
                     </div>
                 </div>
                 <div class="modern-form-section-body">
                     <div class="modern-form-grid">
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="name">
-                                Subject Name <span class="modern-required">*</span>
+                                Section Name <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
-                                <i class="fas fa-book modern-input-icon"></i>
+                                <i class="fas fa-layer-group modern-input-icon"></i>
                                 <input type="text"
                                     name="name"
                                     id="name"
                                     class="modern-input {{ $errors->has('name') ? 'is-invalid' : '' }}"
-                                    value="{{ old('name', $data->name) }}"
-                                    placeholder="e.g. Mathematics"
+                                    value="{{ old('name') }}"
+                                    placeholder="e.g. Section A"
                                     required
                                     autofocus>
                             </div>
@@ -63,66 +63,55 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="code">
-                                Subject Code <span class="modern-required">*</span>
+                            <label class="modern-form-label" for="class_id">
+                                Class <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
-                                <i class="fas fa-hashtag modern-input-icon"></i>
-                                <input type="text"
-                                    name="code"
-                                    id="code"
-                                    class="modern-input {{ $errors->has('code') ? 'is-invalid' : '' }}"
-                                    value="{{ old('code', $data->code) }}"
-                                    placeholder="e.g. MATH101"
-                                    required>
+                                <i class="fas fa-chalkboard modern-input-icon"></i>
+                                <select name="class_id" id="class_id" class="modern-input modern-select {{ $errors->has('class_id') ? 'is-invalid' : '' }}" required>
+                                    <option value="">-- Select Class --</option>
+                                    @foreach($classes as $class)
+                                        <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>
+                                            {{ $class->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
-                            @error('code')
+                            @error('class_id')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="type">
-                                Type <span class="modern-required">*</span>
+                            <label class="modern-form-label" for="teacher_id">
+                                Teacher <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
-                                <i class="fas fa-tag modern-input-icon"></i>
-                                <select name="type" id="type" class="modern-input modern-select {{ $errors->has('type') ? 'is-invalid' : '' }}" required>
-                                    <option value="">-- Select Type --</option>
-                                    <option value="compulsory" {{ old('type', $data->type) === 'compulsory' ? 'selected' : '' }}>Compulsory</option>
-                                    <option value="elective" {{ old('type', $data->type) === 'elective' ? 'selected' : '' }}>Elective</option>
+                                <i class="fas fa-chalkboard-teacher modern-input-icon"></i>
+                                <select name="teacher_id" id="teacher_id" class="modern-input modern-select">
+                                    <option value="">-- Select Teacher --</option>
+                                    @foreach($teachers as $teacher)
+                                        <option value="{{ $teacher->id }}" {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>
+                                            {{ $teacher->first_name }} {{ $teacher->last_name }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
-                            @error('type')
-                                <span class="modern-form-error">{{ $message }}</span>
-                            @enderror
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="status">
-                                Status <small>(optional)</small>
+                            <label class="modern-form-label" for="max_students">
+                                Max Students <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
-                                <i class="fas fa-toggle-on modern-input-icon"></i>
-                                <select name="status" id="status" class="modern-input modern-select">
-                                    <option value="active" {{ old('status', $data->status ?? 'active') === 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ old('status', $data->status ?? 'active') === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="modern-form-group modern-form-span-2">
-                            <label class="modern-form-label" for="description">
-                                Description <small>(optional)</small>
-                            </label>
-                            <div class="modern-input-wrapper">
-                                <i class="fas fa-align-left modern-input-icon"></i>
-                                <textarea
-                                    name="description"
-                                    id="description"
-                                    class="modern-input modern-textarea"
-                                    placeholder="Brief description of the subject..."
-                                    rows="3">{{ old('description', $data->description) }}</textarea>
+                                <i class="fas fa-users modern-input-icon"></i>
+                                <input type="number"
+                                    name="max_students"
+                                    id="max_students"
+                                    class="modern-input"
+                                    value="{{ old('max_students') }}"
+                                    placeholder="e.g. 40"
+                                    min="1">
                             </div>
                         </div>
                     </div>
@@ -131,12 +120,12 @@
 
             {{-- Form Actions --}}
             <div class="modern-form-actions">
-                <a href="{{ route('admin.subjects.index') }}" class="btn-modern btn-modern-ghost">
+                <a href="{{ route('admin.sections.index') }}" class="btn-modern btn-modern-ghost">
                     Cancel
                 </a>
                 <button type="submit" class="btn-modern btn-modern-primary">
-                    <i class="fas fa-save"></i>
-                    <span>Save Changes</span>
+                    <i class="fas fa-check"></i>
+                    <span>Create Section</span>
                 </button>
             </div>
         </form>
@@ -177,8 +166,6 @@
     color: #6c757d;
     margin: 0.25rem 0 0;
 }
-
-.modern-page-subtitle strong { color: #4361ee; }
 
 /* Breadcrumb */
 .modern-breadcrumb ol {
@@ -309,8 +296,6 @@
     border-color: #ef4444;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
-
-.modern-textarea { resize: vertical; min-height: 80px; }
 
 .modern-select {
     appearance: none;

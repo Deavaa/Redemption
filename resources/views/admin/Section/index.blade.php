@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Terms')
+@section('title', 'Sections')
 
 @section('content')
 <div class="modern-page">
@@ -10,16 +10,16 @@
                 <ol>
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                     <li><a href="#">Academic</a></li>
-                    <li class="active">Terms</li>
+                    <li class="active">Sections</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Terms</h1>
-            <p class="modern-page-subtitle">Manage academic terms and semesters</p>
+            <h1 class="modern-page-title">Sections</h1>
+            <p class="modern-page-subtitle">Manage class sections and teacher assignments</p>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.terms.create') }}" class="btn-modern btn-modern-primary">
+            <a href="{{ route('admin.sections.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-plus"></i>
-                <span>Add Term</span>
+                <span>Add Section</span>
             </a>
         </div>
     </div>
@@ -28,44 +28,53 @@
     <div class="modern-stats-row">
         <div class="modern-stat-card">
             <div class="modern-stat-icon modern-stat-icon-blue">
-                <i class="fas fa-calendar-alt"></i>
+                <i class="fas fa-layer-group"></i>
             </div>
             <div class="modern-stat-info">
                 <span class="modern-stat-value">{{ $data->total() }}</span>
-                <span class="modern-stat-label">Total Terms</span>
+                <span class="modern-stat-label">Total Sections</span>
             </div>
         </div>
         <div class="modern-stat-card">
             <div class="modern-stat-icon modern-stat-icon-green">
-                <i class="fas fa-check-circle"></i>
+                <i class="fas fa-chalkboard-teacher"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->where('is_active', true)->count() }}</span>
-                <span class="modern-stat-label">Active</span>
+                <span class="modern-stat-value">{{ $data->where('teacher_id', '!=', null)->count() }}</span>
+                <span class="modern-stat-label">With Teacher</span>
             </div>
         </div>
         <div class="modern-stat-card">
             <div class="modern-stat-icon modern-stat-icon-orange">
-                <i class="fas fa-graduation-cap"></i>
+                <i class="fas fa-user-slash"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ \App\Models\AcademicYear::where('is_current', 1)->count() }}</span>
-                <span class="modern-stat-label">Current Academic Year</span>
+                <span class="modern-stat-value">{{ $data->where('teacher_id', null)->count() }}</span>
+                <span class="modern-stat-label">Without Teacher</span>
+            </div>
+        </div>
+        <div class="modern-stat-card">
+            <div class="modern-stat-icon modern-stat-icon-purple">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="modern-stat-info">
+                <span class="modern-stat-value">{{ $data->sum('max_students') }}</span>
+                <span class="modern-stat-label">Max Capacity</span>
             </div>
         </div>
     </div>
 
-    {{-- Terms Table Card --}}
+    {{-- Sections Table Card --}}
     <div class="modern-card">
         <div class="modern-card-header">
             <div class="modern-card-header-left">
-                <h2 class="modern-card-title">All Terms</h2>
+                <h2 class="modern-card-title">All Sections</h2>
                 <span class="modern-badge modern-badge-light">{{ $data->total() }} records</span>
             </div>
             <div class="modern-card-header-right">
                 <div class="modern-search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="termSearch" placeholder="Search terms..." onkeyup="filterTable()">
+                    <input type="text" id="sectionSearch" placeholder="Search sections..." onkeyup="filterTable()">
                 </div>
             </div>
         </div>
@@ -82,15 +91,14 @@
 
             @if($data->count() > 0)
             <div class="modern-table-wrapper">
-                <table class="modern-table" id="termTable">
+                <table class="modern-table" id="sectionTable">
                     <thead>
                         <tr>
                             <th class="th-narrow">#</th>
-                            <th>Term Name</th>
-                            <th>Academic Year</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th class="th-center">Status</th>
+                            <th>Section Name</th>
+                            <th>Class</th>
+                            <th>Teacher</th>
+                            <th class="th-center">Max Students</th>
                             <th class="th-actions">Actions</th>
                         </tr>
                     </thead>
@@ -101,34 +109,31 @@
                                 <span class="modern-row-number">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
                             </td>
                             <td>
-                                <div class="modern-cell-title">{{ $item->name }}</div>
+                                <div class="modern-cell-title">{{ $item->name ?? '-' }}</div>
                             </td>
                             <td>
-                                @if($item->academicYear)
-                                    <span class="modern-badge modern-badge-light">{{ $item->academicYear->name }}</span>
+                                @if($item->classroom)
+                                    <span class="modern-badge modern-badge-light">{{ $item->classroom->name }}</span>
                                 @else
                                     <span class="modern-cell-muted">-</span>
                                 @endif
                             </td>
                             <td>
-                                <div class="modern-cell-text">{{ $item->start_date ? $item->start_date->format('M d, Y') : '-' }}</div>
-                            </td>
-                            <td>
-                                <div class="modern-cell-text">{{ $item->end_date ? $item->end_date->format('M d, Y') : '-' }}</div>
+                                @if($item->teacher)
+                                    <div class="modern-cell-title">{{ $item->teacher->first_name }} {{ $item->teacher->last_name }}</div>
+                                @else
+                                    <span class="modern-badge modern-badge-warning">Unassigned</span>
+                                @endif
                             </td>
                             <td class="td-center">
-                                @if($item->is_active)
-                                    <span class="modern-badge modern-badge-success">Active</span>
-                                @else
-                                    <span class="modern-badge modern-badge-light">Inactive</span>
-                                @endif
+                                <span class="modern-cell-title">{{ $item->max_students ?? '-' }}</span>
                             </td>
                             <td class="td-actions">
                                 <div class="modern-action-group">
-                                    <a href="{{ route('admin.terms.edit', $item->id) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
+                                    <a href="{{ route('admin.sections.edit', $item->id) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                         <i class="fas fa-pen"></i>
                                     </a>
-                                    <form method="POST" action="{{ route('admin.terms.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this term?')">
+                                    <form method="POST" action="{{ route('admin.sections.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this section?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
                                             <i class="fas fa-trash-alt"></i>
@@ -151,12 +156,12 @@
             @else
             <div class="modern-empty-state">
                 <div class="modern-empty-icon">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="fas fa-layer-group"></i>
                 </div>
-                <h3>No Terms Yet</h3>
-                <p>Get started by adding your first academic term.</p>
-                <a href="{{ route('admin.terms.create') }}" class="btn-modern btn-modern-primary">
-                    <i class="fas fa-plus"></i> Add Term
+                <h3>No Sections Yet</h3>
+                <p>Get started by adding your first class section.</p>
+                <a href="{{ route('admin.sections.create') }}" class="btn-modern btn-modern-primary">
+                    <i class="fas fa-plus"></i> Add Section
                 </a>
             </div>
             @endif
@@ -255,6 +260,7 @@
 .modern-stat-icon-blue { background: #eef2ff; color: #4361ee; }
 .modern-stat-icon-green { background: #ecfdf5; color: #10b981; }
 .modern-stat-icon-orange { background: #fff7ed; color: #f97316; }
+.modern-stat-icon-purple { background: #f5f3ff; color: #8b5cf6; }
 
 .modern-stat-info { display: flex; flex-direction: column; }
 
@@ -320,6 +326,7 @@
 .modern-badge-light { background: #f3f4f6; color: #6b7280; }
 .modern-badge-success { background: #ecfdf5; color: #059669; }
 .modern-badge-danger { background: #fef2f2; color: #dc2626; }
+.modern-badge-warning { background: #fff7ed; color: #ea580c; }
 
 /* Search Box */
 .modern-search-box {
@@ -411,10 +418,6 @@
     font-weight: 600;
     color: #1a1a2e;
     margin-bottom: 2px;
-}
-
-.modern-cell-text {
-    color: #4b5563;
 }
 
 .modern-cell-muted { color: #d1d5db; }
@@ -576,9 +579,9 @@
 @push('scripts')
 <script>
 function filterTable() {
-    const input = document.getElementById('termSearch');
+    const input = document.getElementById('sectionSearch');
     const filter = input.value.toLowerCase();
-    const table = document.getElementById('termTable');
+    const table = document.getElementById('sectionTable');
     const rows = table.querySelectorAll('tbody tr');
 
     rows.forEach(row => {
