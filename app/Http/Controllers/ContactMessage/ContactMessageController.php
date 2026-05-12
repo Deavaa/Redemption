@@ -6,11 +6,32 @@ use App\Models\ContactMessage;
 
 class ContactMessageController extends Controller
 {
-    public function index() { $data = ContactMessage::latest()->paginate(20); return view('admin.ContactMessage.index', compact('data')); }
-    public function create() { return view('admin.ContactMessage.create'); }
-    public function store(Request $r) { ContactMessage::create($r->all()); return redirect()->route("admin.contact-messages.index")->with('success','Created successfully'); }
-    public function show(ContactMessage $item) { return view('admin.ContactMessage.show', compact('item')); }
-    public function edit(ContactMessage $item) { return view('admin.ContactMessage.edit', compact('item')); }
-    public function update(Request $r, ContactMessage $item) { $item->update($r->all()); return redirect()->route("admin.contact-messages.index")->with('success','Updated successfully'); }
-    public function destroy(ContactMessage $item) { $item->delete(); return back()->with('success','Deleted successfully'); }
+    public function index(Request $r)
+    {
+        $q = ContactMessage::with('branch');
+        if ($r->filled('search')) {
+            $s = $r->search;
+            $q->where('name', 'LIKE', "%$s%")->orWhere('subject', 'LIKE', "%$s%")->orWhere('email', 'LIKE', "%$s%");
+        }
+        if ($r->filled('is_read')) $q->where('is_read', $r->is_read === 'yes');
+        $data = $q->latest()->paginate(20);
+        $totalMessages = ContactMessage::count();
+        $unreadCount = ContactMessage::where('is_read', false)->count();
+        return view('admin.ContactMessage.index', compact('data', 'totalMessages', 'unreadCount'));
+    }
+
+    public function show(ContactMessage $item)
+    {
+        if (!$item->is_read) {
+            $item->update(['is_read' => true]);
+        }
+        $item->load('branch');
+        return view('admin.ContactMessage.show', compact('item'));
+    }
+
+    public function destroy(ContactMessage $item)
+    {
+        $item->delete();
+        return back()->with('success','Message deleted successfully');
+    }
 }

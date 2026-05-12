@@ -1,1 +1,14 @@
-<?php namespace App\Models;use Illuminate\Database\Eloquent\Factories\HasFactory;use Illuminate\Database\Eloquent\Model;class ProgressReport extends Model{use HasFactory;protected $table="progress_reports";protected $fillable=["student_id","academic_year_id","term_id","classroom_id","overall_grade","total_marks","max_marks","class_rank","remarks","teacher_comment","status"];protected $casts=["total_marks"=>"decimal:2","max_marks"=>"decimal:2"];public function student(){return $this->belongsTo(Student::class);}public function academicYear(){return $this->belongsTo(AcademicYear::class);}public function term(){return $this->belongsTo(Term::class);}public function classroom(){return $this->belongsTo(Classroom::class);}public function subjects(){return $this->hasMany(ProgressReportSubject::class,"progress_report_id");}}
+<?php namespace App\Models;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+class ProgressReport extends Model{
+    use HasFactory;
+    protected $table="progress_reports";
+    protected $fillable=["student_id","academic_year_id","term_id","class_id","overall_grade","total_marks","max_marks","class_rank","rank","percentage","grade","remarks","teacher_comment","status"];
+    protected $casts=["total_marks"=>"decimal:2","max_marks"=>"decimal:2","percentage"=>"decimal:2"];
+    public function student(){return $this->belongsTo(Student::class);}
+    public function academicYear(){return $this->belongsTo(AcademicYear::class);}
+    public function term(){return $this->belongsTo(Term::class);}
+    public function classroom(){return $this->belongsTo(Classroom::class,'class_id');}
+    public function subjects(){return $this->hasMany(ProgressReportSubject::class,"progress_report_id");}
+}

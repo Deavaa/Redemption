@@ -32,7 +32,7 @@ class ExamController extends Controller
     {
         $r->validate([
             'name'             => 'required|string|max:255',
-            'type'             => 'required|in:quiz,test,mid_term,final_exam,assignment,other',
+            'type'             => 'required|in:exam,quiz,assignment,project,midterm,final',
             'total_marks'      => 'required|numeric|min:0|max:99999',
             'academic_year_id' => 'required|exists:academic_years,id',
             'term_id'          => 'required|exists:terms,id',
@@ -75,7 +75,7 @@ class ExamController extends Controller
     {
         $r->validate([
             'name'             => 'required|string|max:255',
-            'type'             => 'required|in:quiz,test,mid_term,final_exam,assignment,other',
+            'type'             => 'required|in:exam,quiz,assignment,project,midterm,final',
             'total_marks'      => 'required|numeric|min:0|max:99999',
             'academic_year_id' => 'required|exists:academic_years,id',
             'term_id'          => 'required|exists:terms,id',

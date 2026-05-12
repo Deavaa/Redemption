@@ -33,6 +33,7 @@ use App\Http\Controllers\Payroll\PayrollController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\EmployeeAsset\EmployeeAssetController;
 use App\Http\Controllers\PerformanceReport\PerformanceReportController;
+use App\Http\Controllers\ProgressReport\ProgressReportController;
 use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
 use App\Http\Controllers\ContactMessage\ContactMessageController;
 use App\Http\Controllers\Setting\SettingController;
@@ -91,6 +92,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::resource('leaves', LeaveController::class);
     Route::resource('employee-assets', EmployeeAssetController::class);
     Route::resource('performance-reports', PerformanceReportController::class);
+    Route::resource('progress-reports', ProgressReportController::class);
     Route::resource('teacher-assignments', TeacherAssignmentController::class);
     Route::resource('contact-messages', ContactMessageController::class);
 

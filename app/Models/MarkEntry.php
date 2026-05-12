@@ -42,4 +42,5 @@ class MarkEntry extends Model
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
     public function classRoom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
     public function section() { return $this->belongsTo(Section::class); }
+    public function teacher() { return $this->belongsTo(Teacher::class); }
 }

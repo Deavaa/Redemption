@@ -3,14 +3,77 @@ namespace App\Http\Controllers\EmployeeAsset;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\EmployeeAsset;
+use App\Models\User;
 
 class EmployeeAssetController extends Controller
 {
-    public function index() { $data = EmployeeAsset::latest()->paginate(20); return view('admin.EmployeeAsset.index', compact('data')); }
-    public function create() { return view('admin.EmployeeAsset.create'); }
-    public function store(Request $r) { EmployeeAsset::create($r->all()); return redirect()->route("admin.employee-assets.index")->with('success','Created successfully'); }
-    public function show(EmployeeAsset $item) { return view('admin.EmployeeAsset.show', compact('item')); }
-    public function edit(EmployeeAsset $item) { return view('admin.EmployeeAsset.edit', compact('item')); }
-    public function update(Request $r, EmployeeAsset $item) { $item->update($r->all()); return redirect()->route("admin.employee-assets.index")->with('success','Updated successfully'); }
-    public function destroy(EmployeeAsset $item) { $item->delete(); return back()->with('success','Deleted successfully'); }
+    public function index(Request $r)
+    {
+        $q = EmployeeAsset::with('employee');
+        if ($r->filled('search')) {
+            $s = $r->search;
+            $q->where('name', 'LIKE', "%$s%")->orWhereHas('employee', function($x) use ($s) {
+                $x->where('name', 'LIKE', "%$s%");
+            });
+        }
+        if ($r->filled('condition')) $q->where('condition', $r->condition);
+        $data = $q->latest()->paginate(20);
+        $totalAssets = EmployeeAsset::count();
+        $employees = User::whereIn('role', ['admin','teacher','staff'])->orderBy('name')->get();
+        return view('admin.EmployeeAsset.index', compact('data', 'totalAssets', 'employees'));
+    }
+
+    public function create()
+    {
+        $employees = User::whereIn('role', ['admin','teacher','staff'])->orderBy('name')->get();
+        return view('admin.EmployeeAsset.create', compact('employees'));
+    }
+
+    public function store(Request $r)
+    {
+        $r->validate([
+            'employee_id' => 'required|exists:users,id',
+            'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
+            'condition' => 'required|in:new,good,fair,poor,damaged',
+            'issue_date' => 'required|date',
+            'return_date' => 'nullable|date|after_or_equal:issue_date',
+            'description' => 'nullable|string|max:500',
+        ]);
+        EmployeeAsset::create($r->only(['employee_id','name','quantity','condition','issue_date','return_date','description']));
+        return redirect()->route("admin.employee-assets.index")->with('success','Asset assigned successfully');
+    }
+
+    public function show(EmployeeAsset $item)
+    {
+        $item->load('employee');
+        return view('admin.EmployeeAsset.show', compact('item'));
+    }
+
+    public function edit(EmployeeAsset $item)
+    {
+        $employees = User::whereIn('role', ['admin','teacher','staff'])->orderBy('name')->get();
+        return view('admin.EmployeeAsset.edit', compact('item', 'employees'));
+    }
+
+    public function update(Request $r, EmployeeAsset $item)
+    {
+        $r->validate([
+            'employee_id' => 'required|exists:users,id',
+            'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
+            'condition' => 'required|in:new,good,fair,poor,damaged',
+            'issue_date' => 'required|date',
+            'return_date' => 'nullable|date|after_or_equal:issue_date',
+            'description' => 'nullable|string|max:500',
+        ]);
+        $item->update($r->only(['employee_id','name','quantity','condition','issue_date','return_date','description']));
+        return redirect()->route("admin.employee-assets.index")->with('success','Asset updated successfully');
+    }
+
+    public function destroy(EmployeeAsset $item)
+    {
+        $item->delete();
+        return back()->with('success','Asset record deleted successfully');
+    }
 }

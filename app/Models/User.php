@@ -13,7 +13,6 @@ class User extends Authenticatable
     protected function casts(): array { return ['email_verified_at'=>'datetime','password'=>'hashed','is_active'=>'boolean']; }
     public function student() { return $this->hasOne(Student::class); }
     public function parent() { return $this->hasOne(ParentModel::class); }
-    public function teacherAssignments() { return $this->hasMany(TeacherAssignment::class, 'teacher_id'); }
     public function employeeAssets() { return $this->hasMany(EmployeeAsset::class, 'employee_id'); }
     public function leaves() { return $this->hasMany(Leave::class, 'employee_id'); }
     public function payrolls() { return $this->hasMany(Payroll::class, 'employee_id'); }

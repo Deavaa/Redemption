@@ -3,14 +3,83 @@ namespace App\Http\Controllers\PerformanceReport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PerformanceReport;
+use App\Models\Student;
+use App\Models\AcademicYear;
+use App\Models\Term;
 
 class PerformanceReportController extends Controller
 {
-    public function index() { $data = PerformanceReport::latest()->paginate(20); return view('admin.PerformanceReport.index', compact('data')); }
-    public function create() { return view('admin.PerformanceReport.create'); }
-    public function store(Request $r) { PerformanceReport::create($r->all()); return redirect()->route("admin.performance-reports.index")->with('success','Created successfully'); }
-    public function show(PerformanceReport $item) { return view('admin.PerformanceReport.show', compact('item')); }
-    public function edit(PerformanceReport $item) { return view('admin.PerformanceReport.edit', compact('item')); }
-    public function update(Request $r, PerformanceReport $item) { $item->update($r->all()); return redirect()->route("admin.performance-reports.index")->with('success','Updated successfully'); }
-    public function destroy(PerformanceReport $item) { $item->delete(); return back()->with('success','Deleted successfully'); }
+    public function index(Request $r)
+    {
+        $q = PerformanceReport::with(['student','academicYear','term']);
+        if ($r->filled('search')) {
+            $s = $r->search;
+            $q->whereHas('student', function($x) use ($s) {
+                $x->where('first_name', 'LIKE', "%$s%")->orWhere('last_name', 'LIKE', "%$s%");
+            });
+        }
+        if ($r->filled('academic_year_id')) $q->where('academic_year_id', $r->academic_year_id);
+        $data = $q->latest()->paginate(20);
+        $totalReports = PerformanceReport::count();
+        $academicYears = AcademicYear::orderBy('name')->get();
+        return view('admin.PerformanceReport.index', compact('data', 'totalReports', 'academicYears'));
+    }
+
+    public function create()
+    {
+        $students = Student::where('status', 'active')->orderBy('first_name')->get();
+        $academicYears = AcademicYear::orderBy('name')->get();
+        $terms = Term::orderBy('name')->get();
+        return view('admin.PerformanceReport.create', compact('students', 'academicYears', 'terms'));
+    }
+
+    public function store(Request $r)
+    {
+        $r->validate([
+            'student_id' => 'required|exists:students,id',
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'term_id' => 'nullable|exists:terms,id',
+            'attendance_percentage' => 'nullable|numeric|min:0|max:100',
+            'behavior_rating' => 'nullable|numeric|min:0|max:10',
+            'sports_rating' => 'nullable|numeric|min:0|max:10',
+            'extracurricular_rating' => 'nullable|numeric|min:0|max:10',
+            'overall_rating' => 'nullable|numeric|min:0|max:10',
+            'remarks' => 'nullable|string',
+        ]);
+        PerformanceReport::create($r->only(['student_id','academic_year_id','term_id','attendance_percentage','behavior_rating','sports_rating','extracurricular_rating','overall_rating','remarks']));
+        return redirect()->route("admin.performance-reports.index")->with('success','Report created successfully');
+    }
+
+    public function show(PerformanceReport $item)
+    {
+        $item->load(['student','academicYear','term']);
+        return view('admin.PerformanceReport.show', compact('item'));
+    }
+
+    public function edit(PerformanceReport $item)
+    {
+        $students = Student::where('status', 'active')->orderBy('first_name')->get();
+        $academicYears = AcademicYear::orderBy('name')->get();
+        $terms = Term::orderBy('name')->get();
+        return view('admin.PerformanceReport.edit', compact('item', 'students', 'academicYears', 'terms'));
+    }
+
+    public function update(Request $r, PerformanceReport $item)
+    {
+        $r->validate([
+            'student_id' => 'required|exists:students,id',
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'term_id' => 'nullable|exists:terms,id',
+            'attendance_percentage' => 'nullable|numeric|min:0|max:100',
+            'behavior_rating' => 'nullable|numeric|min:0|max:10',
+            'sports_rating' => 'nullable|numeric|min:0|max:10',
+            'extracurricular_rating' => 'nullable|numeric|min:0|max:10',
+            'overall_rating' => 'nullable|numeric|min:0|max:10',
+            'remarks' => 'nullable|string',
+        ]);
+        $item->update($r->only(['student_id','academic_year_id','term_id','attendance_percentage','behavior_rating','sports_rating','extracurricular_rating','overall_rating','remarks']));
+        return redirect()->route("admin.performance-reports.index")->with('success','Report updated successfully');
+    }
+
+    public function destroy(PerformanceReport $item) { $item->delete(); return back()->with('success','Report deleted successfully'); }
 }
