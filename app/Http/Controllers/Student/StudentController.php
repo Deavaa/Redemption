@@ -27,8 +27,8 @@ class StudentController extends Controller
         }
         $students = $query->latest()->paginate(20);
         $totalStudents = Student::count();
-        $activeStudents = $totalStudents;
-        $inactiveStudents = 0;
+        $activeStudents = Student::where('status', 'active')->count();
+        $inactiveStudents = Student::where('status', 'inactive')->count();
 
         return view('admin.Student.index', compact('students', 'totalStudents', 'activeStudents', 'inactiveStudents'));
     }
@@ -105,6 +105,12 @@ class StudentController extends Controller
         Student::create($validated);
 
         return redirect()->route('admin.students.index')->with('success', 'Student enrolled successfully!');
+    }
+
+    public function show(Student $student)
+    {
+        $student->load(['classroom', 'section', 'branch', 'academicYear', 'parents']);
+        return view('admin.Student.show', ['data' => $student]);
     }
 
     public function edit(Student $student)

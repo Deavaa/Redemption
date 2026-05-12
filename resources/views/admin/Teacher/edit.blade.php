@@ -1,30 +1,504 @@
 @extends('layouts.admin')
-@section('page-title', 'Edit Teacher')
+@section('title', 'Edit Teacher')
+
 @section('content')
-<div class="container-fluid py-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold mb-1"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Teacher - {{ $data->first_name }} {{ $data->last_name }}</h4>
-            <nav aria-label="breadcrumb"><ol class="breadcrumb m-0">:   <li class="breadcrumb-item"><a href="{{ route('admin.teachers.index') }}" class="text-decoration-none text-muted">Teachers</a></li>
-                <li class="breadcrumb-item active text-gold">Edit</li>
-            </ol></nav>
-        <a href="{{ route('admin.teachers.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to t List</a>
+<div class="modern-page">
+    {{-- Page Header --}}
+    <div class="modern-page-header">
+        <div class="modern-page-header-left">
+            <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                <ol>
+                    <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
+                    <li><a href="{{ route('admin.teachers.index') }}">Teachers</a></li>
+                    <li class="active">Edit</li>
+                </ol>
+            </nav>
+            <h1 class="modern-page-title">Edit Teacher</h1>
+            <p class="modern-page-subtitle">Update information for <strong>{{ $data->first_name }} {{ $data->last_name }}</strong></p>
+        </div>
+        <div class="modern-page-header-right">
+            <a href="{{ route('admin.teachers.index') }}" class="btn-modern btn-modern-outline">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to List</span>
+            </a>
+        </div>
     </div>
 
-    <form method="POST"7F–öãÒ'·²&÷WFR‚vFÖ–âçFV6†W'2çWFFRrÂFFFÓæ–B’×Ò#à¢77&bÖWF†öB‚uUBr¢ÆF—b6Æ73Ò&6&B&÷&FW"Ó6†F÷r×6ÒÖ"ÓB#à¢ÆF—b6Æ73Ò&6&BÖ†VFW"&r×v†—FR&÷&FW"Ö&÷GFöÒ’Ó2#à¢Æƒb6Æ73Ò&gr×6VÖ–&öÆBÖ"Ó#ãÆ’6Æ73Ò&&’&’×W'6öâÖRÓ"FW‡B×&–Ö'’#ãÂö“åW'6öæÂ–æf÷&ÖF–öãÂöƒcà¢ÂöF—cà¢ÆF—b6Æ73Ò&6&BÖ&öG’#à¢ÆF—b6Æ73Ò'&÷rrÓ2#à¢ÆF—b6Æ73Ò&6öÂÖÖBÓb#à¢ÆÆ&VÂ6Æ73Ò&f÷&ÒÖÆ&VÂgr×6VÖ–&öÆB#äf—'7BæÖRÇ7â6Æ73Ò'FW‡BÖFævW"#â£Â÷7ããÂöÆ&VÃà¢Æ–çWBG—SÒ'FW‡B"æÖSÒ&f—'7EöæÖR"6Æ73Ò&f÷&ÒÖ6öçG&öÂ"fÇVSÒ'·²FFFÓæf—'7EöæÖR×Ò"&WV—&VCà¢W'&÷"‚vf—'7EöæÖRr“ÆF—b6Æ73Ò'FW‡BÖFævW"6ÖÆÂ×BÓ#ç·²FÖW76vR×ÓÂöF—cäVæFW'&÷ ¢ÂöF—cà¢ÆF—b6Æ73Ò&6öÂÖÖBÓb#à¢ÆÆ&VÂ6Æ73Ò&f÷&ÒÖÆ&VÂgr×6VÖ–&öÆB#äÆ7BæÖRÇ7â6Æ73Ò'FW‡BÖFævW"#â£Â÷7ããÂöÆ&VÃà¢Æ–çWBG—SÒ'FW‡B"æÖSÒ&Æ7EöæÖR"6Æ73Ò&f÷&ÒÖ6öçG&öÂ"fÇVSÒ'·²FFFÓæÆ7EöæÖR×Ò"&WV—&VCà¢W'&÷"‚vÆ7E}¹…µ”œ¤ñ‘¥Ø±…ÍÌô‰Ñ•áÐµ‘…¹•ÈÍµ…±°µÐ´Äˆùíì€‘µ•ÍÍ…”õôð½‘¥Øù•¹‘•ÉÉ½È(€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰½°µµ´Øˆø(€€€€€€€€€€€€€€€€€€€€ñ±…‰•°±…ÍÌô‰™½É´µ±…‰•°™ÜµÍ•µ¥‰½±ˆùµ…¥°€ñÍÁ…¸±…ÍÌô‰Ñ•áÐµ‘…¹•Èˆø¨ð½ÍÁ…¸øð½±…‰•°ø(€€€€€€€€€€€€€€€€€€€€ñ¥¹ÁÕÐÑåÁ”ô‰•µ…¥°ˆ¹…µ”ô‰•µ…¥°ˆ±…ÍÌô‰™½É´µ½¹ÑÉ½°ˆÙ…±Õ”ô‰íì€‘‘…Ñ„´ù•µ…¥°õôˆÉ•ÅÕ¥É•ø(€€€€€€€€€€€€€€€€€€€•ÉÉ½È •µ…¥°œ¤ñ‘¥Ø±…ÍÌô‰Ñ•áÐµ‘…¹•ÈÍµ…±°µÐ´Äˆùíì€‘µ•ÍÍ…”õôð½‘¥Øù•¹‘•ÉÉ½È(€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€ð½‘¥Øø(€€€€ð½‘¥Øø((€€€€ñ‘¥Ø±…ÍÌô‰…É‰½É‘•È´ÀÍ¡…‘½ÜµÍ´µˆ´Ðˆø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰…Éµ¡•…‘•È‰œµÝ¡¥Ñ”‰½É‘•Èµ‰½ÑÑ½´Áä´Ìø(€€€€€€€€€€€€ñ Ø±…ÍÌô‰™ÜµÍ•µ¥‰½±µˆ´Àˆøñ¤±…ÍÌô‰‰¤‰¤µ‰É¥•™…Í”µ”´ÈÑ•áÐµÍÕ•ÍÌˆøð½¤ùAÉ½™•ÍÍ¥½¹…°%¹™½Éµ…Ñ¥½¸ð½ Øø(€€€€€€€€ð½‘¥Øø(€€€€€€€€ñ‘¥Ø±…ÍÌô‰…Éµ‰½‘äˆø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰É½Üœ´Ìˆø(€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰½°µµ´Øˆø(€€€€€€€€€€€€€€€€€€€€ñ±…‰•°±…ÍÌô‰™½É´µ±…‰•°™ÜµÍ•µ¥‰½±ˆùEÕ…±¥™¥…Ñ¥½¸€ñÍÁ…¸±…ÍÌô‰Ñ•áÐµ‘…¹•Èˆø¨ð½ÍÁ…¸øð½±…‰•°ø(€€€€€€€€€€€€€€€€€€€ñ¥¹ÁÕÐÑåÁ”ô‰Ñ•áÐˆ¹…µ”ô‰ÅÕ…±¥™¥…Ñ¥½¸ˆ±…ÍÌô‰™½É´µ½¹ÑÉ½°ˆÙ…±Õ”ô‰íì€‘‘…Ñ„´ùÅÕ…±¥™¥…Ñ¥½¸õôˆÉ•ÅÕ¥É•ø(€€€€€€€€€€€€€€€€€€€•ÉÉ½È ÅÕ…±¥™¥…Ñ¥½¸œ¤ñ‘¥Ø±…ÍÌô‰Ñ•áÐµ‘…¹•ÈÍµ…±°µÐ´Äˆùíì€‘‘…Ñ„´ùÅÕ…±¥™¥…Ñ¥½¸õôð½‘¥Øù•¹‘•ÉÉ½È(€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÌô‰½°µµ´Ðˆø(€€€€€€€€€€€€€€€€€€€€ñ±…‰•°±…ÍÌô‰™½É´µ±…‰•°™ÜµÍ•µ¥‰½±ˆùM…±…Éäð½±…‰•°ø(€€€€€€€€€€€€€€€€€€€€ñ¥¹ÁÕÐÑåÁ”ô‰¹Õµ‰•Èˆ¹…µ”ô‰Í…±…Éäˆ±…ÍÌô‰™½É´µ½¹ÑÉ½°ˆÙ…±Õ”ô‰íì€‘‘…Ñ„´ùÍ…±…Éäõôˆ step="0.01" min=">
+    {{-- Form Card --}}
+    <div class="modern-card">
+        <form method="POST" action="{{ route('admin.teachers.update', $data->id) }}">
+            @csrf @method('PUT')
+
+            {{-- Personal Information --}}
+            <div class="modern-form-section">
+                <div class="modern-form-section-header">
+                    <div class="modern-form-section-icon modern-form-section-icon-blue">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="modern-form-section-title">Personal Information</h3>
+                        <p class="modern-form-section-desc">Update the teacher's name and contact details</p>
+                    </div>
                 </div>
-               <div class="col-md-4">
-                   <label class="form-label fw-semibold">Status</label>
-                   <select name="status" class=""form-select">
-                         <option value="Active" {{ $data->status === 'Active' ? 'selected' : '' }}>Active</option>
-                       <option value="Inactive" {{ $data->status === 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                    </select>
+                <div class="modern-form-section-body">
+                    <div class="modern-form-grid">
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="first_name">
+                                First Name <span class="modern-required">*</span>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-user modern-input-icon"></i>
+                                <input type="text"
+                                    name="first_name"
+                                    id="first_name"
+                                    class="modern-input {{ $errors->has('first_name') ? 'is-invalid' : '' }}"
+                                    value="{{ old('first_name', $data->first_name) }}"
+                                    placeholder="e.g. John"
+                                    required
+                                    autofocus>
+                            </div>
+                            @error('first_name')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="last_name">
+                                Last Name <span class="modern-required">*</span>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-user modern-input-icon"></i>
+                                <input type="text"
+                                    name="last_name"
+                                    id="last_name"
+                                    class="modern-input {{ $errors->has('last_name') ? 'is-invalid' : '' }}"
+                                    value="{{ old('last_name', $data->last_name) }}"
+                                    placeholder="e.g. Smith"
+                                    required>
+                            </div>
+                            @error('last_name')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="email">
+                                Email <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-envelope modern-input-icon"></i>
+                                <input type="email"
+                                    name="email"
+                                    id="email"
+                                    class="modern-input {{ $errors->has('email') ? 'is-invalid' : '' }}"
+                                    value="{{ old('email', $data->email) }}"
+                                    placeholder="e.g. john.smith@school.edu">
+                            </div>
+                            @error('email')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="phone">
+                                Phone <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-phone modern-input-icon"></i>
+                                <input type="tel"
+                                    name="phone"
+                                    id="phone"
+                                    class="modern-input {{ $errors->has('phone') ? 'is-invalid' : '' }}"
+                                    value="{{ old('phone', $data->phone) }}"
+                                    placeholder="e.g. +251 91 234 5678">
+                            </div>
+                            @error('phone')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
             </div>
-           </div>
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-gold btn-lg px-4"><i class="bi bi-check-lg me-2"></i>Save Changes</button>
-        <a href="{{ route('admin.teachers.index') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
-   </div>
-    </form>
+
+            {{-- Professional Details --}}
+            <div class="modern-form-section">
+                <div class="modern-form-section-header">
+                    <div class="modern-form-section-icon modern-form-section-icon-purple">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h3 class="modern-form-section-title">Professional Details</h3>
+                        <p class="modern-form-section-desc">Update qualification, department, and employment info</p>
+                    </div>
+                </div>
+                <div class="modern-form-section-body">
+                    <div class="modern-form-grid">
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="qualification">
+                                Qualification <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-award modern-input-icon"></i>
+                                <input type="text"
+                                    name="qualification"
+                                    id="qualification"
+                                    class="modern-input {{ $errors->has('qualification') ? 'is-invalid' : '' }}"
+                                    value="{{ old('qualification', $data->qualification) }}"
+                                    placeholder="e.g. M.Ed. Education">
+                            </div>
+                            @error('qualification')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="department">
+                                Department <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-building modern-input-icon"></i>
+                                <input type="text"
+                                    name="department"
+                                    id="department"
+                                    class="modern-input {{ $errors->has('department') ? 'is-invalid' : '' }}"
+                                    value="{{ old('department', $data->department) }}"
+                                    placeholder="e.g. Science">
+                            </div>
+                            @error('department')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="hire_date">
+                                Hire Date <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-calendar-alt modern-input-icon"></i>
+                                <input type="date"
+                                    name="hire_date"
+                                    id="hire_date"
+                                    class="modern-input {{ $errors->has('hire_date') ? 'is-invalid' : '' }}"
+                                    value="{{ old('hire_date', $data->hire_date) }}">
+                            </div>
+                            @error('hire_date')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="salary">
+                                Salary <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-dollar-sign modern-input-icon"></i>
+                                <input type="number"
+                                    name="salary"
+                                    id="salary"
+                                    step="0.01"
+                                    min="0"
+                                    class="modern-input {{ $errors->has('salary') ? 'is-invalid' : '' }}"
+                                    value="{{ old('salary', $data->salary) }}"
+                                    placeholder="e.g. 50000">
+                            </div>
+                            @error('salary')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="status">
+                                Status <span class="modern-required">*</span>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-toggle-on modern-input-icon"></i>
+                                <select name="status"
+                                    id="status"
+                                    class="modern-input modern-select {{ $errors->has('status') ? 'is-invalid' : '' }}">
+                                    <option value="Active" {{ old('status', $data->status) === 'Active' ? 'selected' : '' }}>Active</option>
+                                    <option value="On Leave" {{ old('status', $data->status) === 'On Leave' ? 'selected' : '' }}>On Leave</option>
+                                    <option value="Inactive" {{ old('status', $data->status) === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                </select>
+                            </div>
+                            @error('status')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Form Actions --}}
+            <div class="modern-form-actions">
+                <a href="{{ route('admin.teachers.index') }}" class="btn-modern btn-modern-ghost">
+                    Cancel
+                </a>
+                <button type="submit" class="btn-modern btn-modern-primary">
+                    <i class="fas fa-save"></i>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+@push('styles')
+<style>
+/* Modern Page Layout */
+.modern-page { animation: fadeSlideIn 0.4s ease-out; }
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modern-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.modern-page-header-left { flex: 1; }
+
+.modern-page-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.modern-page-subtitle {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0.25rem 0 0;
+}
+
+.modern-page-subtitle strong { color: #4361ee; }
+
+/* Breadcrumb */
+.modern-breadcrumb ol {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.5rem;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    align-items: center;
+}
+
+.modern-breadcrumb li { color: #adb5bd; }
+.modern-breadcrumb li a { color: #6c757d; text-decoration: none; transition: color 0.2s; }
+.modern-breadcrumb li a:hover { color: #4361ee; }
+.modern-breadcrumb li + li::before { content: '/'; margin-right: 0.5rem; color: #dee2e6; }
+.modern-breadcrumb li.active { color: #4361ee; font-weight: 500; }
+
+/* Card */
+.modern-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+}
+
+/* Form Section */
+.modern-form-section { border-bottom: 1px solid #f0f0f0; }
+.modern-form-section:last-of-type { border-bottom: none; }
+
+.modern-form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem 2rem 0.75rem;
+}
+
+.modern-form-section-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.modern-form-section-icon-blue { background: #eef2ff; color: #4361ee; }
+.modern-form-section-icon-purple { background: #f3e8ff; color: #7c3aed; }
+
+.modern-form-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.modern-form-section-desc {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    margin: 0.15rem 0 0;
+}
+
+.modern-form-section-body { padding: 1.25rem 2rem 1.75rem; }
+
+/* Form Grid */
+.modern-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.modern-form-span-2 { grid-column: span 2; }
+
+/* Form Group */
+.modern-form-group { display: flex; flex-direction: column; }
+
+.modern-form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.45rem;
+    font-size: 0.88rem;
+}
+
+.modern-form-label small {
+    font-weight: 400;
+    color: #9ca3af;
+    font-size: 0.78rem;
+}
+
+.modern-required { color: #ef4444; font-weight: 700; }
+
+/* Input */
+.modern-input-wrapper { position: relative; }
+
+.modern-input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.modern-input {
+    width: 100%;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem 0.7rem 2.5rem;
+    font-size: 0.9rem;
+    color: #1a1a2e;
+    background: #fff;
+    transition: all 0.2s;
+}
+
+.modern-input:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.modern-input::placeholder { color: #c5c9d2; }
+
+.modern-input.is-invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.modern-select {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+}
+
+.modern-form-error {
+    display: block;
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
+    font-weight: 500;
+}
+
+/* Form Actions */
+.modern-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #f0f0f0;
+    background: #fafbfc;
+}
+
+/* Modern Button */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.35rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.btn-modern-primary {
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
+}
+
+.btn-modern-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
+    color: #fff;
+}
+
+.btn-modern-outline {
+    background: transparent;
+    color: #6b7280;
+    border: 1.5px solid #e5e7eb;
+}
+
+.btn-modern-outline:hover {
+    border-color: #4361ee;
+    color: #4361ee;
+    background: #f8f9ff;
+}
+
+.btn-modern-ghost {
+    background: transparent;
+    color: #6b7280;
+    padding: 0.65rem 1rem;
+}
+
+.btn-modern-ghost:hover {
+    color: #1a1a2e;
+    background: #f3f4f6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modern-page-header { flex-direction: column; align-items: stretch; }
+    .modern-page-title { font-size: 1.35rem; }
+    .modern-form-grid { grid-template-columns: 1fr; }
+    .modern-form-span-2 { grid-column: span 1; }
+    .modern-form-section-body { padding: 1rem 1.25rem 1.5rem; }
+    .modern-form-section-header { padding: 1.25rem 1.25rem 0.75rem; }
+    .modern-form-actions { padding: 1rem 1.25rem; flex-direction: column; }
+    .btn-modern { justify-content: center; width: 100%; }
+}
+</style>
+@endpush
 @endsection
