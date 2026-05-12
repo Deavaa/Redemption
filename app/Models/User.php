@@ -18,6 +18,18 @@ class User extends Authenticatable
     public function payrolls() { return $this->hasMany(Payroll::class, 'employee_id'); }
     public function approvedLeaves() { return $this->hasMany(Leave::class, 'approved_by'); }
     public function teacherProfile() { return $this->hasOne(Teacher::class, 'email', 'email'); }
+    public function chatParticipants()
+    {
+        return $this->hasMany(ChatParticipant::class);
+    }
+
+    public function conversations()
+    {
+        return $this->belongsToMany(ChatConversation::class, 'chat_participants', 'user_id', 'conversation_id')
+            ->withPivot('role', 'joined_at', 'last_read_at', 'is_muted')
+            ->withTimestamps();
+    }
+
     public function isAdmin() { return $this->role === 'admin'; }
     public function isTeacher() { return $this->role === 'teacher'; }
 }

@@ -30,12 +30,16 @@ class TeamMemberController extends Controller
             'experience' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'photo' => 'nullable|string|max:500',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'bio' => 'nullable|string',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        TeamMember::create($r->only(['name','designation','department','qualification','experience','phone','email','photo','bio','sort_order','is_active']));
+        $data = $r->only(['name','designation','department','qualification','experience','phone','email','bio','sort_order','is_active']);
+        if ($r->hasFile('photo')) {
+            $data['photo'] = $r->file('photo')->store('team-photos', 'public');
+        }
+        TeamMember::create($data);
         return redirect()->route("admin.team-members.index")->with('success','Team member created successfully');
     }
 
@@ -52,12 +56,16 @@ class TeamMemberController extends Controller
             'experience' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'photo' => 'nullable|string|max:500',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'bio' => 'nullable|string',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $team_member->update($r->only(['name','designation','department','qualification','experience','phone','email','photo','bio','sort_order','is_active']));
+        $data = $r->only(['name','designation','department','qualification','experience','phone','email','bio','sort_order','is_active']);
+        if ($r->hasFile('photo')) {
+            $data['photo'] = $r->file('photo')->store('team-photos', 'public');
+        }
+        $team_member->update($data);
         return redirect()->route("admin.team-members.index")->with('success','Team member updated successfully');
     }
 

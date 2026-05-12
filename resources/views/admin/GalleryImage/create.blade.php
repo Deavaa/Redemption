@@ -45,7 +45,7 @@
                     <div class="modern-form-grid">
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="title">
-                                Title <span class="modern-required">*</span>
+                                Title <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-heading modern-input-icon"></i>
@@ -55,7 +55,6 @@
                                     class="modern-input {{ $errors->has('title') ? 'is-invalid' : '' }}"
                                     value="{{ old('title') }}"
                                     placeholder="e.g. School Sports Day"
-                                    required
                                     autofocus>
                             </div>
                             @error('title')
@@ -117,17 +116,14 @@
                     <div class="modern-form-grid">
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="image_path">
-                                Image File <span class="modern-required">*</span>
+                                Image File <small>(optional - upload an image)</small>
                             </label>
-                            <div class="modern-input-wrapper">
-                                <i class="fas fa-file-image modern-input-icon"></i>
-                                <input type="file"
-                                    name="image_path"
-                                    id="image_path"
-                                    class="modern-input {{ $errors->has('image_path') ? 'is-invalid' : '' }}"
-                                    accept="image/*"
-                                    required>
-                            </div>
+                            <input type="file"
+                                name="image_path"
+                                id="image_path"
+                                class="modern-input {{ $errors->has('image_path') ? 'is-invalid' : '' }}"
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                            <small class="text-muted mt-1">Recommended: max 5MB (jpeg, png, gif, webp)</small>
                             @error('image_path')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror

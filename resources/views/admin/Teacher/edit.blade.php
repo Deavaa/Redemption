@@ -26,7 +26,7 @@
 
     {{-- Form Card --}}
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.teachers.update', $data->id) }}">
+        <form method="POST" action="{{ route('admin.teachers.update', $data->id) }}" enctype="multipart/form-data">
             @csrf @method('PUT')
 
             {{-- Personal Information --}}
@@ -207,17 +207,44 @@
                         </div>
 
                         <div class="modern-form-group">
+                            <label class="modern-form-label" for="address">
+                                Address <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-map-marker-alt modern-input-icon"></i>
+                                <input type="text" name="address" id="address" class="modern-input {{ $errors->has('address') ? 'is-invalid' : '' }}" value="{{ old('address', $data->address) }}" placeholder="e.g. Addis Ababa, Ethiopia">
+                            </div>
+                            @error('address')<span class="modern-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="photo">
+                                Photo <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-camera modern-input-icon"></i>
+                                @if($data->photo)
+                                    <div class="mb-2">
+                                        <img src="{{ Storage::url($data->photo) }}" alt="Current photo" style="max-height: 60px; border-radius: 8px;">
+                                    </div>
+                                @endif
+                                <input type="file" name="photo" id="photo" class="modern-input {{ $errors->has('photo') ? 'is-invalid' : '' }}" accept="image/jpeg,image/png,image/jpg,image/gif">
+                            </div>
+                            @error('photo')<span class="modern-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="modern-form-group">
                             <label class="modern-form-label" for="status">
-                                Status <span class="modern-required">*</span>
+                                Status <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-toggle-on modern-input-icon"></i>
                                 <select name="status"
                                     id="status"
                                     class="modern-input modern-select {{ $errors->has('status') ? 'is-invalid' : '' }}">
-                                    <option value="Active" {{ old('status', $data->status) === 'Active' ? 'selected' : '' }}>Active</option>
-                                    <option value="On Leave" {{ old('status', $data->status) === 'On Leave' ? 'selected' : '' }}>On Leave</option>
-                                    <option value="Inactive" {{ old('status', $data->status) === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="active" {{ old('status', $data->status) === 'active' ? 'selected' : '' }}>Active</option>
+                                    <option value="on_leave" {{ old('status', $data->status) === 'on_leave' ? 'selected' : '' }}>On Leave</option>
+                                    <option value="inactive" {{ old('status', $data->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
                                 </select>
                             </div>
                             @error('status')

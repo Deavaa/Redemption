@@ -60,16 +60,16 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="classSelect">
+                            <label class="modern-form-label" for="class_id">
                                 Classroom <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-chalkboard modern-input-icon"></i>
-                                <select name="class_id" id="classSelect"
+                                <select name="class_id" id="class_id"
                                     class="modern-input modern-select {{ $errors->has('class_id') ? 'is-invalid' : '' }}"
                                     required>
                                     <option value="">-- Select Classroom --</option>
-                                    @foreach($classrooms as $cls)
+                                    @foreach($classes as $cls)
                                     <option value="{{ $cls->id }}" {{ old('class_id') == $cls->id ? 'selected' : '' }}>{{ $cls->name }}</option>
                                     @endforeach
                                 </select>
@@ -80,12 +80,12 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="sectionSelect">
+                            <label class="modern-form-label" for="section_id">
                                 Section
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-layer-group modern-input-icon"></i>
-                                <select name="section_id" id="sectionSelect"
+                                <select name="section_id" id="section_id"
                                     class="modern-input modern-select {{ $errors->has('section_id') ? 'is-invalid' : '' }}">
                                     <option value="">-- All Sections --</option>
                                 </select>
@@ -120,11 +120,10 @@
                                     class="modern-input modern-select {{ $errors->has('condition') ? 'is-invalid' : '' }}"
                                     required>
                                     <option value="">-- Select --</option>
-                                    <option value="new" {{ old('condition') === 'new' ? 'selected' : '' }}>New</option>
-                                    <option value="good" {{ old('condition') === 'good' ? 'selected' : '' }}>Good</option>
-                                    <option value="fair" {{ old('condition') === 'fair' ? 'selected' : '' }}>Fair</option>
-                                    <option value="poor" {{ old('condition') === 'poor' ? 'selected' : '' }}>Poor</option>
-                                    <option value="damaged" {{ old('condition') === 'damaged' ? 'selected' : '' }}>Damaged</option>
+                                    <option value="Good" {{ old('condition') === 'Good' ? 'selected' : '' }}>Good</option>
+                                    <option value="Fair" {{ old('condition') === 'Fair' ? 'selected' : '' }}>Fair</option>
+                                    <option value="Needs Repair" {{ old('condition') === 'Needs Repair' ? 'selected' : '' }}>Needs Repair</option>
+                                    <option value="Damaged" {{ old('condition') === 'Damaged' ? 'selected' : '' }}>Damaged</option>
                                 </select>
                             </div>
                             @error('condition')
@@ -473,30 +472,14 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const classSelect = document.getElementById('classSelect');
-    const sectionSelect = document.getElementById('sectionSelect');
-    const allSections = @json($classrooms->flatMap(fn($c) => $c->sections->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'class_id' => $s->class_id])));
-
-    function loadSections(classId) {
-        sectionSelect.innerHTML = '<option value="">-- All Sections --</option>';
-        if (!classId) return;
-        const sections = allSections.filter(s => s.class_id == classId);
-        if (sections.length === 0) {
-            sectionSelect.innerHTML = '<option value="">No sections</option>';
-            return;
-        }
-        sections.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = s.name;
-            sectionSelect.appendChild(opt);
+document.getElementById('class_id')?.addEventListener('change', function() {
+    fetch('{{ route("admin.class-assets.api-sections") }}?class_id=' + this.value)
+        .then(r => r.json())
+        .then(data => {
+            const sel = document.getElementById('section_id');
+            sel.innerHTML = '<option value="">-- All Sections --</option>';
+            data.forEach(s => sel.innerHTML += `<option value="${s.id}">${s.name}</option>`);
         });
-    }
-
-    classSelect.addEventListener('change', function() {
-        loadSections(this.value);
-    });
 });
 </script>
 @endpush

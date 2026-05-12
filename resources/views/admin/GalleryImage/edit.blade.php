@@ -45,7 +45,7 @@
                     <div class="modern-form-grid">
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="title">
-                                Title <span class="modern-required">*</span>
+                                Title <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-heading modern-input-icon"></i>
@@ -55,7 +55,6 @@
                                     class="modern-input {{ $errors->has('title') ? 'is-invalid' : '' }}"
                                     value="{{ old('title', $item->title) }}"
                                     placeholder="e.g. School Sports Day"
-                                    required
                                     autofocus>
                             </div>
                             @error('title')
@@ -115,27 +114,21 @@
                 </div>
                 <div class="modern-form-section-body">
                     <div class="modern-form-grid">
-                        @if($item->image_path)
-                        <div class="modern-form-group modern-form-span-2">
-                            <label class="modern-form-label">Current Image</label>
-                            <div class="modern-current-image">
-                                <img src="{{ asset('storage/' . $item->image_path) }}" alt="{{ $item->title }}" class="modern-current-img">
-                            </div>
-                        </div>
-                        @endif
-
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="image_path">
                                 Replace Image <small>(leave empty to keep current)</small>
                             </label>
-                            <div class="modern-input-wrapper">
-                                <i class="fas fa-file-image modern-input-icon"></i>
-                                <input type="file"
-                                    name="image_path"
-                                    id="image_path"
-                                    class="modern-input {{ $errors->has('image_path') ? 'is-invalid' : '' }}"
-                                    accept="image/*">
-                            </div>
+                            @if($item->image_path)
+                                <div class="mb-2">
+                                    <img src="{{ asset('storage/' . $item->image_path) }}" alt="{{ $item->title }}" style="max-height:120px;border-radius:8px;border:1px solid #e5e7eb;">
+                                </div>
+                            @endif
+                            <input type="file"
+                                name="image_path"
+                                id="image_path"
+                                class="modern-input {{ $errors->has('image_path') ? 'is-invalid' : '' }}"
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                            <small class="text-muted mt-1">Recommended: max 5MB (jpeg, png, gif, webp)</small>
                             @error('image_path')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror

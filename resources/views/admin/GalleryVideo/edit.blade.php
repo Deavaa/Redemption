@@ -44,7 +44,7 @@
                     <div class="modern-form-grid">
                         <div class="modern-form-group modern-form-span-2">
                             <label class="modern-form-label" for="title">
-                                Title <span class="modern-required">*</span>
+                                Title <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-heading modern-input-icon"></i>
@@ -54,7 +54,6 @@
                                     class="modern-input {{ $errors->has('title') ? 'is-invalid' : '' }}"
                                     value="{{ old('title', $item->title) }}"
                                     placeholder="e.g. School Annual Day Highlights"
-                                    required
                                     autofocus>
                             </div>
                             @error('title')
@@ -83,14 +82,19 @@
 
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="thumbnail">
-                                Thumbnail
+                                Thumbnail <small>(optional - upload a new image to replace)</small>
                             </label>
-                            <input type="text"
+                            @if($item->thumbnail)
+                                <div class="mb-2">
+                                    <img src="{{ asset('storage/' . $item->thumbnail) }}" alt="Current thumbnail" style="max-height:120px;border-radius:8px;border:1px solid #e5e7eb;">
+                                </div>
+                            @endif
+                            <input type="file"
                                 name="thumbnail"
                                 id="thumbnail"
                                 class="modern-input {{ $errors->has('thumbnail') ? 'is-invalid' : '' }}"
-                                value="{{ old('thumbnail', $item->thumbnail) }}"
-                                placeholder="Thumbnail image path or URL">
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                            <small class="text-muted mt-1">Recommended: max 5MB (jpeg, png, gif, webp)</small>
                             @error('thumbnail')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror

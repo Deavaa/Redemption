@@ -46,11 +46,20 @@
         </div>
         <div class="modern-stat-card">
             <div class="modern-stat-icon modern-stat-icon-blue">
-                <i class="fas fa-chalkboard"></i>
+                <i class="fas fa-check-circle"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $classrooms->count() }}</span>
-                <span class="modern-stat-label">Classrooms</span>
+                <span class="modern-stat-value">{{ $goodCondition }}</span>
+                <span class="modern-stat-label">Good Condition</span>
+            </div>
+        </div>
+        <div class="modern-stat-card">
+            <div class="modern-stat-icon modern-stat-icon-danger">
+                <i class="fas fa-tools"></i>
+            </div>
+            <div class="modern-stat-info">
+                <span class="modern-stat-value">{{ $needsRepair }}</span>
+                <span class="modern-stat-label">Needs Repair</span>
             </div>
         </div>
     </div>
@@ -122,15 +131,14 @@
                             <td class="td-center">
                                 @php
                                     $condBadge = match($item->condition) {
-                                        'new' => 'modern-badge-success',
-                                        'good' => 'modern-badge-info',
-                                        'fair' => 'modern-badge-warning',
-                                        'poor' => 'modern-badge-danger',
-                                        'damaged' => 'modern-badge-light',
+                                        'Good' => 'modern-badge-success',
+                                        'Fair' => 'modern-badge-info',
+                                        'Needs Repair' => 'modern-badge-warning',
+                                        'Damaged' => 'modern-badge-danger',
                                         default => 'modern-badge-light'
                                     };
                                 @endphp
-                                <span class="modern-badge {{ $condBadge }}">{{ ucfirst($item->condition) }}</span>
+                                <span class="modern-badge {{ $condBadge }}">{{ $item->condition }}</span>
                             </td>
                             <td>
                                 <span class="modern-cell-muted">{{ $item->purchase_date ?? '-' }}</span>
@@ -279,6 +287,7 @@
 .modern-stat-icon-blue { background: #eef2ff; color: #4361ee; }
 .modern-stat-icon-green { background: #ecfdf5; color: #10b981; }
 .modern-stat-icon-gold { background: #fefce8; color: #d97706; }
+.modern-stat-icon-danger { background: #fef2f2; color: #dc2626; }
 
 .modern-stat-info { display: flex; flex-direction: column; }
 

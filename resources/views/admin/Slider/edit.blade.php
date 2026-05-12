@@ -44,7 +44,7 @@
                     <div class="modern-form-grid">
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="title">
-                                Title <span class="modern-required">*</span>
+                                Title <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-heading modern-input-icon"></i>
@@ -54,7 +54,6 @@
                                     class="modern-input {{ $errors->has('title') ? 'is-invalid' : '' }}"
                                     value="{{ old('title', $item->title) }}"
                                     placeholder="e.g. Welcome to Our School"
-                                    required
                                     autofocus>
                             </div>
                             @error('title')
@@ -98,15 +97,19 @@
                     <div class="modern-form-grid">
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="image_path">
-                                Image Path <span class="modern-required">*</span>
+                                Slider Image <small>(optional - upload a new image to replace)</small>
                             </label>
-                            <input type="text"
+                            @if($item->image_path)
+                                <div class="mb-2">
+                                    <img src="{{ asset('storage/' . $item->image_path) }}" alt="Current" style="max-height:120px;border-radius:8px;border:1px solid #e5e7eb;">
+                                </div>
+                            @endif
+                            <input type="file"
                                 name="image_path"
                                 id="image_path"
                                 class="modern-input {{ $errors->has('image_path') ? 'is-invalid' : '' }}"
-                                value="{{ old('image_path', $item->image_path) }}"
-                                placeholder="e.g. uploads/sliders/banner.jpg"
-                                required>
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                            <small class="text-muted mt-1">Recommended: 1920x600px, max 5MB</small>
                             @error('image_path')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror

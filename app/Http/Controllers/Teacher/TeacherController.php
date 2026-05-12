@@ -30,8 +30,14 @@ class TeacherController extends Controller
             'department'    => 'nullable|string|max:255',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
-            'status'        => 'nullable|in:active,inactive',
+            'status'        => 'nullable|in:active,inactive,on_leave,On Leave',
+            'address'       => 'nullable|string|max:500',
+            'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('teacher-photos', 'public');
+        }
 
         try {
             $t = Teacher::create($validated);
@@ -72,8 +78,14 @@ class TeacherController extends Controller
             'department'    => 'nullable|string|max:255',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
-            'status'        => 'nullable|in:active,inactive',
+            'status'        => 'nullable|in:active,inactive,on_leave,On Leave',
+            'address'       => 'nullable|string|max:500',
+            'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('teacher-photos', 'public');
+        }
 
         $item->update($validated);
 

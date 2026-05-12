@@ -26,7 +26,7 @@
 
     {{-- Form Card --}}
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.team-members.store') }}">
+        <form method="POST" action="{{ route('admin.team-members.store') }}" enctype="multipart/form-data">
             @csrf
 
             {{-- Personal Information --}}
@@ -128,17 +128,17 @@
 
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="photo">
-                                Photo URL <small>(optional)</small>
+                                Photo <small>(optional - upload an image)</small>
                             </label>
-                            <div class="modern-input-wrapper">
-                                <i class="fas fa-image modern-input-icon"></i>
-                                <input type="text"
-                                    name="photo"
-                                    id="photo"
-                                    class="modern-input"
-                                    value="{{ old('photo') }}"
-                                    placeholder="e.g. uploads/team/photo.jpg">
-                            </div>
+                            <input type="file"
+                                name="photo"
+                                id="photo"
+                                class="modern-input {{ $errors->has('photo') ? 'is-invalid' : '' }}"
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                            <small class="text-muted mt-1">Recommended: max 5MB (jpeg, png, gif, webp)</small>
+                            @error('photo')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>

@@ -15,7 +15,7 @@
                 </ol>
             </nav>
             <h1 class="modern-page-title">Edit Asset</h1>
-            <p class="modern-page-subtitle">Update details for {{ $item->name }}</p>
+            <p class="modern-page-subtitle">Update details for {{ $class_asset->name }}</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.class-assets.index') }}" class="btn-modern btn-modern-outline">
@@ -27,7 +27,7 @@
 
     {{-- Form Card --}}
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.class-assets.update', $item->id) }}">
+        <form method="POST" action="{{ route('admin.class-assets.update', $class_asset->id) }}">
             @csrf @method('PUT')
 
             {{-- Asset Information Section --}}
@@ -51,7 +51,7 @@
                                 <i class="fas fa-tag modern-input-icon"></i>
                                 <input type="text" name="name" id="name"
                                     class="modern-input {{ $errors->has('name') ? 'is-invalid' : '' }}"
-                                    value="{{ old('name', $item->name) }}"
+                                    value="{{ old('name', $class_asset->name) }}"
                                     placeholder="e.g. Projector, Whiteboard, Chairs" required>
                             </div>
                             @error('name')
@@ -60,17 +60,17 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="classSelect">
+                            <label class="modern-form-label" for="class_id">
                                 Classroom <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-chalkboard modern-input-icon"></i>
-                                <select name="class_id" id="classSelect"
+                                <select name="class_id" id="class_id"
                                     class="modern-input modern-select {{ $errors->has('class_id') ? 'is-invalid' : '' }}"
                                     required>
                                     <option value="">-- Select Classroom --</option>
-                                    @foreach($classrooms as $cls)
-                                    <option value="{{ $cls->id }}" {{ old('class_id', $item->class_id) == $cls->id ? 'selected' : '' }}>{{ $cls->name }}</option>
+                                    @foreach($classes as $cls)
+                                    <option value="{{ $cls->id }}" {{ old('class_id', $class_asset->class_id) == $cls->id ? 'selected' : '' }}>{{ $cls->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -80,14 +80,17 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="sectionSelect">
+                            <label class="modern-form-label" for="section_id">
                                 Section
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-layer-group modern-input-icon"></i>
-                                <select name="section_id" id="sectionSelect"
+                                <select name="section_id" id="section_id"
                                     class="modern-input modern-select {{ $errors->has('section_id') ? 'is-invalid' : '' }}">
                                     <option value="">-- All Sections --</option>
+                                    @foreach($sections as $sec)
+                                    <option value="{{ $sec->id }}" {{ old('section_id', $class_asset->section_id) == $sec->id ? 'selected' : '' }}>{{ $sec->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             @error('section_id')
@@ -103,7 +106,7 @@
                                 <i class="fas fa-hashtag modern-input-icon"></i>
                                 <input type="number" name="quantity" id="quantity"
                                     class="modern-input {{ $errors->has('quantity') ? 'is-invalid' : '' }}"
-                                    value="{{ old('quantity', $item->quantity) }}" min="1" required>
+                                    value="{{ old('quantity', $class_asset->quantity) }}" min="1" required>
                             </div>
                             @error('quantity')
                                 <span class="modern-form-error">{{ $message }}</span>
@@ -120,11 +123,10 @@
                                     class="modern-input modern-select {{ $errors->has('condition') ? 'is-invalid' : '' }}"
                                     required>
                                     <option value="">-- Select --</option>
-                                    <option value="new" {{ old('condition', $item->condition) === 'new' ? 'selected' : '' }}>New</option>
-                                    <option value="good" {{ old('condition', $item->condition) === 'good' ? 'selected' : '' }}>Good</option>
-                                    <option value="fair" {{ old('condition', $item->condition) === 'fair' ? 'selected' : '' }}>Fair</option>
-                                    <option value="poor" {{ old('condition', $item->condition) === 'poor' ? 'selected' : '' }}>Poor</option>
-                                    <option value="damaged" {{ old('condition', $item->condition) === 'damaged' ? 'selected' : '' }}>Damaged</option>
+                                    <option value="Good" {{ old('condition', $class_asset->condition) === 'Good' ? 'selected' : '' }}>Good</option>
+                                    <option value="Fair" {{ old('condition', $class_asset->condition) === 'Fair' ? 'selected' : '' }}>Fair</option>
+                                    <option value="Needs Repair" {{ old('condition', $class_asset->condition) === 'Needs Repair' ? 'selected' : '' }}>Needs Repair</option>
+                                    <option value="Damaged" {{ old('condition', $class_asset->condition) === 'Damaged' ? 'selected' : '' }}>Damaged</option>
                                 </select>
                             </div>
                             @error('condition')
@@ -140,7 +142,7 @@
                                 <i class="fas fa-calendar-alt modern-input-icon"></i>
                                 <input type="date" name="purchase_date" id="purchase_date"
                                     class="modern-input {{ $errors->has('purchase_date') ? 'is-invalid' : '' }}"
-                                    value="{{ old('purchase_date', $item->purchase_date) }}">
+                                    value="{{ old('purchase_date', $class_asset->purchase_date) }}">
                             </div>
                             @error('purchase_date')
                                 <span class="modern-form-error">{{ $message }}</span>
@@ -155,7 +157,7 @@
                                 <i class="fas fa-coins modern-input-icon"></i>
                                 <input type="number" step="0.01" min="0" name="purchase_price" id="purchase_price"
                                     class="modern-input {{ $errors->has('purchase_price') ? 'is-invalid' : '' }}"
-                                    value="{{ old('purchase_price', $item->purchase_price) }}"
+                                    value="{{ old('purchase_price', $class_asset->purchase_price) }}"
                                     placeholder="0.00">
                             </div>
                             @error('purchase_price')
@@ -172,7 +174,7 @@
                                 <textarea name="description" id="description"
                                     class="modern-input modern-textarea {{ $errors->has('description') ? 'is-invalid' : '' }}"
                                     rows="3"
-                                    placeholder="Optional description of the asset...">{{ old('description', $item->description) }}</textarea>
+                                    placeholder="Optional description of the asset...">{{ old('description', $class_asset->description) }}</textarea>
                             </div>
                             @error('description')
                                 <span class="modern-form-error">{{ $message }}</span>
@@ -474,32 +476,34 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const classSelect = document.getElementById('classSelect');
-    const sectionSelect = document.getElementById('sectionSelect');
-    const currentSectionId = {{ $item->section_id ?? 'null' }};
-    const allSections = @json($classrooms->flatMap(fn($c) => $c->sections->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'class_id' => $s->class_id])));
+    const classSelect = document.getElementById('class_id');
+    const sectionSelect = document.getElementById('section_id');
+    const currentSectionId = {{ $class_asset->section_id ?? 'null' }};
 
     function loadSections(classId) {
         sectionSelect.innerHTML = '<option value="">-- All Sections --</option>';
         if (!classId) return;
-        const sections = allSections.filter(s => s.class_id == classId);
-        if (sections.length === 0) {
-            sectionSelect.innerHTML = '<option value="">No sections</option>';
-            return;
-        }
-        sections.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = s.name;
-            if (s.id == currentSectionId) opt.selected = true;
-            sectionSelect.appendChild(opt);
-        });
+        fetch('{{ route("admin.class-assets.api-sections") }}?class_id=' + classId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    sectionSelect.innerHTML = '<option value="">No sections</option>';
+                    return;
+                }
+                data.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    if (s.id == currentSectionId) opt.selected = true;
+                    sectionSelect.appendChild(opt);
+                });
+            });
     }
 
     // Load sections for the current classroom on page load
-    loadSections(classSelect.value);
+    if (classSelect && classSelect.value) loadSections(classSelect.value);
 
-    classSelect.addEventListener('change', function() {
+    classSelect?.addEventListener('change', function() {
         loadSections(this.value);
     });
 });

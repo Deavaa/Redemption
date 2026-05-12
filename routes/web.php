@@ -36,6 +36,7 @@ use App\Http\Controllers\PerformanceReport\PerformanceReportController;
 use App\Http\Controllers\ProgressReport\ProgressReportController;
 use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
 use App\Http\Controllers\ContactMessage\ContactMessageController;
+use App\Http\Controllers\MarkSheet\MarkSheetController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\HomeController;
 
@@ -44,6 +45,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Telegram webhook (public)
+Route::post('telegram/webhook', [App\Http\Controllers\Telegram\TelegramController::class, 'webhook']);
 
 Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -64,6 +68,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students');
     Route::post('mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save');
 
+    // Mark Sheet
+    Route::get('mark-sheet', [MarkSheetController::class, 'index'])->name('mark-sheet.index');
+    Route::post('mark-sheet/generate', [MarkSheetController::class, 'generate'])->name('mark-sheet.generate');
+    Route::get('mark-sheet/api/sections', [MarkSheetController::class, 'getSections'])->name('mark-sheet.sections');
+    Route::get('mark-sheet/api/students', [MarkSheetController::class, 'getStudents'])->name('mark-sheet.students');
+
+    // ID Card Generation
+    Route::get('id-card-generate', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'index'])->name('id-card-generate.index');
+    Route::post('id-card-generate', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'generate'])->name('id-card-generate.generate');
+    Route::get('id-card-generate/api/sections', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'getSections'])->name('id-card-generate.sections');
+    Route::get('id-card-generate/api/students', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'getStudents'])->name('id-card-generate.students');
+
+    // Certificate Generation
+    Route::get('certificate-generate', [App\Http\Controllers\Certificate\CertificateGenerateController::class, 'index'])->name('certificate-generate.index');
+    Route::post('certificate-generate', [App\Http\Controllers\Certificate\CertificateGenerateController::class, 'generate'])->name('certificate-generate.generate');
+    Route::get('certificate-generate/api/students', [App\Http\Controllers\Certificate\CertificateGenerateController::class, 'getStudents'])->name('certificate-generate.students');
+
     Route::resource('students', StudentController::class);
     Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
     Route::get('students/api/sections/{classId}', [StudentController::class, 'getSections'])->name('students.api.sections');
@@ -79,6 +100,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::resource('classrooms', ClassroomController::class);
     Route::resource('sections', SectionController::class);
     Route::resource('class-assets', ClassAssetController::class);
+    Route::get('class-assets/api/sections', [ClassAssetController::class, 'apiSections'])->name('class-assets.api-sections');
     Route::resource('id-cards', IdCardController::class);
     Route::resource('certificates', CertificateController::class);
     Route::resource('audits', AuditController::class);
@@ -95,6 +117,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::resource('progress-reports', ProgressReportController::class);
     Route::resource('teacher-assignments', TeacherAssignmentController::class);
     Route::resource('contact-messages', ContactMessageController::class);
+
+    // Chat
+    Route::get('chat', [App\Http\Controllers\Chat\ChatController::class, 'index'])->name('chat.index');
+    Route::post('chat', [App\Http\Controllers\Chat\ChatController::class, 'storeConversation'])->name('chat.store');
+    Route::get('chat/{id}', [App\Http\Controllers\Chat\ChatController::class, 'show'])->name('chat.show');
+    Route::post('chat/{id}/send', [App\Http\Controllers\Chat\ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::delete('chat/{id}', [App\Http\Controllers\Chat\ChatController::class, 'destroyConversation'])->name('chat.destroy');
+    Route::get('chat/{id}/messages', [App\Http\Controllers\Chat\ChatController::class, 'getMessages'])->name('chat.messages');
+
+    // Telegram
+    Route::get('telegram', [App\Http\Controllers\Telegram\TelegramController::class, 'index'])->name('telegram.index');
+    Route::put('telegram/settings', [App\Http\Controllers\Telegram\TelegramController::class, 'updateSettings'])->name('telegram.update-settings');
+    Route::get('telegram/send', [App\Http\Controllers\Telegram\TelegramController::class, 'send'])->name('telegram.send');
+    Route::post('telegram/send', [App\Http\Controllers\Telegram\TelegramController::class, 'sendMessage'])->name('telegram.send-message');
+    Route::get('telegram/test', [App\Http\Controllers\Telegram\TelegramController::class, 'testConnection'])->name('telegram.test');
 
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');

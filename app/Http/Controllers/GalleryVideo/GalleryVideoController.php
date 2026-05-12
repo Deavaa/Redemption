@@ -23,14 +23,18 @@ class GalleryVideoController extends Controller
     public function store(Request $r)
     {
         $r->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'video_url' => 'required|string|max:500',
-            'thumbnail' => 'nullable|string|max:500',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        GalleryVideo::create($r->only(['title','description','video_url','thumbnail','sort_order','is_active']));
+        $data = $r->only(['title','description','video_url','sort_order','is_active']);
+        if ($r->hasFile('thumbnail')) {
+            $data['thumbnail'] = $r->file('thumbnail')->store('gallery/thumbnails', 'public');
+        }
+        GalleryVideo::create($data);
         return redirect()->route("admin.gallery-videos.index")->with('success','Video added successfully');
     }
 
@@ -41,14 +45,18 @@ class GalleryVideoController extends Controller
     public function update(Request $r, GalleryVideo $item)
     {
         $r->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'video_url' => 'required|string|max:500',
-            'thumbnail' => 'nullable|string|max:500',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $item->update($r->only(['title','description','video_url','thumbnail','sort_order','is_active']));
+        $data = $r->only(['title','description','video_url','sort_order','is_active']);
+        if ($r->hasFile('thumbnail')) {
+            $data['thumbnail'] = $r->file('thumbnail')->store('gallery/thumbnails', 'public');
+        }
+        $item->update($data);
         return redirect()->route("admin.gallery-videos.index")->with('success','Video updated successfully');
     }
 

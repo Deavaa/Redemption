@@ -24,14 +24,18 @@ class GalleryImageController extends Controller
     public function store(Request $r)
     {
         $r->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'image_path' => 'required|string|max:500',
+            'image_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'category' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        GalleryImage::create($r->only(['title','description','image_path','category','sort_order','is_active']));
+        $data = $r->only(['title','description','category','sort_order','is_active']);
+        if ($r->hasFile('image_path')) {
+            $data['image_path'] = $r->file('image_path')->store('gallery', 'public');
+        }
+        GalleryImage::create($data);
         return redirect()->route("admin.gallery-images.index")->with('success','Image added successfully');
     }
 
@@ -42,14 +46,18 @@ class GalleryImageController extends Controller
     public function update(Request $r, GalleryImage $item)
     {
         $r->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'image_path' => 'required|string|max:500',
+            'image_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'category' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $item->update($r->only(['title','description','image_path','category','sort_order','is_active']));
+        $data = $r->only(['title','description','category','sort_order','is_active']);
+        if ($r->hasFile('image_path')) {
+            $data['image_path'] = $r->file('image_path')->store('gallery', 'public');
+        }
+        $item->update($data);
         return redirect()->route("admin.gallery-images.index")->with('success','Image updated successfully');
     }
 

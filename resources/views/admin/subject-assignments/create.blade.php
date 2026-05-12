@@ -32,7 +32,7 @@
                 <div id="sectionList"><p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i>Select classes above first.</p></div>
             </div></div>
             <div class="card mb-3"><div class="card-header bg-light fw-semibold py-2"><span class="text-secondary me-2"><i class="bi bi-person-check-fill"></i></span> Teacher</div><div class="card-body">
-                <select name="teacher_id" class="form-select" required><option value="">-- Select Teacher --</option>@foreach($teachers as $teacher)<option value="{{ $teacher->id }}">{{ $teacher->full_name }}</option>@endforeach</select>
+                <select name="teacher_id" class="form-select"><option value="">-- Select Teacher (Optional) --</option>@foreach($teachers as $teacher)<option value="{{ $teacher->id }}">{{ $teacher->full_name }}</option>@endforeach</select>
             </div></div>
         </div>
         <div class="col-lg-5">
