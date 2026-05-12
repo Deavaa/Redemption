@@ -5,6 +5,7 @@ use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\Teacher;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 class ClassroomController extends Controller
 {
@@ -21,17 +22,19 @@ class ClassroomController extends Controller
     {
         $academicYears = AcademicYear::orderBy('name')->get();
         $teachers = Teacher::orderBy('first_name')->get();
-        return view('admin.Classroom.create', compact('academicYears','teachers'));
+        $branches = Branch::orderBy('name')->get();
+        return view('admin.Classroom.create', compact('academicYears','teachers','branches'));
     }
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
+            'branch_id' => 'required|exists:branches,id',
             'capacity' => 'nullable|integer|min:1',
             'teacher_id' => 'nullable|exists:teachers,id',
         ]);
-        $class = Classroom::create($request->only('name','academic_year_id','capacity','teacher_id','branch_id'));
+        $class = Classroom::create($request->only('name','academic_year_id','branch_id','capacity','teacher_id'));
         if ($request->has('sections')) {
             foreach ($request->sections as $sec) {
                 if (!empty($sec['name'])) {
@@ -48,21 +51,23 @@ class ClassroomController extends Controller
     }
     public function edit($id)
     {
-        $data = Classroom::with(['sections.teacher','academicYear','teacher'])->findOrFail($id);
+        $data = Classroom::with(['sections.teacher','academicYear','teacher','branch'])->findOrFail($id);
         $academicYears = AcademicYear::orderBy('name')->get();
         $teachers = Teacher::orderBy('first_name')->get();
-        return view('admin.Classroom.edit', compact('data','academicYears','teachers'));
+        $branches = Branch::orderBy('name')->get();
+        return view('admin.Classroom.edit', compact('data','academicYears','teachers','branches'));
     }
     public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
+            'branch_id' => 'required|exists:branches,id',
             'capacity' => 'nullable|integer|min:1',
             'teacher_id' => 'nullable|exists:teachers,id',
         ]);
         $class = Classroom::findOrFail($id);
-        $class->update($request->only('name','academic_year_id','capacity','teacher_id','branch_id'));
+        $class->update($request->only('name','academic_year_id','branch_id','capacity','teacher_id'));
         if ($request->has('sections')) {
             $existingIds = [];
             foreach ($request->sections as $sec) {

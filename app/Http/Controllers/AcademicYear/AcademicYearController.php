@@ -25,6 +25,12 @@ class AcademicYearController extends Controller
         AcademicYear::create($input);
         return redirect()->route('admin.academic-years.index')->with('success','Created');
     }
+    public function show($id)
+    {
+        $item = AcademicYear::findOrFail($id);
+        return view('admin.AcademicYear.show', compact('item'));
+    }
+
     public function edit($id)
     {
         $data = AcademicYear::findOrFail($id);

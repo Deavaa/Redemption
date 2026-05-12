@@ -81,6 +81,24 @@
                         </div>
 
                         <div class="modern-form-group">
+                            <label class="modern-form-label" for="branch_id">
+                                Branch <span class="modern-required">*</span>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-map-marker-alt modern-input-icon"></i>
+                                <select name="branch_id" id="branch_id" class="modern-input modern-select {{ $errors->has('branch_id') ? 'is-invalid' : '' }}" required>
+                                    <option value="">-- Select Branch --</option>
+                                    @foreach($branches as $b)
+                                        <option value="{{ $b->id }}" {{ old('branch_id', $data->branch_id) == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @error('branch_id')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
                             <label class="modern-form-label" for="teacher_id">
                                 Class Teacher <small>(optional)</small>
                             </label>
