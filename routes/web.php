@@ -40,6 +40,8 @@ use App\Http\Controllers\MarkSheet\MarkSheetController;
 use App\Http\Controllers\MarkSheet\MarkRosterController;
 use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController;
 use App\Http\Controllers\Setting\SettingController;
+use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\CalendarEvent\CalendarEventController;
 use App\Http\Controllers\HomeController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -129,6 +131,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::resource('progress-reports', ProgressReportController::class);
     Route::resource('teacher-assignments', TeacherAssignmentController::class);
     Route::resource('contact-messages', ContactMessageController::class);
+
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::get('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::get('api/notifications/unread', [NotificationController::class, 'apiUnreadCount'])->name('notifications.api.unread');
+    Route::get('api/notifications/latest', [NotificationController::class, 'apiLatest'])->name('notifications.api.latest');
+
+    // Academic Calendar
+    Route::get('calendar', [CalendarEventController::class, 'index'])->name('calendar.index');
+    Route::post('calendar', [CalendarEventController::class, 'store'])->name('calendar.store');
+    Route::put('calendar/{calendar_event}', [CalendarEventController::class, 'update'])->name('calendar.update');
+    Route::delete('calendar/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar.destroy');
+    Route::get('api/calendar/events', [CalendarEventController::class, 'apiEvents'])->name('calendar.api.events');
+    Route::get('api/calendar/event/{calendar_event}', [CalendarEventController::class, 'apiEvent'])->name('calendar.api.event');
 
     // Chat
     Route::get('chat', [App\Http\Controllers\Chat\ChatController::class, 'index'])->name('chat.index');

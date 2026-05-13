@@ -42,6 +42,7 @@
                     'admin.class-assets.*',
                     'admin.id-card-generate.*',
                     'admin.certificate-generate.*',
+                    'admin.calendar.*',
                 ];
                 $peopleRoutes = ['admin.students.*', 'admin.teachers.*', 'admin.staff.*', 'admin.team-members.*', 'admin.parents.*'];
                 $financeRoutes = ['admin.fees.*', 'admin.fee-payments.*', 'admin.payrolls.*', 'admin.budgets.*', 'admin.income-expenses.*', 'admin.finance-statements.*', 'admin.leaves.*', 'admin.employee-assets.*'];
@@ -76,6 +77,7 @@
                         <li class="{{ request()->routeIs('admin.mark-sheet.*') ? 'active' : '' }}"><a href="{{ route('admin.mark-sheet.index') }}"><i class="bi bi-file-earmark-text"></i> Mark Sheet</a></li>
                         <li class="{{ request()->routeIs('admin.id-card-generate.*') ? 'active' : '' }}"><a href="{{ route('admin.id-card-generate.index') }}"><i class="fas fa-id-card"></i> Generate ID Cards</a></li>
                         <li class="{{ request()->routeIs('admin.certificate-generate.*') ? 'active' : '' }}"><a href="{{ route('admin.certificate-generate.index') }}"><i class="fas fa-certificate"></i> Generate Certificates</a></li>
+                        <li class="{{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}"><a href="{{ route('admin.calendar.index') }}"><i class="fas fa-calendar-alt"></i> Academic Calendar</a></li>
                     </ul>
                 </li>
 
@@ -180,7 +182,68 @@
                     </div>
                 </div>
                 <div class="topbar-right">
-                    <a href="{{ url('/') }}" class="topbar-link" target="_blank" title="View Website">
+                    {{-- Chat Icon --}}
+                    @php
+                        $chatUnreadCount = \App\Models\ChatMessage::whereHas('conversation.participants', function ($q) {
+                            $q->where('user_id', auth()->id());
+                        })->where('sender_id', '!=', auth()->id())->where('is_read', false)->count();
+                    @endphp
+                    <a href="{{ route('admin.chat.index') }}" class="topbar-icon-btn" title="Chat">
+                        <i class="fas fa-comments"></i>
+                        @if($chatUnreadCount > 0)
+                            <span class="topbar-badge topbar-badge-chat">{{ $chatUnreadCount > 99 ? '99+' : $chatUnreadCount }}</span>
+                        @endif
+                    </a>
+
+                    {{-- Notification Bell --}}
+                    @php
+                        $notifUnreadCount = \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count();
+                        $latestNotifs = \App\Models\Notification::where('user_id', auth()->id())->orderByDesc('created_at')->limit(5)->get();
+                    @endphp
+                    <div class="topbar-icon-dropdown">
+                        <button class="topbar-icon-btn" data-bs-toggle="dropdown" data-bs-auto-close="outside" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            @if($notifUnreadCount > 0)
+                                <span class="topbar-badge topbar-badge-notif">{{ $notifUnreadCount > 99 ? '99+' : $notifUnreadCount }}</span>
+                            @endif
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end topbar-notif-dropdown">
+                            <div class="notif-dropdown-header">
+                                <h6>Notifications</h6>
+                                @if($notifUnreadCount > 0)
+                                    <form method="POST" action="{{ route('admin.notifications.markAllRead') }}">@csrf
+                                        <button type="submit" class="notif-mark-all">Mark all read</button>
+                                    </form>
+                                @endif
+                            </div>
+                            <div class="notif-dropdown-body">
+                                @forelse($latestNotifs as $notif)
+                                    <a href="{{ $notif->is_read ? ($notif->link ?? '#') : route('admin.notifications.read', $notif->id) }}" class="notif-item {{ $notif->is_read ? '' : 'notif-unread' }}">
+                                        <div class="notif-icon notif-icon-{{ $notif->type }}">
+                                            <i class="{{ $notif->icon }}"></i>
+                                        </div>
+                                        <div class="notif-content">
+                                            <div class="notif-title">{{ $notif->title }}</div>
+                                            @if($notif->message)
+                                                <div class="notif-msg">{{ Str::limit($notif->message, 60) }}</div>
+                                            @endif
+                                            <div class="notif-time">{{ $notif->created_at->diffForHumans() }}</div>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="notif-empty">
+                                        <i class="fas fa-bell-slash"></i>
+                                        <p>No notifications</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                            <div class="notif-dropdown-footer">
+                                <a href="{{ route('admin.notifications.index') }}">View All Notifications</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{{ url('/') }}" class="topbar-icon-btn d-none d-md-flex" target="_blank" title="View Website">
                         <i class="fas fa-external-link-alt"></i>
                     </a>
                     <div class="topbar-dropdown">
@@ -231,15 +294,21 @@
             </a>
             <a href="{{ route('admin.chat.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}">
                 <i class="fas fa-comments"></i>
+                @if($chatUnreadCount > 0)
+                    <span class="mobile-nav-badge">{{ $chatUnreadCount > 9 ? '9+' : $chatUnreadCount }}</span>
+                @endif
                 <span>Chat</span>
             </a>
-            <a href="{{ route('admin.students.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
-                <i class="fas fa-user-graduate"></i>
-                <span>Students</span>
+            <a href="{{ route('admin.calendar.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
             </a>
-            <a href="{{ route('admin.teachers.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}">
-                <i class="fas fa-chalkboard-teacher"></i>
-                <span>Teachers</span>
+            <a href="{{ route('admin.notifications.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
+                <i class="fas fa-bell"></i>
+                @if($notifUnreadCount > 0)
+                    <span class="mobile-nav-badge">{{ $notifUnreadCount > 9 ? '9+' : $notifUnreadCount }}</span>
+                @endif
+                <span>Alerts</span>
             </a>
             <a href="#" class="mobile-nav-item" id="mobileMenuToggle">
                 <i class="fas fa-ellipsis-h"></i>
