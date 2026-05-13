@@ -56,6 +56,7 @@
                         <li><a href="{{ route('admin.classrooms.index') }}"><i class="bi bi-building"></i> Classes</a></li>
                         <li><a href="{{ route('admin.mark-entries.index') }}"><i class="bi bi-pencil-square"></i> Mark Entry</a></li>
                     </ul>
+            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                 </li>
 
                 <li class="menu-header">PEOPLE</li>
@@ -69,6 +70,7 @@
                         <li><a href="{{ route('admin.staff.index') }}"><i class="bi bi-person-badge"></i> Staff</a></li>
                         <li><a href="{{ route('admin.team-members.index') }}"><i class="fas fa-users"></i> Team Members</a></li>
                     </ul>
+            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                 </li>
 
                 <li class="menu-header">FINANCE</li>
@@ -86,6 +88,7 @@
                         <li><a href="{{ route('admin.leaves.index') }}"><i class="fas fa-calendar-minus"></i> Leaves</a></li>
                         <li><a href="{{ route('admin.employee-assets.index') }}"><i class="fas fa-boxes"></i> Employee Assets</a></li>
                     </ul>
+            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                 </li>
 
                 <li class="menu-header">WEBSITE</li>
@@ -100,6 +103,7 @@
                         <li><a href="{{ route('admin.gallery-videos.index') }}"><i class="fas fa-video"></i> Gallery Videos</a></li>
                         <li><a href="{{ route('admin.contact-messages.index') }}"><i class="fas fa-envelope"></i> Messages</a></li>
                     </ul>
+            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                 </li>
 
                 <li class="menu-header">SYSTEM</li>
@@ -110,6 +114,7 @@
                     <a href="{{ route('admin.audits.index') }}"><i class="fas fa-clipboard-list"></i><span>Audit Log</span></a>
                 </li>
             </ul>
+            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
 
             <div class="sidebar-footer">
                 <div class="sidebar-footer-user">
@@ -153,6 +158,7 @@
                                 </form>
                             </li>
                         </ul>
+            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                     </div>
                 </div>
             </nav>
@@ -293,6 +299,50 @@
 
         // Remove loading on page load
         document.querySelector('.admin-content').style.opacity = '1';
+    })();
+    </script>
+
+    <!-- Sidebar Scroll Enhancement -->
+    <script>
+    (function(){
+        var menu = document.querySelector('.sidebar-menu');
+        var indicator = document.getElementById('scrollIndicator');
+
+        if (menu && indicator) {
+            function checkScroll() {
+                var isScrollable = menu.scrollHeight > menu.clientHeight;
+                var atBottom = menu.scrollTop + menu.clientHeight >= menu.scrollHeight - 10;
+                indicator.classList.toggle('visible', isScrollable && !atBottom);
+            }
+
+            menu.addEventListener('scroll', checkScroll);
+            checkScroll();
+
+            // Keyboard navigation for sidebar
+            menu.addEventListener('keydown', function(e) {
+                var items = menu.querySelectorAll('a[href], .submenu-toggle');
+                var current = document.activeElement;
+                var index = Array.from(items).indexOf(current);
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    var next = items[index + 1];
+                    if (next) next.focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    var prev = items[index - 1];
+                    if (prev) prev.focus();
+                }
+            });
+
+            // Auto-scroll to active item
+            var activeItem = menu.querySelector('li.active a, li.active .submenu-toggle');
+            if (activeItem) {
+                setTimeout(function() {
+                    activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 300);
+            }
+        }
     })();
     </script>
 </body>

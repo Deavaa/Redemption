@@ -525,3 +525,80 @@ li.active .sidebar-chevron { transform: rotate(180deg); }
 
 /* Alert compact */
 .global-alert { padding: 0.4rem 0.75rem !important; font-size: 0.78rem !important; }
+/* ============================================
+   SIDEBAR MODERNIZATION - Scroll & Compact
+   ============================================ */
+
+/* Make sidebar a flex column so footer stays at bottom */
+.admin-sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+
+/* Sidebar header stays at top */
+.sidebar-header {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+/* Sidebar menu - scrollable area */
+.sidebar-menu {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 8px !important;
+
+    /* Custom scrollbar - thin and minimal */
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255,255,255,0.15) transparent !important;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+    width: 4px !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15) !important;
+    border-radius: 4px !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.3) !important;
+}
+
+/* Sidebar footer stays at bottom */
+.sidebar-footer {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 10 !important;
+    background: inherit !important;
+}
+
+/* Scroll indicator - fade at bottom when more items exist */
+.sidebar-scroll-indicator {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, rgba(15,23,42,0.9));
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.sidebar-scroll-indicator.visible {
+    opacity: 1;
+}
