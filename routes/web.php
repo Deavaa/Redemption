@@ -37,7 +37,13 @@ use App\Http\Controllers\ProgressReport\ProgressReportController;
 use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
 use App\Http\Controllers\ContactMessage\ContactMessageController;
 use App\Http\Controllers\MarkSheet\MarkSheetController;
+use App\Http\Controllers\MarkSheet\MarkSheetFullController;
+use App\Http\Controllers\MarkSheet\MarkRosterController;
+use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController;
 use App\Http\Controllers\Setting\SettingController;
+use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\CalendarEvent\CalendarEventController;
+use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\HomeController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -74,6 +80,27 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('mark-sheet/api/sections', [MarkSheetController::class, 'getSections'])->name('mark-sheet.sections');
     Route::get('mark-sheet/api/students', [MarkSheetController::class, 'getStudents'])->name('mark-sheet.students');
 
+    // Full Mark Sheet (Term1 + Term2 + Annual)
+    Route::get('mark-sheet-full', [MarkSheetFullController::class, 'index'])->name('mark-sheet-full.index');
+    Route::post('mark-sheet-full/generate', [MarkSheetFullController::class, 'generate'])->name('mark-sheet-full.generate');
+    Route::get('mark-sheet-full/api/sections', [MarkSheetFullController::class, 'getSections'])->name('mark-sheet-full.sections');
+
+    // Mark Roster
+    Route::get('mark-roster', [MarkRosterController::class, 'index'])->name('mark-roster.index');
+    Route::post('mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate');
+    Route::get('mark-roster/api/sections', [MarkRosterController::class, 'getSections'])->name('mark-roster.sections');
+
+    // Report Card (Foldable 4-face)
+    Route::get('report-card', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'index'])->name('report-card.index');
+    Route::post('report-card/generate', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'generate'])->name('report-card.generate');
+    Route::get('report-card/api/sections', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'getSections'])->name('report-card.sections');
+    Route::get('report-card/api/students', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'getStudents'])->name('report-card.students');
+
+    // Performance Analysis
+    Route::get('performance-analysis', [PerformanceAnalysisController::class, 'index'])->name('performance-analysis.index');
+    Route::post('performance-analysis/generate', [PerformanceAnalysisController::class, 'generate'])->name('performance-analysis.generate');
+    Route::get('performance-analysis/api/sections', [PerformanceAnalysisController::class, 'getSections'])->name('performance-analysis.sections');
+
     // ID Card Generation
     Route::get('id-card-generate', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'index'])->name('id-card-generate.index');
     Route::post('id-card-generate', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'generate'])->name('id-card-generate.generate');
@@ -86,6 +113,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('certificate-generate/api/students', [App\Http\Controllers\Certificate\CertificateGenerateController::class, 'getStudents'])->name('certificate-generate.students');
 
     Route::resource('students', StudentController::class);
+    Route::get('students/api/admission-preview', [StudentController::class, 'apiAdmissionPreview'])->name('students.api.admission-preview');
+    Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
     Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
     Route::get('students/api/sections/{classId}', [StudentController::class, 'getSections'])->name('students.api.sections');
     Route::resource('teachers', TeacherController::class);
@@ -118,6 +147,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::resource('teacher-assignments', TeacherAssignmentController::class);
     Route::resource('contact-messages', ContactMessageController::class);
 
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::get('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::get('api/notifications/unread', [NotificationController::class, 'apiUnreadCount'])->name('notifications.api.unread');
+    Route::get('api/notifications/latest', [NotificationController::class, 'apiLatest'])->name('notifications.api.latest');
+
+    // Academic Calendar
+    Route::get('calendar', [CalendarEventController::class, 'index'])->name('calendar.index');
+    Route::post('calendar', [CalendarEventController::class, 'store'])->name('calendar.store');
+    Route::put('calendar/{calendar_event}', [CalendarEventController::class, 'update'])->name('calendar.update');
+    Route::delete('calendar/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar.destroy');
+    Route::get('api/calendar/events', [CalendarEventController::class, 'apiEvents'])->name('calendar.api.events');
+    Route::get('api/calendar/event/{calendar_event}', [CalendarEventController::class, 'apiEvent'])->name('calendar.api.event');
+
     // Chat
     Route::get('chat', [App\Http\Controllers\Chat\ChatController::class, 'index'])->name('chat.index');
     Route::post('chat', [App\Http\Controllers\Chat\ChatController::class, 'storeConversation'])->name('chat.store');
@@ -129,6 +174,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     // Telegram
     Route::get('telegram', [App\Http\Controllers\Telegram\TelegramController::class, 'index'])->name('telegram.index');
     Route::put('telegram/settings', [App\Http\Controllers\Telegram\TelegramController::class, 'updateSettings'])->name('telegram.update-settings');
+    Route::post('telegram/branch-settings', [App\Http\Controllers\Telegram\TelegramController::class, 'updateBranchSettings'])->name('telegram.update-branch-settings');
     Route::get('telegram/send', [App\Http\Controllers\Telegram\TelegramController::class, 'send'])->name('telegram.send');
     Route::post('telegram/send', [App\Http\Controllers\Telegram\TelegramController::class, 'sendMessage'])->name('telegram.send-message');
     Route::get('telegram/test', [App\Http\Controllers\Telegram\TelegramController::class, 'testConnection'])->name('telegram.test');
@@ -138,6 +184,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
     Route::post('/settings/update-all', [SettingController::class, 'update'])->name('settings.updateAll');
-    Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo'])->name('settings.uploadLogo');
+    Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo'])->name('settings.upload-logo');
+    Route::post('/settings/upload-favicon', [SettingController::class, 'uploadFavicon'])->name('settings.upload-favicon');
     Route::delete('/settings/{id}', [SettingController::class, 'destroy'])->name('settings.destroy');
+
+    // Roles & Permissions
+    Route::resource('roles', RoleController::class);
+    Route::get('roles/{role}/users', [RoleController::class, 'users'])->name('roles.users');
+    Route::post('roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assign-users');
+    Route::post('roles/{role}/toggle-permission', [RoleController::class, 'togglePermission'])->name('roles.toggle-permission');
 });
