@@ -14,7 +14,7 @@
                 </ol>
             </nav>
             <h1 class="modern-page-title">Edit Exam</h1>
-            <p class="modern-page-subtitle">Update exam schedule for <strong>{{ $item->name }}</strong></p>
+            <p class="modern-page-subtitle">Update exam schedule for <strong>{{ $exam->name }}</strong></p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.exams.index') }}" class="btn-modern btn-modern-outline">
@@ -26,7 +26,7 @@
 
     {{-- Form Card --}}
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.exams.update', $item->id) }}">
+        <form method="POST" action="{{ route('admin.exams.update', $exam->id) }}">
             @csrf @method('PUT')
 
             {{-- Exam Information --}}
@@ -52,7 +52,7 @@
                                     name="name"
                                     id="name"
                                     class="modern-input {{ $errors->has('name') ? 'is-invalid' : '' }}"
-                                    value="{{ old('name', $item->name) }}"
+                                    value="{{ old('name', $exam->name) }}"
                                     placeholder="e.g. End of Term 2 Exam"
                                     required
                                     autofocus>
@@ -70,13 +70,13 @@
                                 <i class="fas fa-tag modern-input-icon"></i>
                                 <select name="type" id="type" class="modern-input modern-select {{ $errors->has('type') ? 'is-invalid' : '' }}" required>
                                                                         <option value="">-- Select Type --</option>
-                                    <option value="exam" {{ old('type', $item->type) == 'exam' ? 'selected' : '' }}>Exam</option>
-                                    <option value="quiz" {{ old('type', $item->type) == 'quiz' ? 'selected' : '' }}>Quiz</option>
-                                    <option value="test" {{ old('type', $item->type) == 'test' ? 'selected' : '' }}>Test</option>
-                                    <option value="midterm" {{ old('type', $item->type) == 'midterm' ? 'selected' : '' }}>Mid-Term Exam</option>
-                                    <option value="final" {{ old('type', $item->type) == 'final' ? 'selected' : '' }}>Final Exam</option>
-                                    <option value="assignment" {{ old('type', $item->type) == 'assignment' ? 'selected' : '' }}>Assignment</option>
-                                    <option value="project" {{ old('type', $item->type) == 'project' ? 'selected' : '' }}>Project</option>
+                                    <option value="exam" {{ old('type', $exam->type) == 'exam' ? 'selected' : '' }}>Exam</option>
+                                    <option value="quiz" {{ old('type', $exam->type) == 'quiz' ? 'selected' : '' }}>Quiz</option>
+                                    <option value="test" {{ old('type', $exam->type) == 'test' ? 'selected' : '' }}>Test</option>
+                                    <option value="midterm" {{ old('type', $exam->type) == 'midterm' ? 'selected' : '' }}>Mid-Term Exam</option>
+                                    <option value="final" {{ old('type', $exam->type) == 'final' ? 'selected' : '' }}>Final Exam</option>
+                                    <option value="assignment" {{ old('type', $exam->type) == 'assignment' ? 'selected' : '' }}>Assignment</option>
+                                    <option value="project" {{ old('type', $exam->type) == 'project' ? 'selected' : '' }}>Project</option>
                                 </select>
                             </div>
                             @error('type')
@@ -94,7 +94,7 @@
                                     name="total_marks"
                                     id="total_marks"
                                     class="modern-input {{ $errors->has('total_marks') ? 'is-invalid' : '' }}"
-                                    value="{{ old('total_marks', $item->total_marks) }}"
+                                    value="{{ old('total_marks', $exam->total_marks) }}"
                                     min="0"
                                     placeholder="100"
                                     required>
@@ -129,7 +129,7 @@
                                 <select name="academic_year_id" id="exam_ay" class="modern-input modern-select {{ $errors->has('academic_year_id') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Year --</option>
                                     @foreach($academicYears as $ay)
-                                    <option value="{{ $ay->id }}" {{ old('academic_year_id', $item->academic_year_id) == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>
+                                    <option value="{{ $ay->id }}" {{ old('academic_year_id', $exam->academic_year_id) == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -179,7 +179,7 @@
                                     name="start_date"
                                     id="start_date"
                                     class="modern-input {{ $errors->has('start_date') ? 'is-invalid' : '' }}"
-                                    value="{{ old('start_date', $item->start_date ? $item->start_date->format('Y-m-d') : '') }}"
+                                    value="{{ old('start_date', $exam->start_date ? $exam->start_date->format('Y-m-d') : '') }}"
                                     required>
                             </div>
                             @error('start_date')
@@ -197,7 +197,7 @@
                                     name="end_date"
                                     id="end_date"
                                     class="modern-input {{ $errors->has('end_date') ? 'is-invalid' : '' }}"
-                                    value="{{ old('end_date', $item->end_date ? $item->end_date->format('Y-m-d') : '') }}"
+                                    value="{{ old('end_date', $exam->end_date ? $exam->end_date->format('Y-m-d') : '') }}"
                                     required>
                             </div>
                             @error('end_date')
@@ -215,7 +215,7 @@
                                     name="start_time"
                                     id="start_time"
                                     class="modern-input"
-                                    value="{{ old('start_time', $item->start_time) }}">
+                                    value="{{ old('start_time', $exam->start_time) }}">
                             </div>
                         </div>
 
@@ -229,7 +229,7 @@
                                     name="end_time"
                                     id="end_time"
                                     class="modern-input"
-                                    value="{{ old('end_time', $item->end_time) }}">
+                                    value="{{ old('end_time', $exam->end_time) }}">
                             </div>
                         </div>
                     </div>
@@ -259,7 +259,7 @@
                                 id="description"
                                 class="modern-input modern-textarea {{ $errors->has('description') ? 'is-invalid' : '' }}"
                                 placeholder="Any special instructions for students..."
-                                rows="3">{{ old('description', $item->description) }}</textarea>
+                                rows="3">{{ old('description', $exam->description) }}</textarea>
                         </div>
                         @error('description')
                             <span class="modern-form-error">{{ $message }}</span>
@@ -571,9 +571,9 @@
     selAY.addEventListener('change', function(){ filterTerms(this.value); });
 
     // Pre-select current values
-    selAY.value = '{{ $item->academic_year_id }}';
+    selAY.value = '{{ $exam->academic_year_id }}';
     filterTerms(selAY.value);
-    selTerm.value = '{{ $item->term_id }}';
+    selTerm.value = '{{ $exam->term_id }}';
 })();
 </script>
 @endpush

@@ -64,7 +64,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('academic-years', AcademicYearController::class);
     Route::resource('terms', TermController::class);
-    Route::resource('exams', ExamController::class)->parameter('exams', 'item');
+    Route::resource('exams', ExamController::class);
     Route::resource('subjects', SubjectController::class);
     Route::resource('subject-assignments', SubjectAssignmentController::class);
     Route::delete('subject-assignments/bulk-delete', [SubjectAssignmentController::class, 'bulkDelete'])->name('subject-assignments.bulk-delete');

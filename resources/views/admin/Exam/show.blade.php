@@ -10,10 +10,10 @@
                 <ol>
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                     <li><a href="{{ route('admin.exams.index') }}">Exams</a></li>
-                    <li class="active">{{ $item->name }}</li>
+                    <li class="active">{{ $exam->name }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ $item->name }}</h1>
+            <h1 class="modern-page-title">{{ $exam->name }}</h1>
             <p class="modern-page-subtitle">Exam details and schedule information</p>
         </div>
         <div class="modern-page-header-right">
@@ -21,7 +21,7 @@
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to List</span>
             </a>
-            <a href="{{ route('admin.exams.edit', $item->id) }}" class="btn-modern btn-modern-primary">
+            <a href="{{ route('admin.exams.edit', $exam->id) }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-pen"></i>
                 <span>Edit</span>
             </a>
@@ -35,10 +35,10 @@
                 $today = \Carbon\Carbon::today()->format('Y-m-d');
                 $status = 'upcoming';
                 $statusLabel = 'Upcoming';
-                if ($item->end_date && $today > $item->end_date->format('Y-m-d')) {
+                if ($exam->end_date && $today > $exam->end_date->format('Y-m-d')) {
                     $status = 'completed';
                     $statusLabel = 'Completed';
-                } elseif ($item->start_date && $today >= $item->start_date->format('Y-m-d')) {
+                } elseif ($exam->start_date && $today >= $exam->start_date->format('Y-m-d')) {
                     $status = 'ongoing';
                     $statusLabel = 'Ongoing';
                 }
@@ -49,7 +49,7 @@
                     <i class="fas fa-file-alt"></i>
                 </div>
                 <div class="modern-detail-hero-info">
-                    <h2 class="modern-detail-hero-title">{{ $item->name }}</h2>
+                    <h2 class="modern-detail-hero-title">{{ $exam->name }}</h2>
                     <div class="modern-detail-hero-badges">
                         @if($status === 'completed')
                             <span class="modern-badge modern-badge-success"><i class="fas fa-check-circle"></i> {{ $statusLabel }}</span>
@@ -58,8 +58,8 @@
                         @else
                             <span class="modern-badge modern-badge-info"><i class="fas fa-calendar-alt"></i> {{ $statusLabel }}</span>
                         @endif
-                        <span class="modern-badge modern-badge-light">{{ ucfirst(str_replace('_', ' ', $item->type)) }}</span>
-                        <span class="modern-badge modern-badge-gold"><i class="fas fa-star"></i> {{ $item->total_marks }} Marks</span>
+                        <span class="modern-badge modern-badge-light">{{ ucfirst(str_replace('_', ' ', $exam->type)) }}</span>
+                        <span class="modern-badge modern-badge-gold"><i class="fas fa-star"></i> {{ $exam->total_marks }} Marks</span>
                     </div>
                 </div>
             </div>
@@ -69,37 +69,37 @@
                     <div class="modern-detail-label">
                         <i class="fas fa-tag"></i> Exam Type
                     </div>
-                    <div class="modern-detail-value">{{ ucfirst(str_replace('_', ' ', $item->type)) }}</div>
+                    <div class="modern-detail-value">{{ ucfirst(str_replace('_', ' ', $exam->type)) }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-star"></i> Total Marks
                     </div>
                     <div class="modern-detail-value">
-                        <span class="modern-detail-marks">{{ $item->total_marks }}</span>
+                        <span class="modern-detail-marks">{{ $exam->total_marks }}</span>
                     </div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-calendar"></i> Academic Year
                     </div>
-                    <div class="modern-detail-value">{{ $item->academicYear->name ?? '-' }}</div>
+                    <div class="modern-detail-value">{{ $exam->academicYear->name ?? '-' }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-list-ol"></i> Term
                     </div>
-                    <div class="modern-detail-value">{{ $item->term->name ?? '-' }}</div>
+                    <div class="modern-detail-value">{{ $exam->term->name ?? '-' }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-calendar-alt"></i> Schedule
                     </div>
                     <div class="modern-detail-value">
-                        @if($item->start_date)
-                            <span class="modern-detail-date">{{ $item->start_date->format('M d, Y') }}</span>
+                        @if($exam->start_date)
+                            <span class="modern-detail-date">{{ $exam->start_date->format('M d, Y') }}</span>
                             <span class="modern-detail-separator">to</span>
-                            <span class="modern-detail-date">{{ $item->end_date ? $item->end_date->format('M d, Y') : '-' }}</span>
+                            <span class="modern-detail-date">{{ $exam->end_date ? $exam->end_date->format('M d, Y') : '-' }}</span>
                         @else
                             <span class="modern-muted">Not set</span>
                         @endif
@@ -110,21 +110,21 @@
                         <i class="fas fa-clock"></i> Daily Time
                     </div>
                     <div class="modern-detail-value">
-                        @if($item->start_time)
-                            <span class="modern-detail-time">{{ $item->start_time }}</span>
+                        @if($exam->start_time)
+                            <span class="modern-detail-time">{{ $exam->start_time }}</span>
                             <span class="modern-detail-separator">-</span>
-                            <span class="modern-detail-time">{{ $item->end_time ?? '-' }}</span>
+                            <span class="modern-detail-time">{{ $exam->end_time ?? '-' }}</span>
                         @else
                             <span class="modern-muted">Not set</span>
                         @endif
                     </div>
                 </div>
-                @if($item->description)
+                @if($exam->description)
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-align-left"></i> Description
                     </div>
-                    <div class="modern-detail-value">{{ $item->description }}</div>
+                    <div class="modern-detail-value">{{ $exam->description }}</div>
                 </div>
                 @endif
 
@@ -145,16 +145,16 @@
                 </div>
                 <div class="modern-summary-grid">
                     <div class="modern-summary-item">
-                        <div class="modern-summary-value">{{ $item->total_marks }}</div>
+                        <div class="modern-summary-value">{{ $exam->total_marks }}</div>
                         <div class="modern-summary-label">Total Marks</div>
                     </div>
                     <div class="modern-summary-item">
-                        <div class="modern-summary-value">{{ ucfirst(str_replace('_', ' ', $item->type)) }}</div>
+                        <div class="modern-summary-value">{{ ucfirst(str_replace('_', ' ', $exam->type)) }}</div>
                         <div class="modern-summary-label">Exam Type</div>
                     </div>
-                    @if($item->start_date && $item->end_date)
+                    @if($exam->start_date && $exam->end_date)
                     <div class="modern-summary-item">
-                        <div class="modern-summary-value">{{ $item->start_date->diffInDays($item->end_date) + 1 }}</div>
+                        <div class="modern-summary-value">{{ $exam->start_date->diffInDays($exam->end_date) + 1 }}</div>
                         <div class="modern-summary-label">Days Duration</div>
                     </div>
                     @endif
@@ -177,7 +177,7 @@
                     <i class="fas fa-bolt"></i> Quick Actions
                 </div>
                 <div class="modern-quick-actions">
-                    <a href="{{ route('admin.exams.edit', $item->id) }}" class="modern-quick-action">
+                    <a href="{{ route('admin.exams.edit', $exam->id) }}" class="modern-quick-action">
                         <i class="fas fa-pen"></i>
                         <span>Edit Exam</span>
                     </a>
@@ -189,7 +189,7 @@
                         <i class="fas fa-plus"></i>
                         <span>Schedule New Exam</span>
                     </a>
-                    <form method="POST" action="{{ route('admin.exams.destroy', $item->id) }}" onsubmit="return confirm('Are you sure you want to delete this exam? This action cannot be undone.')">
+                    <form method="POST" action="{{ route('admin.exams.destroy', $exam->id) }}" onsubmit="return confirm('Are you sure you want to delete this exam? This action cannot be undone.')">
                         @csrf @method('DELETE')
                         <button type="submit" class="modern-quick-action modern-quick-action-danger">
                             <i class="fas fa-trash-alt"></i>
@@ -207,11 +207,11 @@
                 <div class="modern-timestamps">
                     <div class="modern-timestamp">
                         <span class="modern-timestamp-label">Created</span>
-                        <span class="modern-timestamp-value">{{ $item->created_at->format('M d, Y H:i') }}</span>
+                        <span class="modern-timestamp-value">{{ $exam->created_at->format('M d, Y H:i') }}</span>
                     </div>
                     <div class="modern-timestamp">
                         <span class="modern-timestamp-label">Updated</span>
-                        <span class="modern-timestamp-value">{{ $item->updated_at->format('M d, Y H:i') }}</span>
+                        <span class="modern-timestamp-value">{{ $exam->updated_at->format('M d, Y H:i') }}</span>
                     </div>
                 </div>
             </div>
