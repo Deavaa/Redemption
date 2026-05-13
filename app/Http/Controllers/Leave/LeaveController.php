@@ -45,19 +45,19 @@ class LeaveController extends Controller
         return redirect()->route("admin.leaves.index")->with('success','Leave request created successfully');
     }
 
-    public function show(Leave $item)
+    public function show(Leave $leave)
     {
-        $item->load(['employee','approver']);
-        return view('admin.Leave.show', compact('item'));
+        $leave->load(['employee','approver']);
+        return view('admin.Leave.show', ['item' => $leave]);
     }
 
-    public function edit(Leave $item)
+    public function edit(Leave $leave)
     {
         $employees = User::whereIn('role', ['admin','teacher','staff'])->orderBy('name')->get();
-        return view('admin.Leave.edit', compact('item', 'employees'));
+        return view('admin.Leave.edit', ['item' => $leave, 'employees' => $employees]);
     }
 
-    public function update(Request $r, Leave $item)
+    public function update(Request $r, Leave $leave)
     {
         $r->validate([
             'employee_id' => 'required|exists:users,id',
@@ -72,9 +72,9 @@ class LeaveController extends Controller
         if ($r->filled('status') && $r->status !== 'pending') {
             $data['approved_by'] = auth()->id();
         }
-        $item->update($data);
+        $leave->update($data);
         return redirect()->route("admin.leaves.index")->with('success','Leave updated successfully');
     }
 
-    public function destroy(Leave $item) { $item->delete(); return back()->with('success','Leave deleted successfully'); }
+    public function destroy(Leave $leave) { $leave->delete(); return back()->with('success','Leave deleted successfully'); }
 }

@@ -48,20 +48,20 @@ class IncomeExpenseController extends Controller
         return redirect()->route("admin.income-expenses.index")->with('success','Record created successfully');
     }
 
-    public function show(IncomeExpense $item)
+    public function show(IncomeExpense $income_expense)
     {
-        $item->load(['academicYear','branch']);
-        return view('admin.IncomeExpense.show', compact('item'));
+        $income_expense->load(['academicYear','branch']);
+        return view('admin.IncomeExpense.show', ['item' => $income_expense]);
     }
 
-    public function edit(IncomeExpense $item)
+    public function edit(IncomeExpense $income_expense)
     {
         $academicYears = AcademicYear::orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
-        return view('admin.IncomeExpense.edit', compact('item', 'academicYears', 'branches'));
+        return view('admin.IncomeExpense.edit', ['item' => $income_expense, 'academicYears' => $academicYears, 'branches' => $branches]);
     }
 
-    public function update(Request $r, IncomeExpense $item)
+    public function update(Request $r, IncomeExpense $income_expense)
     {
         $r->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -73,9 +73,9 @@ class IncomeExpenseController extends Controller
             'reference' => 'nullable|string|max:255',
             'branch_id' => 'nullable|exists:branches,id',
         ]);
-        $item->update($r->only(['academic_year_id','type','category','amount','date','description','reference','branch_id']));
+        $income_expense->update($r->only(['academic_year_id','type','category','amount','date','description','reference','branch_id']));
         return redirect()->route("admin.income-expenses.index")->with('success','Record updated successfully');
     }
 
-    public function destroy(IncomeExpense $item) { $item->delete(); return back()->with('success','Record deleted successfully'); }
+    public function destroy(IncomeExpense $income_expense) { $income_expense->delete(); return back()->with('success','Record deleted successfully'); }
 }

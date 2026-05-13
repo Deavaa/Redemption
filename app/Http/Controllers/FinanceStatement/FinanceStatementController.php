@@ -48,20 +48,20 @@ class FinanceStatementController extends Controller
         return redirect()->route("admin.finance-statements.index")->with('success','Statement created successfully');
     }
 
-    public function show(FinanceStatement $item)
+    public function show(FinanceStatement $finance_statement)
     {
-        $item->load(['academicYear','branch']);
-        return view('admin.FinanceStatement.show', compact('item'));
+        $finance_statement->load(['academicYear','branch']);
+        return view('admin.FinanceStatement.show', ['item' => $finance_statement]);
     }
 
-    public function edit(FinanceStatement $item)
+    public function edit(FinanceStatement $finance_statement)
     {
         $academicYears = AcademicYear::orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
-        return view('admin.FinanceStatement.edit', compact('item', 'academicYears', 'branches'));
+        return view('admin.FinanceStatement.edit', ['item' => $finance_statement, 'academicYears' => $academicYears, 'branches' => $branches]);
     }
 
-    public function update(Request $r, FinanceStatement $item)
+    public function update(Request $r, FinanceStatement $finance_statement)
     {
         $r->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -74,13 +74,13 @@ class FinanceStatementController extends Controller
             'net_balance' => 'nullable|numeric',
             'description' => 'nullable|string',
         ]);
-        $item->update($r->only(['academic_year_id','branch_id','statement_type','period_from','period_to','total_income','total_expense','net_balance','description']));
+        $finance_statement->update($r->only(['academic_year_id','branch_id','statement_type','period_from','period_to','total_income','total_expense','net_balance','description']));
         return redirect()->route("admin.finance-statements.index")->with('success','Statement updated successfully');
     }
 
-    public function destroy(FinanceStatement $item)
+    public function destroy(FinanceStatement $finance_statement)
     {
-        $item->delete();
+        $finance_statement->delete();
         return back()->with('success','Statement deleted successfully');
     }
 }

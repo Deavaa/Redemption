@@ -44,23 +44,23 @@ class TeacherAssignmentController extends Controller
         return redirect()->route("admin.teacher-assignments.index")->with('success','Assignment created successfully');
     }
 
-    public function show(TeacherAssignment $item)
+    public function show(TeacherAssignment $teacher_assignment)
     {
-        $item->load(['teacher','classRoom','section','subject','academicYear']);
-        return view('admin.TeacherAssignment.show', compact('item'));
+        $teacher_assignment->load(['teacher','classRoom','section','subject','academicYear']);
+        return view('admin.TeacherAssignment.show', ['item' => $teacher_assignment]);
     }
 
-    public function edit(TeacherAssignment $item)
+    public function edit(TeacherAssignment $teacher_assignment)
     {
         $teachers = Teacher::orderBy('first_name')->get();
         $classes = Classroom::orderBy('name')->get();
-        $sections = Section::where('class_id', $item->class_id)->orderBy('name')->get();
+        $sections = Section::where('class_id', $teacher_assignment->class_id)->orderBy('name')->get();
         $subjects = Subject::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        return view('admin.TeacherAssignment.edit', compact('item', 'teachers', 'classes', 'sections', 'subjects', 'academicYears'));
+        return view('admin.TeacherAssignment.edit', ['item' => $teacher_assignment, 'teachers' => $teachers, 'classes' => $classes, 'sections' => $sections, 'subjects' => $subjects, 'academicYears' => $academicYears]);
     }
 
-    public function update(Request $r, TeacherAssignment $item)
+    public function update(Request $r, TeacherAssignment $teacher_assignment)
     {
         $r->validate([
             'teacher_id' => 'required|exists:teachers,id',
@@ -69,9 +69,9 @@ class TeacherAssignmentController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'academic_year_id' => 'required|exists:academic_years,id',
         ]);
-        $item->update($r->only(['teacher_id','class_id','section_id','subject_id','academic_year_id']));
+        $teacher_assignment->update($r->only(['teacher_id','class_id','section_id','subject_id','academic_year_id']));
         return redirect()->route("admin.teacher-assignments.index")->with('success','Assignment updated successfully');
     }
 
-    public function destroy(TeacherAssignment $item) { $item->delete(); return back()->with('success','Assignment deleted successfully'); }
+    public function destroy(TeacherAssignment $teacher_assignment) { $teacher_assignment->delete(); return back()->with('success','Assignment deleted successfully'); }
 }

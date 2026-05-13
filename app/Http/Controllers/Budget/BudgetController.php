@@ -44,19 +44,19 @@ class BudgetController extends Controller
         return redirect()->route("admin.budgets.index")->with('success','Budget created successfully');
     }
 
-    public function show(Budget $item)
+    public function show(Budget $budget)
     {
-        $item->load('academicYear');
-        return view('admin.Budget.show', compact('item'));
+        $budget->load('academicYear');
+        return view('admin.Budget.show', ['item' => $budget]);
     }
 
-    public function edit(Budget $item)
+    public function edit(Budget $budget)
     {
         $academicYears = AcademicYear::orderBy('name')->get();
-        return view('admin.Budget.edit', compact('item', 'academicYears'));
+        return view('admin.Budget.edit', ['item' => $budget, 'academicYears' => $academicYears]);
     }
 
-    public function update(Request $r, Budget $item)
+    public function update(Request $r, Budget $budget)
     {
         $r->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -66,13 +66,13 @@ class BudgetController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|in:planned,approved,active,completed,cancelled',
         ]);
-        $item->update($r->only(['academic_year_id','category','allocated_amount','spent_amount','description','status']));
+        $budget->update($r->only(['academic_year_id','category','allocated_amount','spent_amount','description','status']));
         return redirect()->route("admin.budgets.index")->with('success','Budget updated successfully');
     }
 
-    public function destroy(Budget $item)
+    public function destroy(Budget $budget)
     {
-        $item->delete();
+        $budget->delete();
         return back()->with('success','Budget deleted successfully');
     }
 }

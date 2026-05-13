@@ -50,21 +50,21 @@ class PerformanceReportController extends Controller
         return redirect()->route("admin.performance-reports.index")->with('success','Report created successfully');
     }
 
-    public function show(PerformanceReport $item)
+    public function show(PerformanceReport $performance_report)
     {
-        $item->load(['student','academicYear','term']);
-        return view('admin.PerformanceReport.show', compact('item'));
+        $performance_report->load(['student','academicYear','term']);
+        return view('admin.PerformanceReport.show', ['item' => $performance_report]);
     }
 
-    public function edit(PerformanceReport $item)
+    public function edit(PerformanceReport $performance_report)
     {
         $students = Student::where('status', 'active')->orderBy('first_name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
         $terms = Term::orderBy('name')->get();
-        return view('admin.PerformanceReport.edit', compact('item', 'students', 'academicYears', 'terms'));
+        return view('admin.PerformanceReport.edit', ['item' => $performance_report, 'students' => $students, 'academicYears' => $academicYears, 'terms' => $terms]);
     }
 
-    public function update(Request $r, PerformanceReport $item)
+    public function update(Request $r, PerformanceReport $performance_report)
     {
         $r->validate([
             'student_id' => 'required|exists:students,id',
@@ -77,9 +77,9 @@ class PerformanceReportController extends Controller
             'overall_rating' => 'nullable|numeric|min:0|max:10',
             'remarks' => 'nullable|string',
         ]);
-        $item->update($r->only(['student_id','academic_year_id','term_id','attendance_percentage','behavior_rating','sports_rating','extracurricular_rating','overall_rating','remarks']));
+        $performance_report->update($r->only(['student_id','academic_year_id','term_id','attendance_percentage','behavior_rating','sports_rating','extracurricular_rating','overall_rating','remarks']));
         return redirect()->route("admin.performance-reports.index")->with('success','Report updated successfully');
     }
 
-    public function destroy(PerformanceReport $item) { $item->delete(); return back()->with('success','Report deleted successfully'); }
+    public function destroy(PerformanceReport $performance_report) { $performance_report->delete(); return back()->with('success','Report deleted successfully'); }
 }

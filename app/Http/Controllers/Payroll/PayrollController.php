@@ -47,19 +47,19 @@ class PayrollController extends Controller
         return redirect()->route("admin.payrolls.index")->with('success','Payroll created successfully');
     }
 
-    public function show(Payroll $item)
+    public function show(Payroll $payroll)
     {
-        $item->load('employee');
-        return view('admin.Payroll.show', compact('item'));
+        $payroll->load('employee');
+        return view('admin.Payroll.show', ['item' => $payroll]);
     }
 
-    public function edit(Payroll $item)
+    public function edit(Payroll $payroll)
     {
         $employees = User::whereIn('role', ['admin','teacher','staff'])->orderBy('name')->get();
-        return view('admin.Payroll.edit', compact('item', 'employees'));
+        return view('admin.Payroll.edit', ['item' => $payroll, 'employees' => $employees]);
     }
 
-    public function update(Request $r, Payroll $item)
+    public function update(Request $r, Payroll $payroll)
     {
         $r->validate([
             'employee_id' => 'required|exists:users,id',
@@ -72,9 +72,9 @@ class PayrollController extends Controller
             'payment_date' => 'required|date',
             'status' => 'required|in:pending,paid,cancelled',
         ]);
-        $item->update($r->only(['employee_id','basic_salary','allowances','deductions','tax','net_salary','pay_period','payment_date','status']));
+        $payroll->update($r->only(['employee_id','basic_salary','allowances','deductions','tax','net_salary','pay_period','payment_date','status']));
         return redirect()->route("admin.payrolls.index")->with('success','Payroll updated successfully');
     }
 
-    public function destroy(Payroll $item) { $item->delete(); return back()->with('success','Payroll deleted successfully'); }
+    public function destroy(Payroll $payroll) { $payroll->delete(); return back()->with('success','Payroll deleted successfully'); }
 }

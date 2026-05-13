@@ -39,10 +39,10 @@ class SliderController extends Controller
         return redirect()->route("admin.sliders.index")->with('success','Slider created successfully');
     }
 
-    public function show(Slider $item) { return view('admin.Slider.show', compact('item')); }
-    public function edit(Slider $item) { return view('admin.Slider.edit', compact('item')); }
+    public function show(Slider $slider) { return view('admin.Slider.show', ['item' => $slider]); }
+    public function edit(Slider $slider) { return view('admin.Slider.edit', ['item' => $slider]); }
 
-    public function update(Request $r, Slider $item)
+    public function update(Request $r, Slider $slider)
     {
         $r->validate([
             'title' => 'nullable|string|max:255',
@@ -57,9 +57,9 @@ class SliderController extends Controller
         if ($r->hasFile('image_path')) {
             $data['image_path'] = $r->file('image_path')->store('sliders', 'public');
         }
-        $item->update($data);
+        $slider->update($data);
         return redirect()->route("admin.sliders.index")->with('success','Slider updated successfully');
     }
 
-    public function destroy(Slider $item) { $item->delete(); return back()->with('success','Slider deleted successfully'); }
+    public function destroy(Slider $slider) { $slider->delete(); return back()->with('success','Slider deleted successfully'); }
 }

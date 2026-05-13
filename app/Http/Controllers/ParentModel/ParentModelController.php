@@ -16,12 +16,12 @@ class ParentModelController extends Controller
         ParentModel::create($r->all());
         return redirect()->route("admin.parents.index")->with("success","Parent added");
     }
-    public function show(ParentModel $item){ return view("admin.ParentModel.show", compact("item")); }
-    public function edit(ParentModel $item){ return view("admin.ParentModel.edit", compact("item")); }
-    public function update(Request $r, ParentModel $item){
+    public function show(ParentModel $parent){ return view("admin.ParentModel.show", ["item" => $parent]); }
+    public function edit(ParentModel $parent){ return view("admin.ParentModel.edit", ["item" => $parent]); }
+    public function update(Request $r, ParentModel $parent){
         $r->validate(["father_name"=>"required","father_phone"=>"required"]);
-        $item->update($r->all());
+        $parent->update($r->all());
         return redirect()->route("admin.parents.index")->with("success","Updated");
     }
-    public function destroy(ParentModel $item){ $item->delete(); return back()->with("success","Deleted"); }
+    public function destroy(ParentModel $parent){ $parent->delete(); return back()->with("success","Deleted"); }
 }

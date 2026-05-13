@@ -20,18 +20,18 @@ class ContactMessageController extends Controller
         return view('admin.ContactMessage.index', compact('data', 'totalMessages', 'unreadCount'));
     }
 
-    public function show(ContactMessage $item)
+    public function show(ContactMessage $contact_message)
     {
-        if (!$item->is_read) {
-            $item->update(['is_read' => true]);
+        if (!$contact_message->is_read) {
+            $contact_message->update(['is_read' => true]);
         }
-        $item->load('branch');
-        return view('admin.ContactMessage.show', compact('item'));
+        $contact_message->load('branch');
+        return view('admin.ContactMessage.show', ['item' => $contact_message]);
     }
 
-    public function destroy(ContactMessage $item)
+    public function destroy(ContactMessage $contact_message)
     {
-        $item->delete();
+        $contact_message->delete();
         return back()->with('success','Message deleted successfully');
     }
 }

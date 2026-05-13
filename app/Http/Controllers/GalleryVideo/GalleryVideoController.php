@@ -39,11 +39,11 @@ class GalleryVideoController extends Controller
         return redirect()->route("admin.gallery-videos.index")->with('success','Video added successfully');
     }
 
-    public function show(GalleryVideo $item) { return view('admin.GalleryVideo.show', compact('item')); }
+    public function show(GalleryVideo $gallery_video) { return view('admin.GalleryVideo.show', ['item' => $gallery_video]); }
 
-    public function edit(GalleryVideo $item) { return view('admin.GalleryVideo.edit', compact('item')); }
+    public function edit(GalleryVideo $gallery_video) { return view('admin.GalleryVideo.edit', ['item' => $gallery_video]); }
 
-    public function update(Request $r, GalleryVideo $item)
+    public function update(Request $r, GalleryVideo $gallery_video)
     {
         $r->validate([
             'title' => 'nullable|string|max:255',
@@ -58,9 +58,9 @@ class GalleryVideoController extends Controller
         if ($r->hasFile('thumbnail')) {
             $data['thumbnail'] = $r->file('thumbnail')->store('gallery/thumbnails', 'public');
         }
-        $item->update($data);
+        $gallery_video->update($data);
         return redirect()->route("admin.gallery-videos.index")->with('success','Video updated successfully');
     }
 
-    public function destroy(GalleryVideo $item) { $item->delete(); return back()->with('success','Video deleted successfully'); }
+    public function destroy(GalleryVideo $gallery_video) { $gallery_video->delete(); return back()->with('success','Video deleted successfully'); }
 }

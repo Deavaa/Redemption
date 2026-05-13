@@ -45,20 +45,20 @@ class AuditController extends Controller
         return redirect()->route("admin.audits.index")->with('success','Audit created successfully');
     }
 
-    public function show(Audit $item)
+    public function show(Audit $audit)
     {
-        $item->load(['academicYear','branch']);
-        return view('admin.Audit.show', compact('item'));
+        $audit->load(['academicYear','branch']);
+        return view('admin.Audit.show', ['item' => $audit]);
     }
 
-    public function edit(Audit $item)
+    public function edit(Audit $audit)
     {
         $academicYears = AcademicYear::orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
-        return view('admin.Audit.edit', compact('item', 'academicYears', 'branches'));
+        return view('admin.Audit.edit', ['item' => $audit, 'academicYears' => $academicYears, 'branches' => $branches]);
     }
 
-    public function update(Request $r, Audit $item)
+    public function update(Request $r, Audit $audit)
     {
         $r->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -69,13 +69,13 @@ class AuditController extends Controller
             'recommendations' => 'nullable|string',
             'status' => 'required|in:scheduled,in_progress,completed,cancelled',
         ]);
-        $item->update($r->only(['academic_year_id','branch_id','auditor_name','audit_date','findings','recommendations','status']));
+        $audit->update($r->only(['academic_year_id','branch_id','auditor_name','audit_date','findings','recommendations','status']));
         return redirect()->route("admin.audits.index")->with('success','Audit updated successfully');
     }
 
-    public function destroy(Audit $item)
+    public function destroy(Audit $audit)
     {
-        $item->delete();
+        $audit->delete();
         return back()->with('success','Audit deleted successfully');
     }
 }

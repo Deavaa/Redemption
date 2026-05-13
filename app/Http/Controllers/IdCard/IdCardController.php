@@ -41,30 +41,30 @@ class IdCardController extends Controller
         return redirect()->route("admin.id-cards.index")->with('success','ID Card created successfully');
     }
 
-    public function show(IdCard $item)
+    public function show(IdCard $id_card)
     {
-        $item->load('student');
-        return view('admin.IdCard.show', compact('item'));
+        $id_card->load('student');
+        return view('admin.IdCard.show', ['item' => $id_card]);
     }
 
-    public function edit(IdCard $item)
+    public function edit(IdCard $id_card)
     {
         $students = Student::where('status', 'active')->orderBy('first_name')->get();
-        return view('admin.IdCard.edit', compact('item', 'students'));
+        return view('admin.IdCard.edit', ['item' => $id_card, 'students' => $students]);
     }
 
-    public function update(Request $r, IdCard $item)
+    public function update(Request $r, IdCard $id_card)
     {
         $r->validate([
             'student_id' => 'required|exists:students,id',
-            'card_number' => 'required|string|max:255|unique:id_cards,card_number,' . $item->id,
+            'card_number' => 'required|string|max:255|unique:id_cards,card_number,' . $id_card->id,
             'issue_date' => 'required|date',
             'valid_until' => 'nullable|date|after_or_equal:issue_date',
             'status' => 'required|in:active,expired,revoked',
         ]);
-        $item->update($r->only(['student_id','card_number','issue_date','valid_until','status']));
+        $id_card->update($r->only(['student_id','card_number','issue_date','valid_until','status']));
         return redirect()->route("admin.id-cards.index")->with('success','ID Card updated successfully');
     }
 
-    public function destroy(IdCard $item) { $item->delete(); return back()->with('success','ID Card deleted successfully'); }
+    public function destroy(IdCard $id_card) { $id_card->delete(); return back()->with('success','ID Card deleted successfully'); }
 }

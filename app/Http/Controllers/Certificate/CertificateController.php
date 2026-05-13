@@ -42,35 +42,35 @@ class CertificateController extends Controller
         return redirect()->route("admin.certificates.index")->with('success','Certificate created successfully');
     }
 
-    public function show(Certificate $item)
+    public function show(Certificate $certificate)
     {
-        $item->load('student');
-        return view('admin.Certificate.show', compact('item'));
+        $certificate->load('student');
+        return view('admin.Certificate.show', ['item' => $certificate]);
     }
 
-    public function edit(Certificate $item)
+    public function edit(Certificate $certificate)
     {
         $students = Student::where('status', 'active')->orderBy('first_name')->get();
-        return view('admin.Certificate.edit', compact('item', 'students'));
+        return view('admin.Certificate.edit', ['item' => $certificate, 'students' => $students]);
     }
 
-    public function update(Request $r, Certificate $item)
+    public function update(Request $r, Certificate $certificate)
     {
         $r->validate([
             'student_id' => 'required|exists:students,id',
             'type' => 'required|in:transfer,completion,character,bonafide,other',
-            'certificate_number' => 'required|string|max:255|unique:certificates,certificate_number,' . $item->id,
+            'certificate_number' => 'required|string|max:255|unique:certificates,certificate_number,' . $certificate->id,
             'issue_date' => 'required|date',
             'content' => 'nullable|string',
             'template' => 'nullable|string|max:255',
         ]);
-        $item->update($r->only(['student_id','type','certificate_number','issue_date','content','template']));
+        $certificate->update($r->only(['student_id','type','certificate_number','issue_date','content','template']));
         return redirect()->route("admin.certificates.index")->with('success','Certificate updated successfully');
     }
 
-    public function destroy(Certificate $item)
+    public function destroy(Certificate $certificate)
     {
-        $item->delete();
+        $certificate->delete();
         return back()->with('success','Certificate deleted successfully');
     }
 }

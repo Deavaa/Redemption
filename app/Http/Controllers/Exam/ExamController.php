@@ -58,23 +58,23 @@ class ExamController extends Controller
             ->with('success', 'Exam scheduled for all subjects and all classes.');
     }
 
-    public function show(Exam $item)
+    public function show(Exam $exam)
     {
-        $item->load(['academicYear', 'term']);
+        $exam->load(['academicYear', 'term']);
 
-        return view('admin.Exam.show', compact('item'));
+        return view('admin.Exam.show', ['item' => $exam]);
     }
 
-    public function edit(Exam $item)
+    public function edit(Exam $exam)
     {
-        $item->load(['academicYear', 'term']);
+        $exam->load(['academicYear', 'term']);
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $allTerms = Term::orderBy('id')->get();
 
-        return view('admin.Exam.edit', compact('item', 'academicYears', 'allTerms'));
+        return view('admin.Exam.edit', ['item' => $exam, 'academicYears' => $academicYears, 'allTerms' => $allTerms]);
     }
 
-    public function update(Request $r, Exam $item)
+    public function update(Request $r, Exam $exam)
     {
         $r->validate([
             'name'             => 'required|string|max:255',
@@ -91,7 +91,7 @@ class ExamController extends Controller
             'description'      => 'nullable|string|max:1000',
         ]);
 
-        $item->update($r->only([
+        $exam->update($r->only([
             'name', 'type', 'total_marks',
             'academic_year_id', 'term_id',
             'class_id', 'subject_id',
@@ -104,9 +104,9 @@ class ExamController extends Controller
             ->with('success', 'Exam updated successfully.');
     }
 
-    public function destroy(Exam $item)
+    public function destroy(Exam $exam)
     {
-        $item->delete();
+        $exam->delete();
 
         return back()->with('success', 'Exam deleted successfully.');
     }

@@ -46,20 +46,20 @@ class FeeController extends Controller
         return redirect()->route('admin.fees.index')->with('success', 'Fee created successfully');
     }
 
-    public function show(Fee $item)
+    public function show(Fee $fee)
     {
-        $item->load(['classroom','academicYear','feePayments']);
-        return view('admin.Fee.show', compact('item'));
+        $fee->load(['classroom','academicYear','feePayments']);
+        return view('admin.Fee.show', ['item' => $fee]);
     }
 
-    public function edit(Fee $item)
+    public function edit(Fee $fee)
     {
         $classrooms = Classroom::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
-        return view('admin.Fee.edit', compact('item', 'classrooms', 'academicYears'));
+        return view('admin.Fee.edit', ['item' => $fee, 'classrooms' => $classrooms, 'academicYears' => $academicYears]);
     }
 
-    public function update(Request $r, Fee $item)
+    public function update(Request $r, Fee $fee)
     {
         $r->validate([
             'fee_type' => 'required|string|max:255',
@@ -70,13 +70,13 @@ class FeeController extends Controller
             'description' => 'nullable|string|max:500',
             'is_active' => 'nullable|boolean',
         ]);
-        $item->update($r->only(['fee_type','amount','class_id','academic_year_id','due_date','description','is_active']));
+        $fee->update($r->only(['fee_type','amount','class_id','academic_year_id','due_date','description','is_active']));
         return redirect()->route('admin.fees.index')->with('success', 'Fee updated successfully');
     }
 
-    public function destroy(Fee $item)
+    public function destroy(Fee $fee)
     {
-        $item->delete();
+        $fee->delete();
         return back()->with('success', 'Fee deleted successfully');
     }
 }

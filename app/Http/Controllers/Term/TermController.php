@@ -40,16 +40,16 @@ class TermController extends Controller
         return redirect()->route('admin.terms.index')->with('success', 'Term created.');
     }
 
-    public function show(Term $item)
+    public function show(Term $term)
     {
-        $item->load('academicYear');
-        return view('admin.Term.show', compact('item'));
+        $term->load('academicYear');
+        return view('admin.Term.show', ['item' => $term]);
     }
 
     public function edit(Term $term)
     {
         $academicYears = AcademicYear::orderByDesc('id')->get();
-        return view('admin.Term.edit', compact('term', 'academicYears'));
+        return view('admin.Term.edit', ['item' => $term, 'academicYears' => $academicYears]);
     }
 
     public function update(Request $r, Term $term)

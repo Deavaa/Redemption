@@ -44,19 +44,19 @@ class EmployeeAssetController extends Controller
         return redirect()->route("admin.employee-assets.index")->with('success','Asset assigned successfully');
     }
 
-    public function show(EmployeeAsset $item)
+    public function show(EmployeeAsset $employee_asset)
     {
-        $item->load('employee');
-        return view('admin.EmployeeAsset.show', compact('item'));
+        $employee_asset->load('employee');
+        return view('admin.EmployeeAsset.show', ['item' => $employee_asset]);
     }
 
-    public function edit(EmployeeAsset $item)
+    public function edit(EmployeeAsset $employee_asset)
     {
         $employees = User::whereIn('role', ['admin','teacher','staff'])->orderBy('name')->get();
-        return view('admin.EmployeeAsset.edit', compact('item', 'employees'));
+        return view('admin.EmployeeAsset.edit', ['item' => $employee_asset, 'employees' => $employees]);
     }
 
-    public function update(Request $r, EmployeeAsset $item)
+    public function update(Request $r, EmployeeAsset $employee_asset)
     {
         $r->validate([
             'employee_id' => 'required|exists:users,id',
@@ -67,13 +67,13 @@ class EmployeeAssetController extends Controller
             'return_date' => 'nullable|date|after_or_equal:issue_date',
             'description' => 'nullable|string|max:500',
         ]);
-        $item->update($r->only(['employee_id','name','quantity','condition','issue_date','return_date','description']));
+        $employee_asset->update($r->only(['employee_id','name','quantity','condition','issue_date','return_date','description']));
         return redirect()->route("admin.employee-assets.index")->with('success','Asset updated successfully');
     }
 
-    public function destroy(EmployeeAsset $item)
+    public function destroy(EmployeeAsset $employee_asset)
     {
-        $item->delete();
+        $employee_asset->delete();
         return back()->with('success','Asset record deleted successfully');
     }
 }
