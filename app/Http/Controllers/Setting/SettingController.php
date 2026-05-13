@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Setting;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -49,6 +50,61 @@ class SettingController extends Controller
     }
 
     /**
+     * Upload a logo file and return the path.
+     */
+    public function uploadLogo(Request $request)
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('logo')) {
+            // Delete old logo if exists
+            $oldLogo = Setting::where('key', 'school_logo')->value('value');
+            if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
+                Storage::disk('public')->delete($oldLogo);
+            }
+
+            $path = $request->file('logo')->store('logos', 'public');
+            Setting::updateOrCreate(
+                ['key' => 'school_logo', 'group' => 'general'],
+                ['value' => $path, 'type' => 'file', 'description' => 'School logo image']
+            );
+
+            return redirect()->back()->with('success', 'Logo uploaded successfully.');
+        }
+
+        return redirect()->back()->with('error', 'No file was uploaded.');
+    }
+
+    /**
+     * Upload a favicon file and return the path.
+     */
+    public function uploadFavicon(Request $request)
+    {
+        $request->validate([
+            'favicon' => 'required|image|mimes:jpeg,png,jpg,gif,svg,ico,webp|max:1024',
+        ]);
+
+        if ($request->hasFile('favicon')) {
+            $oldFavicon = Setting::where('key', 'favicon')->value('value');
+            if ($oldFavicon && Storage::disk('public')->exists($oldFavicon)) {
+                Storage::disk('public')->delete($oldFavicon);
+            }
+
+            $path = $request->file('favicon')->store('logos', 'public');
+            Setting::updateOrCreate(
+                ['key' => 'favicon', 'group' => 'website'],
+                ['value' => $path, 'type' => 'file', 'description' => 'Website favicon image']
+            );
+
+            return redirect()->back()->with('success', 'Favicon uploaded successfully.');
+        }
+
+        return redirect()->back()->with('error', 'No file was uploaded.');
+    }
+
+    /**
      * Ensure all required settings exist in the database.
      */
     private function ensureSettingsExist(): void
@@ -57,7 +113,7 @@ class SettingController extends Controller
             // General
             ['key' => 'school_name',       'value' => 'School of Redemption', 'group' => 'general', 'type' => 'text',     'description' => 'Official school name displayed across the system'],
             ['key' => 'school_motto',      'value' => '',                     'group' => 'general', 'type' => 'text',     'description' => 'School motto or tagline'],
-            ['key' => 'school_logo',       'value' => '',                     'group' => 'general', 'type' => 'text',     'description' => 'Path to school logo image (e.g. images/logo.png)'],
+            ['key' => 'school_logo',       'value' => '',                     'group' => 'general', 'type' => 'file',     'description' => 'School logo image (upload below)'],
             ['key' => 'established_year',  'value' => '',                     'group' => 'general', 'type' => 'number',   'description' => 'Year the school was established'],
             ['key' => 'timezone',          'value' => 'Africa/Addis_Ababa',   'group' => 'general', 'type' => 'text',     'description' => 'System timezone'],
 
@@ -65,7 +121,7 @@ class SettingController extends Controller
             ['key' => 'website_url',       'value' => '',                     'group' => 'website', 'type' => 'text',     'description' => 'School website URL'],
             ['key' => 'primary_color',     'value' => '#4361ee',              'group' => 'website', 'type' => 'text',     'description' => 'Primary brand color (hex)'],
             ['key' => 'secondary_color',   'value' => '#3a0ca3',              'group' => 'website', 'type' => 'text',     'description' => 'Secondary brand color (hex)'],
-            ['key' => 'favicon',           'value' => '',                     'group' => 'website', 'type' => 'text',     'description' => 'Path to favicon image'],
+            ['key' => 'favicon',           'value' => '',                     'group' => 'website', 'type' => 'file',     'description' => 'Website favicon (upload below)'],
             ['key' => 'show_branches',     'value' => '1',                    'group' => 'website', 'type' => 'boolean',  'description' => 'Show branch list on public website'],
 
             // Academic

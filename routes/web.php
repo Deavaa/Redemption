@@ -90,6 +90,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::post('mark-sheet-full/generate', [MarkSheetFullController::class, 'generate'])->name('mark-sheet-full.generate');
     Route::get('mark-sheet-full/api/sections', [MarkSheetFullController::class, 'getSections'])->name('mark-sheet-full.sections');
 
+    // Report Card (Foldable 4-face)
+    Route::get('report-card', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'index'])->name('report-card.index');
+    Route::post('report-card/generate', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'generate'])->name('report-card.generate');
+    Route::get('report-card/api/sections', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'getSections'])->name('report-card.sections');
+    Route::get('report-card/api/students', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'getStudents'])->name('report-card.students');
+
     // Performance Analysis
     Route::get('performance-analysis', [PerformanceAnalysisController::class, 'index'])->name('performance-analysis.index');
     Route::post('performance-analysis/generate', [PerformanceAnalysisController::class, 'generate'])->name('performance-analysis.generate');
@@ -175,6 +181,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
     Route::post('/settings/update-all', [SettingController::class, 'update'])->name('settings.updateAll');
+    Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo'])->name('settings.upload-logo');
+    Route::post('/settings/upload-favicon', [SettingController::class, 'uploadFavicon'])->name('settings.upload-favicon');
 
     // Roles & Permissions
     Route::resource('roles', RoleController::class);

@@ -2,7 +2,6 @@
 @section('title', 'Academic Calendar')
 
 @push('styles')
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 <style>
 .cal-page { animation: calFadeIn 0.4s ease-out; }
 @keyframes calFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -27,6 +26,8 @@
 #calendar .fc-day-today { background: #eff6ff !important; }
 #calendar .fc-event { border-radius: 6px !important; padding: 2px 6px !important; font-size: 0.78rem !important; font-weight: 600 !important; border: none !important; cursor: pointer; }
 #calendar .fc-col-header-cell { font-size: 0.82rem; font-weight: 600; color: #6b7280; text-transform: uppercase; }
+#calendar .fc-daygrid-day { cursor: pointer; transition: background 0.15s; }
+#calendar .fc-daygrid-day:hover { background: #f0f4ff !important; }
 
 /* Sidebar form */
 .cal-form-group { margin-bottom: 1rem; }
@@ -65,6 +66,9 @@
 .cal-modal-value { color: #1a1a2e; font-size: 0.88rem; }
 .cal-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #f0f0f0; display: flex; gap: 0.5rem; justify-content: flex-end; }
 
+/* Quick Add Modal */
+.quick-add-hint { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.82rem; color: #1e40af; display: flex; align-items: center; gap: 0.5rem; }
+
 @keyframes calModalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
 @media (max-width: 992px) { .cal-layout { grid-template-columns: 1fr; } }
@@ -77,7 +81,7 @@
     <div class="cal-header">
         <div class="cal-header-left">
             <h1 class="cal-title">Academic Calendar</h1>
-            <p class="cal-subtitle">Manage school events, holidays, exams, and important dates</p>
+            <p class="cal-subtitle">Manage school events, holidays, exams, and important dates &mdash; click any date to add an event</p>
         </div>
     </div>
 
@@ -89,6 +93,12 @@
 
         {{-- Sidebar --}}
         <div>
+            {{-- Quick Add Hint --}}
+            <div class="quick-add-hint">
+                <i class="fas fa-mouse-pointer"></i>
+                <span>Click on any calendar date to quickly add an event!</span>
+            </div>
+
             {{-- Add Event Form --}}
             <div class="cal-card" style="margin-bottom:1.25rem;">
                 <div class="cal-card-header"><i class="fas fa-plus-circle" style="color:#4361ee"></i> Add Event</div>
@@ -97,7 +107,7 @@
                         @csrf
                         <div class="cal-form-group">
                             <label class="cal-form-label">Title *</label>
-                            <input type="text" name="title" class="cal-form-control" required placeholder="Event title">
+                            <input type="text" name="title" class="cal-form-control" required placeholder="Event title" id="eventTitle">
                         </div>
                         <div class="cal-form-group">
                             <label class="cal-form-label">Category *</label>
@@ -146,6 +156,17 @@
                                 @endforeach
                             </select>
                         </div>
+                        @if($branches->count() > 1)
+                        <div class="cal-form-group">
+                            <label class="cal-form-label">Branch</label>
+                            <select name="branch_id" class="cal-form-control">
+                                <option value="">-- All Branches --</option>
+                                @foreach($branches as $br)
+                                    <option value="{{ $br->id }}">{{ $br->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
                         <input type="hidden" name="color" id="eventColor">
                         <button type="submit" class="btn btn-primary w-100"><i class="fas fa-plus me-1"></i> Add Event</button>
                     </form>
@@ -175,6 +196,69 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+{{-- Quick Add Event Modal (appears when clicking a calendar date) --}}
+<div id="quickAddModal" class="cal-modal-overlay" style="display:none;" onclick="if(event.target===this)closeQuickAdd()">
+    <div class="cal-modal">
+        <div class="cal-modal-header">
+            <h5 class="cal-modal-title"><i class="fas fa-calendar-plus me-2" style="color:#4361ee"></i>Add Event</h5>
+            <button class="cal-modal-close" onclick="closeQuickAdd()"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="POST" action="{{ route('admin.calendar.store') }}" id="quickAddForm">
+            @csrf
+            <div class="cal-modal-body">
+                <div class="quick-add-hint" id="quickAddDateHint">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Adding event for: <strong id="quickAddDateText"></strong></span>
+                </div>
+                <div class="cal-form-group">
+                    <label class="cal-form-label">Title *</label>
+                    <input type="text" name="title" class="cal-form-control" required placeholder="Event title" id="quickAddTitle" autofocus>
+                </div>
+                <div class="cal-form-group">
+                    <label class="cal-form-label">Category *</label>
+                    <select name="category" class="cal-form-control" required id="quickAddCategory">
+                        @foreach(\App\Models\CalendarEvent::categoryList() as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <input type="hidden" name="start_date" id="quickAddStartDate">
+                <input type="hidden" name="end_date" id="quickAddEndDate">
+                <input type="hidden" name="is_all_day" value="1">
+                <input type="hidden" name="color" id="quickAddColor">
+                <div class="cal-form-group">
+                    <label class="cal-form-label">Description</label>
+                    <textarea name="description" class="cal-form-control" rows="2" placeholder="Optional description"></textarea>
+                </div>
+                <div class="cal-form-group">
+                    <label class="cal-form-label">Academic Year</label>
+                    <select name="academic_year_id" class="cal-form-control">
+                        <option value="">-- None --</option>
+                        @foreach($academicYears as $ay)
+                            <option value="{{ $ay->id }}">{{ $ay->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @if($branches->count() > 1)
+                <div class="cal-form-group">
+                    <label class="cal-form-label">Branch</label>
+                    <select name="branch_id" class="cal-form-control">
+                        <option value="">-- All Branches --</option>
+                        @foreach($branches as $br)
+                            <option value="{{ $br->id }}">{{ $br->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+            </div>
+            <div class="cal-modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeQuickAdd()">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i> Add Event</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -216,6 +300,13 @@ function updateColor() { colorInput.value = categoryColors[catSelect.value] || '
 catSelect.addEventListener('change', updateColor);
 updateColor();
 
+// Quick Add modal auto-color
+const quickCatSelect = document.getElementById('quickAddCategory');
+const quickColorInput = document.getElementById('quickAddColor');
+function updateQuickColor() { quickColorInput.value = categoryColors[quickCatSelect.value] || '#4361ee'; }
+quickCatSelect.addEventListener('change', updateQuickColor);
+updateQuickColor();
+
 // Initialize FullCalendar
 const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
     initialView: 'dayGridMonth',
@@ -237,6 +328,7 @@ const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), 
         })
             .then(r => { if(!r.ok) throw new Error('Network error'); return r.json(); })
             .then(data => {
+                console.log('Calendar events loaded:', data.length);
                 successCallback(data);
                 updateUpcoming(data);
             })
@@ -247,16 +339,63 @@ const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), 
         showEventDetail(info.event);
     },
     dateClick: function(info) {
-        // Fill the form with the clicked date and scroll to form
-        document.getElementById('eventStartDate').value = info.dateStr;
-        document.getElementById('eventEndDate').value = info.dateStr;
-        // Scroll the form into view
-        document.getElementById('eventForm').scrollIntoView({behavior: 'smooth', block: 'start'});
-        // Focus the title field
-        setTimeout(function(){ document.querySelector('#eventForm input[name="title"]').focus(); }, 300);
+        // Open quick add modal with the clicked date
+        openQuickAdd(info.dateStr);
     }
 });
 calendar.render();
+
+function openQuickAdd(dateStr) {
+    const dateObj = new Date(dateStr + 'T00:00:00');
+    const formatted = dateObj.toLocaleDateString(undefined, {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+    document.getElementById('quickAddStartDate').value = dateStr;
+    document.getElementById('quickAddEndDate').value = dateStr;
+    document.getElementById('quickAddDateText').textContent = formatted;
+    document.getElementById('quickAddTitle').value = '';
+    document.getElementById('quickAddModal').style.display = 'flex';
+
+    setTimeout(function() {
+        document.getElementById('quickAddTitle').focus();
+    }, 200);
+}
+
+function closeQuickAdd() {
+    document.getElementById('quickAddModal').style.display = 'none';
+}
+
+// Handle quick add form submission via AJAX so we don't lose calendar state
+document.getElementById('quickAddForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(r => {
+        if (r.ok) {
+            closeQuickAdd();
+            calendar.refetchEvents();
+            // Also update the sidebar form's date
+            document.getElementById('eventStartDate').value = formData.get('start_date');
+        } else {
+            return r.json().then(data => {
+                alert('Error: ' + (data.message || 'Failed to add event'));
+            });
+        }
+    })
+    .catch(err => {
+        // Fallback: submit normally
+        form.submit();
+    });
+});
 
 function showEventDetail(event) {
     currentEventId = event.id;
@@ -292,11 +431,12 @@ function closeModal() {
 function deleteEvent() {
     if (!currentEventId) return;
     if (!confirm('Are you sure you want to delete this event?')) return;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
     fetch('{{ route("admin.calendar.destroy", 0) }}'.replace('/0', '/' + currentEventId), {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: '_method=DELETE&_token=' + document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+        body: '_method=DELETE&_token=' + csrfToken
     }).then(() => {
         closeModal();
         calendar.refetchEvents();
@@ -325,7 +465,9 @@ function updateUpcoming(events) {
     }).join('');
 }
 
-// Keyboard shortcut to close modal
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+// Keyboard shortcut to close modals
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); closeQuickAdd(); }
+});
 </script>
 @endpush

@@ -121,7 +121,8 @@ class CalendarEventController extends Controller
             $end = null;
             if ($e->end_date) {
                 // FullCalendar end date is exclusive, so add 1 day for all-day events
-                $endDate = $e->is_all_day ? $e->end_date->addDay() : $e->end_date;
+                // Use copy() to avoid mutating the original Carbon instance
+                $endDate = $e->is_all_day ? $e->end_date->copy()->addDay() : $e->end_date;
                 $end = $endDate->format('Y-m-d');
                 if ($e->end_time && !$e->is_all_day) {
                     $end .= 'T' . $e->end_time;

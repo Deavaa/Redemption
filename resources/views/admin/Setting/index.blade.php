@@ -66,11 +66,119 @@
     </div>
     @endif
 
+    @if(session('error'))
+    <div class="modern-alert modern-alert-danger">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ session('error') }}</span>
+        <button type="button" class="modern-alert-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    @endif
+
+    {{-- Logo & Favicon Upload Cards (shown before settings form) --}}
+    <div class="modern-upload-row">
+        {{-- Logo Upload --}}
+        <div class="modern-card modern-upload-card">
+            <div class="modern-form-section-header">
+                <div class="modern-form-section-icon modern-form-section-icon-blue">
+                    <i class="fas fa-school"></i>
+                </div>
+                <div>
+                    <h3 class="modern-form-section-title">School Logo</h3>
+                    <p class="modern-form-section-desc">Upload the school logo used across the system</p>
+                </div>
+            </div>
+            <div class="modern-upload-body">
+                @php
+                    $logoSetting = $settings->get('general')?->firstWhere('key', 'school_logo');
+                    $logoPath = $logoSetting?->value;
+                    $logoUrl = $logoPath ? (filter_var($logoPath, FILTER_VALIDATE_URL) ? $logoPath : Storage::disk('public')->url($logoPath)) : null;
+                @endphp
+                @if($logoUrl)
+                <div class="modern-logo-preview">
+                    <img src="{{ $logoUrl }}" alt="School Logo" id="logoPreview">
+                </div>
+                @else
+                <div class="modern-logo-preview modern-logo-placeholder" id="logoPreviewPlaceholder">
+                    <i class="fas fa-image"></i>
+                    <span>No logo uploaded</span>
+                </div>
+                @endif
+                <form method="POST" action="{{ route('admin.settings.upload-logo') }}" enctype="multipart/form-data" id="logoUploadForm">
+                    @csrf
+                    <div class="modern-upload-input">
+                        <input type="file" name="logo" id="logoInput" accept="image/jpeg,image/png,image/jpg,image/gif,image/svg,image/webp" class="modern-file-input">
+                        <label for="logoInput" class="modern-file-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Choose Logo</span>
+                        </label>
+                        <button type="submit" class="btn-modern btn-modern-primary btn-modern-sm" id="logoUploadBtn" style="display:none;">
+                            <i class="fas fa-upload"></i> Upload
+                        </button>
+                    </div>
+                    <span class="modern-form-hint">Recommended: PNG or SVG, max 2MB, transparent background preferred</span>
+                </form>
+            </div>
+        </div>
+
+        {{-- Favicon Upload --}}
+        <div class="modern-card modern-upload-card">
+            <div class="modern-form-section-header">
+                <div class="modern-form-section-icon modern-form-section-icon-green">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <div>
+                    <h3 class="modern-form-section-title">Website Favicon</h3>
+                    <p class="modern-form-section-desc">Upload the favicon shown in browser tabs</p>
+                </div>
+            </div>
+            <div class="modern-upload-body">
+                @php
+                    $faviconSetting = $settings->get('website')?->firstWhere('key', 'favicon');
+                    $faviconPath = $faviconSetting?->value;
+                    $faviconUrl = $faviconPath ? (filter_var($faviconPath, FILTER_VALIDATE_URL) ? $faviconPath : Storage::disk('public')->url($faviconPath)) : null;
+                @endphp
+                @if($faviconUrl)
+                <div class="modern-logo-preview modern-favicon-preview">
+                    <img src="{{ $faviconUrl }}" alt="Favicon" id="faviconPreview">
+                </div>
+                @else
+                <div class="modern-logo-preview modern-logo-placeholder modern-favicon-preview" id="faviconPreviewPlaceholder">
+                    <i class="fas fa-star"></i>
+                    <span>No favicon</span>
+                </div>
+                @endif
+                <form method="POST" action="{{ route('admin.settings.upload-favicon') }}" enctype="multipart/form-data" id="faviconUploadForm">
+                    @csrf
+                    <div class="modern-upload-input">
+                        <input type="file" name="favicon" id="faviconInput" accept="image/jpeg,image/png,image/jpg,image/gif,image/svg,image/x-icon,image/webp" class="modern-file-input">
+                        <label for="faviconInput" class="modern-file-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Choose Favicon</span>
+                        </label>
+                        <button type="submit" class="btn-modern btn-modern-primary btn-modern-sm" id="faviconUploadBtn" style="display:none;">
+                            <i class="fas fa-upload"></i> Upload
+                        </button>
+                    </div>
+                    <span class="modern-form-hint">Recommended: ICO or PNG, 32x32 or 64x64 pixels, max 1MB</span>
+                </form>
+            </div>
+        </div>
+    </div>
+
     {{-- Settings Form --}}
     <form id="settingsForm" method="POST" action="{{ route('admin.settings.updateAll') }}">
         @csrf
 
         @foreach($settings as $group => $items)
+            {{-- Skip school_logo and favicon in the form since they have dedicated upload sections --}}
+            @php
+                $filteredItems = $items->filter(function($item) {
+                    return !in_array($item->key, ['school_logo', 'favicon']);
+                });
+                if ($filteredItems->count() === 0) continue;
+            @endphp
         <div class="modern-card" style="margin-bottom: 1.25rem;">
             <div class="modern-form-section">
                 <div class="modern-form-section-header">
@@ -94,12 +202,12 @@
                     </div>
                     <div>
                         <h3 class="modern-form-section-title">{{ $groupLabels[$group] ?? ucfirst($group) }}</h3>
-                        <p class="modern-form-section-desc">{{ $items->count() }} setting{{ $items->count() > 1 ? 's' : '' }} in this group</p>
+                        <p class="modern-form-section-desc">{{ $filteredItems->count() }} setting{{ $filteredItems->count() > 1 ? 's' : '' }} in this group</p>
                     </div>
                 </div>
                 <div class="modern-form-section-body">
                     <div class="modern-form-grid">
-                        @foreach($items as $item)
+                        @foreach($filteredItems as $item)
                             @if($item->type === 'boolean')
                             <div class="modern-form-group">
                                 <div class="modern-toggle-wrapper">
@@ -114,29 +222,6 @@
                                         @endif
                                     </div>
                                 </div>
-                            </div>
-                            @elseif($item->key === 'school_logo')
-                            <div class="modern-form-group" style="grid-column: span 2">
-                                <label class="modern-form-label" for="setting_{{ $item->id }}">
-                                    {{ ucfirst(str_replace('_', ' ', $item->key)) }}
-                                </label>
-                                @if($item->value)
-                                <div style="margin-bottom:.75rem">
-                                    <img src="{{ asset($item->value) }}" alt="School Logo" style="max-height:80px;border-radius:10px;border:2px solid #e5e7eb;padding:4px;background:#fff">
-                                </div>
-                                @endif
-                                <div class="modern-input-wrapper">
-                                    <i class="fas fa-image modern-input-icon"></i>
-                                    <input type="text"
-                                        name="settings[{{ $item->group }}__{{ $item->key }}]"
-                                        id="setting_{{ $item->id }}"
-                                        class="modern-input"
-                                        value="{{ $item->value }}"
-                                        placeholder="Path to logo (e.g. images/logo.png)">
-                                </div>
-                                @if($item->description)
-                                <span class="modern-form-hint">{{ $item->description }}</span>
-                                @endif
                             </div>
                             @elseif($item->type === 'number')
                             <div class="modern-form-group">
@@ -179,6 +264,35 @@
                                     {{ ucfirst(str_replace('_', ' ', $item->key)) }}
                                 </label>
                                 <div class="modern-input-wrapper">
+                                    @if($item->key === 'mail_password')
+                                    <i class="fas fa-lock modern-input-icon"></i>
+                                    <input type="password"
+                                        name="settings[{{ $item->group }}__{{ $item->key }}]"
+                                        id="setting_{{ $item->id }}"
+                                        class="modern-input"
+                                        value="{{ $item->value }}"
+                                        placeholder="Enter password...">
+                                    @elseif($item->key === 'primary_color' || $item->key === 'secondary_color')
+                                    <i class="fas fa-palette modern-input-icon"></i>
+                                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                                        <input type="color" value="{{ $item->value ?: '#4361ee' }}" style="width:40px;height:36px;border:1.5px solid #e5e7eb;border-radius:8px;padding:2px;cursor:pointer;" onchange="this.nextElementSibling.value=this.value">
+                                        <input type="text"
+                                            name="settings[{{ $item->group }}__{{ $item->key }}]"
+                                            id="setting_{{ $item->id }}"
+                                            class="modern-input"
+                                            value="{{ $item->value }}"
+                                            placeholder="#4361ee"
+                                            oninput="this.previousElementSibling.value=this.value">
+                                    </div>
+                                    @elseif(filter_var($item->value, FILTER_VALIDATE_URL))
+                                    <i class="fas fa-link modern-input-icon"></i>
+                                    <input type="url"
+                                        name="settings[{{ $item->group }}__{{ $item->key }}]"
+                                        id="setting_{{ $item->id }}"
+                                        class="modern-input"
+                                        value="{{ $item->value }}"
+                                        placeholder="https://...">
+                                    @else
                                     <i class="fas fa-font modern-input-icon"></i>
                                     <input type="text"
                                         name="settings[{{ $item->group }}__{{ $item->key }}]"
@@ -186,6 +300,7 @@
                                         class="modern-input"
                                         value="{{ $item->value }}"
                                         placeholder="Enter value...">
+                                    @endif
                                 </div>
                                 @if($item->description)
                                 <span class="modern-form-hint">{{ $item->description }}</span>
@@ -348,6 +463,12 @@
     border: 1px solid #a7f3d0;
 }
 
+.modern-alert-danger {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
 .modern-alert-close {
     margin-left: auto;
     background: none;
@@ -358,6 +479,98 @@
     transition: opacity 0.2s;
 }
 .modern-alert-close:hover { opacity: 1; }
+
+/* Upload Row */
+.modern-upload-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.modern-upload-body {
+    padding: 1.25rem 2rem 1.75rem;
+}
+
+.modern-logo-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.modern-logo-preview img {
+    max-height: 100px;
+    max-width: 100%;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    padding: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.modern-favicon-preview img {
+    max-height: 48px;
+    max-width: 48px;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.modern-logo-placeholder {
+    width: 100%;
+    height: 100px;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: #9ca3af;
+    font-size: 0.85rem;
+}
+
+.modern-logo-placeholder i {
+    font-size: 1.5rem;
+    color: #d1d5db;
+}
+
+.modern-favicon-preview.modern-logo-placeholder {
+    height: 80px;
+}
+
+.modern-upload-input {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modern-file-input {
+    display: none;
+}
+
+.modern-file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f9fafb;
+}
+
+.modern-file-label:hover {
+    border-color: #4361ee;
+    color: #4361ee;
+    background: #f8f9ff;
+}
+
+.btn-modern-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+}
 
 /* Form Section */
 .modern-form-section { border-bottom: none; }
@@ -585,7 +798,20 @@
     .modern-form-section-header { padding: 1.25rem 1.25rem 0.75rem; }
     .modern-form-actions { padding: 1rem 1.25rem; flex-direction: column; }
     .btn-modern { justify-content: center; width: 100%; }
+    .modern-upload-row { grid-template-columns: 1fr; }
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+// Show upload button when file is selected
+document.getElementById('logoInput').addEventListener('change', function() {
+    document.getElementById('logoUploadBtn').style.display = this.files.length ? 'inline-flex' : 'none';
+});
+document.getElementById('faviconInput').addEventListener('change', function() {
+    document.getElementById('faviconUploadBtn').style.display = this.files.length ? 'inline-flex' : 'none';
+});
+</script>
 @endpush
 @endsection

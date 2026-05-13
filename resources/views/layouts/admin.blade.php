@@ -39,6 +39,7 @@
                     'admin.mark-sheet.*',
                     'admin.mark-sheet-full.*',
                     'admin.mark-roster.*',
+                    'admin.report-card.*',
                     'admin.classrooms.*',
                     'admin.sections.*',
                     'admin.class-assets.*',
@@ -79,6 +80,7 @@
                         <li class="{{ request()->routeIs('admin.mark-sheet.*') ? 'active' : '' }}"><a href="{{ route('admin.mark-sheet.index') }}"><i class="bi bi-file-earmark-text"></i> Mark Sheet</a></li>
                         <li class="{{ request()->routeIs('admin.mark-sheet-full.*') ? 'active' : '' }}"><a href="{{ route('admin.mark-sheet-full.index') }}"><i class="fas fa-table"></i> Full Mark Sheet</a></li>
                         <li class="{{ request()->routeIs('admin.mark-roster.*') ? 'active' : '' }}"><a href="{{ route('admin.mark-roster.index') }}"><i class="bi bi-list-columns-reverse"></i> Mark Roster</a></li>
+                        <li class="{{ request()->routeIs('admin.report-card.*') ? 'active' : '' }}"><a href="{{ route('admin.report-card.index') }}"><i class="fas fa-id-card-alt"></i> Report Cards</a></li>
                         <li class="{{ request()->routeIs('admin.id-card-generate.*') ? 'active' : '' }}"><a href="{{ route('admin.id-card-generate.index') }}"><i class="fas fa-id-card"></i> Generate ID Cards</a></li>
                         <li class="{{ request()->routeIs('admin.certificate-generate.*') ? 'active' : '' }}"><a href="{{ route('admin.certificate-generate.index') }}"><i class="fas fa-certificate"></i> Generate Certificates</a></li>
                         <li class="{{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}"><a href="{{ route('admin.calendar.index') }}"><i class="fas fa-calendar-alt"></i> Academic Calendar</a></li>

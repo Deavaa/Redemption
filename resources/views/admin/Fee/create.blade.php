@@ -136,9 +136,12 @@
                                     name="due_date"
                                     id="due_date"
                                     class="modern-input {{ $errors->has('due_date') ? 'is-invalid' : '' }}"
-                                    value="{{ old('due_date') }}"
+                                    value="{{ old('due_date', $nextDueDate ?? '') }}"
                                     required>
                             </div>
+                            @isset($nextDueDate)
+                            <span class="modern-form-hint">Auto-set to the {{ $feeDueDay ?? 10 }}th of the Ethiopian month ({{ $nextDueDate }})</span>
+                            @endisset
                             @error('due_date')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror
