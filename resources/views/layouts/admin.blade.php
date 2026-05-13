@@ -4,7 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Admin') | School of Redemption</title>
+@php
+    $schoolName = \App\Models\Setting::get('school_name', 'School of Redemption');
+    $schoolLogo = \App\Models\Setting::get('school_logo', '');
+    $nameParts = explode(' ', trim($schoolName));
+    $lastName = array_pop($nameParts);
+    $firstPart = implode(' ', $nameParts) ?: 'School of';
+@endphp
+    <title>@yield('title', 'Admin') | {{ $schoolName }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -19,12 +26,18 @@
         <nav class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
                 <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
-                    <div class="sidebar-brand-icon">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
+                    @if($schoolLogo && file_exists(public_path('storage/' . $schoolLogo)))
+                        <div class="sidebar-brand-icon">
+                            <img src="{{ asset('storage/' . $schoolLogo) }}?t={{ time() }}" alt="{{ $schoolName }}" style="width: 36px; height: 36px; object-fit: contain;">
+                        </div>
+                    @else
+                        <div class="sidebar-brand-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                    @endif
                     <div class="sidebar-brand-text">
-                        <span class="sidebar-brand-pre">School of</span>
-                        <span class="sidebar-brand-name">REDEMPTION</span>
+                        <span class="sidebar-brand-pre">{{ $firstPart }}</span>
+                        <span class="sidebar-brand-name">{{ strtoupper($lastName) }}</span>
                     </div>
                 </a>
             </div>

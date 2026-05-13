@@ -28,21 +28,53 @@ class HomeController extends Controller
             ->limit(6)
             ->get();
 
-        // Get settings for the homepage
+        // Get ALL settings from database - used throughout the website
         $settings = [
+            // General
             'school_name' => Setting::get('school_name', 'School of Redemption'),
             'school_tagline' => Setting::get('school_tagline', 'Excellence in Education'),
             'school_description' => Setting::get('school_description', 'At School of Redemption, we nurture each student\'s potential through excellence in education, character development, and innovative learning methodologies that prepare them for tomorrow\'s challenges.'),
-            'school_phone' => Setting::get('school_phone', '+1 (234) 567-890'),
+
+            // Contact
+            'school_phone' => Setting::get('school_phone', '+251 11 234 5678'),
             'school_email' => Setting::get('school_email', 'info@schoolofredemption.edu'),
-            'school_address' => Setting::get('school_address', '123 Education Street, City'),
+            'school_address' => Setting::get('school_address', 'Addis Ababa, Ethiopia'),
+            'school_website' => Setting::get('school_website', 'https://schoolofredemption.edu'),
+
+            // Academic Stats
             'total_students' => Setting::get('total_students', '1500+'),
             'total_teachers' => Setting::get('total_teachers', '120+'),
             'university_acceptance' => Setting::get('university_acceptance', '98%'),
             'years_of_excellence' => Setting::get('years_of_excellence', '25+'),
+
+            // About
             'about_description' => Setting::get('about_description', 'School of Redemption has been at the forefront of educational excellence for over two decades. Founded on the principles of integrity, innovation, and inclusivity, we have grown into an institution that shapes the leaders of tomorrow.'),
+            'about_mission' => Setting::get('about_mission', 'To provide quality education that empowers students to become responsible, innovative, and compassionate leaders of tomorrow.'),
+            'about_vision' => Setting::get('about_vision', 'To be a leading institution of academic excellence, fostering holistic development and preparing students for global challenges.'),
+
+            // Social Media
+            'facebook_url' => Setting::get('facebook_url', ''),
+            'twitter_url' => Setting::get('twitter_url', ''),
+            'youtube_url' => Setting::get('youtube_url', ''),
+            'telegram_url' => Setting::get('telegram_url', ''),
+            'instagram_url' => Setting::get('instagram_url', ''),
+            'linkedin_url' => Setting::get('linkedin_url', ''),
+
+            // Website
             'cta_title' => Setting::get('cta_title', 'Ready to Begin Your Journey?'),
-            'cta_description' => Setting::get('cta_description', 'Join our community of learners and discover the transformative power of education at School of Redemption. Admissions are now open for the 2026 academic year.'),
+            'cta_description' => Setting::get('cta_description', 'Join our community of learners and discover the transformative power of education at School of Redemption. Admissions are now open for the upcoming academic year.'),
+            'cta_button_text' => Setting::get('cta_button_text', 'Apply Now'),
+            'cta_button_url' => Setting::get('cta_button_url', '#contact'),
+            'footer_text' => Setting::get('footer_text', 'School of Redemption. All rights reserved.'),
+
+            // Appearance
+            'school_logo' => Setting::get('school_logo', ''),
+            'primary_color' => Setting::get('primary_color', '#0d0d2b'),
+            'secondary_color' => Setting::get('secondary_color', '#c9a84c'),
+            'show_slider' => Setting::get('show_slider', '1'),
+            'show_stats' => Setting::get('show_stats', '1'),
+            'show_team' => Setting::get('show_team', '1'),
+            'show_gallery' => Setting::get('show_gallery', '1'),
         ];
 
         return view('welcome', compact('sliders', 'teamMembers', 'galleryImages', 'settings'));

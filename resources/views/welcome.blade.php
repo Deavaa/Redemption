@@ -4,8 +4,8 @@ cd /c/xampp/htdocs/school-of-redemption && echo "PD9waHAKCm5hbWVzcGFjZSBEYXRhYmF
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="School of Redemption - Excellence in Education, Building Tomorrow's Leaders">
-    <title>School of Redemption - Excellence in Education</title>
+    <meta name="description" content="{{ $settings['school_name'] }} - {{ $settings['school_tagline'] }}">
+    <title>{{ $settings['school_name'] }} - {{ $settings['school_tagline'] }}</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,8 +18,8 @@ cd /c/xampp/htdocs/school-of-redemption && echo "PD9waHAKCm5hbWVzcGFjZSBEYXRhYmF
     
     <style>
         :root {
-            --primary-color: #0d0d2b;
-            --secondary-color: #c9a84c;
+            --primary-color: {{ $settings['primary_color'] ?? '#0d0d2b' }};
+            --secondary-color: {{ $settings['secondary_color'] ?? '#c9a84c' }};
             --accent-color: #198754;
             --text-dark: #1a1a2e;
             --text-light: #6c757d;
@@ -827,8 +827,11 @@ cd /c/xampp/htdocs/school-of-redemption && echo "PD9waHAKCm5hbWVzcGFjZSBEYXRhYmF
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <span class="brand-pre">School of<br></span>
-                <span class="brand-name">REDEMPTION</span>
+                @if($settings['school_logo'] && file_exists(public_path('storage/' . $settings['school_logo'])))
+                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; margin-right: 10px;">
+                @endif
+                <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}<br></span>
+                <span class="brand-name">{{ Str::afterLast($settings['school_name'], ' ') }}</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -1056,7 +1059,7 @@ cd /c/xampp/htdocs/school-of-redemption && echo "PD9waHAKCm5hbWVzcGFjZSBEYXRhYmF
                     <div class="about-image">
                         <img src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="School Campus">
                         <div class="about-badge">
-                            <h3>25+</h3>
+                            <h3>{{ $settings['years_of_excellence'] }}</h3>
                             <p>Years of Excellence</p>
                         </div>
                     </div>
@@ -1065,8 +1068,8 @@ cd /c/xampp/htdocs/school-of-redemption && echo "PD9waHAKCm5hbWVzcGFjZSBEYXRhYmF
                     <div class="about-content">
                         <span class="section-badge">About Our School</span>
                         <h2>A Legacy of Academic Excellence</h2>
-                        <p>School of Redemption has been at the forefront of educational excellence for over two decades. Founded on the principles of integrity, innovation, and inclusivity, we have grown into an institution that shapes the leaders of tomorrow.</p>
-                        <p>Our commitment to providing a nurturing environment where students can explore, discover, and excel has made us one of the most sought-after educational institutions in the region.</p>
+                        <p>{{ $settings['about_description'] }}</p>
+                        <p>{{ $settings['about_mission'] }}</p>
                         <ul class="about-features">
                             <li><i class="fas fa-check-circle"></i> Accredited by National Education Board</li>
                             <li><i class="fas fa-check-circle"></i> Award-winning STEM programs</li>
@@ -1302,13 +1305,13 @@ cd /c/xampp/htdocs/school-of-redemption && echo "PD9waHAKCm5hbWVzcGFjZSBEYXRhYmF
     <!-- CTA Section -->
     <section class="cta" id="contact">
         <div class="container">
-            <h2>Ready to Begin Your Journey?</h2>
-            <p>Join our community of learners and discover the transformative power of education at School of Redemption. Admissions are now open for the 2026 academic year.</p>
+            <h2>{{ $settings['cta_title'] }}</h2>
+            <p>{{ $settings['cta_description'] }}</p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="{{ route('login') }}" class="btn btn-hero-primary">
-                    <i class="fas fa-user-plus me-2"></i>Apply Now
+                <a href="{{ $settings['cta_button_url'] }}" class="btn btn-hero-primary">
+                    <i class="fas fa-user-plus me-2"></i>{{ $settings['cta_button_text'] }}
                 </a>
-                <a href="tel:+1234567890" class="btn btn-hero-secondary">
+                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $settings['school_phone']) }}" class="btn btn-hero-secondary">
                     <i class="fas fa-phone me-2"></i>Contact Us
                 </a>
             </div>
@@ -1321,16 +1324,20 @@ cd /c/xampp/htdocs/school-of-redemption && echo "PD9waHAKCm5hbWVzcGFjZSBEYXRhYmF
             <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
                     <div class="footer-brand">
-                        <span class="brand-pre">School of</span>
-                        <span class="brand-name">REDEMPTION</span>
+                        @if($settings['school_logo'] && file_exists(public_path('storage/' . $settings['school_logo'])))
+                            <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 40px; margin-bottom: 0.5rem;">
+                        @endif
+                        <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}</span>
+                        <span class="brand-name"> {{ Str::afterLast($settings['school_name'], ' ') }}</span>
                     </div>
-                    <p>Empowering students to achieve excellence and become responsible global citizens through quality education and character development.</p>
+                    <p>{{ $settings['about_mission'] }}</p>
                     <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        @if($settings['facebook_url'])<a href="{{ $settings['facebook_url'] }}" target="_blank"><i class="fab fa-facebook-f"></i></a>@endif
+                        @if($settings['twitter_url'])<a href="{{ $settings['twitter_url'] }}" target="_blank"><i class="fab fa-twitter"></i></a>@endif
+                        @if($settings['instagram_url'])<a href="{{ $settings['instagram_url'] }}" target="_blank"><i class="fab fa-instagram"></i></a>@endif
+                        @if($settings['linkedin_url'])<a href="{{ $settings['linkedin_url'] }}" target="_blank"><i class="fab fa-linkedin-in"></i></a>@endif
+                        @if($settings['youtube_url'])<a href="{{ $settings['youtube_url'] }}" target="_blank"><i class="fab fa-youtube"></i></a>@endif
+                        @if($settings['telegram_url'])<a href="{{ $settings['telegram_url'] }}" target="_blank"><i class="fab fa-telegram-plane"></i></a>@endif
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-6">
@@ -1356,15 +1363,15 @@ cd /c/xampp/htdocs/school-of-redemption && echo "PD9waHAKCm5hbWVzcGFjZSBEYXRhYmF
                 <div class="col-lg-3 col-md-6">
                     <h5>Contact Info</h5>
                     <ul class="footer-links">
-                        <li><i class="fas fa-map-marker-alt me-2"></i>123 Education Street, City</li>
-                        <li><i class="fas fa-phone me-2"></i>+1 (234) 567-890</li>
-                        <li><i class="fas fa-envelope me-2"></i>info@schoolofredemption.edu</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i>{{ $settings['school_address'] }}</li>
+                        <li><i class="fas fa-phone me-2"></i>{{ $settings['school_phone'] }}</li>
+                        <li><i class="fas fa-envelope me-2"></i>{{ $settings['school_email'] }}</li>
                         <li><i class="fas fa-clock me-2"></i>Mon - Fri: 7:30 AM - 4:00 PM</li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; {{ date('Y') }} School of Redemption. All Rights Reserved. | Designed with <i class="fas fa-heart text-danger"></i> for Education</p>
+                <p>&copy; {{ date('Y') }} {{ $settings['footer_text'] }}</p>
             </div>
         </div>
     </footer>
