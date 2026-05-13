@@ -17,10 +17,10 @@
             <p class="modern-page-subtitle">Configure and manage system preferences</p>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.settings.create') }}" class="btn-modern btn-modern-primary">
-                <i class="fas fa-plus"></i>
-                <span>Add Setting</span>
-            </a>
+            <button type="submit" form="settingsForm" class="btn-modern btn-modern-primary">
+                <i class="fas fa-save"></i>
+                <span>Save All Settings</span>
+            </button>
         </div>
     </div>
 
@@ -67,7 +67,7 @@
     @endif
 
     {{-- Settings Form --}}
-    <form method="POST" action="{{ route('admin.settings.updateAll') }}">
+    <form id="settingsForm" method="POST" action="{{ route('admin.settings.updateAll') }}">
         @csrf
 
         @foreach($settings as $group => $items)
