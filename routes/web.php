@@ -189,6 +189,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
     Route::post('/settings/update-all', [SettingController::class, 'update'])->name('settings.updateAll');
+Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo'])->name('settings.uploadLogo');
     Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo'])->name('settings.upload-logo');
     Route::post('/settings/upload-favicon', [SettingController::class, 'uploadFavicon'])->name('settings.upload-favicon');
     Route::delete('/settings/{id}', [SettingController::class, 'destroy'])->name('settings.destroy');
