@@ -22,9 +22,6 @@
                         <span class="sidebar-brand-name">REDEMPTION</span>
                     </div>
                 </a>
-                <button class="sidebar-toggle-btn" id="sidebarCollapseBtn" title="Toggle sidebar">
-                    <i class="fas fa-angles-left"></i>
-                </button>
             </div>
             @php
                 $academicRoutes = ['admin.academic-years.*','admin.terms.*','admin.subjects.*','admin.subject-assignments.*','admin.exams.*','admin.mark-entries.*','admin.classrooms.*','admin.sections.*'];
@@ -45,18 +42,17 @@
                 <li class="menu-header">ACADEMIC</li>
                 <li class="{{ $isAcademicActive ? 'active' : '' }}">
                     <a href="#academicSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
-                        <i class="bi bi-mortarboard"></i><span>Academic</span><i class="fas fa-chevron-down sidebar-chevron"></i>
+                        <i class="fas fa-graduation-cap"></i><span>Academic</span><i class="fas fa-chevron-down sidebar-chevron"></i>
                     </a>
                     <ul class="collapse {{ $isAcademicActive ? 'show' : '' }}" id="academicSubmenu">
-                        <li><a href="{{ route('admin.academic-years.index') }}"><i class="bi bi-calendar-range"></i> Academic Years</a></li>
-                        <li><a href="{{ route('admin.terms.index') }}"><i class="bi bi-bookmark"></i> Terms</a></li>
-                        <li><a href="{{ route('admin.subjects.index') }}"><i class="bi bi-book"></i> Subjects</a></li>
-                        <li><a href="{{ route('admin.subject-assignments.index') }}"><i class="bi bi-link-45deg"></i> Assign Subjects</a></li>
-                        <li><a href="{{ route('admin.exams.index') }}"><i class="bi bi-journal-text"></i> Exams</a></li>
-                        <li><a href="{{ route('admin.classrooms.index') }}"><i class="bi bi-building"></i> Classes</a></li>
-                        <li><a href="{{ route('admin.mark-entries.index') }}"><i class="bi bi-pencil-square"></i> Mark Entry</a></li>
+                        <li><a href="{{ route('admin.academic-years.index') }}"><i class="fas fa-calendar"></i> Academic Years</a></li>
+                        <li><a href="{{ route('admin.terms.index') }}"><i class="fas fa-bookmark"></i> Terms</a></li>
+                        <li><a href="{{ route('admin.subjects.index') }}"><i class="fas fa-book"></i> Subjects</a></li>
+                        <li><a href="{{ route('admin.subject-assignments.index') }}"><i class="fas fa-link"></i> Assign Subjects</a></li>
+                        <li><a href="{{ route('admin.exams.index') }}"><i class="fas fa-file-alt"></i> Exams</a></li>
+                        <li><a href="{{ route('admin.classrooms.index') }}"><i class="fas fa-building"></i> Classes</a></li>
+                        <li><a href="{{ route('admin.mark-entries.index') }}"><i class="fas fa-pen"></i> Mark Entry</a></li>
                     </ul>
-            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                 </li>
 
                 <li class="menu-header">PEOPLE</li>
@@ -67,10 +63,9 @@
                     <ul class="collapse {{ $isPeopleActive ? 'show' : '' }}" id="peopleSubmenu">
                         <li><a href="{{ route('admin.students.index') }}"><i class="fas fa-user-graduate"></i> Students</a></li>
                         <li><a href="{{ route('admin.teachers.index') }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
-                        <li><a href="{{ route('admin.staff.index') }}"><i class="bi bi-person-badge"></i> Staff</a></li>
+                        <li><a href="{{ route('admin.staff.index') }}"><i class="fas fa-id-badge"></i> Staff</a></li>
                         <li><a href="{{ route('admin.team-members.index') }}"><i class="fas fa-users"></i> Team Members</a></li>
                     </ul>
-            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                 </li>
 
                 <li class="menu-header">FINANCE</li>
@@ -88,7 +83,6 @@
                         <li><a href="{{ route('admin.leaves.index') }}"><i class="fas fa-calendar-minus"></i> Leaves</a></li>
                         <li><a href="{{ route('admin.employee-assets.index') }}"><i class="fas fa-boxes"></i> Employee Assets</a></li>
                     </ul>
-            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                 </li>
 
                 <li class="menu-header">WEBSITE</li>
@@ -103,7 +97,6 @@
                         <li><a href="{{ route('admin.gallery-videos.index') }}"><i class="fas fa-video"></i> Gallery Videos</a></li>
                         <li><a href="{{ route('admin.contact-messages.index') }}"><i class="fas fa-envelope"></i> Messages</a></li>
                     </ul>
-            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                 </li>
 
                 <li class="menu-header">SYSTEM</li>
@@ -114,7 +107,6 @@
                     <a href="{{ route('admin.audits.index') }}"><i class="fas fa-clipboard-list"></i><span>Audit Log</span></a>
                 </li>
             </ul>
-            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
 
             <div class="sidebar-footer">
                 <div class="sidebar-footer-user">
@@ -132,10 +124,12 @@
         <div class="admin-main">
             <nav class="admin-topbar">
                 <div class="topbar-left">
-                    <button class="topbar-link d-md-none" id="sidebarToggle" style="display:none;">
+                    <button class="sidebar-toggle" id="sidebarToggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <span class="topbar-greeting">Hi, <strong>{{ Auth::user()->name }}</strong></span>
+                    <div class="topbar-breadcrumb">
+                        <span>Hi, </span><strong>{{ Auth::user()->name }}</strong>
+                    </div>
                 </div>
                 <div class="topbar-right">
                     <a href="{{ url('/') }}" class="topbar-link" target="_blank" title="View Website">
@@ -158,7 +152,6 @@
                                 </form>
                             </li>
                         </ul>
-            <div class="sidebar-scroll-indicator" id="scrollIndicator"></div>
                     </div>
                 </div>
             </nav>
@@ -188,33 +181,28 @@
     (function(){
         const sidebar = document.getElementById('adminSidebar');
         const backdrop = document.getElementById('sidebarBackdrop');
-        const collapseBtn = document.getElementById('sidebarCollapseBtn');
-        const mobileToggle = document.getElementById('sidebarToggle');
+        const toggle = document.getElementById('sidebarToggle');
         const isMobile = () => window.innerWidth < 768;
 
-        // Collapse toggle
-        collapseBtn?.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            const icon = collapseBtn.querySelector('i');
-            icon.className = sidebar.classList.contains('collapsed')
-                ? 'fas fa-angles-right' : 'fas fa-angles-left';
-        });
-
-        // Mobile toggle
         function showSidebar(show) {
             if (!sidebar) return;
             sidebar.classList.toggle('show', show);
             backdrop?.classList.toggle('d-none', !show);
         }
 
-        if (mobileToggle) mobileToggle.style.display = isMobile() ? 'flex' : 'none';
-        mobileToggle?.addEventListener('click', () => showSidebar(!sidebar.classList.contains('show')));
+        toggle?.addEventListener('click', () => showSidebar(!sidebar.classList.contains('show')));
         backdrop?.addEventListener('click', () => showSidebar(false));
 
-        window.addEventListener('resize', () => {
-            if (mobileToggle) mobileToggle.style.display = isMobile() ? 'flex' : 'none';
-            if (!isMobile()) showSidebar(false);
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (link.hasAttribute('data-bs-toggle')) return;
+                if (window.innerWidth < 768) showSidebar(false);
+            });
         });
+
+        // Auto-scroll to active menu item
+        var active = document.querySelector('.sidebar-menu li.active');
+        if (active) setTimeout(function(){ active.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 200);
 
         // Auto-dismiss alerts
         document.querySelectorAll('.global-alert').forEach(a => {
@@ -224,140 +212,5 @@
     </script>
     @stack('scripts')
     @yield('scripts')
-
-    <!-- AJAX Performance: Prefetch links on hover, smooth transitions -->
-    <script>
-    (function(){
-        // AJAX form submission - prevents full page reload for CRUD forms
-        document.addEventListener('submit', function(e) {
-            var form = e.target;
-            if (form.method.toLowerCase() !== 'post' && form.method.toLowerCase() !== 'put' && form.method.toLowerCase() !== 'delete') return;
-            if (form.closest('.no-ajax')) return; // Skip forms with .no-ajax class
-
-            // Only AJAX-ify delete forms for safety
-            if (form.querySelector('input[name="_method"][value="DELETE"]')) {
-                e.preventDefault();
-                if (!confirm('Are you sure you want to delete this?')) return;
-
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-                    body: new FormData(form)
-                })
-                .then(r => r.ok ? r : Promise.reject(r))
-                .then(() => {
-                    // Remove the table row smoothly
-                    var row = form.closest('tr');
-                    if (row) { row.style.transition = 'opacity 0.3s'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
-                    // Show success message
-                    var alert = document.createElement('div');
-                    alert.className = 'global-alert global-alert-success';
-                    alert.innerHTML = '<i class="fas fa-check-circle"></i><span>Deleted successfully.</span><button type="button" class="global-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>';
-                    document.querySelector('.admin-content').prepend(alert);
-                    setTimeout(() => { alert.style.transition='opacity 0.3s'; alert.style.opacity='0'; setTimeout(()=>alert.remove(),300); }, 4000);
-                })
-                .catch(() => {
-                    var alert = document.createElement('div');
-                    alert.className = 'global-alert global-alert-danger';
-                    alert.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Delete failed. Please try again.</span><button type="button" class="global-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>';
-                    document.querySelector('.admin-content').prepend(alert);
-                });
-            }
-        });
-
-        // Prefetch pages on link hover (loads faster when clicked)
-        var prefetchCache = {};
-        document.addEventListener('mouseover', function(e) {
-            var link = e.target.closest('a[href]');
-            if (!link) return;
-            var href = link.getAttribute('href');
-            if (!href || href.startsWith('#') || href.startsWith('javascript') || prefetchCache[href]) return;
-            if (link.target === '_blank') return;
-
-            // Only prefetch same-origin links
-            try {
-                var url = new URL(href, window.location.origin);
-                if (url.origin !== window.location.origin) return;
-            } catch(e) { return; }
-
-            prefetchCache[href] = true;
-            var prefetch = document.createElement('link');
-            prefetch.rel = 'prefetch';
-            prefetch.href = href;
-            document.head.appendChild(prefetch);
-        });
-
-        // Smooth sidebar link clicks - add loading indicator
-        document.querySelectorAll('.sidebar-menu a[href]').forEach(function(link) {
-            link.addEventListener('click', function() {
-                if (link.getAttribute('data-bs-toggle')) return; // Skip collapse toggles
-                if (link.target === '_blank') return;
-                document.querySelector('.admin-content').style.opacity = '0.5';
-                document.querySelector('.admin-content').style.transition = 'opacity 0.15s';
-            });
-        });
-
-        // Remove loading on page load
-        document.querySelector('.admin-content').style.opacity = '1';
-    })();
-    </script>
-
-    <!-- Sidebar Scroll Enhancement -->
-    <script>
-    (function(){
-        var menu = document.querySelector('.sidebar-menu');
-        var indicator = document.getElementById('scrollIndicator');
-
-        if (menu && indicator) {
-            function checkScroll() {
-                var isScrollable = menu.scrollHeight > menu.clientHeight;
-                var atBottom = menu.scrollTop + menu.clientHeight >= menu.scrollHeight - 10;
-                indicator.classList.toggle('visible', isScrollable && !atBottom);
-            }
-
-            menu.addEventListener('scroll', checkScroll);
-            checkScroll();
-
-            // Keyboard navigation for sidebar
-            menu.addEventListener('keydown', function(e) {
-                var items = menu.querySelectorAll('a[href], .submenu-toggle');
-                var current = document.activeElement;
-                var index = Array.from(items).indexOf(current);
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    var next = items[index + 1];
-                    if (next) next.focus();
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    var prev = items[index - 1];
-                    if (prev) prev.focus();
-                }
-            });
-
-            // Auto-scroll to active item
-            var activeItem = menu.querySelector('li.active a, li.active .submenu-toggle');
-            if (activeItem) {
-                setTimeout(function() {
-                    activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }, 300);
-            }
-        }
-    })();
-    </script>
-
-    <!-- Sidebar Scroll Enhancement -->
-    <script>
-    (function(){
-        var menu = document.querySelector('.sidebar-menu');
-        if (menu) {
-            // Auto-scroll to active menu item
-            var active = menu.querySelector('li.active');
-            if (active) {
-                setTimeout(function(){ active.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 200);
-            }
-        }
-    })();
-    </script>
 </body>
 </html>
