@@ -1,20 +1,18 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration {
-    public function up() {
-        // Make email nullable on teachers table
-        Schema::table('teachers', function (Blueprint $table) {
-            $table->string('email')->nullable()->unique()->change();
-        });
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Make email nullable on teachers table using raw SQL (Laravel 12 compatible - no ->change())
+        DB::statement("ALTER TABLE teachers MODIFY COLUMN email VARCHAR(255) NULL DEFAULT NULL");
     }
 
-    public function down() {
-        Schema::table('teachers', function (Blueprint $table) {
-            $table->string('email')->unique()->nullable(false)->change();
-        });
+    public function down(): void
+    {
+        DB::statement("ALTER TABLE teachers MODIFY COLUMN email VARCHAR(255) NOT NULL");
     }
 };

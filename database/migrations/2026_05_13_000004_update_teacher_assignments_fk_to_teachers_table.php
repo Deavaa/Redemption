@@ -3,25 +3,42 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('teacher_assignments', function (Blueprint $table) {
-            // Drop the old foreign key if it exists
-            $sm = Schema::getConnection()->getDoctrineSchemaManager();
-            $foreignKeys = $sm->listTableForeignKeys('teacher_assignments');
-            foreach ($foreignKeys as $fk) {
-                if (in_array('teacher_id', $fk->getLocalColumns())) {
-                    $table->dropForeign($fk->getName());
-                    break;
+        // Drop existing foreign key on teacher_id (Laravel 12 compatible - no getDoctrineSchemaManager)
+        // First, find and drop any existing foreign key on teacher_id
+        $foreignKeys = DB::select("
+            SELECT CONSTRAINT_NAME
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'teacher_assignments'
+              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+        ");
+
+        foreach ($foreignKeys as $fk) {
+            // Check if this FK is on teacher_id column
+            $columns = DB::select("
+                SELECT COLUMN_NAME
+                FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'teacher_assignments'
+                  AND CONSTRAINT_NAME = ?
+            ", [$fk->CONSTRAINT_NAME]);
+
+            foreach ($columns as $col) {
+                if ($col->COLUMN_NAME === 'teacher_id') {
+                    DB::statement("ALTER TABLE teacher_assignments DROP FOREIGN KEY `{$fk->CONSTRAINT_NAME}`");
+                    break 2;
                 }
             }
-        });
+        }
 
+        // Re-add foreign key referencing teachers table instead of users
         Schema::table('teacher_assignments', function (Blueprint $table) {
-            // Re-add foreign key referencing teachers table instead of users
             $table->foreign('teacher_id')->references('id')->on('teachers')->nullOnDelete();
         });
     }
