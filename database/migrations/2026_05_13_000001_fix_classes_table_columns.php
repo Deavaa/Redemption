@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Drop the existing foreign key that references 'users' - using raw SQL to check if it exists
+        // Step 1: Drop the existing foreign key that references 'users'
         $foreignKeys = DB::select("
             SELECT CONSTRAINT_NAME
             FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
@@ -35,7 +35,17 @@ return new class extends Migration
             }
         }
 
-        // Add the capacity column if it doesn't exist
+        // Step 2: Clean up orphaned teacher_id values
+        // Old FK referenced users table, new FK references teachers table.
+        // Any teacher_id that doesn't exist in teachers table must be set to NULL.
+        DB::statement("
+            UPDATE classes
+            SET teacher_id = NULL
+            WHERE teacher_id IS NOT NULL
+              AND teacher_id NOT IN (SELECT id FROM teachers)
+        ");
+
+        // Step 3: Add the capacity column if it doesn't exist
         $columns = DB::select("
             SELECT COLUMN_NAME
             FROM INFORMATION_SCHEMA.COLUMNS
@@ -50,7 +60,7 @@ return new class extends Migration
             });
         }
 
-        // Re-add foreign key referencing 'teachers' table instead of 'users'
+        // Step 4: Re-add foreign key referencing 'teachers' table instead of 'users'
         Schema::table('classes', function (Blueprint $table) {
             $table->foreign('teacher_id')->references('id')->on('teachers')->nullOnDelete();
         });

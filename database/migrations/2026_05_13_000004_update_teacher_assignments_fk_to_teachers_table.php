@@ -9,8 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Drop existing foreign key on teacher_id (Laravel 12 compatible - no getDoctrineSchemaManager)
-        // First, find and drop any existing foreign key on teacher_id
+        // Step 1: Drop existing foreign key on teacher_id (Laravel 12 compatible)
         $foreignKeys = DB::select("
             SELECT CONSTRAINT_NAME
             FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
@@ -20,7 +19,6 @@ return new class extends Migration
         ");
 
         foreach ($foreignKeys as $fk) {
-            // Check if this FK is on teacher_id column
             $columns = DB::select("
                 SELECT COLUMN_NAME
                 FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
@@ -37,7 +35,17 @@ return new class extends Migration
             }
         }
 
-        // Re-add foreign key referencing teachers table instead of users
+        // Step 2: Clean up orphaned teacher_id values
+        // Old FK referenced users table, new FK references teachers table.
+        // Any teacher_id that doesn't exist in teachers table must be set to NULL.
+        DB::statement("
+            UPDATE teacher_assignments
+            SET teacher_id = NULL
+            WHERE teacher_id IS NOT NULL
+              AND teacher_id NOT IN (SELECT id FROM teachers)
+        ");
+
+        // Step 3: Re-add foreign key referencing teachers table instead of users
         Schema::table('teacher_assignments', function (Blueprint $table) {
             $table->foreign('teacher_id')->references('id')->on('teachers')->nullOnDelete();
         });
