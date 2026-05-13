@@ -37,6 +37,8 @@ use App\Http\Controllers\ProgressReport\ProgressReportController;
 use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
 use App\Http\Controllers\ContactMessage\ContactMessageController;
 use App\Http\Controllers\MarkSheet\MarkSheetController;
+use App\Http\Controllers\MarkSheet\MarkRosterController;
+use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\HomeController;
 
@@ -73,6 +75,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::post('mark-sheet/generate', [MarkSheetController::class, 'generate'])->name('mark-sheet.generate');
     Route::get('mark-sheet/api/sections', [MarkSheetController::class, 'getSections'])->name('mark-sheet.sections');
     Route::get('mark-sheet/api/students', [MarkSheetController::class, 'getStudents'])->name('mark-sheet.students');
+
+    // Mark Roster
+    Route::get('mark-roster', [MarkRosterController::class, 'index'])->name('mark-roster.index');
+    Route::post('mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate');
+    Route::get('mark-roster/api/sections', [MarkRosterController::class, 'getSections'])->name('mark-roster.sections');
+
+    // Performance Analysis
+    Route::get('performance-analysis', [PerformanceAnalysisController::class, 'index'])->name('performance-analysis.index');
+    Route::post('performance-analysis/generate', [PerformanceAnalysisController::class, 'generate'])->name('performance-analysis.generate');
+    Route::get('performance-analysis/api/sections', [PerformanceAnalysisController::class, 'getSections'])->name('performance-analysis.sections');
 
     // ID Card Generation
     Route::get('id-card-generate', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'index'])->name('id-card-generate.index');
