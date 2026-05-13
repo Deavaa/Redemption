@@ -261,34 +261,34 @@
                             </div>
 
                             <div class="modern-form-group">
-                                <label class="modern-form-label" for="admission_number">
-                                    Admission Number <small>(auto)</small>
+                                <label class="modern-form-label">
+                                    Admission Number <small>(auto-assigned)</small>
                                 </label>
-                                <div class="modern-input-wrapper">
-                                    <i class="fas fa-id-badge modern-input-icon"></i>
-                                    <input type="text" name="admission_number" id="admission_number"
-                                        class="modern-input {{ $errors->has('admission_number') ? 'is-invalid' : '' }}"
-                                        value="{{ old('admission_number') }}"
-                                        placeholder="Auto-generated" readonly>
+                                <div class="auto-gen-field">
+                                    <div class="auto-gen-badge" id="admissionNumberBadge">
+                                        <i class="fas fa-id-badge"></i>
+                                        <span>{{ $nextAdmissionNumber ?? 'YYYY-0001' }}</span>
+                                    </div>
+                                    <input type="hidden" name="admission_number" id="admission_number" value="{{ old('admission_number') }}">
                                 </div>
-                                <div class="modern-input-hint">Auto-generated on save</div>
+                                <div class="modern-input-hint">Automatically assigned when student is saved</div>
                                 @error('admission_number')
                                     <span class="modern-form-error">{{ $message }}</span>
                                 @enderror
                             </div>
 
                             <div class="modern-form-group">
-                                <label class="modern-form-label" for="roll_number">
-                                    Roll Number <small>(auto)</small>
+                                <label class="modern-form-label">
+                                    Roll Number <small>(auto-assigned)</small>
                                 </label>
-                                <div class="modern-input-wrapper">
-                                    <i class="fas fa-hashtag modern-input-icon"></i>
-                                    <input type="text" name="roll_number" id="roll_number"
-                                        class="modern-input {{ $errors->has('roll_number') ? 'is-invalid' : '' }}"
-                                        value="{{ old('roll_number') }}"
-                                        placeholder="Auto-generated" readonly>
+                                <div class="auto-gen-field">
+                                    <div class="auto-gen-badge auto-gen-badge-orange" id="rollNumberBadge">
+                                        <i class="fas fa-hashtag"></i>
+                                        <span id="rollNumberValue">Select class & section first</span>
+                                    </div>
+                                    <input type="hidden" name="roll_number" id="roll_number" value="{{ old('roll_number') }}">
                                 </div>
-                                <div class="modern-input-hint">Auto-generated on save</div>
+                                <div class="modern-input-hint">Automatically assigned based on section</div>
                                 @error('roll_number')
                                     <span class="modern-form-error">{{ $message }}</span>
                                 @enderror
@@ -824,6 +824,36 @@
     cursor: not-allowed;
 }
 
+/* Auto-generated field badge */
+.auto-gen-field {
+    display: flex;
+    align-items: center;
+}
+.auto-gen-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    color: #4361ee;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    border: 1.5px solid #c7d2fe;
+    width: 100%;
+    box-sizing: border-box;
+}
+.auto-gen-badge i {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+.auto-gen-badge-orange {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    color: #c2410c;
+    border-color: #fed7aa;
+}
+
 .modern-textarea { resize: vertical; min-height: 80px; }
 
 .modern-select {
@@ -1202,6 +1232,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const modal = bootstrap.Modal.getInstance(document.getElementById('addParentModal'));
             modal.hide();
             document.getElementById('newParentForm').reset();
+        });
+    }
+
+    // Auto-generate roll number preview when section changes
+    const sectionSelect = document.getElementById('section');
+    const rollNumberValue = document.getElementById('rollNumberValue');
+    const rollNumberInput = document.getElementById('roll_number');
+
+    if (sectionSelect) {
+        sectionSelect.addEventListener('change', function() {
+            const sectionId = this.value;
+            if (!sectionId) {
+                rollNumberValue.textContent = 'Select class & section first';
+                rollNumberInput.value = '';
+                return;
+            }
+            fetch('{{ route("admin.students.api.roll-preview") }}?section_id=' + sectionId, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.roll_number !== undefined) {
+                    rollNumberValue.textContent = data.roll_number;
+                    rollNumberInput.value = data.roll_number;
+                }
+            })
+            .catch(function() {
+                rollNumberValue.textContent = 'Will be assigned';
+            });
         });
     }
 });

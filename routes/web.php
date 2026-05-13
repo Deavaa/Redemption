@@ -38,6 +38,7 @@ use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
 use App\Http\Controllers\ContactMessage\ContactMessageController;
 use App\Http\Controllers\MarkSheet\MarkSheetController;
 use App\Http\Controllers\MarkSheet\MarkRosterController;
+use App\Http\Controllers\MarkSheet\MarkSheetFullController;
 use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Notification\NotificationController;
@@ -83,6 +84,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::post('mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate');
     Route::get('mark-roster/api/sections', [MarkRosterController::class, 'getSections'])->name('mark-roster.sections');
 
+    // Full Mark Sheet (Term1 + Term2 + Annual)
+    Route::get('mark-sheet-full', [MarkSheetFullController::class, 'index'])->name('mark-sheet-full.index');
+    Route::post('mark-sheet-full/generate', [MarkSheetFullController::class, 'generate'])->name('mark-sheet-full.generate');
+    Route::get('mark-sheet-full/api/sections', [MarkSheetFullController::class, 'getSections'])->name('mark-sheet-full.sections');
+
     // Performance Analysis
     Route::get('performance-analysis', [PerformanceAnalysisController::class, 'index'])->name('performance-analysis.index');
     Route::post('performance-analysis/generate', [PerformanceAnalysisController::class, 'generate'])->name('performance-analysis.generate');
@@ -100,7 +106,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('certificate-generate/api/students', [App\Http\Controllers\Certificate\CertificateGenerateController::class, 'getStudents'])->name('certificate-generate.students');
 
     Route::resource('students', StudentController::class);
-    Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
+    Route::get('students/api/admission-preview', [StudentController::class, 'apiAdmissionPreview'])->name('students.api.admission-preview');
+    Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
     Route::get('students/api/sections/{classId}', [StudentController::class, 'getSections'])->name('students.api.sections');
     Route::resource('teachers', TeacherController::class);
     Route::resource('staff', StaffController::class);

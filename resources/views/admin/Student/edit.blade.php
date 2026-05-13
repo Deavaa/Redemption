@@ -257,37 +257,29 @@
                             </div>
 
                             <div class="modern-form-group">
-                                <label class="modern-form-label" for="admission_number">
+                                <label class="modern-form-label">
                                     Admission Number
                                 </label>
-                                <div class="modern-input-wrapper">
-                                    <i class="fas fa-id-badge modern-input-icon"></i>
-                                    <input type="text" name="admission_number" id="admission_number"
-                                        class="modern-input {{ $errors->has('admission_number') ? 'is-invalid' : '' }}"
-                                        value="{{ old('admission_number', $data->admission_number) }}"
-                                        placeholder="Auto-generated" readonly>
+                                <div class="auto-gen-field">
+                                    <div class="auto-gen-badge">
+                                        <i class="fas fa-id-badge"></i>
+                                        <span>{{ $data->admission_number }}</span>
+                                    </div>
+                                    <input type="hidden" name="admission_number" value="{{ $data->admission_number }}">
                                 </div>
-                                <div class="modern-input-hint">Auto-generated on save</div>
-                                @error('admission_number')
-                                    <span class="modern-form-error">{{ $message }}</span>
-                                @enderror
                             </div>
 
                             <div class="modern-form-group">
-                                <label class="modern-form-label" for="roll_number">
-                                    Roll Number <small>(auto)</small>
+                                <label class="modern-form-label">
+                                    Roll Number
                                 </label>
-                                <div class="modern-input-wrapper">
-                                    <i class="fas fa-hashtag modern-input-icon"></i>
-                                    <input type="text" name="roll_number" id="roll_number"
-                                        class="modern-input {{ $errors->has('roll_number') ? 'is-invalid' : '' }}"
-                                        value="{{ old('roll_number', $data->roll_number) }}"
-                                        placeholder="Auto-generated" readonly>
+                                <div class="auto-gen-field">
+                                    <div class="auto-gen-badge auto-gen-badge-orange">
+                                        <i class="fas fa-hashtag"></i>
+                                        <span>{{ $data->roll_number }}</span>
+                                    </div>
+                                    <input type="hidden" name="roll_number" value="{{ $data->roll_number }}">
                                 </div>
-                                <div class="modern-input-hint">Auto-generated on save</div>
-                                @error('roll_number')
-                                    <span class="modern-form-error">{{ $message }}</span>
-                                @enderror
                             </div>
 
                             <div class="modern-form-group">
@@ -805,6 +797,36 @@
     background: #f9fafb;
     color: #6b7280;
     cursor: not-allowed;
+}
+
+/* Auto-generated field badge */
+.auto-gen-field {
+    display: flex;
+    align-items: center;
+}
+.auto-gen-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    color: #4361ee;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    border: 1.5px solid #c7d2fe;
+    width: 100%;
+    box-sizing: border-box;
+}
+.auto-gen-badge i {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+.auto-gen-badge-orange {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    color: #c2410c;
+    border-color: #fed7aa;
 }
 
 .modern-textarea { resize: vertical; min-height: 80px; }

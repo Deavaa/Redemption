@@ -45,7 +45,10 @@ class StudentController extends Controller
             $academicYears = AcademicYear::all();
         }
 
-        return view('admin.Student.create', compact('classrooms', 'parents', 'branches', 'academicYears'));
+        // Pre-generate the next admission number for preview
+        $nextAdmissionNumber = $this->generateAdmissionNumber();
+
+        return view('admin.Student.create', compact('classrooms', 'parents', 'branches', 'academicYears', 'nextAdmissionNumber'));
     }
 
     public function store(Request $request)
@@ -88,16 +91,12 @@ class StudentController extends Controller
 
         // Generate admission_number if not provided
         if (empty($validated['admission_number'])) {
-            $year = date('Y');
-            $lastAdmission = Student::where('admission_number', 'like', $year.'-%')->orderBy('admission_number', 'desc')->first();
-            $nextNum = $lastAdmission ? ((int) substr($lastAdmission->admission_number, -4)) + 1 : 1;
-            $validated['admission_number'] = $year.'-'.str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+            $validated['admission_number'] = $this->generateAdmissionNumber();
         }
 
         // Generate roll_number if not provided
         if (empty($validated['roll_number'])) {
-            $maxRoll = Student::where('section_id', $validated['section_id'])->max('roll_number') ?? 0;
-            $validated['roll_number'] = $maxRoll + 1;
+            $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
         }
 
         $validated['user_id'] = auth()->id();
@@ -183,5 +182,52 @@ class StudentController extends Controller
         $student->delete();
 
         return redirect()->route('admin.students.index')->with('success', 'Student deleted successfully!');
+    }
+
+    /**
+     * Generate the next admission number.
+     */
+    private function generateAdmissionNumber(): string
+    {
+        $year = date('Y');
+        $lastAdmission = Student::where('admission_number', 'like', $year.'-%')
+            ->selectRaw("CAST(SUBSTRING(admission_number, -4) AS UNSIGNED) as num")
+            ->orderByRaw('num DESC')
+            ->first();
+        $nextNum = $lastAdmission ? (((int) $lastAdmission->num) + 1) : 1;
+        return $year.'-'.str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate the next roll number for a section.
+     */
+    private function generateRollNumber(int $sectionId): int
+    {
+        $maxRoll = Student::where('section_id', $sectionId)
+            ->selectRaw("CAST(roll_number AS UNSIGNED) as rn")
+            ->orderByRaw('rn DESC')
+            ->first();
+        return $maxRoll ? (((int) $maxRoll->rn) + 1) : 1;
+    }
+
+    /**
+     * API: Preview next admission number.
+     */
+    public function apiAdmissionPreview()
+    {
+        return response()->json([
+            'admission_number' => $this->generateAdmissionNumber(),
+        ]);
+    }
+
+    /**
+     * API: Preview next roll number for a section.
+     */
+    public function apiRollPreview(Request $request)
+    {
+        $request->validate(['section_id' => 'required|exists:sections,id']);
+        return response()->json([
+            'roll_number' => $this->generateRollNumber($request->section_id),
+        ]);
     }
 }
