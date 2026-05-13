@@ -31,7 +31,8 @@ class GalleryImageController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $data = $r->only(['title','description','category','sort_order','is_active']);
+        $data = $r->only(['title','description','category','sort_order']);
+        $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('image_path')) {
             $data['image_path'] = $r->file('image_path')->store('gallery', 'public');
         }
@@ -53,7 +54,8 @@ class GalleryImageController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $data = $r->only(['title','description','category','sort_order','is_active']);
+        $data = $r->only(['title','description','category','sort_order']);
+        $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('image_path')) {
             $data['image_path'] = $r->file('image_path')->store('gallery', 'public');
         }

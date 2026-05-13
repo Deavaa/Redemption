@@ -30,7 +30,8 @@ class GalleryVideoController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $data = $r->only(['title','description','video_url','sort_order','is_active']);
+        $data = $r->only(['title','description','video_url','sort_order']);
+        $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('thumbnail')) {
             $data['thumbnail'] = $r->file('thumbnail')->store('gallery/thumbnails', 'public');
         }
@@ -52,7 +53,8 @@ class GalleryVideoController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $data = $r->only(['title','description','video_url','sort_order','is_active']);
+        $data = $r->only(['title','description','video_url','sort_order']);
+        $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('thumbnail')) {
             $data['thumbnail'] = $r->file('thumbnail')->store('gallery/thumbnails', 'public');
         }

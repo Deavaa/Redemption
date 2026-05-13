@@ -35,7 +35,8 @@ class TeamMemberController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $data = $r->only(['name','designation','department','qualification','experience','phone','email','bio','sort_order','is_active']);
+        $data = $r->only(['name','designation','department','qualification','experience','phone','email','bio','sort_order']);
+        $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('photo')) {
             $data['photo'] = $r->file('photo')->store('team-photos', 'public');
         }
@@ -61,7 +62,8 @@ class TeamMemberController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
-        $data = $r->only(['name','designation','department','qualification','experience','phone','email','bio','sort_order','is_active']);
+        $data = $r->only(['name','designation','department','qualification','experience','phone','email','bio','sort_order']);
+        $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('photo')) {
             $data['photo'] = $r->file('photo')->store('team-photos', 'public');
         }

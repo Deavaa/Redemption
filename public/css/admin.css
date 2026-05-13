@@ -110,9 +110,8 @@ body {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.35);
     z-index: 1049;
-    backdrop-filter: blur(2px);
 }
 
 .sidebar-backdrop:not(.d-none) {
@@ -126,13 +125,26 @@ body {
 }
 
 .sidebar-menu li.menu-open > a {
-    color: #e2e8f0;
+    color: #94a3b8;
 }
 
-.sidebar-menu .collapse li.active > a {
+.sidebar-menu .collapse li.active > a,
+.sidebar-menu .collapsing li.active > a {
     background: rgba(67, 97, 238, 0.15);
     color: #fff;
     border-left: 3px solid var(--primary);
+}
+
+.sidebar-menu > li.active > a:not([data-bs-toggle]) {
+    background: rgba(67, 97, 238, 0.15);
+    color: #fff;
+    border-left-color: var(--primary);
+}
+
+.sidebar-menu > li.active > a[data-bs-toggle] {
+    background: none;
+    color: #94a3b8;
+    border-left-color: transparent;
 }
 
 .admin-main {

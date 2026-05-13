@@ -129,13 +129,13 @@
                         <i class="fas fa-comments"></i><span>Chat</span>
                     </a>
                 </li>
-                <li class="{{ request()->routeIs('admin.telegram.*') ? 'active' : '' }}">
+                <li class="{{ request()->routeIs('admin.telegram.*') ? 'menu-open' : '' }}">
                     <a href="#telegramSubmenu" data-bs-toggle="collapse">
                         <i class="fab fa-telegram"></i><span>Telegram</span><i class="fas fa-chevron-down ms-auto sidebar-chevron"></i>
                     </a>
-                    <ul class="collapse" id="telegramSubmenu">
-                        <li><a href="{{ route('admin.telegram.index') }}"><i class="fas fa-cog"></i> Settings</a></li>
-                        <li><a href="{{ route('admin.telegram.send') }}"><i class="fas fa-paper-plane"></i> Send Message</a></li>
+                    <ul class="collapse {{ request()->routeIs('admin.telegram.*') ? 'show' : '' }}" id="telegramSubmenu">
+                        <li class="{{ request()->routeIs('admin.telegram.index') ? 'active' : '' }}"><a href="{{ route('admin.telegram.index') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                        <li class="{{ request()->routeIs('admin.telegram.send') ? 'active' : '' }}"><a href="{{ route('admin.telegram.send') }}"><i class="fas fa-paper-plane"></i> Send Message</a></li>
                     </ul>
                 </li>
 
@@ -254,11 +254,18 @@
         const sidebarBackdrop = document.getElementById('sidebarBackdrop');
         const sidebarToggle = document.getElementById('sidebarToggle');
 
+        function isDesktop() { return window.innerWidth >= 768; }
+
         function setSidebarVisibility(show) {
             if (!sidebar) return;
             sidebar.classList.toggle('show', show);
+            // Only show backdrop on mobile
             if (sidebarBackdrop) {
-                sidebarBackdrop.classList.toggle('d-none', !show);
+                if (show && !isDesktop()) {
+                    sidebarBackdrop.classList.remove('d-none');
+                } else {
+                    sidebarBackdrop.classList.add('d-none');
+                }
             }
         }
 
@@ -273,15 +280,28 @@
         document.querySelectorAll('.sidebar-menu a').forEach(link => {
             link.addEventListener('click', () => {
                 const isCollapseToggle = link.hasAttribute('data-bs-toggle') || (link.getAttribute('href') || '').startsWith('#');
-                if (window.innerWidth < 768 && !isCollapseToggle) {
+                if (!isDesktop() && !isCollapseToggle) {
                     setSidebarVisibility(false);
                 }
             });
         });
 
-        if (window.innerWidth >= 768) {
-            setSidebarVisibility(true);
+        // On desktop, always show sidebar without backdrop
+        if (isDesktop()) {
+            sidebar.classList.add('show');
+            if (sidebarBackdrop) sidebarBackdrop.classList.add('d-none');
         }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            if (isDesktop()) {
+                sidebar.classList.add('show');
+                if (sidebarBackdrop) sidebarBackdrop.classList.add('d-none');
+            } else {
+                sidebar.classList.remove('show');
+                if (sidebarBackdrop) sidebarBackdrop.classList.add('d-none');
+            }
+        });
 
         // Auto-dismiss alerts
         document.querySelectorAll('.global-alert').forEach(alert => {
