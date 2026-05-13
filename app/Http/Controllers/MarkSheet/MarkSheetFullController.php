@@ -71,13 +71,13 @@ class MarkSheetFullController extends Controller
         $allMarks = $marksQuery->get();
 
         // Get unique subjects from marks
-        $subjects = $allMarks->pluck('subject')->filter()->unique('id')->sortBy('name')->values();
+        $subjects = $allMarks->pluck('subject')->filter()->unique('id')->sortBy(function($s) { return [$s->priority ?? 0, $s->name]; })->values();
 
         // If no marks yet, get subjects from teacher assignments
         if ($subjects->isEmpty()) {
             $subjects = \App\Models\Subject::whereHas('teacherAssignments', function ($q) use ($classId) {
                 $q->where('class_id', $classId);
-            })->orderBy('name')->get();
+            })->orderBy('priority')->orderBy('name')->get();
         }
 
         // Build the data structure: [studentId][termId][subjectId] = mark data

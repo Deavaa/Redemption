@@ -26,7 +26,7 @@ class TeacherAssignmentController extends Controller
     {
         $teachers = Teacher::orderBy('first_name')->get();
         $classes = Classroom::orderBy('name')->get();
-        $subjects = Subject::orderBy('name')->get();
+        $subjects = Subject::ordered()->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         return view('admin.TeacherAssignment.create', compact('teachers', 'classes', 'subjects', 'academicYears'));
     }
@@ -55,7 +55,7 @@ class TeacherAssignmentController extends Controller
         $teachers = Teacher::orderBy('first_name')->get();
         $classes = Classroom::orderBy('name')->get();
         $sections = Section::where('class_id', $teacher_assignment->class_id)->orderBy('name')->get();
-        $subjects = Subject::orderBy('name')->get();
+        $subjects = Subject::ordered()->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         return view('admin.TeacherAssignment.edit', ['item' => $teacher_assignment, 'teachers' => $teachers, 'classes' => $classes, 'sections' => $sections, 'subjects' => $subjects, 'academicYears' => $academicYears]);
     }

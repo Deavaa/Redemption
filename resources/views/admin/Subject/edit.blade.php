@@ -89,8 +89,9 @@
                                 <i class="fas fa-tag modern-input-icon"></i>
                                 <select name="type" id="type" class="modern-input modern-select {{ $errors->has('type') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Type --</option>
-                                    <option value="compulsory" {{ old('type', $data->type) === 'compulsory' ? 'selected' : '' }}>Compulsory</option>
-                                    <option value="elective" {{ old('type', $data->type) === 'elective' ? 'selected' : '' }}>Elective</option>
+                                    @foreach($typeOptions as $key => $label)
+                                    <option value="{{ $key }}" {{ old('type', $data->type) === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             @error('type')
@@ -99,15 +100,36 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="status">
-                                Status <small>(optional)</small>
+                            <label class="modern-form-label" for="priority">
+                                Priority / Order <small>(lower = shown first)</small>
                             </label>
                             <div class="modern-input-wrapper">
-                                <i class="fas fa-toggle-on modern-input-icon"></i>
-                                <select name="status" id="status" class="modern-input modern-select">
-                                    <option value="active" {{ old('status', $data->status ?? 'active') === 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ old('status', $data->status ?? 'active') === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                </select>
+                                <i class="fas fa-sort-numeric-up modern-input-icon"></i>
+                                <input type="number"
+                                    name="priority"
+                                    id="priority"
+                                    class="modern-input {{ $errors->has('priority') ? 'is-invalid' : '' }}"
+                                    value="{{ old('priority', $data->priority ?? 0) }}"
+                                    min="0"
+                                    max="999"
+                                    placeholder="0 = highest priority">
+                            </div>
+                            @error('priority')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                            <small style="color:#9ca3af;font-size:.75rem;margin-top:.25rem">Controls subject order in mark sheets, report cards, and certificates.</small>
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label">
+                                Active
+                            </label>
+                            <div style="display:flex;align-items:center;gap:.65rem;padding-top:.5rem">
+                                <label style="position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0">
+                                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $data->is_active ?? true) ? 'checked' : '' }} style="opacity:0;width:0;height:0">
+                                    <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#d1d5db;border-radius:50px;transition:.3s"></span>
+                                </label>
+                                <span style="font-size:.85rem;color:#374151">Subject is active and visible</span>
                             </div>
                         </div>
 

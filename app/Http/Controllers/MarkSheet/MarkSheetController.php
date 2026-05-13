@@ -44,7 +44,7 @@ class MarkSheetController extends Controller
         if ($r->filled('exam_id')) $query->where('exam_id', $r->exam_id);
         if ($r->filled('student_id')) $query->where('student_id', $r->student_id);
 
-        $marks = $query->orderBy('student_id')->orderBy('subject_id')->get();
+        $marks = $query->orderBy('student_id')->orderByRaw('(SELECT priority FROM subjects WHERE subjects.id = mark_entries.subject_id) ASC')->orderBy('subject_id')->get();
         $students = $marks->groupBy('student_id');
         $class = ClassRoom::find($r->class_id);
         $academicYear = AcademicYear::find($r->academic_year_id);

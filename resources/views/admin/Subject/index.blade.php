@@ -40,7 +40,7 @@
                 <i class="fas fa-bookmark"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->where('type', 'compulsory')->count() + $data->where('type', 'Core')->count() }}</span>
+                <span class="modern-stat-value">{{ $data->where('type', 'compulsory')->count() }}</span>
                 <span class="modern-stat-label">Compulsory</span>
             </div>
         </div>
@@ -49,7 +49,7 @@
                 <i class="fas fa-book-open"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->where('type', 'elective')->count() + $data->where('type', 'Elective')->count() }}</span>
+                <span class="modern-stat-value">{{ $data->where('type', 'elective')->count() }}</span>
                 <span class="modern-stat-label">Elective</span>
             </div>
         </div>
@@ -58,7 +58,7 @@
                 <i class="fas fa-check-double"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->where('status', 'active')->count() + $data->where('status', '1')->count() }}</span>
+                <span class="modern-stat-value">{{ $data->where('is_active', true)->count() }}</span>
                 <span class="modern-stat-label">Active</span>
             </div>
         </div>
@@ -98,6 +98,7 @@
                             <th>Subject Name</th>
                             <th>Code</th>
                             <th class="th-center">Type</th>
+                            <th class="th-center">Priority</th>
                             <th class="th-center">Status</th>
                             <th class="th-actions">Actions</th>
                         </tr>
@@ -122,16 +123,21 @@
                                 @endif
                             </td>
                             <td class="td-center">
-                                @if($item->type === 'compulsory' || $item->type === 'Core')
+                                @if($item->type === 'compulsory')
                                     <span class="modern-badge modern-badge-success">Compulsory</span>
-                                @elseif($item->type === 'elective' || $item->type === 'Elective')
+                                @elseif($item->type === 'elective')
                                     <span class="modern-badge modern-badge-info">Elective</span>
+                                @elseif($item->type === 'optional')
+                                    <span class="modern-badge modern-badge-light">Optional</span>
                                 @else
-                                    <span class="modern-badge modern-badge-light">{{ $item->type ?? '-' }}</span>
+                                    <span class="modern-badge modern-badge-light">{{ ucfirst($item->type ?? '-') }}</span>
                                 @endif
                             </td>
                             <td class="td-center">
-                                @if($item->status === 'active' || $item->status === '1' || !isset($item->status))
+                                <span style="font-weight:700;color:#4361ee">{{ $item->priority ?? 0 }}</span>
+                            </td>
+                            <td class="td-center">
+                                @if($item->is_active)
                                     <span class="modern-badge modern-badge-success">Active</span>
                                 @else
                                     <span class="modern-badge modern-badge-danger">Inactive</span>

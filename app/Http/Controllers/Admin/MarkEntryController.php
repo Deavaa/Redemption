@@ -65,9 +65,9 @@ class MarkEntryController extends Controller
         $subjects = $assignments->map(function($a) {
             $subj = $a->subject;
             if (!$subj) return null;
-            return ['id'=>$subj->id,'name'=>$subj->name,'code'=>$subj->code??'','type'=>strtolower($subj->type??''),'is_core'=>is_null($a->section_id)];
+            return ['id'=>$subj->id,'name'=>$subj->name,'code'=>$subj->code??'','type'=>strtolower($subj->type??''),'priority'=>$subj->priority??0,'is_core'=>is_null($a->section_id)];
         })->filter();
-        return response()->json($subjects->unique('id')->values());
+        return response()->json($subjects->sortBy('priority')->unique('id')->values());
     }
 
     public function apiStudents(Request $request) {

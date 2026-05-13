@@ -47,10 +47,10 @@ class MarkRosterController extends Controller
             $query->where('section_id', $r->section_id);
         }
 
-        $marks = $query->orderBy('student_id')->orderBy('subject_id')->get();
+        $marks = $query->orderBy('student_id')->orderByRaw('(SELECT priority FROM subjects WHERE subjects.id = mark_entries.subject_id) ASC')->orderBy('subject_id')->get();
 
         // ── Unique subjects (preserve the order they appear in) ──────
-        $subjects = $marks->pluck('subject')->filter()->unique('id')->values();
+        $subjects = $marks->pluck('subject')->filter()->unique('id')->sortBy(function($s) { return [$s->priority ?? 0, $s->name]; })->values();
 
         // ── Group marks by student and build the roster rows ─────────
         $grouped = $marks->groupBy('student_id');
