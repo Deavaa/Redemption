@@ -69,7 +69,7 @@
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-tag modern-input-icon"></i>
                                 <select name="type" id="type" class="modern-input modern-select {{ $errors->has('type') ? 'is-invalid' : '' }}" required>
-                                    <option value="">-- Select Type --</option>
+                                                                        <option value="">-- Select Type --</option>
                                     <option value="exam" {{ old('type', $item->type) == 'exam' ? 'selected' : '' }}>Exam</option>
                                     <option value="quiz" {{ old('type', $item->type) == 'quiz' ? 'selected' : '' }}>Quiz</option>
                                     <option value="test" {{ old('type', $item->type) == 'test' ? 'selected' : '' }}>Test</option>
