@@ -228,21 +228,32 @@ const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), 
     events: function(fetchInfo, successCallback, failureCallback) {
         let url = '{{ route("admin.calendar.api.events") }}?start=' + fetchInfo.startStr.substring(0,10) + '&end=' + fetchInfo.endStr.substring(0,10);
         if (activeCategory) url += '&category=' + activeCategory;
-        fetch(url, { credentials: 'same-origin' })
-            .then(r => r.json())
+        fetch(url, {
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(r => { if(!r.ok) throw new Error('Network error'); return r.json(); })
             .then(data => {
                 successCallback(data);
                 updateUpcoming(data);
             })
-            .catch(failureCallback);
+            .catch(function(err) { console.error('Calendar fetch error:', err); failureCallback(err); });
     },
     eventClick: function(info) {
         info.jsEvent.preventDefault();
         showEventDetail(info.event);
     },
     dateClick: function(info) {
+        // Fill the form with the clicked date and scroll to form
         document.getElementById('eventStartDate').value = info.dateStr;
-        document.getElementById('eventEndDate').value = '';
+        document.getElementById('eventEndDate').value = info.dateStr;
+        // Scroll the form into view
+        document.getElementById('eventForm').scrollIntoView({behavior: 'smooth', block: 'start'});
+        // Focus the title field
+        setTimeout(function(){ document.querySelector('#eventForm input[name="title"]').focus(); }, 300);
     }
 });
 calendar.render();

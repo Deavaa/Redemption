@@ -167,6 +167,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     // Telegram
     Route::get('telegram', [App\Http\Controllers\Telegram\TelegramController::class, 'index'])->name('telegram.index');
     Route::put('telegram/settings', [App\Http\Controllers\Telegram\TelegramController::class, 'updateSettings'])->name('telegram.update-settings');
+    Route::post('telegram/branch-settings', [App\Http\Controllers\Telegram\TelegramController::class, 'updateBranchSettings'])->name('telegram.update-branch-settings');
     Route::get('telegram/send', [App\Http\Controllers\Telegram\TelegramController::class, 'send'])->name('telegram.send');
     Route::post('telegram/send', [App\Http\Controllers\Telegram\TelegramController::class, 'sendMessage'])->name('telegram.send-message');
     Route::get('telegram/test', [App\Http\Controllers\Telegram\TelegramController::class, 'testConnection'])->name('telegram.test');

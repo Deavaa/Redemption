@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Settings')
+@section('title', 'School Settings')
 
 @section('content')
 <div class="modern-page">
@@ -13,14 +13,14 @@
                     <li class="active">Settings</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Settings</h1>
-            <p class="modern-page-subtitle">Manage system configuration and preferences</p>
+            <h1 class="modern-page-title">School Settings</h1>
+            <p class="modern-page-subtitle">Configure and manage system preferences</p>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.settings.create') }}" class="btn-modern btn-modern-primary">
-                <i class="fas fa-plus"></i>
-                <span>Add Setting</span>
-            </a>
+            <button type="submit" form="settingsForm" class="btn-modern btn-modern-primary">
+                <i class="fas fa-save"></i>
+                <span>Save All Settings</span>
+            </button>
         </div>
     </div>
 
@@ -31,7 +31,7 @@
                 <i class="fas fa-cog"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->total() }}</span>
+                <span class="modern-stat-value">{{ $settings->sum(fn($g) => $g->count()) }}</span>
                 <span class="modern-stat-label">Total Settings</span>
             </div>
         </div>
@@ -40,7 +40,7 @@
                 <i class="fas fa-layer-group"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->groupBy('group')->count() }}</span>
+                <span class="modern-stat-value">{{ $settings->count() }}</span>
                 <span class="modern-stat-label">Groups</span>
             </div>
         </div>
@@ -49,110 +49,167 @@
                 <i class="fas fa-check-double"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->where('value', '!=', '')->count() }}</span>
+                <span class="modern-stat-value">{{ $settings->sum(fn($g) => $g->where('value', '!=', '')->count()) }}</span>
                 <span class="modern-stat-label">Configured</span>
             </div>
         </div>
     </div>
 
-    {{-- Settings Table Card --}}
-    <div class="modern-card">
-        <div class="modern-card-header">
-            <div class="modern-card-header-left">
-                <h2 class="modern-card-title">All Settings</h2>
-                <span class="modern-badge modern-badge-light">{{ $data->total() }} records</span>
-            </div>
-            <div class="modern-card-header-right">
-                <div class="modern-search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="settingSearch" placeholder="Search settings..." onkeyup="filterTable()">
-                </div>
-            </div>
-        </div>
-        <div class="modern-card-body">
-            @if(session('success'))
-                <div class="modern-alert modern-alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <span>{{ session('success') }}</span>
-                    <button type="button" class="modern-alert-close" onclick="this.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            @endif
-
-            @if($data->count() > 0)
-            <div class="modern-table-wrapper">
-                <table class="modern-table" id="settingTable">
-                    <thead>
-                        <tr>
-                            <th class="th-narrow">#</th>
-                            <th>Key</th>
-                            <th>Value</th>
-                            <th class="th-center">Group</th>
-                            <th>Description</th>
-                            <th class="th-actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($data as $item)
-                        <tr class="modern-table-row">
-                            <td class="td-narrow">
-                                <span class="modern-row-number">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
-                            </td>
-                            <td>
-                                <div class="modern-cell-title">{{ $item->key }}</div>
-                            </td>
-                            <td>
-                                <div class="modern-cell-text">{{ Str::limit($item->value, 50) }}</div>
-                            </td>
-                            <td class="td-center">
-                                <span class="modern-badge modern-badge-info">{{ ucfirst($item->group) }}</span>
-                            </td>
-                            <td>
-                                <div class="modern-cell-muted">{{ $item->description ?? '-' }}</div>
-                            </td>
-                            <td class="td-actions">
-                                <div class="modern-action-group">
-                                    <a href="{{ route('admin.settings.show', $item->id) }}" class="modern-btn-icon modern-btn-view" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.settings.edit', $item->id) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
-                                        <i class="fas fa-pen"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.settings.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this setting?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Pagination --}}
-            @if($data->hasPages())
-            <div class="modern-pagination-wrapper">
-                {{ $data->withQueryString()->links() }}
-            </div>
-            @endif
-            @else
-            <div class="modern-empty-state">
-                <div class="modern-empty-icon">
-                    <i class="fas fa-cog"></i>
-                </div>
-                <h3>No Settings Yet</h3>
-                <p>Get started by adding your first system setting.</p>
-                <a href="{{ route('admin.settings.create') }}" class="btn-modern btn-modern-primary">
-                    <i class="fas fa-plus"></i> Add Setting
-                </a>
-            </div>
-            @endif
-        </div>
+    {{-- Success Alert --}}
+    @if(session('success'))
+    <div class="modern-alert modern-alert-success">
+        <i class="fas fa-check-circle"></i>
+        <span>{{ session('success') }}</span>
+        <button type="button" class="modern-alert-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
+    @endif
+
+    {{-- Settings Form --}}
+    <form id="settingsForm" method="POST" action="{{ route('admin.settings.updateAll') }}">
+        @csrf
+
+        @foreach($settings as $group => $items)
+        <div class="modern-card" style="margin-bottom: 1.25rem;">
+            <div class="modern-form-section">
+                <div class="modern-form-section-header">
+                    @php
+                        $groupIcons = [
+                            'general' => ['icon' => 'fas fa-sliders-h', 'color' => 'blue'],
+                            'academic' => ['icon' => 'fas fa-graduation-cap', 'color' => 'green'],
+                            'contact' => ['icon' => 'fas fa-address-book', 'color' => 'gold'],
+                            'social' => ['icon' => 'fas fa-share-alt', 'color' => 'purple'],
+                            'about' => ['icon' => 'fas fa-info-circle', 'color' => 'blue'],
+                            'appearance' => ['icon' => 'fas fa-palette', 'color' => 'purple'],
+                            'email' => ['icon' => 'fas fa-envelope', 'color' => 'green'],
+                            'fees' => ['icon' => 'fas fa-money-bill-wave', 'color' => 'gold'],
+                            'finance' => ['icon' => 'fas fa-chart-line', 'color' => 'gold'],
+                            'website' => ['icon' => 'fas fa-globe', 'color' => 'blue'],
+                        ];
+                        $groupConfig = $groupIcons[$group] ?? ['icon' => 'fas fa-folder', 'color' => 'blue'];
+                    @endphp
+                    <div class="modern-form-section-icon modern-form-section-icon-{{ $groupConfig['color'] }}">
+                        <i class="{{ $groupConfig['icon'] }}"></i>
+                    </div>
+                    <div>
+                        <h3 class="modern-form-section-title">{{ $groupLabels[$group] ?? ucfirst($group) }}</h3>
+                        <p class="modern-form-section-desc">{{ $items->count() }} setting{{ $items->count() > 1 ? 's' : '' }} in this group</p>
+                    </div>
+                </div>
+                <div class="modern-form-section-body">
+                    <div class="modern-form-grid">
+                        @foreach($items as $item)
+                            @if($item->type === 'boolean')
+                            <div class="modern-form-group">
+                                <div class="modern-toggle-wrapper">
+                                    <label class="modern-toggle">
+                                        <input type="checkbox" name="settings[{{ $item->group }}__{{ $item->key }}]" value="1" {{ $item->value ? 'checked' : '' }}>
+                                        <span class="modern-toggle-slider"></span>
+                                    </label>
+                                    <div class="modern-toggle-info">
+                                        <span class="modern-toggle-title">{{ ucfirst(str_replace('_', ' ', $item->key)) }}</span>
+                                        @if($item->description)
+                                        <span class="modern-toggle-desc">{{ $item->description }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @elseif($item->key === 'school_logo')
+                            <div class="modern-form-group" style="grid-column: span 2">
+                                <label class="modern-form-label" for="setting_{{ $item->id }}">
+                                    {{ ucfirst(str_replace('_', ' ', $item->key)) }}
+                                </label>
+                                @if($item->value)
+                                <div style="margin-bottom:.75rem">
+                                    <img src="{{ asset($item->value) }}" alt="School Logo" style="max-height:80px;border-radius:10px;border:2px solid #e5e7eb;padding:4px;background:#fff">
+                                </div>
+                                @endif
+                                <div class="modern-input-wrapper">
+                                    <i class="fas fa-image modern-input-icon"></i>
+                                    <input type="text"
+                                        name="settings[{{ $item->group }}__{{ $item->key }}]"
+                                        id="setting_{{ $item->id }}"
+                                        class="modern-input"
+                                        value="{{ $item->value }}"
+                                        placeholder="Path to logo (e.g. images/logo.png)">
+                                </div>
+                                @if($item->description)
+                                <span class="modern-form-hint">{{ $item->description }}</span>
+                                @endif
+                            </div>
+                            @elseif($item->type === 'number')
+                            <div class="modern-form-group">
+                                <label class="modern-form-label" for="setting_{{ $item->id }}">
+                                    {{ ucfirst(str_replace('_', ' ', $item->key)) }}
+                                </label>
+                                <div class="modern-input-wrapper">
+                                    <i class="fas fa-hashtag modern-input-icon"></i>
+                                    <input type="number"
+                                        name="settings[{{ $item->group }}__{{ $item->key }}]"
+                                        id="setting_{{ $item->id }}"
+                                        class="modern-input"
+                                        value="{{ $item->value }}"
+                                        placeholder="Enter value...">
+                                </div>
+                                @if($item->description)
+                                <span class="modern-form-hint">{{ $item->description }}</span>
+                                @endif
+                            </div>
+                            @elseif($item->type === 'textarea')
+                            <div class="modern-form-group" style="grid-column: span 2">
+                                <label class="modern-form-label" for="setting_{{ $item->id }}">
+                                    {{ ucfirst(str_replace('_', ' ', $item->key)) }}
+                                </label>
+                                <div class="modern-input-wrapper">
+                                    <i class="fas fa-align-left modern-input-icon" style="top: 1rem; transform: none;"></i>
+                                    <textarea name="settings[{{ $item->group }}__{{ $item->key }}]"
+                                        id="setting_{{ $item->id }}"
+                                        class="modern-textarea"
+                                        rows="3"
+                                        placeholder="Enter value...">{{ $item->value }}</textarea>
+                                </div>
+                                @if($item->description)
+                                <span class="modern-form-hint">{{ $item->description }}</span>
+                                @endif
+                            </div>
+                            @else
+                            <div class="modern-form-group">
+                                <label class="modern-form-label" for="setting_{{ $item->id }}">
+                                    {{ ucfirst(str_replace('_', ' ', $item->key)) }}
+                                </label>
+                                <div class="modern-input-wrapper">
+                                    <i class="fas fa-font modern-input-icon"></i>
+                                    <input type="text"
+                                        name="settings[{{ $item->group }}__{{ $item->key }}]"
+                                        id="setting_{{ $item->id }}"
+                                        class="modern-input"
+                                        value="{{ $item->value }}"
+                                        placeholder="Enter value...">
+                                </div>
+                                @if($item->description)
+                                <span class="modern-form-hint">{{ $item->description }}</span>
+                                @endif
+                            </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+
+        {{-- Form Actions --}}
+        <div class="modern-form-actions" style="border-radius: 14px;">
+            <a href="{{ route('admin.dashboard') }}" class="btn-modern btn-modern-ghost">
+                Cancel
+            </a>
+            <button type="submit" class="btn-modern btn-modern-primary">
+                <i class="fas fa-save"></i>
+                <span>Save All Settings</span>
+            </button>
+        </div>
+    </form>
 </div>
 
 @push('styles')
@@ -175,6 +232,7 @@
 }
 
 .modern-page-header-left { flex: 1; }
+.modern-page-header-right { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
 .modern-page-title {
     font-size: 1.75rem;
@@ -269,220 +327,6 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     border: 1px solid #f0f0f0;
     overflow: hidden;
-    margin-bottom: 1.5rem;
-}
-
-.modern-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.modern-card-header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.modern-card-header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.modern-card-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1a1a2e;
-    margin: 0;
-}
-
-.modern-card-body { padding: 0; }
-
-/* Badges */
-.modern-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.25rem 0.65rem;
-    border-radius: 50px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-}
-
-.modern-badge-light { background: #f3f4f6; color: #6b7280; }
-.modern-badge-success { background: #ecfdf5; color: #059669; }
-.modern-badge-danger { background: #fef2f2; color: #dc2626; }
-.modern-badge-gold { background: #fefce8; color: #b45309; }
-.modern-badge-info { background: #eef2ff; color: #4361ee; }
-.modern-badge-warning { background: #fff7ed; color: #ea580c; }
-
-/* Search Box */
-.modern-search-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.modern-search-box i {
-    position: absolute;
-    left: 12px;
-    color: #adb5bd;
-    font-size: 0.85rem;
-}
-
-.modern-search-box input {
-    border: 1.5px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 0.55rem 0.75rem 0.55rem 2.25rem;
-    font-size: 0.875rem;
-    width: 220px;
-    transition: all 0.2s;
-    background: #f9fafb;
-    color: #374151;
-}
-
-.modern-search-box input:focus {
-    outline: none;
-    border-color: #4361ee;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-}
-
-.modern-search-box input::placeholder { color: #9ca3af; }
-
-/* Table */
-.modern-table-wrapper { overflow-x: auto; }
-
-.modern-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.modern-table thead th {
-    background: #f9fafb;
-    padding: 0.85rem 1rem;
-    text-align: left;
-    font-weight: 600;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #6b7280;
-    border-bottom: 2px solid #e5e7eb;
-    white-space: nowrap;
-}
-
-.th-center, .td-center { text-align: center !important; }
-.th-actions, .td-actions { text-align: right !important; }
-.th-narrow, .td-narrow { width: 50px; }
-
-.modern-table tbody tr {
-    border-bottom: 1px solid #f3f4f6;
-    transition: background 0.15s;
-}
-
-.modern-table tbody tr:hover { background: #f8f9ff; }
-
-.modern-table td {
-    padding: 0.9rem 1rem;
-    vertical-align: middle;
-    color: #374151;
-}
-
-.modern-row-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: #f3f4f6;
-    color: #6b7280;
-    font-weight: 600;
-    font-size: 0.8rem;
-}
-
-.modern-cell-title {
-    font-weight: 600;
-    color: #1a1a2e;
-    margin-bottom: 2px;
-}
-
-.modern-cell-text {
-    color: #4b5563;
-}
-
-.modern-cell-muted { color: #d1d5db; }
-
-/* Action Buttons */
-.modern-action-group {
-    display: inline-flex;
-    gap: 0.35rem;
-}
-
-.modern-btn-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 9px;
-    border: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.82rem;
-    text-decoration: none;
-}
-
-.modern-btn-view {
-    background: #eef2ff;
-    color: #4361ee;
-}
-.modern-btn-view:hover { background: #4361ee; color: #fff; transform: translateY(-1px); }
-
-.modern-btn-edit {
-    background: #fefce8;
-    color: #d97706;
-}
-.modern-btn-edit:hover { background: #d97706; color: #fff; transform: translateY(-1px); }
-
-.modern-btn-delete {
-    background: #fef2f2;
-    color: #dc2626;
-}
-.modern-btn-delete:hover { background: #dc2626; color: #fff; transform: translateY(-1px); }
-
-/* Modern Button */
-.btn-modern {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 1.35rem;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: all 0.25s;
-}
-
-.btn-modern-primary {
-    background: linear-gradient(135deg, #4361ee, #3a0ca3);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
-}
-
-.btn-modern-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
-    color: #fff;
 }
 
 /* Alert */
@@ -491,7 +335,7 @@
     align-items: center;
     gap: 0.65rem;
     padding: 0.85rem 1.25rem;
-    margin: 1rem 1.5rem;
+    margin-bottom: 1.25rem;
     border-radius: 10px;
     font-size: 0.88rem;
     font-weight: 500;
@@ -515,44 +359,219 @@
 }
 .modern-alert-close:hover { opacity: 1; }
 
-/* Empty State */
-.modern-empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
+/* Form Section */
+.modern-form-section { border-bottom: none; }
+
+.modern-form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem 2rem 0.75rem;
 }
 
-.modern-empty-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: #f3f4f6;
-    display: inline-flex;
+.modern-form-section-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    color: #d1d5db;
-    margin-bottom: 1.25rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
 }
 
-.modern-empty-state h3 {
-    font-size: 1.2rem;
+.modern-form-section-icon-blue { background: #eef2ff; color: #4361ee; }
+.modern-form-section-icon-green { background: #ecfdf5; color: #10b981; }
+.modern-form-section-icon-gold { background: #fefce8; color: #d97706; }
+.modern-form-section-icon-purple { background: #f5f3ff; color: #7c3aed; }
+
+.modern-form-section-title {
+    font-size: 1.05rem;
     font-weight: 700;
     color: #1a1a2e;
-    margin: 0 0 0.5rem;
+    margin: 0;
 }
 
-.modern-empty-state p {
+.modern-form-section-desc {
+    font-size: 0.82rem;
     color: #9ca3af;
-    font-size: 0.9rem;
-    margin: 0 0 1.5rem;
+    margin: 0.15rem 0 0;
 }
 
-/* Pagination */
-.modern-pagination-wrapper {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid #f0f0f0;
+.modern-form-section-body { padding: 1.25rem 2rem 1.75rem; }
+
+/* Form Grid */
+.modern-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.modern-form-span-2 { grid-column: span 2; }
+
+/* Form Group */
+.modern-form-group { display: flex; flex-direction: column; }
+
+.modern-form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.45rem;
+    font-size: 0.88rem;
+}
+
+.modern-form-hint {
+    display: block;
+    color: #9ca3af;
+    font-size: 0.78rem;
+    margin-top: 0.3rem;
+}
+
+/* Input */
+.modern-input-wrapper { position: relative; }
+
+.modern-input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.modern-input {
+    width: 100%;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem 0.7rem 2.5rem;
+    font-size: 0.9rem;
+    color: #1a1a2e;
+    background: #fff;
+    transition: all 0.2s;
+}
+
+.modern-input:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.modern-input::placeholder { color: #c5c9d2; }
+
+.modern-textarea {
+    width: 100%;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem 0.7rem 2.5rem;
+    font-size: 0.9rem;
+    color: #1a1a2e;
+    background: #fff;
+    transition: all 0.2s;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.modern-textarea:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.modern-textarea::placeholder { color: #c5c9d2; }
+
+/* Toggle */
+.modern-toggle-wrapper {
     display: flex;
-    justify-content: center;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+}
+
+.modern-toggle {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.modern-toggle input { opacity: 0; width: 0; height: 0; }
+
+.modern-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #d1d5db;
+    border-radius: 50px;
+    transition: 0.3s;
+}
+
+.modern-toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 20px; width: 20px;
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.modern-toggle input:checked + .modern-toggle-slider { background: #4361ee; }
+.modern-toggle input:checked + .modern-toggle-slider::before { transform: translateX(22px); }
+
+.modern-toggle-info { display: flex; flex-direction: column; }
+.modern-toggle-title { font-weight: 600; color: #374151; font-size: 0.88rem; }
+.modern-toggle-desc { font-size: 0.78rem; color: #9ca3af; }
+
+/* Form Actions */
+.modern-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem 2rem;
+    background: #fafbfc;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* Modern Button */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.35rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.btn-modern-primary {
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(67,97,238,0.3);
+}
+
+.btn-modern-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
+    color: #fff;
+}
+
+.btn-modern-ghost {
+    background: transparent;
+    color: #6b7280;
+    padding: 0.65rem 1rem;
+}
+
+.btn-modern-ghost:hover {
+    color: #1a1a2e;
+    background: #f3f4f6;
 }
 
 /* Responsive */
@@ -560,26 +579,13 @@
     .modern-page-header { flex-direction: column; align-items: stretch; }
     .modern-page-title { font-size: 1.35rem; }
     .modern-stats-row { grid-template-columns: 1fr; }
-    .modern-card-header { flex-direction: column; align-items: stretch; }
-    .modern-search-box input { width: 100%; }
-    .modern-table { font-size: 0.82rem; }
+    .modern-form-grid { grid-template-columns: 1fr; }
+    .modern-form-span-2 { grid-column: span 1; }
+    .modern-form-section-body { padding: 1rem 1.25rem 1.5rem; }
+    .modern-form-section-header { padding: 1.25rem 1.25rem 0.75rem; }
+    .modern-form-actions { padding: 1rem 1.25rem; flex-direction: column; }
+    .btn-modern { justify-content: center; width: 100%; }
 }
 </style>
-@endpush
-
-@push('scripts')
-<script>
-function filterTable() {
-    const input = document.getElementById('settingSearch');
-    const filter = input.value.toLowerCase();
-    const table = document.getElementById('settingTable');
-    const rows = table.querySelectorAll('tbody tr');
-
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(filter) ? '' : 'none';
-    });
-}
-</script>
 @endpush
 @endsection

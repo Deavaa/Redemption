@@ -1,9 +1,12 @@
 <?php
+
 namespace App\Http\Controllers\Fee;
+
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\Fee;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class FeeController extends Controller
@@ -28,7 +31,8 @@ class FeeController extends Controller
     {
         $classrooms = Classroom::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
-        return view('admin.Fee.create', compact('classrooms', 'academicYears'));
+        $feeDueDay = Setting::where('key', 'fee_due_day')->value('value') ?? 10;
+        return view('admin.Fee.create', compact('classrooms', 'academicYears', 'feeDueDay'));
     }
 
     public function store(Request $r)
@@ -42,7 +46,15 @@ class FeeController extends Controller
             'description' => 'nullable|string|max:500',
             'is_active' => 'nullable|boolean',
         ]);
-        Fee::create($r->only(['fee_type','amount','class_id','academic_year_id','due_date','description','is_active']));
+
+        $data = $r->only(['fee_type','amount','class_id','academic_year_id','due_date','description','is_active']);
+
+        // Auto-set due date to 10th of current month if not provided
+        if (empty($data['due_date'])) {
+            $data['due_date'] = $this->getNextDueDate();
+        }
+
+        Fee::create($data);
         return redirect()->route('admin.fees.index')->with('success', 'Fee created successfully');
     }
 
@@ -56,7 +68,8 @@ class FeeController extends Controller
     {
         $classrooms = Classroom::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
-        return view('admin.Fee.edit', ['item' => $fee, 'classrooms' => $classrooms, 'academicYears' => $academicYears]);
+        $feeDueDay = Setting::where('key', 'fee_due_day')->value('value') ?? 10;
+        return view('admin.Fee.edit', ['item' => $fee, 'classrooms' => $classrooms, 'academicYears' => $academicYears, 'feeDueDay' => $feeDueDay]);
     }
 
     public function update(Request $r, Fee $fee)
@@ -70,7 +83,14 @@ class FeeController extends Controller
             'description' => 'nullable|string|max:500',
             'is_active' => 'nullable|boolean',
         ]);
-        $fee->update($r->only(['fee_type','amount','class_id','academic_year_id','due_date','description','is_active']));
+
+        $data = $r->only(['fee_type','amount','class_id','academic_year_id','due_date','description','is_active']);
+
+        if (empty($data['due_date'])) {
+            $data['due_date'] = $this->getNextDueDate();
+        }
+
+        $fee->update($data);
         return redirect()->route('admin.fees.index')->with('success', 'Fee updated successfully');
     }
 
@@ -78,5 +98,32 @@ class FeeController extends Controller
     {
         $fee->delete();
         return back()->with('success', 'Fee deleted successfully');
+    }
+
+    /**
+     * Calculate the next fee due date.
+     * Ethiopian calendar: 10th day of each month.
+     * Since PHP uses Gregorian internally, we approximate the Ethiopian 10th
+     * as the 19th of the Gregorian month (Ethiopian calendar is ~7-8 years behind
+     * and the 10th of Ethiopian month roughly corresponds to 19th Gregorian).
+     * However, for practical school management, we use the configured due_day setting.
+     */
+    private function getNextDueDate(): string
+    {
+        $dueDay = (int) (Setting::where('key', 'fee_due_day')->value('value') ?? 10);
+        $now = now();
+        $year = $now->year;
+        $month = $now->month;
+
+        // If the due day has already passed this month, use next month
+        if ($now->day > $dueDay) {
+            $month++;
+            if ($month > 12) {
+                $month = 1;
+                $year++;
+            }
+        }
+
+        return sprintf('%04d-%02d-%02d', $year, $month, $dueDay);
     }
 }

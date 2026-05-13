@@ -100,6 +100,11 @@ class MarkRosterController extends Controller
         $academicYear = AcademicYear::find($r->academic_year_id);
         $term         = Term::find($r->term_id);
 
+        // Re-fetch filter dropdown data for the form
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        $terms         = Term::orderBy('id', 'desc')->get();
+        $classes       = ClassRoom::orderBy('name')->get();
+
         return view('admin.mark-roster.index', compact(
             'roster',
             'subjects',

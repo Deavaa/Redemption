@@ -94,7 +94,14 @@ class CalendarEventController extends Controller
         $query = CalendarEvent::with(['academicYear', 'branch']);
 
         if ($r->filled('start')) {
-            $query->where('start_date', '>=', $r->start);
+            $query->where(function ($q) use ($r) {
+                $q->where('start_date', '>=', $r->start)
+                  ->orWhere(function ($q2) use ($r) {
+                      $q2->where('start_date', '<', $r->start)
+                         ->whereNotNull('end_date')
+                         ->where('end_date', '>=', $r->start);
+                  });
+            });
         }
         if ($r->filled('end')) {
             $query->where('start_date', '<=', $r->end);
@@ -107,11 +114,24 @@ class CalendarEventController extends Controller
         }
 
         $events = $query->get()->map(function ($e) {
+            $start = $e->start_date->format('Y-m-d');
+            if ($e->start_time && !$e->is_all_day) {
+                $start .= 'T' . $e->start_time;
+            }
+            $end = null;
+            if ($e->end_date) {
+                // FullCalendar end date is exclusive, so add 1 day for all-day events
+                $endDate = $e->is_all_day ? $e->end_date->addDay() : $e->end_date;
+                $end = $endDate->format('Y-m-d');
+                if ($e->end_time && !$e->is_all_day) {
+                    $end .= 'T' . $e->end_time;
+                }
+            }
             return [
                 'id'          => $e->id,
                 'title'       => $e->title,
-                'start'       => $e->start_date->format('Y-m-d') . ($e->start_time && !$e->is_all_day ? 'T' . $e->start_time : ''),
-                'end'         => $e->end_date ? $e->end_date->format('Y-m-d') . ($e->end_time && !$e->is_all_day ? 'T' . $e->end_time : '') : null,
+                'start'       => $start,
+                'end'         => $end,
                 'allDay'      => $e->is_all_day,
                 'backgroundColor' => $e->color,
                 'borderColor' => $e->color,
