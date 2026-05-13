@@ -464,3 +464,64 @@ li.active .sidebar-chevron { transform: rotate(180deg); }
 @media (max-width: 480px) {
     .dash-stats { grid-template-columns: 1fr; }
 }
+/* ============================================
+   TARGETED OPTIMIZATIONS - Space & Performance
+   Keep original design, just tighten spacing
+   ============================================ */
+
+/* Reduce title sizes */
+.modern-page-title { font-size: 1.35rem !important; }
+.modern-page-subtitle { font-size: 0.8rem !important; }
+.modern-form-section-title { font-size: 0.92rem !important; }
+.modern-form-section-desc { font-size: 0.75rem !important; }
+.modern-form-label { font-size: 0.8rem !important; margin-bottom: 0.3rem !important; }
+
+/* Tighter padding/margins */
+.modern-form-section-body { padding: 0.75rem 1.25rem 1rem !important; }
+.modern-form-section-header { padding: 1rem 1.25rem 0.5rem !important; }
+.modern-form-grid { gap: 0.75rem !important; }
+.modern-form-actions { padding: 0.75rem 1.25rem !important; }
+.modern-page-header { margin-bottom: 1rem !important; }
+
+/* Smaller inputs */
+.modern-input { padding: 0.5rem 0.75rem 0.5rem 2.2rem !important; font-size: 0.82rem !important; }
+.modern-select { padding-right: 2.2rem !important; }
+
+/* Smaller buttons */
+.btn-modern { padding: 0.5rem 1rem !important; font-size: 0.82rem !important; }
+
+/* Compact cards */
+.modern-card { border-radius: 10px !important; }
+
+/* Compact badges */
+.modern-badge { font-size: 0.68rem !important; padding: 0.2rem 0.5rem !important; }
+
+/* Compact table in index views */
+.modern-table th, .modern-table td { padding: 0.4rem 0.6rem !important; font-size: 0.8rem !important; }
+
+/* Smooth page transitions */
+.modern-page { animation: fadeIn 0.2s ease !important; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Sidebar compact */
+.sidebar-header { padding: 0.5rem 0.75rem !important; }
+.sidebar-brand-icon { width: 32px !important; height: 32px !important; }
+.sidebar-brand-name { font-size: 0.85rem !important; }
+.sidebar-menu > li > a, .sidebar-menu > li > .submenu-toggle { padding: 0.35rem 0.75rem !important; font-size: 0.78rem !important; }
+.sidebar-footer { padding: 0.5rem 0.75rem !important; }
+.collapse ul li a { padding: 0.25rem 0.75rem 0.25rem 2rem !important; font-size: 0.73rem !important; }
+
+/* Topbar compact */
+.admin-topbar { height: 44px !important; }
+.topbar-breadcrumb { font-size: 0.8rem !important; }
+
+/* Dashboard stat cards */
+.dash-stat-value { font-size: 1.2rem !important; }
+.dash-stat-label { font-size: 0.68rem !important; }
+
+/* Index page header compact */
+.modern-index-header { padding: 0.75rem 1.25rem !important; }
+.modern-index-title { font-size: 1.1rem !important; }
+
+/* Alert compact */
+.global-alert { padding: 0.4rem 0.75rem !important; font-size: 0.78rem !important; }

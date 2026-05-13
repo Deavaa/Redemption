@@ -218,5 +218,82 @@
     </script>
     @stack('scripts')
     @yield('scripts')
+
+    <!-- AJAX Performance: Prefetch links on hover, smooth transitions -->
+    <script>
+    (function(){
+        // AJAX form submission - prevents full page reload for CRUD forms
+        document.addEventListener('submit', function(e) {
+            var form = e.target;
+            if (form.method.toLowerCase() !== 'post' && form.method.toLowerCase() !== 'put' && form.method.toLowerCase() !== 'delete') return;
+            if (form.closest('.no-ajax')) return; // Skip forms with .no-ajax class
+
+            // Only AJAX-ify delete forms for safety
+            if (form.querySelector('input[name="_method"][value="DELETE"]')) {
+                e.preventDefault();
+                if (!confirm('Are you sure you want to delete this?')) return;
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: new FormData(form)
+                })
+                .then(r => r.ok ? r : Promise.reject(r))
+                .then(() => {
+                    // Remove the table row smoothly
+                    var row = form.closest('tr');
+                    if (row) { row.style.transition = 'opacity 0.3s'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
+                    // Show success message
+                    var alert = document.createElement('div');
+                    alert.className = 'global-alert global-alert-success';
+                    alert.innerHTML = '<i class="fas fa-check-circle"></i><span>Deleted successfully.</span><button type="button" class="global-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>';
+                    document.querySelector('.admin-content').prepend(alert);
+                    setTimeout(() => { alert.style.transition='opacity 0.3s'; alert.style.opacity='0'; setTimeout(()=>alert.remove(),300); }, 4000);
+                })
+                .catch(() => {
+                    var alert = document.createElement('div');
+                    alert.className = 'global-alert global-alert-danger';
+                    alert.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Delete failed. Please try again.</span><button type="button" class="global-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>';
+                    document.querySelector('.admin-content').prepend(alert);
+                });
+            }
+        });
+
+        // Prefetch pages on link hover (loads faster when clicked)
+        var prefetchCache = {};
+        document.addEventListener('mouseover', function(e) {
+            var link = e.target.closest('a[href]');
+            if (!link) return;
+            var href = link.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript') || prefetchCache[href]) return;
+            if (link.target === '_blank') return;
+
+            // Only prefetch same-origin links
+            try {
+                var url = new URL(href, window.location.origin);
+                if (url.origin !== window.location.origin) return;
+            } catch(e) { return; }
+
+            prefetchCache[href] = true;
+            var prefetch = document.createElement('link');
+            prefetch.rel = 'prefetch';
+            prefetch.href = href;
+            document.head.appendChild(prefetch);
+        });
+
+        // Smooth sidebar link clicks - add loading indicator
+        document.querySelectorAll('.sidebar-menu a[href]').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (link.getAttribute('data-bs-toggle')) return; // Skip collapse toggles
+                if (link.target === '_blank') return;
+                document.querySelector('.admin-content').style.opacity = '0.5';
+                document.querySelector('.admin-content').style.transition = 'opacity 0.15s';
+            });
+        });
+
+        // Remove loading on page load
+        document.querySelector('.admin-content').style.opacity = '1';
+    })();
+    </script>
 </body>
 </html>
