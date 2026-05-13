@@ -345,5 +345,19 @@
         }
     })();
     </script>
+
+    <!-- Sidebar Scroll Enhancement -->
+    <script>
+    (function(){
+        var menu = document.querySelector('.sidebar-menu');
+        if (menu) {
+            // Auto-scroll to active menu item
+            var active = menu.querySelector('li.active');
+            if (active) {
+                setTimeout(function(){ active.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 200);
+            }
+        }
+    })();
+    </script>
 </body>
 </html>
