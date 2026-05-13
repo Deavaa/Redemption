@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
-use App\Models\Exam;
 use App\Models\AcademicYear;
+use App\Models\Exam;
 use App\Models\Term;
 use Illuminate\Http\Request;
 
@@ -31,16 +31,16 @@ class ExamController extends Controller
     public function store(Request $r)
     {
         $r->validate([
-            'name'             => 'required|string|max:255',
-            'type'             => 'required|in:exam,quiz,test,midterm,final,assignment,project',
-            'total_marks'      => 'required|numeric|min:0|max:99999',
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:exam,quiz,test,midterm,final,assignment,project',
+            'total_marks' => 'required|numeric|min:0|max:99999',
             'academic_year_id' => 'required|exists:academic_years,id',
-            'term_id'          => 'required|exists:terms,id',
-            'start_date'       => 'required|date',
-            'end_date'         => 'required|date|after_or_equal:start_date',
-            'start_time'       => 'nullable|date_format:H:i',
-            'end_time'         => 'nullable|date_format:H:i',
-            'description'      => 'nullable|string|max:1000',
+            'term_id' => 'required|exists:terms,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_time' => 'nullable|date_format:H:i:s',
+            'end_time' => 'nullable|date_format:H:i:s',
+            'description' => 'nullable|string|max:1000',
         ]);
 
         Exam::create($r->only([
@@ -74,16 +74,16 @@ class ExamController extends Controller
     public function update(Request $r, Exam $exam)
     {
         $r->validate([
-            'name'             => 'required|string|max:255',
-            'type'             => 'required|in:exam,quiz,test,midterm,final,assignment,project',
-            'total_marks'      => 'required|numeric|min:0|max:99999',
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:exam,quiz,test,midterm,final,assignment,project',
+            'total_marks' => 'required|numeric|min:0|max:99999',
             'academic_year_id' => 'required|exists:academic_years,id',
-            'term_id'          => 'required|exists:terms,id',
-            'start_date'       => 'required|date',
-            'end_date'         => 'required|date|after_or_equal:start_date',
-            'start_time'       => 'nullable|date_format:H:i',
-            'end_time'         => 'nullable|date_format:H:i',
-            'description'      => 'nullable|string|max:1000',
+            'term_id' => 'required|exists:terms,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_time' => 'nullable|date_format:H:i:s',
+            'end_time' => 'nullable|date_format:H:i:s',
+            'description' => 'nullable|string|max:1000',
         ]);
 
         $exam->update($r->only([
