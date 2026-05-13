@@ -659,4 +659,3 @@
 })();
 </script>
 @endpush
-@endsection
