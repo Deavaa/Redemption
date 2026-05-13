@@ -151,6 +151,11 @@
                         <i class="fas fa-cog"></i><span>Settings</span>
                     </a>
                 </li>
+                <li class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.roles.index') }}">
+                        <i class="fas fa-user-shield"></i><span>Roles & Permissions</span>
+                    </a>
+                </li>
                 <li class="{{ request()->routeIs('admin.audits.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.audits.index') }}">
                         <i class="fas fa-clipboard-list"></i><span>Audit Log</span>
@@ -166,7 +171,7 @@
                     </div>
                     <div class="sidebar-footer-info">
                         <span class="sidebar-footer-name">{{ Auth::user()->name }}</span>
-                        <span class="sidebar-footer-role">Administrator</span>
+                        <span class="sidebar-footer-role">{{ Auth::user()->display_role ?? ucfirst(Auth::user()->role) }}</span>
                     </div>
                 </div>
             </div>

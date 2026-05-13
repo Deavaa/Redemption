@@ -44,6 +44,7 @@ use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\CalendarEvent\CalendarEventController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Role\RoleController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -173,4 +174,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
     Route::post('/settings/update-all', [SettingController::class, 'update'])->name('settings.updateAll');
+
+    // Roles & Permissions
+    Route::resource('roles', RoleController::class);
+    Route::get('roles/{role}/users', [RoleController::class, 'users'])->name('roles.users');
+    Route::post('roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assign-users');
+    Route::post('roles/{role}/toggle-permission', [RoleController::class, 'togglePermission'])->name('roles.toggle-permission');
 });

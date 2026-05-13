@@ -59,6 +59,10 @@
 .msf-term-header.term2{background:#8b5cf6}
 .msf-term-header.annual{background:#10b981}
 .msf-term-header.total{background:#f59e0b;color:#1a1a2e}
+.msf-term-header.rank-t1{background:#2563eb}
+.msf-term-header.rank-t2{background:#7c3aed}
+.msf-term-header.rank-ann{background:#059669}
+.msf-term-header.avg{background:#6366f1;color:#fff}
 
 /* Student rows */
 .msf-table tbody td{vertical-align:middle}
@@ -70,8 +74,22 @@
 .msf-table .mark-cell.grade-fail{color:#ef4444;font-weight:700}
 .msf-table .mark-cell.grade-pass{color:#10b981}
 .msf-table .total-cell{font-weight:700;color:#4361ee;background:#f0f4ff}
+.msf-table .avg-cell{font-weight:600;color:#6366f1;background:#eef2ff;font-size:.72rem}
+.msf-table .rank-cell-t1{font-weight:700;color:#2563eb;background:#dbeafe}
+.msf-table .rank-cell-t2{font-weight:700;color:#7c3aed;background:#ede9fe}
+.msf-table .rank-cell-ann{font-weight:700;color:#059669;background:#d1fae5}
 .msf-table .annual-total-cell{font-weight:700;color:#10b981;background:#ecfdf5}
-.msf-table .rank-cell{font-weight:700;color:#7c3aed}
+
+/* Average / Summary rows */
+.msf-table .avg-row td{background:#f5f3ff!important;font-weight:700;color:#4338ca;border-top:2px solid #6366f1}
+.msf-table .avg-row .stu-name{background:#f5f3ff!important;color:#4338ca;position:sticky;left:32px;z-index:2}
+.msf-table .avg-row .stu-serial{background:#f5f3ff!important;color:#4338ca;position:sticky;left:0;z-index:2}
+.msf-table .highest-row td{background:#fef9c3!important;font-weight:700;color:#854d0e;border-top:2px solid #eab308}
+.msf-table .highest-row .stu-name{background:#fef9c3!important;color:#854d0e;position:sticky;left:32px;z-index:2}
+.msf-table .highest-row .stu-serial{background:#fef9c3!important;color:#854d0e;position:sticky;left:0;z-index:2}
+.msf-table .lowest-row td{background:#fee2e2!important;font-weight:700;color:#991b1b;border-top:2px solid #ef4444}
+.msf-table .lowest-row .stu-name{background:#fee2e2!important;color:#991b1b;position:sticky;left:32px;z-index:2}
+.msf-table .lowest-row .stu-serial{background:#fee2e2!important;color:#991b1b;position:sticky;left:0;z-index:2}
 
 /* Grade legend */
 .msf-legend{display:flex;gap:.5rem;flex-wrap:wrap;padding:.75rem 1.5rem;border-top:1px solid #e5e7eb;background:#fafbfc;font-size:.72rem;color:#6b7280}
@@ -103,7 +121,7 @@
         <div class="msf-header-left">
             <nav aria-label="breadcrumb" class="msf-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li class="active">Full Mark Sheet</li></ol></nav>
             <h1 class="msf-title">Full Mark Sheet</h1>
-            <p class="msf-subtitle">Complete mark sheet with Term 1, Term 2, and Annual results</p>
+            <p class="msf-subtitle">Complete mark sheet with Term 1, Term 2, and Annual results with averages and ranks</p>
         </div>
     </div>
 
@@ -175,6 +193,8 @@
                         <th class="msf-term-header term1">T1</th>
                         @endforeach
                         <th class="msf-term-header term1" style="min-width:42px">T1 Tot</th>
+                        <th class="msf-term-header term1" style="min-width:38px">T1 Avg</th>
+                        <th class="msf-term-header rank-t1" style="min-width:38px">T1 Rk</th>
 
                         {{-- Term 2 group --}}
                         @if($term2)
@@ -182,14 +202,17 @@
                         <th class="msf-term-header term2">T2</th>
                         @endforeach
                         <th class="msf-term-header term2" style="min-width:42px">T2 Tot</th>
+                        <th class="msf-term-header term2" style="min-width:38px">T2 Avg</th>
+                        <th class="msf-term-header rank-t2" style="min-width:38px">T2 Rk</th>
                         @endif
 
                         {{-- Annual group --}}
                         @foreach($subjects as $subj)
                         <th class="msf-term-header annual">Ann</th>
                         @endforeach
-                        <th class="msf-term-header total" style="min-width:42px">Total</th>
-                        <th class="msf-term-header total" style="min-width:42px">Rank</th>
+                        <th class="msf-term-header annual" style="min-width:42px">Ann Tot</th>
+                        <th class="msf-term-header annual" style="min-width:38px">Ann Avg</th>
+                        <th class="msf-term-header rank-ann" style="min-width:38px">Ann Rk</th>
                     </tr>
 
                     {{-- Row 2: Subject name headers (rotated 90°) --}}
@@ -198,14 +221,18 @@
                         @foreach($subjects as $subj)
                         <th class="msf-rotated-header"><span>{{ $subj->name }}</span></th>
                         @endforeach
-                        <th class="msf-rotated-header" style="background:#dbeafe"><span>Term 1 Total</span></th>
+                        <th class="msf-rotated-header" style="background:#dbeafe"><span>T1 Total</span></th>
+                        <th class="msf-rotated-header" style="background:#e0e7ff"><span>T1 Average</span></th>
+                        <th class="msf-rotated-header" style="background:#bfdbfe"><span>T1 Rank</span></th>
 
                         {{-- Term 2 subjects --}}
                         @if($term2)
                         @foreach($subjects as $subj)
                         <th class="msf-rotated-header"><span>{{ $subj->name }}</span></th>
                         @endforeach
-                        <th class="msf-rotated-header" style="background:#ede9fe"><span>Term 2 Total</span></th>
+                        <th class="msf-rotated-header" style="background:#ede9fe"><span>T2 Total</span></th>
+                        <th class="msf-rotated-header" style="background:#e0e7ff"><span>T2 Average</span></th>
+                        <th class="msf-rotated-header" style="background:#ddd6fe"><span>T2 Rank</span></th>
                         @endif
 
                         {{-- Annual subjects --}}
@@ -213,7 +240,8 @@
                         <th class="msf-rotated-header"><span>{{ $subj->name }}</span></th>
                         @endforeach
                         <th class="msf-rotated-header" style="background:#d1fae5"><span>Annual Total</span></th>
-                        <th class="msf-rotated-header" style="background:#fef3c7"><span>Rank</span></th>
+                        <th class="msf-rotated-header" style="background:#ccfbf1"><span>Annual Avg</span></th>
+                        <th class="msf-rotated-header" style="background:#a7f3d0"><span>Annual Rank</span></th>
                     </tr>
                 </thead>
 
@@ -236,6 +264,8 @@
                             </td>
                         @endforeach
                         <td class="total-cell">{{ $row['term1_total'] ?: '-' }}</td>
+                        <td class="avg-cell">{{ $row['term1_avg'] ?: '-' }}</td>
+                        <td class="rank-cell-t1">{{ $row['term1_rank'] ?? '-' }}</td>
 
                         {{-- Term 2 marks --}}
                         @if($term2)
@@ -251,6 +281,8 @@
                             </td>
                         @endforeach
                         <td class="total-cell">{{ $row['term2_total'] ?: '-' }}</td>
+                        <td class="avg-cell">{{ $row['term2_avg'] ?: '-' }}</td>
+                        <td class="rank-cell-t2">{{ $row['term2_rank'] ?? '-' }}</td>
                         @endif
 
                         {{-- Annual marks --}}
@@ -266,9 +298,152 @@
                             </td>
                         @endforeach
                         <td class="annual-total-cell">{{ $row['annual_total'] ?: '-' }}</td>
-                        <td class="rank-cell">{{ $row['rank'] ?? '-' }}</td>
+                        <td class="avg-cell">{{ $row['annual_avg'] ?: '-' }}</td>
+                        <td class="rank-cell-ann">{{ $row['annual_rank'] ?? '-' }}</td>
                     </tr>
                     @endforeach
+
+                    {{-- Class Average Row --}}
+                    <tr class="avg-row">
+                        <td class="stu-serial"><i class="fas fa-chart-bar"></i></td>
+                        <td class="stu-name">Class Average</td>
+
+                        {{-- Term 1 averages --}}
+                        @foreach($subjects as $subj)
+                            @php $t1Avg = $averages['term1'][$subj->id] ?? null @endphp
+                            <td style="font-weight:700;color:#4338ca">{{ $t1Avg ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">{{ $averages['term1_total_avg'] ?? '-' }}</td>
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">-</td>
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">-</td>
+
+                        {{-- Term 2 averages --}}
+                        @if($term2)
+                        @foreach($subjects as $subj)
+                            @php $t2Avg = $averages['term2'][$subj->id] ?? null @endphp
+                            <td style="font-weight:700;color:#4338ca">{{ $t2Avg ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">{{ $averages['term2_total_avg'] ?? '-' }}</td>
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">-</td>
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">-</td>
+                        @endif
+
+                        {{-- Annual averages --}}
+                        @foreach($subjects as $subj)
+                            @php $annAvg = $averages['annual'][$subj->id] ?? null @endphp
+                            <td style="font-weight:700;color:#4338ca">{{ $annAvg ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">{{ $averages['annual_total_avg'] ?? '-' }}</td>
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">-</td>
+                        <td style="font-weight:700;color:#4338ca;background:#e0e7ff">-</td>
+                    </tr>
+
+                    {{-- Highest Marks Row --}}
+                    @php
+                        $highest = ['term1' => [], 'term2' => [], 'annual' => [], 'term1_total' => 0, 'term2_total' => 0, 'annual_total' => 0];
+                        foreach ($subjects as $subj) {
+                            $t1Vals = []; $t2Vals = []; $aVals = [];
+                            foreach ($roster as $row) {
+                                $t1 = $row['term1'][$subj->id] ?? null;
+                                if ($t1 && $t1['grand_total'] !== null) $t1Vals[] = floatval($t1['grand_total']);
+                                $t2 = $row['term2'][$subj->id] ?? null;
+                                if ($t2 && $t2['grand_total'] !== null) $t2Vals[] = floatval($t2['grand_total']);
+                                $ann = $row['annual'][$subj->id] ?? null;
+                                if ($ann && $ann['grand_total'] !== null) $aVals[] = floatval($ann['grand_total']);
+                            }
+                            $highest['term1'][$subj->id] = count($t1Vals) ? max($t1Vals) : null;
+                            $highest['term2'][$subj->id] = count($t2Vals) ? max($t2Vals) : null;
+                            $highest['annual'][$subj->id] = count($aVals) ? max($aVals) : null;
+                        }
+                        $highest['term1_total'] = count($roster) ? max(array_column($roster, 'term1_total')) : 0;
+                        $highest['term2_total'] = count($roster) ? max(array_column($roster, 'term2_total')) : 0;
+                        $highest['annual_total'] = count($roster) ? max(array_column($roster, 'annual_total')) : 0;
+                    @endphp
+                    <tr class="highest-row">
+                        <td class="stu-serial"><i class="fas fa-arrow-up"></i></td>
+                        <td class="stu-name">Highest Mark</td>
+
+                        {{-- Term 1 highest --}}
+                        @foreach($subjects as $subj)
+                            <td style="font-weight:700;color:#854d0e">{{ $highest['term1'][$subj->id] ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">{{ $highest['term1_total'] ?: '-' }}</td>
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">-</td>
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">-</td>
+
+                        {{-- Term 2 highest --}}
+                        @if($term2)
+                        @foreach($subjects as $subj)
+                            <td style="font-weight:700;color:#854d0e">{{ $highest['term2'][$subj->id] ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">{{ $highest['term2_total'] ?: '-' }}</td>
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">-</td>
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">-</td>
+                        @endif
+
+                        {{-- Annual highest --}}
+                        @foreach($subjects as $subj)
+                            <td style="font-weight:700;color:#854d0e">{{ $highest['annual'][$subj->id] ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">{{ $highest['annual_total'] ?: '-' }}</td>
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">-</td>
+                        <td style="font-weight:700;color:#854d0e;background:#fef9c3">-</td>
+                    </tr>
+
+                    {{-- Lowest Marks Row --}}
+                    @php
+                        $lowest = ['term1' => [], 'term2' => [], 'annual' => [], 'term1_total' => 0, 'term2_total' => 0, 'annual_total' => 0];
+                        foreach ($subjects as $subj) {
+                            $t1Vals = []; $t2Vals = []; $aVals = [];
+                            foreach ($roster as $row) {
+                                $t1 = $row['term1'][$subj->id] ?? null;
+                                if ($t1 && $t1['grand_total'] !== null) $t1Vals[] = floatval($t1['grand_total']);
+                                $t2 = $row['term2'][$subj->id] ?? null;
+                                if ($t2 && $t2['grand_total'] !== null) $t2Vals[] = floatval($t2['grand_total']);
+                                $ann = $row['annual'][$subj->id] ?? null;
+                                if ($ann && $ann['grand_total'] !== null) $aVals[] = floatval($ann['grand_total']);
+                            }
+                            $lowest['term1'][$subj->id] = count($t1Vals) ? min($t1Vals) : null;
+                            $lowest['term2'][$subj->id] = count($t2Vals) ? min($t2Vals) : null;
+                            $lowest['annual'][$subj->id] = count($aVals) ? min($aVals) : null;
+                        }
+                        $t1Totals = array_filter(array_column($roster, 'term1_total'));
+                        $t2Totals = array_filter(array_column($roster, 'term2_total'));
+                        $aTotals = array_filter(array_column($roster, 'annual_total'));
+                        $lowest['term1_total'] = count($t1Totals) ? min($t1Totals) : 0;
+                        $lowest['term2_total'] = count($t2Totals) ? min($t2Totals) : 0;
+                        $lowest['annual_total'] = count($aTotals) ? min($aTotals) : 0;
+                    @endphp
+                    <tr class="lowest-row">
+                        <td class="stu-serial"><i class="fas fa-arrow-down"></i></td>
+                        <td class="stu-name">Lowest Mark</td>
+
+                        {{-- Term 1 lowest --}}
+                        @foreach($subjects as $subj)
+                            <td style="font-weight:700;color:#991b1b">{{ $lowest['term1'][$subj->id] ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">{{ $lowest['term1_total'] ?: '-' }}</td>
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">-</td>
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">-</td>
+
+                        {{-- Term 2 lowest --}}
+                        @if($term2)
+                        @foreach($subjects as $subj)
+                            <td style="font-weight:700;color:#991b1b">{{ $lowest['term2'][$subj->id] ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">{{ $lowest['term2_total'] ?: '-' }}</td>
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">-</td>
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">-</td>
+                        @endif
+
+                        {{-- Annual lowest --}}
+                        @foreach($subjects as $subj)
+                            <td style="font-weight:700;color:#991b1b">{{ $lowest['annual'][$subj->id] ?? '-' }}</td>
+                        @endforeach
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">{{ $lowest['annual_total'] ?: '-' }}</td>
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">-</td>
+                        <td style="font-weight:700;color:#991b1b;background:#fee2e2">-</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -284,6 +459,8 @@
             <span style="margin-left:1rem;font-weight:600">T1 = Term 1</span>
             <span style="font-weight:600">T2 = Term 2</span>
             <span style="font-weight:600">Ann = Annual (Avg of T1+T2)</span>
+            <span style="font-weight:600">Avg = Student Average</span>
+            <span style="font-weight:600">Rk = Rank</span>
         </div>
 
         <div class="msf-actions">

@@ -27,6 +27,7 @@ class MarkSheetFullController extends Controller
     /**
      * Generate the full mark sheet: students × subjects with Term1, Term2, Annual columns.
      * Subjects are displayed as 90°-rotated column headers.
+     * Includes: average row, term-specific ranks, annual = avg(T1+T2).
      */
     public function generate(Request $r)
     {
@@ -45,7 +46,6 @@ class MarkSheetFullController extends Controller
             ->orderBy('term_number')
             ->get();
 
-        // If only 2 terms exist, Term1 and Term2; Annual is calculated
         $term1 = $terms->first();
         $term2 = $terms->count() >= 2 ? $terms->skip(1)->first() : null;
 
@@ -95,15 +95,19 @@ class MarkSheetFullController extends Controller
         $roster = [];
         foreach ($students as $student) {
             $row = [
-                'student' => $student,
-                'term1'   => [],
-                'term2'   => [],
-                'annual'  => [],
-                'term1_total' => 0,
-                'term2_total' => 0,
+                'student'      => $student,
+                'term1'        => [],
+                'term2'        => [],
+                'annual'       => [],
+                'term1_total'  => 0,
+                'term2_total'  => 0,
                 'annual_total' => 0,
-                'term1_count' => 0,
-                'term2_count' => 0,
+                'term1_count'  => 0,
+                'term2_count'  => 0,
+                'annual_count' => 0,
+                'term1_avg'    => 0,
+                'term2_avg'    => 0,
+                'annual_avg'   => 0,
             ];
 
             foreach ($subjects as $subj) {
@@ -134,37 +138,102 @@ class MarkSheetFullController extends Controller
                         'grade'       => $this->calcGrade($annualMark),
                     ];
                     $row['annual_total'] += $annualMark;
-                } elseif ($t1 && $t1['grand_total'] !== null && !$t2) {
+                    $row['annual_count']++;
+                } elseif ($t1 && $t1['grand_total'] !== null && (!$t2 || $t2['grand_total'] === null)) {
                     // Only Term1 exists, use it as annual
                     $row['annual'][$subj->id] = [
                         'grand_total' => $t1['grand_total'],
                         'grade'       => $t1['grade'],
                     ];
                     $row['annual_total'] += floatval($t1['grand_total']);
+                    $row['annual_count']++;
+                } elseif ($t2 && $t2['grand_total'] !== null && (!$t1 || $t1['grand_total'] === null)) {
+                    // Only Term2 exists
+                    $row['annual'][$subj->id] = [
+                        'grand_total' => $t2['grand_total'],
+                        'grade'       => $t2['grade'],
+                    ];
+                    $row['annual_total'] += floatval($t2['grand_total']);
+                    $row['annual_count']++;
                 } else {
                     $row['annual'][$subj->id] = null;
                 }
             }
 
+            // Calculate per-student averages
+            $row['term1_avg'] = $row['term1_count'] > 0
+                ? round($row['term1_total'] / $row['term1_count'], 1) : 0;
+            $row['term2_avg'] = $row['term2_count'] > 0
+                ? round($row['term2_total'] / $row['term2_count'], 1) : 0;
+            $row['annual_avg'] = $row['annual_count'] > 0
+                ? round($row['annual_total'] / $row['annual_count'], 1) : 0;
+
             $roster[] = $row;
         }
 
-        // Calculate ranks based on annual total
-        $ranked = collect($roster)->sortByDesc('annual_total')->values();
-        $rank = 1;
-        foreach ($ranked as $i => $r) {
-            if ($i > 0 && $r['annual_total'] < $ranked[$i - 1]['annual_total']) {
-                $rank = $i + 1;
-            }
-            // Find this student in roster and set rank
-            foreach ($roster as &$row) {
-                if ($row['student']->id === $r['student']->id) {
-                    $row['rank'] = $rank;
-                    break;
+        // Calculate Term1 ranks
+        $this->assignRanks($roster, 'term1_total', 'term1_rank');
+        // Calculate Term2 ranks
+        $this->assignRanks($roster, 'term2_total', 'term2_rank');
+        // Calculate Annual ranks
+        $this->assignRanks($roster, 'annual_total', 'annual_rank');
+
+        // Calculate class averages for each subject per term
+        $averages = [
+            'term1'  => [],
+            'term2'  => [],
+            'annual' => [],
+            'term1_total_avg'  => 0,
+            'term2_total_avg'  => 0,
+            'annual_total_avg' => 0,
+        ];
+
+        $studentCount = count($roster);
+        if ($studentCount > 0) {
+            foreach ($subjects as $subj) {
+                // Term1 subject average
+                $t1Sum = 0; $t1Cnt = 0;
+                foreach ($roster as $row) {
+                    $t1 = $row['term1'][$subj->id] ?? null;
+                    if ($t1 && $t1['grand_total'] !== null) {
+                        $t1Sum += floatval($t1['grand_total']);
+                        $t1Cnt++;
+                    }
                 }
+                $averages['term1'][$subj->id] = $t1Cnt > 0 ? round($t1Sum / $t1Cnt, 1) : null;
+
+                // Term2 subject average
+                $t2Sum = 0; $t2Cnt = 0;
+                foreach ($roster as $row) {
+                    $t2 = $row['term2'][$subj->id] ?? null;
+                    if ($t2 && $t2['grand_total'] !== null) {
+                        $t2Sum += floatval($t2['grand_total']);
+                        $t2Cnt++;
+                    }
+                }
+                $averages['term2'][$subj->id] = $t2Cnt > 0 ? round($t2Sum / $t2Cnt, 1) : null;
+
+                // Annual subject average
+                $aSum = 0; $aCnt = 0;
+                foreach ($roster as $row) {
+                    $ann = $row['annual'][$subj->id] ?? null;
+                    if ($ann && $ann['grand_total'] !== null) {
+                        $aSum += floatval($ann['grand_total']);
+                        $aCnt++;
+                    }
+                }
+                $averages['annual'][$subj->id] = $aCnt > 0 ? round($aSum / $aCnt, 1) : null;
             }
+
+            // Overall total averages
+            $t1TotalSum = array_sum(array_column($roster, 'term1_total'));
+            $t2TotalSum = array_sum(array_column($roster, 'term2_total'));
+            $aTotalSum  = array_sum(array_column($roster, 'annual_total'));
+
+            $averages['term1_total_avg']  = round($t1TotalSum / $studentCount, 1);
+            $averages['term2_total_avg']  = round($t2TotalSum / $studentCount, 1);
+            $averages['annual_total_avg'] = round($aTotalSum / $studentCount, 1);
         }
-        unset($row);
 
         // Lookup reference models
         $class        = ClassRoom::find($classId);
@@ -183,7 +252,8 @@ class MarkSheetFullController extends Controller
             'term1',
             'term2',
             'academicYears',
-            'classes'
+            'classes',
+            'averages'
         ));
     }
 
@@ -197,6 +267,29 @@ class MarkSheetFullController extends Controller
             ->get(['id', 'name']);
 
         return response()->json($sections);
+    }
+
+    /**
+     * Assign ranks to roster based on a given total field.
+     * Handles ties (same total = same rank, next rank skips).
+     */
+    private function assignRanks(array &$roster, string $totalField, string $rankField): void
+    {
+        $ranked = collect($roster)->sortByDesc($totalField)->values();
+        $rank = 1;
+        $rankMap = [];
+
+        foreach ($ranked as $i => $r) {
+            if ($i > 0 && $r[$totalField] < $ranked[$i - 1][$totalField]) {
+                $rank = $i + 1;
+            }
+            $rankMap[$r['student']->id] = $rank;
+        }
+
+        foreach ($roster as &$row) {
+            $row[$rankField] = $rankMap[$row['student']->id] ?? '-';
+        }
+        unset($row);
     }
 
     /**
