@@ -36,6 +36,8 @@ class ExamController extends Controller
             'total_marks'      => 'required|numeric|min:0|max:99999',
             'academic_year_id' => 'required|exists:academic_years,id',
             'term_id'          => 'required|exists:terms,id',
+            'class_id'         => 'nullable|exists:classes,id',
+            'subject_id'       => 'nullable|exists:subjects,id',
             'start_date'       => 'required|date',
             'end_date'         => 'required|date|after_or_equal:start_date',
             'start_time'       => 'nullable|date_format:H:i',
@@ -46,6 +48,7 @@ class ExamController extends Controller
         Exam::create($r->only([
             'name', 'type', 'total_marks',
             'academic_year_id', 'term_id',
+            'class_id', 'subject_id',
             'start_date', 'end_date',
             'start_time', 'end_time',
             'description',
@@ -79,6 +82,8 @@ class ExamController extends Controller
             'total_marks'      => 'required|numeric|min:0|max:99999',
             'academic_year_id' => 'required|exists:academic_years,id',
             'term_id'          => 'required|exists:terms,id',
+            'class_id'         => 'nullable|exists:classes,id',
+            'subject_id'       => 'nullable|exists:subjects,id',
             'start_date'       => 'required|date',
             'end_date'         => 'required|date|after_or_equal:start_date',
             'start_time'       => 'nullable|date_format:H:i',
@@ -89,6 +94,7 @@ class ExamController extends Controller
         $item->update($r->only([
             'name', 'type', 'total_marks',
             'academic_year_id', 'term_id',
+            'class_id', 'subject_id',
             'start_date', 'end_date',
             'start_time', 'end_time',
             'description',
