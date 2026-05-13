@@ -78,7 +78,7 @@ class ExamController extends Controller
     {
         $r->validate([
             'name'             => 'required|string|max:255',
-            'type'             => 'required|in:exam,quiz,assignment,project,midterm,final',
+            'type'             => 'required|in:exam,quiz,test,midterm,final,assignment,project',
             'total_marks'      => 'required|numeric|min:0|max:99999',
             'academic_year_id' => 'required|exists:academic_years,id',
             'term_id'          => 'required|exists:terms,id',
