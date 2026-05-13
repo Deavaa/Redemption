@@ -70,12 +70,13 @@
                                 <i class="fas fa-tag modern-input-icon"></i>
                                 <select name="type" id="type" class="modern-input modern-select {{ $errors->has('type') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Type --</option>
+                                    <option value="exam" {{ old('type', $item->type) == 'exam' ? 'selected' : '' }}>Exam</option>
                                     <option value="quiz" {{ old('type', $item->type) == 'quiz' ? 'selected' : '' }}>Quiz</option>
                                     <option value="test" {{ old('type', $item->type) == 'test' ? 'selected' : '' }}>Test</option>
-                                    <option value="mid_term" {{ old('type', $item->type) == 'mid_term' ? 'selected' : '' }}>Mid-Term Exam</option>
-                                    <option value="final_exam" {{ old('type', $item->type) == 'final_exam' ? 'selected' : '' }}>Final Exam</option>
+                                    <option value="midterm" {{ old('type', $item->type) == 'midterm' ? 'selected' : '' }}>Mid-Term Exam</option>
+                                    <option value="final" {{ old('type', $item->type) == 'final' ? 'selected' : '' }}>Final Exam</option>
                                     <option value="assignment" {{ old('type', $item->type) == 'assignment' ? 'selected' : '' }}>Assignment</option>
-                                    <option value="other" {{ old('type', $item->type) == 'other' ? 'selected' : '' }}>Other</option>
+                                    <option value="project" {{ old('type', $item->type) == 'project' ? 'selected' : '' }}>Project</option>
                                 </select>
                             </div>
                             @error('type')
