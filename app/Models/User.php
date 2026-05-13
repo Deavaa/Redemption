@@ -55,14 +55,24 @@ class User extends Authenticatable
      */
     public function getAllPermissions()
     {
-        static $cached = null;
-        if ($cached !== null) {
-            return $cached;
+        // Admin always has full access - no need to query
+        if ($this->role === 'admin') {
+            return collect();
         }
 
-        return $cached = $this->roles->flatMap(function ($role) {
-            return $role->permissions;
-        })->unique('id');
+        try {
+            static $cached = null;
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            return $cached = $this->roles->flatMap(function ($role) {
+                return $role->permissions;
+            })->unique('id');
+        } catch (\Throwable $e) {
+            // Roles/permissions tables may not exist yet (before migration runs)
+            return collect();
+        }
     }
 
     // ── Legacy Role Helpers ─────────────────────────────────
@@ -79,7 +89,11 @@ class User extends Authenticatable
         if ($this->role === 'admin') {
             return true;
         }
-        return $this->roles()->where('name', $role)->exists();
+        try {
+            return $this->roles()->where('name', $role)->exists();
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
@@ -93,7 +107,11 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->getAllPermissions()->contains('name', $permission);
+        try {
+            return $this->getAllPermissions()->contains('name', $permission);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
@@ -105,9 +123,13 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->getAllPermissions()
-            ->whereIn('name', $permissions)
-            ->isNotEmpty();
+        try {
+            return $this->getAllPermissions()
+                ->whereIn('name', $permissions)
+                ->isNotEmpty();
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
@@ -119,8 +141,12 @@ class User extends Authenticatable
             return true;
         }
 
-        $userPerms = $this->getAllPermissions()->pluck('name')->toArray();
-        return empty(array_diff($permissions, $userPerms));
+        try {
+            $userPerms = $this->getAllPermissions()->pluck('name')->toArray();
+            return empty(array_diff($permissions, $userPerms));
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
@@ -128,7 +154,11 @@ class User extends Authenticatable
      */
     public function assignRole(Role $role): void
     {
-        $this->roles()->syncWithoutDetaching([$role->id]);
+        try {
+            $this->roles()->syncWithoutDetaching([$role->id]);
+        } catch (\Throwable $e) {
+            // Silently fail if roles table doesn't exist yet
+        }
     }
 
     /**
@@ -136,7 +166,11 @@ class User extends Authenticatable
      */
     public function removeRole(Role $role): void
     {
-        $this->roles()->detach($role->id);
+        try {
+            $this->roles()->detach($role->id);
+        } catch (\Throwable $e) {
+            // Silently fail if roles table doesn't exist yet
+        }
     }
 
     /**
@@ -148,9 +182,13 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->getAllPermissions()
-            ->where('module', $module)
-            ->isNotEmpty();
+        try {
+            return $this->getAllPermissions()
+                ->where('module', $module)
+                ->isNotEmpty();
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
@@ -158,9 +196,13 @@ class User extends Authenticatable
      */
     public function getDisplayRoleAttribute(): string
     {
-        $role = $this->roles()->first();
-        if ($role) {
-            return $role->display_name;
+        try {
+            $role = $this->roles()->first();
+            if ($role) {
+                return $role->display_name;
+            }
+        } catch (\Throwable $e) {
+            // Roles table may not exist yet (before migration runs)
         }
         return ucfirst($this->role);
     }

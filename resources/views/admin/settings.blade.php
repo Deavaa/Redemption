@@ -144,8 +144,8 @@
                             <div class="modern-form-group">
                                 <div class="modern-toggle-wrapper">
                                     <label class="modern-toggle">
-                                        <input type="checkbox" name="settings[{{ $item->group }}__{{ $item->key }}]" value="1" {{ $item->value ? 'checked' : '' }}>
                                         <input type="hidden" name="settings[{{ $item->group }}__{{ $item->key }}]" value="0" disabled class="toggle-hidden">
+                                        <input type="checkbox" name="settings[{{ $item->group }}__{{ $item->key }}]" value="1" {{ $item->value ? 'checked' : '' }}>
                                         <span class="modern-toggle-slider"></span>
                                     </label>
                                     <div class="modern-toggle-info">
