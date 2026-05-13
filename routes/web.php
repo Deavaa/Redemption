@@ -1,50 +1,55 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AcademicYear\AcademicYearController;
-use App\Http\Controllers\Term\TermController;
-use App\Http\Controllers\Exam\ExamController;
-use App\Http\Controllers\Subject\SubjectController;
-use App\Http\Controllers\Admin\SubjectAssignmentController;
 use App\Http\Controllers\Admin\MarkEntryController;
-use App\Http\Controllers\Student\StudentController;
-use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Admin\StaffController;
-use App\Http\Controllers\TeamMember\TeamMemberController;
-use App\Http\Controllers\Slider\SliderController;
-use App\Http\Controllers\GalleryImage\GalleryImageController;
-use App\Http\Controllers\GalleryVideo\GalleryVideoController;
-use App\Http\Controllers\Branch\BranchController;
-use App\Http\Controllers\Classroom\ClassroomController;
-use App\Http\Controllers\Section\SectionController;
-use App\Http\Controllers\ClassAsset\ClassAssetController;
-use App\Http\Controllers\IdCard\IdCardController;
-use App\Http\Controllers\Certificate\CertificateController;
+use App\Http\Controllers\Admin\SubjectAssignmentController;
 use App\Http\Controllers\Audit\AuditController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Branch\BranchController;
 use App\Http\Controllers\Budget\BudgetController;
-use App\Http\Controllers\IncomeExpense\IncomeExpenseController;
-use App\Http\Controllers\FinanceStatement\FinanceStatementController;
+use App\Http\Controllers\CalendarEvent\CalendarEventController;
+use App\Http\Controllers\Certificate\CertificateController;
+use App\Http\Controllers\Certificate\CertificateGenerateController;
+use App\Http\Controllers\Chat\ChatController;
+use App\Http\Controllers\ClassAsset\ClassAssetController;
+use App\Http\Controllers\Classroom\ClassroomController;
+use App\Http\Controllers\ContactMessage\ContactMessageController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmployeeAsset\EmployeeAssetController;
+use App\Http\Controllers\Exam\ExamController;
 use App\Http\Controllers\Fee\FeeController;
 use App\Http\Controllers\FeePayment\FeePaymentController;
-use App\Http\Controllers\ParentModel\ParentModelController;
-use App\Http\Controllers\Payroll\PayrollController;
+use App\Http\Controllers\FinanceStatement\FinanceStatementController;
+use App\Http\Controllers\GalleryImage\GalleryImageController;
+use App\Http\Controllers\GalleryVideo\GalleryVideoController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IdCard\IdCardController;
+use App\Http\Controllers\IdCard\IdCardGenerateController;
+use App\Http\Controllers\IncomeExpense\IncomeExpenseController;
 use App\Http\Controllers\Leave\LeaveController;
-use App\Http\Controllers\EmployeeAsset\EmployeeAssetController;
-use App\Http\Controllers\PerformanceReport\PerformanceReportController;
-use App\Http\Controllers\ProgressReport\ProgressReportController;
-use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
-use App\Http\Controllers\ContactMessage\ContactMessageController;
+use App\Http\Controllers\MarkSheet\MarkRosterController;
 use App\Http\Controllers\MarkSheet\MarkSheetController;
 use App\Http\Controllers\MarkSheet\MarkSheetFullController;
-use App\Http\Controllers\MarkSheet\MarkRosterController;
-use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController;
-use App\Http\Controllers\Setting\SettingController;
+use App\Http\Controllers\MarkSheet\ReportCardController;
 use App\Http\Controllers\Notification\NotificationController;
-use App\Http\Controllers\CalendarEvent\CalendarEventController;
+use App\Http\Controllers\ParentModel\ParentModelController;
+use App\Http\Controllers\Payroll\PayrollController;
+use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController;
+use App\Http\Controllers\PerformanceReport\PerformanceReportController;
+use App\Http\Controllers\ProgressReport\ProgressReportController;
 use App\Http\Controllers\Role\RoleController;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Section\SectionController;
+use App\Http\Controllers\Setting\SettingController;
+use App\Http\Controllers\Slider\SliderController;
+use App\Http\Controllers\Student\StudentController;
+use App\Http\Controllers\Subject\SubjectController;
+use App\Http\Controllers\Teacher\TeacherController;
+use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
+use App\Http\Controllers\TeamMember\TeamMemberController;
+use App\Http\Controllers\Telegram\TelegramController;
+use App\Http\Controllers\Term\TermController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -53,13 +58,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Telegram webhook (public)
-Route::post('telegram/webhook', [App\Http\Controllers\Telegram\TelegramController::class, 'webhook']);
+Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 
-Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('academic-years', AcademicYearController::class);
     Route::resource('terms', TermController::class);
-    Route::resource('exams', ExamController::class);
+    Route::resource('exams', ExamController::class)->parameter('exams', 'item');
     Route::resource('subjects', SubjectController::class);
     Route::resource('subject-assignments', SubjectAssignmentController::class);
     Route::delete('subject-assignments/bulk-delete', [SubjectAssignmentController::class, 'bulkDelete'])->name('subject-assignments.bulk-delete');
@@ -91,10 +96,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('mark-roster/api/sections', [MarkRosterController::class, 'getSections'])->name('mark-roster.sections');
 
     // Report Card (Foldable 4-face)
-    Route::get('report-card', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'index'])->name('report-card.index');
-    Route::post('report-card/generate', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'generate'])->name('report-card.generate');
-    Route::get('report-card/api/sections', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'getSections'])->name('report-card.sections');
-    Route::get('report-card/api/students', [\App\Http\Controllers\MarkSheet\ReportCardController::class, 'getStudents'])->name('report-card.students');
+    Route::get('report-card', [ReportCardController::class, 'index'])->name('report-card.index');
+    Route::post('report-card/generate', [ReportCardController::class, 'generate'])->name('report-card.generate');
+    Route::get('report-card/api/sections', [ReportCardController::class, 'getSections'])->name('report-card.sections');
+    Route::get('report-card/api/students', [ReportCardController::class, 'getStudents'])->name('report-card.students');
 
     // Performance Analysis
     Route::get('performance-analysis', [PerformanceAnalysisController::class, 'index'])->name('performance-analysis.index');
@@ -102,15 +107,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('performance-analysis/api/sections', [PerformanceAnalysisController::class, 'getSections'])->name('performance-analysis.sections');
 
     // ID Card Generation
-    Route::get('id-card-generate', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'index'])->name('id-card-generate.index');
-    Route::post('id-card-generate', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'generate'])->name('id-card-generate.generate');
-    Route::get('id-card-generate/api/sections', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'getSections'])->name('id-card-generate.sections');
-    Route::get('id-card-generate/api/students', [App\Http\Controllers\IdCard\IdCardGenerateController::class, 'getStudents'])->name('id-card-generate.students');
+    Route::get('id-card-generate', [IdCardGenerateController::class, 'index'])->name('id-card-generate.index');
+    Route::post('id-card-generate', [IdCardGenerateController::class, 'generate'])->name('id-card-generate.generate');
+    Route::get('id-card-generate/api/sections', [IdCardGenerateController::class, 'getSections'])->name('id-card-generate.sections');
+    Route::get('id-card-generate/api/students', [IdCardGenerateController::class, 'getStudents'])->name('id-card-generate.students');
 
     // Certificate Generation
-    Route::get('certificate-generate', [App\Http\Controllers\Certificate\CertificateGenerateController::class, 'index'])->name('certificate-generate.index');
-    Route::post('certificate-generate', [App\Http\Controllers\Certificate\CertificateGenerateController::class, 'generate'])->name('certificate-generate.generate');
-    Route::get('certificate-generate/api/students', [App\Http\Controllers\Certificate\CertificateGenerateController::class, 'getStudents'])->name('certificate-generate.students');
+    Route::get('certificate-generate', [CertificateGenerateController::class, 'index'])->name('certificate-generate.index');
+    Route::post('certificate-generate', [CertificateGenerateController::class, 'generate'])->name('certificate-generate.generate');
+    Route::get('certificate-generate/api/students', [CertificateGenerateController::class, 'getStudents'])->name('certificate-generate.students');
 
     Route::resource('students', StudentController::class);
     Route::get('students/api/admission-preview', [StudentController::class, 'apiAdmissionPreview'])->name('students.api.admission-preview');
@@ -164,20 +169,20 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('api/calendar/event/{calendar_event}', [CalendarEventController::class, 'apiEvent'])->name('calendar.api.event');
 
     // Chat
-    Route::get('chat', [App\Http\Controllers\Chat\ChatController::class, 'index'])->name('chat.index');
-    Route::post('chat', [App\Http\Controllers\Chat\ChatController::class, 'storeConversation'])->name('chat.store');
-    Route::get('chat/{id}', [App\Http\Controllers\Chat\ChatController::class, 'show'])->name('chat.show');
-    Route::post('chat/{id}/send', [App\Http\Controllers\Chat\ChatController::class, 'sendMessage'])->name('chat.send');
-    Route::delete('chat/{id}', [App\Http\Controllers\Chat\ChatController::class, 'destroyConversation'])->name('chat.destroy');
-    Route::get('chat/{id}/messages', [App\Http\Controllers\Chat\ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('chat', [ChatController::class, 'storeConversation'])->name('chat.store');
+    Route::get('chat/{id}', [ChatController::class, 'show'])->name('chat.show');
+    Route::post('chat/{id}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::delete('chat/{id}', [ChatController::class, 'destroyConversation'])->name('chat.destroy');
+    Route::get('chat/{id}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
 
     // Telegram
-    Route::get('telegram', [App\Http\Controllers\Telegram\TelegramController::class, 'index'])->name('telegram.index');
-    Route::put('telegram/settings', [App\Http\Controllers\Telegram\TelegramController::class, 'updateSettings'])->name('telegram.update-settings');
-    Route::post('telegram/branch-settings', [App\Http\Controllers\Telegram\TelegramController::class, 'updateBranchSettings'])->name('telegram.update-branch-settings');
-    Route::get('telegram/send', [App\Http\Controllers\Telegram\TelegramController::class, 'send'])->name('telegram.send');
-    Route::post('telegram/send', [App\Http\Controllers\Telegram\TelegramController::class, 'sendMessage'])->name('telegram.send-message');
-    Route::get('telegram/test', [App\Http\Controllers\Telegram\TelegramController::class, 'testConnection'])->name('telegram.test');
+    Route::get('telegram', [TelegramController::class, 'index'])->name('telegram.index');
+    Route::put('telegram/settings', [TelegramController::class, 'updateSettings'])->name('telegram.update-settings');
+    Route::post('telegram/branch-settings', [TelegramController::class, 'updateBranchSettings'])->name('telegram.update-branch-settings');
+    Route::get('telegram/send', [TelegramController::class, 'send'])->name('telegram.send');
+    Route::post('telegram/send', [TelegramController::class, 'sendMessage'])->name('telegram.send-message');
+    Route::get('telegram/test', [TelegramController::class, 'testConnection'])->name('telegram.test');
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
