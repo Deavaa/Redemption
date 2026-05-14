@@ -239,4 +239,23 @@ return [
     'id_card_selected' => 'selected',
     'id_card_preview_title' => 'Selected Students',
     'id_card_select_alert' => 'Please select at least one student',
+
+    // ID Card Back Side
+    'academic_year' => 'Academic Year',
+    'guardian' => 'Guardian',
+    'id_card_rules_title' => 'Rules & Regulations',
+    'id_card_rules' => 'ID Card Rules',
+    'rule_1' => 'This card must be worn visibly at all times while on school premises.',
+    'rule_2' => 'Loss of this card must be reported immediately to the school office.',
+    'rule_3' => 'A replacement fee will be charged for lost or damaged cards.',
+    'rule_4' => 'This card is non-transferable and remains school property.',
+    'rule_5' => 'Must be surrendered upon graduation, withdrawal, or expulsion.',
+    'school_rules' => 'School Rules',
+    'srule_1' => 'Maintain punctuality and regular attendance.',
+    'srule_2' => 'Wear proper school uniform at all times.',
+    'srule_3' => 'Respect teachers, staff, and fellow students.',
+    'srule_4' => 'No electronic devices allowed during class hours.',
+    'srule_5' => 'Maintain discipline and follow school code of conduct.',
+    'contact_info' => 'Contact',
+    'id_card_issued' => 'Issued by the school administration',
 ];

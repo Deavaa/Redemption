@@ -154,17 +154,69 @@ class MarkEntryController extends Controller
             'class'=>$class?$class->name:'','section'=>$section?$section->name:'']);
     }
     public function apiSave(Request $request) {
-        $request->validate(['student_id'=>'required|numeric','subject_id'=>'required|numeric',
-            'academic_year_id'=>'nullable|numeric','term_id'=>'required|numeric']);
-        $data = $request->only('student_id','subject_id','academic_year_id','term_id','class_id','section_id','class_grade','section',
-            'ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10','conduct','handwriting','creativity','test1','test2','mid_term','final_exam');
+        $request->validate([
+            'student_id' => 'required|numeric',
+            'subject_id' => 'required|numeric',
+            'academic_year_id' => 'nullable|numeric',
+            'term_id' => 'required|numeric',
+        ]);
+
+        $data = $request->only(
+            'student_id','subject_id','academic_year_id','term_id','class_id','section_id','class_grade','section',
+            'ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10',
+            'conduct','handwriting','creativity','test1','test2','mid_term','final_exam'
+        );
+
+        // Handle single-field auto-save (mark_key + mark_value)
         if ($request->filled('mark_key') && $request->filled('mark_value')) {
             $data[$request->mark_key] = $request->mark_value;
         }
-        if (auth()->check()) $data['teacher_id']=auth()->id();
+
+        // Set teacher_id from authenticated user (prefer teacher profile)
+        if (auth()->check()) {
+            $teacher = \App\Models\Teacher::where('email', auth()->user()->email)->first();
+            $data['teacher_id'] = $teacher ? $teacher->id : auth()->id();
+        }
+
+        // Calculate totals
         $data = MarkEntry::calcTotals($data);
-        $entry = MarkEntry::updateOrCreate(['student_id'=>$data['student_id'],'subject_id'=>$data['subject_id'],
-            'academic_year_id'=>$data['academic_year_id']??null,'term_id'=>$data['term_id']??null], $data);
-        return response()->json(['success'=>true,'entry'=>$entry,'ca_total'=>$entry->ca_total,'exam_total'=>$entry->exam_total,'grand_total'=>$entry->grand_total]);
+
+        // Use the correct unique key for upsert: student + subject + academic_year + term
+        // This avoids the old [exam_id, student_id] unique constraint conflict
+        $uniqueKey = [
+            'student_id' => $data['student_id'],
+            'subject_id' => $data['subject_id'],
+            'academic_year_id' => $data['academic_year_id'] ?? null,
+            'term_id' => $data['term_id'] ?? null,
+        ];
+
+        try {
+            $entry = MarkEntry::updateOrCreate($uniqueKey, $data);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Fallback: if unique constraint fails, try to find and update manually
+            // This handles the legacy [exam_id, student_id] unique constraint
+            $existing = MarkEntry::where('student_id', $data['student_id'])
+                ->where('subject_id', $data['subject_id'])
+                ->where('academic_year_id', $data['academic_year_id'] ?? null)
+                ->where('term_id', $data['term_id'] ?? null)
+                ->first();
+
+            if ($existing) {
+                $existing->update($data);
+                $entry = $existing->fresh();
+            } else {
+                // Clear exam_id to avoid old unique constraint conflict
+                $data['exam_id'] = $data['exam_id'] ?? null;
+                $entry = MarkEntry::create($data);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'entry' => $entry,
+            'ca_total' => $entry->ca_total,
+            'exam_total' => $entry->exam_total,
+            'grand_total' => $entry->grand_total,
+        ]);
     }
 }

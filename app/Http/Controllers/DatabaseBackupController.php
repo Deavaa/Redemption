@@ -24,6 +24,8 @@ class DatabaseBackupController extends Controller
     {
         $connection = config('database.default');
         $driver = config("database.connections.{$connection}.driver", 'unknown');
+        $mailMailer = config('mail.default', env('MAIL_MAILER', 'log'));
+        $mailConfigured = !in_array($mailMailer, ['log', 'array', 'null']);
 
         // Gather database stats
         $tables = $this->getTableList();
@@ -48,7 +50,8 @@ class DatabaseBackupController extends Controller
         }
 
         return view('admin.database-backup.index', compact(
-            'connection', 'driver', 'tables', 'tableCounts', 'totalRecords', 'lastBackup'
+            'connection', 'driver', 'tables', 'tableCounts', 'totalRecords', 'lastBackup',
+            'mailMailer', 'mailConfigured'
         ));
     }
 
@@ -63,6 +66,16 @@ class DatabaseBackupController extends Controller
             'tables.*' => 'string',
             'email' => 'nullable|email',
         ]);
+
+        // Check if mail is actually configured
+        $mailMailer = config('mail.default', env('MAIL_MAILER', 'log'));
+        if (in_array($mailMailer, ['log', 'array', 'null'])) {
+            return redirect()->back()->with('error',
+                'Email is not configured! The current mail driver is "' . $mailMailer . '" which only writes to log files. ' .
+                'Please configure SMTP in your .env file (MAIL_MAILER=smtp, MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD) to actually send emails. ' .
+                'For Gmail, use an App Password from https://myaccount.google.com/apppasswords'
+            );
+        }
 
         try {
             $format = $request->input('format', 'sql');
@@ -124,6 +137,16 @@ class DatabaseBackupController extends Controller
      */
     public function quickExport()
     {
+        // Check if mail is actually configured
+        $mailMailer = config('mail.default', env('MAIL_MAILER', 'log'));
+        if (in_array($mailMailer, ['log', 'array', 'null'])) {
+            return redirect()->back()->with('error',
+                'Email is not configured! The current mail driver is "' . $mailMailer . '" which only writes to log files. ' .
+                'Please configure SMTP in your .env file (MAIL_MAILER=smtp, MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD) to actually send emails. ' .
+                'For Gmail, use an App Password from https://myaccount.google.com/apppasswords'
+            );
+        }
+
         try {
             $sqlContent = $this->exportAsSql([]);
             $timestamp = now()->format('Y-m-d_His');

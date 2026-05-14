@@ -27,14 +27,15 @@ class Setting extends Model
             return asset('images/default-logo.png');
         }
 
-        // Check if file exists in public path
-        if (file_exists(public_path($logo))) {
-            return asset($logo);
+        // If stored via Storage::disk('public'), value is like "settings/xxx.png"
+        // Try Storage::url() first (generates /storage/settings/xxx.png)
+        if (Storage::disk('public')->exists($logo)) {
+            return Storage::url($logo);
         }
 
-        // Check if file exists in storage
-        if (file_exists(storage_path('app/public/' . $logo))) {
-            return Storage::url($logo);
+        // Check if file exists in public path directly
+        if (file_exists(public_path($logo))) {
+            return asset($logo);
         }
 
         // Check with uploads prefix
@@ -42,7 +43,12 @@ class Setting extends Model
             return asset('uploads/' . $logo);
         }
 
-        // Try as-is with asset
+        // Check storage/app/public/ path directly
+        if (file_exists(storage_path('app/public/' . $logo))) {
+            return asset('storage/' . $logo);
+        }
+
+        // Fallback: try asset helper as-is
         return asset($logo);
     }
 }
