@@ -36,11 +36,13 @@ class CertificateGenerateController extends Controller
             ->orderBy('subject_id')
             ->get();
 
+        Certificate::where('student_id', $student->id)->where('type', $r->type)->delete();
+
         // Auto-create certificate record
         $cert = Certificate::create([
             'student_id' => $student->id,
             'type' => $r->type,
-            'certificate_number' => strtoupper(substr($r->type, 0, 3)) . '-' . date('Y') . '-' . str_pad($student->id, 4, '0', STR_PAD_LEFT),
+            'certificate_number' => strtoupper(substr($r->type, 0, 3)) . '-' . date('Y') . '-' . str_pad(Certificate::count()+1, 4, '0', STR_PAD_LEFT),
             'issue_date' => now()->format('Y-m-d'),
             'content' => $r->type . ' certificate for ' . $student->first_name . ' ' . $student->last_name,
             'template' => $r->type,

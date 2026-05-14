@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student ID Cards</title>
@@ -47,6 +48,7 @@
     </style>
 </head>
 <body>
+    @php $logoPath = DB::table('settings')->where('key', 'school_logo')->value('value'); $logoUrl = ''; if($logoPath){ if(file_exists(public_path('storage/' . $logoPath))){ $logoUrl = asset('storage/' . $logoPath); } elseif(file_exists(public_path($logoPath))){ $logoUrl = asset($logoPath); } else { $logoUrl = asset($logoPath); } } @endphp
     <div class="no-print"><button onclick="window.print()">Print ID Cards</button></div>
     <div class="id-cards-grid">
         @foreach($students as $student)

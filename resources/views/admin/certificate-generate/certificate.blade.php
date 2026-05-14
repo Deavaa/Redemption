@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
     <title>Certificate - {{ $student->first_name }} {{ $student->last_name }}</title>
     <style>
@@ -33,10 +34,12 @@
     </style>
 </head>
 <body>
+    @php $logoPath = DB::table('settings')->where('key', 'school_logo')->value('value'); $logoUrl = ''; if($logoPath){ if(file_exists(public_path('storage/' . $logoPath))){ $logoUrl = asset('storage/' . $logoPath); } elseif(file_exists(public_path($logoPath))){ $logoUrl = asset($logoPath); } else { $logoUrl = asset($logoPath); } } @endphp
     <div class="no-print"><button onclick="window.print()">Print Certificate</button></div>
     <div class="certificate">
         <div class="certificate-inner">
             <div class="cert-header">
+                @if($logoUrl)<img src="{{ $logoUrl }}" style="height:55px;object-fit:contain;margin-bottom:5px;">@endif
                 <h1>SCHOOL OF REDEMPTION</h1>
                 <div class="cert-line"></div>
                 <h2>{{ ucfirst($cert->type) }} Certificate</h2>
