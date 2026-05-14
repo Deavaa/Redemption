@@ -35,6 +35,7 @@ class GalleryImageController extends Controller
         $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('image_path')) {
             $data['image_path'] = $r->file('image_path')->store('gallery', 'public');
+            $this->copyToPublicStorage($data['image_path']);
         }
         GalleryImage::create($data);
         return redirect()->route("admin.gallery-images.index")->with('success','Image added successfully');
@@ -58,10 +59,28 @@ class GalleryImageController extends Controller
         $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('image_path')) {
             $data['image_path'] = $r->file('image_path')->store('gallery', 'public');
+            $this->copyToPublicStorage($data['image_path']);
         }
         $gallery_image->update($data);
         return redirect()->route("admin.gallery-images.index")->with('success','Image updated successfully');
     }
 
     public function destroy(GalleryImage $gallery_image) { $gallery_image->delete(); return back()->with('success','Image deleted successfully'); }
+
+    private function copyToPublicStorage($relativePath)
+    {
+        try {
+            $sourcePath = \Illuminate\Support\Facades\Storage::disk('public')->path($relativePath);
+            $destinationPath = public_path('storage/' . $relativePath);
+            $destinationDir = dirname($destinationPath);
+            if (!is_dir($destinationDir)) {
+                mkdir($destinationDir, 0755, true);
+            }
+            if (file_exists($sourcePath)) {
+                copy($sourcePath, $destinationPath);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to copy file to public storage fallback: ' . $e->getMessage());
+        }
+    }
 }

@@ -26,12 +26,14 @@
         @php
             $academicRoutes = ['admin.academic-years.*','admin.terms.*','admin.subjects.*','admin.subject-assignments.*','admin.exams.*','admin.mark-entries.*','admin.classrooms.*','admin.sections.*','admin.mark-sheet.*','admin.mark-sheet-full.*','admin.mark-roster.*','admin.report-card.*','admin.progress-reports.*'];
             $peopleRoutes = ['admin.students.*','admin.teachers.*','admin.staff.*','admin.team-members.*','admin.parents.*','admin.teacher-assignments.*'];
-            $financeRoutes = ['admin.fees.*','admin.fee-payments.*','admin.payrolls.*','admin.budgets.*','admin.income-expenses.*','admin.finance-statements.*','admin.leaves.*','admin.employee-assets.*'];
-            $websiteRoutes = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*'];
+            $financeRoutes = ['admin.fees.*','admin.fee-payments.*','admin.payrolls.*','admin.budgets.*','admin.income-expenses.*','admin.finance-statements.*','admin.leaves.*','admin.employee-assets.*','admin.budget-comparison.*','admin.financial-comparison.*'];
+            $analysisRoutes = ['admin.performance-analysis.*','admin.performance-comparison.*','admin.psychological-analysis.*','admin.performance-reports.*'];
+            $websiteRoutes = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*','admin.web-content.*'];
                 $generateRoutes = ['admin.id-card-generate.*','admin.certificate-generate.*','admin.id-cards.*','admin.certificates.*'];
             $isAcademicActive = request()->routeIs($academicRoutes);
             $isPeopleActive = request()->routeIs($peopleRoutes);
             $isFinanceActive = request()->routeIs($financeRoutes);
+            $isAnalysisActive = request()->routeIs($analysisRoutes);
             $isWebsiteActive = request()->routeIs($websiteRoutes);
                 $isGenerateActive = request()->routeIs($generateRoutes);
         @endphp
@@ -92,6 +94,21 @@
                         <li><a href="{{ route('admin.finance-statements.index') }}" class="{{ request()->routeIs('admin.finance-statements.*') ? 'active' : '' }}"><i class="fas fa-file-alt"></i> {{ __('app.statements') }}</a></li>
                         <li><a href="{{ route('admin.leaves.index') }}" class="{{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}"><i class="fas fa-calendar-minus"></i> {{ __('app.leaves') }}</a></li>
                         <li><a href="{{ route('admin.employee-assets.index') }}" class="{{ request()->routeIs('admin.employee-assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i> {{ __('app.employee_assets') }}</a></li>
+                        <li><a href="{{ route('admin.budget-comparison.index') }}" class="{{ request()->routeIs('admin.budget-comparison.*') ? 'active' : '' }}"><i class="fas fa-balance-scale"></i> {{ __('app.budget_comparison') ?? 'Budget Comparison' }}</a></li>
+                        <li><a href="{{ route('admin.financial-comparison.index') }}" class="{{ request()->routeIs('admin.financial-comparison.*') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i> {{ __('app.financial_comparison') ?? 'Financial Comparison' }}</a></li>
+                    </ul>
+                </li>
+
+                <li class="menu-header">{{ __('app.analysis') ?? 'ANALYSIS' }}</li>
+                <li class="{{ $isAnalysisActive ? 'has-active-child' : '' }}">
+                    <a href="#analysisSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
+                        <i class="fas fa-chart-line"></i><span>{{ __('app.analysis') ?? 'Analysis' }}</span><i class="fas fa-chevron-down sidebar-chevron"></i>
+                    </a>
+                    <ul class="collapse {{ $isAnalysisActive ? 'show' : '' }}" id="analysisSubmenu">
+                        <li><a href="{{ route('admin.performance-analysis.index') }}" class="{{ request()->routeIs('admin.performance-analysis.*') ? 'active' : '' }}"><i class="fas fa-tachometer-alt"></i> {{ __('app.performance_analysis') ?? 'Performance Analysis' }}</a></li>
+                        <li><a href="{{ route('admin.performance-comparison.index') }}" class="{{ request()->routeIs('admin.performance-comparison.*') ? 'active' : '' }}"><i class="fas fa-code-compare"></i> {{ __('app.performance_comparison') ?? 'Branch Comparison' }}</a></li>
+                        <li><a href="{{ route('admin.psychological-analysis.index') }}" class="{{ request()->routeIs('admin.psychological-analysis.*') ? 'active' : '' }}"><i class="fas fa-brain"></i> {{ __('app.psychological_analysis') ?? 'Psychological Analysis' }}</a></li>
+                        <li><a href="{{ route('admin.performance-reports.index') }}" class="{{ request()->routeIs('admin.performance-reports.*') ? 'active' : '' }}"><i class="fas fa-file-medical-alt"></i> {{ __('app.performance_reports') ?? 'Performance Reports' }}</a></li>
                     </ul>
                 </li>
 
@@ -117,6 +134,19 @@
                         <li><a href="{{ route('admin.gallery-images.index') }}" class="{{ request()->routeIs('admin.gallery-images.*') ? 'active' : '' }}"><i class="fas fa-image"></i> {{ __('app.gallery_images') }}</a></li>
                         <li><a href="{{ route('admin.gallery-videos.index') }}" class="{{ request()->routeIs('admin.gallery-videos.*') ? 'active' : '' }}"><i class="fas fa-video"></i> {{ __('app.gallery_videos') }}</a></li>
                         <li><a href="{{ route('admin.contact-messages.index') }}" class="{{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}"><i class="fas fa-envelope"></i> {{ __('app.messages') }}</a></li>
+                        <li><a href="{{ route('admin.web-content.index') }}" class="{{ request()->routeIs('admin.web-content.*') ? 'active' : '' }}"><i class="fas fa-paint-brush"></i> {{ __('app.web_content') ?? 'Web Content' }}</a></li>
+                    </ul>
+                </li>
+
+                <li class="menu-header">{{ __('app.communication') ?? 'COMMUNICATION' }}</li>
+                <li class="{{ request()->routeIs('admin.calendar.*') ? 'has-active-child' : '' }}">
+                    <a href="#commSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
+                        <i class="fas fa-broadcast-tower"></i><span>{{ __('app.communication') ?? 'Communication' }}</span><i class="fas fa-chevron-down sidebar-chevron"></i>
+                    </a>
+                    <ul class="collapse {{ request()->routeIs('admin.calendar.*') || request()->routeIs('admin.telegram.*') || request()->routeIs('admin.announcements.*') ? 'show' : '' }}" id="commSubmenu">
+                        <li><a href="{{ route('admin.calendar.index') }}" class="{{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}"><i class="fas fa-calendar-alt"></i> {{ __('app.academic_calendar') ?? 'Academic Calendar' }}</a></li>
+                        <li><a href="{{ route('admin.announcements.index') }}" class="{{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}"><i class="fas fa-bullhorn"></i> {{ __('app.announcements') ?? 'Announcements' }}</a></li>
+                        <li><a href="{{ route('admin.telegram.index') }}" class="{{ request()->routeIs('admin.telegram.*') ? 'active' : '' }}"><i class="fab fa-telegram"></i> {{ __('app.telegram') ?? 'Telegram' }}</a></li>
                     </ul>
                 </li>
 

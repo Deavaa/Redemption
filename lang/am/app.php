@@ -258,4 +258,37 @@ return [
     'srule_5' => 'ሥርዓት ጠብቁ እና የትምህርት ቤት የባህሪ መመሪያ ተከታተሉ።',
     'contact_info' => 'ያግኙን',
     'id_card_issued' => 'በትምህርት ቤት አስተዳደር የተሰጠ',
+
+    // Sidebar - New Sections
+    'analysis' => 'ትንተና',
+    'communication' => 'ግንኙነት',
+
+    // Finance - New
+    'budget_comparison' => 'የበጀት ማነፃፀር',
+    'financial_comparison' => 'የገንዘብ ማነፃፀር',
+    'finance_statements' => 'የገንዘብ መግለጫ',
+
+    // Analysis
+    'performance_analysis' => 'የአፈጻጸም ትንተና',
+    'performance_comparison' => 'የቅርንጫፍ አፈጻጸም ማነፃፀር',
+    'psychological_analysis' => 'ስነ-አዕምሮ ትንተና',
+    'performance_reports' => 'የአፈጻጸም ሪፖርቶች',
+    'psych_desc' => 'የተማሪ ስነ-አዕምሮ መገለጫ፣ አነሳስ እና ሂድት ትንተና',
+
+    // Communication
+    'academic_calendar' => 'የትምህርት ቀን መቁጠሪያ',
+    'announcements' => 'ማሳወቂያዎች',
+    'announcements_desc' => 'ማሳወቂያዎችን ይፍጠሩ እና ራስ-ሰር ማንቂያዎችን ይላኩ',
+    'create_announcement' => 'ማሳወቂያ ይፍጠሩ',
+    'send_to_telegram' => 'ወደ ቴሌግራም ራስ-ሰር ላክ',
+    'upcoming' => 'መጪ',
+    'no_announcements' => 'መጪ ማሳወቂያ የለም',
+    'past_announcements' => 'ያለፉ ማሳወቂያዎች',
+    'telegram' => 'ቴሌግራም',
+
+    // Web Content
+    'web_content' => 'ድሕረ-ገጽ ይዘት',
+    'web_content_desc' => 'የድሕረ-ገጽ ይዘት፣ አቀማመጥ እና ምልክት አስተዳድር',
+    'title' => 'ርዕስ',
+    'category' => 'ምድብ',
 ];

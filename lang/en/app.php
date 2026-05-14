@@ -258,4 +258,37 @@ return [
     'srule_5' => 'Maintain discipline and follow school code of conduct.',
     'contact_info' => 'Contact',
     'id_card_issued' => 'Issued by the school administration',
+
+    // Sidebar - New Sections
+    'analysis' => 'ANALYSIS',
+    'communication' => 'COMMUNICATION',
+
+    // Finance - New
+    'budget_comparison' => 'Budget Comparison',
+    'financial_comparison' => 'Financial Comparison',
+    'finance_statements' => 'Finance Statements',
+
+    // Analysis
+    'performance_analysis' => 'Performance Analysis',
+    'performance_comparison' => 'Branch Performance Comparison',
+    'psychological_analysis' => 'Psychological Analysis',
+    'performance_reports' => 'Performance Reports',
+    'psych_desc' => 'Analyze student psychological profiles, motivation, and progress',
+
+    // Communication
+    'academic_calendar' => 'Academic Calendar',
+    'announcements' => 'Announcements',
+    'announcements_desc' => 'Create announcements and send alerts automatically',
+    'create_announcement' => 'Create Announcement',
+    'send_to_telegram' => 'Send to Telegram automatically',
+    'upcoming' => 'Upcoming',
+    'no_announcements' => 'No upcoming announcements',
+    'past_announcements' => 'Past Announcements',
+    'telegram' => 'Telegram',
+
+    // Web Content
+    'web_content' => 'Web Content',
+    'web_content_desc' => 'Manage website content, appearance, and branding',
+    'title' => 'Title',
+    'category' => 'Category',
 ];

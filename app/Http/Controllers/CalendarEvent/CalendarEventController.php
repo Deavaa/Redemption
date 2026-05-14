@@ -6,8 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use App\Models\AcademicYear;
 use App\Models\Branch;
+use App\Models\TelegramSetting;
+use App\Models\BranchTelegramSetting;
+use App\Models\TelegramMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class CalendarEventController extends Controller
 {
@@ -47,9 +51,14 @@ class CalendarEventController extends Controller
             $data['color'] = CalendarEvent::categoryColors()[$data['category']] ?? '#4361ee';
         }
 
-        CalendarEvent::create($data);
+        $event = CalendarEvent::create($data);
 
-        return redirect()->route('admin.calendar.index')->with('success', 'Event created successfully.');
+        // Auto-notify via Telegram if enabled
+        if ($r->has('notify_telegram')) {
+            $this->notifyTelegram($event);
+        }
+
+        return redirect()->route('admin.calendar.index')->with('success', 'Event created successfully.' . ($r->has('notify_telegram') ? ' Telegram notification sent.' : ''));
     }
 
     public function update(Request $r, CalendarEvent $calendar_event)
@@ -80,7 +89,12 @@ class CalendarEventController extends Controller
 
         $calendar_event->update($data);
 
-        return redirect()->route('admin.calendar.index')->with('success', 'Event updated successfully.');
+        // Auto-notify via Telegram if enabled
+        if ($r->has('notify_telegram')) {
+            $this->notifyTelegram($calendar_event);
+        }
+
+        return redirect()->route('admin.calendar.index')->with('success', 'Event updated successfully.' . ($r->has('notify_telegram') ? ' Telegram notification sent.' : ''));
     }
 
     public function destroy(CalendarEvent $calendar_event)
@@ -147,6 +161,74 @@ class CalendarEventController extends Controller
         });
 
         return response()->json($events);
+    }
+
+    /**
+     * Send event notification to Telegram groups/channels.
+     */
+    private function notifyTelegram(CalendarEvent $event)
+    {
+        $categoryEmoji = [
+            'holiday' => '\xF0\x9F\x8E\x89', 'exam' => '\xF0\x9F\x93\x9D',
+            'event' => '\xF0\x9F\x93\x85', 'meeting' => '\xF0\x9F\x91\xA5',
+            'deadline' => '\xE2\x8F\xB0', 'other' => '\xF0\x9F\x93\x8C',
+        ];
+        $emoji = $categoryEmoji[$event->category] ?? '\xF0\x9F\x93\x8C';
+
+        $message = "$emoji *{$event->title}*\n";
+        $message .= "\xF0\x9F\x93\x85 " . $event->start_date->format('M d, Y');
+        if ($event->start_time && !$event->is_all_day) {
+            $message .= " at " . $event->start_time;
+        }
+        if ($event->end_date && $event->end_date != $event->start_date) {
+            $message .= " - " . $event->end_date->format('M d, Y');
+        }
+        $message .= "\n\xF0\x9F\x8F\x7D " . ucfirst($event->category);
+        if ($event->description) {
+            $message .= "\n\n" . $event->description;
+        }
+
+        $targets = [];
+
+        // Global bot
+        $global = TelegramSetting::getSettings();
+        if ($global && $global->is_enabled && $global->bot_token && $global->chat_id) {
+            $targets[] = ['bot_token' => $global->bot_token, 'chat_id' => $global->chat_id, 'name' => 'Global'];
+        }
+
+        // Branch-specific bot
+        if ($event->branch_id) {
+            $bs = BranchTelegramSetting::getForBranch($event->branch_id);
+            if ($bs && $bs->is_enabled && $bs->bot_token && $bs->chat_id) {
+                $targets[] = ['bot_token' => $bs->bot_token, 'chat_id' => $bs->chat_id, 'name' => $event->branch->name ?? 'Branch'];
+            }
+        } else {
+            // Send to all enabled branches
+            $allBranch = BranchTelegramSetting::where('is_enabled', true)
+                ->whereNotNull('bot_token')->whereNotNull('chat_id')->get();
+            foreach ($allBranch as $bs) {
+                $targets[] = ['bot_token' => $bs->bot_token, 'chat_id' => $bs->chat_id, 'name' => $bs->branch->name ?? 'Branch'];
+            }
+        }
+
+        foreach ($targets as $target) {
+            try {
+                $response = Http::post("https://api.telegram.org/bot{$target['bot_token']}/sendMessage", [
+                    'chat_id' => $target['chat_id'],
+                    'text' => $message,
+                    'parse_mode' => 'Markdown',
+                ]);
+                $data = $response->json();
+                TelegramMessage::create([
+                    'chat_id' => $target['chat_id'],
+                    'message' => $message,
+                    'direction' => 'outgoing',
+                    'status' => ($data['ok'] ?? false) ? 'sent' : 'failed',
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('Telegram notification failed: ' . $e->getMessage());
+            }
+        }
     }
 
     public function apiEvent(CalendarEvent $calendar_event)

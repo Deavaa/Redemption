@@ -34,6 +34,7 @@ class SliderController extends Controller
         $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('image_path')) {
             $data['image_path'] = $r->file('image_path')->store('sliders', 'public');
+            $this->copyToPublicStorage($data['image_path']);
         }
         Slider::create($data);
         return redirect()->route("admin.sliders.index")->with('success','Slider created successfully');
@@ -56,10 +57,28 @@ class SliderController extends Controller
         $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('image_path')) {
             $data['image_path'] = $r->file('image_path')->store('sliders', 'public');
+            $this->copyToPublicStorage($data['image_path']);
         }
         $slider->update($data);
         return redirect()->route("admin.sliders.index")->with('success','Slider updated successfully');
     }
 
     public function destroy(Slider $slider) { $slider->delete(); return back()->with('success','Slider deleted successfully'); }
+
+    private function copyToPublicStorage($relativePath)
+    {
+        try {
+            $sourcePath = \Illuminate\Support\Facades\Storage::disk('public')->path($relativePath);
+            $destinationPath = public_path('storage/' . $relativePath);
+            $destinationDir = dirname($destinationPath);
+            if (!is_dir($destinationDir)) {
+                mkdir($destinationDir, 0755, true);
+            }
+            if (file_exists($sourcePath)) {
+                copy($sourcePath, $destinationPath);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to copy file to public storage fallback: ' . $e->getMessage());
+        }
+    }
 }

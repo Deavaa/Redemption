@@ -8,6 +8,8 @@ use App\Http\Controllers\Audit\AuditController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Branch\BranchController;
 use App\Http\Controllers\Budget\BudgetController;
+use App\Http\Controllers\Budget\BudgetComparisonController;
+use App\Http\Controllers\CalendarEvent\AnnouncementController;
 use App\Http\Controllers\CalendarEvent\CalendarEventController;
 use App\Http\Controllers\Certificate\CertificateController;
 use App\Http\Controllers\Certificate\CertificateGenerateController;
@@ -20,6 +22,7 @@ use App\Http\Controllers\EmployeeAsset\EmployeeAssetController;
 use App\Http\Controllers\Exam\ExamController;
 use App\Http\Controllers\Fee\FeeController;
 use App\Http\Controllers\FeePayment\FeePaymentController;
+use App\Http\Controllers\FinanceStatement\FinancialComparisonController;
 use App\Http\Controllers\FinanceStatement\FinanceStatementController;
 use App\Http\Controllers\GalleryImage\GalleryImageController;
 use App\Http\Controllers\GalleryVideo\GalleryVideoController;
@@ -32,15 +35,19 @@ use App\Http\Controllers\MarkSheet\MarkRosterController;
 use App\Http\Controllers\MarkSheet\MarkSheetController;
 use App\Http\Controllers\MarkSheet\MarkSheetFullController;
 use App\Http\Controllers\MarkSheet\ReportCardController;
+use App\Http\Controllers\Media\MediaController;
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\ParentModel\ParentModelController;
 use App\Http\Controllers\Payroll\PayrollController;
+use App\Http\Controllers\PerformanceReport\PerformanceComparisonController;
 use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController;
+use App\Http\Controllers\PerformanceReport\PsychologicalAnalysisController;
 use App\Http\Controllers\PerformanceReport\PerformanceReportController;
 use App\Http\Controllers\ProgressReport\ProgressReportController;
 use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Section\SectionController;
 use App\Http\Controllers\Setting\SettingController;
+use App\Http\Controllers\Setting\WebContentController;
 use App\Http\Controllers\Slider\SliderController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Subject\SubjectController;
@@ -64,6 +71,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Telegram webhook (public)
 Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
+
+// Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
+Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -209,4 +219,31 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('database-backup/export-send', [DatabaseBackupController::class, 'exportAndSend'])->name('database-backup.export-send');
     Route::post('database-backup/quick-export', [DatabaseBackupController::class, 'quickExport'])->name('database-backup.quick-export');
     Route::post('database-backup/download', [DatabaseBackupController::class, 'download'])->name('database-backup.download');
+
+    // Branch Budget Comparison
+    Route::get('budget-comparison', [BudgetComparisonController::class, 'index'])->name('budget-comparison.index');
+
+    // Financial Comparison
+    Route::get('financial-comparison', [FinancialComparisonController::class, 'index'])->name('financial-comparison.index');
+
+    // Performance Branch Comparison
+    Route::get('performance-comparison', [PerformanceComparisonController::class, 'index'])->name('performance-comparison.index');
+
+    // Psychological Analysis
+    Route::get('psychological-analysis', [PsychologicalAnalysisController::class, 'index'])->name('psychological-analysis.index');
+    Route::post('psychological-analysis/generate', [PsychologicalAnalysisController::class, 'generate'])->name('psychological-analysis.generate');
+
+    // Web Content Management
+    Route::get('web-content', [WebContentController::class, 'index'])->name('web-content.index');
+    Route::post('web-content', [WebContentController::class, 'update'])->name('web-content.update');
+    Route::post('web-content/upload', [WebContentController::class, 'upload'])->name('web-content.upload');
+
+    // Announcements
+    Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+    Route::post('announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+    Route::post('announcements/{id}/send-telegram', [AnnouncementController::class, 'sendToTelegram'])->name('announcements.send-telegram');
+    Route::delete('announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+
+    // Media Upload (admin)
+    Route::post('media/upload', [MediaController::class, 'upload'])->name('media.upload');
 });
