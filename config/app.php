@@ -86,6 +86,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Available Locales
+    |--------------------------------------------------------------------------
+    |
+    | List all the locales your application supports. This is used by the
+    | language switcher and the SetLocale middleware to validate locale
+    | changes. Add new locales here as you add more translations.
+    |
+    */
+
+    'available_locales' => [
+        'en' => 'English',
+        'am' => 'አማርኛ (Amharic)',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

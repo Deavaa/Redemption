@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - School of Redemption</title>
+<title>{{ __('app.login') }} - {{ __('app.school_name') }}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -20,13 +20,28 @@ body{min-height:100vh;display:flex;align-items:center;justify-content:center;bac
 .btn-login{width:100%;padding:12px;background:linear-gradient(135deg,#3498db,#2c3e50);color:#fff;border:none;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .3s;}
 .btn-login:hover{opacity:.9;}
 .alert{background:#f8d7da;color:#721c24;padding:10px 15px;border-radius:5px;margin-bottom:15px;font-size:14px;}
+.lang-switcher{position:absolute;top:20px;right:20px;display:flex;gap:6px;z-index:10;}
+.lang-switcher a{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;background:rgba(255,255,255,0.15);color:#fff;text-decoration:none;font-size:13px;font-weight:500;transition:all .2s;backdrop-filter:blur(4px);}
+.lang-switcher a:hover{background:rgba(255,255,255,0.25);}
+.lang-switcher a.active{background:rgba(255,255,255,0.3);font-weight:700;}
+.lang-switcher a i{font-size:12px;}
 </style>
 </head>
 <body>
+{{-- Language Switcher --}}
+<div class="lang-switcher">
+    @foreach(config('app.available_locales') as $code => $name)
+        <a href="{{ route('lang.switch', $code) }}" class="{{ app()->getLocale() === $code ? 'active' : '' }}">
+            <i class="fas fa-globe"></i>
+            {{ strtoupper($code) }}
+        </a>
+    @endforeach
+</div>
+
 <div class="login-box">
   <div class="icon"><i class="bi bi-mortarboard-fill"></i></div>
-  <h2>School of Redemption</h2>
-  <p>Sign in to your account</p>
+  <h2>{{ __('app.school_name') }}</h2>
+  <p>{{ __('app.sign_in') }}</p>
   @if(session('error'))
   <div class="alert">{{ session('error') }}</div>
   @endif
@@ -36,14 +51,14 @@ body{min-height:100vh;display:flex;align-items:center;justify-content:center;bac
   <form method="POST" action="{{ route('login') }}">
     @csrf
     <div class="form-group">
-      <label><i class="bi bi-person"></i> Email / ID Number / Phone</label>
-      <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Enter your email, ID number, or phone">
+      <label><i class="bi bi-person"></i> {{ __('app.email_id_phone') }}</label>
+      <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="{{ __('app.enter_email') }}">
     </div>
     <div class="form-group">
-      <label><i class="bi bi-lock"></i> Password</label>
-      <input type="password" name="password" required placeholder="Enter your password">
+      <label><i class="bi bi-lock"></i> {{ __('app.password') }}</label>
+      <input type="password" name="password" required placeholder="{{ __('app.enter_password') }}">
     </div>
-    <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right"></i> Login</button>
+    <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right"></i> {{ __('app.login') }}</button>
   </form>
 </div>
 </body>

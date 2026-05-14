@@ -49,9 +49,13 @@ use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
 use App\Http\Controllers\TeamMember\TeamMemberController;
 use App\Http\Controllers\Telegram\TelegramController;
 use App\Http\Controllers\Term\TermController;
+use App\Http\Controllers\LanguageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Language Switcher
+Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
