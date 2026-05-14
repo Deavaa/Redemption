@@ -121,4 +121,12 @@ return [
     'language' => 'Language',
     'english' => 'English',
     'amharic' => 'አማርኛ',
+
+    // Notifications & Chat
+    'notifications' => 'Notifications',
+    'no_notifications' => 'No new notifications',
+    'view_all_notifications' => 'View All Notifications',
+    'mark_all_read' => 'Mark all as read',
+    'notification' => 'Notification',
+    'chat' => 'Chat',
 ];

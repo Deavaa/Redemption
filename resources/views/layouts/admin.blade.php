@@ -154,12 +154,14 @@
             </div>
             <div class="topbar-right">
                 {{-- Language Switcher --}}
-                <div class="topbar-dropdown dropdown">
-                    <button class="topbar-lang-btn" data-bs-toggle="dropdown" title="{{ __('app.language') }}">
+                <div class="topbar-icon-btn dropdown">
+                    <button class="topbar-icon-toggle" data-bs-toggle="dropdown" title="{{ __('app.language') }}">
                         <i class="fas fa-globe"></i>
-                        <span class="lang-label">{{ strtoupper(app()->getLocale()) }}</span>
+                        <span class="topbar-icon-badge lang-code">{{ strtoupper(app()->getLocale()) }}</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end lang-dropdown">
+                    <ul class="dropdown-menu dropdown-menu-end topbar-icon-dropdown">
+                        <li class="dropdown-header"><i class="fas fa-globe me-1"></i> {{ __('app.language') }}</li>
+                        <li><hr class="dropdown-divider"></li>
                         @foreach(config('app.available_locales') as $code => $name)
                             <li>
                                 <a class="dropdown-item {{ app()->getLocale() === $code ? 'active' : '' }}"
@@ -176,7 +178,75 @@
                     </ul>
                 </div>
 
-                <a href="{{ url('/') }}" class="topbar-link" target="_blank" title="{{ __('app.view_website') }}">
+                {{-- Chat Icon --}}
+                @php
+                    $chatUnread = 0;
+                    try {
+                        $chatUnread = \App\Models\ChatMessage::whereHas('conversation.participants', function ($q) {
+                            $q->where('user_id', Auth::id());
+                        })->where('sender_id', '!=', Auth::id())->where('is_read', false)->count();
+                    } catch (\Exception $e) {}
+                @endphp
+                <a href="{{ route('admin.chat.index') }}" class="topbar-icon-btn topbar-icon-link" title="{{ __('app.chat') }}">
+                    <i class="fas fa-comment-dots"></i>
+                    @if($chatUnread > 0)
+                        <span class="topbar-icon-badge badge-danger">{{ $chatUnread > 99 ? '99+' : $chatUnread }}</span>
+                    @endif
+                </a>
+
+                {{-- Notifications Icon --}}
+                @php
+                    $notifUnread = 0;
+                    try {
+                        $notifUnread = \App\Models\Notification::where('user_id', Auth::id())
+                            ->where('is_read', false)->count();
+                    } catch (\Exception $e) {}
+                    $latestNotifs = \App\Models\Notification::where('user_id', Auth::id())
+                        ->orderByDesc('created_at')->limit(5)->get();
+                @endphp
+                <div class="topbar-icon-btn dropdown">
+                    <button class="topbar-icon-toggle" data-bs-toggle="dropdown" title="{{ __('app.notifications') }}">
+                        <i class="fas fa-bell"></i>
+                        @if($notifUnread > 0)
+                            <span class="topbar-icon-badge badge-danger">{{ $notifUnread > 99 ? '99+' : $notifUnread }}</span>
+                        @endif
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end topbar-notif-dropdown">
+                        <li class="dropdown-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-bell me-1"></i> {{ __('app.notifications') }}</span>
+                            @if($notifUnread > 0)
+                                <a href="{{ route('admin.notifications.markAllRead') }}" class="text-primary" style="font-size:11px;" onclick="event.preventDefault();this.closest('form')?.submit();">
+                                    <form method="POST" action="{{ route('admin.notifications.markAllRead') }}" style="display:inline">@csrf
+                                        <button type="submit" class="btn btn-link p-0 text-primary" style="font-size:11px;text-decoration:none;">{{ __('app.mark_all_read') }}</button>
+                                    </form>
+                                </a>
+                            @endif
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        @forelse($latestNotifs as $notif)
+                            <li>
+                                <a class="dropdown-item notif-item {{ $notif->is_read ? '' : 'unread' }}"
+                                   href="{{ $notif->link ? route('admin.notifications.read', $notif->id) : route('admin.notifications.index') }}">
+                                    <div class="notif-title">{{ Str::limit($notif->title ?? $notif->message ?? __('app.notification'), 50) }}</div>
+                                    <div class="notif-time">{{ $notif->created_at->diffForHumans() }}</div>
+                                </a>
+                            </li>
+                        @empty
+                            <li class="dropdown-item text-center text-muted" style="font-size:12px;padding:16px;">
+                                <i class="fas fa-bell-slash mb-1" style="font-size:18px;opacity:.4;display:block"></i>
+                                {{ __('app.no_notifications') }}
+                            </li>
+                        @endforelse
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-center text-primary fw-semibold" href="{{ route('admin.notifications.index') }}" style="font-size:12px;">
+                                {{ __('app.view_all_notifications') }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <a href="{{ url('/') }}" class="topbar-icon-btn topbar-icon-link" target="_blank" title="{{ __('app.view_website') }}">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
                 <div class="topbar-dropdown dropdown">
@@ -263,39 +333,123 @@
 })();
 </script>
 <style>
-/* Language Switcher Styles */
-.topbar-lang-btn {
+/* ===== Topbar Icon Buttons (Chat, Notifications, Language) ===== */
+.topbar-icon-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: var(--transition);
+    font-size: 15px;
+}
+.topbar-icon-btn:hover {
+    background: var(--body-bg);
+    color: var(--text-dark);
+}
+.topbar-icon-link {
+    text-decoration: none;
+}
+.topbar-icon-toggle {
     background: none;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 6px;
-    color: rgba(255,255,255,0.8);
-    padding: 6px 10px;
-    font-size: 13px;
+    border: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    font-size: inherit;
     cursor: pointer;
-    transition: all 0.2s;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
 }
-.topbar-lang-btn:hover {
-    background: rgba(255,255,255,0.1);
+.topbar-icon-toggle:hover {
+    color: var(--text-dark);
+}
+
+/* Badge on icon */
+.topbar-icon-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 16px;
+    height: 16px;
+    padding: 2px 4px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.topbar-icon-badge.lang-code {
+    position: static;
+    background: var(--primary-light);
+    color: var(--primary);
+    min-width: auto;
+    height: auto;
+    padding: 1px 4px;
+    font-size: 9px;
+    border-radius: 3px;
+    margin-left: -2px;
+    margin-top: -6px;
+}
+.topbar-icon-badge.badge-danger {
+    background: var(--danger);
     color: #fff;
-    border-color: rgba(255,255,255,0.3);
+    top: 0;
+    right: 0;
+    animation: badge-pulse 2s infinite;
 }
-.topbar-lang-btn .lang-label {
-    font-weight: 600;
-    font-size: 11px;
+@keyframes badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
 }
-.lang-dropdown .dropdown-item {
-    font-size: 14px;
-    padding: 8px 16px;
+
+/* Notification Dropdown */
+.topbar-icon-dropdown {
+    min-width: 180px;
 }
-.lang-dropdown .dropdown-item.active {
+.topbar-icon-dropdown .dropdown-item {
+    font-size: 13px;
+    padding: 8px 14px;
+}
+.topbar-icon-dropdown .dropdown-item.active {
     background-color: #f0f7ff;
     font-weight: 600;
 }
-.lang-dropdown .dropdown-item:hover {
-    background-color: #f5f5f5;
+
+.topbar-notif-dropdown {
+    width: 320px;
+    max-width: 90vw;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.notif-item {
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #f3f4f6;
+}
+.notif-item.unread {
+    background: #f0f7ff;
+}
+.notif-item .notif-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.notif-item .notif-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
 }
 </style>
 @stack('scripts')

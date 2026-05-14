@@ -121,4 +121,12 @@ return [
     'language' => 'ቋንቋ',
     'english' => 'English',
     'amharic' => 'አማርኛ',
+
+    // Notifications & Chat
+    'notifications' => 'ማሳወቂያዎች',
+    'no_notifications' => 'አዲስ ማሳወቂያ የለም',
+    'view_all_notifications' => 'ሁሉንም ማሳወቂያዎች ይመልከቱ',
+    'mark_all_read' => 'ሁሉንም እንደተነበበ ምልክት አድርግ',
+    'notification' => 'ማሳወቂያ',
+    'chat' => 'ውይይት',
 ];
