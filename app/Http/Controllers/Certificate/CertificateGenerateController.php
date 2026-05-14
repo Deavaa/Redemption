@@ -36,13 +36,34 @@ class CertificateGenerateController extends Controller
             ->orderBy('subject_id')
             ->get();
 
+        // Delete existing certificate of same type for this student (regenerate)
         Certificate::where('student_id', $student->id)->where('type', $r->type)->delete();
+
+        // Generate unique certificate number using max+1 to avoid duplicate constraint
+        $prefix = strtoupper(substr($r->type, 0, 3));
+        $year = date('Y');
+        $lastCert = Certificate::where('certificate_number', 'LIKE', "{$prefix}-{$year}-%")
+            ->orderByDesc('id')
+            ->first();
+        $nextNum = 1;
+        if ($lastCert) {
+            $parts = explode('-', $lastCert->certificate_number);
+            $lastNum = (int) end($parts);
+            $nextNum = $lastNum + 1;
+        }
+        $certificateNumber = $prefix . '-' . $year . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+        // Ensure uniqueness (edge case: concurrent requests)
+        while (Certificate::where('certificate_number', $certificateNumber)->exists()) {
+            $nextNum++;
+            $certificateNumber = $prefix . '-' . $year . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+        }
 
         // Auto-create certificate record
         $cert = Certificate::create([
             'student_id' => $student->id,
             'type' => $r->type,
-            'certificate_number' => strtoupper(substr($r->type, 0, 3)) . '-' . date('Y') . '-' . str_pad(Certificate::count()+1, 4, '0', STR_PAD_LEFT),
+            'certificate_number' => $certificateNumber,
             'issue_date' => now()->format('Y-m-d'),
             'content' => $r->type . ' certificate for ' . $student->first_name . ' ' . $student->last_name,
             'template' => $r->type,

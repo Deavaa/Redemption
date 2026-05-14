@@ -219,4 +219,24 @@ return [
     'cert_has_achieved' => 'በአካዳሚክ ፕሮግራሙ የሚከተለውን ስኬት አግኝቷል።',
     'class_teacher' => 'የክፍል መምህር',
     'principal' => 'ዋና መምህር',
+
+    // Certificate Generate Steps
+    'cert_step1_desc' => 'ተማሪዎችን ለመጫን ክፍል ይምረጡ',
+    'cert_step2_desc' => 'ለሰርተፍኬቱ ተማሪውን ይምረጡ',
+    'cert_step3_desc' => 'የሚፈጠረውን የሰርተፍኬት ዓይነት ይምረጡ',
+    'cert_selected_student' => 'የተመረጠ ተማሪ',
+    'cert_selected_desc' => 'ለሰርተፍኬት ማመንጫ የተማሪ ዝርዝሮች',
+    'cert_select_student_alert' => 'እባክዎን መጀመሪያ ተማሪ ይምረጡ',
+    'cert_academic_desc' => 'ሙሉ የአካዳሚክ መዛግብት ከውጤት እና ከደረጃ ጋር',
+    'cert_completion_desc' => 'የፕሮግራም ማጠናቀቅ ያረጋግጣል',
+    'cert_transfer_desc' => 'የይፋዊ ማስተላለፊያ ሰነድ',
+    'cert_character_desc' => 'ጥሩ ባህርይ እና ባህሪ ያረጋግጣል',
+    'cert_foldable_desc' => 'ሰፊ የውጤት ካርድ ከውጤት እና ከደረጃ ጋር',
+
+    // ID Card Generate Steps
+    'id_card_step1_desc' => 'ተማሪዎችን ለማጥበጥ ክፍል እና የክፍል መደብ ይምረጡ',
+    'id_card_step2_desc' => 'ለመለያ ካርድ ፍጠር የሚፈልጓቸውን ተማሪዎች ይምረጡ',
+    'id_card_selected' => 'ተመርጠዋል',
+    'id_card_preview_title' => 'የተመረጡ ተማሪዎች',
+    'id_card_select_alert' => 'እባክዎን ቢያንስ አንድ ተማሪ ይምረጡ',
 ];

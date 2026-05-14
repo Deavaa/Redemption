@@ -219,4 +219,24 @@ return [
     'cert_has_achieved' => 'has achieved the following in the academic program.',
     'class_teacher' => 'Class Teacher',
     'principal' => 'Principal',
+
+    // Certificate Generate Steps
+    'cert_step1_desc' => 'Select a class to load students',
+    'cert_step2_desc' => 'Select the student for the certificate',
+    'cert_step3_desc' => 'Choose the type of certificate to generate',
+    'cert_selected_student' => 'Selected Student',
+    'cert_selected_desc' => 'Student details for certificate generation',
+    'cert_select_student_alert' => 'Please select a student first',
+    'cert_academic_desc' => 'Full academic record with marks and grades',
+    'cert_completion_desc' => 'Certifies successful program completion',
+    'cert_transfer_desc' => 'Official transfer documentation',
+    'cert_character_desc' => 'Certifies good character and conduct',
+    'cert_foldable_desc' => 'Comprehensive report card with marks and grades',
+
+    // ID Card Generate Steps
+    'id_card_step1_desc' => 'Choose a class and section to narrow down students',
+    'id_card_step2_desc' => 'Check the students you want to generate ID cards for',
+    'id_card_selected' => 'selected',
+    'id_card_preview_title' => 'Selected Students',
+    'id_card_select_alert' => 'Please select at least one student',
 ];
