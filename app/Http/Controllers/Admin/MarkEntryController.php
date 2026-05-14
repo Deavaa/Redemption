@@ -131,10 +131,10 @@ class MarkEntryController extends Controller
         $ayId=$request->query('academic_year_id'); $termId=$request->query('term_id');
         $classId=$request->query('class_id'); $sectionId=$request->query('section_id'); $subjectId=$request->query('subject_id');
         if (!$ayId||!$termId||!$classId||!$sectionId||!$subjectId) return response()->json(['error'=>'All filters required'],400);
-        $students = DB::table('students')->leftJoin('users','students.user_id','=','users.id')
+        $students = DB::table('students')
             ->where('students.class_id',$classId)->where('students.section_id',$sectionId)->where('students.academic_year_id',$ayId)
-            ->orderBy('users.name','asc')
-            ->select('students.id as student_id','users.name as student_name','students.roll_number','students.gender')->get();
+            ->orderBy('students.last_name','asc')->orderBy('students.first_name','asc')
+            ->select('students.id as student_id',DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"),'students.roll_number','students.gender')->get();
         $existingMarks = MarkEntry::where('academic_year_id',$ayId)->where('term_id',$termId)
             ->where('class_id',$classId)->where('section_id',$sectionId)->where('subject_id',$subjectId)->get()->keyBy('student_id');
         $markFields = MarkEntry::getMarkFields();
@@ -154,8 +154,8 @@ class MarkEntryController extends Controller
             'class'=>$class?$class->name:'','section'=>$section?$section->name:'']);
     }
     public function apiSave(Request $request) {
-        $request->validate(['student_id'=>'required|integer','subject_id'=>'required|integer',
-            'academic_year_id'=>'nullable|integer','term_id'=>'required|integer']);
+        $request->validate(['student_id'=>'required|numeric','subject_id'=>'required|numeric',
+            'academic_year_id'=>'nullable|numeric','term_id'=>'required|numeric']);
         $data = $request->only('student_id','subject_id','academic_year_id','term_id','class_id','section_id','class_grade','section',
             'ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10','conduct','handwriting','creativity','test1','test2','mid_term','final_exam');
         if ($request->filled('mark_key') && $request->filled('mark_value')) {

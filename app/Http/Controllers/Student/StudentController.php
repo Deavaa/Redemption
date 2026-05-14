@@ -101,6 +101,11 @@ class StudentController extends Controller
 
         $validated['user_id'] = auth()->id();
 
+        // Set default admission_date if not provided
+        if (empty($validated['admission_date'])) {
+            $validated['admission_date'] = now()->toDateString();
+        }
+
         Student::create($validated);
 
         return redirect()->route('admin.students.index')->with('success', 'Student enrolled successfully!');
@@ -171,6 +176,10 @@ class StudentController extends Controller
         // Get class_id from section_id
         $section = Section::find($validated['section_id']);
         $validated['class_id'] = $section->class_id;
+
+        if (empty($validated['admission_date'])) {
+            $validated['admission_date'] = now()->toDateString();
+        }
 
         $student->update($validated);
 

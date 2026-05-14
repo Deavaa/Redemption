@@ -1,3 +1,5 @@
+<?php
+ $css = <<<'CSS_CONTENT'
 /* ===== REDEMPTION SCHOOL MANAGEMENT - MODERN TEMPLATE ===== */
 :root {
     --sidebar-w: 260px;
@@ -848,3 +850,8 @@ a { text-decoration: none; color: inherit; }
 .dropdown-header-name { font-weight: 600; color: var(--text-dark); }
 .dropdown-header-email { font-size: 11px; color: var(--text-muted); }
 .dropdown-item { border-radius: 4px; padding: 6px 12px; font-size: 13px; }
+CSS_CONTENT;
+
+file_put_contents(getcwd() . '/public/css/admin.css', $css);
+echo "CSS written successfully!\n";
+echo "File size: " . filesize(getcwd() . '/public/css/admin.css') . " bytes\n";
