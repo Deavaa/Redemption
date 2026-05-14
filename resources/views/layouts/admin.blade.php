@@ -125,6 +125,9 @@
                 <li class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fas fa-cog"></i><span>{{ __('app.settings') }}</span></a>
                 </li>
+                <li class="{{ request()->routeIs('admin.database-backup.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.database-backup.index') }}" class="{{ request()->routeIs('admin.database-backup.*') ? 'active' : '' }}"><i class="fas fa-database"></i><span>{{ __('app.db_export_title') }}</span></a>
+                </li>
                 <li class="{{ request()->routeIs('admin.audits.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.audits.index') }}" class="{{ request()->routeIs('admin.audits.*') ? 'active' : '' }}"><i class="fas fa-clipboard-list"></i><span>{{ __('app.audit_log') }}</span></a>
                 </li>

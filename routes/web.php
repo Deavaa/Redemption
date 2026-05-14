@@ -50,6 +50,7 @@ use App\Http\Controllers\TeamMember\TeamMemberController;
 use App\Http\Controllers\Telegram\TelegramController;
 use App\Http\Controllers\Term\TermController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\DatabaseBackupController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -202,4 +203,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('roles/{role}/users', [RoleController::class, 'users'])->name('roles.users');
     Route::post('roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assign-users');
     Route::post('roles/{role}/toggle-permission', [RoleController::class, 'togglePermission'])->name('roles.toggle-permission');
+
+    // Database Backup & Export
+    Route::get('database-backup', [DatabaseBackupController::class, 'index'])->name('database-backup.index');
+    Route::post('database-backup/export-send', [DatabaseBackupController::class, 'exportAndSend'])->name('database-backup.export-send');
+    Route::post('database-backup/quick-export', [DatabaseBackupController::class, 'quickExport'])->name('database-backup.quick-export');
+    Route::post('database-backup/download', [DatabaseBackupController::class, 'download'])->name('database-backup.download');
 });
