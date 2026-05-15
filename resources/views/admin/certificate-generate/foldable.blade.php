@@ -20,24 +20,24 @@
 
         /* ===== PAGE 1 OUTSIDE: LEFT = Grading Info, RIGHT = Cover ===== */
         .back-panel {
-            background: #fff; padding: 9mm 8mm; overflow-y: auto;
+            background: #fff; padding: 10mm 9mm; overflow-y: auto;
             border-right: 2px dashed #bbb;
         }
         .back-panel h3 {
-            font-size: 1rem; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 10px;
-            padding-bottom: 5px; border-bottom: 3px solid #2d2d3a; display: inline-block;
+            font-size: 1.15rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 12px;
+            padding-bottom: 6px; border-bottom: 3px solid #2d2d3a; display: inline-block;
         }
-        .back-panel h4 { font-size: 0.9rem; font-weight: 700; color: #1a1a2e; margin: 12px 0 6px; }
-        .back-panel p, .back-panel li { font-size: 0.8rem; color: #4b5563; line-height: 1.7; }
-        .back-panel ul { padding-left: 16px; margin-bottom: 8px; }
-        .grading-scale { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.78rem; }
-        .grading-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 7px 9px; text-align: center; font-size: 0.72rem; font-weight: 700; }
-        .grading-scale td { padding: 6px 9px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.75rem; }
+        .back-panel h4 { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 14px 0 8px; }
+        .back-panel p, .back-panel li { font-size: 0.9rem; color: #4b5563; line-height: 1.8; }
+        .back-panel ul { padding-left: 18px; margin-bottom: 10px; }
+        .grading-scale { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.88rem; }
+        .grading-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 9px 10px; text-align: center; font-size: 0.82rem; font-weight: 700; }
+        .grading-scale td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.85rem; }
         .grading-scale td:first-child { font-weight: 700; text-align: left; }
-        .conduct-scale { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.78rem; }
-        .conduct-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 7px 9px; text-align: center; font-size: 0.72rem; font-weight: 700; }
-        .conduct-scale td { padding: 6px 9px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.75rem; }
+        .conduct-scale { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.88rem; }
+        .conduct-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 9px 10px; text-align: center; font-size: 0.82rem; font-weight: 700; }
+        .conduct-scale td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.85rem; }
 
         /* FRONT COVER PANEL */
         .front-panel {
@@ -45,25 +45,25 @@
             justify-content: space-between; position: relative;
             border-left: 3px solid #2d2d3a;
         }
-        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 24mm; }
-        .front-logo { max-height: 85px; max-width: 120px; object-fit: contain; margin: 0 auto 16px; display: block; border-radius: 12px; border: 2px solid #2d2d3a; padding: 6px; }
-        .front-school-name { font-size: 1.6rem; font-weight: 800; letter-spacing: 3.5px; margin-bottom: 5px; }
-        .front-school-name-am { font-size: 1.25rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 10px; color: #4b5563; }
-        .front-line { width: 65px; height: 0; border-top: 2px solid #2d2d3a; margin: 0 auto 12px; }
-        .front-academic-year { font-size: 1rem; font-weight: 300; letter-spacing: 2.5px; color: #4b5563; }
-        .front-cert-title { font-size: 0.9rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 12px; color: #6b7280; }
-        .front-cert-title-am { font-size: 0.85rem; font-weight: 500; margin-top: 4px; color: #9ca3af; }
+        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 22mm; }
+        .front-logo { max-height: 95px; max-width: 130px; object-fit: contain; margin: 0 auto 18px; display: block; border-radius: 12px; border: 2px solid #2d2d3a; padding: 6px; }
+        .front-school-name { font-size: 1.85rem; font-weight: 800; letter-spacing: 3.5px; margin-bottom: 6px; }
+        .front-school-name-am { font-size: 1.4rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 12px; color: #4b5563; }
+        .front-line { width: 75px; height: 0; border-top: 2px solid #2d2d3a; margin: 0 auto 14px; }
+        .front-academic-year { font-size: 1.15rem; font-weight: 300; letter-spacing: 2.5px; color: #4b5563; }
+        .front-cert-title { font-size: 1.05rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 14px; color: #6b7280; }
+        .front-cert-title-am { font-size: 0.95rem; font-weight: 500; margin-top: 5px; color: #9ca3af; }
 
         .front-bottom {
             position: relative; z-index: 1;
-            background: #fff; padding: 10mm 12mm 16mm;
+            background: #fff; padding: 12mm 14mm 18mm;
             border-top: 2px solid #2d2d3a;
         }
-        .front-student-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; color: #1a1a2e; }
-        .front-info-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 7px; }
-        .front-info-item { font-size: 0.78rem; color: #4b5563; }
+        .front-student-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; color: #1a1a2e; }
+        .front-info-row { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 9px; }
+        .front-info-item { font-size: 0.9rem; color: #4b5563; }
         .front-info-item strong { color: #1a1a2e; font-weight: 600; }
-        .front-status-badge { display: inline-block; padding: 5px 14px; border-radius: 5px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-top: 8px; border: 1.5px solid; }
+        .front-status-badge { display: inline-block; padding: 6px 16px; border-radius: 5px; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-top: 10px; border: 1.5px solid; }
         .front-status-promoted { border-color: #10b981; color: #059669; }
         .front-status-detained { border-color: #ef4444; color: #dc2626; }
         .front-status-conditional { border-color: #f59e0b; color: #d97706; }
@@ -71,55 +71,55 @@
 
         /* ===== PAGE 2 INSIDE: LEFT = Marks Table, RIGHT = Comments + Signatures ===== */
         .inside-left {
-            border-right: 2px dashed #e5e7eb; padding: 8mm 8mm; overflow-y: auto;
+            border-right: 2px dashed #e5e7eb; padding: 10mm 10mm; overflow-y: auto;
         }
         .inside-right {
-            padding: 8mm 8mm; display: flex; flex-direction: column;
+            padding: 10mm 10mm; display: flex; flex-direction: column;
         }
 
         .section-title {
-            font-size: 0.9rem; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 4px;
-            padding-bottom: 4px; border-bottom: 3px solid #2d2d3a; display: inline-block;
+            font-size: 1.05rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 5px;
+            padding-bottom: 5px; border-bottom: 3px solid #2d2d3a; display: inline-block;
         }
         .section-title-am {
-            font-size: 0.8rem; font-weight: 600; color: #6b7280;
-            margin-bottom: 10px; display: block;
+            font-size: 0.9rem; font-weight: 600; color: #6b7280;
+            margin-bottom: 12px; display: block;
         }
 
-        .marks-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .marks-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         .marks-table th {
-            border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 7px 7px;
-            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; font-weight: 700;
+            border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 9px 9px;
+            font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; font-weight: 700;
         }
         .marks-table th:first-child { text-align: left; }
-        .marks-table td { padding: 6px 7px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 0.78rem; }
+        .marks-table td { padding: 8px 9px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 0.9rem; }
         .marks-table td:first-child { text-align: left; font-weight: 600; }
         .marks-table .summary-row { font-weight: 700; }
         .marks-table .summary-row td { border-top: 2px solid #2d2d3a; }
 
-        .comment-section { margin-bottom: 14px; }
-        .comment-label { font-size: 0.85rem; font-weight: 700; color: #2d2d3a; margin-bottom: 5px; }
-        .comment-label-am { font-size: 0.72rem; font-weight: 500; color: #6b7280; margin-bottom: 5px; }
+        .comment-section { margin-bottom: 18px; }
+        .comment-label { font-size: 0.98rem; font-weight: 700; color: #2d2d3a; margin-bottom: 6px; }
+        .comment-label-am { font-size: 0.82rem; font-weight: 500; color: #6b7280; margin-bottom: 6px; }
         .comment-box {
-            border: 1px solid #2d2d3a; border-radius: 6px; padding: 10px;
-            min-height: 56px; font-size: 0.8rem; color: #374151; line-height: 1.6;
+            border: 1px solid #2d2d3a; border-radius: 6px; padding: 12px;
+            min-height: 65px; font-size: 0.92rem; color: #374151; line-height: 1.7;
         }
 
         .overall-summary {
             border: 2px solid #2d2d3a; border-radius: 8px;
-            padding: 12px 16px; margin-bottom: 14px;
+            padding: 14px 18px; margin-bottom: 18px;
         }
         .overall-summary h4 {
-            font-size: 0.9rem; color: #1a1a2e; margin-bottom: 6px;
+            font-size: 1.05rem; color: #1a1a2e; margin-bottom: 8px;
         }
-        .overall-row { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 4px; }
+        .overall-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
         .overall-row strong { color: #1a1a2e; }
 
-        .signatures { display: flex; justify-content: space-between; margin-top: auto; padding-top: 14px; }
+        .signatures { display: flex; justify-content: space-between; margin-top: auto; padding-top: 18px; }
         .sig { text-align: center; }
-        .sig-line { width: 100px; border-top: 2px solid #333; margin: 28px auto 5px; }
-        .sig span { font-size: 0.68rem; color: #6b7280; }
+        .sig-line { width: 110px; border-top: 2px solid #333; margin: 30px auto 6px; }
+        .sig span { font-size: 0.78rem; color: #6b7280; }
 
         .no-print { text-align: center; margin: 20px 0; }
         .no-print button { padding: 10px 24px; background: #2d2d3a; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; margin: 0 5px; }
