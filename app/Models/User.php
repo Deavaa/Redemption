@@ -51,26 +51,43 @@ class User extends Authenticatable
     }
 
     /**
-     * Get all permissions for this user (through roles).
+     * Direct user-permission overrides (bypasses roles).
+     */
+    public function directPermissions()
+    {
+        return $this->belongsToMany(Permission::class, 'permission_user');
+    }
+
+    /**
+     * Get all permissions for this user (through roles + direct).
+     * Admin always has full access.
      */
     public function getAllPermissions()
     {
         // Admin always has full access - no need to query
         if ($this->role === 'admin') {
-            return collect();
+            return Permission::all();
         }
 
         try {
-            static $cached = null;
-            if ($cached !== null) {
-                return $cached;
+            // Instance-level cache (not static — avoids cross-user leak)
+            if (isset($this->_permissionsCache)) {
+                return $this->_permissionsCache;
             }
 
-            return $cached = $this->roles->flatMap(function ($role) {
+            // Permissions from all assigned roles
+            $rolePermissions = $this->roles->flatMap(function ($role) {
                 return $role->permissions;
-            })->unique('id');
+            });
+
+            // Direct user-level permission overrides
+            $directPermissions = $this->directPermissions ?? collect();
+
+            return $this->_permissionsCache = $rolePermissions
+                ->merge($directPermissions)
+                ->unique('id');
         } catch (\Throwable $e) {
-            // Roles/permissions tables may not exist yet (before migration runs)
+            // Tables may not exist yet (before migration runs)
             return collect();
         }
     }
@@ -156,6 +173,7 @@ class User extends Authenticatable
     {
         try {
             $this->roles()->syncWithoutDetaching([$role->id]);
+            unset($this->_permissionsCache);
         } catch (\Throwable $e) {
             // Silently fail if roles table doesn't exist yet
         }
@@ -168,9 +186,43 @@ class User extends Authenticatable
     {
         try {
             $this->roles()->detach($role->id);
+            unset($this->_permissionsCache);
         } catch (\Throwable $e) {
             // Silently fail if roles table doesn't exist yet
         }
+    }
+
+    /**
+     * Give a direct permission override to the user.
+     */
+    public function giveDirectPermission(Permission $permission): void
+    {
+        try {
+            $this->directPermissions()->syncWithoutDetaching([$permission->id]);
+            unset($this->_permissionsCache);
+        } catch (\Throwable $e) {}
+    }
+
+    /**
+     * Revoke a direct permission override from the user.
+     */
+    public function revokeDirectPermission(Permission $permission): void
+    {
+        try {
+            $this->directPermissions()->detach($permission->id);
+            unset($this->_permissionsCache);
+        } catch (\Throwable $e) {}
+    }
+
+    /**
+     * Sync direct permission overrides (full replace).
+     */
+    public function syncDirectPermissions(array $permissionIds): void
+    {
+        try {
+            $this->directPermissions()->sync($permissionIds);
+            unset($this->_permissionsCache);
+        } catch (\Throwable $e) {}
     }
 
     /**
@@ -205,5 +257,17 @@ class User extends Authenticatable
             // Roles table may not exist yet (before migration runs)
         }
         return ucfirst($this->role);
+    }
+
+    /**
+     * Get all role names for this user.
+     */
+    public function getRoleNames(): array
+    {
+        try {
+            return $this->roles->pluck('name')->toArray();
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 }

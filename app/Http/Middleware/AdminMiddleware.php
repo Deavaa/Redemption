@@ -12,10 +12,22 @@ class AdminMiddleware
     {
         $user = $request->user();
 
-        if (! $user || ! $user->isAdmin()) {
+        if (!$user) {
             abort(403);
         }
 
-        return $next($request);
+        // Legacy check: users.role column
+        if ($user->isAdmin()) {
+            return $next($request);
+        }
+
+        // RBAC check: user has any role that grants admin panel access
+        try {
+            if ($user->roles()->exists()) {
+                return $next($request);
+            }
+        } catch (\Throwable $e) {}
+
+        abort(403, 'You do not have access to the admin panel.');
     }
 }

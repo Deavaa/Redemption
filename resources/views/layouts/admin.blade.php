@@ -155,6 +155,9 @@
                 <li class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fas fa-cog"></i><span>{{ __('app.settings') }}</span></a>
                 </li>
+                <li class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.roles.index') }}" class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"><i class="fas fa-shield-alt"></i><span>{{ __('app.roles_permissions') ?? 'Roles & Permissions' }}</span></a>
+                </li>
                 <li class="{{ request()->routeIs('admin.database-backup.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.database-backup.index') }}" class="{{ request()->routeIs('admin.database-backup.*') ? 'active' : '' }}"><i class="fas fa-database"></i><span>{{ __('app.db_export_title') }}</span></a>
                 </li>
@@ -168,7 +171,7 @@
                 <div class="sidebar-footer-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
                 <div class="sidebar-footer-info">
                     <span class="sidebar-footer-name">{{ Auth::user()->name }}</span>
-                    <span class="sidebar-footer-role">{{ __('app.administrator') }}</span>
+                    <span class="sidebar-footer-role">{{ Auth::user()->display_role }}</span>
                 </div>
             </div>
         </div>

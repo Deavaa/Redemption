@@ -51,6 +51,7 @@ return [
     'generate' => 'GENERATE',
     'website' => 'WEBSITE',
     'system' => 'SYSTEM',
+    'roles_permissions' => 'Roles & Permissions',
 
     // Academic Menu
     'academic_years' => 'Academic Years',

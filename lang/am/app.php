@@ -51,6 +51,7 @@ return [
     'generate' => 'ፍጠር',
     'website' => 'ድሕረ-ገጽ',
     'system' => 'ስርዓት',
+    'roles_permissions' => 'ሚናዎች እና ፈቃዶች',
 
     // Academic Menu
     'academic_years' => 'የትምህርት ዓመታት',
