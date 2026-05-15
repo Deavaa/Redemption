@@ -66,6 +66,7 @@ use App\Http\Controllers\UserAccess\TeacherAccessController;
 use App\Http\Controllers\UserAccess\StudentAccessController;
 use App\Http\Controllers\UserAccess\ParentAccessController;
 use App\Http\Controllers\ReportExchange\ReportExchangeController;
+use App\Http\Controllers\Training\TrainingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -186,6 +187,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('payrolls', PayrollController::class)->middleware('permission:payrolls.view');
     Route::resource('leaves', LeaveController::class)->middleware('permission:leaves.view');
     Route::resource('employee-assets', EmployeeAssetController::class)->middleware('permission:employee_assets.view');
+
+    // Training & Capacity Building
+    Route::resource('trainings', TrainingController::class)->middleware('permission:trainings.view');
+    Route::post('trainings/{training}/participants', [TrainingController::class, 'addParticipant'])->name('trainings.participants.add')->middleware('permission:trainings.edit');
+    Route::post('trainings/{training}/participants/bulk', [TrainingController::class, 'addBulkParticipants'])->name('trainings.participants.add-bulk')->middleware('permission:trainings.edit');
+    Route::put('trainings/{training}/participants/{participantId}', [TrainingController::class, 'updateParticipant'])->name('trainings.participants.update')->middleware('permission:trainings.edit');
+    Route::delete('trainings/{training}/participants/{participantId}', [TrainingController::class, 'removeParticipant'])->name('trainings.participants.remove')->middleware('permission:trainings.edit');
 
     // Stock Management
     Route::resource('stock', StockController::class)->middleware('permission:stock.view');

@@ -31,6 +31,8 @@ class User extends Authenticatable
     public function payrolls() { return $this->hasMany(Payroll::class, 'employee_id'); }
     public function approvedLeaves() { return $this->hasMany(Leave::class, 'approved_by'); }
     public function teacherProfile() { return $this->hasOne(Teacher::class, 'email', 'email'); }
+    public function trainings() { return $this->belongsToMany(Training::class, 'training_participants', 'employee_id', 'training_id')->withPivot(['status','completion_date','score','grade','certificate_number','certificate_issued','feedback','remarks','nominated_by'])->withTimestamps(); }
+    public function trainingParticipants() { return $this->hasMany(TrainingParticipant::class, 'employee_id'); }
 
     public function chatParticipants()
     {
