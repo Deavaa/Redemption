@@ -257,14 +257,7 @@
                 </tbody>
             </table>
 
-            <h4>2. Marking Composition / የምዘና አካላት</h4>
-            <ul>
-                <li><strong>Continuous Assessment (CA) / የቀጥታ ምዘና:</strong> Comprises class tests, quizzes, homework, projects, and class participation. This accounts for 30% of the total mark. / የክፍል ፈተና፣ መልስ፣ የቤት ስራ፣ ፕሮጀክት እና የክፍል ተሳትፎ ያካትታል። ከጠቅላሉ 30% ይይዛል።</li>
-                <li><strong>Mid-Term Examination / የአጋማሽ ፈተና:</strong> A comprehensive assessment administered at the midpoint of each term covering all material taught. / በእያንዳንዱ ወር መካከል የሚሰጥ ሁሉንም ትምህርት የሚሸፍን ምዘና።</li>
-                <li><strong>Final Examination / የመጨረሻ ፈተና:</strong> A summative assessment at the end of each term evaluating the full term curriculum. This accounts for 70% of the total mark. / በእያንዳንዱ ወር መጨረሻ የሚሰጥ ከጠቅላሉ 70% የሚይዝ ምዘና።</li>
-            </ul>
-
-            <h4>3. Behavioral Assessment / የባህሪ ምዘና</h4>
+            <h4>2. Behavioral Assessment / የባህሪ ምዘና</h4>
             <p>Behavioral and character development is assessed alongside academic performance using the following 5-point scale. / የባህሪ እና ባህሪ ልማት ከአካዳሚክ ውጤት ጋር በመሆን በሚከተለው 5-ነጥብ ሚዛን ይገመገማል።</p>
             <table class="conduct-scale">
                 <thead><tr><th>Rating / ደረጃ</th><th>Score / ነጥብ</th><th>Description / መግለጫ</th></tr></thead>
@@ -276,16 +269,6 @@
                     <tr><td>Poor / ደካማ</td><td>1</td><td>Consistently disruptive, intervention needed / በየጊዜው መበከል፣ ጣልቃ መግባት ይፈለጋል</td></tr>
                 </tbody>
             </table>
-
-            <h4>4. Promotion Policy / የማስተማሪያ ፖሊሲ</h4>
-            <ul>
-                <li><strong>Promoted / የተማረከ:</strong> Overall average of 50% or above with minimum passing grades in core subjects. Student advances to the next grade level. / አጠቃላይ አማካይ 50% እና ከዚያ በላይ በዋና የትምህርት ዘርፎች ዝቅተኛ የማለፍ ውጤት ሲኖር።</li>
-                <li><strong>Conditionally Promoted / በሁኔታ የተማረከ:</strong> Average between 40%-49% or fails no more than 2 subjects. Student must show improvement in the next term. / አማካይ ከ40%-49% መካከል ወይም ከ2 በላይ ያልተሳካ የለም። ተማሪው በሚቀጥለው ወር ማሻሻል አለበት።</li>
-                <li><strong>Detained / የተያዘ:</strong> Average below 40% or fails more than 2 subjects. Student must repeat the grade. / አማካይ ከ40% በታች ወይም ከ2 በላይ ያልተሳካ። ተማሪው ክፍሉን መድገም አለበት።</li>
-            </ul>
-
-            <h4>5. Attendance Requirement / የመገኘት መስፈርት</h4>
-            <p>Students must maintain a minimum attendance rate of 75% throughout the academic year. Failure to meet this requirement may affect promotion eligibility regardless of academic performance. / ተማሪዎች በአመቱ ውስጥ የመገኘት ምንም ከ75% በታች መሆን የለበትም። ይህንን መስፈርት ያላሟሉ ተማሪዎች ውጤታቸው ምንም ቢሆንም የማስተማሪያ ብቃታቸው ሊጎዳ ይችላል።</p>
         </div>
 
         <div class="panel front-panel" style="position:relative;">
