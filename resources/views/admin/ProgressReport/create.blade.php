@@ -84,11 +84,11 @@
 
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="term_id">
-                                Term <small>(optional)</small>
+                                Term <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-list-ol modern-input-icon"></i>
-                                <select name="term_id" id="term_id" class="modern-input modern-select">
+                                <select name="term_id" id="term_id" class="modern-input modern-select" required>
                                     <option value="">-- Select Term --</option>
                                     @foreach($t as $term)
                                         <option value="{{ $term->id }}" {{ old('term_id') == $term->id ? 'selected' : '' }}>
@@ -100,15 +100,15 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="classroom_id">
-                                Class <small>(optional)</small>
+                            <label class="modern-form-label" for="class_id">
+                                Class <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-chalkboard modern-input-icon"></i>
-                                <select name="classroom_id" id="classroom_id" class="modern-input modern-select">
+                                <select name="class_id" id="class_id" class="modern-input modern-select" required>
                                     <option value="">-- Select Class --</option>
                                     @foreach($c as $classroom)
-                                        <option value="{{ $classroom->id }}" {{ old('classroom_id') == $classroom->id ? 'selected' : '' }}>
+                                        <option value="{{ $classroom->id }}" {{ old('class_id') == $classroom->id ? 'selected' : '' }}>
                                             {{ $classroom->name }}
                                         </option>
                                     @endforeach

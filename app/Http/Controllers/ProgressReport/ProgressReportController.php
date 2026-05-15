@@ -40,9 +40,9 @@ class ProgressReportController extends Controller
     {
         $v = $r->validate([
             "student_id" => "required|exists:students,id",
-            "academic_year_id" => "nullable|exists:academic_years,id",
-            "term_id" => "nullable|exists:terms,id",
-            "class_id" => "nullable|exists:classes,id",
+            "academic_year_id" => "required|exists:academic_years,id",
+            "term_id" => "required|exists:terms,id",
+            "class_id" => "required|exists:classes,id",
             "overall_grade" => "nullable|string|max:10",
             "total_marks" => "nullable|numeric",
             "max_marks" => "nullable|numeric",
@@ -58,9 +58,9 @@ class ProgressReportController extends Controller
 
         $rep = ProgressReport::create([
             "student_id" => $v["student_id"],
-            "academic_year_id" => $v["academic_year_id"] ?? null,
-            "term_id" => $v["term_id"] ?? null,
-            "class_id" => $v["class_id"] ?? null,
+            "academic_year_id" => $v["academic_year_id"],
+            "term_id" => $v["term_id"],
+            "class_id" => $v["class_id"],
             "overall_grade" => $v["overall_grade"] ?? null,
             "total_marks" => $v["total_marks"] ?? 0,
             "max_marks" => $v["max_marks"] ?? 100,
@@ -106,9 +106,9 @@ class ProgressReportController extends Controller
     {
         $v = $r->validate([
             "student_id" => "required|exists:students,id",
-            "academic_year_id" => "nullable|exists:academic_years,id",
-            "term_id" => "nullable|exists:terms,id",
-            "class_id" => "nullable|exists:classes,id",
+            "academic_year_id" => "required|exists:academic_years,id",
+            "term_id" => "required|exists:terms,id",
+            "class_id" => "required|exists:classes,id",
             "overall_grade" => "nullable|string|max:10",
             "total_marks" => "nullable|numeric",
             "max_marks" => "nullable|numeric",
@@ -124,9 +124,9 @@ class ProgressReportController extends Controller
 
         $progress_report->update([
             "student_id" => $v["student_id"],
-            "academic_year_id" => $v["academic_year_id"] ?? null,
-            "term_id" => $v["term_id"] ?? null,
-            "class_id" => $v["class_id"] ?? null,
+            "academic_year_id" => $v["academic_year_id"],
+            "term_id" => $v["term_id"],
+            "class_id" => $v["class_id"],
             "overall_grade" => $v["overall_grade"] ?? null,
             "total_marks" => $v["total_marks"] ?? 0,
             "max_marks" => $v["max_marks"] ?? 100,

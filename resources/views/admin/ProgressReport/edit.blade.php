@@ -14,7 +14,7 @@
                 </ol>
             </nav>
             <h1 class="modern-page-title">Edit Progress Report</h1>
-            <p class="modern-page-subtitle">Update report for <strong>{{ $p->student->first_name ?? '' }} {{ $p->student->last_name ?? '' }}</strong></p>
+            <p class="modern-page-subtitle">Update report for <strong>{{ $progress_report->student->first_name ?? '' }} {{ $progress_report->student->last_name ?? '' }}</strong></p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.progress-reports.index') }}" class="btn-modern btn-modern-outline">
@@ -26,7 +26,7 @@
 
     {{-- Form Card --}}
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.progress-reports.update', $p->id) }}">
+        <form method="POST" action="{{ route('admin.progress-reports.update', $progress_report->id) }}">
             @csrf @method('PUT')
 
             {{-- Student & Academic Info --}}
@@ -51,7 +51,7 @@
                                 <select name="student_id" id="student_id" class="modern-input modern-select {{ $errors->has('student_id') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Student --</option>
                                     @foreach($s as $student)
-                                        <option value="{{ $student->id }}" {{ old('student_id', $p->student_id) == $student->id ? 'selected' : '' }}>
+                                        <option value="{{ $student->id }}" {{ old('student_id', $progress_report->student_id) == $student->id ? 'selected' : '' }}>
                                             {{ $student->first_name }} {{ $student->last_name }}
                                         </option>
                                     @endforeach
@@ -71,7 +71,7 @@
                                 <select name="academic_year_id" id="academic_year_id" class="modern-input modern-select {{ $errors->has('academic_year_id') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Year --</option>
                                     @foreach($ay as $year)
-                                        <option value="{{ $year->id }}" {{ old('academic_year_id', $p->academic_year_id) == $year->id ? 'selected' : '' }}>
+                                        <option value="{{ $year->id }}" {{ old('academic_year_id', $progress_report->academic_year_id) == $year->id ? 'selected' : '' }}>
                                             {{ $year->name }}
                                         </option>
                                     @endforeach
@@ -84,14 +84,14 @@
 
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="term_id">
-                                Term <small>(optional)</small>
+                                Term <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-list-ol modern-input-icon"></i>
-                                <select name="term_id" id="term_id" class="modern-input modern-select">
+                                <select name="term_id" id="term_id" class="modern-input modern-select" required>
                                     <option value="">-- Select Term --</option>
                                     @foreach($t as $term)
-                                        <option value="{{ $term->id }}" {{ old('term_id', $p->term_id) == $term->id ? 'selected' : '' }}>
+                                        <option value="{{ $term->id }}" {{ old('term_id', $progress_report->term_id) == $term->id ? 'selected' : '' }}>
                                             {{ $term->name }}
                                         </option>
                                     @endforeach
@@ -100,15 +100,15 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="classroom_id">
-                                Class <small>(optional)</small>
+                            <label class="modern-form-label" for="class_id">
+                                Class <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-chalkboard modern-input-icon"></i>
-                                <select name="classroom_id" id="classroom_id" class="modern-input modern-select">
+                                <select name="class_id" id="class_id" class="modern-input modern-select" required>
                                     <option value="">-- Select Class --</option>
                                     @foreach($c as $classroom)
-                                        <option value="{{ $classroom->id }}" {{ old('classroom_id', $p->classroom_id) == $classroom->id ? 'selected' : '' }}>
+                                        <option value="{{ $classroom->id }}" {{ old('class_id', $progress_report->class_id) == $classroom->id ? 'selected' : '' }}>
                                             {{ $classroom->name }}
                                         </option>
                                     @endforeach
@@ -140,7 +140,7 @@
                                 <i class="fas fa-calculator modern-input-icon"></i>
                                 <input type="number" step="0.01" name="total_marks" id="total_marks"
                                     class="modern-input {{ $errors->has('total_marks') ? 'is-invalid' : '' }}"
-                                    value="{{ old('total_marks', $p->total_marks) }}"
+                                    value="{{ old('total_marks', $progress_report->total_marks) }}"
                                     placeholder="e.g. 450"
                                     required>
                             </div>
@@ -157,7 +157,7 @@
                                 <i class="fas fa-bullseye modern-input-icon"></i>
                                 <input type="number" step="0.01" name="max_marks" id="max_marks"
                                     class="modern-input"
-                                    value="{{ old('max_marks', $p->max_marks) }}"
+                                    value="{{ old('max_marks', $progress_report->max_marks) }}"
                                     placeholder="e.g. 500">
                             </div>
                         </div>
@@ -170,13 +170,13 @@
                                 <i class="fas fa-award modern-input-icon"></i>
                                 <select name="overall_grade" id="overall_grade" class="modern-input modern-select">
                                     <option value="">-- Select Grade --</option>
-                                    <option value="A+" {{ old('overall_grade', $p->overall_grade) === 'A+' ? 'selected' : '' }}>A+</option>
-                                    <option value="A" {{ old('overall_grade', $p->overall_grade) === 'A' ? 'selected' : '' }}>A</option>
-                                    <option value="B+" {{ old('overall_grade', $p->overall_grade) === 'B+' ? 'selected' : '' }}>B+</option>
-                                    <option value="B" {{ old('overall_grade', $p->overall_grade) === 'B' ? 'selected' : '' }}>B</option>
-                                    <option value="C" {{ old('overall_grade', $p->overall_grade) === 'C' ? 'selected' : '' }}>C</option>
-                                    <option value="D" {{ old('overall_grade', $p->overall_grade) === 'D' ? 'selected' : '' }}>D</option>
-                                    <option value="F" {{ old('overall_grade', $p->overall_grade) === 'F' ? 'selected' : '' }}>F</option>
+                                    <option value="A+" {{ old('overall_grade', $progress_report->overall_grade) === 'A+' ? 'selected' : '' }}>A+</option>
+                                    <option value="A" {{ old('overall_grade', $progress_report->overall_grade) === 'A' ? 'selected' : '' }}>A</option>
+                                    <option value="B+" {{ old('overall_grade', $progress_report->overall_grade) === 'B+' ? 'selected' : '' }}>B+</option>
+                                    <option value="B" {{ old('overall_grade', $progress_report->overall_grade) === 'B' ? 'selected' : '' }}>B</option>
+                                    <option value="C" {{ old('overall_grade', $progress_report->overall_grade) === 'C' ? 'selected' : '' }}>C</option>
+                                    <option value="D" {{ old('overall_grade', $progress_report->overall_grade) === 'D' ? 'selected' : '' }}>D</option>
+                                    <option value="F" {{ old('overall_grade', $progress_report->overall_grade) === 'F' ? 'selected' : '' }}>F</option>
                                 </select>
                             </div>
                         </div>
@@ -189,7 +189,7 @@
                                 <i class="fas fa-trophy modern-input-icon"></i>
                                 <input type="number" name="class_rank" id="class_rank"
                                     class="modern-input"
-                                    value="{{ old('class_rank', $p->class_rank) }}"
+                                    value="{{ old('class_rank', $progress_report->class_rank) }}"
                                     placeholder="e.g. 1"
                                     min="1">
                             </div>
@@ -220,7 +220,7 @@
                                 <textarea name="remarks" id="remarks"
                                     class="modern-input modern-textarea {{ $errors->has('remarks') ? 'is-invalid' : '' }}"
                                     placeholder="General remarks about student progress..."
-                                    rows="3">{{ old('remarks', $p->remarks) }}</textarea>
+                                    rows="3">{{ old('remarks', $progress_report->remarks) }}</textarea>
                             </div>
                             @error('remarks')
                                 <span class="modern-form-error">{{ $message }}</span>
@@ -236,7 +236,7 @@
                                 <textarea name="teacher_comment" id="teacher_comment"
                                     class="modern-input modern-textarea {{ $errors->has('teacher_comment') ? 'is-invalid' : '' }}"
                                     placeholder="Teacher's feedback and recommendations..."
-                                    rows="3">{{ old('teacher_comment', $p->teacher_comment) }}</textarea>
+                                    rows="3">{{ old('teacher_comment', $progress_report->teacher_comment) }}</textarea>
                             </div>
                             @error('teacher_comment')
                                 <span class="modern-form-error">{{ $message }}</span>
@@ -266,9 +266,9 @@
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-flag modern-input-icon"></i>
                                 <select name="status" id="status" class="modern-input modern-select">
-                                    <option value="draft" {{ old('status', $p->status) === 'draft' ? 'selected' : '' }}>Draft</option>
-                                    <option value="published" {{ old('status', $p->status) === 'published' ? 'selected' : '' }}>Published</option>
-                                    <option value="archived" {{ old('status', $p->status) === 'archived' ? 'selected' : '' }}>Archived</option>
+                                    <option value="draft" {{ old('status', $progress_report->status) === 'draft' ? 'selected' : '' }}>Draft</option>
+                                    <option value="published" {{ old('status', $progress_report->status) === 'published' ? 'selected' : '' }}>Published</option>
+                                    <option value="archived" {{ old('status', $progress_report->status) === 'archived' ? 'selected' : '' }}>Archived</option>
                                 </select>
                             </div>
                         </div>

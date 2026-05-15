@@ -21,7 +21,7 @@
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to List</span>
             </a>
-            <a href="{{ route('admin.progress-reports.edit', $data->id) }}" class="btn-modern btn-modern-primary">
+            <a href="{{ route('admin.progress-reports.edit', $progress_report->id) }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-pen"></i>
                 <span>Edit</span>
             </a>
@@ -36,18 +36,18 @@
                     <i class="fas fa-file-alt"></i>
                 </div>
                 <div class="modern-detail-hero-info">
-                    <h2 class="modern-detail-hero-title">{{ $data->student->first_name ?? '-' }} {{ $data->student->last_name ?? '' }}</h2>
+                    <h2 class="modern-detail-hero-title">{{ $progress_report->student->first_name ?? '-' }} {{ $progress_report->student->last_name ?? '' }}</h2>
                     <div class="modern-detail-hero-badges">
-                        @if($data->status === 'published')
+                        @if($progress_report->status === 'published')
                             <span class="modern-badge modern-badge-success"><i class="fas fa-check-circle"></i> Published</span>
-                        @elseif($data->status === 'archived')
+                        @elseif($progress_report->status === 'archived')
                             <span class="modern-badge modern-badge-light"><i class="fas fa-archive"></i> Archived</span>
                         @else
                             <span class="modern-badge modern-badge-gold"><i class="fas fa-pencil-alt"></i> Draft</span>
                         @endif
-                        @if($data->overall_grade)
+                        @if($progress_report->overall_grade)
                             @php
-                                $grade = $data->overall_grade;
+                                $grade = $progress_report->overall_grade;
                                 $gradeClass = 'modern-badge-light';
                                 if (in_array($grade, ['A+', 'A'])) $gradeClass = 'modern-badge-success';
                                 elseif (in_array($grade, ['B+', 'B'])) $gradeClass = 'modern-badge-info';
@@ -68,25 +68,25 @@
                     <div class="modern-detail-label">
                         <i class="fas fa-user"></i> Student
                     </div>
-                    <div class="modern-detail-value">{{ $data->student->first_name ?? '-' }} {{ $data->student->last_name ?? '' }}</div>
+                    <div class="modern-detail-value">{{ $progress_report->student->first_name ?? '-' }} {{ $progress_report->student->last_name ?? '' }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-calendar-alt"></i> Academic Year
                     </div>
-                    <div class="modern-detail-value">{{ $data->academicYear->name ?? '-' }}</div>
+                    <div class="modern-detail-value">{{ $progress_report->academicYear->name ?? '-' }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-list-ol"></i> Term
                     </div>
-                    <div class="modern-detail-value">{{ $data->term->name ?? '-' }}</div>
+                    <div class="modern-detail-value">{{ $progress_report->term->name ?? '-' }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-chalkboard"></i> Class
                     </div>
-                    <div class="modern-detail-value">{{ $data->classroom->name ?? '-' }}</div>
+                    <div class="modern-detail-value">{{ $progress_report->classroom->name ?? '-' }}</div>
                 </div>
 
                 {{-- Performance Information --}}
@@ -96,20 +96,20 @@
                     <div class="modern-detail-label">
                         <i class="fas fa-calculator"></i> Total Marks
                     </div>
-                    <div class="modern-detail-value modern-detail-value-bold">{{ $data->total_marks ?? 0 }}</div>
+                    <div class="modern-detail-value modern-detail-value-bold">{{ $progress_report->total_marks ?? 0 }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-bullseye"></i> Maximum Marks
                     </div>
-                    <div class="modern-detail-value">{{ $data->max_marks ?? 100 }}</div>
+                    <div class="modern-detail-value">{{ $progress_report->max_marks ?? 100 }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-percent"></i> Percentage
                     </div>
                     <div class="modern-detail-value modern-detail-value-bold">
-                        {{ number_format($data->total_marks / max($data->max_marks, 1) * 100, 1) }}%
+                        {{ number_format($progress_report->total_marks / max($progress_report->max_marks, 1) * 100, 1) }}%
                     </div>
                 </div>
                 <div class="modern-detail-row">
@@ -117,8 +117,8 @@
                         <i class="fas fa-award"></i> Overall Grade
                     </div>
                     <div class="modern-detail-value">
-                        @if($data->overall_grade)
-                            <span class="modern-badge {{ $gradeClass ?? 'modern-badge-light' }}">{{ $data->overall_grade }}</span>
+                        @if($progress_report->overall_grade)
+                            <span class="modern-badge {{ $gradeClass ?? 'modern-badge-light' }}">{{ $progress_report->overall_grade }}</span>
                         @else
                             <span class="modern-muted">-</span>
                         @endif
@@ -129,8 +129,8 @@
                         <i class="fas fa-trophy"></i> Class Rank
                     </div>
                     <div class="modern-detail-value">
-                        @if($data->class_rank)
-                            <span class="modern-detail-value-bold">{{ $data->class_rank }}</span>
+                        @if($progress_report->class_rank)
+                            <span class="modern-detail-value-bold">{{ $progress_report->class_rank }}</span>
                         @else
                             <span class="modern-muted">-</span>
                         @endif
@@ -138,24 +138,24 @@
                 </div>
 
                 {{-- Remarks & Comments --}}
-                @if($data->remarks || $data->teacher_comment)
+                @if($progress_report->remarks || $progress_report->teacher_comment)
                 <div class="modern-detail-section-label">Remarks & Comments</div>
 
-                @if($data->remarks)
+                @if($progress_report->remarks)
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-sticky-note"></i> Remarks
                     </div>
-                    <div class="modern-detail-value">{{ $data->remarks }}</div>
+                    <div class="modern-detail-value">{{ $progress_report->remarks }}</div>
                 </div>
                 @endif
 
-                @if($data->teacher_comment)
+                @if($progress_report->teacher_comment)
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">
                         <i class="fas fa-chalkboard-teacher"></i> Teacher Comment
                     </div>
-                    <div class="modern-detail-value">{{ $data->teacher_comment }}</div>
+                    <div class="modern-detail-value">{{ $progress_report->teacher_comment }}</div>
                 </div>
                 @endif
                 @endif
@@ -170,7 +170,7 @@
                     <i class="fas fa-bolt"></i> Quick Actions
                 </div>
                 <div class="modern-quick-actions">
-                    <a href="{{ route('admin.progress-reports.edit', $data->id) }}" class="modern-quick-action">
+                    <a href="{{ route('admin.progress-reports.edit', $progress_report->id) }}" class="modern-quick-action">
                         <i class="fas fa-pen"></i>
                         <span>Edit Report</span>
                     </a>
@@ -178,7 +178,7 @@
                         <i class="fas fa-list"></i>
                         <span>All Reports</span>
                     </a>
-                    <form method="POST" action="{{ route('admin.progress-reports.destroy', $data->id) }}" onsubmit="return confirm('Are you sure you want to delete this report? This action cannot be undone.')">
+                    <form method="POST" action="{{ route('admin.progress-reports.destroy', $progress_report->id) }}" onsubmit="return confirm('Are you sure you want to delete this report? This action cannot be undone.')">
                         @csrf @method('DELETE')
                         <button type="submit" class="modern-quick-action modern-quick-action-danger">
                             <i class="fas fa-trash-alt"></i>
@@ -196,24 +196,24 @@
                 <div class="modern-summary-content">
                     <div class="modern-summary-item">
                         <span class="modern-summary-label">Marks</span>
-                        <span class="modern-summary-value">{{ $data->total_marks ?? 0 }} / {{ $data->max_marks ?? 100 }}</span>
+                        <span class="modern-summary-value">{{ $progress_report->total_marks ?? 0 }} / {{ $progress_report->max_marks ?? 100 }}</span>
                     </div>
                     <div class="modern-summary-item">
                         <span class="modern-summary-label">Percentage</span>
-                        <span class="modern-summary-value">{{ number_format($data->total_marks / max($data->max_marks, 1) * 100, 1) }}%</span>
+                        <span class="modern-summary-value">{{ number_format($progress_report->total_marks / max($progress_report->max_marks, 1) * 100, 1) }}%</span>
                     </div>
                     <div class="modern-summary-item">
                         <span class="modern-summary-label">Grade</span>
-                        <span class="modern-summary-value">{{ $data->overall_grade ?? '-' }}</span>
+                        <span class="modern-summary-value">{{ $progress_report->overall_grade ?? '-' }}</span>
                     </div>
                     <div class="modern-summary-item">
                         <span class="modern-summary-label">Rank</span>
-                        <span class="modern-summary-value">{{ $data->class_rank ?? '-' }}</span>
+                        <span class="modern-summary-value">{{ $progress_report->class_rank ?? '-' }}</span>
                     </div>
                     {{-- Progress Bar --}}
                     <div class="modern-progress-wrapper">
                         <div class="modern-progress-bar">
-                            <div class="modern-progress-fill" style="width: {{ min($data->total_marks / max($data->max_marks, 1) * 100, 100) }}%"></div>
+                            <div class="modern-progress-fill" style="width: {{ min($progress_report->total_marks / max($progress_report->max_marks, 1) * 100, 100) }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -227,11 +227,11 @@
                 <div class="modern-timestamps">
                     <div class="modern-timestamp">
                         <span class="modern-timestamp-label">Created</span>
-                        <span class="modern-timestamp-value">{{ $data->created_at->format('M d, Y H:i') }}</span>
+                        <span class="modern-timestamp-value">{{ $progress_report->created_at->format('M d, Y H:i') }}</span>
                     </div>
                     <div class="modern-timestamp">
                         <span class="modern-timestamp-label">Updated</span>
-                        <span class="modern-timestamp-value">{{ $data->updated_at->format('M d, Y H:i') }}</span>
+                        <span class="modern-timestamp-value">{{ $progress_report->updated_at->format('M d, Y H:i') }}</span>
                     </div>
                 </div>
             </div>
