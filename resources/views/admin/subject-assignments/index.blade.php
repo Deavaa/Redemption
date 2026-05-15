@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'Subject Assignments')
 @push('styles')
-<style>.type-badge-core{background:#0d6efd;color:#fff;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600}.type-badge-elective{background:#fd7e14;color:#fff;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600}.section-all{background:#e7f1ff;color:#0d6efd;padding:2px 8px;border-radius:8px;font-size:.75rem;font-weight:600}.section-specific{background:#fff3e0;color:#e65100;padding:2px 8px;border-radius:8px;font-size:.75rem;font-weight:600}.row-core{border-left:4px solid #0d6efd!important}.row-elective{border-left:4px solid #fd7e14!important}</style>
+<style>.type-badge-core{background:#0d6efd;color:#fff;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600}.type-badge-elective{background:#fd7e14;color:#fff;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600}.section-all{background:#e7f1ff;color:#0d6efd;padding:2px 8px;border-radius:8px;font-size:.75rem;font-weight:600}.section-specific{background:#fff3e0;color:#e65100;padding:2px 8px;border-radius:8px;font-size:.75rem;font-weight:600}.row-core{border-left:4px solid #0d6efd!important}.row-elective{border-left:4px solid #fd7e14!important}.bulk-toolbar{display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:8px 16px;margin-bottom:12px;align-items:center;gap:12px}.bulk-toolbar.active{display:flex}</style>
 @endpush
 @section('content')
 <div class="container-fluid p-0">
@@ -20,6 +20,17 @@
         <div class="col-md-4 d-flex gap-2"><button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i> Filter</button><a href="{{ route('admin.subject-assignments.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle"></i></a></div>
     </div></div></div></form>
     <form method="POST" action="{{ route('admin.subject-assignments.bulk-delete') }}" id="bulkForm">@csrf @method('DELETE')
+
+    {{-- Bulk Delete Toolbar --}}
+    <div class="bulk-toolbar" id="bulkToolbar">
+        <i class="bi bi-check2-square text-warning"></i>
+        <span id="selectedCount">0 selected</span>
+        <button type="submit" class="btn btn-danger btn-sm" id="bulkDeleteBtn" disabled onclick="return confirm('Delete all selected assignments?')">
+            <i class="bi bi-trash me-1"></i> Delete Selected
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllChecks()">Cancel</button>
+    </div>
+
     @if($assignments->count() > 0)
     <div class="card"><div class="card-body p-0"><div class="table-responsive">
         <table class="table table-hover align-middle mb-0"><thead class="table-dark"><tr><th style="width:40px"><input type="checkbox" class="form-check-input" id="selectAll"></th><th>#</th><th>Subject</th><th>Class</th><th>Section</th><th>Type</th><th>Teacher</th><th>AY</th><th>Actions</th></tr></thead>
@@ -34,7 +45,7 @@
             <td>{{ $a->teacher->full_name ?? 'N/A' }}</td>
             <td class="small">{{ $a->academicYear->name ?? 'N/A' }}</td>
             <td><div class="btn-group btn-group-sm"><a href="{{ route('admin.subject-assignments.edit', $a) }}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i></a>
-            <button type="button" class="btn btn-outline-danger btn-delete-single" data-id="{{ $a->id }}"><i class="bi bi-trash"></i></button></div></td>
+            <button type="button" class="btn btn-outline-danger btn-delete-single" data-url="{{ route('admin.subject-assignments.destroy', $a) }}"><i class="bi bi-trash"></i></button></div></td>
         </tr>@endforeach</tbody></table>
     </div></div></div>
     @else
@@ -45,9 +56,54 @@
 @endsection
 @push('scripts')
 <script>
-document.getElementById('selectAll')?.addEventListener('change',function(){document.querySelectorAll('.bulk-check').forEach(cb=>cb.checked=this.checked);updUI();});
-document.querySelectorAll('.bulk-check').forEach(cb=>{cb.addEventListener('change',function(){const a=document.querySelectorAll('.bulk-check'),c=document.querySelectorAll('.bulk-check:checked');document.getElementById('selectAll').checked=(a.length===c.length&&a.length>0);updUI();});});
-function updUI(){const c=document.querySelectorAll('.bulk-check:checked');document.getElementById('selectedCount').textContent=c.length+' selected';document.getElementById('bulkDeleteBtn').disabled=(c.length===0);}
-document.querySelectorAll('.btn-delete-single').forEach(btn=>{btn.addEventListener('click',function(){if(confirm('Remove?')){const id=this.dataset.id;const f=document.createElement('form');f.method='POST';f.action='/admin/subject-assignments/'+id;const t=document.createElement('input');t.type='hidden';t.name='_token';t.value=document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');f.appendChild(t);const m=document.createElement('input');m.type='hidden';m.name='_method';m.value='DELETE';f.appendChild(m);document.body.appendChild(f);f.submit();}});});
+document.getElementById('selectAll')?.addEventListener('change',function(){
+    document.querySelectorAll('.bulk-check').forEach(cb=>cb.checked=this.checked);
+    updUI();
+});
+document.querySelectorAll('.bulk-check').forEach(cb=>{
+    cb.addEventListener('change',function(){
+        const a=document.querySelectorAll('.bulk-check'),
+              c=document.querySelectorAll('.bulk-check:checked');
+        document.getElementById('selectAll').checked=(a.length===c.length&&a.length>0);
+        updUI();
+    });
+});
+function updUI(){
+    const c=document.querySelectorAll('.bulk-check:checked');
+    const toolbar=document.getElementById('bulkToolbar');
+    const countEl=document.getElementById('selectedCount');
+    const btnEl=document.getElementById('bulkDeleteBtn');
+    if(countEl) countEl.textContent=c.length+' selected';
+    if(btnEl) btnEl.disabled=(c.length===0);
+    if(toolbar) toolbar.classList.toggle('active',c.length>0);
+}
+function clearAllChecks(){
+    document.querySelectorAll('.bulk-check').forEach(cb=>cb.checked=false);
+    const sa=document.getElementById('selectAll');
+    if(sa) sa.checked=false;
+    updUI();
+}
+document.querySelectorAll('.btn-delete-single').forEach(btn=>{
+    btn.addEventListener('click',function(){
+        if(confirm('Remove this subject assignment?')){
+            const url=this.dataset.url;
+            const f=document.createElement('form');
+            f.method='POST';
+            f.action=url;
+            const t=document.createElement('input');
+            t.type='hidden';
+            t.name='_token';
+            t.value=document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            f.appendChild(t);
+            const m=document.createElement('input');
+            m.type='hidden';
+            m.name='_method';
+            m.value='DELETE';
+            f.appendChild(m);
+            document.body.appendChild(f);
+            f.submit();
+        }
+    });
+});
 </script>
 @endpush

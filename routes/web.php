@@ -96,10 +96,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('terms', TermController::class)->middleware('permission:terms.view');
     Route::resource('exams', ExamController::class)->middleware('permission:exams.view');
     Route::resource('subjects', SubjectController::class)->middleware('permission:subjects.view');
-    Route::resource('subject-assignments', SubjectAssignmentController::class)->middleware('permission:subject_assignments.view');
+    // Subject Assignments (custom routes BEFORE resource to avoid route conflicts)
     Route::delete('subject-assignments/bulk-delete', [SubjectAssignmentController::class, 'bulkDelete'])->name('subject-assignments.bulk-delete')->middleware('permission:subject_assignments.delete');
     Route::get('subject-assignments/api/classes', [SubjectAssignmentController::class, 'apiClasses'])->name('subject-assignments.api.classes');
     Route::get('subject-assignments/api/sections', [SubjectAssignmentController::class, 'apiSections'])->name('subject-assignments.api.sections');
+    Route::resource('subject-assignments', SubjectAssignmentController::class)->middleware('permission:subject_assignments.view');
 
     Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
     Route::get('mark-entries/api/terms', [MarkEntryController::class, 'apiTerms'])->name('mark-entries.api.terms');
