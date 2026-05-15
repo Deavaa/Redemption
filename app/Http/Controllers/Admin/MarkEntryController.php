@@ -185,21 +185,6 @@ class MarkEntryController extends Controller
             }
         }
 
-        // Handle single-field auto-save (mark_key + mark_value)
-        if ($request->filled('mark_key') && $request->has('mark_value')) {
-            $markKey = $request->mark_key;
-            $markValue = $request->mark_value;
-            $data[$markKey] = ($markValue === '' || $markValue === null) ? null : $markValue;
-        } else {
-            // Full save — copy all mark fields from request
-            foreach ($markFieldNames as $f) {
-                if ($request->has($f)) {
-                    $val = $request->input($f);
-                    $data[$f] = ($val === '' || $val === null) ? null : $val;
-                }
-            }
-        }
-
         // Resolve class_id and section_id from class_grade/section if not provided
         if (empty($data['class_id']) && !empty($data['class_grade'])) {
             $classRoom = ClassRoom::where('name', $data['class_grade'])->first();
@@ -225,26 +210,49 @@ class MarkEntryController extends Controller
         }
         $data['teacher_id'] = $teacherId;
 
-        // Calculate totals
+        // ── Load existing record FIRST so calcTotals has complete data ──
+        $existingQuery = MarkEntry::where('student_id', $studentId)
+            ->where('subject_id', $subjectId)
+            ->where('term_id', $termId);
+        if (!empty($ayId)) {
+            $existingQuery->where('academic_year_id', $ayId);
+        } else {
+            $existingQuery->whereNull('academic_year_id');
+        }
+        $existing = $existingQuery->first();
+
+        // Seed $data with existing values so calcTotals works with ALL fields
+        if ($existing) {
+            foreach ($markFieldNames as $f) {
+                if (!isset($data[$f])) {
+                    $data[$f] = $existing->$f;
+                }
+            }
+        }
+
+        // Handle single-field auto-save (mark_key + mark_value) — override the one field
+        if ($request->filled('mark_key') && $request->has('mark_value')) {
+            $markKey = $request->mark_key;
+            $markValue = $request->mark_value;
+            $data[$markKey] = ($markValue === '' || $markValue === null) ? null : $markValue;
+        } else {
+            // Full save — copy all mark fields from request
+            foreach ($markFieldNames as $f) {
+                if ($request->has($f)) {
+                    $val = $request->input($f);
+                    $data[$f] = ($val === '' || $val === null) ? null : $val;
+                }
+            }
+        }
+
+        // Calculate totals — now $data has ALL mark fields, not just the changed one
         $data = MarkEntry::calcTotals($data);
 
         // Set marks_obtained = grand_total for backward compatibility (column is NOT NULL in original migration)
         $data['marks_obtained'] = $data['grand_total'] ?? 0;
 
         try {
-            // Find existing record with null-safe academic_year_id matching
-            $existingQuery = MarkEntry::where('student_id', $studentId)
-                ->where('subject_id', $subjectId)
-                ->where('term_id', $termId);
-
-            if (!empty($ayId)) {
-                $existingQuery->where('academic_year_id', $ayId);
-            } else {
-                $existingQuery->whereNull('academic_year_id');
-            }
-
-            $existing = $existingQuery->first();
-
+            // $existing was already loaded above (before calcTotals)
             if ($existing) {
                 // Only update the fields we actually have data for
                 $updateData = array_filter($data, function($value, $key) use ($markFieldNames) {

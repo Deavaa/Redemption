@@ -57,12 +57,33 @@
 /* Roster Table */
 .mr-table-wrap{overflow-x:auto}
 .mr-table{width:100%;border-collapse:collapse;font-size:.78rem}
-.mr-table th{padding:.45rem .35rem;border:1px solid #e5e7eb;white-space:nowrap;text-align:center;font-weight:700;position:sticky;top:0}
-.mr-table td{padding:.4rem .35rem;border:1px solid #e5e7eb;text-align:center}
+.mr-table th{padding:.45rem .3rem;border:1px solid #e5e7eb;white-space:nowrap;text-align:center;font-weight:700;position:sticky;top:0}
+.mr-table td{padding:.4rem .3rem;border:1px solid #e5e7eb;text-align:center}
 .mr-table tbody tr:nth-child(even){background:#f9fafb}
 .mr-table tbody tr:hover{background:#eef2ff}
 .mr-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:130px;position:sticky;left:0;z-index:2;background:inherit}
 .mr-table .stu-serial{font-weight:600;color:#6b7280;position:sticky;left:0;z-index:2;background:inherit;min-width:32px}
+
+/* ── Rotated column headers ── */
+.mr-table .rot-th{
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    height:90px;
+    min-width:28px;
+    max-width:32px;
+    padding:4px 2px;
+    vertical-align:bottom;
+    font-size:.7rem;
+    line-height:1.1;
+    letter-spacing:.3px;
+}
+.mr-table .rot-th small{
+    font-weight:400;
+    opacity:.65;
+    font-size:.6rem;
+    display:block;
+    margin-top:2px;
+}
 
 /* Group header rows */
 .mr-table .group-ca{background:#eff6ff;color:#1e40af;font-size:.78rem;letter-spacing:.5px}
@@ -92,9 +113,6 @@
 .mr-table .avg-row .stu-name{background:#f0f4ff!important;color:#4338ca;position:sticky;left:0;z-index:2}
 .mr-table .avg-row .stu-serial{background:#f0f4ff!important;color:#4338ca;position:sticky;left:0;z-index:2}
 
-/* Sub-field header row */
-.mr-table .sub-head th{font-size:.7rem;font-weight:600;padding:.35rem .25rem}
-
 /* No data */
 .mr-empty{text-align:center;padding:3rem 1rem;color:#9ca3af}
 .mr-empty i{font-size:2.5rem;margin-bottom:.75rem;display:block}
@@ -105,8 +123,9 @@
     .mr-header,.mr-card,.mr-actions{display:none!important}
     .mr-subject-section{page-break-inside:avoid}
     .mr-subject-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0!important}
-    .mr-table{font-size:8pt}
+    .mr-table{font-size:7pt}
     .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .mr-table .rot-th{height:70px;font-size:6pt}
     .group-ca th,.group-exam th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .avg-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -199,6 +218,17 @@
         $rows = $sr['rows'];
         $avgs = $sr['averages'];
         $colorIdx = $si % 10;
+
+        // Helper: format raw mark field (1 decimal place)
+        $fmt1 = function($v) {
+            if ($v === null || $v === '') return '-';
+            return number_format((float)$v, 1);
+        };
+        // Helper: format calculated field (2 decimal places)
+        $fmt2 = function($v) {
+            if ($v === null || $v === '') return '-';
+            return number_format((float)$v, 2);
+        };
     ?>
     <div class="mr-subject-section">
         <div class="mr-subject-head s{{ $colorIdx }}">
@@ -214,32 +244,34 @@
                     <tr>
                         <th rowspan="2" style="width:32px">#</th>
                         <th rowspan="2" style="text-align:left;min-width:130px">Student Name</th>
-                        <th colspan="13" class="group-ca"><i class="fas fa-tasks me-1"></i>Continuous Assessment (Raw /70 &rarr; Scaled /30)</th>
-                        <th colspan="4" class="group-exam"><i class="fas fa-pen-alt me-1"></i>Exam (/70)</th>
-                        <th rowspan="2" style="background:#d1fae5;color:#065f46;min-width:50px">Grand Total</th>
-                        <th rowspan="2" style="background:#f0fdf4;color:#065f46;min-width:40px">Grade</th>
+                        <th colspan="14" class="group-ca"><i class="fas fa-tasks me-1"></i>Continuous Assessment (Raw /70 &rarr; Scaled /30)</th>
+                        <th colspan="5" class="group-exam"><i class="fas fa-pen-alt me-1"></i>Exam (/70)</th>
+                        <th rowspan="2" class="grand-total-col" style="min-width:50px">Grand<br>Total</th>
+                        <th rowspan="2" class="grade-col" style="min-width:40px">Grade</th>
                     </tr>
-                    {{-- Row 2: Sub-field headers --}}
+                    {{-- Row 2: Sub-field headers (rotated 90 degrees) --}}
                     <tr>
-                        {{-- CA fields --}}
-                        <th class="sub-head ca-col">CA1<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA2<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA3<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA4<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA5<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA6<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA7<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA8<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA9<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">CA10<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">Conduct<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-col">Handwriting<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
-                        <th class="sub-head ca-total-col">CA Total<br><small style="font-weight:400;color:#3b82f6">/30</small></th>
-                        {{-- Exam fields --}}
-                        <th class="sub-head exam-col">Test 1<br><small style="font-weight:400;color:#9ca3af">/10</small></th>
-                        <th class="sub-head exam-col">Test 2<br><small style="font-weight:400;color:#9ca3af">/10</small></th>
-                        <th class="sub-head exam-col">Mid Term<br><small style="font-weight:400;color:#9ca3af">/20</small></th>
-                        <th class="sub-head exam-total-col">Final<br><small style="font-weight:400;color:#b45309">/30</small></th>
+                        {{-- CA fields (rotated) --}}
+                        <th class="rot-th ca-col">CA1 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA2 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA3 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA4 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA5 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA6 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA7 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA8 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA9 <small>/5</small></th>
+                        <th class="rot-th ca-col">CA10 <small>/5</small></th>
+                        <th class="rot-th ca-col">Conduct <small>/5</small></th>
+                        <th class="rot-th ca-col">Handwriting <small>/5</small></th>
+                        <th class="rot-th ca-col">Creativity <small>/10</small></th>
+                        <th class="rot-th ca-total-col">CA Total <small>/30</small></th>
+                        {{-- Exam fields (rotated) --}}
+                        <th class="rot-th exam-col">Test 1 <small>/10</small></th>
+                        <th class="rot-th exam-col">Test 2 <small>/10</small></th>
+                        <th class="rot-th exam-col">Mid Term <small>/20</small></th>
+                        <th class="rot-th exam-col">Final Exam <small>/30</small></th>
+                        <th class="rot-th exam-total-col">Exam Total <small>/70</small></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -247,27 +279,31 @@
                     <tr>
                         <td class="stu-serial">{{ $row['serial'] }}</td>
                         <td class="stu-name">{{ $row['student']->first_name ?? '' }} {{ $row['student']->last_name ?? '' }}</td>
-                        {{-- CA fields --}}
-                        <td class="ca-col">{{ $row['ca1'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca2'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca3'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca4'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca5'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca6'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca7'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca8'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca9'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['ca10'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['conduct'] ?? '-' }}</td>
-                        <td class="ca-col">{{ $row['handwriting'] ?? '-' }}</td>
-                        <td class="ca-total-col">{{ $row['ca_total'] ?? '-' }}</td>
-                        {{-- Exam fields --}}
-                        <td class="exam-col">{{ $row['test1'] ?? '-' }}</td>
-                        <td class="exam-col">{{ $row['test2'] ?? '-' }}</td>
-                        <td class="exam-col">{{ $row['mid_term'] ?? '-' }}</td>
-                        <td class="exam-total-col">{{ $row['final_exam'] ?? '-' }}</td>
-                        {{-- Result --}}
-                        <td class="grand-total-col">{{ $row['grand_total'] ?? '-' }}</td>
+                        {{-- CA raw fields (1 decimal) --}}
+                        <td class="ca-col">{{ $fmt1($row['ca1'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca2'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca3'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca4'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca5'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca6'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca7'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca8'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca9'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['ca10'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['conduct'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['handwriting'] ?? null) }}</td>
+                        <td class="ca-col">{{ $fmt1($row['creativity'] ?? null) }}</td>
+                        {{-- CA Total (2 decimals - calculated) --}}
+                        <td class="ca-total-col">{{ $fmt2($row['ca_total'] ?? null) }}</td>
+                        {{-- Exam raw fields (1 decimal) --}}
+                        <td class="exam-col">{{ $fmt1($row['test1'] ?? null) }}</td>
+                        <td class="exam-col">{{ $fmt1($row['test2'] ?? null) }}</td>
+                        <td class="exam-col">{{ $fmt1($row['mid_term'] ?? null) }}</td>
+                        <td class="exam-col">{{ $fmt1($row['final_exam'] ?? null) }}</td>
+                        {{-- Exam Total (2 decimals - calculated) --}}
+                        <td class="exam-total-col">{{ $fmt2($row['exam_total'] ?? null) }}</td>
+                        {{-- Grand Total (2 decimals - calculated) --}}
+                        <td class="grand-total-col">{{ $fmt2($row['grand_total'] ?? null) }}</td>
                         @php
                             $gClass = 'g-f';
                             if ($row['grade']) {
@@ -285,24 +321,31 @@
                     {{-- Average Row --}}
                     <tr class="avg-row">
                         <td class="stu-serial" colspan="2" style="text-align:center"><i class="fas fa-chart-bar me-1"></i>Class Average</td>
-                        <td>{{ $avgs['ca1'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca2'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca3'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca4'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca5'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca6'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca7'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca8'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca9'] ?? '-' }}</td>
-                        <td>{{ $avgs['ca10'] ?? '-' }}</td>
-                        <td>{{ $avgs['conduct'] ?? '-' }}</td>
-                        <td>{{ $avgs['handwriting'] ?? '-' }}</td>
-                        <td style="font-weight:800">{{ $avgs['ca_total'] ?? '-' }}</td>
-                        <td>{{ $avgs['test1'] ?? '-' }}</td>
-                        <td>{{ $avgs['test2'] ?? '-' }}</td>
-                        <td>{{ $avgs['mid_term'] ?? '-' }}</td>
-                        <td style="font-weight:800">{{ $avgs['final_exam'] ?? '-' }}</td>
-                        <td style="font-weight:800;font-size:.9rem">{{ $avgs['grand_total'] ?? '-' }}</td>
+                        {{-- CA averages (1 decimal) --}}
+                        <td>{{ $fmt1($avgs['ca1'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca2'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca3'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca4'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca5'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca6'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca7'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca8'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca9'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['ca10'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['conduct'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['handwriting'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['creativity'] ?? null) }}</td>
+                        {{-- CA Total average (2 decimals) --}}
+                        <td style="font-weight:800">{{ $fmt2($avgs['ca_total'] ?? null) }}</td>
+                        {{-- Exam averages (1 decimal) --}}
+                        <td>{{ $fmt1($avgs['test1'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['test2'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['mid_term'] ?? null) }}</td>
+                        <td>{{ $fmt1($avgs['final_exam'] ?? null) }}</td>
+                        {{-- Exam Total average (2 decimals) --}}
+                        <td style="font-weight:800">{{ $fmt2($avgs['exam_total'] ?? null) }}</td>
+                        {{-- Grand Total average (2 decimals) --}}
+                        <td style="font-weight:800;font-size:.9rem">{{ $fmt2($avgs['grand_total'] ?? null) }}</td>
                         <td style="font-weight:800">-</td>
                     </tr>
                 </tbody>

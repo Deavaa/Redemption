@@ -129,8 +129,15 @@ class MarkRosterController extends Controller
                 }
             }
             $averages = [];
+            $calcFields = ['ca_total', 'exam_total', 'grand_total'];
             foreach ($avgFields as $f) {
-                $averages[$f] = $colCounts[$f] > 0 ? round($colSums[$f] / $colCounts[$f], 1) : null;
+                if ($colCounts[$f] > 0) {
+                    // Calculated fields get 2 decimal places, raw fields get 1
+                    $decimals = in_array($f, $calcFields) ? 2 : 1;
+                    $averages[$f] = round($colSums[$f] / $colCounts[$f], $decimals);
+                } else {
+                    $averages[$f] = null;
+                }
             }
 
             $subjectRosters[] = [
