@@ -114,19 +114,20 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="capacity">
-                                Capacity <small>(optional)</small>
+                            <label class="modern-form-label">
+                                Class Capacity <small>(auto-calculated)</small>
                             </label>
                             <div class="modern-input-wrapper">
-                                <i class="fas fa-users modern-input-icon"></i>
-                                <input type="number"
-                                    name="capacity"
-                                    id="capacity"
+                                <i class="fas fa-calculator modern-input-icon"></i>
+                                <input type="text"
+                                    id="capacityDisplay"
                                     class="modern-input"
-                                    value="{{ old('capacity') }}"
-                                    placeholder="e.g. 40"
-                                    min="1">
+                                    style="background:#f9fafb;color:#6b7280;cursor:default;"
+                                    value="{{ __('Sum of section capacities') }}"
+                                    readonly
+                                    tabindex="-1">
                             </div>
+                            <small class="text-muted mt-1" style="font-size:0.78rem;">{{ __('Auto-calculated from sections below') }}</small>
                         </div>
                     </div>
                 </div>
@@ -683,7 +684,31 @@ function updateRemoveButtons() {
         var btn = r.querySelector('.modern-section-remove');
         if (btn) btn.disabled = rows.length <= 1;
     });
+    updateCapacityDisplay();
 }
+
+function updateCapacityDisplay() {
+    var total = 0;
+    var inputs = document.querySelectorAll('input[name*="[max_students]"]');
+    inputs.forEach(function(input) {
+        var val = parseInt(input.value);
+        if (!isNaN(val) && val > 0) total += val;
+    });
+    var display = document.getElementById('capacityDisplay');
+    if (display) {
+        display.value = total > 0 ? total + ' {{ __("students (sum of sections)") }}' : '{{ __("Sum of section capacities") }}';
+    }
+}
+
+// Listen for max_students changes
+document.addEventListener('input', function(e) {
+    if (e.target.name && e.target.name.indexOf('[max_students]') !== -1) {
+        updateCapacityDisplay();
+    }
+});
+
+// Initial calculation
+updateCapacityDisplay();
 </script>
 @endpush
 @endsection

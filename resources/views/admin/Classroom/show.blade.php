@@ -30,8 +30,9 @@
                         @if($item->academicYear)
                             <span class="modern-badge modern-badge-info"><i class="fas fa-calendar-alt"></i> {{ $item->academicYear->name }}</span>
                         @endif
-                        @if($item->capacity)
-                            <span class="modern-badge modern-badge-gold"><i class="fas fa-users"></i> Capacity: {{ $item->capacity }}</span>
+                        @php $cap = $item->calculated_capacity; @endphp
+                        @if($cap)
+                            <span class="modern-badge modern-badge-gold"><i class="fas fa-users"></i> Capacity: {{ $cap }}</span>
                         @endif
                         @if($item->sections && $item->sections->count() > 0)
                             <span class="modern-badge modern-badge-success"><i class="fas fa-layer-group"></i> {{ $item->sections->count() }} Section(s)</span>
@@ -79,8 +80,10 @@
                 <div class="modern-detail-row">
                     <div class="modern-detail-label"><i class="fas fa-users"></i> Capacity</div>
                     <div class="modern-detail-value">
-                        @if($item->capacity)
-                            <span class="modern-badge modern-badge-gold">{{ $item->capacity }} students</span>
+                        @php $cap = $item->calculated_capacity; @endphp
+                        @if($cap)
+                            <span class="modern-badge modern-badge-gold">{{ $cap }} students</span>
+                            <small class="text-muted ms-2">({{ __('Sum of section capacities') }})</small>
                         @else
                             <span class="modern-muted">Not Set</span>
                         @endif

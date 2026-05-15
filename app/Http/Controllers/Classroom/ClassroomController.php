@@ -31,11 +31,10 @@ class ClassroomController extends Controller
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
             'branch_id' => 'required|exists:branches,id',
-            'capacity' => 'nullable|integer|min:1',
             'numeric_name' => 'nullable|string|max:255',
             'teacher_id' => 'nullable|exists:teachers,id',
         ]);
-        $class = Classroom::create($request->only('name','academic_year_id','branch_id','capacity','numeric_name','teacher_id'));
+        $class = Classroom::create($request->only('name','academic_year_id','branch_id','numeric_name','teacher_id'));
         if ($request->has('sections')) {
             foreach ($request->sections as $sec) {
                 if (!empty($sec['name'])) {
@@ -48,6 +47,8 @@ class ClassroomController extends Controller
                 }
             }
         }
+        // Auto-calculate capacity from sections
+        $class->recalculateCapacity();
         return redirect()->route('admin.classrooms.index')->with('success','Class created with sections');
     }
     public function edit($id)
@@ -64,12 +65,11 @@ class ClassroomController extends Controller
             'name' => 'required|string|max:255',
             'academic_year_id' => 'required|exists:academic_years,id',
             'branch_id' => 'required|exists:branches,id',
-            'capacity' => 'nullable|integer|min:1',
             'numeric_name' => 'nullable|string|max:255',
             'teacher_id' => 'nullable|exists:teachers,id',
         ]);
         $class = Classroom::findOrFail($id);
-        $class->update($request->only('name','academic_year_id','branch_id','capacity','numeric_name','teacher_id'));
+        $class->update($request->only('name','academic_year_id','branch_id','numeric_name','teacher_id'));
         if ($request->has('sections')) {
             $existingIds = [];
             foreach ($request->sections as $sec) {
@@ -93,6 +93,8 @@ class ClassroomController extends Controller
         } else {
             Section::where('class_id', $class->id)->delete();
         }
+        // Auto-calculate capacity from sections
+        $class->recalculateCapacity();
         return redirect()->route('admin.classrooms.index')->with('success','Class updated with sections');
     }
     public function destroy($id)

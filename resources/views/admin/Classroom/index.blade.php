@@ -121,8 +121,9 @@
                                 <div class="modern-cell-text">{{ $item->academicYear->name ?? '-' }}</div>
                             </td>
                             <td class="td-center">
-                                @if($item->capacity)
-                                    <span class="modern-badge modern-badge-capacity">{{ $item->capacity }}</span>
+                                @php $cap = $item->calculated_capacity; @endphp
+                                @if($cap)
+                                    <span class="modern-badge modern-badge-capacity">{{ $cap }}</span>
                                 @else
                                     <span class="modern-cell-muted">-</span>
                                 @endif

@@ -38,7 +38,10 @@ class SectionController extends Controller {
             'max_students' => 'nullable|integer|min:1',
             'teacher_id' => 'nullable|exists:teachers,id',
         ]);
-        Section::create($r->only(['class_id','name','max_students','teacher_id']));
+        $section = Section::create($r->only(['class_id','name','max_students','teacher_id']));
+        // Recalculate parent classroom capacity
+        $class = ClassRoom::find($r->class_id);
+        if ($class) $class->recalculateCapacity();
         return redirect()->route('admin.sections.index')->with('success','Section created successfully');
     }
 
@@ -63,9 +66,22 @@ class SectionController extends Controller {
             'max_students' => 'nullable|integer|min:1',
             'teacher_id' => 'nullable|exists:teachers,id',
         ]);
+        $oldClassId = $section->class_id;
         $section->update($r->only(['class_id','name','max_students','teacher_id']));
+        // Recalculate capacity for old and new classroom
+        if ($oldClassId != $r->class_id) {
+            $oldClass = ClassRoom::find($oldClassId);
+            if ($oldClass) $oldClass->recalculateCapacity();
+        }
+        $newClass = ClassRoom::find($r->class_id);
+        if ($newClass) $newClass->recalculateCapacity();
         return redirect()->route('admin.sections.index')->with('success','Section updated successfully');
     }
 
-    public function destroy(Section $section) { $section->delete(); return back()->with('success','Section deleted successfully'); }
+    public function destroy(Section $section) {
+        $class = ClassRoom::find($section->class_id);
+        $section->delete();
+        if ($class) $class->recalculateCapacity();
+        return back()->with('success','Section deleted successfully');
+    }
 }
