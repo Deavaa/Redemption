@@ -3,19 +3,26 @@
 
 @push('styles')
 <style>
-.mr-page{animation:mrIn .4s ease-out}@keyframes mrIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.mr-page{animation:mrIn .4s ease-out}
+@keyframes mrIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .mr-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
 .mr-header-left{flex:1}
 .mr-title{font-size:1.75rem;font-weight:800;color:#1a1a2e;margin:0;letter-spacing:-.5px}
 .mr-subtitle{font-size:.9rem;color:#6c757d;margin:.25rem 0 0}
 .mr-breadcrumb ol{display:flex;list-style:none;padding:0;margin:0 0 .5rem;gap:.5rem;font-size:.8rem;align-items:center}
-.mr-breadcrumb li{color:#adb5bd}.mr-breadcrumb li a{color:#6c757d;text-decoration:none;transition:color .2s}.mr-breadcrumb li a:hover{color:#4361ee}
-.mr-breadcrumb li+li::before{content:'/';margin-right:.5rem;color:#dee2e6}.mr-breadcrumb li.active{color:#4361ee;font-weight:500}
-.mr-card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #f0f0f0;overflow:hidden;margin-bottom:1.25rem}
+.mr-breadcrumb li{color:#adb5bd}
+.mr-breadcrumb li a{color:#6c757d;text-decoration:none;transition:color .2s}
+.mr-breadcrumb li a:hover{color:#4361ee}
+.mr-breadcrumb li+li::before{content:'/';margin-right:.5rem;color:#dee2e6}
+.mr-breadcrumb li.active{color:#4361ee;font-weight:500}
+
+.mr-card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #f0f0f0;overflow:hidden;margin-bottom:1.5rem}
 .mr-card-head{display:flex;align-items:center;gap:.75rem;padding:1rem 1.5rem;border-bottom:1px solid #f0f0f0;background:#fafbfc}
 .mr-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
-.mr-card-icon.blue{background:#eef2ff;color:#4361ee}.mr-card-icon.green{background:#ecfdf5;color:#10b981}.mr-card-icon.gold{background:#fefce8;color:#d97706}.mr-card-icon.purple{background:#f5f3ff;color:#7c3aed}
-.mr-card-title{font-size:1rem;font-weight:700;color:#1a1a2e;margin:0}.mr-card-desc{font-size:.82rem;color:#9ca3af;margin:.1rem 0 0}
+.mr-card-icon.blue{background:#eef2ff;color:#4361ee}
+.mr-card-icon.green{background:#ecfdf5;color:#10b981}
+.mr-card-title{font-size:1rem;font-weight:700;color:#1a1a2e;margin:0}
+.mr-card-desc{font-size:.82rem;color:#9ca3af;margin:.1rem 0 0}
 .mr-card-body{padding:1.25rem 1.5rem}
 .mr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
 .mr-group{display:flex;flex-direction:column}
@@ -24,27 +31,85 @@
 .mr-select:focus{outline:none;border-color:#4361ee;box-shadow:0 0 0 3px rgba(67,97,238,.1)}
 .mr-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.25rem;border-radius:10px;font-weight:600;font-size:.88rem;border:none;cursor:pointer;transition:all .25s;color:#fff;background:linear-gradient(135deg,#4361ee,#3a0ca3);box-shadow:0 2px 8px rgba(67,97,238,.3)}
 .mr-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(67,97,238,.4)}
-.mr-btn-outline{background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;box-shadow:none}.mr-btn-outline:hover{border-color:#4361ee;color:#4361ee;background:#f8f9ff;transform:none;box-shadow:none}
+.mr-btn-outline{background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;box-shadow:none}
+.mr-btn-outline:hover{border-color:#4361ee;color:#4361ee;background:#f8f9ff;transform:none;box-shadow:none}
 .mr-actions{display:flex;justify-content:flex-end;gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
 
-/* Report Header */
-.mr-report-head{background:linear-gradient(135deg,#1e3a5f,#264b73);color:#fff;padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-.mr-report-title{font-size:1.2rem;font-weight:800;margin:0}.mr-report-meta{display:flex;gap:.75rem;flex-wrap:wrap}
-.mr-report-chip{font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px}
+/* Subject Section */
+.mr-subject-section{margin-bottom:2rem}
+.mr-subject-section:last-child{margin-bottom:0}
+.mr-subject-head{display:flex;align-items:center;gap:.75rem;padding:.85rem 1.5rem;border-radius:14px 14px 0 0;color:#fff;font-size:1.05rem;font-weight:800}
+.mr-subject-head .subj-icon{font-size:1.1rem}
+.mr-subject-head .subj-badge{font-size:.72rem;background:rgba(255,255,255,.2);padding:.1rem .5rem;border-radius:5px;margin-left:auto}
+
+/* Alternate subject colors */
+.mr-subject-head.s0{background:linear-gradient(135deg,#4361ee,#3b82f6)}
+.mr-subject-head.s1{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+.mr-subject-head.s2{background:linear-gradient(135deg,#10b981,#059669)}
+.mr-subject-head.s3{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.mr-subject-head.s4{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.mr-subject-head.s5{background:linear-gradient(135deg,#06b6d4,#0891b2)}
+.mr-subject-head.s6{background:linear-gradient(135deg,#ec4899,#db2777)}
+.mr-subject-head.s7{background:linear-gradient(135deg,#6366f1,#4f46e5)}
+.mr-subject-head.s8{background:linear-gradient(135deg,#14b8a6,#0d9488)}
+.mr-subject-head.s9{background:linear-gradient(135deg,#f97316,#ea580c)}
 
 /* Roster Table */
 .mr-table-wrap{overflow-x:auto}
-.mr-table{width:100%;border-collapse:collapse;font-size:.82rem}
-.mr-table th{background:#f8fafc;color:#374151;font-weight:700;padding:.55rem .5rem;border:1px solid #e5e7eb;white-space:nowrap;text-align:center;position:sticky;top:0}
-.mr-table td{padding:.45rem .5rem;border:1px solid #e5e7eb;text-align:center}
+.mr-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.mr-table th{padding:.45rem .35rem;border:1px solid #e5e7eb;white-space:nowrap;text-align:center;font-weight:700;position:sticky;top:0}
+.mr-table td{padding:.4rem .35rem;border:1px solid #e5e7eb;text-align:center}
 .mr-table tbody tr:nth-child(even){background:#f9fafb}
 .mr-table tbody tr:hover{background:#eef2ff}
-.mr-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:140px}
-.mr-table .total-col{font-weight:700;color:#4361ee;background:#f0f4ff}
-.mr-table .rank-col{font-weight:700}
+.mr-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:130px;position:sticky;left:0;z-index:2;background:inherit}
+.mr-table .stu-serial{font-weight:600;color:#6b7280;position:sticky;left:0;z-index:2;background:inherit;min-width:32px}
 
-/* Print */
-@media print{.mr-header,.mr-card,.mr-actions,.mr-report-head{display:none!important}.mr-table{font-size:10pt}.mr-table th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+/* Group header rows */
+.mr-table .group-ca{background:#eff6ff;color:#1e40af;font-size:.78rem;letter-spacing:.5px}
+.mr-table .group-exam{background:#fef3c7;color:#92400e;font-size:.78rem;letter-spacing:.5px}
+.mr-table .group-ca th{background:#dbeafe;border-bottom:2px solid #93c5fd}
+.mr-table .group-exam th{background:#fde68a;border-bottom:2px solid #fbbf24}
+
+/* CA columns */
+.mr-table .ca-col{background:#f8fbff}
+.mr-table .ca-total-col{background:#dbeafe;font-weight:700;color:#1e40af}
+
+/* Exam columns */
+.mr-table .exam-col{background:#fffdf5}
+.mr-table .exam-total-col{background:#fde68a;font-weight:700;color:#92400e}
+
+/* Result columns */
+.mr-table .grand-total-col{background:#d1fae5;font-weight:800;color:#065f46}
+.mr-table .grade-col{font-weight:800}
+.mr-table .grade-col.g-a{color:#059669}
+.mr-table .grade-col.g-b{color:#2563eb}
+.mr-table .grade-col.g-c{color:#d97706}
+.mr-table .grade-col.g-d{color:#ea580c}
+.mr-table .grade-col.g-f{color:#dc2626}
+
+/* Average row */
+.mr-table .avg-row td{background:#f0f4ff!important;font-weight:700;color:#4338ca;border-top:2px solid #6366f1}
+.mr-table .avg-row .stu-name{background:#f0f4ff!important;color:#4338ca;position:sticky;left:0;z-index:2}
+.mr-table .avg-row .stu-serial{background:#f0f4ff!important;color:#4338ca;position:sticky;left:0;z-index:2}
+
+/* Sub-field header row */
+.mr-table .sub-head th{font-size:.7rem;font-weight:600;padding:.35rem .25rem}
+
+/* No data */
+.mr-empty{text-align:center;padding:3rem 1rem;color:#9ca3af}
+.mr-empty i{font-size:2.5rem;margin-bottom:.75rem;display:block}
+.mr-empty p{margin:0;font-size:.95rem}
+
+/* Print styles */
+@media print{
+    .mr-header,.mr-card,.mr-actions{display:none!important}
+    .mr-subject-section{page-break-inside:avoid}
+    .mr-subject-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0!important}
+    .mr-table{font-size:8pt}
+    .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .group-ca th,.group-exam th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .avg-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 
 /* Responsive */
 @media(max-width:768px){.mr-grid{grid-template-columns:1fr 1fr}.mr-title{font-size:1.35rem}}
@@ -58,7 +123,7 @@
         <div class="mr-header-left">
             <nav aria-label="breadcrumb" class="mr-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li class="active">Mark Roster</li></ol></nav>
             <h1 class="mr-title">Mark Roster</h1>
-            <p class="mr-subtitle">Class-wise mark roster showing all students and subjects</p>
+            <p class="mr-subtitle">Detailed mark roster with separate table per subject showing all CA and Exam entries</p>
         </div>
     </div>
 
@@ -108,51 +173,153 @@
     </div>
 
     {{-- Roster Results --}}
-    @isset($roster)
-    <div class="mr-card">
-        <div class="mr-report-head">
-            <h2 class="mr-report-title">Mark Roster</h2>
-            <div class="mr-report-meta">
-                <span class="mr-report-chip">{{ $academicYear->name ?? '' }}</span>
-                <span class="mr-report-chip">{{ $term->name ?? '' }}</span>
-                <span class="mr-report-chip">{{ $class->name ?? '' }}</span>
-                @if($section)<span class="mr-report-chip">{{ $section->name }}</span>@endif
-            </div>
+    @isset($subjectRosters)
+    @if(count($subjectRosters) > 0)
+
+    {{-- Info bar --}}
+    <div class="mr-card" style="margin-bottom:1.5rem">
+        <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:linear-gradient(135deg,#1e3a5f,#264b73);color:#fff;flex-wrap:wrap">
+            <span style="font-weight:800;font-size:1.05rem"><i class="fas fa-clipboard-list me-1"></i> Mark Roster</span>
+            <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $academicYear->name ?? '' }}</span>
+            <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $term->name ?? '' }}</span>
+            <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $class->name ?? '' }}</span>
+            @if($section)<span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $section->name }}</span>@endif
+            <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ count($subjectRosters) }} Subjects</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:.75rem;padding:.5rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc">
+            <button onclick="window.print()" class="mr-btn mr-btn-outline"><i class="fas fa-print"></i> Print</button>
+            <button onclick="exportRosterCSV()" class="mr-btn mr-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+        </div>
+    </div>
+
+    {{-- One table per subject --}}
+    @foreach($subjectRosters as $si => $sr)
+    <?php
+        $subj = $sr['subject'];
+        $rows = $sr['rows'];
+        $avgs = $sr['averages'];
+        $colorIdx = $si % 10;
+    ?>
+    <div class="mr-subject-section">
+        <div class="mr-subject-head s{{ $colorIdx }}">
+            <i class="fas fa-book subj-icon"></i>
+            <span>{{ $subj->name }}</span>
+            @if($subj->code)<span style="font-size:.75rem;opacity:.8">({{ $subj->code }})</span>@endif
+            <span class="subj-badge">{{ count($rows) }} Students</span>
         </div>
         <div class="mr-table-wrap">
             <table class="mr-table">
                 <thead>
+                    {{-- Row 1: Group headers --}}
                     <tr>
-                        <th>#</th>
-                        <th style="text-align:left">Student Name</th>
-                        <th>Roll No</th>
-                        @foreach($subjects as $subj)<th>{{ $subj->name }}</th>@endforeach
-                        <th class="total-col">Total</th>
+                        <th rowspan="2" style="width:32px">#</th>
+                        <th rowspan="2" style="text-align:left;min-width:130px">Student Name</th>
+                        <th colspan="13" class="group-ca"><i class="fas fa-tasks me-1"></i>Continuous Assessment (Raw /70 &rarr; Scaled /30)</th>
+                        <th colspan="4" class="group-exam"><i class="fas fa-pen-alt me-1"></i>Exam (/70)</th>
+                        <th rowspan="2" style="background:#d1fae5;color:#065f46;min-width:50px">Grand Total</th>
+                        <th rowspan="2" style="background:#f0fdf4;color:#065f46;min-width:40px">Grade</th>
+                    </tr>
+                    {{-- Row 2: Sub-field headers --}}
+                    <tr>
+                        {{-- CA fields --}}
+                        <th class="sub-head ca-col">CA1<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA2<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA3<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA4<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA5<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA6<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA7<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA8<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA9<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">CA10<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">Conduct<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-col">Handwriting<br><small style="font-weight:400;color:#9ca3af">/5</small></th>
+                        <th class="sub-head ca-total-col">CA Total<br><small style="font-weight:400;color:#3b82f6">/30</small></th>
+                        {{-- Exam fields --}}
+                        <th class="sub-head exam-col">Test 1<br><small style="font-weight:400;color:#9ca3af">/10</small></th>
+                        <th class="sub-head exam-col">Test 2<br><small style="font-weight:400;color:#9ca3af">/10</small></th>
+                        <th class="sub-head exam-col">Mid Term<br><small style="font-weight:400;color:#9ca3af">/20</small></th>
+                        <th class="sub-head exam-total-col">Final<br><small style="font-weight:400;color:#b45309">/30</small></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($roster as $i => $row)
+                    @foreach($rows as $row)
                     <tr>
-                        <td>{{ $i + 1 }}</td>
+                        <td class="stu-serial">{{ $row['serial'] }}</td>
                         <td class="stu-name">{{ $row['student']->first_name ?? '' }} {{ $row['student']->last_name ?? '' }}</td>
-                        <td>{{ $row['student']->roll_number ?? '-' }}</td>
-                        @foreach($subjects as $subj)
-                            @php $m = $row['subjectMarks'][$subj->id] ?? null @endphp
-                            <td>{{ $m ? ($m['grand_total'] ?? '-') : '-' }}</td>
-                        @endforeach
-                        <td class="total-col">{{ $row['grandTotal'] }}</td>
+                        {{-- CA fields --}}
+                        <td class="ca-col">{{ $row['ca1'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca2'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca3'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca4'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca5'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca6'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca7'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca8'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca9'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['ca10'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['conduct'] ?? '-' }}</td>
+                        <td class="ca-col">{{ $row['handwriting'] ?? '-' }}</td>
+                        <td class="ca-total-col">{{ $row['ca_total'] ?? '-' }}</td>
+                        {{-- Exam fields --}}
+                        <td class="exam-col">{{ $row['test1'] ?? '-' }}</td>
+                        <td class="exam-col">{{ $row['test2'] ?? '-' }}</td>
+                        <td class="exam-col">{{ $row['mid_term'] ?? '-' }}</td>
+                        <td class="exam-total-col">{{ $row['final_exam'] ?? '-' }}</td>
+                        {{-- Result --}}
+                        <td class="grand-total-col">{{ $row['grand_total'] ?? '-' }}</td>
+                        @php
+                            $gClass = 'g-f';
+                            if ($row['grade']) {
+                                $g = $row['grade'];
+                                if (in_array($g, ['A+','A','A-'])) $gClass = 'g-a';
+                                elseif (in_array($g, ['B+','B','B-'])) $gClass = 'g-b';
+                                elseif (in_array($g, ['C+','C','C-'])) $gClass = 'g-c';
+                                elseif (in_array($g, ['D','D-'])) $gClass = 'g-d';
+                            }
+                        @endphp
+                        <td class="grade-col {{ $gClass }}">{{ $row['grade'] ?? '-' }}</td>
                     </tr>
                     @endforeach
-                    @if($roster->isEmpty())
-                    <tr><td colspan="{{ 3 + $subjects->count() + 1 }}" style="text-align:center;padding:2rem;color:#9ca3af">No marks found for the selected filters</td></tr>
-                    @endif
+
+                    {{-- Average Row --}}
+                    <tr class="avg-row">
+                        <td class="stu-serial" colspan="2" style="text-align:center"><i class="fas fa-chart-bar me-1"></i>Class Average</td>
+                        <td>{{ $avgs['ca1'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca2'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca3'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca4'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca5'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca6'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca7'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca8'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca9'] ?? '-' }}</td>
+                        <td>{{ $avgs['ca10'] ?? '-' }}</td>
+                        <td>{{ $avgs['conduct'] ?? '-' }}</td>
+                        <td>{{ $avgs['handwriting'] ?? '-' }}</td>
+                        <td style="font-weight:800">{{ $avgs['ca_total'] ?? '-' }}</td>
+                        <td>{{ $avgs['test1'] ?? '-' }}</td>
+                        <td>{{ $avgs['test2'] ?? '-' }}</td>
+                        <td>{{ $avgs['mid_term'] ?? '-' }}</td>
+                        <td style="font-weight:800">{{ $avgs['final_exam'] ?? '-' }}</td>
+                        <td style="font-weight:800;font-size:.9rem">{{ $avgs['grand_total'] ?? '-' }}</td>
+                        <td style="font-weight:800">-</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-        <div class="mr-actions">
-            <button onclick="window.print()" class="mr-btn mr-btn-outline"><i class="fas fa-print"></i> Print</button>
+    </div>
+    @endforeach
+
+    @else
+    <div class="mr-card">
+        <div class="mr-empty">
+            <i class="fas fa-clipboard-list"></i>
+            <p>No marks found for the selected filters.</p>
+            <p style="font-size:.82rem;margin-top:.5rem">Please make sure marks have been entered for the selected academic year, term, and class.</p>
         </div>
     </div>
+    @endif
     @endisset
 </div>
 @endsection
@@ -162,13 +329,49 @@
 (function(){
     var cls=document.getElementById('filterClass');
     var sec=document.getElementById('filterSection');
-    cls.addEventListener('change',function(){
-        if(!this.value){sec.innerHTML='<option value="">-- All Sections --</option>';return;}
-        fetch('{{ route("admin.mark-roster.sections") }}?class_id='+this.value,{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(data){
-            sec.innerHTML='<option value="">-- All Sections --</option>';
-            data.forEach(function(s){sec.innerHTML+='<option value="'+s.id+'">'+s.name+'</option>';});
+    if(cls){
+        cls.addEventListener('change',function(){
+            if(!this.value){sec.innerHTML='<option value="">-- All Sections --</option>';return;}
+            fetch('{{ route("admin.mark-roster.sections") }}?class_id='+this.value,{credentials:'same-origin'})
+            .then(function(r){return r.json();})
+            .then(function(data){
+                sec.innerHTML='<option value="">-- All Sections --</option>';
+                data.forEach(function(s){sec.innerHTML+='<option value="'+s.id+'">'+s.name+'</option>';});
+            });
+        });
+    }
+})();
+
+function exportRosterCSV(){
+    var tables=document.querySelectorAll('.mr-table');
+    if(!tables.length)return;
+    var csv=[];
+    tables.forEach(function(table){
+        var sectionHead=table.closest('.mr-subject-section');
+        if(sectionHead){
+            var headDiv=sectionHead.querySelector('.mr-subject-head');
+            if(headDiv){
+                csv.push('');
+                csv.push('=== '+headDiv.innerText.trim()+' ===');
+                csv.push('');
+            }
+        }
+        var rows=table.querySelectorAll('tr');
+        rows.forEach(function(row){
+            var cols=row.querySelectorAll('td,th');
+            var rowData=[];
+            cols.forEach(function(col){
+                var text=col.innerText.replace(/"/g,'""').replace(/\n/g,' ');
+                rowData.push('"'+text+'"');
+            });
+            csv.push(rowData.join(','));
         });
     });
-})();
+    var blob=new Blob([csv.join('\n')],{type:'text/csv;charset=utf-8;'});
+    var link=document.createElement('a');
+    link.href=URL.createObjectURL(blob);
+    link.download='mark_roster.csv';
+    link.click();
+}
 </script>
 @endpush

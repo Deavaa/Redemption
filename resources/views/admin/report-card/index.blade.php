@@ -38,7 +38,7 @@
     <div class="rc-header">
         <div class="rc-header-left">
             <h1 class="rc-title">Report Cards</h1>
-            <p class="rc-subtitle">Generate foldable postcard-style report cards for students</p>
+            <p class="rc-subtitle">Generate annual report cards with all terms, landscape layout with two columns</p>
         </div>
     </div>
 
@@ -52,19 +52,10 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                         <div class="rc-form-group">
                             <label class="rc-form-label">Academic Year *</label>
-                            <select name="academic_year_id" class="rc-form-control" required>
+                            <select name="academic_year_id" class="rc-form-control" required id="rcAcademicYearId">
                                 <option value="">-- Select --</option>
                                 @foreach($academicYears as $ay)
                                     <option value="{{ $ay->id }}">{{ $ay->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="rc-form-group">
-                            <label class="rc-form-label">Term *</label>
-                            <select name="term_id" class="rc-form-control" required>
-                                <option value="">-- Select --</option>
-                                @foreach($terms as $t)
-                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -83,15 +74,15 @@
                                 <option value="">-- All Sections --</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="rc-form-group">
-                        <label class="rc-form-label">Student</label>
-                        <select name="student_id" class="rc-form-control" id="rcStudentId">
-                            <option value="">-- All Students --</option>
-                        </select>
+                        <div class="rc-form-group">
+                            <label class="rc-form-label">Student</label>
+                            <select name="student_id" class="rc-form-control" id="rcStudentId">
+                                <option value="">-- All Students --</option>
+                            </select>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100" style="margin-top:0.5rem;">
-                        <i class="fas fa-id-card me-1"></i> Generate Report Cards
+                        <i class="fas fa-id-card me-1"></i> Generate Annual Report Cards
                     </button>
                 </form>
             </div>
@@ -100,15 +91,13 @@
         {{-- Info Card --}}
         <div>
             <div class="rc-info-box">
-                <div class="rc-info-title"><i class="fas fa-info-circle me-1"></i> Foldable Report Card</div>
+                <div class="rc-info-title"><i class="fas fa-info-circle me-1"></i> Annual Report Card</div>
                 <div class="rc-info-text">
-                    The report card is designed as a postcard that folds in two places, creating four faces:
+                    The report card shows marks for <strong>all terms</strong> of the academic year plus annual averages. Layout is A4 landscape with two equal columns:
                 </div>
                 <div class="rc-face-diagram">
-                    <div class="rc-face"><div class="rc-face-num">1</div>Front Cover<br>School Logo & Info</div>
-                    <div class="rc-face"><div class="rc-face-num">2</div>Inside Left<br>Attendance & Conduct</div>
-                    <div class="rc-face"><div class="rc-face-num">3</div>Inside Right<br>Subject Marks Table</div>
-                    <div class="rc-face"><div class="rc-face-num">4</div>Back Cover<br>Comments & Signature</div>
+                    <div class="rc-face"><div class="rc-face-num">Left</div>Subject Marks<br>Term 1 + Term 2 + Annual</div>
+                    <div class="rc-face"><div class="rc-face-num">Right</div>Summary + Grading<br>Comments + Signatures</div>
                 </div>
             </div>
 
@@ -119,8 +108,8 @@
                         <li>Use <strong>A4 landscape</strong> paper</li>
                         <li>Set margins to <strong>None</strong> in print dialog</li>
                         <li>Enable <strong>Background Graphics</strong></li>
-                        <li>Print on both sides (duplex) or use double-sided paper</li>
-                        <li>Fold along the dashed lines</li>
+                        <li>Each student gets a full page</li>
+                        <li>Annual = Average of Term 1 + Term 2</li>
                     </ul>
                 </div>
             </div>

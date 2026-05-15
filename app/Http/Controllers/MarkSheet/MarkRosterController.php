@@ -26,7 +26,9 @@ class MarkRosterController extends Controller
     }
 
     /**
-     * Generate the mark roster — a table of ALL students with ALL subject marks side by side.
+     * Generate the mark roster — a SEPARATE TABLE per subject showing
+     * every CA and Exam field as a column, grouped under
+     * "Continuous Assessment" and "Exam" header rows.
      */
     public function generate(Request $r)
     {
@@ -52,47 +54,91 @@ class MarkRosterController extends Controller
         // ── Unique subjects (preserve the order they appear in) ──────
         $subjects = $marks->pluck('subject')->filter()->unique('id')->sortBy(function($s) { return [$s->priority ?? 0, $s->name]; })->values();
 
-        // ── Group marks by student and build the roster rows ─────────
-        $grouped = $marks->groupBy('student_id');
+        // If no marks yet, get subjects from teacher assignments
+        if ($subjects->isEmpty()) {
+            $subjects = \App\Models\Subject::whereHas('teacherAssignments', function ($q) use ($r) {
+                $q->where('class_id', $r->class_id);
+            })->orderBy('priority')->orderBy('name')->get();
+        }
 
-        $roster = $grouped->map(function ($entries, $studentId) {
-            $student = $entries->first()->student;
+        // ── Get all students in the class/section ────────────────────
+        $studentQuery = Student::where('class_id', $r->class_id)
+            ->where('status', 'active');
+        if ($r->filled('section_id')) {
+            $studentQuery->where('section_id', $r->section_id);
+        }
+        $students = $studentQuery
+            ->selectRaw("*, CAST(roll_number AS UNSIGNED) as rn_sort")
+            ->orderByRaw('rn_sort ASC')
+            ->orderBy('first_name')
+            ->get();
 
-            $subjectMarks = [];
-            $grandTotal   = 0;
+        // ── Build detailed mark data per subject ─────────────────────
+        // Structure: [subjectId][studentId] = full mark entry row
+        $markData = [];
+        foreach ($marks as $entry) {
+            $markData[$entry->subject_id][$entry->student_id] = $entry;
+        }
 
-            foreach ($entries as $entry) {
-                if ($entry->subject) {
-                    $subjectMarks[$entry->subject_id] = [
-                        'marks_obtained' => $entry->marks_obtained,
-                        'ca_total'       => $entry->ca_total,
-                        'exam_total'     => $entry->exam_total,
-                        'grand_total'    => $entry->grand_total,
-                        'grade'          => $entry->grade,
-                    ];
-                    $grandTotal += floatval($entry->grand_total ?? 0);
+        // ── Build subject rosters with all CA/Exam detail ────────────
+        $subjectRosters = [];
+        foreach ($subjects as $subj) {
+            $rows = [];
+            foreach ($students as $i => $student) {
+                $entry = $markData[$subj->id][$student->id] ?? null;
+                $rows[] = [
+                    'serial'   => $i + 1,
+                    'student'  => $student,
+                    'ca1'        => $entry->ca1 ?? null,
+                    'ca2'        => $entry->ca2 ?? null,
+                    'ca3'        => $entry->ca3 ?? null,
+                    'ca4'        => $entry->ca4 ?? null,
+                    'ca5'        => $entry->ca5 ?? null,
+                    'ca6'        => $entry->ca6 ?? null,
+                    'ca7'        => $entry->ca7 ?? null,
+                    'ca8'        => $entry->ca8 ?? null,
+                    'ca9'        => $entry->ca9 ?? null,
+                    'ca10'       => $entry->ca10 ?? null,
+                    'conduct'    => $entry->conduct ?? null,
+                    'handwriting'=> $entry->handwriting ?? null,
+                    'creativity' => $entry->creativity ?? null,
+                    'ca_total'   => $entry->ca_total ?? null,
+                    'test1'      => $entry->test1 ?? null,
+                    'test2'      => $entry->test2 ?? null,
+                    'mid_term'   => $entry->mid_term ?? null,
+                    'final_exam' => $entry->final_exam ?? null,
+                    'exam_total' => $entry->exam_total ?? null,
+                    'grand_total'=> $entry->grand_total ?? null,
+                    'grade'      => $entry->grade ?? null,
+                ];
+            }
+
+            // Compute column averages
+            $colSums = [];
+            $colCounts = [];
+            $avgFields = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10',
+                          'conduct','handwriting','creativity','ca_total',
+                          'test1','test2','mid_term','final_exam','exam_total','grand_total'];
+            foreach ($avgFields as $f) { $colSums[$f] = 0; $colCounts[$f] = 0; }
+            foreach ($rows as $row) {
+                foreach ($avgFields as $f) {
+                    if ($row[$f] !== null) {
+                        $colSums[$f] += floatval($row[$f]);
+                        $colCounts[$f]++;
+                    }
                 }
             }
-
-            return [
-                'student'      => $student,
-                'subjectMarks' => $subjectMarks,
-                'grandTotal'   => round($grandTotal, 2),
-            ];
-        })->values();
-
-        // Sort roster by roll number (if available) then by name
-        $roster = $roster->sort(function ($a, $b) {
-            $rollA = $a['student']->roll_number ?? '';
-            $rollB = $b['student']->roll_number ?? '';
-            if ($rollA !== $rollB) {
-                return strcmp($rollA, $rollB);
+            $averages = [];
+            foreach ($avgFields as $f) {
+                $averages[$f] = $colCounts[$f] > 0 ? round($colSums[$f] / $colCounts[$f], 1) : null;
             }
-            return strcmp(
-                ($a['student']->first_name ?? '') . ($a['student']->last_name ?? ''),
-                ($b['student']->first_name ?? '') . ($b['student']->last_name ?? '')
-            );
-        })->values();
+
+            $subjectRosters[] = [
+                'subject'  => $subj,
+                'rows'     => $rows,
+                'averages' => $averages,
+            ];
+        }
 
         // ── Lookup reference models ──────────────────────────────────
         $class        = ClassRoom::find($r->class_id);
@@ -106,8 +152,9 @@ class MarkRosterController extends Controller
         $classes       = ClassRoom::orderBy('name')->get();
 
         return view('admin.mark-roster.index', compact(
-            'roster',
+            'subjectRosters',
             'subjects',
+            'students',
             'class',
             'section',
             'academicYear',

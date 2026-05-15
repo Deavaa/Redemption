@@ -15,106 +15,166 @@ use Illuminate\Http\Request;
 class ReportCardController extends Controller
 {
     /**
-     * Show filter form for generating foldable report cards.
+     * Show filter form for generating report cards.
      */
     public function index()
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $terms = Term::orderBy('id', 'desc')->get();
         $classes = ClassRoom::orderBy('name')->get();
 
-        return view('admin.report-card.index', compact('academicYears', 'terms', 'classes'));
+        return view('admin.report-card.index', compact('academicYears', 'classes'));
     }
 
     /**
-     * Generate foldable report cards for selected students.
+     * Generate year-based report cards for selected students.
      *
-     * Layout: 4 faces like a postcard folded in two places
-     * - Face 1 (Front Cover): School logo, name, "Report Card", student name/class
-     * - Face 2 (Inside Left): Attendance summary, behavior/conduct
-     * - Face 3 (Inside Right): Subject marks table with grades
-     * - Face 4 (Back Cover): Teacher/principal comments, grading scale, signature
+     * Layout: A4 Landscape with two equal columns (left & right).
+     * Shows all terms for the academic year, plus annual average.
+     * - Left Column: Student info + Subject marks table (all terms)
+     * - Right Column: Performance summary + Grading scale + Comments + Signatures
      */
     public function generate(Request $r)
     {
         $r->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
-            'term_id'          => 'required|exists:terms,id',
             'class_id'         => 'required|exists:classes,id',
             'section_id'       => 'nullable|exists:sections,id',
             'student_id'       => 'nullable|exists:students,id',
         ]);
 
-        // Get all mark entries for the given filters
-        $query = MarkEntry::with(['student', 'subject', 'term', 'academicYear', 'classRoom', 'section'])
-            ->where('academic_year_id', $r->academic_year_id)
-            ->where('term_id', $r->term_id)
-            ->where('class_id', $r->class_id);
+        $academicYearId = $r->academic_year_id;
+        $classId        = $r->class_id;
+        $sectionId      = $r->filled('section_id') ? $r->section_id : null;
 
-        if ($r->filled('section_id')) {
-            $query->where('section_id', $r->section_id);
+        // Get all terms for the academic year
+        $terms = Term::where('academic_year_id', $academicYearId)
+            ->orderBy('term_number')
+            ->get();
+
+        $term1 = $terms->first();
+        $term2 = $terms->count() >= 2 ? $terms->skip(1)->first() : null;
+
+        // Get all mark entries for the academic year and class
+        $query = MarkEntry::with(['student', 'subject', 'term', 'academicYear', 'classRoom', 'section'])
+            ->where('academic_year_id', $academicYearId)
+            ->where('class_id', $classId);
+
+        if ($sectionId) {
+            $query->where('section_id', $sectionId);
         }
         if ($r->filled('student_id')) {
             $query->where('student_id', $r->student_id);
         }
 
-        $marks = $query->orderBy('student_id')
+        $allMarks = $query->orderBy('student_id')
             ->orderByRaw('(SELECT priority FROM subjects WHERE subjects.id = mark_entries.subject_id) ASC')
             ->orderBy('subject_id')
             ->get();
 
-        // Group marks by student
-        $studentMarks = $marks->groupBy('student_id');
+        // Get unique subjects
+        $subjects = $allMarks->pluck('subject')->filter()->unique('id')->sortBy(function($s) { return [$s->priority ?? 0, $s->name]; })->values();
 
-        // For each student, compute subject list, totals, rank
+        // Build mark data: [studentId][termId][subjectId] = entry
+        $markData = [];
+        foreach ($allMarks as $entry) {
+            $markData[$entry->student_id][$entry->term_id][$entry->subject_id] = $entry;
+        }
+
+        // Get students
+        $studentQuery = Student::where('class_id', $classId)->where('status', 'active');
+        if ($sectionId) {
+            $studentQuery->where('section_id', $sectionId);
+        }
+        if ($r->filled('student_id')) {
+            $studentQuery->where('id', $r->student_id);
+        }
+        $studentsList = $studentQuery
+            ->selectRaw("*, CAST(roll_number AS UNSIGNED) as rn_sort")
+            ->orderByRaw('rn_sort ASC')
+            ->orderBy('first_name')
+            ->get();
+
+        // Build student cards data
         $students = [];
-        $allTotals = []; // for rank calculation
+        $allAnnualTotals = []; // for rank calculation
 
-        foreach ($studentMarks as $studentId => $entries) {
-            $student = $entries->first()->student;
-            $subjects = [];
-            $grandTotal = 0;
-            $maxPossible = 0;
+        foreach ($studentsList as $student) {
+            $subjectRows = [];
+            $annualGrandTotal = 0;
+            $annualSubjectCount = 0;
 
-            foreach ($entries as $entry) {
-                if ($entry->subject) {
-                    $subjects[] = [
-                        'name'         => $entry->subject->name,
-                        'type'         => $entry->subject->type ?? 'compulsory',
-                        'ca_total'     => $entry->ca_total,
-                        'exam_total'   => $entry->exam_total,
-                        'grand_total'  => $entry->grand_total,
-                        'grade'        => $entry->grade,
-                        'max'          => 100,
-                    ];
-                    $grandTotal += floatval($entry->grand_total ?? 0);
-                    $maxPossible += 100;
+            foreach ($subjects as $subj) {
+                $t1Entry = $markData[$student->id][$term1->id][$subj->id] ?? null;
+                $t2Entry = $term2 ? ($markData[$student->id][$term2->id][$subj->id] ?? null) : null;
+
+                $t1Ca = $t1Entry ? $t1Entry->ca_total : null;
+                $t1Exam = $t1Entry ? $t1Entry->exam_total : null;
+                $t1Grand = $t1Entry ? $t1Entry->grand_total : null;
+                $t1Grade = $t1Entry ? $t1Entry->grade : null;
+
+                $t2Ca = $t2Entry ? $t2Entry->ca_total : null;
+                $t2Exam = $t2Entry ? $t2Entry->exam_total : null;
+                $t2Grand = $t2Entry ? $t2Entry->grand_total : null;
+                $t2Grade = $t2Entry ? $t2Entry->grade : null;
+
+                // Annual = average of T1+T2 if both exist
+                $annGrand = null;
+                $annGrade = null;
+                if ($t1Grand !== null && $t2Grand !== null) {
+                    $annGrand = round((floatval($t1Grand) + floatval($t2Grand)) / 2, 1);
+                    $annGrade = $this->getGrade($annGrand);
+                } elseif ($t1Grand !== null) {
+                    $annGrand = floatval($t1Grand);
+                    $annGrade = $t1Grade;
+                } elseif ($t2Grand !== null) {
+                    $annGrand = floatval($t2Grand);
+                    $annGrade = $t2Grade;
                 }
+
+                if ($annGrand !== null) {
+                    $annualGrandTotal += $annGrand;
+                    $annualSubjectCount++;
+                }
+
+                $subjectRows[] = [
+                    'name'    => $subj->name,
+                    't1_ca'   => $t1Ca,
+                    't1_exam' => $t1Exam,
+                    't1_total'=> $t1Grand,
+                    't1_grade'=> $t1Grade,
+                    't2_ca'   => $t2Ca,
+                    't2_exam' => $t2Exam,
+                    't2_total'=> $t2Grand,
+                    't2_grade'=> $t2Grade,
+                    'ann_total'=> $annGrand,
+                    'ann_grade'=> $annGrade,
+                ];
             }
 
-            $percentage = $maxPossible > 0 ? round(($grandTotal / $maxPossible) * 100, 1) : 0;
+            $maxPossible = $subjects->count() * 100;
+            $percentage = $maxPossible > 0 ? round(($annualGrandTotal / $maxPossible) * 100, 1) : 0;
             $overallGrade = $this->getGrade($percentage);
 
-            $allTotals[$studentId] = $grandTotal;
+            $allAnnualTotals[$student->id] = $annualGrandTotal;
 
             $students[] = [
-                'student'     => $student,
-                'subjects'    => $subjects,
-                'grandTotal'  => $grandTotal,
-                'maxPossible' => $maxPossible,
-                'percentage'  => $percentage,
-                'grade'       => $overallGrade,
+                'student'          => $student,
+                'subjects'         => $subjectRows,
+                'annualGrandTotal' => $annualGrandTotal,
+                'maxPossible'      => $maxPossible,
+                'percentage'       => $percentage,
+                'grade'            => $overallGrade,
+                'subjectCount'     => $annualSubjectCount,
             ];
         }
 
-        // Calculate ranks
-        arsort($allTotals);
+        // Calculate ranks based on annual totals
+        arsort($allAnnualTotals);
         $rankMap = [];
         $rank = 1;
-        foreach ($allTotals as $sid => $total) {
+        foreach ($allAnnualTotals as $sid => $total) {
             $rankMap[$sid] = $rank++;
         }
-
         foreach ($students as &$s) {
             $s['rank'] = $rankMap[$s['student']->id] ?? '-';
         }
@@ -132,10 +192,9 @@ class ReportCardController extends Controller
         });
 
         // Reference data
-        $class = ClassRoom::find($r->class_id);
-        $section = $r->filled('section_id') ? Section::find($r->section_id) : null;
-        $academicYear = AcademicYear::find($r->academic_year_id);
-        $term = Term::find($r->term_id);
+        $class = ClassRoom::find($classId);
+        $section = $sectionId ? Section::find($sectionId) : null;
+        $academicYear = AcademicYear::find($academicYearId);
 
         // School settings
         $schoolName = Setting::get('school_name', 'School of Redemption');
@@ -144,7 +203,6 @@ class ReportCardController extends Controller
         $schoolAddress = Setting::get('address', '');
         $schoolPhone = Setting::get('phone', '');
         $schoolEmail = Setting::get('email', '');
-        $currencySymbol = Setting::get('currency_symbol', 'Br');
 
         $logoUrl = null;
         if ($schoolLogo) {
@@ -153,10 +211,14 @@ class ReportCardController extends Controller
                 : Setting::getLogoUrl();
         }
 
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        $classes = ClassRoom::orderBy('name')->get();
+
         return view('admin.report-card.card', compact(
-            'students', 'class', 'section', 'academicYear', 'term',
+            'students', 'class', 'section', 'academicYear',
+            'term1', 'term2', 'subjects',
             'schoolName', 'schoolMotto', 'logoUrl', 'schoolAddress', 'schoolPhone', 'schoolEmail',
-            'currencySymbol'
+            'academicYears', 'classes'
         ));
     }
 
@@ -181,21 +243,20 @@ class ReportCardController extends Controller
     }
 
     /**
-     * Convert percentage to grade letter.
+     * Convert mark/percentage to grade letter.
      */
-    private function getGrade(float $percentage): string
+    private function getGrade(float $mark): string
     {
-        if ($percentage >= 90) return 'A+';
-        if ($percentage >= 85) return 'A';
-        if ($percentage >= 80) return 'A-';
-        if ($percentage >= 75) return 'B+';
-        if ($percentage >= 70) return 'B';
-        if ($percentage >= 65) return 'B-';
-        if ($percentage >= 60) return 'C+';
-        if ($percentage >= 55) return 'C';
-        if ($percentage >= 50) return 'C-';
-        if ($percentage >= 45) return 'D';
-        if ($percentage >= 40) return 'D-';
+        if ($mark >= 90) return 'A+';
+        if ($mark >= 80) return 'A';
+        if ($mark >= 75) return 'A-';
+        if ($mark >= 70) return 'B+';
+        if ($mark >= 65) return 'B';
+        if ($mark >= 60) return 'B-';
+        if ($mark >= 55) return 'C+';
+        if ($mark >= 50) return 'C';
+        if ($mark >= 45) return 'C-';
+        if ($mark >= 40) return 'D';
         return 'F';
     }
 }
