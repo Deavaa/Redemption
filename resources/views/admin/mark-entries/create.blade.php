@@ -417,13 +417,18 @@
     window.goNext = function() { if (curIdx < students.length - 1) { curIdx++; showStudent(curIdx); } };
 
     function recalc() {
-        var caR = 0, exT = 0;
+        var caR = 0, exR = 0;
         document.querySelectorAll('.mi').forEach(function(inp) {
             var v = parseFloat(inp.value) || 0;
             if (inp.dataset.group === 'ca') caR += v;
-            else exT += v;
+            else exR += v;
         });
-        var caS = (caR / 70) * 30, tot = caS + exT;
+        // CA scaled: round to 2 decimals like PHP round(($caRaw / 70) * 30, 2)
+        var caS = Math.round((caR / 70) * 30 * 100) / 100;
+        // Exam total: cap at 70 like PHP min($examRaw, 70)
+        var exT = Math.min(exR, 70);
+        // Grand total: round to 2 decimals like PHP
+        var tot = Math.round((caS + exT) * 100) / 100;
         var g = 'F', gClass = 'mc-grade-F';
         if (tot >= 90) { g = 'A+'; gClass = 'mc-grade-A'; }
         else if (tot >= 80) { g = 'A'; gClass = 'mc-grade-A'; }
@@ -436,9 +441,9 @@
         else if (tot >= 45) { g = 'C-'; gClass = 'mc-grade-C'; }
         else if (tot >= 40) { g = 'D'; gClass = 'mc-grade-D'; }
         document.getElementById('tCaRaw').textContent = caR.toFixed(1);
-        document.getElementById('tCaScaled').textContent = caS.toFixed(1);
+        document.getElementById('tCaScaled').textContent = caS.toFixed(2);
         document.getElementById('tExam').textContent = exT.toFixed(1);
-        document.getElementById('tTotal').textContent = tot.toFixed(1);
+        document.getElementById('tTotal').textContent = tot.toFixed(2);
         var ge = document.getElementById('tGrade');
         ge.textContent = g;
         ge.className = 'mc-grade ' + gClass;

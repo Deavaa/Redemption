@@ -140,14 +140,27 @@ class MarkEntryController extends Controller
         $existingMarks = MarkEntry::where('academic_year_id',$ayId)->where('term_id',$termId)
             ->where('class_id',$classId)->where('section_id',$sectionId)->where('subject_id',$subjectId)->get()->keyBy('student_id');
         $markFields = MarkEntry::getMarkFields();
+        $caFields = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10','conduct','handwriting','creativity'];
+        $examFields = ['test1','test2','mid_term','final_exam'];
         $rows = [];
         foreach ($students as $s) {
             $mark = $existingMarks->get($s->student_id);
             $row = ['student_id'=>$s->student_id,'student_name'=>$s->student_name??'Unknown','roll_number'=>$s->roll_number,'gender'=>$s->gender];
             foreach ($markFields as $field) { $col=$field['col']; $row[$col]=$mark?floatval($mark->$col):null; }
-            $row['ca_total']=$mark?floatval($mark->ca_total):0;
-            $row['exam_total']=$mark?floatval($mark->exam_total):0;
-            $row['grand_total']=$mark?floatval($mark->grand_total):0;
+            // Recalculate totals from raw fields (don't trust stored values)
+            if ($mark) {
+                $caRaw = 0;
+                foreach ($caFields as $f) { $caRaw += floatval($mark->$f ?? 0); }
+                $examRaw = 0;
+                foreach ($examFields as $f) { $examRaw += floatval($mark->$f ?? 0); }
+                $row['ca_total'] = round(($caRaw / 70) * 30, 2);
+                $row['exam_total'] = min($examRaw, 70);
+                $row['grand_total'] = round($row['ca_total'] + $row['exam_total'], 2);
+            } else {
+                $row['ca_total'] = 0;
+                $row['exam_total'] = 0;
+                $row['grand_total'] = 0;
+            }
             $rows[]=$row;
         }
         $subject=Subject::find($subjectId); $term=Term::find($termId); $class=ClassRoom::find($classId); $section=Section::find($sectionId);

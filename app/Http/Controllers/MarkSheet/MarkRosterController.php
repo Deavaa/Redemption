@@ -81,12 +81,14 @@ class MarkRosterController extends Controller
         }
 
         // ── Build subject rosters with all CA/Exam detail ────────────
+        $caFields = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10','conduct','handwriting','creativity'];
+        $examFields = ['test1','test2','mid_term','final_exam'];
         $subjectRosters = [];
         foreach ($subjects as $subj) {
             $rows = [];
             foreach ($students as $i => $student) {
                 $entry = $markData[$subj->id][$student->id] ?? null;
-                $rows[] = [
+                $row = [
                     'serial'   => $i + 1,
                     'student'  => $student,
                     'ca1'        => $entry->ca1 ?? null,
@@ -102,15 +104,40 @@ class MarkRosterController extends Controller
                     'conduct'    => $entry->conduct ?? null,
                     'handwriting'=> $entry->handwriting ?? null,
                     'creativity' => $entry->creativity ?? null,
-                    'ca_total'   => $entry->ca_total ?? null,
                     'test1'      => $entry->test1 ?? null,
                     'test2'      => $entry->test2 ?? null,
                     'mid_term'   => $entry->mid_term ?? null,
                     'final_exam' => $entry->final_exam ?? null,
-                    'exam_total' => $entry->exam_total ?? null,
-                    'grand_total'=> $entry->grand_total ?? null,
-                    'grade'      => $entry->grade ?? null,
                 ];
+                // Recalculate totals from raw fields (don't trust stored values)
+                if ($entry) {
+                    $caRaw = 0;
+                    foreach ($caFields as $f) { $caRaw += floatval($entry->$f ?? 0); }
+                    $examRaw = 0;
+                    foreach ($examFields as $f) { $examRaw += floatval($entry->$f ?? 0); }
+                    $row['ca_total'] = round(($caRaw / 70) * 30, 2);
+                    $row['exam_total'] = min($examRaw, 70);
+                    $row['grand_total'] = round($row['ca_total'] + $row['exam_total'], 2);
+                    // Calculate grade from recalculated grand_total
+                    $gt = $row['grand_total'];
+                    if ($gt >= 90) $row['grade'] = 'A+';
+                    elseif ($gt >= 80) $row['grade'] = 'A';
+                    elseif ($gt >= 75) $row['grade'] = 'A-';
+                    elseif ($gt >= 70) $row['grade'] = 'B+';
+                    elseif ($gt >= 65) $row['grade'] = 'B';
+                    elseif ($gt >= 60) $row['grade'] = 'B-';
+                    elseif ($gt >= 55) $row['grade'] = 'C+';
+                    elseif ($gt >= 50) $row['grade'] = 'C';
+                    elseif ($gt >= 45) $row['grade'] = 'C-';
+                    elseif ($gt >= 40) $row['grade'] = 'D';
+                    else $row['grade'] = 'F';
+                } else {
+                    $row['ca_total'] = null;
+                    $row['exam_total'] = null;
+                    $row['grand_total'] = null;
+                    $row['grade'] = null;
+                }
+                $rows[] = $row;
             }
 
             // Compute column averages

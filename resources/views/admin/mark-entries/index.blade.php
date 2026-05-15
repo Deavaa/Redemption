@@ -614,21 +614,25 @@
         el.textContent = text;
     }
 
-    // --- Calculation ---
+    // --- Calculation (must match PHP MarkEntry::calcTotals exactly) ---
     function recalc() {
-        let caRaw = 0, examTotal = 0;
+        let caRaw = 0, examRaw = 0;
         document.querySelectorAll('.mark-input').forEach(inp => {
             const v = parseFloat(inp.value) || 0;
             if (inp.dataset.type === 'ca') caRaw += v;
-            else examTotal += v;
+            else examRaw += v;
         });
-        const caScaled = (caRaw / 70) * 30;
-        const grandTotal = caScaled + examTotal;
+        // CA scaled: round to 2 decimals like PHP round(($caRaw / 70) * 30, 2)
+        const caScaled = Math.round((caRaw / 70) * 30 * 100) / 100;
+        // Exam total: cap at 70 like PHP min($examRaw, 70)
+        const examTotal = Math.min(examRaw, 70);
+        // Grand total: round to 2 decimals like PHP
+        const grandTotal = Math.round((caScaled + examTotal) * 100) / 100;
 
         document.getElementById('tCaRaw').textContent = caRaw.toFixed(1);
-        document.getElementById('tCaScaled').textContent = caScaled.toFixed(1);
+        document.getElementById('tCaScaled').textContent = caScaled.toFixed(2);
         document.getElementById('tExam').textContent = examTotal.toFixed(1);
-        document.getElementById('tTotal').textContent = grandTotal.toFixed(1);
+        document.getElementById('tTotal').textContent = grandTotal.toFixed(2);
 
         // Grade
         let g = 'F', gClass = 'me-grade-F';
