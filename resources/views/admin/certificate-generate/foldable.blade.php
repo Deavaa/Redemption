@@ -324,7 +324,6 @@
                         <th>Term 1<br>ወር 1</th>
                         <th>Term 2<br>ወር 2</th>
                         <th>Yearly<br>ዓመታዊ</th>
-                        <th>Grade<br>ደረጃ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -334,7 +333,6 @@
                         <td>{{ $md['term1'] ?? '-' }}</td>
                         <td>{{ $md['term2'] ?? '-' }}</td>
                         <td><strong>{{ $md['yearly'] ?? '-' }}</strong></td>
-                        <td>{{ $md['grade'] }}</td>
                     </tr>
                     @endforeach
                     <tr class="summary-row">
@@ -342,23 +340,20 @@
                         <td>{{ $totalTerm1 ?: '-' }}</td>
                         <td>{{ $totalTerm2 ?: '-' }}</td>
                         <td>{{ $totalYearly ?: '-' }}</td>
-                        <td>-</td>
                     </tr>
                     <tr class="summary-row">
                         <td>Average / አማካይ</td>
                         <td>{{ $countWithMarks > 0 ? round($totalTerm1 / $countWithMarks, 1) : '-' }}</td>
                         <td>{{ $countWithMarks > 0 ? round($totalTerm2 / $countWithMarks, 1) : '-' }}</td>
                         <td>{{ $avgYearly }}</td>
-                        <td>{{ $overallGrade }}</td>
                     </tr>
                     <tr class="summary-row">
                         <td>Rank / ደረጃ</td>
-                        <td colspan="4">-</td>
+                        <td colspan="3">-</td>
                     </tr>
                     <tr class="summary-row">
                         <td>Conduct / ባህሪ</td>
                         <td colspan="3">{{ $conduct }}/5</td>
-                        <td>{{ is_numeric($conduct) && $conduct >= 4 ? 'Very Good' : (is_numeric($conduct) && $conduct >= 3 ? 'Good' : 'Fair') }}</td>
                     </tr>
                 </tbody>
             </table>
