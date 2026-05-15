@@ -188,13 +188,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('employee-assets', EmployeeAssetController::class)->middleware('permission:employee_assets.view');
 
     // Stock Management
-    Route::resource('stock', StockController::class)->middleware('permission:stock.view')->names(['index' => 'admin.stock.index', 'create' => 'admin.stock.create', 'store' => 'admin.stock.store', 'show' => 'admin.stock.show', 'edit' => 'admin.stock.edit', 'update' => 'admin.stock.update', 'destroy' => 'admin.stock.destroy']);
-    Route::get('stock-in', [StockController::class, 'stockIn'])->name('admin.stock.stock-in')->middleware('permission:stock.stock-in');
-    Route::post('stock-in', [StockController::class, 'storeStockIn'])->name('admin.stock.store-stock-in')->middleware('permission:stock.stock-in');
-    Route::get('stock-out', [StockController::class, 'stockOut'])->name('admin.stock.stock-out')->middleware('permission:stock.stock-out');
-    Route::post('stock-out', [StockController::class, 'storeStockOut'])->name('admin.stock.store-stock-out')->middleware('permission:stock.stock-out');
-    Route::get('stock-transactions', [StockController::class, 'transactions'])->name('admin.stock.transactions')->middleware('permission:stock.view');
-    Route::get('stock-report', [StockController::class, 'report'])->name('admin.stock.report')->middleware('permission:stock.report');
+    Route::resource('stock', StockController::class)->middleware('permission:stock.view');
+    Route::get('stock-in', [StockController::class, 'stockIn'])->name('stock.stock-in')->middleware('permission:stock.stock-in');
+    Route::post('stock-in', [StockController::class, 'storeStockIn'])->name('stock.store-stock-in')->middleware('permission:stock.stock-in');
+    Route::get('stock-out', [StockController::class, 'stockOut'])->name('stock.stock-out')->middleware('permission:stock.stock-out');
+    Route::post('stock-out', [StockController::class, 'storeStockOut'])->name('stock.store-stock-out')->middleware('permission:stock.stock-out');
+    Route::get('stock-transactions', [StockController::class, 'transactions'])->name('stock.transactions')->middleware('permission:stock.view');
+    Route::get('stock-report', [StockController::class, 'report'])->name('stock.report')->middleware('permission:stock.report');
     Route::resource('performance-reports', PerformanceReportController::class)->middleware('permission:mark_sheets.view');
     Route::resource('progress-reports', ProgressReportController::class)->middleware('permission:mark_sheets.view');
     Route::resource('audits', AuditController::class)->middleware('permission:audits.view');
