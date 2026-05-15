@@ -39,6 +39,7 @@ use App\Http\Controllers\Media\MediaController;
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\ParentModel\ParentModelController;
 use App\Http\Controllers\Payroll\PayrollController;
+use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\PerformanceReport\PerformanceComparisonController;
 use App\Http\Controllers\Performance\PerformanceAnalysisController;
 use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController as PerformanceReportAnalysisController;
@@ -58,11 +59,13 @@ use App\Http\Controllers\TeamMember\TeamMemberController;
 use App\Http\Controllers\Telegram\TelegramController;
 use App\Http\Controllers\Term\TermController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\Library\LibraryBookController;
 use App\Http\Controllers\DatabaseBackupController;
 use App\Http\Controllers\Backup\DatabaseBackupController as ScheduledBackupController;
 use App\Http\Controllers\UserAccess\TeacherAccessController;
 use App\Http\Controllers\UserAccess\StudentAccessController;
 use App\Http\Controllers\UserAccess\ParentAccessController;
+use App\Http\Controllers\ReportExchange\ReportExchangeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -169,6 +172,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('id-cards', IdCardController::class)->middleware('permission:id_cards.generate');
     Route::resource('certificates', CertificateController::class)->middleware('permission:certificates.generate');
 
+    // ── Library ───────────────────────────────────────────
+    Route::resource('library', LibraryBookController::class)->middleware('permission:library.view');
+    Route::get('library/{library}/read', [LibraryBookController::class, 'read'])->name('library.read')->middleware('permission:library.view');
+    Route::get('library/{library}/serve', [LibraryBookController::class, 'serveBook'])->name('library.serve')->middleware('permission:library.view');
+
     // ── Finance ───────────────────────────────────────────
     Route::resource('budgets', BudgetController::class)->middleware('permission:budgets.view');
     Route::resource('income-expenses', IncomeExpenseController::class)->middleware('permission:income_expenses.view');
@@ -178,6 +186,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('payrolls', PayrollController::class)->middleware('permission:payrolls.view');
     Route::resource('leaves', LeaveController::class)->middleware('permission:leaves.view');
     Route::resource('employee-assets', EmployeeAssetController::class)->middleware('permission:employee_assets.view');
+
+    // Stock Management
+    Route::resource('stock', StockController::class)->middleware('permission:employee_assets.view')->names(['index' => 'admin.stock.index', 'create' => 'admin.stock.create', 'store' => 'admin.stock.store', 'show' => 'admin.stock.show', 'edit' => 'admin.stock.edit', 'update' => 'admin.stock.update', 'destroy' => 'admin.stock.destroy']);
+    Route::get('stock-in', [StockController::class, 'stockIn'])->name('admin.stock.stock-in')->middleware('permission:employee_assets.view');
+    Route::post('stock-in', [StockController::class, 'storeStockIn'])->name('admin.stock.store-stock-in')->middleware('permission:employee_assets.view');
+    Route::get('stock-out', [StockController::class, 'stockOut'])->name('admin.stock.stock-out')->middleware('permission:employee_assets.view');
+    Route::post('stock-out', [StockController::class, 'storeStockOut'])->name('admin.stock.store-stock-out')->middleware('permission:employee_assets.view');
+    Route::get('stock-transactions', [StockController::class, 'transactions'])->name('admin.stock.transactions')->middleware('permission:employee_assets.view');
+    Route::get('stock-report', [StockController::class, 'report'])->name('admin.stock.report')->middleware('permission:employee_assets.view');
     Route::resource('performance-reports', PerformanceReportController::class)->middleware('permission:mark_sheets.view');
     Route::resource('progress-reports', ProgressReportController::class)->middleware('permission:mark_sheets.view');
     Route::resource('audits', AuditController::class)->middleware('permission:audits.view');
@@ -277,6 +294,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Media Upload (admin)
     Route::post('media/upload', [MediaController::class, 'upload'])->name('media.upload');
+
+    // Report Document Exchange
+    Route::get('report-exchange', [ReportExchangeController::class, 'index'])->name('report-exchange.index')->middleware('permission:settings.view');
+    Route::get('report-exchange/create', [ReportExchangeController::class, 'create'])->name('report-exchange.create')->middleware('permission:settings.edit');
+    Route::post('report-exchange', [ReportExchangeController::class, 'store'])->name('report-exchange.store')->middleware('permission:settings.edit');
+    Route::get('report-exchange/{report_exchange}', [ReportExchangeController::class, 'show'])->name('report-exchange.show')->middleware('permission:settings.view');
+    Route::get('report-exchange/{report_exchange}/edit', [ReportExchangeController::class, 'edit'])->name('report-exchange.edit')->middleware('permission:settings.edit');
+    Route::put('report-exchange/{report_exchange}', [ReportExchangeController::class, 'update'])->name('report-exchange.update')->middleware('permission:settings.edit');
+    Route::delete('report-exchange/{report_exchange}', [ReportExchangeController::class, 'destroy'])->name('report-exchange.destroy')->middleware('permission:settings.edit');
+    Route::get('report-exchange/{report_exchange}/download', [ReportExchangeController::class, 'download'])->name('report-exchange.download')->middleware('permission:settings.view');
+    Route::post('report-exchange/{report_exchange}/comment', [ReportExchangeController::class, 'addComment'])->name('report-exchange.comment')->middleware('permission:settings.edit');
+    Route::get('report-exchange-api/terms', [ReportExchangeController::class, 'getTerms'])->name('report-exchange.terms');
 
     // User Access Management
     Route::get('user-access/teachers', [TeacherAccessController::class, 'index'])->name('user-access.teachers');

@@ -89,6 +89,12 @@ return [
     'student_id_cards' => 'የተማሪ መለያ ካርዶች',
     'certificates' => 'ሰርተፍኬቶች',
 
+    // Library Menu
+    'library' => 'ቤተ-መጻሕፍት',
+    'upload_book' => 'መጽሐፍ አስገባ',
+    'read_book' => 'መጽሐፍ አንብብ',
+    'digital_library' => 'ዲጂታል ቤተ-መጻሕፍት',
+
     // Website Menu
     'branches' => 'ቅርንጫፎች',
     'sliders' => 'ስላይደሮች',

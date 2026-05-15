@@ -60,7 +60,12 @@
                         <label class="modern-form-label">Employee <span class="modern-required">*</span></label>
                         <div class="modern-input-wrapper">
                             <i class="fas fa-user modern-input-icon"></i>
-                            <input type="text" name="employee_id" class="modern-input" value="{{ old('employee_id') }}" placeholder="Enter employee ID" required>
+                            <select name="employee_id" class="modern-select" required>
+                                <option value="" disabled selected>Select employee</option>
+                                @foreach($employees as $emp)
+                                <option value="{{ $emp->id }}" {{ old('employee_id') == $emp->id ? 'selected' : '' }}>{{ $emp->name }} ({{ $emp->role ?? 'N/A' }})</option>
+                                @endforeach
+                            </select>
                         </div>
                         @error('employee_id')
                             <div class="modern-form-error">{{ $message }}</div>

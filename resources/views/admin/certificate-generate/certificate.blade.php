@@ -21,13 +21,13 @@
         /* Outer border: double line frame using lines only */
         .cert-border-outer {
             position: absolute; inset: 0;
-            border: 3px solid #1a1a2e;
+            border: 3px solid #2d2d3a;
             border-radius: 4px;
             pointer-events: none; z-index: 1;
         }
         .cert-border-inner {
             position: absolute; inset: 6px;
-            border: 1.5px solid #1a1a2e;
+            border: 1.5px solid #2d2d3a;
             border-radius: 2px;
             pointer-events: none; z-index: 1;
         }
@@ -36,19 +36,19 @@
         .cert-corner {
             position: absolute; width: 50px; height: 50px; z-index: 2;
         }
-        .cert-corner-tl { top: 10px; left: 10px; border-top: 2px solid #1a1a2e; border-left: 2px solid #1a1a2e; }
-        .cert-corner-tr { top: 10px; right: 10px; border-top: 2px solid #1a1a2e; border-right: 2px solid #1a1a2e; }
-        .cert-corner-bl { bottom: 10px; left: 10px; border-bottom: 2px solid #1a1a2e; border-left: 2px solid #1a1a2e; }
-        .cert-corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid #1a1a2e; border-right: 2px solid #1a1a2e; }
+        .cert-corner-tl { top: 10px; left: 10px; border-top: 2px solid #2d2d3a; border-left: 2px solid #2d2d3a; }
+        .cert-corner-tr { top: 10px; right: 10px; border-top: 2px solid #2d2d3a; border-right: 2px solid #2d2d3a; }
+        .cert-corner-bl { bottom: 10px; left: 10px; border-bottom: 2px solid #2d2d3a; border-left: 2px solid #2d2d3a; }
+        .cert-corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid #2d2d3a; border-right: 2px solid #2d2d3a; }
 
         /* Line-pattern decorative band at top */
         .cert-top-band {
             height: 8px; margin: 16px 24px 0;
             background: repeating-linear-gradient(
                 90deg,
-                #1a1a2e 0px, #1a1a2e 12px,
+                #2d2d3a 0px, #2d2d3a 12px,
                 transparent 12px, transparent 16px,
-                #555 16px, #555 20px,
+                #666 16px, #666 20px,
                 transparent 20px, transparent 28px
             );
         }
@@ -57,8 +57,8 @@
         .cert-watermark {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 350px; height: 350px;
-            opacity: 0.035; pointer-events: none; z-index: 0;
+            width: 380px; height: 380px;
+            opacity: 0.12; pointer-events: none; z-index: 0;
         }
         .cert-watermark img { width: 100%; height: 100%; object-fit: contain; }
 
@@ -73,7 +73,7 @@
             height: 45px; object-fit: contain; margin-bottom: 4px;
         }
         .cert-header h1 {
-            font-size: 1.3rem; color: #1a1a2e; margin: 0;
+            font-size: 1.3rem; color: #2d2d3a; margin: 0;
             letter-spacing: 3px; font-weight: 800;
         }
         .cert-header h2 {
@@ -86,7 +86,7 @@
             width: 200px; height: 3px; margin: 6px auto;
             background: repeating-linear-gradient(
                 90deg,
-                #1a1a2e 0px, #1a1a2e 20px,
+                #2d2d3a 0px, #2d2d3a 20px,
                 transparent 20px, transparent 24px
             );
         }
@@ -95,12 +95,12 @@
         .cert-body { text-align: center; margin: 10px 0; }
         .cert-body p { font-size: 0.78rem; line-height: 1.7; color: #444; margin: 3px 0; }
         .cert-body .cert-name {
-            font-size: 1.15rem; font-weight: 700; color: #1a1a2e;
+            font-size: 1.15rem; font-weight: 700; color: #2d2d3a;
             margin: 5px 0; display: inline-block;
-            border-bottom: 1.5px solid #1a1a2e; padding-bottom: 2px;
+            border-bottom: 1.5px solid #2d2d3a; padding-bottom: 2px;
         }
         .cert-body .cert-type {
-            font-size: 0.8rem; color: #1a1a2e; font-weight: 700;
+            font-size: 0.8rem; color: #2d2d3a; font-weight: 700;
             text-transform: uppercase; letter-spacing: 2px; margin: 8px 0;
         }
 
@@ -110,7 +110,7 @@
             gap: 4px 16px; max-width: 380px; margin: 10px auto; text-align: left;
         }
         .cert-detail-item { font-size: 0.72rem; color: #333; }
-        .cert-detail-item strong { color: #1a1a2e; }
+        .cert-detail-item strong { color: #2d2d3a; }
 
         /* Marks table */
         .cert-marks-table {
@@ -118,8 +118,8 @@
         }
         .cert-marks-table th {
             padding: 3px 8px; font-size: 0.68rem; text-transform: uppercase;
-            letter-spacing: 0.4px; color: #1a1a2e;
-            border-bottom: 2px solid #1a1a2e;
+            letter-spacing: 0.4px; color: #2d2d3a;
+            border-bottom: 2px solid #2d2d3a;
         }
         .cert-marks-table td {
             padding: 3px 8px; font-size: 0.72rem; color: #333;
@@ -134,7 +134,7 @@
         .cert-signature { text-align: center; min-width: 120px; }
         .cert-signature-line {
             width: 110px; margin: 0 auto 3px;
-            border-top: 1.5px solid #1a1a2e;
+            border-top: 1.5px solid #2d2d3a;
         }
         .cert-signature span { font-size: 0.65rem; color: #666; }
 
@@ -142,17 +142,17 @@
         .cert-seal {
             position: absolute; bottom: 18px; right: 30px;
             width: 60px; height: 60px;
-            border: 2px solid rgba(26,26,46,0.2);
+            border: 2px solid rgba(45,45,58,0.2);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             z-index: 2;
         }
         .cert-seal-inner {
             width: 48px; height: 48px;
-            border: 1px solid rgba(26,26,46,0.15);
+            border: 1px solid rgba(45,45,58,0.15);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.4rem; color: rgba(26,26,46,0.25);
+            font-size: 0.4rem; color: rgba(45,45,58,0.25);
             text-align: center; line-height: 1.2; font-weight: 700;
             letter-spacing: 1px; text-transform: uppercase;
         }
@@ -162,16 +162,16 @@
             height: 6px; margin: 0 24px 16px;
             background: repeating-linear-gradient(
                 90deg,
-                #1a1a2e 0px, #1a1a2e 12px,
+                #2d2d3a 0px, #2d2d3a 12px,
                 transparent 12px, transparent 16px,
-                #555 16px, #555 20px,
+                #666 16px, #666 20px,
                 transparent 20px, transparent 28px
             );
         }
 
         .no-print { text-align: center; margin: 20px 0; }
         .no-print button {
-            padding: 10px 24px; background: #1a1a2e; color: #fff;
+            padding: 10px 24px; background: #2d2d3a; color: #fff;
             border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
         }
 
@@ -214,7 +214,7 @@
         <div class="cert-content">
             {{-- Certificate Type Badge (top) --}}
             <div style="text-align:center;margin-bottom:2px;">
-                <span style="display:inline-block;padding:2px 14px;background:#1a1a2e;color:#fff;font-size:0.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
+                <span style="display:inline-block;padding:2px 14px;background:#2d2d3a;color:#fff;font-size:0.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
                     @if($cert->type === 'academic'){{ __('app.cert_academic') ?? 'Academic Certificate' }}
                     @elseif($cert->type === 'completion'){{ __('app.cert_completion') ?? 'Completion Certificate' }}
                     @elseif($cert->type === 'transfer'){{ __('app.cert_transfer') ?? 'Transfer Certificate' }}

@@ -89,6 +89,12 @@ return [
     'student_id_cards' => 'Student ID Cards',
     'certificates' => 'Certificates',
 
+    // Library Menu
+    'library' => 'Library',
+    'upload_book' => 'Upload Book',
+    'read_book' => 'Read Book',
+    'digital_library' => 'Digital Library',
+
     // Website Menu
     'branches' => 'Branches',
     'sliders' => 'Sliders',
