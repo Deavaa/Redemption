@@ -5,26 +5,41 @@
     <meta charset="UTF-8">
     <title>Foldable Certificate - {{ $student->first_name }}</title>
     <style>
-        @page { size: A5 landscape; margin: 0; }
+        @page { size: A4 landscape; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: #e5e7eb; }
-        .page { width: 210mm; height: 148mm; display: flex; margin: 10px auto; background: #fff; overflow: hidden; }
-        .panel { width: 105mm; height: 148mm; display: flex; flex-direction: column; }
 
-        /* PAGE 1 OUTSIDE */
-        .back-panel { background: #fff; border-right: 1px solid #ddd; padding: 10mm 9mm; overflow-y: auto; }
-        .back-panel h3 { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4361ee; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 2px solid #4361ee; display: inline-block; }
-        .back-panel h4 { font-size: 0.68rem; font-weight: 700; color: #1a1a2e; margin: 7px 0 3px; }
-        .back-panel p, .back-panel li { font-size: 0.58rem; color: #4b5563; line-height: 1.55; }
-        .back-panel ul { padding-left: 12px; margin-bottom: 4px; }
-        .grading-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.55rem; }
-        .grading-scale th { background: #1a1a2e; color: #fff; padding: 3px 5px; text-align: center; }
-        .grading-scale td { padding: 2px 5px; border-bottom: 1px solid #eee; text-align: center; }
+        /* Each page = A4 landscape, split exactly 50/50 for fold */
+        .page {
+            width: 297mm; height: 210mm; display: flex; margin: 10px auto;
+            background: #fff; overflow: hidden;
+        }
+        .panel {
+            width: 148.5mm; height: 210mm; display: flex; flex-direction: column;
+        }
+
+        /* ===== PAGE 1 OUTSIDE: LEFT = Grading Info, RIGHT = Cover ===== */
+        .back-panel {
+            background: #fff; padding: 12mm 10mm; overflow-y: auto;
+            border-right: 2px dashed #ddd;
+        }
+        .back-panel h3 {
+            font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.2px; color: #4361ee; margin-bottom: 8px;
+            padding-bottom: 4px; border-bottom: 2.5px solid #4361ee; display: inline-block;
+        }
+        .back-panel h4 { font-size: 0.78rem; font-weight: 700; color: #1a1a2e; margin: 10px 0 4px; }
+        .back-panel p, .back-panel li { font-size: 0.68rem; color: #4b5563; line-height: 1.6; }
+        .back-panel ul { padding-left: 14px; margin-bottom: 6px; }
+        .grading-scale { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 0.65rem; }
+        .grading-scale th { background: #1a1a2e; color: #fff; padding: 5px 7px; text-align: center; font-size: 0.6rem; }
+        .grading-scale td { padding: 4px 7px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.63rem; }
         .grading-scale td:first-child { font-weight: 700; text-align: left; }
-        .conduct-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.55rem; }
-        .conduct-scale th { background: #4361ee; color: #fff; padding: 3px 5px; text-align: center; }
-        .conduct-scale td { padding: 2px 5px; border-bottom: 1px solid #eee; text-align: center; }
+        .conduct-scale { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 0.65rem; }
+        .conduct-scale th { background: #4361ee; color: #fff; padding: 5px 7px; text-align: center; font-size: 0.6rem; }
+        .conduct-scale td { padding: 4px 7px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.63rem; }
 
+        /* FRONT COVER PANEL */
         .front-panel {
             background: linear-gradient(160deg, #1a1a2e 0%, #3a0ca3 50%, #4361ee 100%);
             color: #fff; display: flex; flex-direction: column;
@@ -34,50 +49,82 @@
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 18mm; }
-        .front-logo { max-height: 55px; max-width: 85px; object-fit: contain; margin: 0 auto 10px; display: block; border-radius: 8px; background: rgba(255,255,255,0.15); padding: 4px; }
-        .front-school-name { font-size: 1.1rem; font-weight: 800; letter-spacing: 3px; margin-bottom: 6px; }
-        .front-line { width: 45px; height: 2px; background: rgba(255,255,255,0.5); margin: 0 auto 8px; }
-        .front-academic-year { font-size: 0.72rem; font-weight: 300; letter-spacing: 2px; opacity: 0.85; }
-        .front-cert-title { font-size: 0.6rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; opacity: 0.7; }
+        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 22mm; }
+        .front-logo { max-height: 70px; max-width: 100px; object-fit: contain; margin: 0 auto 14px; display: block; border-radius: 10px; background: rgba(255,255,255,0.15); padding: 5px; }
+        .front-school-name { font-size: 1.35rem; font-weight: 800; letter-spacing: 3px; margin-bottom: 4px; }
+        .front-school-name-am { font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; opacity: 0.9; }
+        .front-line { width: 55px; height: 2.5px; background: rgba(255,255,255,0.5); margin: 0 auto 10px; }
+        .front-academic-year { font-size: 0.85rem; font-weight: 300; letter-spacing: 2px; opacity: 0.85; }
+        .front-cert-title { font-size: 0.75rem; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 10px; opacity: 0.7; }
+        .front-cert-title-am { font-size: 0.7rem; font-weight: 500; margin-top: 3px; opacity: 0.6; }
 
         .front-bottom {
             position: relative; z-index: 1;
-            background: rgba(0,0,0,0.25); padding: 8mm 8mm 10mm;
+            background: rgba(0,0,0,0.25); padding: 10mm 10mm 14mm;
             border-top: 1px solid rgba(255,255,255,0.15);
         }
-        .front-student-name { font-size: 1rem; font-weight: 800; margin-bottom: 6px; }
-        .front-info-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 3px; }
-        .front-info-item { font-size: 0.55rem; opacity: 0.85; }
+        .front-student-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 8px; }
+        .front-info-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 5px; }
+        .front-info-item { font-size: 0.65rem; opacity: 0.85; }
         .front-info-item strong { opacity: 1; font-weight: 600; }
-        .front-status-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.52rem; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+        .front-status-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; margin-top: 6px; }
         .front-status-promoted { background: rgba(16,185,129,0.3); color: #6ee7b7; }
         .front-status-detained { background: rgba(220,38,38,0.3); color: #fca5a5; }
         .front-status-conditional { background: rgba(217,119,6,0.3); color: #fcd34d; }
         .front-status-na { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
 
-        /* PAGE 2 INSIDE */
-        .inside-left { border-right: 2px solid #e5e7eb; padding: 5mm 5mm; overflow-y: auto; }
-        .inside-right { padding: 5mm 5mm; display: flex; flex-direction: column; }
+        /* ===== PAGE 2 INSIDE: LEFT = Marks Table, RIGHT = Comments + Signatures ===== */
+        .inside-left {
+            border-right: 2px dashed #e5e7eb; padding: 8mm 7mm; overflow-y: auto;
+        }
+        .inside-right {
+            padding: 8mm 7mm; display: flex; flex-direction: column;
+        }
 
-        .section-title { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4361ee; margin-bottom: 4px; padding-bottom: 2px; border-bottom: 2px solid #4361ee; display: inline-block; }
+        .section-title {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.2px; color: #4361ee; margin-bottom: 6px;
+            padding-bottom: 3px; border-bottom: 2.5px solid #4361ee; display: inline-block;
+        }
+        .section-title-am {
+            font-size: 0.65rem; font-weight: 600; color: #6b7280;
+            margin-bottom: 8px; display: block;
+        }
 
-        .marks-table { width: 100%; border-collapse: collapse; font-size: 0.55rem; }
-        .marks-table th { background: #1a1a2e; color: #fff; padding: 3px 3px; font-size: 0.48rem; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; }
+        .marks-table { width: 100%; border-collapse: collapse; font-size: 0.65rem; }
+        .marks-table th {
+            background: #1a1a2e; color: #fff; padding: 5px 5px;
+            font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.3px; text-align: center;
+        }
         .marks-table th:first-child { text-align: left; }
-        .marks-table td { padding: 2px 3px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 0.55rem; }
+        .marks-table td { padding: 4px 5px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 0.65rem; }
         .marks-table td:first-child { text-align: left; font-weight: 600; }
         .marks-table .summary-row { background: #f8f9ff; font-weight: 700; }
         .marks-table .summary-row td { border-top: 2px solid #4361ee; }
 
-        .comment-section { margin-bottom: 6px; }
-        .comment-label { font-size: 0.58rem; font-weight: 700; color: #4361ee; margin-bottom: 3px; }
-        .comment-box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px; background: #fafbfc; min-height: 40px; font-size: 0.62rem; color: #374151; }
+        .comment-section { margin-bottom: 10px; }
+        .comment-label { font-size: 0.7rem; font-weight: 700; color: #4361ee; margin-bottom: 4px; }
+        .comment-label-am { font-size: 0.6rem; font-weight: 500; color: #6b7280; margin-bottom: 4px; }
+        .comment-box {
+            border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px;
+            background: #fafbfc; min-height: 48px; font-size: 0.7rem; color: #374151; line-height: 1.5;
+        }
 
-        .signatures { display: flex; justify-content: space-between; margin-top: auto; padding-top: 6px; }
+        .overall-summary {
+            background: linear-gradient(135deg, #f0f4ff, #e8edff);
+            border: 1.5px solid #4361ee; border-radius: 8px;
+            padding: 8px 12px; margin-bottom: 10px;
+        }
+        .overall-summary h4 {
+            font-size: 0.72rem; color: #1a1a2e; margin-bottom: 4px;
+        }
+        .overall-row { display: flex; justify-content: space-between; font-size: 0.65rem; margin-bottom: 2px; }
+        .overall-row strong { color: #1a1a2e; }
+
+        .signatures { display: flex; justify-content: space-between; margin-top: auto; padding-top: 10px; }
         .sig { text-align: center; }
-        .sig-line { width: 80px; border-top: 1px solid #333; margin: 20px auto 3px; }
-        .sig span { font-size: 0.5rem; color: #6b7280; }
+        .sig-line { width: 90px; border-top: 1.5px solid #333; margin: 24px auto 4px; }
+        .sig span { font-size: 0.58rem; color: #6b7280; }
 
         .no-print { text-align: center; margin: 20px 0; }
         .no-print button { padding: 10px 24px; background: #4361ee; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; margin: 0 5px; }
@@ -192,99 +239,102 @@
     <!-- PAGE 1: OUTSIDE - Back (left: grading rules) + Front (right: cover with student info) -->
     <div class="page">
         <div class="panel back-panel">
-            <h3>Grading &amp; Assessment Policy</h3>
+            <h3>Grading &amp; Assessment Policy / የውጤት ምዘና ፖሊሲ</h3>
 
-            <h4>1. Academic Grading Scale</h4>
+            <h4>1. Academic Grading Scale / የአካዳሚክ ውጤት ደረጃ</h4>
             <p>Student performance is evaluated using the following grading scale. Each grade corresponds to a specific range of percentage scores and carries a designated grade point value used for computing cumulative averages.</p>
             <table class="grading-scale">
                 <thead><tr><th>Grade</th><th>Score Range</th><th>Point</th><th>Description</th></tr></thead>
                 <tbody>
-                    <tr><td>A+</td><td>90 - 100</td><td>4.0</td><td>Excellent</td></tr>
-                    <tr><td>A</td><td>80 - 89</td><td>3.5</td><td>Very Good</td></tr>
-                    <tr><td>B+</td><td>75 - 79</td><td>3.0</td><td>Good</td></tr>
-                    <tr><td>B</td><td>70 - 74</td><td>2.5</td><td>Fairly Good</td></tr>
-                    <tr><td>C+</td><td>65 - 69</td><td>2.0</td><td>Above Average</td></tr>
-                    <tr><td>C</td><td>60 - 64</td><td>1.5</td><td>Average</td></tr>
-                    <tr><td>D</td><td>50 - 59</td><td>1.0</td><td>Below Average</td></tr>
-                    <tr><td>F</td><td>0 - 49</td><td>0.0</td><td>Fail</td></tr>
+                    <tr><td>A+</td><td>90 - 100</td><td>4.0</td><td>Excellent / በጣም ብሩህ</td></tr>
+                    <tr><td>A</td><td>80 - 89</td><td>3.5</td><td>Very Good / በጣም ጥሩ</td></tr>
+                    <tr><td>B+</td><td>75 - 79</td><td>3.0</td><td>Good / ጥሩ</td></tr>
+                    <tr><td>B</td><td>70 - 74</td><td>2.5</td><td>Fairly Good / ተቀባይነት ያለው</td></tr>
+                    <tr><td>C+</td><td>65 - 69</td><td>2.0</td><td>Above Average / ከመካከለኛ በላይ</td></tr>
+                    <tr><td>C</td><td>60 - 64</td><td>1.5</td><td>Average / መካከለኛ</td></tr>
+                    <tr><td>D</td><td>50 - 59</td><td>1.0</td><td>Below Average / ከመካከለኛ በታች</td></tr>
+                    <tr><td>F</td><td>0 - 49</td><td>0.0</td><td>Fail / ያልተሳካ</td></tr>
                 </tbody>
             </table>
 
-            <h4>2. Marking Composition</h4>
+            <h4>2. Marking Composition / የምዘና አካላት</h4>
             <ul>
-                <li><strong>Continuous Assessment (CA):</strong> Comprises class tests, quizzes, homework, projects, and class participation.</li>
-                <li><strong>Mid-Term Examination:</strong> A comprehensive assessment administered at the midpoint of each term.</li>
-                <li><strong>Final Examination:</strong> A summative assessment at the end of each term evaluating the full term curriculum.</li>
+                <li><strong>Continuous Assessment (CA) / የቀጥታ ምዘና:</strong> Comprises class tests, quizzes, homework, projects, and class participation.</li>
+                <li><strong>Mid-Term Examination / የአጋማሽ ፈተና:</strong> A comprehensive assessment administered at the midpoint of each term.</li>
+                <li><strong>Final Examination / የመጨረሻ ፈተና:</strong> A summative assessment at the end of each term evaluating the full term curriculum.</li>
             </ul>
 
-            <h4>3. Behavioral Assessment</h4>
+            <h4>3. Behavioral Assessment / የባህሪ ምዘና</h4>
             <p>Behavioral and character development is assessed alongside academic performance:</p>
             <table class="conduct-scale">
                 <thead><tr><th>Rating</th><th>Score</th><th>Description</th></tr></thead>
                 <tbody>
-                    <tr><td>Excellent</td><td>5</td><td>Outstanding conduct, exemplary behavior</td></tr>
-                    <tr><td>Very Good</td><td>4</td><td>Consistently well-behaved, respectful</td></tr>
-                    <tr><td>Good</td><td>3</td><td>Generally well-mannered, follows rules</td></tr>
-                    <tr><td>Fair</td><td>2</td><td>Needs improvement, frequent reminders</td></tr>
-                    <tr><td>Poor</td><td>1</td><td>Consistently disruptive, intervention needed</td></tr>
+                    <tr><td>Excellent / በጣም ጥሩ</td><td>5</td><td>Outstanding conduct, exemplary behavior</td></tr>
+                    <tr><td>Very Good / በጣም ጥሩ</td><td>4</td><td>Consistently well-behaved, respectful</td></tr>
+                    <tr><td>Good / ጥሩ</td><td>3</td><td>Generally well-mannered, follows rules</td></tr>
+                    <tr><td>Fair / መካከለኛ</td><td>2</td><td>Needs improvement, frequent reminders</td></tr>
+                    <tr><td>Poor / ደካማ</td><td>1</td><td>Consistently disruptive, intervention needed</td></tr>
                 </tbody>
             </table>
 
-            <h4>4. Promotion Policy</h4>
+            <h4>4. Promotion Policy / የማስተማሪያ ፖሊሲ</h4>
             <ul>
-                <li><strong>Promoted:</strong> Overall average of 50% or above with minimum passing grades in core subjects.</li>
-                <li><strong>Conditionally Promoted:</strong> Average between 40%-49% or fails no more than 2 subjects.</li>
-                <li><strong>Detained:</strong> Average below 40% or fails more than 2 subjects. Student must repeat the grade.</li>
+                <li><strong>Promoted / የተማረከ:</strong> Overall average of 50% or above with minimum passing grades in core subjects.</li>
+                <li><strong>Conditionally Promoted / በሁኔታ የተማረከ:</strong> Average between 40%-49% or fails no more than 2 subjects.</li>
+                <li><strong>Detained / የተያዘ:</strong> Average below 40% or fails more than 2 subjects. Student must repeat the grade.</li>
             </ul>
 
-            <h4>5. Attendance Requirement</h4>
-            <p>Students must maintain a minimum attendance rate of 75% throughout the academic year. Failure to meet this requirement may affect promotion eligibility regardless of academic performance.</p>
+            <h4>5. Attendance Requirement / የመገኘት መስፈርት</h4>
+            <p>Students must maintain a minimum attendance rate of 75% throughout the academic year. Failure to meet this requirement may affect promotion eligibility regardless of academic performance. / ተማሪዎች በአመቱ ውስጥ የመገኘት ምንም ከ75% በታች መሆን የለበትም።</p>
         </div>
 
         <div class="panel front-panel">
             <div class="front-top">
                 @if($logoUrl)<img src="{{ $logoUrl }}" class="front-logo" alt="Logo">@endif
                 <div class="front-school-name">{{ strtoupper($schoolName) }}</div>
+                <div class="front-school-name-am">የትምህርት ቤቱ ስም</div>
                 <div class="front-line"></div>
                 <div class="front-academic-year">{{ $student->academicYear->name ?? date('Y') }}</div>
                 <div class="front-cert-title">Student Report Card</div>
+                <div class="front-cert-title-am">የተማሪ ውጤት ካርድ</div>
             </div>
 
             <div class="front-bottom">
                 <div class="front-student-name">{{ $student->first_name }} {{ $student->last_name }}</div>
                 <div class="front-info-row">
-                    <div class="front-info-item"><strong>Class:</strong> {{ $student->classroom->name ?? '-' }}</div>
-                    <div class="front-info-item"><strong>Section:</strong> {{ $student->section->name ?? '-' }}</div>
-                    <div class="front-info-item"><strong>Roll No:</strong> {{ $student->roll_number }}</div>
+                    <div class="front-info-item"><strong>Class / ክፍል:</strong> {{ $student->classroom->name ?? '-' }}</div>
+                    <div class="front-info-item"><strong>Section / መደብ:</strong> {{ $student->section->name ?? '-' }}</div>
+                    <div class="front-info-item"><strong>Roll No / ቁጥር:</strong> {{ $student->roll_number }}</div>
                 </div>
                 <div class="front-info-row">
                     <div class="front-info-item"><strong>Admission No:</strong> {{ $student->admission_number }}</div>
-                    <div class="front-info-item"><strong>Gender:</strong> {{ $student->gender ?? '-' }}</div>
-                    <div class="front-info-item"><strong>DOB:</strong> {{ $student->date_of_birth ?? '-' }}</div>
+                    <div class="front-info-item"><strong>Gender / ጾታ:</strong> {{ $student->gender ?? '-' }}</div>
+                    <div class="front-info-item"><strong>DOB / የልደት ቀን:</strong> {{ $student->date_of_birth ?? '-' }}</div>
                 </div>
                 <div class="front-status-badge front-status-{{ $statusClass }}">
                     @if($promotionStatus !== 'N/A')
                         {{ ucfirst($promotionStatus) }}{{ ($promoClass ?? '') ? ' to ' . $promoClass : '' }}
                     @else
-                        Result Pending
+                        Result Pending / ውጤት መጠባበቅ ላይ
                     @endif
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PAGE 2: INSIDE - Left (marks table with ALL subjects) + Right (semester comments + signatures) -->
+    <!-- PAGE 2: INSIDE - Left (marks table with ALL subjects) + Right (comments + overall + signatures) -->
     <div class="page page-break">
         <div class="panel inside-left">
             <div class="section-title">Academic Results</div>
+            <div class="section-title-am">የአካዳሚክ ውጤቶች</div>
             <table class="marks-table">
                 <thead>
                     <tr>
-                        <th>Subject</th>
-                        <th>Term 1</th>
-                        <th>Term 2</th>
-                        <th>Yearly</th>
-                        <th>Grade</th>
+                        <th>Subject / ስም</th>
+                        <th>Term 1<br>ወር 1</th>
+                        <th>Term 2<br>ወር 2</th>
+                        <th>Yearly<br>ዓመታዊ</th>
+                        <th>Grade<br>ደረጃ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -298,25 +348,25 @@
                     </tr>
                     @endforeach
                     <tr class="summary-row">
-                        <td>Total</td>
+                        <td>Total / ጠቅላላ</td>
                         <td>{{ $totalTerm1 ?: '-' }}</td>
                         <td>{{ $totalTerm2 ?: '-' }}</td>
                         <td>{{ $totalYearly ?: '-' }}</td>
                         <td>-</td>
                     </tr>
                     <tr class="summary-row">
-                        <td>Average</td>
+                        <td>Average / አማካይ</td>
                         <td>{{ $countWithMarks > 0 ? round($totalTerm1 / $countWithMarks, 1) : '-' }}</td>
                         <td>{{ $countWithMarks > 0 ? round($totalTerm2 / $countWithMarks, 1) : '-' }}</td>
                         <td>{{ $avgYearly }}</td>
                         <td>{{ $overallGrade }}</td>
                     </tr>
                     <tr class="summary-row">
-                        <td>Rank</td>
+                        <td>Rank / ደረጃ</td>
                         <td colspan="4">-</td>
                     </tr>
                     <tr class="summary-row">
-                        <td>Conduct</td>
+                        <td>Conduct / ባህሪ</td>
                         <td colspan="3">{{ $conduct }}/5</td>
                         <td>{{ is_numeric($conduct) && $conduct >= 4 ? 'Very Good' : (is_numeric($conduct) && $conduct >= 3 ? 'Good' : 'Fair') }}</td>
                     </tr>
@@ -325,32 +375,43 @@
         </div>
 
         <div class="panel inside-right">
+            <!-- Overall Summary Box -->
+            <div class="overall-summary">
+                <h4>Overall Summary / ጠቅላላ ማጠቃለያ</h4>
+                <div class="overall-row"><span>Overall Average / አማካይ ውጤት:</span> <strong>{{ $avgYearly }}%</strong></div>
+                <div class="overall-row"><span>Overall Grade / ደረጃ:</span> <strong>{{ $overallGrade }}</strong></div>
+                <div class="overall-row"><span>Status / ሁኔታ:</span> <strong>{{ $overallStatus }}</strong></div>
+                <div class="overall-row"><span>Conduct / ባህሪ:</span> <strong>{{ $conduct }}/5 ({{ is_numeric($conduct) && $conduct >= 4 ? 'Very Good / በጣም ጥሩ' : (is_numeric($conduct) && $conduct >= 3 ? 'Good / ጥሩ' : 'Fair / መካከለኛ') }})</strong></div>
+            </div>
+
             <div class="comment-section">
                 <div class="comment-label">Semester 1 - Homeroom Teacher's Comment</div>
+                <div class="comment-label-am">የ1ኛ ሴሚስተር - የክፍል መምህር አስተያየት</div>
                 <div class="comment-box">
                     @if($t1Comment)
                         {{ $t1Comment }}
                     @else
-                        <p>{{ $student->first_name }} has shown {{ $avgYearly >= 70 ? 'excellent' : ($avgYearly >= 50 ? 'good' : 'below average') }} performance in the first semester. {{ $avgYearly >= 70 ? 'Continue to encourage this level of dedication.' : ($avgYearly >= 50 ? 'There is room for improvement. Additional focus will help.' : 'Significant improvement is needed. Please provide extra support at home.') }}</p>
+                        {{ $student->first_name }} has shown {{ $avgYearly >= 70 ? 'excellent' : ($avgYearly >= 50 ? 'good' : 'below average') }} performance in the first semester. {{ $avgYearly >= 70 ? 'Continue to encourage this level of dedication.' : ($avgYearly >= 50 ? 'There is room for improvement. Additional focus will help.' : 'Significant improvement is needed. Please provide extra support at home.') }}
                     @endif
                 </div>
             </div>
 
             <div class="comment-section">
                 <div class="comment-label">Semester 2 - Homeroom Teacher's Comment</div>
+                <div class="comment-label-am">የ2ኛ ሴሚስተር - የክፍል መምህር አስተያየት</div>
                 <div class="comment-box">
                     @if($t2Comment)
                         {{ $t2Comment }}
                     @else
-                        <p>{{ $student->first_name }} has shown {{ $avgYearly >= 70 ? 'excellent' : ($avgYearly >= 50 ? 'good' : 'below average') }} performance in the second semester. {{ $promotionStatus === 'promoted' ? 'I am pleased to recommend this student for promotion.' : ($promotionStatus === 'detained' ? 'Unfortunately, this student will need to repeat this class.' : 'This student is conditionally promoted and must improve.') }}</p>
+                        {{ $student->first_name }} has shown {{ $avgYearly >= 70 ? 'excellent' : ($avgYearly >= 50 ? 'good' : 'below average') }} performance in the second semester. {{ $promotionStatus === 'promoted' ? 'I am pleased to recommend this student for promotion.' : ($promotionStatus === 'detained' ? 'Unfortunately, this student will need to repeat this class.' : 'This student is conditionally promoted and must improve.') }}
                     @endif
                 </div>
             </div>
 
             <div class="signatures">
-                <div class="sig"><div class="sig-line"></div><span>Homeroom Teacher</span></div>
-                <div class="sig"><div class="sig-line"></div><span>Principal</span></div>
-                <div class="sig"><div class="sig-line"></div><span>Parent/Guardian</span></div>
+                <div class="sig"><div class="sig-line"></div><span>Homeroom Teacher<br>የክፍል መምህር</span></div>
+                <div class="sig"><div class="sig-line"></div><span>Principal<br>ዳይሬክተር</span></div>
+                <div class="sig"><div class="sig-line"></div><span>Parent/Guardian<br>ወላጅ/አሳዳጊ</span></div>
             </div>
         </div>
     </div>
