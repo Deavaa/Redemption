@@ -15,8 +15,7 @@ return new class extends Migration
             $table->decimal('marks_obtained', 8, 2)->nullable()->change();
         });
 
-        // Also fix teacher_id FK: drop old constraint (may point to users) and re-add pointing to teachers
-        // First check if there are existing FK constraints on teacher_id
+        // Fix teacher_id FK: drop old constraint (may point to users) and re-add pointing to teachers
         $foreignKeys = DB::select("
             SELECT CONSTRAINT_NAME
             FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
@@ -25,19 +24,27 @@ return new class extends Migration
               AND CONSTRAINT_TYPE = 'FOREIGN KEY'
         ");
 
-        Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys) {
+        $teacherFkDropped = false;
+        Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys, &$teacherFkDropped) {
             foreach ($foreignKeys as $fk) {
                 $name = $fk->CONSTRAINT_NAME;
                 if (str_contains($name, 'teacher_id')) {
-                    $table->dropForeign($name);
+                    try {
+                        $table->dropForeign($name);
+                        $teacherFkDropped = true;
+                    } catch (\Throwable $e) {
+                        // FK may already be dropped
+                    }
                 }
             }
         });
 
-        // Re-add with correct reference to teachers table
-        Schema::table('mark_entries', function (Blueprint $table) {
-            $table->foreign('teacher_id')->references('id')->on('teachers')->nullOnDelete();
-        });
+        // Re-add with correct reference to teachers table (only if we dropped one)
+        if ($teacherFkDropped) {
+            Schema::table('mark_entries', function (Blueprint $table) {
+                $table->foreign('teacher_id')->references('id')->on('teachers')->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void
@@ -46,7 +53,6 @@ return new class extends Migration
             $table->decimal('marks_obtained', 8, 2)->default(0)->change();
         });
 
-        // Revert teacher_id FK back
         $foreignKeys = DB::select("
             SELECT CONSTRAINT_NAME
             FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
@@ -55,17 +61,23 @@ return new class extends Migration
               AND CONSTRAINT_TYPE = 'FOREIGN KEY'
         ");
 
-        Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys) {
+        $teacherFkDropped = false;
+        Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys, &$teacherFkDropped) {
             foreach ($foreignKeys as $fk) {
                 $name = $fk->CONSTRAINT_NAME;
                 if (str_contains($name, 'teacher_id')) {
-                    $table->dropForeign($name);
+                    try {
+                        $table->dropForeign($name);
+                        $teacherFkDropped = true;
+                    } catch (\Throwable $e) {}
                 }
             }
         });
 
-        Schema::table('mark_entries', function (Blueprint $table) {
-            $table->foreign('teacher_id')->references('id')->on('users')->nullOnDelete();
-        });
+        if ($teacherFkDropped) {
+            Schema::table('mark_entries', function (Blueprint $table) {
+                $table->foreign('teacher_id')->references('id')->on('users')->nullOnDelete();
+            });
+        }
     }
 };
