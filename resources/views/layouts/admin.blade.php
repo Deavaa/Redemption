@@ -357,6 +357,18 @@
                 </div>
             </div>
         </nav>
+
+        {{-- Announcement Ticker Bar --}}
+        <div id="announcementTicker" style="display:none;">
+            <div class="ticker-inner">
+                <div class="ticker-badge"><i class="fas fa-bullhorn"></i> <span>Announcements</span></div>
+                <div class="ticker-content">
+                    <div class="ticker-track" id="tickerTrack"></div>
+                </div>
+                <button class="ticker-close" id="tickerClose" title="Dismiss"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
         <div class="admin-content">
             @if(session('success'))
                 <div class="global-alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
@@ -539,7 +551,166 @@
     color: var(--text-muted);
     margin-top: 2px;
 }
+
+/* ===== Announcement Ticker Bar ===== */
+#announcementTicker {
+    background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    color: #fff;
+    overflow: hidden;
+    position: relative;
+    z-index: 100;
+}
+.ticker-inner {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    padding: 0;
+}
+.ticker-badge {
+    background: rgba(255,255,255,0.18);
+    padding: 0 14px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255,255,255,0.15);
+}
+.ticker-badge i { font-size: 13px; }
+.ticker-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+}
+.ticker-track {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    white-space: nowrap;
+    animation: ticker-scroll 60s linear infinite;
+}
+.ticker-track:hover { animation-play-state: paused; }
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.ticker-item .ticker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.ticker-item .ticker-cat {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+}
+.ticker-item .ticker-date {
+    font-size: 11px;
+    opacity: 0.6;
+}
+.ticker-close {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: #fff;
+    width: 36px;
+    height: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    border-left: 1px solid rgba(255,255,255,0.15);
+}
+.ticker-close:hover { background: rgba(255,255,255,0.25); }
+
+@keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+@media (max-width: 768px) {
+    .ticker-badge span { display: none; }
+    .ticker-badge { padding: 0 10px; }
+    .ticker-item { padding: 0 14px; font-size: 12px; }
+    #announcementTicker { font-size: 12px; }
+}
 </style>
+<script>
+// Announcement Ticker - fetch and display
+(function() {
+    var tickerEl = document.getElementById('announcementTicker');
+    var trackEl = document.getElementById('tickerTrack');
+    var closeBtn = document.getElementById('tickerClose');
+    if (!tickerEl || !trackEl) return;
+
+    // Check if dismissed this session
+    if (sessionStorage.getItem('ticker_dismissed')) {
+        tickerEl.style.display = 'none';
+        return;
+    }
+
+    closeBtn.addEventListener('click', function() {
+        tickerEl.style.display = 'none';
+        sessionStorage.setItem('ticker_dismissed', '1');
+    });
+
+    var categoryLabels = {
+        'holiday': 'Holiday', 'exam': 'Exam', 'event': 'Event',
+        'meeting': 'Meeting', 'deadline': 'Deadline', 'other': 'Info'
+    };
+
+    fetch('{{ route("admin.api.announcements") }}', {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (!data || data.length === 0) {
+            tickerEl.style.display = 'none';
+            return;
+        }
+
+        var html = '';
+        data.forEach(function(item) {
+            var dotColor = item.color || '#fff';
+            var cat = categoryLabels[item.category] || item.category || '';
+            html += '<span class="ticker-item">';
+            html += '<span class="ticker-dot" style="background:' + dotColor + '"></span>';
+            html += '<span class="ticker-cat">' + cat + '</span>';
+            html += ' ' + item.title;
+            if (item.start_date) html += ' <span class="ticker-date">(' + item.start_date + ')</span>';
+            html += '</span>';
+        });
+
+        // Duplicate for seamless loop
+        trackEl.innerHTML = html + html;
+        tickerEl.style.display = 'block';
+
+        // Adjust animation speed based on content width
+        var totalWidth = trackEl.scrollWidth / 2;
+        var speed = Math.max(30, totalWidth / 50); // ~50px/s
+        trackEl.style.animationDuration = speed + 's';
+    })
+    .catch(function() {
+        tickerEl.style.display = 'none';
+    });
+})();
+</script>
 @stack('scripts')
 @yield('scripts')
 </body>

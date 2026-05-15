@@ -71,6 +71,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Public announcement ticker API (no auth)
+Route::get('api/public/announcements', [CalendarEventController::class, 'apiAnnouncements'])->name('api.public.announcements');
+
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
@@ -222,6 +225,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::delete('calendar/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar.destroy')->middleware('permission:calendar.manage');
     Route::get('api/calendar/events', [CalendarEventController::class, 'apiEvents'])->name('calendar.api.events');
     Route::get('api/calendar/event/{calendar_event}', [CalendarEventController::class, 'apiEvent'])->name('calendar.api.event');
+    Route::get('api/announcements', [CalendarEventController::class, 'apiAnnouncements'])->name('api.announcements');
 
     // Chat
     Route::get('chat', [ChatController::class, 'index'])->name('chat.index')->middleware('permission:chat.access');

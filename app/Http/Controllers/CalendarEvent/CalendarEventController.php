@@ -45,6 +45,7 @@ class CalendarEventController extends Controller
             'start_time', 'end_time', 'academic_year_id', 'branch_id',
         ]);
         $data['is_all_day'] = $r->has('is_all_day') ? true : (!$r->filled('start_time'));
+        $data['is_announcement'] = $r->has('is_announcement') ? true : true; // Auto-announce all events
         $data['created_by'] = Auth::id();
 
         if (empty($data['color'])) {
@@ -56,6 +57,11 @@ class CalendarEventController extends Controller
         // Auto-notify via Telegram if enabled
         if ($r->has('notify_telegram')) {
             $this->notifyTelegram($event);
+        }
+
+        // Return JSON for AJAX requests, redirect for normal
+        if ($r->ajax() || $r->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Event created successfully.', 'event' => $event]);
         }
 
         return redirect()->route('admin.calendar.index')->with('success', 'Event created successfully.' . ($r->has('notify_telegram') ? ' Telegram notification sent.' : ''));
@@ -82,6 +88,7 @@ class CalendarEventController extends Controller
             'start_time', 'end_time', 'academic_year_id', 'branch_id',
         ]);
         $data['is_all_day'] = $r->has('is_all_day') ? true : (!$r->filled('start_time'));
+        $data['is_announcement'] = $r->has('is_announcement') ? true : true; // Auto-announce
 
         if (empty($data['color'])) {
             $data['color'] = CalendarEvent::categoryColors()[$data['category']] ?? '#4361ee';
@@ -94,13 +101,58 @@ class CalendarEventController extends Controller
             $this->notifyTelegram($calendar_event);
         }
 
+        if ($r->ajax() || $r->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Event updated successfully.', 'event' => $calendar_event]);
+        }
+
         return redirect()->route('admin.calendar.index')->with('success', 'Event updated successfully.' . ($r->has('notify_telegram') ? ' Telegram notification sent.' : ''));
     }
 
     public function destroy(CalendarEvent $calendar_event)
     {
         $calendar_event->delete();
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Event deleted successfully.']);
+        }
         return back()->with('success', 'Event deleted successfully.');
+    }
+
+    /**
+     * API endpoint for the announcement ticker bar.
+     * Returns active/upcoming announcements.
+     */
+    public function apiAnnouncements(Request $r)
+    {
+        $query = CalendarEvent::where('is_announcement', true)
+            ->where(function ($q) {
+                $q->where('start_date', '>=', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->whereNotNull('end_date')
+                         ->where('end_date', '>=', now()->toDateString());
+                  });
+            });
+
+        if ($r->filled('branch_id')) {
+            $query->where(function ($q) use ($r) {
+                $q->where('branch_id', $r->branch_id)
+                  ->orWhereNull('branch_id');
+            });
+        }
+
+        $announcements = $query->orderBy('start_date')->limit(20)->get()->map(function ($e) {
+            return [
+                'id'          => $e->id,
+                'title'       => $e->title,
+                'description' => $e->description,
+                'category'    => $e->category,
+                'color'       => $e->color,
+                'start_date'  => $e->start_date->format('M d, Y'),
+                'end_date'    => $e->end_date?->format('M d, Y'),
+                'is_all_day'  => $e->is_all_day,
+            ];
+        });
+
+        return response()->json($announcements);
     }
 
     public function apiEvents(Request $r)

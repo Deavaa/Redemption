@@ -12,11 +12,11 @@ class AnnouncementController extends Controller
 {
     public function index()
     {
-        $announcements = CalendarEvent::where('category', 'event')
-            ->orWhere('is_all_day', true)
+        $announcements = CalendarEvent::where('is_announcement', true)
             ->orderBy('start_date', 'desc')
             ->paginate(20);
-        $pendingAnnouncements = CalendarEvent::where('start_date', '>=', now())
+        $pendingAnnouncements = CalendarEvent::where('is_announcement', true)
+            ->where('start_date', '>=', now())
             ->orderBy('start_date')->get();
         return view('admin.announcements.index', compact('announcements', 'pendingAnnouncements'));
     }
@@ -37,6 +37,7 @@ class AnnouncementController extends Controller
             'category' => $r->category,
             'start_date' => $r->start_date,
             'is_all_day' => true,
+            'is_announcement' => true,
             'color' => CalendarEvent::categoryColors()[$r->category] ?? '#4361ee',
         ]);
 

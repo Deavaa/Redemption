@@ -809,8 +809,30 @@
     </style>
 </head>
 <body>
+    <!-- Announcement Ticker Bar -->
+    <div id="announcementTicker" style="display:none;background:linear-gradient(135deg,#4361ee 0%,#3a0ca3 100%);color:#fff;overflow:hidden;position:fixed;top:0;left:0;right:0;z-index:9999;">
+        <div style="display:flex;align-items:center;height:36px;">
+            <div style="background:rgba(255,255,255,0.18);padding:0 14px;height:100%;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0;border-right:1px solid rgba(255,255,255,0.15);">
+                <i class="fas fa-bullhorn" style="font-size:13px;"></i> <span>Announcements</span>
+            </div>
+            <div style="flex:1;overflow:hidden;position:relative;height:100%;">
+                <div id="tickerTrack" style="display:flex;align-items:center;height:100%;white-space:nowrap;animation:ticker-scroll 60s linear infinite;"></div>
+            </div>
+            <button id="tickerClose" style="background:rgba(255,255,255,0.12);border:none;color:#fff;width:36px;height:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.15);" title="Dismiss"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <style>
+    @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .ticker-item { display:inline-flex;align-items:center;gap:8px;padding:0 24px;font-size:13px;font-weight:500;white-space:nowrap; }
+    .ticker-dot { width:6px;height:6px;border-radius:50%;flex-shrink:0; }
+    .ticker-cat { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.7; }
+    .ticker-date { font-size:11px;opacity:0.6; }
+    #tickerTrack:hover { animation-play-state:paused; }
+    @media(max-width:768px) { .ticker-item { padding:0 14px;font-size:12px; } }
+    </style>
+
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar" style="top:36px;">
         <div class="container">
             <a class="navbar-brand" href="#">
                 @if($settings['school_logo'] && file_exists(public_path('storage/' . $settings['school_logo'])))
@@ -1406,6 +1428,69 @@
             el.style.opacity = '0';
             observer.observe(el);
         });
+    </script>
+
+    <!-- Announcement Ticker Script -->
+    <script>
+    (function() {
+        var tickerEl = document.getElementById('announcementTicker');
+        var trackEl = document.getElementById('tickerTrack');
+        var closeBtn = document.getElementById('tickerClose');
+        var navbar = document.getElementById('navbar');
+        if (!tickerEl || !trackEl) return;
+
+        if (sessionStorage.getItem('ticker_dismissed')) {
+            tickerEl.style.display = 'none';
+            if (navbar) navbar.style.top = '0';
+            return;
+        }
+
+        closeBtn.addEventListener('click', function() {
+            tickerEl.style.display = 'none';
+            if (navbar) navbar.style.top = '0';
+            sessionStorage.setItem('ticker_dismissed', '1');
+        });
+
+        var categoryLabels = {
+            'holiday': 'Holiday', 'exam': 'Exam', 'event': 'Event',
+            'meeting': 'Meeting', 'deadline': 'Deadline', 'other': 'Info'
+        };
+
+        fetch('/api/public/announcements', {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data || data.length === 0) {
+                tickerEl.style.display = 'none';
+                if (navbar) navbar.style.top = '0';
+                return;
+            }
+
+            var html = '';
+            data.forEach(function(item) {
+                var dotColor = item.color || '#fff';
+                var cat = categoryLabels[item.category] || item.category || '';
+                html += '<span class="ticker-item">';
+                html += '<span class="ticker-dot" style="background:' + dotColor + '"></span>';
+                html += '<span class="ticker-cat">' + cat + '</span>';
+                html += ' ' + item.title;
+                if (item.start_date) html += ' <span class="ticker-date">(' + item.start_date + ')</span>';
+                html += '</span>';
+            });
+
+            trackEl.innerHTML = html + html;
+            tickerEl.style.display = 'block';
+
+            var totalWidth = trackEl.scrollWidth / 2;
+            var speed = Math.max(30, totalWidth / 50);
+            trackEl.style.animationDuration = speed + 's';
+        })
+        .catch(function() {
+            tickerEl.style.display = 'none';
+            if (navbar) navbar.style.top = '0';
+        });
+    })();
     </script>
 </body>
 </html>

@@ -364,6 +364,58 @@ function closeQuickAdd() {
     document.getElementById('quickAddModal').style.display = 'none';
 }
 
+// Handle sidebar event form submission via AJAX so calendar updates without page reload
+document.getElementById('eventForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Adding...';
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(r => {
+        if (r.ok) {
+            calendar.refetchEvents();
+            form.reset();
+            document.getElementById('isAllDay').checked = true;
+            document.getElementById('timeFields').style.display = 'none';
+            updateColor();
+            // Flash success on the button
+            submitBtn.innerHTML = '<i class="fas fa-check me-1"></i> Added!';
+            submitBtn.classList.remove('btn-primary');
+            submitBtn.classList.add('btn-success');
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-primary');
+                submitBtn.disabled = false;
+            }, 1500);
+        } else {
+            return r.json().then(data => {
+                alert('Error: ' + (data.message || 'Failed to add event'));
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+    })
+    .catch(err => {
+        // Fallback: submit normally
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        form.submit();
+    });
+});
+
 // Handle quick add form submission via AJAX so we don't lose calendar state
 document.getElementById('quickAddForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -383,8 +435,6 @@ document.getElementById('quickAddForm').addEventListener('submit', function(e) {
         if (r.ok) {
             closeQuickAdd();
             calendar.refetchEvents();
-            // Also update the sidebar form's date
-            document.getElementById('eventStartDate').value = formData.get('start_date');
         } else {
             return r.json().then(data => {
                 alert('Error: ' + (data.message || 'Failed to add event'));

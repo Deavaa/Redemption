@@ -9,13 +9,14 @@ class CalendarEvent extends Model
     protected $fillable = [
         'title', 'description', 'category', 'color',
         'start_date', 'end_date', 'start_time', 'end_time',
-        'is_all_day', 'academic_year_id', 'branch_id', 'created_by',
+        'is_all_day', 'is_announcement', 'academic_year_id', 'branch_id', 'created_by',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date'   => 'date',
         'is_all_day' => 'boolean',
+        'is_announcement' => 'boolean',
     ];
 
     public function academicYear()
