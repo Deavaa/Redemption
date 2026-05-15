@@ -32,46 +32,42 @@
         .back-panel p, .back-panel li { font-size: 0.8rem; color: #4b5563; line-height: 1.7; }
         .back-panel ul { padding-left: 16px; margin-bottom: 8px; }
         .grading-scale { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.78rem; }
-        .grading-scale th { background: #1a1a2e; color: #fff; padding: 7px 9px; text-align: center; font-size: 0.72rem; }
+        .grading-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 7px 9px; text-align: center; font-size: 0.72rem; font-weight: 700; }
         .grading-scale td { padding: 6px 9px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.75rem; }
         .grading-scale td:first-child { font-weight: 700; text-align: left; }
         .conduct-scale { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.78rem; }
-        .conduct-scale th { background: #2d2d3a; color: #fff; padding: 7px 9px; text-align: center; font-size: 0.72rem; }
+        .conduct-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 7px 9px; text-align: center; font-size: 0.72rem; font-weight: 700; }
         .conduct-scale td { padding: 6px 9px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.75rem; }
 
         /* FRONT COVER PANEL */
         .front-panel {
-            background: linear-gradient(160deg, #1a1a2e 0%, #2d2d3a 50%, #3d3d52 100%);
-            color: #fff; display: flex; flex-direction: column;
+            background: #fff; color: #2d2d3a; display: flex; flex-direction: column;
             justify-content: space-between; position: relative;
-        }
-        .front-panel::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            border-left: 3px solid #2d2d3a;
         }
         .front-top { position: relative; z-index: 1; text-align: center; padding-top: 24mm; }
-        .front-logo { max-height: 85px; max-width: 120px; object-fit: contain; margin: 0 auto 16px; display: block; border-radius: 12px; background: rgba(255,255,255,0.15); padding: 6px; }
+        .front-logo { max-height: 85px; max-width: 120px; object-fit: contain; margin: 0 auto 16px; display: block; border-radius: 12px; border: 2px solid #2d2d3a; padding: 6px; }
         .front-school-name { font-size: 1.6rem; font-weight: 800; letter-spacing: 3.5px; margin-bottom: 5px; }
-        .front-school-name-am { font-size: 1.25rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 10px; opacity: 0.9; }
-        .front-line { width: 65px; height: 3px; background: rgba(255,255,255,0.5); margin: 0 auto 12px; }
-        .front-academic-year { font-size: 1rem; font-weight: 300; letter-spacing: 2.5px; opacity: 0.85; }
-        .front-cert-title { font-size: 0.9rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 12px; opacity: 0.7; }
-        .front-cert-title-am { font-size: 0.85rem; font-weight: 500; margin-top: 4px; opacity: 0.6; }
+        .front-school-name-am { font-size: 1.25rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 10px; color: #4b5563; }
+        .front-line { width: 65px; height: 0; border-top: 2px solid #2d2d3a; margin: 0 auto 12px; }
+        .front-academic-year { font-size: 1rem; font-weight: 300; letter-spacing: 2.5px; color: #4b5563; }
+        .front-cert-title { font-size: 0.9rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 12px; color: #6b7280; }
+        .front-cert-title-am { font-size: 0.85rem; font-weight: 500; margin-top: 4px; color: #9ca3af; }
 
         .front-bottom {
             position: relative; z-index: 1;
-            background: rgba(0,0,0,0.25); padding: 10mm 12mm 16mm;
-            border-top: 1px solid rgba(255,255,255,0.15);
+            background: #fff; padding: 10mm 12mm 16mm;
+            border-top: 2px solid #2d2d3a;
         }
-        .front-student-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; }
+        .front-student-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; color: #1a1a2e; }
         .front-info-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 7px; }
-        .front-info-item { font-size: 0.78rem; opacity: 0.85; }
-        .front-info-item strong { opacity: 1; font-weight: 600; }
-        .front-status-badge { display: inline-block; padding: 5px 14px; border-radius: 5px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-top: 8px; }
-        .front-status-promoted { background: rgba(16,185,129,0.3); color: #6ee7b7; }
-        .front-status-detained { background: rgba(220,38,38,0.3); color: #fca5a5; }
-        .front-status-conditional { background: rgba(217,119,6,0.3); color: #fcd34d; }
-        .front-status-na { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
+        .front-info-item { font-size: 0.78rem; color: #4b5563; }
+        .front-info-item strong { color: #1a1a2e; font-weight: 600; }
+        .front-status-badge { display: inline-block; padding: 5px 14px; border-radius: 5px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-top: 8px; border: 1.5px solid; }
+        .front-status-promoted { border-color: #10b981; color: #059669; }
+        .front-status-detained { border-color: #ef4444; color: #dc2626; }
+        .front-status-conditional { border-color: #f59e0b; color: #d97706; }
+        .front-status-na { border-color: #9ca3af; color: #6b7280; }
 
         /* ===== PAGE 2 INSIDE: LEFT = Marks Table, RIGHT = Comments + Signatures ===== */
         .inside-left {
@@ -93,25 +89,24 @@
 
         .marks-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
         .marks-table th {
-            background: #1a1a2e; color: #fff; padding: 7px 7px;
-            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;
+            border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 7px 7px;
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; font-weight: 700;
         }
         .marks-table th:first-child { text-align: left; }
         .marks-table td { padding: 6px 7px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 0.78rem; }
         .marks-table td:first-child { text-align: left; font-weight: 600; }
-        .marks-table .summary-row { background: #f5f5f8; font-weight: 700; }
+        .marks-table .summary-row { font-weight: 700; }
         .marks-table .summary-row td { border-top: 2px solid #2d2d3a; }
 
         .comment-section { margin-bottom: 14px; }
         .comment-label { font-size: 0.85rem; font-weight: 700; color: #2d2d3a; margin-bottom: 5px; }
         .comment-label-am { font-size: 0.72rem; font-weight: 500; color: #6b7280; margin-bottom: 5px; }
         .comment-box {
-            border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;
-            background: #fafbfc; min-height: 56px; font-size: 0.8rem; color: #374151; line-height: 1.6;
+            border: 1px solid #2d2d3a; border-radius: 6px; padding: 10px;
+            min-height: 56px; font-size: 0.8rem; color: #374151; line-height: 1.6;
         }
 
         .overall-summary {
-            background: linear-gradient(135deg, #f5f5f8, #ececf0);
             border: 2px solid #2d2d3a; border-radius: 8px;
             padding: 12px 16px; margin-bottom: 14px;
         }

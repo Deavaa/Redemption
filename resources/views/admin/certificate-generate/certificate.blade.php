@@ -43,14 +43,9 @@
 
         /* Line-pattern decorative band at top */
         .cert-top-band {
-            height: 8px; margin: 16px 24px 0;
-            background: repeating-linear-gradient(
-                90deg,
-                #2d2d3a 0px, #2d2d3a 12px,
-                transparent 12px, transparent 16px,
-                #666 16px, #666 20px,
-                transparent 20px, transparent 28px
-            );
+            height: 4px; margin: 16px 24px 0;
+            border-top: 2px solid #2d2d3a;
+            border-bottom: 1px solid #999;
         }
 
         /* Watermark */
@@ -83,12 +78,8 @@
 
         /* Decorative line under title */
         .cert-divider {
-            width: 200px; height: 3px; margin: 6px auto;
-            background: repeating-linear-gradient(
-                90deg,
-                #2d2d3a 0px, #2d2d3a 20px,
-                transparent 20px, transparent 24px
-            );
+            width: 200px; height: 0; margin: 6px auto;
+            border-top: 2px solid #2d2d3a;
         }
 
         /* Body */
@@ -159,14 +150,9 @@
 
         /* Bottom decorative band */
         .cert-bottom-band {
-            height: 6px; margin: 0 24px 16px;
-            background: repeating-linear-gradient(
-                90deg,
-                #2d2d3a 0px, #2d2d3a 12px,
-                transparent 12px, transparent 16px,
-                #666 16px, #666 20px,
-                transparent 20px, transparent 28px
-            );
+            height: 4px; margin: 0 24px 16px;
+            border-top: 1px solid #999;
+            border-bottom: 2px solid #2d2d3a;
         }
 
         .no-print { text-align: center; margin: 20px 0; }
@@ -214,7 +200,7 @@
         <div class="cert-content">
             {{-- Certificate Type Badge (top) --}}
             <div style="text-align:center;margin-bottom:2px;">
-                <span style="display:inline-block;padding:2px 14px;background:#2d2d3a;color:#fff;font-size:0.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
+                <span style="display:inline-block;padding:2px 14px;border:1.5px solid #2d2d3a;color:#2d2d3a;font-size:0.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
                     @if($cert->type === 'academic'){{ __('app.cert_academic') ?? 'Academic Certificate' }}
                     @elseif($cert->type === 'completion'){{ __('app.cert_completion') ?? 'Completion Certificate' }}
                     @elseif($cert->type === 'transfer'){{ __('app.cert_transfer') ?? 'Transfer Certificate' }}
