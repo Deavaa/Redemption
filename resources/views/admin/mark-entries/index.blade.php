@@ -561,6 +561,9 @@
 
         setSaveStatus('saving', 'Saving...');
 
+        // Convert empty string to null for proper DB handling
+        const markValue = (value === '' || value === undefined || value === null) ? null : value;
+
         fetch(`${API_BASE}/save`, {
             method: 'POST',
             credentials: 'same-origin',
@@ -573,10 +576,16 @@
                 section_id: sectionId,
                 subject_id: subjectId,
                 mark_key: key,
-                mark_value: value
+                mark_value: markValue
             })
         })
-        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+        .then(r => {
+            if (!r.ok) {
+                return r.json().then(e => { throw new Error(e.error || 'Server error ' + r.status); })
+                    .catch(err => { throw err.message ? err : new Error('Server error ' + r.status); });
+            }
+            return r.json();
+        })
         .then(res => {
             if (res.success) {
                 setSaveStatus('saved', 'Saved');
@@ -587,12 +596,16 @@
                     students[currentIndex].marks.exam_total = res.exam_total;
                     students[currentIndex].marks.grand_total = res.grand_total;
                 }
-                setTimeout(() => setSaveStatus('idle', 'Not saved'), 2000);
+                setTimeout(() => setSaveStatus('idle', 'Saved'), 2000);
             } else {
-                setSaveStatus('error', 'Failed');
+                setSaveStatus('error', res.error || 'Failed');
+                console.error('Save failed:', res);
             }
         })
-        .catch(() => { setSaveStatus('error', 'Error'); });
+        .catch(err => {
+            setSaveStatus('error', err.message || 'Error');
+            console.error('Save error:', err);
+        });
     }
 
     function setSaveStatus(state, text) {

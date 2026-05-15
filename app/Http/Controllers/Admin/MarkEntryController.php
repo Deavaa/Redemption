@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Models\MarkEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class MarkEntryController extends Controller
 {
     public function index() {
@@ -156,29 +157,50 @@ class MarkEntryController extends Controller
     }
 
     public function apiSave(Request $request) {
+        // Relaxed validation — auto-save sends minimal data
         $request->validate([
-            'student_id' => 'required|numeric',
-            'subject_id' => 'required|numeric',
-            'academic_year_id' => 'nullable|numeric',
-            'term_id' => 'required|numeric',
+            'student_id' => 'required',
+            'subject_id' => 'required',
+            'term_id' => 'required',
         ]);
 
-        $data = $request->only(
-            'student_id','subject_id','academic_year_id','term_id','class_id','section_id','class_grade','section','teacher_id',
-            'ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10',
-            'conduct','handwriting','creativity','test1','test2','mid_term','final_exam'
-        );
+        $studentId = $request->input('student_id');
+        $subjectId = $request->input('subject_id');
+        $ayId = $request->input('academic_year_id') ?: null;
+        $termId = $request->input('term_id');
+
+        // Collect only the mark fields that were actually sent
+        $markFieldNames = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10',
+            'conduct','handwriting','creativity','test1','test2','mid_term','final_exam'];
+        $data = [];
+        $data['student_id'] = $studentId;
+        $data['subject_id'] = $subjectId;
+        $data['academic_year_id'] = $ayId;
+        $data['term_id'] = $termId;
+
+        // Copy explicit fields from request
+        foreach (['class_id','section_id','class_grade','section','exam_id','grade','remarks'] as $f) {
+            if ($request->has($f)) {
+                $data[$f] = $request->input($f) ?: null;
+            }
+        }
 
         // Handle single-field auto-save (mark_key + mark_value)
         if ($request->filled('mark_key') && $request->has('mark_value')) {
             $markKey = $request->mark_key;
             $markValue = $request->mark_value;
-            // Allow empty string / null to clear a field
             $data[$markKey] = ($markValue === '' || $markValue === null) ? null : $markValue;
+        } else {
+            // Full save — copy all mark fields from request
+            foreach ($markFieldNames as $f) {
+                if ($request->has($f)) {
+                    $val = $request->input($f);
+                    $data[$f] = ($val === '' || $val === null) ? null : $val;
+                }
+            }
         }
 
         // Resolve class_id and section_id from class_grade/section if not provided
-        // This supports both the index page (sends class_id/section_id) and the create page (sends class_grade/section)
         if (empty($data['class_id']) && !empty($data['class_grade'])) {
             $classRoom = ClassRoom::where('name', $data['class_grade'])->first();
             if ($classRoom) {
@@ -193,31 +215,30 @@ class MarkEntryController extends Controller
             }
         }
 
-        // Set teacher_id from authenticated user (prefer teacher profile)
+        // Set teacher_id — ONLY use teacher profile ID (avoid FK violation with users table)
+        $teacherId = null;
         if (auth()->check()) {
             $teacher = \App\Models\Teacher::where('email', auth()->user()->email)->first();
-            $data['teacher_id'] = $teacher ? $teacher->id : auth()->id();
+            if ($teacher) {
+                $teacherId = $teacher->id;
+            }
         }
+        $data['teacher_id'] = $teacherId;
 
         // Calculate totals
         $data = MarkEntry::calcTotals($data);
 
-        // Use the correct unique key for upsert
-        $uniqueKey = [
-            'student_id' => $data['student_id'],
-            'subject_id' => $data['subject_id'],
-            'academic_year_id' => $data['academic_year_id'] ?? null,
-            'term_id' => $data['term_id'] ?? null,
-        ];
+        // Set marks_obtained = grand_total for backward compatibility (column is NOT NULL in original migration)
+        $data['marks_obtained'] = $data['grand_total'] ?? 0;
 
         try {
-            // First try to find an existing record manually to avoid unique constraint issues with nulls
-            $existingQuery = MarkEntry::where('student_id', $data['student_id'])
-                ->where('subject_id', $data['subject_id'])
-                ->where('term_id', $data['term_id']);
+            // Find existing record with null-safe academic_year_id matching
+            $existingQuery = MarkEntry::where('student_id', $studentId)
+                ->where('subject_id', $subjectId)
+                ->where('term_id', $termId);
 
-            if (!empty($data['academic_year_id'])) {
-                $existingQuery->where('academic_year_id', $data['academic_year_id']);
+            if (!empty($ayId)) {
+                $existingQuery->where('academic_year_id', $ayId);
             } else {
                 $existingQuery->whereNull('academic_year_id');
             }
@@ -225,16 +246,43 @@ class MarkEntryController extends Controller
             $existing = $existingQuery->first();
 
             if ($existing) {
-                $existing->update($data);
+                // Only update the fields we actually have data for
+                $updateData = array_filter($data, function($value, $key) use ($markFieldNames) {
+                    // Always update these core fields
+                    if (in_array($key, ['student_id','subject_id','academic_year_id','term_id',
+                        'class_id','section_id','teacher_id','marks_obtained',
+                        'ca_total','exam_total','grand_total'])) return true;
+                    // Update mark fields only if they were explicitly set
+                    if (in_array($key, $markFieldNames)) return true;
+                    // Update other fields like class_grade, section, etc.
+                    if (in_array($key, ['class_grade','section','exam_id','grade','remarks'])) return true;
+                    return false;
+                }, ARRAY_FILTER_USE_BOTH);
+
+                $existing->update($updateData);
                 $entry = $existing->fresh();
             } else {
+                // Set defaults for required fields on create
+                if (!isset($data['marks_obtained'])) $data['marks_obtained'] = 0;
                 $entry = MarkEntry::create($data);
             }
         } catch (\Illuminate\Database\QueryException $e) {
-            \Log::error('MarkEntry save error: ' . $e->getMessage());
+            Log::error('MarkEntry save error: ' . $e->getMessage(), [
+                'data' => $data,
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
-                'error' => 'Database error saving marks. Please try again.',
+                'error' => 'Database error: ' . $e->getMessage(),
+            ], 500);
+        } catch (\Throwable $e) {
+            Log::error('MarkEntry save exception: ' . $e->getMessage(), [
+                'class' => get_class($e),
+                'data' => $data
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => 'Error: ' . $e->getMessage(),
             ], 500);
         }
 
