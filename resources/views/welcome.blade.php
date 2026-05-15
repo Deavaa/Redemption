@@ -816,7 +816,7 @@
                 <i class="fas fa-bullhorn" style="font-size:13px;"></i> <span>Announcements</span>
             </div>
             <div style="flex:1;overflow:hidden;position:relative;height:100%;">
-                <div id="tickerTrack" style="display:flex;align-items:center;height:100%;white-space:nowrap;animation:ticker-scroll 60s linear infinite;"></div>
+                <div id="tickerTrack" style="display:flex;align-items:center;height:100%;white-space:nowrap;"></div>
             </div>
             <button id="tickerClose" style="background:rgba(255,255,255,0.12);border:none;color:#fff;width:36px;height:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.15);" title="Dismiss"><i class="fas fa-times"></i></button>
         </div>
@@ -827,7 +827,8 @@
     .ticker-dot { width:6px;height:6px;border-radius:50%;flex-shrink:0; }
     .ticker-cat { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.7; }
     .ticker-date { font-size:11px;opacity:0.6; }
-    #tickerTrack:hover { animation-play-state:paused; }
+    #tickerTrack.scrolling { animation: ticker-scroll 120s linear infinite; }
+    #tickerTrack.scrolling:hover { animation-play-state:paused; }
     @media(max-width:768px) { .ticker-item { padding:0 14px;font-size:12px; } }
     </style>
 
@@ -1479,12 +1480,23 @@
                 html += '</span>';
             });
 
-            trackEl.innerHTML = html + html;
-            tickerEl.style.display = 'block';
+            // Duplicate for seamless loop only if content overflows
+            var contentWidth = trackEl.scrollWidth;
+            var containerWidth = trackEl.parentElement.offsetWidth;
 
-            var totalWidth = trackEl.scrollWidth / 2;
-            var speed = Math.max(30, totalWidth / 50);
-            trackEl.style.animationDuration = speed + 's';
+            if (contentWidth > containerWidth) {
+                // Content overflows — enable slow scrolling
+                trackEl.innerHTML = html + html;
+                trackEl.classList.add('scrolling');
+                // Very slow speed: ~5px per second, minimum 60s
+                var totalWidth = trackEl.scrollWidth / 2;
+                var speed = Math.max(60, totalWidth / 5);
+                trackEl.style.animationDuration = speed + 's';
+            } else {
+                // Content fits — static, no scrolling
+                trackEl.innerHTML = html;
+            }
+            tickerEl.style.display = 'block';
         })
         .catch(function() {
             tickerEl.style.display = 'none';

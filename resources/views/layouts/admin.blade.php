@@ -593,9 +593,12 @@
     align-items: center;
     height: 100%;
     white-space: nowrap;
-    animation: ticker-scroll 60s linear infinite;
+    /* animation only applied via JS when content overflows */
 }
-.ticker-track:hover { animation-play-state: paused; }
+.ticker-track.scrolling {
+    animation: ticker-scroll 120s linear infinite;
+}
+.ticker-track.scrolling:hover { animation-play-state: paused; }
 .ticker-item {
     display: inline-flex;
     align-items: center;
@@ -697,14 +700,23 @@
             html += '</span>';
         });
 
-        // Duplicate for seamless loop
-        trackEl.innerHTML = html + html;
-        tickerEl.style.display = 'block';
+        // Duplicate for seamless loop only if content overflows
+        var contentWidth = trackEl.scrollWidth;
+        var containerWidth = trackEl.parentElement.offsetWidth;
 
-        // Adjust animation speed based on content width
-        var totalWidth = trackEl.scrollWidth / 2;
-        var speed = Math.max(30, totalWidth / 50); // ~50px/s
-        trackEl.style.animationDuration = speed + 's';
+        if (contentWidth > containerWidth) {
+            // Content overflows — enable slow scrolling
+            trackEl.innerHTML = html + html;
+            trackEl.classList.add('scrolling');
+            // Very slow speed: ~5px per second, minimum 60s
+            var totalWidth = trackEl.scrollWidth / 2;
+            var speed = Math.max(60, totalWidth / 5);
+            trackEl.style.animationDuration = speed + 's';
+        } else {
+            // Content fits — static, no scrolling
+            trackEl.innerHTML = html;
+        }
+        tickerEl.style.display = 'block';
     })
     .catch(function() {
         tickerEl.style.display = 'none';
