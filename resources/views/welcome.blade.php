@@ -393,38 +393,24 @@
             background: var(--light-bg);
         }
         
-        .about-image {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
-        }
-        
-        .about-image img {
-            width: 100%;
-            height: 500px;
-            object-fit: cover;
-        }
-        
-        .about-badge {
-            position: absolute;
-            bottom: -20px;
-            right: -20px;
+        .about-excellence-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
             background: var(--secondary-color);
             color: var(--primary-color);
-            padding: 2rem;
-            border-radius: 20px;
-            text-align: center;
-            min-width: 150px;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            margin-bottom: 2rem;
         }
         
-        .about-badge h3 {
-            font-size: 2.5rem;
+        .about-excellence-badge h3 {
+            font-size: 2rem;
             margin: 0;
             line-height: 1;
         }
         
-        .about-badge p {
+        .about-excellence-badge p {
             margin: 0;
             font-size: 0.9rem;
             font-weight: 600;
@@ -1054,31 +1040,28 @@
     <!-- About Section -->
     <section class="about" id="about">
         <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6">
-                    <div class="about-image">
-                        <img src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="School Campus">
-                        <div class="about-badge">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="about-content text-center">
+                        <span class="section-badge">About Our School</span>
+                        <h2>A Legacy of Academic Excellence</h2>
+                        <div class="about-excellence-badge">
                             <h3>{{ $settings['years_of_excellence'] }}</h3>
                             <p>Years of Excellence</p>
                         </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="about-content">
-                        <span class="section-badge">About Our School</span>
-                        <h2>A Legacy of Academic Excellence</h2>
                         <p>{{ $settings['about_description'] }}</p>
                         <p>{{ $settings['about_mission'] }}</p>
-                        <ul class="about-features">
+                        <ul class="about-features d-inline-block text-start">
                             <li><i class="fas fa-check-circle"></i> Accredited by National Education Board</li>
                             <li><i class="fas fa-check-circle"></i> Award-winning STEM programs</li>
                             <li><i class="fas fa-check-circle"></i> Comprehensive extracurricular activities</li>
                             <li><i class="fas fa-check-circle"></i> Strong alumni network worldwide</li>
                         </ul>
-                        <a href="#contact" class="btn btn-hero-primary mt-3">
-                            <i class="fas fa-arrow-right me-2"></i>Discover More
-                        </a>
+                        <div class="mt-3">
+                            <a href="#contact" class="btn btn-hero-primary">
+                                <i class="fas fa-arrow-right me-2"></i>Discover More
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
