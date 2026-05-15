@@ -122,6 +122,7 @@
                         <li><a href="{{ route('admin.stock.stock-in') }}" class="{{ request()->routeIs('admin.stock.stock-in') ? 'active' : '' }}"><i class="fas fa-plus-circle text-success"></i> Stock In</a></li>
                         <li><a href="{{ route('admin.stock.stock-out') }}" class="{{ request()->routeIs('admin.stock.stock-out') ? 'active' : '' }}"><i class="fas fa-minus-circle text-warning"></i> Stock Out</a></li>
                         <li><a href="{{ route('admin.stock.report') }}" class="{{ request()->routeIs('admin.stock.report') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i> Stock Report</a></li>
+                        <li><a href="{{ route('admin.stock.transactions') }}" class="{{ request()->routeIs('admin.stock.transactions') ? 'active' : '' }}"><i class="fas fa-history"></i> Transactions</a></li>
                     </ul>
                 </li>
 
