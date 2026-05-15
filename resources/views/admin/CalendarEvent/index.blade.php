@@ -127,7 +127,7 @@
                         </div>
                         <div class="cal-form-group">
                             <div class="cal-form-check">
-                                <input type="checkbox" name="is_all_day" id="isAllDay" checked>
+                                <input type="checkbox" name="is_all_day" id="isAllDay" value="1" checked>
                                 <label for="isAllDay">All day event</label>
                             </div>
                         </div>

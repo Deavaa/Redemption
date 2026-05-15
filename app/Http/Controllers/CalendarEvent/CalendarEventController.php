@@ -35,7 +35,7 @@ class CalendarEventController extends Controller
             'end_date'       => 'nullable|date|after_or_equal:start_date',
             'start_time'     => 'nullable|date_format:H:i',
             'end_time'       => 'nullable|date_format:H:i',
-            'is_all_day'     => 'nullable|boolean',
+            'is_all_day'     => 'nullable',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'branch_id'      => 'nullable|exists:branches,id',
         ]);
@@ -44,7 +44,8 @@ class CalendarEventController extends Controller
             'title', 'description', 'category', 'color', 'start_date', 'end_date',
             'start_time', 'end_time', 'academic_year_id', 'branch_id',
         ]);
-        $data['is_all_day'] = $r->has('is_all_day') ? true : (!$r->filled('start_time'));
+        $isAllDay = $r->input('is_all_day');
+        $data['is_all_day'] = in_array($isAllDay, [true, 1, '1', 'on', 'true'], true) ? true : (!$r->filled('start_time'));
         $data['is_announcement'] = $r->has('is_announcement') ? true : true; // Auto-announce all events
         $data['created_by'] = Auth::id();
 
@@ -78,7 +79,7 @@ class CalendarEventController extends Controller
             'end_date'       => 'nullable|date|after_or_equal:start_date',
             'start_time'     => 'nullable|date_format:H:i',
             'end_time'       => 'nullable|date_format:H:i',
-            'is_all_day'     => 'nullable|boolean',
+            'is_all_day'     => 'nullable',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'branch_id'      => 'nullable|exists:branches,id',
         ]);
@@ -87,7 +88,8 @@ class CalendarEventController extends Controller
             'title', 'description', 'category', 'color', 'start_date', 'end_date',
             'start_time', 'end_time', 'academic_year_id', 'branch_id',
         ]);
-        $data['is_all_day'] = $r->has('is_all_day') ? true : (!$r->filled('start_time'));
+        $isAllDay = $r->input('is_all_day');
+        $data['is_all_day'] = in_array($isAllDay, [true, 1, '1', 'on', 'true'], true) ? true : (!$r->filled('start_time'));
         $data['is_announcement'] = $r->has('is_announcement') ? true : true; // Auto-announce
 
         if (empty($data['color'])) {
