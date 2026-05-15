@@ -454,25 +454,29 @@
             term_id: document.getElementById('sel_term').value,
             class_grade: document.getElementById('sel_grade').value,
             section: document.getElementById('sel_section').value,
-            mark_key: field, mark_value: value || null
+            mark_key: field, mark_value: (value === '' || value === undefined) ? null : value
         };
         marksData[s.id] = marksData[s.id] || {};
-        marksData[s.id][field] = value || null;
+        marksData[s.id][field] = (value === '' || value === undefined) ? null : value;
         st.style.display = 'inline-block';
         st.className = 'mc-save-badge saving';
         st.textContent = 'Saving...';
         fetch('/admin/mark-entries/api/save', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf }, body: JSON.stringify(d)
-        }).then(function(r) { return r.json(); }).then(function(res) {
+        }).then(function(r) {
+            if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || 'Server error ' + r.status); });
+            return r.json();
+        }).then(function(res) {
             if (res.success) {
                 st.className = 'mc-save-badge saved'; st.textContent = 'Saved!';
                 marksData[s.id] = res.entry || marksData[s.id];
                 setTimeout(function() { st.style.display = 'none'; }, 1500);
             } else {
-                st.className = 'mc-save-badge error'; st.textContent = 'Error';
+                st.className = 'mc-save-badge error'; st.textContent = res.error || 'Error';
             }
-        }).catch(function() {
-            st.className = 'mc-save-badge error'; st.textContent = 'Network Error';
+        }).catch(function(err) {
+            st.className = 'mc-save-badge error'; st.textContent = err.message || 'Network Error';
+            console.error('Save error:', err);
         });
     }
 
@@ -485,7 +489,10 @@
         d.term_id = document.getElementById('sel_term').value;
         d.class_grade = document.getElementById('sel_grade').value;
         d.section = document.getElementById('sel_section').value;
-        document.querySelectorAll('.mi').forEach(function(inp) { d[inp.dataset.field] = inp.value || null; });
+        document.querySelectorAll('.mi').forEach(function(inp) {
+            var v = inp.value;
+            d[inp.dataset.field] = (v === '' || v === undefined) ? null : v;
+        });
         var st = document.getElementById('saveStatus');
         marksData[s.id] = d;
         st.style.display = 'inline-block';
@@ -493,16 +500,20 @@
         st.textContent = 'Saving...';
         fetch('/admin/mark-entries/api/save', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf }, body: JSON.stringify(d)
-        }).then(function(r) { return r.json(); }).then(function(res) {
+        }).then(function(r) {
+            if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || 'Server error ' + r.status); });
+            return r.json();
+        }).then(function(res) {
             if (res.success) {
                 st.className = 'mc-save-badge saved'; st.textContent = 'Saved!';
                 marksData[s.id] = res.entry || d;
                 setTimeout(function() { st.style.display = 'none'; }, 1500);
             } else {
-                st.className = 'mc-save-badge error'; st.textContent = 'Error';
+                st.className = 'mc-save-badge error'; st.textContent = res.error || 'Error';
             }
-        }).catch(function() {
-            st.className = 'mc-save-badge error'; st.textContent = 'Network Error';
+        }).catch(function(err) {
+            st.className = 'mc-save-badge error'; st.textContent = err.message || 'Network Error';
+            console.error('Save error:', err);
         });
     };
 

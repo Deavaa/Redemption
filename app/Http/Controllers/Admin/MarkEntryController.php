@@ -86,7 +86,8 @@ class MarkEntryController extends Controller
             $query->where('section', $request->section);
         }
 
-        $students = $query->orderByRaw('CAST(roll_number AS UNSIGNED) ASC')->orderBy('last_name')->orderBy('first_name')->get();
+        // Sort alphabetically by first_name then last_name
+        $students = $query->orderBy('first_name', 'asc')->orderBy('last_name', 'asc')->get();
 
         $subjectId = $request->get('subject_id');
         $ayId = $request->get('academic_year_id');
@@ -133,7 +134,7 @@ class MarkEntryController extends Controller
         if (!$ayId||!$termId||!$classId||!$sectionId||!$subjectId) return response()->json(['error'=>'All filters required'],400);
         $students = DB::table('students')
             ->where('students.class_id',$classId)->where('students.section_id',$sectionId)->where('students.academic_year_id',$ayId)
-            ->orderByRaw('CAST(students.roll_number AS UNSIGNED) ASC')->orderBy('students.last_name','asc')->orderBy('students.first_name','asc')
+            ->orderBy('students.first_name','asc')->orderBy('students.last_name','asc')
             ->select('students.id as student_id',DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"),'students.roll_number','students.gender')->get();
         $existingMarks = MarkEntry::where('academic_year_id',$ayId)->where('term_id',$termId)
             ->where('class_id',$classId)->where('section_id',$sectionId)->where('subject_id',$subjectId)->get()->keyBy('student_id');
@@ -153,6 +154,7 @@ class MarkEntryController extends Controller
             'subject'=>$subject?$subject->name:'','term'=>$term?$term->name:'',
             'class'=>$class?$class->name:'','section'=>$section?$section->name:'']);
     }
+
     public function apiSave(Request $request) {
         $request->validate([
             'student_id' => 'required|numeric',
@@ -162,14 +164,33 @@ class MarkEntryController extends Controller
         ]);
 
         $data = $request->only(
-            'student_id','subject_id','academic_year_id','term_id','class_id','section_id','class_grade','section',
+            'student_id','subject_id','academic_year_id','term_id','class_id','section_id','class_grade','section','teacher_id',
             'ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10',
             'conduct','handwriting','creativity','test1','test2','mid_term','final_exam'
         );
 
         // Handle single-field auto-save (mark_key + mark_value)
-        if ($request->filled('mark_key') && $request->filled('mark_value')) {
-            $data[$request->mark_key] = $request->mark_value;
+        if ($request->filled('mark_key') && $request->has('mark_value')) {
+            $markKey = $request->mark_key;
+            $markValue = $request->mark_value;
+            // Allow empty string / null to clear a field
+            $data[$markKey] = ($markValue === '' || $markValue === null) ? null : $markValue;
+        }
+
+        // Resolve class_id and section_id from class_grade/section if not provided
+        // This supports both the index page (sends class_id/section_id) and the create page (sends class_grade/section)
+        if (empty($data['class_id']) && !empty($data['class_grade'])) {
+            $classRoom = ClassRoom::where('name', $data['class_grade'])->first();
+            if ($classRoom) {
+                $data['class_id'] = $classRoom->id;
+            }
+        }
+        if (empty($data['section_id']) && !empty($data['section']) && !empty($data['class_id'])) {
+            $sectionModel = Section::where('class_id', $data['class_id'])
+                ->where('name', $data['section'])->first();
+            if ($sectionModel) {
+                $data['section_id'] = $sectionModel->id;
+            }
         }
 
         // Set teacher_id from authenticated user (prefer teacher profile)
@@ -181,8 +202,7 @@ class MarkEntryController extends Controller
         // Calculate totals
         $data = MarkEntry::calcTotals($data);
 
-        // Use the correct unique key for upsert: student + subject + academic_year + term
-        // This avoids the old [exam_id, student_id] unique constraint conflict
+        // Use the correct unique key for upsert
         $uniqueKey = [
             'student_id' => $data['student_id'],
             'subject_id' => $data['subject_id'],
@@ -191,24 +211,31 @@ class MarkEntryController extends Controller
         ];
 
         try {
-            $entry = MarkEntry::updateOrCreate($uniqueKey, $data);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Fallback: if unique constraint fails, try to find and update manually
-            // This handles the legacy [exam_id, student_id] unique constraint
-            $existing = MarkEntry::where('student_id', $data['student_id'])
+            // First try to find an existing record manually to avoid unique constraint issues with nulls
+            $existingQuery = MarkEntry::where('student_id', $data['student_id'])
                 ->where('subject_id', $data['subject_id'])
-                ->where('academic_year_id', $data['academic_year_id'] ?? null)
-                ->where('term_id', $data['term_id'] ?? null)
-                ->first();
+                ->where('term_id', $data['term_id']);
+
+            if (!empty($data['academic_year_id'])) {
+                $existingQuery->where('academic_year_id', $data['academic_year_id']);
+            } else {
+                $existingQuery->whereNull('academic_year_id');
+            }
+
+            $existing = $existingQuery->first();
 
             if ($existing) {
                 $existing->update($data);
                 $entry = $existing->fresh();
             } else {
-                // Clear exam_id to avoid old unique constraint conflict
-                $data['exam_id'] = $data['exam_id'] ?? null;
                 $entry = MarkEntry::create($data);
             }
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('MarkEntry save error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Database error saving marks. Please try again.',
+            ], 500);
         }
 
         return response()->json([
