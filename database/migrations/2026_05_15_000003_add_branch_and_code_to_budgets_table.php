@@ -6,26 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('budgets', function (Blueprint $table) {
-            $table->foreignId('branch_id')->nullable()->after('id')->constrained('branches')->nullOnDelete();
-            $table->string('budget_code')->nullable()->unique()->after('branch_id');
+            if (!Schema::hasColumn('budgets', 'branch_id')) {
+                $table->foreignId('branch_id')->nullable()->after('id')->constrained('branches')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('budgets', 'budget_code')) {
+                $table->string('budget_code')->nullable()->unique()->after('branch_id');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('budgets', function (Blueprint $table) {
-            $table->dropForeign(['branch_id']);
-            $table->dropColumn('branch_id');
-            $table->dropColumn('budget_code');
+            if (Schema::hasColumn('budgets', 'branch_id')) {
+                $table->dropForeign(['branch_id']);
+                $table->dropColumn('branch_id');
+            }
+            if (Schema::hasColumn('budgets', 'budget_code')) {
+                $table->dropColumn('budget_code');
+            }
         });
     }
 };
