@@ -117,12 +117,14 @@
                         <li><a href="{{ route('admin.payrolls.index') }}" class="{{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i> Payroll</a></li>
                         <li><a href="{{ route('admin.leaves.index') }}" class="{{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}"><i class="fas fa-calendar-minus"></i> Leaves</a></li>
                         <li><a href="{{ route('admin.employee-assets.index') }}" class="{{ request()->routeIs('admin.employee-assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i> Employee Assets</a></li>
+                        @if(Route::has('admin.stock.index'))
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Stock Management</li>
                         <li><a href="{{ route('admin.stock.index') }}" class="{{ request()->routeIs('admin.stock.*') ? 'active' : '' }}"><i class="fas fa-warehouse"></i> Stock Items</a></li>
                         <li><a href="{{ route('admin.stock.stock-in') }}" class="{{ request()->routeIs('admin.stock.stock-in') ? 'active' : '' }}"><i class="fas fa-plus-circle text-success"></i> Stock In</a></li>
                         <li><a href="{{ route('admin.stock.stock-out') }}" class="{{ request()->routeIs('admin.stock.stock-out') ? 'active' : '' }}"><i class="fas fa-minus-circle text-warning"></i> Stock Out</a></li>
                         <li><a href="{{ route('admin.stock.report') }}" class="{{ request()->routeIs('admin.stock.report') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i> Stock Report</a></li>
                         <li><a href="{{ route('admin.stock.transactions') }}" class="{{ request()->routeIs('admin.stock.transactions') ? 'active' : '' }}"><i class="fas fa-history"></i> Transactions</a></li>
+                        @endif
                     </ul>
                 </li>
 
