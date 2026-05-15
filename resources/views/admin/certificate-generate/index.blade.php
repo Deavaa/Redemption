@@ -3,22 +3,22 @@
 
 @section('content')
 <div class="modern-page">
-    <div class="modern-page-header">
-        <div class="modern-page-header-left">
-            <nav aria-label="breadcrumb" class="modern-breadcrumb">
-                <ol>
+    <div class="modern-page-header" style="margin-bottom:0.75rem;">
+        <div class="modern-page-header-left" style="display:flex;align-items:center;gap:10px;">
+            <nav aria-label="breadcrumb" class="modern-breadcrumb" style="margin:0;">
+                <ol style="margin:0;">
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                     <li><a href="{{ route('admin.certificates.index') }}">{{ __('app.certificates') }}</a></li>
                     <li class="active">{{ __('app.generate') }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ __('app.generate') }} {{ __('app.certificates') }}</h1>
-            <p class="modern-page-subtitle">{{ __('app.cert_generate_subtitle') ?? 'Create academic certificates for students' }}</p>
+            <span style="color:var(--border);font-size:0.65rem;">|</span>
+            <h1 style="font-size:0.85rem;font-weight:700;color:var(--text-dark);margin:0;">{{ __('app.generate') }} {{ __('app.certificates') }}</h1>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.certificates.index') }}" class="btn-modern btn-modern-ghost"><i class="fas fa-arrow-left"></i> {{ __('app.cancel') }}</a>
-            <button type="submit" class="btn-modern btn-modern-primary" id="generateCertBtnTop" disabled form="certGenForm">
-                <i class="fas fa-certificate"></i> {{ __('app.generate') }} {{ __('app.certificates') }}
+            <a href="{{ route('admin.certificates.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.7rem;padding:4px 10px;"><i class="fas fa-arrow-left"></i> {{ __('app.cancel') }}</a>
+            <button type="submit" class="btn-modern btn-modern-primary" id="generateCertBtnTop" disabled form="certGenForm" style="font-size:0.7rem;padding:4px 12px;">
+                <i class="fas fa-certificate"></i> {{ __('app.generate') }}
             </button>
         </div>
     </div>
@@ -210,18 +210,18 @@
 
 @push('styles')
 <style>
-/* ===== Certificate Generate - Modern Steps ===== */
+/* ===== Certificate Generate - Compact Steps ===== */
 .gen-step-header {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 16px 20px;
+    gap: 10px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
 }
 .gen-step-number {
-    width: 36px;
-    height: 36px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--primary), #8b5cf6);
     color: #fff;
@@ -229,28 +229,28 @@
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 10px;
     flex-shrink: 0;
 }
 .gen-step-number-green {
     background: linear-gradient(135deg, var(--success), #34d399);
 }
 .gen-step-title {
-    font-size: 15px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--text-dark);
     margin: 0;
 }
 .gen-step-desc {
-    font-size: 12px;
+    font-size: 9px;
     color: var(--text-muted);
-    margin: 2px 0 0;
+    margin: 1px 0 0;
 }
 .gen-step-action {
     margin-left: auto;
 }
 .gen-step-body {
-    padding: 16px 20px;
+    padding: 10px 14px;
 }
 
 /* Class Selection Grid */
@@ -569,9 +569,8 @@
 .modern-page-header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     flex-shrink: 0;
-    padding-top: 4px;
 }
 
 /* Sticky Generate Bar */

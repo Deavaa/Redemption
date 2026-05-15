@@ -257,13 +257,12 @@
 <body>
     @php
         $logoUrl = \App\Models\Setting::getLogoUrl();
-        $logoPath = \App\Models\Setting::get('school_logo');
         $schoolName = \App\Models\Setting::get('school_name', 'School of Redemption');
         $schoolPhone = \App\Models\Setting::get('school_phone', '');
         $schoolEmail = \App\Models\Setting::get('school_email', '');
         $schoolAddress = \App\Models\Setting::get('school_address', '');
         $schoolWebsite = \App\Models\Setting::get('school_website', '');
-        $logoExists = $logoPath && !empty($logoPath);
+        $hasLogo = !empty($logoUrl);
     @endphp
 
     {{-- Ghost SVG definitions --}}
@@ -311,8 +310,8 @@
                 {{-- Header --}}
                 <div class="id-card-header">
                     <div class="id-card-logo">
-                        @if($logoExists)
-                            <img src="{{ $logoUrl }}" alt="Logo" onerror="this.parentElement.innerHTML='<div class=\'ghost-logo\'><svg><use href=\'#ghost-school\'/></svg></div>';">
+                        @if($hasLogo)
+                            <img src="{{ $logoUrl }}" alt="Logo" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'ghost-logo\'><svg><use href=\'#ghost-school\'/></svg></div>';">
                         @else
                             <div class="ghost-logo"><svg><use href="#ghost-school"/></svg></div>
                         @endif
@@ -327,7 +326,7 @@
                 <div class="id-card-separator"></div>
 
                 {{-- Watermark --}}
-                @if($logoExists)
+                @if($hasLogo)
                 <div class="id-card-watermark">
                     <img src="{{ $logoUrl }}" alt="" onerror="this.style.display='none';">
                 </div>

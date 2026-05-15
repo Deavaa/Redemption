@@ -5,16 +5,16 @@
     <meta charset="UTF-8">
     <title>{{ __('app.certificates') }} - {{ $student->first_name }} {{ $student->last_name }}</title>
     <style>
-        @page { size: A4 landscape; margin: 12mm; }
+        @page { size: A5 landscape; margin: 10mm; }
         * { box-sizing: border-box; }
         body {
             font-family: 'Georgia', 'Times New Roman', serif;
-            margin: 0; padding: 30px; background: #f5f5f5;
+            margin: 0; padding: 20px; background: #f5f5f5;
             -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
 
         .certificate {
-            width: 297mm; min-height: 190mm; margin: 0 auto; background: #fff;
+            width: 210mm; min-height: 148mm; margin: 0 auto; background: #fff;
             position: relative; padding: 0;
         }
 
@@ -64,26 +64,26 @@
 
         .cert-content {
             position: relative; z-index: 2;
-            padding: 20px 40px 30px;
+            padding: 12px 24px 20px;
         }
 
         /* Header */
-        .cert-header { text-align: center; margin-bottom: 15px; }
+        .cert-header { text-align: center; margin-bottom: 8px; }
         .cert-header-logo {
-            height: 60px; object-fit: contain; margin-bottom: 6px;
+            height: 45px; object-fit: contain; margin-bottom: 4px;
         }
         .cert-header h1 {
-            font-size: 1.9rem; color: #1a1a2e; margin: 0;
-            letter-spacing: 4px; font-weight: 800;
+            font-size: 1.3rem; color: #1a1a2e; margin: 0;
+            letter-spacing: 3px; font-weight: 800;
         }
         .cert-header h2 {
-            font-size: 1rem; color: #555; margin: 4px 0;
+            font-size: 0.75rem; color: #555; margin: 3px 0;
             font-style: italic; font-weight: 400;
         }
 
         /* Decorative line under title */
         .cert-divider {
-            width: 280px; height: 3px; margin: 10px auto;
+            width: 200px; height: 3px; margin: 6px auto;
             background: repeating-linear-gradient(
                 90deg,
                 #1a1a2e 0px, #1a1a2e 20px,
@@ -92,67 +92,67 @@
         }
 
         /* Body */
-        .cert-body { text-align: center; margin: 15px 0; }
-        .cert-body p { font-size: 0.95rem; line-height: 1.8; color: #444; margin: 4px 0; }
+        .cert-body { text-align: center; margin: 10px 0; }
+        .cert-body p { font-size: 0.78rem; line-height: 1.7; color: #444; margin: 3px 0; }
         .cert-body .cert-name {
-            font-size: 1.5rem; font-weight: 700; color: #1a1a2e;
-            margin: 8px 0; display: inline-block;
+            font-size: 1.15rem; font-weight: 700; color: #1a1a2e;
+            margin: 5px 0; display: inline-block;
             border-bottom: 1.5px solid #1a1a2e; padding-bottom: 2px;
         }
         .cert-body .cert-type {
-            font-size: 1rem; color: #1a1a2e; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 3px; margin: 12px 0;
+            font-size: 0.8rem; color: #1a1a2e; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 2px; margin: 8px 0;
         }
 
         /* Details grid */
         .cert-details {
             display: grid; grid-template-columns: 1fr 1fr;
-            gap: 6px 20px; max-width: 480px; margin: 15px auto; text-align: left;
+            gap: 4px 16px; max-width: 380px; margin: 10px auto; text-align: left;
         }
-        .cert-detail-item { font-size: 0.85rem; color: #333; }
+        .cert-detail-item { font-size: 0.72rem; color: #333; }
         .cert-detail-item strong { color: #1a1a2e; }
 
         /* Marks table */
         .cert-marks-table {
-            width: 80%; margin: 12px auto; border-collapse: collapse;
+            width: 85%; margin: 8px auto; border-collapse: collapse;
         }
         .cert-marks-table th {
-            padding: 5px 10px; font-size: 0.78rem; text-transform: uppercase;
-            letter-spacing: 0.5px; color: #1a1a2e;
+            padding: 3px 8px; font-size: 0.68rem; text-transform: uppercase;
+            letter-spacing: 0.4px; color: #1a1a2e;
             border-bottom: 2px solid #1a1a2e;
         }
         .cert-marks-table td {
-            padding: 4px 10px; font-size: 0.82rem; color: #333;
+            padding: 3px 8px; font-size: 0.72rem; color: #333;
             border-bottom: 1px solid #ddd;
         }
 
         /* Footer / Signatures */
         .cert-footer {
             display: flex; justify-content: space-between;
-            margin-top: 30px; padding: 0 20px;
+            margin-top: 20px; padding: 0 16px;
         }
-        .cert-signature { text-align: center; min-width: 160px; }
+        .cert-signature { text-align: center; min-width: 120px; }
         .cert-signature-line {
-            width: 140px; margin: 0 auto 4px;
+            width: 110px; margin: 0 auto 3px;
             border-top: 1.5px solid #1a1a2e;
         }
-        .cert-signature span { font-size: 0.75rem; color: #666; }
+        .cert-signature span { font-size: 0.65rem; color: #666; }
 
         /* Seal - line-based circle */
         .cert-seal {
-            position: absolute; bottom: 30px; right: 50px;
-            width: 80px; height: 80px;
+            position: absolute; bottom: 18px; right: 30px;
+            width: 60px; height: 60px;
             border: 2px solid rgba(26,26,46,0.2);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             z-index: 2;
         }
         .cert-seal-inner {
-            width: 64px; height: 64px;
+            width: 48px; height: 48px;
             border: 1px solid rgba(26,26,46,0.15);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.5rem; color: rgba(26,26,46,0.25);
+            font-size: 0.4rem; color: rgba(26,26,46,0.25);
             text-align: center; line-height: 1.2; font-weight: 700;
             letter-spacing: 1px; text-transform: uppercase;
         }
@@ -183,9 +183,9 @@
 </head>
 <body>
     @php
-        $logoPath = \App\Models\Setting::get('school_logo');
         $logoUrl = \App\Models\Setting::getLogoUrl();
         $schoolName = \App\Models\Setting::get('school_name', 'School of Redemption');
+        $hasLogo = !empty($logoUrl);
     @endphp
 
     <div class="no-print"><button onclick="window.print()">{{ __('app.print') ?? 'Print Certificate' }}</button></div>
@@ -205,7 +205,7 @@
         <div class="cert-top-band"></div>
 
         {{-- Watermark --}}
-        @if($logoPath && $logoUrl)
+        @if($hasLogo)
         <div class="cert-watermark">
             <img src="{{ $logoUrl }}" alt="">
         </div>
@@ -214,7 +214,7 @@
         <div class="cert-content">
             {{-- Header --}}
             <div class="cert-header">
-                @if($logoPath && $logoUrl)
+                @if($hasLogo)
                     <img src="{{ $logoUrl }}" class="cert-header-logo" alt="Logo">
                 @endif
                 <h1>{{ strtoupper($schoolName) }}</h1>

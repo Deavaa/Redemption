@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <title>Foldable Certificate - {{ $student->first_name }}</title>
     <style>
-        @page { size: A4 landscape; margin: 0; }
+        @page { size: A5 landscape; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: #e5e7eb; }
-        .page { width: 297mm; height: 210mm; display: flex; margin: 10px auto; background: #fff; overflow: hidden; }
-        .panel { width: 148.5mm; height: 210mm; display: flex; flex-direction: column; }
+        .page { width: 210mm; height: 148mm; display: flex; margin: 10px auto; background: #fff; overflow: hidden; }
+        .panel { width: 105mm; height: 148mm; display: flex; flex-direction: column; }
 
         /* PAGE 1 OUTSIDE */
         .back-panel { background: #fff; border-right: 1px solid #ddd; padding: 10mm 9mm; overflow-y: auto; }
@@ -34,31 +34,31 @@
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 25mm; }
-        .front-logo { max-height: 80px; max-width: 120px; object-fit: contain; margin: 0 auto 15px; display: block; border-radius: 10px; background: rgba(255,255,255,0.15); padding: 5px; }
-        .front-school-name { font-size: 1.6rem; font-weight: 800; letter-spacing: 4px; margin-bottom: 8px; }
-        .front-line { width: 60px; height: 2px; background: rgba(255,255,255,0.5); margin: 0 auto 10px; }
-        .front-academic-year { font-size: 0.95rem; font-weight: 300; letter-spacing: 2px; opacity: 0.85; }
-        .front-cert-title { font-size: 0.78rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; opacity: 0.7; }
+        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 18mm; }
+        .front-logo { max-height: 55px; max-width: 85px; object-fit: contain; margin: 0 auto 10px; display: block; border-radius: 8px; background: rgba(255,255,255,0.15); padding: 4px; }
+        .front-school-name { font-size: 1.1rem; font-weight: 800; letter-spacing: 3px; margin-bottom: 6px; }
+        .front-line { width: 45px; height: 2px; background: rgba(255,255,255,0.5); margin: 0 auto 8px; }
+        .front-academic-year { font-size: 0.72rem; font-weight: 300; letter-spacing: 2px; opacity: 0.85; }
+        .front-cert-title { font-size: 0.6rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; opacity: 0.7; }
 
         .front-bottom {
             position: relative; z-index: 1;
-            background: rgba(0,0,0,0.25); padding: 12mm 12mm 15mm;
+            background: rgba(0,0,0,0.25); padding: 8mm 8mm 10mm;
             border-top: 1px solid rgba(255,255,255,0.15);
         }
-        .front-student-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
-        .front-info-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 4px; }
-        .front-info-item { font-size: 0.68rem; opacity: 0.85; }
+        .front-student-name { font-size: 1rem; font-weight: 800; margin-bottom: 6px; }
+        .front-info-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 3px; }
+        .front-info-item { font-size: 0.55rem; opacity: 0.85; }
         .front-info-item strong { opacity: 1; font-weight: 600; }
-        .front-status-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; margin-top: 5px; }
+        .front-status-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.52rem; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
         .front-status-promoted { background: rgba(16,185,129,0.3); color: #6ee7b7; }
         .front-status-detained { background: rgba(220,38,38,0.3); color: #fca5a5; }
         .front-status-conditional { background: rgba(217,119,6,0.3); color: #fcd34d; }
         .front-status-na { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
 
         /* PAGE 2 INSIDE */
-        .inside-left { border-right: 2px solid #e5e7eb; padding: 7mm 7mm; overflow-y: auto; }
-        .inside-right { padding: 7mm 7mm; display: flex; flex-direction: column; }
+        .inside-left { border-right: 2px solid #e5e7eb; padding: 5mm 5mm; overflow-y: auto; }
+        .inside-right { padding: 5mm 5mm; display: flex; flex-direction: column; }
 
         .section-title { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4361ee; margin-bottom: 4px; padding-bottom: 2px; border-bottom: 2px solid #4361ee; display: inline-block; }
 

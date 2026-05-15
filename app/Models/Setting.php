@@ -18,37 +18,45 @@ class Setting extends Model
 
     /**
      * Get the full URL for the school logo
+     * Uses multiple fallback strategies for different server setups (XAMPP, shared hosting, etc.)
      */
     public static function getLogoUrl(): string
     {
         $logo = self::get('school_logo') ?? self::get('logo') ?? '';
 
         if (empty($logo)) {
-            return asset('images/default-logo.png');
+            return '';
         }
 
-        // If stored via Storage::disk('public'), value is like "settings/xxx.png"
-        // Try Storage::url() first (generates /storage/settings/xxx.png)
-        if (Storage::disk('public')->exists($logo)) {
-            return Storage::url($logo);
+        // Strategy 1: Storage facade (standard Laravel)
+        try {
+            if (Storage::disk('public')->exists($logo)) {
+                return Storage::url($logo);
+            }
+        } catch (\Throwable $e) {}
+
+        // Strategy 2: Direct public path (e.g. public/storage/settings/logo.png via symlink)
+        if (file_exists(public_path('storage/' . $logo))) {
+            return asset('storage/' . $logo);
         }
 
-        // Check if file exists in public path directly
+        // Strategy 3: Direct public path without storage prefix
         if (file_exists(public_path($logo))) {
             return asset($logo);
         }
 
-        // Check with uploads prefix
+        // Strategy 4: Check uploads directory
         if (file_exists(public_path('uploads/' . $logo))) {
             return asset('uploads/' . $logo);
         }
 
-        // Check storage/app/public/ path directly
+        // Strategy 5: Storage app public directory (real file location)
         if (file_exists(storage_path('app/public/' . $logo))) {
             return asset('storage/' . $logo);
         }
 
-        // Fallback: try asset helper as-is
-        return asset($logo);
+        // Strategy 6: Try the raw value as a URL path (works if symlink exists on server)
+        // This is a last-resort fallback that assumes the web server can serve the file
+        return asset('storage/' . $logo);
     }
 }

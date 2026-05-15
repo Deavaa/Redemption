@@ -3,22 +3,22 @@
 
 @section('content')
 <div class="modern-page">
-    <div class="modern-page-header">
-        <div class="modern-page-header-left">
-            <nav aria-label="breadcrumb" class="modern-breadcrumb">
-                <ol>
+    <div class="modern-page-header" style="margin-bottom:0.75rem;">
+        <div class="modern-page-header-left" style="display:flex;align-items:center;gap:10px;">
+            <nav aria-label="breadcrumb" class="modern-breadcrumb" style="margin:0;">
+                <ol style="margin:0;">
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                     <li><a href="{{ route('admin.id-cards.index') }}">{{ __('app.student_id_cards') }}</a></li>
                     <li class="active">{{ __('app.generate') }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ __('app.generate') }} {{ __('app.student_id_cards') }}</h1>
-            <p class="modern-page-subtitle">{{ __('app.id_card_subtitle') ?? 'Select students and generate printable ID cards' }}</p>
+            <span style="color:var(--border);font-size:0.65rem;">|</span>
+            <h1 style="font-size:0.85rem;font-weight:700;color:var(--text-dark);margin:0;">{{ __('app.generate') }} {{ __('app.student_id_cards') }}</h1>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.id-cards.index') }}" class="btn-modern btn-modern-ghost"><i class="fas fa-arrow-left"></i> {{ __('app.cancel') }}</a>
-            <button type="submit" class="btn-modern btn-modern-primary" id="generateIdBtnTop" disabled form="idCardForm">
-                <i class="fas fa-print"></i> {{ __('app.generate') }} {{ __('app.student_id_cards') }}
+            <a href="{{ route('admin.id-cards.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.7rem;padding:4px 10px;"><i class="fas fa-arrow-left"></i> {{ __('app.cancel') }}</a>
+            <button type="submit" class="btn-modern btn-modern-primary" id="generateIdBtnTop" disabled form="idCardForm" style="font-size:0.7rem;padding:4px 12px;">
+                <i class="fas fa-print"></i> {{ __('app.generate') }}
             </button>
         </div>
     </div>
@@ -146,26 +146,26 @@
 
 @push('styles')
 <style>
-/* ===== ID Card Generate - Modern Steps ===== */
+/* ===== ID Card Generate - Compact Steps ===== */
 .gen-step-header {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 16px 20px;
+    gap: 10px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
 }
 .gen-step-number {
-    width: 36px; height: 36px; border-radius: 50%;
+    width: 24px; height: 24px; border-radius: 50%;
     background: linear-gradient(135deg, var(--primary), #8b5cf6);
     color: #fff; display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 15px; flex-shrink: 0;
+    font-weight: 700; font-size: 10px; flex-shrink: 0;
 }
 .gen-step-number-green { background: linear-gradient(135deg, var(--success), #34d399); }
-.gen-step-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin: 0; }
-.gen-step-desc { font-size: 12px; color: var(--text-muted); margin: 2px 0 0; }
-.gen-step-action { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-.gen-step-body { padding: 16px 20px; }
+.gen-step-title { font-size: 11px; font-weight: 700; color: var(--text-dark); margin: 0; }
+.gen-step-desc { font-size: 9px; color: var(--text-muted); margin: 1px 0 0; }
+.gen-step-action { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.gen-step-body { padding: 10px 14px; }
 
 /* Search */
 .gen-search-box { position: relative; width: 200px; }
@@ -290,9 +290,8 @@
 .modern-page-header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     flex-shrink: 0;
-    padding-top: 4px;
 }
 
 /* Sticky Generate Bar */
