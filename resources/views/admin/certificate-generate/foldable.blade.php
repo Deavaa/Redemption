@@ -164,12 +164,18 @@
         // Promotion status
         $promotionStatus = 'N/A';
         $promoClass = '';
-        $promoResult = DB::table('promotion_results')->where('student_id', $student->id)->orderBy('id', 'desc')->first();
-        if($promoResult) {
-            $promotionStatus = $promoResult->status;
-            if($promoResult->to_class_id) {
-                $promoClass = DB::table('classes')->where('id', $promoResult->to_class_id)->value('name') ?? '';
+        try {
+            if (Schema::hasTable('promotion_results')) {
+                $promoResult = DB::table('promotion_results')->where('student_id', $student->id)->orderBy('id', 'desc')->first();
+                if($promoResult) {
+                    $promotionStatus = $promoResult->status;
+                    if($promoResult->to_class_id) {
+                        $promoClass = DB::table('classes')->where('id', $promoResult->to_class_id)->value('name') ?? '';
+                    }
+                }
             }
+        } catch (\Throwable $e) {
+            // Table doesn't exist yet — promotion status stays N/A
         }
         $statusClass = $promotionStatus === 'promoted' ? 'promoted' : ($promotionStatus === 'detained' ? 'detained' : ($promotionStatus === 'conditional' ? 'conditional' : 'na'));
 
