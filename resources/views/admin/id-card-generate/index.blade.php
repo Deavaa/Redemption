@@ -15,6 +15,12 @@
             <h1 class="modern-page-title">{{ __('app.generate') }} {{ __('app.student_id_cards') }}</h1>
             <p class="modern-page-subtitle">{{ __('app.id_card_subtitle') ?? 'Select students and generate printable ID cards' }}</p>
         </div>
+        <div class="modern-page-header-right">
+            <a href="{{ route('admin.id-cards.index') }}" class="btn-modern btn-modern-ghost"><i class="fas fa-arrow-left"></i> {{ __('app.cancel') }}</a>
+            <button type="submit" class="btn-modern btn-modern-primary" id="generateIdBtnTop" disabled form="idCardForm">
+                <i class="fas fa-print"></i> {{ __('app.generate') }} {{ __('app.student_id_cards') }}
+            </button>
+        </div>
     </div>
 
     <form method="POST" action="{{ route('admin.id-card-generate.generate') }}" target="_blank" id="idCardForm">
@@ -118,6 +124,19 @@
             <div class="modern-form-actions">
                 <a href="{{ route('admin.id-cards.index') }}" class="btn-modern btn-modern-ghost">{{ __('app.cancel') }}</a>
                 <button type="submit" class="btn-modern btn-modern-primary" id="generateIdBtn" disabled>
+                    <i class="fas fa-print"></i> {{ __('app.generate') }} {{ __('app.student_id_cards') }}
+                </button>
+            </div>
+        </div>
+
+        {{-- Sticky Top Generate Bar --}}
+        <div class="idgen-sticky-bar" id="idGenStickyBar" style="display:none;">
+            <div class="idgen-sticky-bar-left">
+                <i class="fas fa-id-card"></i>
+                <span id="stickyCount">0</span> {{ __('app.students') ?? 'students' }} {{ __('app.id_card_selected') ?? 'selected' }}
+            </div>
+            <div class="idgen-sticky-bar-right">
+                <button type="submit" class="btn-modern btn-modern-primary" id="generateIdBtnSticky" disabled form="idCardForm">
                     <i class="fas fa-print"></i> {{ __('app.generate') }} {{ __('app.student_id_cards') }}
                 </button>
             </div>
@@ -267,12 +286,68 @@
 .gen-empty-state i { font-size: 28px; opacity: 0.3; margin-bottom: 8px; }
 .gen-empty-state p { font-size: 13px; }
 
+/* Header Right */
+.modern-page-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+/* Sticky Generate Bar */
+.idgen-sticky-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    box-shadow: 0 -4px 20px rgba(79, 70, 229, 0.3);
+    border-radius: 0;
+}
+.idgen-sticky-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.idgen-sticky-bar-left i { font-size: 16px; }
+.idgen-sticky-bar-right { display: flex; gap: 8px; }
+.idgen-sticky-bar .btn-modern-primary {
+    background: #fff;
+    color: #4f46e5;
+    border: none;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.idgen-sticky-bar .btn-modern-primary:hover {
+    background: #f0f0ff;
+    transform: translateY(-1px);
+}
+.idgen-sticky-bar .btn-modern-primary:disabled {
+    background: rgba(255,255,255,0.4);
+    color: rgba(79,70,229,0.5);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
 @media (max-width: 768px) {
     .gen-step-action { margin-left: 0; width: 100%; flex-wrap: wrap; }
     .gen-search-box { width: 100%; }
     .idgen-student-grid { grid-template-columns: 1fr; }
     .idgen-preview-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
     .idgen-select-actions { width: 100%; }
+    .modern-page-header { flex-wrap: wrap; }
+    .modern-page-header-right { width: 100%; justify-content: flex-end; margin-top: 8px; }
+    .idgen-sticky-bar { padding: 10px 16px; }
 }
 </style>
 @endpush
@@ -294,6 +369,10 @@
     const previewGrid = document.getElementById('previewGrid');
     const previewSummary = document.getElementById('previewSummaryText');
     const genBtn = document.getElementById('generateIdBtn');
+    const genBtnTop = document.getElementById('generateIdBtnTop');
+    const genBtnSticky = document.getElementById('generateIdBtnSticky');
+    const stickyBar = document.getElementById('idGenStickyBar');
+    const stickyCount = document.getElementById('stickyCount');
 
     let allStudents = [];
     let selectedIds = new Set();
@@ -419,6 +498,14 @@
         const count = selectedIds.size;
         selectedCount.textContent = count;
         genBtn.disabled = count === 0;
+        if (genBtnTop) genBtnTop.disabled = count === 0;
+        if (genBtnSticky) genBtnSticky.disabled = count === 0;
+        if (stickyCount) stickyCount.textContent = count;
+
+        // Show sticky bar when students selected
+        if (stickyBar) {
+            stickyBar.style.display = count > 0 ? 'flex' : 'none';
+        }
 
         // Update preview
         if (count > 0) {

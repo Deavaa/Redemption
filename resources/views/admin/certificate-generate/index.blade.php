@@ -15,6 +15,12 @@
             <h1 class="modern-page-title">{{ __('app.generate') }} {{ __('app.certificates') }}</h1>
             <p class="modern-page-subtitle">{{ __('app.cert_generate_subtitle') ?? 'Create academic certificates for students' }}</p>
         </div>
+        <div class="modern-page-header-right">
+            <a href="{{ route('admin.certificates.index') }}" class="btn-modern btn-modern-ghost"><i class="fas fa-arrow-left"></i> {{ __('app.cancel') }}</a>
+            <button type="submit" class="btn-modern btn-modern-primary" id="generateCertBtnTop" disabled form="certGenForm">
+                <i class="fas fa-certificate"></i> {{ __('app.generate') }} {{ __('app.certificates') }}
+            </button>
+        </div>
     </div>
 
     <form method="POST" action="{{ route('admin.certificate-generate.generate') }}" target="_blank" id="certGenForm">
@@ -182,6 +188,19 @@
             <div class="modern-form-actions">
                 <a href="{{ route('admin.certificates.index') }}" class="btn-modern btn-modern-ghost">{{ __('app.cancel') }}</a>
                 <button type="submit" class="btn-modern btn-modern-primary" id="generateCertBtn">
+                    <i class="fas fa-certificate"></i> {{ __('app.generate') }} {{ __('app.certificates') }}
+                </button>
+            </div>
+        </div>
+
+        {{-- Sticky Top Generate Bar --}}
+        <div class="certgen-sticky-bar" id="certGenStickyBar" style="display:none;">
+            <div class="certgen-sticky-bar-left">
+                <i class="fas fa-certificate"></i>
+                <span id="certStickyName">{{ __('app.certificates') }}</span>
+            </div>
+            <div class="certgen-sticky-bar-right">
+                <button type="submit" class="btn-modern btn-modern-primary" id="generateCertBtnSticky" disabled form="certGenForm">
                     <i class="fas fa-certificate"></i> {{ __('app.generate') }} {{ __('app.certificates') }}
                 </button>
             </div>
@@ -546,12 +565,68 @@
     color: var(--primary);
 }
 
+/* Header Right */
+.modern-page-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+/* Sticky Generate Bar */
+.certgen-sticky-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    box-shadow: 0 -4px 20px rgba(124, 58, 237, 0.3);
+    border-radius: 0;
+}
+.certgen-sticky-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.certgen-sticky-bar-left i { font-size: 16px; }
+.certgen-sticky-bar-right { display: flex; gap: 8px; }
+.certgen-sticky-bar .btn-modern-primary {
+    background: #fff;
+    color: #7c3aed;
+    border: none;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.certgen-sticky-bar .btn-modern-primary:hover {
+    background: #f5f0ff;
+    transform: translateY(-1px);
+}
+.certgen-sticky-bar .btn-modern-primary:disabled {
+    background: rgba(255,255,255,0.4);
+    color: rgba(124,58,237,0.5);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
 @media (max-width: 768px) {
     .gen-class-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
     .gen-student-grid { grid-template-columns: 1fr; }
     .gen-search-box { width: 100%; }
     .gen-step-action { margin-left: 0; width: 100%; }
     .gen-preview-details { flex-direction: column; gap: 4px; }
+    .modern-page-header { flex-wrap: wrap; }
+    .modern-page-header-right { width: 100%; justify-content: flex-end; margin-top: 8px; }
+    .certgen-sticky-bar { padding: 10px 16px; }
 }
 </style>
 @endpush
@@ -572,6 +647,10 @@
     const previewSection = document.getElementById('previewSection');
     const removeStudentBtn = document.getElementById('removeStudent');
     const genBtn = document.getElementById('generateCertBtn');
+    const genBtnTop = document.getElementById('generateCertBtnTop');
+    const genBtnSticky = document.getElementById('generateCertBtnSticky');
+    const stickyBar = document.getElementById('certGenStickyBar');
+    const certStickyName = document.getElementById('certStickyName');
 
     let allStudents = [];
     let selectedClassId = '';
@@ -647,6 +726,15 @@
         selectedStudentId = student.id;
         studentInput.value = student.id;
 
+        // Enable all generate buttons
+        genBtn.disabled = false;
+        if (genBtnTop) genBtnTop.disabled = false;
+        if (genBtnSticky) genBtnSticky.disabled = false;
+
+        // Show sticky bar
+        if (stickyBar) stickyBar.style.display = 'flex';
+        if (certStickyName) certStickyName.textContent = student.first_name + ' ' + student.last_name;
+
         // Show preview
         const initials = ((student.first_name || '?')[0] + (student.last_name || '?')[0]).toUpperCase();
         previewAvatar.textContent = student.photo ? '' : initials;
@@ -662,6 +750,14 @@
         studentInput.value = '';
         previewCard.style.display = 'none';
         studentContainer.querySelectorAll('.gen-student-card').forEach(c => c.classList.remove('active'));
+
+        // Disable all generate buttons
+        genBtn.disabled = true;
+        if (genBtnTop) genBtnTop.disabled = true;
+        if (genBtnSticky) genBtnSticky.disabled = true;
+
+        // Hide sticky bar
+        if (stickyBar) stickyBar.style.display = 'none';
     }
 
     // ---- Remove Student ----
