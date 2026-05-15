@@ -86,7 +86,7 @@ class MarkEntryController extends Controller
             $query->where('section', $request->section);
         }
 
-        $students = $query->orderBy('last_name')->orderBy('first_name')->get();
+        $students = $query->orderByRaw('CAST(roll_number AS UNSIGNED) ASC')->orderBy('last_name')->orderBy('first_name')->get();
 
         $subjectId = $request->get('subject_id');
         $ayId = $request->get('academic_year_id');
@@ -133,7 +133,7 @@ class MarkEntryController extends Controller
         if (!$ayId||!$termId||!$classId||!$sectionId||!$subjectId) return response()->json(['error'=>'All filters required'],400);
         $students = DB::table('students')
             ->where('students.class_id',$classId)->where('students.section_id',$sectionId)->where('students.academic_year_id',$ayId)
-            ->orderBy('students.last_name','asc')->orderBy('students.first_name','asc')
+            ->orderByRaw('CAST(students.roll_number AS UNSIGNED) ASC')->orderBy('students.last_name','asc')->orderBy('students.first_name','asc')
             ->select('students.id as student_id',DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"),'students.roll_number','students.gender')->get();
         $existingMarks = MarkEntry::where('academic_year_id',$ayId)->where('term_id',$termId)
             ->where('class_id',$classId)->where('section_id',$sectionId)->where('subject_id',$subjectId)->get()->keyBy('student_id');

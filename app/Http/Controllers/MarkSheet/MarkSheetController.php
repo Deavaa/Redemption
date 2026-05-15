@@ -45,7 +45,10 @@ class MarkSheetController extends Controller
         if ($r->filled('student_id')) $query->where('student_id', $r->student_id);
 
         $marks = $query->orderBy('student_id')->orderByRaw('(SELECT priority FROM subjects WHERE subjects.id = mark_entries.subject_id) ASC')->orderBy('subject_id')->get();
-        $students = $marks->groupBy('student_id');
+        $students = $marks->groupBy('student_id')->sortBy(function($studentMarks) {
+            $s = $studentMarks->first()?->student;
+            return $s ? (intval($s->roll_number) * 10000 + ord(strtoupper($s->first_name[0] ?? 'A'))) : 0;
+        });
         $class = ClassRoom::find($r->class_id);
         $academicYear = AcademicYear::find($r->academic_year_id);
         $term = $r->filled('term_id') ? Term::find($r->term_id) : null;
@@ -68,7 +71,7 @@ class MarkSheetController extends Controller
     {
         $query = Student::where('class_id', $r->class_id);
         if ($r->filled('section_id')) $query->where('section_id', $r->section_id);
-        $students = $query->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'roll_number']);
+        $students = $query->selectRaw("*, CAST(roll_number AS UNSIGNED) as rn_sort")->orderByRaw('rn_sort ASC')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'roll_number']);
         return response()->json($students);
     }
 }
