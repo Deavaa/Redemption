@@ -9,30 +9,39 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Add librarian and branch_principal roles
         $now = now();
 
-        // Create librarian role
-        $librarianRoleId = DB::table('roles')->insertGetId([
-            'name' => 'librarian',
-            'display_name' => 'Librarian',
-            'description' => 'Can manage the digital library - upload, edit, and organize books',
-            'is_system' => false,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
+        // Create librarian role (idempotent)
+        $librarianRole = DB::table('roles')->where('name', 'librarian')->first();
+        if (!$librarianRole) {
+            $librarianRoleId = DB::table('roles')->insertGetId([
+                'name' => 'librarian',
+                'display_name' => 'Librarian',
+                'description' => 'Can manage the digital library - upload, edit, and organize books',
+                'is_system' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        } else {
+            $librarianRoleId = $librarianRole->id;
+        }
 
-        // Create branch_principal role
-        $branchPrincipalRoleId = DB::table('roles')->insertGetId([
-            'name' => 'branch_principal',
-            'display_name' => 'Branch Principal',
-            'description' => 'Can manage library books for their branch and access branch-specific features',
-            'is_system' => false,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
+        // Create branch_principal role (idempotent)
+        $branchPrincipalRole = DB::table('roles')->where('name', 'branch_principal')->first();
+        if (!$branchPrincipalRole) {
+            $branchPrincipalRoleId = DB::table('roles')->insertGetId([
+                'name' => 'branch_principal',
+                'display_name' => 'Branch Principal',
+                'description' => 'Can manage library books for their branch and access branch-specific features',
+                'is_system' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        } else {
+            $branchPrincipalRoleId = $branchPrincipalRole->id;
+        }
 
-        // Create library permissions
+        // Create library permissions (idempotent)
         $libraryPermissions = [
             ['name' => 'library.view', 'display_name' => 'View Library', 'module' => 'academic', 'description' => 'View and browse library books', 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'library.upload', 'display_name' => 'Upload Books', 'module' => 'academic', 'description' => 'Upload new books to the library', 'created_at' => $now, 'updated_at' => $now],
@@ -42,39 +51,56 @@ return new class extends Migration
 
         $permissionIds = [];
         foreach ($libraryPermissions as $perm) {
-            $permissionIds[] = DB::table('permissions')->insertGetId($perm);
+            $existing = DB::table('permissions')->where('name', $perm['name'])->first();
+            if (!$existing) {
+                $permissionIds[] = DB::table('permissions')->insertGetId($perm);
+            } else {
+                $permissionIds[] = $existing->id;
+            }
         }
 
-        // Assign all library permissions to librarian role
+        // Assign all library permissions to librarian role (idempotent - permission_role has no timestamps)
         foreach ($permissionIds as $pid) {
-            DB::table('permission_role')->insert([
-                'permission_id' => $pid,
-                'role_id' => $librarianRoleId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+            $exists = DB::table('permission_role')
+                ->where('permission_id', $pid)
+                ->where('role_id', $librarianRoleId)
+                ->exists();
+            if (!$exists) {
+                DB::table('permission_role')->insert([
+                    'permission_id' => $pid,
+                    'role_id' => $librarianRoleId,
+                ]);
+            }
         }
 
-        // Assign all library permissions to branch_principal role
+        // Assign all library permissions to branch_principal role (idempotent)
         foreach ($permissionIds as $pid) {
-            DB::table('permission_role')->insert([
-                'permission_id' => $pid,
-                'role_id' => $branchPrincipalRoleId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+            $exists = DB::table('permission_role')
+                ->where('permission_id', $pid)
+                ->where('role_id', $branchPrincipalRoleId)
+                ->exists();
+            if (!$exists) {
+                DB::table('permission_role')->insert([
+                    'permission_id' => $pid,
+                    'role_id' => $branchPrincipalRoleId,
+                ]);
+            }
         }
 
         // Assign library.view to existing roles (teacher, student, staff, parent)
         $viewOnlyRoles = DB::table('roles')->whereIn('name', ['teacher', 'student', 'staff', 'parent'])->pluck('id');
         $viewPermissionId = $permissionIds[0]; // library.view
         foreach ($viewOnlyRoles as $roleId) {
-            DB::table('permission_role')->insert([
-                'permission_id' => $viewPermissionId,
-                'role_id' => $roleId,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+            $exists = DB::table('permission_role')
+                ->where('permission_id', $viewPermissionId)
+                ->where('role_id', $roleId)
+                ->exists();
+            if (!$exists) {
+                DB::table('permission_role')->insert([
+                    'permission_id' => $viewPermissionId,
+                    'role_id' => $roleId,
+                ]);
+            }
         }
     }
 
