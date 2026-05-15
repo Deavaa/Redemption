@@ -87,14 +87,8 @@
 </head>
 <body>
     @php
-        $logoPath = DB::table('settings')->where('key', 'school_logo')->value('value');
-        $logoUrl = '';
-        if($logoPath) {
-            if(file_exists(public_path('storage/' . $logoPath))) { $logoUrl = asset('storage/' . $logoPath); }
-            elseif(file_exists(public_path($logoPath))) { $logoUrl = asset($logoPath); }
-            else { $logoUrl = asset($logoPath); }
-        }
-        $schoolName = DB::table('settings')->where('key', 'school_name')->value('value') ?? 'School of Redemption';
+        $logoUrl = \App\Models\Setting::getLogoUrl();
+        $schoolName = \App\Models\Setting::get('school_name', 'School of Redemption');
 
         // Get ALL subjects assigned to this student's class
         $classId = $student->class_id ?? $student->classroom_id ?? null;

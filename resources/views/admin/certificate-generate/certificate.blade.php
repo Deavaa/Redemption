@@ -212,6 +212,18 @@
         @endif
 
         <div class="cert-content">
+            {{-- Certificate Type Badge (top) --}}
+            <div style="text-align:center;margin-bottom:2px;">
+                <span style="display:inline-block;padding:2px 14px;background:#1a1a2e;color:#fff;font-size:0.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
+                    @if($cert->type === 'academic'){{ __('app.cert_academic') ?? 'Academic Certificate' }}
+                    @elseif($cert->type === 'completion'){{ __('app.cert_completion') ?? 'Completion Certificate' }}
+                    @elseif($cert->type === 'transfer'){{ __('app.cert_transfer') ?? 'Transfer Certificate' }}
+                    @elseif($cert->type === 'character'){{ __('app.cert_character') ?? 'Character Certificate' }}
+                    @else{{ ucfirst($cert->type) }} {{ __('app.certificates') ?? 'Certificate' }}
+                    @endif
+                </span>
+            </div>
+
             {{-- Header --}}
             <div class="cert-header">
                 @if($hasLogo)

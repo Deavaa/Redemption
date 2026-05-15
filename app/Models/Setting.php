@@ -19,6 +19,7 @@ class Setting extends Model
     /**
      * Get the full URL for the school logo
      * Uses multiple fallback strategies for different server setups (XAMPP, shared hosting, etc.)
+     * Also ensures the file is copied to public/storage/ for symlink-less setups.
      */
     public static function getLogoUrl(): string
     {
@@ -28,35 +29,59 @@ class Setting extends Model
             return '';
         }
 
-        // Strategy 1: Storage facade (standard Laravel)
-        try {
-            if (Storage::disk('public')->exists($logo)) {
-                return Storage::url($logo);
-            }
-        } catch (\Throwable $e) {}
-
-        // Strategy 2: Direct public path (e.g. public/storage/settings/logo.png via symlink)
+        // Strategy 1: Direct public path (public/storage/settings/logo.png) — fastest, works with copyToPublicStorage
         if (file_exists(public_path('storage/' . $logo))) {
             return asset('storage/' . $logo);
         }
 
-        // Strategy 3: Direct public path without storage prefix
+        // Strategy 2: Storage facade (standard Laravel — checks storage/app/public/)
+        try {
+            if (Storage::disk('public')->exists($logo)) {
+                // Try to copy to public/storage/ for next time
+                self::ensurePublicCopy($logo);
+                return Storage::url($logo);
+            }
+        } catch (\Throwable $e) {}
+
+        // Strategy 3: Storage app public directory (real file location)
+        if (file_exists(storage_path('app/public/' . $logo))) {
+            self::ensurePublicCopy($logo);
+            return asset('storage/' . $logo);
+        }
+
+        // Strategy 4: Direct public path without storage prefix
         if (file_exists(public_path($logo))) {
             return asset($logo);
         }
 
-        // Strategy 4: Check uploads directory
+        // Strategy 5: Check uploads directory
         if (file_exists(public_path('uploads/' . $logo))) {
             return asset('uploads/' . $logo);
         }
 
-        // Strategy 5: Storage app public directory (real file location)
-        if (file_exists(storage_path('app/public/' . $logo))) {
-            return asset('storage/' . $logo);
-        }
-
-        // Strategy 6: Try the raw value as a URL path (works if symlink exists on server)
-        // This is a last-resort fallback that assumes the web server can serve the file
+        // Strategy 6: Last resort — assume web server can serve via symlink or fallback route
         return asset('storage/' . $logo);
+    }
+
+    /**
+     * Ensure a file from storage/app/public/ is also copied to public/storage/
+     * for servers where the symlink doesn't work (XAMPP).
+     */
+    private static function ensurePublicCopy(string $relativePath): void
+    {
+        try {
+            $sourcePath = storage_path('app/public/' . $relativePath);
+            $destinationPath = public_path('storage/' . $relativePath);
+
+            if (file_exists($sourcePath) && !file_exists($destinationPath)) {
+                $destinationDir = dirname($destinationPath);
+                if (!is_dir($destinationDir)) {
+                    mkdir($destinationDir, 0755, true);
+                }
+                copy($sourcePath, $destinationPath);
+            }
+        } catch (\Throwable $e) {
+            // Silently fail — don't break the page
+        }
     }
 }

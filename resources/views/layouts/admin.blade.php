@@ -27,7 +27,7 @@
             $academicRoutes = ['admin.academic-years.*','admin.terms.*','admin.subjects.*','admin.subject-assignments.*','admin.exams.*','admin.mark-entries.*','admin.classrooms.*','admin.sections.*','admin.mark-sheet.*','admin.mark-sheet-full.*','admin.mark-roster.*','admin.report-card.*','admin.progress-reports.*'];
             $peopleRoutes = ['admin.students.*','admin.teachers.*','admin.staff.*','admin.team-members.*','admin.parents.*','admin.teacher-assignments.*'];
             $financeRoutes = ['admin.fees.*','admin.fee-payments.*','admin.payrolls.*','admin.budgets.*','admin.income-expenses.*','admin.finance-statements.*','admin.leaves.*','admin.employee-assets.*','admin.budget-comparison.*','admin.financial-comparison.*'];
-            $analysisRoutes = ['admin.performance-analysis.*','admin.performance-comparison.*','admin.psychological-analysis.*','admin.performance-reports.*'];
+            $analysisRoutes = ['admin.performance-analysis.*','admin.performance-comparison.*','admin.psychological-analysis.*','admin.performance-reports.*','admin.performance.*'];
             $websiteRoutes = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*','admin.web-content.*'];
                 $generateRoutes = ['admin.id-card-generate.*','admin.certificate-generate.*','admin.id-cards.*','admin.certificates.*'];
             $isAcademicActive = request()->routeIs($academicRoutes);
@@ -109,6 +109,12 @@
                         <li><a href="{{ route('admin.performance-comparison.index') }}" class="{{ request()->routeIs('admin.performance-comparison.*') ? 'active' : '' }}"><i class="fas fa-code-compare"></i> {{ __('app.performance_comparison') ?? 'Branch Comparison' }}</a></li>
                         <li><a href="{{ route('admin.psychological-analysis.index') }}" class="{{ request()->routeIs('admin.psychological-analysis.*') ? 'active' : '' }}"><i class="fas fa-brain"></i> {{ __('app.psychological_analysis') ?? 'Psychological Analysis' }}</a></li>
                         <li><a href="{{ route('admin.performance-reports.index') }}" class="{{ request()->routeIs('admin.performance-reports.*') ? 'active' : '' }}"><i class="fas fa-file-medical-alt"></i> {{ __('app.performance_reports') ?? 'Performance Reports' }}</a></li>
+                        <li style="margin-top:.5rem;padding-top:.5rem;border-top:1px dashed #e5e7eb"><span style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:.5rem">Suggestions & Insights</span></li>
+                        <li><a href="{{ route('admin.performance.index') }}" class="{{ request()->routeIs('admin.performance.index') ? 'active' : '' }}"><i class="fas fa-tachometer-alt"></i> Performance Dashboard</a></li>
+                        <li><a href="{{ route('admin.performance.at-risk') }}" class="{{ request()->routeIs('admin.performance.at-risk') ? 'active' : '' }}"><i class="fas fa-exclamation-triangle"></i> At-Risk Students</a></li>
+                        <li><a href="{{ route('admin.performance.class-comparison') }}" class="{{ request()->routeIs('admin.performance.class-comparison') ? 'active' : '' }}"><i class="fas fa-code-compare"></i> Class Comparison</a></li>
+                        <li><a href="{{ route('admin.performance.branch-comparison') }}" class="{{ request()->routeIs('admin.performance.branch-comparison') ? 'active' : '' }}"><i class="fas fa-building"></i> Branch Comparison</a></li>
+                        <li><a href="{{ route('admin.performance.gender') }}" class="{{ request()->routeIs('admin.performance.gender') ? 'active' : '' }}"><i class="fas fa-venus-mars"></i> Gender Analysis</a></li>
                     </ul>
                 </li>
 
@@ -152,6 +158,17 @@
 
                 <li class="menu-header">{{ __('app.system') }}</li>
 
+                <li class="{{ request()->routeIs('admin.user-access.*') ? 'has-active-child' : '' }}">
+                    <a href="#userAccessSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
+                        <i class="fas fa-user-lock"></i><span>User Access</span><i class="fas fa-chevron-down sidebar-chevron"></i>
+                    </a>
+                    <ul class="collapse {{ request()->routeIs('admin.user-access.*') ? 'show' : '' }}" id="userAccessSubmenu">
+                        <li><a href="{{ route('admin.user-access.teachers') }}" class="{{ request()->routeIs('admin.user-access.teachers*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
+                        <li><a href="{{ route('admin.user-access.students') }}" class="{{ request()->routeIs('admin.user-access.students*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Students</a></li>
+                        <li><a href="{{ route('admin.user-access.parents') }}" class="{{ request()->routeIs('admin.user-access.parents*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
+                    </ul>
+                </li>
+
                 <li class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fas fa-cog"></i><span>{{ __('app.settings') }}</span></a>
                 </li>
@@ -160,6 +177,9 @@
                 </li>
                 <li class="{{ request()->routeIs('admin.database-backup.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.database-backup.index') }}" class="{{ request()->routeIs('admin.database-backup.*') ? 'active' : '' }}"><i class="fas fa-database"></i><span>{{ __('app.db_export_title') }}</span></a>
+                </li>
+                <li class="{{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.backup.index') }}" class="{{ request()->routeIs('admin.backup.*') ? 'active' : '' }}"><i class="fas fa-clock"></i><span>Scheduled Backup</span></a>
                 </li>
                 <li class="{{ request()->routeIs('admin.audits.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.audits.index') }}" class="{{ request()->routeIs('admin.audits.*') ? 'active' : '' }}"><i class="fas fa-clipboard-list"></i><span>{{ __('app.audit_log') }}</span></a>

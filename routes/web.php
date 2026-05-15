@@ -40,7 +40,8 @@ use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\ParentModel\ParentModelController;
 use App\Http\Controllers\Payroll\PayrollController;
 use App\Http\Controllers\PerformanceReport\PerformanceComparisonController;
-use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController;
+use App\Http\Controllers\Performance\PerformanceAnalysisController;
+use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController as PerformanceReportAnalysisController;
 use App\Http\Controllers\PerformanceReport\PsychologicalAnalysisController;
 use App\Http\Controllers\PerformanceReport\PerformanceReportController;
 use App\Http\Controllers\ProgressReport\ProgressReportController;
@@ -58,6 +59,10 @@ use App\Http\Controllers\Telegram\TelegramController;
 use App\Http\Controllers\Term\TermController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\DatabaseBackupController;
+use App\Http\Controllers\Backup\DatabaseBackupController as ScheduledBackupController;
+use App\Http\Controllers\UserAccess\TeacherAccessController;
+use App\Http\Controllers\UserAccess\StudentAccessController;
+use App\Http\Controllers\UserAccess\ParentAccessController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -119,10 +124,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('report-card/api/sections', [ReportCardController::class, 'getSections'])->name('report-card.sections');
     Route::get('report-card/api/students', [ReportCardController::class, 'getStudents'])->name('report-card.students');
 
-    // Performance Analysis
-    Route::get('performance-analysis', [PerformanceAnalysisController::class, 'index'])->name('performance-analysis.index')->middleware('permission:mark_sheets.view');
-    Route::post('performance-analysis/generate', [PerformanceAnalysisController::class, 'generate'])->name('performance-analysis.generate')->middleware('permission:mark_sheets.generate');
-    Route::get('performance-analysis/api/sections', [PerformanceAnalysisController::class, 'getSections'])->name('performance-analysis.sections');
+    // Performance Analysis (Legacy - Class-based)
+    Route::get('performance-analysis', [PerformanceReportAnalysisController::class, 'index'])->name('performance-analysis.index')->middleware('permission:mark_sheets.view');
+    Route::post('performance-analysis/generate', [PerformanceReportAnalysisController::class, 'generate'])->name('performance-analysis.generate')->middleware('permission:mark_sheets.generate');
+    Route::get('performance-analysis/api/sections', [PerformanceReportAnalysisController::class, 'getSections'])->name('performance-analysis.sections');
 
     // ID Card Generation
     Route::get('id-card-generate', [IdCardGenerateController::class, 'index'])->name('id-card-generate.index')->middleware('permission:id_cards.generate');
@@ -224,11 +229,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assign-users')->middleware('permission:roles.edit');
     Route::post('roles/{role}/toggle-permission', [RoleController::class, 'togglePermission'])->name('roles.toggle-permission')->middleware('permission:roles.edit');
 
-    // Database Backup & Export
+    // Database Backup & Export (Legacy)
     Route::get('database-backup', [DatabaseBackupController::class, 'index'])->name('database-backup.index')->middleware('permission:settings.view');
     Route::post('database-backup/export-send', [DatabaseBackupController::class, 'exportAndSend'])->name('database-backup.export-send')->middleware('permission:settings.edit');
     Route::post('database-backup/quick-export', [DatabaseBackupController::class, 'quickExport'])->name('database-backup.quick-export')->middleware('permission:settings.edit');
     Route::post('database-backup/download', [DatabaseBackupController::class, 'download'])->name('database-backup.download')->middleware('permission:settings.edit');
+
+    // Scheduled Database Backup
+    Route::get('backup', [ScheduledBackupController::class, 'index'])->name('backup.index')->middleware('permission:settings.view');
+    Route::post('backup/now', [ScheduledBackupController::class, 'backupNow'])->name('backup.now')->middleware('permission:settings.edit');
+    Route::get('backup/download/{filename}', [ScheduledBackupController::class, 'download'])->name('backup.download')->middleware('permission:settings.edit')->where('filename', '[^/]+');
+    Route::delete('backup/{filename}', [ScheduledBackupController::class, 'delete'])->name('backup.delete')->middleware('permission:settings.edit')->where('filename', '[^/]+');
+    Route::put('backup/schedule', [ScheduledBackupController::class, 'updateSchedule'])->name('backup.schedule')->middleware('permission:settings.edit');
 
     // Branch Budget Comparison
     Route::get('budget-comparison', [BudgetComparisonController::class, 'index'])->name('budget-comparison.index')->middleware('permission:budgets.view');
@@ -243,6 +255,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('psychological-analysis', [PsychologicalAnalysisController::class, 'index'])->name('psychological-analysis.index')->middleware('permission:mark_sheets.view');
     Route::post('psychological-analysis/generate', [PsychologicalAnalysisController::class, 'generate'])->name('psychological-analysis.generate')->middleware('permission:mark_sheets.generate');
 
+    // Performance Analysis & Suggestions
+    Route::get('performance', [PerformanceAnalysisController::class, 'index'])->name('performance.index')->middleware('permission:mark_sheets.view');
+    Route::get('performance/student/{id}', [PerformanceAnalysisController::class, 'studentAnalysis'])->name('performance.student')->middleware('permission:mark_sheets.view');
+    Route::get('performance/class-comparison', [PerformanceAnalysisController::class, 'classComparison'])->name('performance.class-comparison')->middleware('permission:mark_sheets.view');
+    Route::get('performance/branch-comparison', [PerformanceAnalysisController::class, 'branchComparison'])->name('performance.branch-comparison')->middleware('permission:mark_sheets.view');
+    Route::get('performance/gender', [PerformanceAnalysisController::class, 'genderAnalysis'])->name('performance.gender')->middleware('permission:mark_sheets.view');
+    Route::get('performance/at-risk', [PerformanceAnalysisController::class, 'atRiskStudents'])->name('performance.at-risk')->middleware('permission:mark_sheets.view');
+    Route::get('performance/suggestions/{id}', [PerformanceAnalysisController::class, 'suggestions'])->name('performance.suggestions')->middleware('permission:mark_sheets.view');
+
     // Web Content Management
     Route::get('web-content', [WebContentController::class, 'index'])->name('web-content.index')->middleware('permission:settings.view');
     Route::post('web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
@@ -256,4 +277,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Media Upload (admin)
     Route::post('media/upload', [MediaController::class, 'upload'])->name('media.upload');
+
+    // User Access Management
+    Route::get('user-access/teachers', [TeacherAccessController::class, 'index'])->name('user-access.teachers');
+    Route::post('user-access/teachers/create', [TeacherAccessController::class, 'createAccount'])->name('user-access.teachers.create');
+    Route::post('user-access/teachers/permissions', [TeacherAccessController::class, 'assignPermissions'])->name('user-access.teachers.permissions');
+    Route::get('user-access/students', [StudentAccessController::class, 'index'])->name('user-access.students');
+    Route::post('user-access/students/create', [StudentAccessController::class, 'createAccount'])->name('user-access.students.create');
+    Route::post('user-access/students/bulk', [StudentAccessController::class, 'bulkCreate'])->name('user-access.students.bulk');
+    Route::get('user-access/parents', [ParentAccessController::class, 'index'])->name('user-access.parents');
+    Route::post('user-access/parents/create', [ParentAccessController::class, 'createAccount'])->name('user-access.parents.create');
 });

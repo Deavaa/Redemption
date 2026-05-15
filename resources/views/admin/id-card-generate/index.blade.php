@@ -26,75 +26,62 @@
     <form method="POST" action="{{ route('admin.id-card-generate.generate') }}" target="_blank" id="idCardForm">
         @csrf
 
-        {{-- Step 1: Filter by Class & Section --}}
-        <div class="modern-card" style="margin-bottom:16px;">
-            <div class="gen-step-header">
-                <div class="gen-step-number">1</div>
-                <div>
-                    <h3 class="gen-step-title">{{ __('app.id_card_filter_desc') ?? 'Filter by class and section' }}</h3>
-                    <p class="gen-step-desc">{{ __('app.id_card_step1_desc') ?? 'Choose a class and section to narrow down students' }}</p>
+        {{-- Filter: Class & Section (horizontal) --}}
+        <div class="modern-card" style="margin-bottom:10px;">
+            <div class="idgen-filter-horizontal">
+                <div class="idgen-filter-group idgen-filter-inline">
+                    <label class="idgen-filter-label-sm">{{ __('app.classes') }}</label>
+                    <div class="idgen-class-chips" id="idClassChips">
+                        <button type="button" class="idgen-chip active" data-class-id="">
+                            {{ __('app.all_classes') ?? 'All' }}
+                        </button>
+                        @foreach($classes as $c)
+                            <button type="button" class="idgen-chip" data-class-id="{{ $c->id }}">
+                                {{ $c->name }}
+                            </button>
+                        @endforeach
+                    </div>
+                    <input type="hidden" name="filter_class" id="idClassInput" value="">
                 </div>
-            </div>
-            <div class="gen-step-body">
-                <div class="idgen-filter-grid">
-                    <div class="idgen-filter-group">
-                        <label class="idgen-filter-label">{{ __('app.classes') }}</label>
-                        <div class="idgen-class-chips" id="idClassChips">
-                            <button type="button" class="idgen-chip active" data-class-id="">
-                                <i class="fas fa-th-large"></i> {{ __('app.all_classes') ?? 'All' }}
-                            </button>
-                            @foreach($classes as $c)
-                                <button type="button" class="idgen-chip" data-class-id="{{ $c->id }}">
-                                    {{ $c->name }}
-                                </button>
-                            @endforeach
-                        </div>
-                        <input type="hidden" name="filter_class" id="idClassInput" value="">
+                <div class="idgen-filter-divider">/</div>
+                <div class="idgen-filter-group idgen-filter-inline">
+                    <label class="idgen-filter-label-sm">{{ __('app.section') ?? 'Section' }}</label>
+                    <div class="idgen-section-chips" id="idSectionChips">
+                        <button type="button" class="idgen-chip active" data-section-id="">
+                            {{ __('app.all_sections') ?? 'All' }}
+                        </button>
                     </div>
-                    <div class="idgen-filter-group">
-                        <label class="idgen-filter-label">{{ __('app.section') ?? 'Section' }}</label>
-                        <div class="idgen-section-chips" id="idSectionChips">
-                            <button type="button" class="idgen-chip active" data-section-id="">
-                                <i class="fas fa-th-large"></i> {{ __('app.all_sections') ?? 'All' }}
-                            </button>
-                        </div>
-                        <input type="hidden" name="filter_section" id="idSectionInput" value="">
-                    </div>
+                    <input type="hidden" name="filter_section" id="idSectionInput" value="">
                 </div>
             </div>
         </div>
 
-        {{-- Step 2: Select Students --}}
-        <div class="modern-card" style="margin-bottom:16px;">
-            <div class="gen-step-header">
-                <div class="gen-step-number">2</div>
-                <div>
-                    <h3 class="gen-step-title">{{ __('app.select_students') ?? 'Select Students' }}</h3>
-                    <p class="gen-step-desc">{{ __('app.id_card_step2_desc') ?? 'Check the students you want to generate ID cards for' }}</p>
+        {{-- Select Students --}}
+        <div class="modern-card" style="margin-bottom:10px;">
+            <div class="idgen-toolbar">
+                <div class="idgen-toolbar-left">
+                    <span class="idgen-toolbar-label">{{ __('app.select_students') ?? 'Select Students' }}</span>
+                    <div class="idgen-selection-count-sm" id="selectionBar">
+                        <i class="fas fa-id-card"></i>
+                        <span id="selectedCount">0</span> {{ __('app.selected') ?? 'selected' }}
+                    </div>
                 </div>
-                <div class="gen-step-action" style="display:flex;gap:8px;align-items:center;">
+                <div class="idgen-toolbar-right">
                     <div class="gen-search-box">
                         <i class="fas fa-search gen-search-icon"></i>
                         <input type="text" id="idStudentSearch" class="gen-search-input" placeholder="{{ __('app.search') }}">
                     </div>
                     <div class="idgen-select-actions">
                         <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" id="selectAllBtn">
-                            <i class="fas fa-check-double"></i> {{ __('app.select_all') ?? 'Select All' }}
+                            <i class="fas fa-check-double"></i>
                         </button>
                         <button type="button" class="btn-modern btn-modern-ghost btn-modern-sm" id="deselectAllBtn">
-                            <i class="fas fa-times"></i> {{ __('app.deselect_all') ?? 'Deselect' }}
+                            <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="gen-step-body">
-                {{-- Selection counter --}}
-                <div class="idgen-selection-bar" id="selectionBar">
-                    <div class="idgen-selection-count">
-                        <i class="fas fa-id-card"></i>
-                        <span id="selectedCount">0</span> {{ __('app.students') ?? 'students' }} {{ __('app.id_card_selected') ?? 'selected' }}
-                    </div>
-                </div>
+            <div class="idgen-student-container">
                 <div id="idStudentGrid" class="idgen-student-grid">
                     <div class="gen-empty-state">
                         <i class="fas fa-users"></i>
@@ -105,15 +92,12 @@
         </div>
 
         {{-- Selected Students Preview --}}
-        <div class="modern-card" id="selectedPreviewCard" style="margin-bottom:16px;display:none;">
-            <div class="gen-step-header">
-                <div class="gen-step-number gen-step-number-green"><i class="fas fa-id-badge"></i></div>
-                <div>
-                    <h3 class="gen-step-title">{{ __('app.id_card_preview_title') ?? 'Selected Students' }}</h3>
-                    <p class="gen-step-desc" id="previewSummaryText">-</p>
-                </div>
+        <div class="modern-card" id="selectedPreviewCard" style="margin-bottom:10px;display:none;">
+            <div class="idgen-toolbar" style="padding:8px 14px;">
+                <span class="idgen-toolbar-label"><i class="fas fa-check-circle" style="color:var(--success);font-size:10px;"></i> {{ __('app.id_card_preview_title') ?? 'Selected' }}</span>
+                <span class="gen-step-desc" id="previewSummaryText">-</span>
             </div>
-            <div class="gen-step-body">
+            <div style="padding:0 14px 10px;">
                 <div class="idgen-preview-grid" id="previewGrid">
                 </div>
             </div>
@@ -146,81 +130,85 @@
 
 @push('styles')
 <style>
-/* ===== ID Card Generate - Compact Steps ===== */
-.gen-step-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-}
-.gen-step-number {
-    width: 24px; height: 24px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #8b5cf6);
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 10px; flex-shrink: 0;
-}
-.gen-step-number-green { background: linear-gradient(135deg, var(--success), #34d399); }
-.gen-step-title { font-size: 11px; font-weight: 700; color: var(--text-dark); margin: 0; }
+/* ===== ID Card Generate - Compact Layout ===== */
 .gen-step-desc { font-size: 9px; color: var(--text-muted); margin: 1px 0 0; }
-.gen-step-action { margin-left: auto; display: flex; gap: 6px; align-items: center; }
-.gen-step-body { padding: 10px 14px; }
+
+/* Horizontal Filter Bar */
+.idgen-filter-horizontal {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px; flex-wrap: wrap;
+}
+.idgen-filter-inline {
+    display: flex; align-items: center; gap: 6px; flex-direction: row !important;
+}
+.idgen-filter-label-sm {
+    font-size: 9px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin: 0; white-space: nowrap;
+}
+.idgen-filter-divider {
+    color: var(--border); font-size: 10px; font-weight: 300;
+}
+.idgen-filter-group { gap: 4px; }
+
+/* Toolbar (compact header for student selection) */
+.idgen-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 14px; border-bottom: 1px solid var(--border);
+    gap: 8px; flex-wrap: wrap;
+}
+.idgen-toolbar-left { display: flex; align-items: center; gap: 10px; }
+.idgen-toolbar-right { display: flex; align-items: center; gap: 6px; }
+.idgen-toolbar-label {
+    font-size: 10px; font-weight: 700; color: var(--text-dark);
+    text-transform: uppercase; letter-spacing: 0.3px;
+}
+.idgen-selection-count-sm {
+    font-size: 10px; font-weight: 600; color: var(--primary);
+    display: flex; align-items: center; gap: 4px;
+    background: var(--primary-light); padding: 2px 8px; border-radius: 10px;
+}
+.idgen-selection-count-sm i { font-size: 10px; }
 
 /* Search */
-.gen-search-box { position: relative; width: 200px; }
-.gen-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 12px; }
+.gen-search-box { position: relative; width: 180px; }
+.gen-search-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 10px; }
 .gen-search-input {
     width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 6px 10px 6px 30px; font-size: 12px; font-family: var(--font);
+    padding: 4px 8px 4px 26px; font-size: 11px; font-family: var(--font);
     color: var(--text-dark); background: var(--card-bg); transition: var(--transition);
 }
-.gen-search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-
-/* Filter Grid */
-.idgen-filter-grid { display: flex; flex-direction: column; gap: 14px; }
-.idgen-filter-group { display: flex; flex-direction: column; gap: 6px; }
-.idgen-filter-label { font-size: 12px; font-weight: 600; color: var(--text-dark); }
+.gen-search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
 
 /* Chips */
 .idgen-class-chips, .idgen-section-chips {
-    display: flex; flex-wrap: wrap; gap: 6px;
+    display: flex; flex-wrap: wrap; gap: 4px;
 }
 .idgen-chip {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 20px;
-    background: var(--card-bg); font-size: 12px; font-weight: 500; color: var(--text);
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 10px; border: 1.5px solid var(--border); border-radius: 14px;
+    background: var(--card-bg); font-size: 11px; font-weight: 500; color: var(--text);
     cursor: pointer; transition: var(--transition); font-family: var(--font);
 }
-.idgen-chip i { font-size: 10px; }
+.idgen-chip i { font-size: 9px; }
 .idgen-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 .idgen-chip.active {
     border-color: var(--primary); background: var(--primary); color: #fff;
 }
 
-/* Selection Bar */
-.idgen-selection-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 14px; background: #f8fafc; border-radius: var(--radius-sm);
-    margin-bottom: 12px; border: 1px solid var(--border);
-}
-.idgen-selection-count {
-    font-size: 13px; font-weight: 600; color: var(--primary);
-    display: flex; align-items: center; gap: 6px;
-}
-.idgen-selection-count i { font-size: 14px; }
-
 /* Select Actions */
-.idgen-select-actions { display: flex; gap: 4px; }
+.idgen-select-actions { display: flex; gap: 3px; }
+
+/* Student Container */
+.idgen-student-container { padding: 8px 14px; }
 
 /* Student Grid */
 .idgen-student-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 8px; max-height: 350px; overflow-y: auto; scrollbar-width: thin;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 6px; max-height: 320px; overflow-y: auto; scrollbar-width: thin;
 }
 .idgen-student-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 12px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
     cursor: pointer; transition: var(--transition); background: var(--card-bg);
 }
 .idgen-student-row:hover { border-color: rgba(99,102,241,0.4); background: #f8f9ff; }
@@ -228,122 +216,97 @@
     border-color: var(--primary); background: var(--primary-light);
 }
 .idgen-student-check {
-    width: 20px; height: 20px; border-radius: 4px; border: 2px solid var(--border);
+    width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border);
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: var(--transition); font-size: 10px; color: transparent;
+    flex-shrink: 0; transition: var(--transition); font-size: 9px; color: transparent;
 }
 .idgen-student-row.checked .idgen-student-check {
     border-color: var(--primary); background: var(--primary); color: #fff;
 }
 .idgen-student-avatar {
-    width: 34px; height: 34px; border-radius: 50%;
+    width: 30px; height: 30px; border-radius: 50%;
     background: linear-gradient(135deg, #dbeafe, #ede9fe);
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 11px; color: var(--primary); flex-shrink: 0;
+    font-weight: 700; font-size: 10px; color: var(--primary); flex-shrink: 0;
     overflow: hidden;
 }
 .idgen-student-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .idgen-student-info { flex: 1; min-width: 0; }
 .idgen-student-name {
-    font-size: 12px; font-weight: 600; color: var(--text-dark);
+    font-size: 11px; font-weight: 600; color: var(--text-dark);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.idgen-student-meta { font-size: 10px; color: var(--text-muted); }
+.idgen-student-meta { font-size: 9px; color: var(--text-muted); }
 
 /* Preview Grid */
 .idgen-preview-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 8px; max-height: 250px; overflow-y: auto; scrollbar-width: thin;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 6px; max-height: 200px; overflow-y: auto; scrollbar-width: thin;
 }
 .idgen-preview-item {
-    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    display: flex; align-items: center; gap: 6px; padding: 5px 8px;
     background: var(--primary-light); border-radius: var(--radius-sm);
     border: 1px solid rgba(99,102,241,0.2);
 }
 .idgen-preview-item-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 24px; height: 24px; border-radius: 50%;
     background: var(--primary); color: #fff;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 10px; flex-shrink: 0;
+    font-weight: 700; font-size: 9px; flex-shrink: 0;
 }
 .idgen-preview-item-name {
-    font-size: 11px; font-weight: 600; color: var(--text-dark);
+    font-size: 10px; font-weight: 600; color: var(--text-dark);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .idgen-preview-item-remove {
-    margin-left: auto; width: 20px; height: 20px; border-radius: 50%;
+    margin-left: auto; width: 18px; height: 18px; border-radius: 50%;
     border: none; background: transparent; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    color: var(--text-muted); font-size: 10px; transition: var(--transition); flex-shrink: 0;
+    color: var(--text-muted); font-size: 9px; transition: var(--transition); flex-shrink: 0;
 }
 .idgen-preview-item-remove:hover { background: var(--danger-light); color: var(--danger); }
 
 /* Empty State */
 .gen-empty-state {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 30px; color: var(--text-muted); grid-column: 1 / -1;
+    padding: 24px; color: var(--text-muted); grid-column: 1 / -1;
 }
-.gen-empty-state i { font-size: 28px; opacity: 0.3; margin-bottom: 8px; }
-.gen-empty-state p { font-size: 13px; }
+.gen-empty-state i { font-size: 24px; opacity: 0.3; margin-bottom: 6px; }
+.gen-empty-state p { font-size: 12px; }
 
 /* Header Right */
 .modern-page-header-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
 }
 
 /* Sticky Generate Bar */
 .idgen-sticky-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 999;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
     background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px;
-    box-shadow: 0 -4px 20px rgba(79, 70, 229, 0.3);
-    border-radius: 0;
+    color: #fff; display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; box-shadow: 0 -4px 20px rgba(79, 70, 229, 0.3);
 }
-.idgen-sticky-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-}
-.idgen-sticky-bar-left i { font-size: 16px; }
+.idgen-sticky-bar-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.idgen-sticky-bar-left i { font-size: 14px; }
 .idgen-sticky-bar-right { display: flex; gap: 8px; }
 .idgen-sticky-bar .btn-modern-primary {
-    background: #fff;
-    color: #4f46e5;
-    border: none;
-    font-weight: 700;
+    background: #fff; color: #4f46e5; border: none; font-weight: 700;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
-.idgen-sticky-bar .btn-modern-primary:hover {
-    background: #f0f0ff;
-    transform: translateY(-1px);
-}
+.idgen-sticky-bar .btn-modern-primary:hover { background: #f0f0ff; transform: translateY(-1px); }
 .idgen-sticky-bar .btn-modern-primary:disabled {
-    background: rgba(255,255,255,0.4);
-    color: rgba(79,70,229,0.5);
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
+    background: rgba(255,255,255,0.4); color: rgba(79,70,229,0.5);
+    cursor: not-allowed; box-shadow: none; transform: none;
 }
 
 @media (max-width: 768px) {
-    .gen-step-action { margin-left: 0; width: 100%; flex-wrap: wrap; }
+    .idgen-filter-horizontal { flex-direction: column; align-items: flex-start; }
+    .idgen-filter-inline { width: 100%; }
     .gen-search-box { width: 100%; }
     .idgen-student-grid { grid-template-columns: 1fr; }
     .idgen-preview-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
-    .idgen-select-actions { width: 100%; }
+    .idgen-toolbar { flex-direction: column; align-items: flex-start; }
+    .idgen-toolbar-right { width: 100%; flex-wrap: wrap; }
     .modern-page-header { flex-wrap: wrap; }
     .modern-page-header-right { width: 100%; justify-content: flex-end; margin-top: 8px; }
     .idgen-sticky-bar { padding: 10px 16px; }

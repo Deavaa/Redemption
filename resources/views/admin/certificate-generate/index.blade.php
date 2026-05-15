@@ -27,19 +27,15 @@
         @csrf
 
         {{-- Step 1: Select Class --}}
-        <div class="modern-card" style="margin-bottom:16px;">
-            <div class="gen-step-header">
-                <div class="gen-step-number">1</div>
-                <div>
-                    <h3 class="gen-step-title">{{ __('app.classes') }}</h3>
-                    <p class="gen-step-desc">{{ __('app.cert_step1_desc') ?? 'Select a class to load students' }}</p>
-                </div>
+        <div class="modern-card" style="margin-bottom:10px;">
+            <div class="certgen-toolbar">
+                <span class="certgen-toolbar-label">{{ __('app.classes') }}</span>
             </div>
-            <div class="gen-step-body">
+            <div style="padding:8px 14px;">
                 <div class="gen-class-grid" id="classGrid">
                     <button type="button" class="gen-class-card" data-class-id="">
                         <i class="fas fa-th-large"></i>
-                        <span>{{ __('app.all_classes') ?? 'All Classes' }}</span>
+                        <span>{{ __('app.all_classes') ?? 'All' }}</span>
                     </button>
                     @foreach($classes as $c)
                         <button type="button" class="gen-class-card" data-class-id="{{ $c->id }}">
@@ -53,21 +49,15 @@
         </div>
 
         {{-- Step 2: Select Student --}}
-        <div class="modern-card" style="margin-bottom:16px;">
-            <div class="gen-step-header">
-                <div class="gen-step-number">2</div>
-                <div>
-                    <h3 class="gen-step-title">{{ __('app.students') }}</h3>
-                    <p class="gen-step-desc">{{ __('app.cert_step2_desc') ?? 'Select the student for the certificate' }}</p>
-                </div>
-                <div class="gen-step-action">
-                    <div class="gen-search-box">
-                        <i class="fas fa-search gen-search-icon"></i>
-                        <input type="text" id="studentSearch" class="gen-search-input" placeholder="{{ __('app.search') }}">
-                    </div>
+        <div class="modern-card" style="margin-bottom:10px;">
+            <div class="certgen-toolbar">
+                <span class="certgen-toolbar-label">{{ __('app.students') }}</span>
+                <div class="gen-search-box">
+                    <i class="fas fa-search gen-search-icon"></i>
+                    <input type="text" id="studentSearch" class="gen-search-input" placeholder="{{ __('app.search') }}">
                 </div>
             </div>
-            <div class="gen-step-body">
+            <div style="padding:8px 14px;">
                 <div id="studentListContainer" class="gen-student-grid">
                     <div class="gen-empty-state">
                         <i class="fas fa-users"></i>
@@ -79,40 +69,29 @@
         </div>
 
         {{-- Selected Student Preview --}}
-        <div class="modern-card gen-preview-card" id="studentPreviewCard" style="margin-bottom:16px;display:none;">
-            <div class="gen-step-header">
-                <div class="gen-step-number gen-step-number-green"><i class="fas fa-user-check"></i></div>
-                <div>
-                    <h3 class="gen-step-title">{{ __('app.cert_selected_student') ?? 'Selected Student' }}</h3>
-                    <p class="gen-step-desc">{{ __('app.cert_selected_desc') ?? 'Student details for certificate generation' }}</p>
-                </div>
-            </div>
-            <div class="gen-preview-body">
-                <div class="gen-preview-avatar" id="previewAvatar">?</div>
+        <div class="modern-card gen-preview-card" id="studentPreviewCard" style="margin-bottom:10px;display:none;">
+            <div class="gen-preview-body" style="padding:10px 14px;">
+                <div class="gen-preview-avatar" id="previewAvatar" style="width:36px;height:36px;font-size:14px;">?</div>
                 <div class="gen-preview-info">
-                    <h4 id="previewName">-</h4>
-                    <div class="gen-preview-details">
-                        <span><i class="fas fa-hashtag"></i> <span id="previewRoll">-</span></span>
-                        <span><i class="fas fa-building"></i> <span id="previewClass">-</span></span>
-                        <span><i class="fas fa-layer-group"></i> <span id="previewSection">-</span></span>
+                    <h4 id="previewName" style="font-size:13px;">-</h4>
+                    <div class="gen-preview-details" style="gap:10px;">
+                        <span style="font-size:10px;"><i class="fas fa-hashtag" style="font-size:8px;"></i> <span id="previewRoll">-</span></span>
+                        <span style="font-size:10px;"><i class="fas fa-building" style="font-size:8px;"></i> <span id="previewClass">-</span></span>
+                        <span style="font-size:10px;"><i class="fas fa-layer-group" style="font-size:8px;"></i> <span id="previewSection">-</span></span>
                     </div>
                 </div>
-                <button type="button" class="gen-preview-remove" id="removeStudent" title="Remove">
+                <button type="button" class="gen-preview-remove" id="removeStudent" style="width:26px;height:26px;font-size:10px;" title="Remove">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
 
         {{-- Step 3: Certificate Type --}}
-        <div class="modern-card" style="margin-bottom:16px;">
-            <div class="gen-step-header">
-                <div class="gen-step-number">3</div>
-                <div>
-                    <h3 class="gen-step-title">{{ __('app.cert_type') ?? 'Certificate Type' }}</h3>
-                    <p class="gen-step-desc">{{ __('app.cert_step3_desc') ?? 'Choose the type of certificate to generate' }}</p>
-                </div>
+        <div class="modern-card" style="margin-bottom:10px;">
+            <div class="certgen-toolbar">
+                <span class="certgen-toolbar-label">{{ __('app.cert_type') ?? 'Certificate Type' }}</span>
             </div>
-            <div class="gen-step-body">
+            <div style="padding:8px 14px;">
                 <div class="gen-type-grid">
                     <label class="gen-type-card">
                         <input type="radio" name="type" value="academic" checked>
@@ -210,334 +189,134 @@
 
 @push('styles')
 <style>
-/* ===== Certificate Generate - Compact Steps ===== */
-.gen-step-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
+/* ===== Certificate Generate - Compact Layout ===== */
+.certgen-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 14px; border-bottom: 1px solid var(--border);
+    gap: 8px; flex-wrap: wrap;
 }
-.gen-step-number {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #8b5cf6);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 10px;
-    flex-shrink: 0;
+.certgen-toolbar-label {
+    font-size: 10px; font-weight: 700; color: var(--text-dark);
+    text-transform: uppercase; letter-spacing: 0.3px;
 }
-.gen-step-number-green {
-    background: linear-gradient(135deg, var(--success), #34d399);
-}
-.gen-step-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-dark);
-    margin: 0;
-}
-.gen-step-desc {
-    font-size: 9px;
-    color: var(--text-muted);
-    margin: 1px 0 0;
-}
-.gen-step-action {
-    margin-left: auto;
-}
-.gen-step-body {
-    padding: 10px 14px;
-}
+.gen-step-desc { font-size: 9px; color: var(--text-muted); margin: 1px 0 0; }
 
 /* Class Selection Grid */
 .gen-class-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 6px;
 }
 .gen-class-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 14px 10px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--card-bg);
-    cursor: pointer;
-    transition: var(--transition);
-    font-family: var(--font);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 6px; border: 1.5px solid var(--border); border-radius: var(--radius);
+    background: var(--card-bg); cursor: pointer; transition: var(--transition);
+    font-family: var(--font); font-size: 11px; font-weight: 600; color: var(--text);
 }
-.gen-class-card i {
-    font-size: 20px;
-    color: var(--text-muted);
-    transition: var(--transition);
-}
-.gen-class-card:hover {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    color: var(--primary);
-}
+.gen-class-card i { font-size: 16px; color: var(--text-muted); transition: var(--transition); }
+.gen-class-card:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
 .gen-class-card:hover i { color: var(--primary); }
 .gen-class-card.active {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    border-color: var(--primary); background: var(--primary-light); color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
 }
 .gen-class-card.active i { color: var(--primary); }
 
 /* Search */
-.gen-search-box {
-    position: relative;
-    width: 220px;
-}
-.gen-search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 12px;
-}
+.gen-search-box { position: relative; width: 180px; }
+.gen-search-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 10px; }
 .gen-search-input {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 6px 10px 6px 30px;
-    font-size: 12px;
-    font-family: var(--font);
-    color: var(--text-dark);
-    background: var(--card-bg);
-    transition: var(--transition);
+    width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px 8px 4px 26px; font-size: 11px; font-family: var(--font);
+    color: var(--text-dark); background: var(--card-bg); transition: var(--transition);
 }
-.gen-search-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-light);
-}
+.gen-search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
 
 /* Student Grid */
 .gen-student-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    scrollbar-width: thin;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px; max-height: 280px; overflow-y: auto; scrollbar-width: thin;
 }
 .gen-student-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition);
-    background: var(--card-bg);
+    display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    cursor: pointer; transition: var(--transition); background: var(--card-bg);
 }
-.gen-student-card:hover {
-    border-color: var(--primary);
-    background: var(--primary-light);
-}
+.gen-student-card:hover { border-color: var(--primary); background: var(--primary-light); }
 .gen-student-card.active {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    border-color: var(--primary); background: var(--primary-light);
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.1);
 }
 .gen-student-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
+    width: 30px; height: 30px; border-radius: 50%;
     background: linear-gradient(135deg, var(--primary-light), #e0e7ff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 12px;
-    color: var(--primary);
-    flex-shrink: 0;
-    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 10px; color: var(--primary); flex-shrink: 0; overflow: hidden;
 }
-.gen-student-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.gen-student-info {
-    flex: 1;
-    min-width: 0;
-}
-.gen-student-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-dark);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.gen-student-meta {
-    font-size: 10px;
-    color: var(--text-muted);
-}
+.gen-student-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.gen-student-info { flex: 1; min-width: 0; }
+.gen-student-name { font-size: 11px; font-weight: 600; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gen-student-meta { font-size: 9px; color: var(--text-muted); }
 .gen-student-check {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: var(--transition);
-    font-size: 10px;
-    color: transparent;
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: var(--transition); font-size: 9px; color: transparent;
 }
-.gen-student-card.active .gen-student-check {
-    border-color: var(--primary);
-    background: var(--primary);
-    color: #fff;
-}
+.gen-student-card.active .gen-student-check { border-color: var(--primary); background: var(--primary); color: #fff; }
 
 /* Empty State */
 .gen-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
-    color: var(--text-muted);
-    grid-column: 1 / -1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; color: var(--text-muted); grid-column: 1 / -1;
 }
-.gen-empty-state i {
-    font-size: 28px;
-    opacity: 0.3;
-    margin-bottom: 8px;
-}
-.gen-empty-state p {
-    font-size: 13px;
-}
+.gen-empty-state i { font-size: 24px; opacity: 0.3; margin-bottom: 6px; }
+.gen-empty-state p { font-size: 12px; }
 
 /* Student Preview */
 .gen-preview-card {
     border-color: var(--success) !important;
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.1) !important;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.08) !important;
 }
 .gen-preview-body {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 16px 20px;
+    display: flex; align-items: center; gap: 10px;
 }
 .gen-preview-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--success), #34d399);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 18px;
-    flex-shrink: 0;
+    border-radius: 50%; background: linear-gradient(135deg, var(--success), #34d399);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; flex-shrink: 0;
 }
-.gen-preview-info {
-    flex: 1;
-    min-width: 0;
-}
-.gen-preview-info h4 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text-dark);
-    margin: 0 0 4px;
-}
-.gen-preview-details {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-.gen-preview-details span {
-    font-size: 12px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-.gen-preview-details span i {
-    font-size: 10px;
-    color: var(--success);
-}
+.gen-preview-info { flex: 1; min-width: 0; }
+.gen-preview-info h4 { font-weight: 700; color: var(--text-dark); margin: 0 0 2px; }
+.gen-preview-details { display: flex; gap: 10px; flex-wrap: wrap; }
+.gen-preview-details span { color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
+.gen-preview-details span i { color: var(--success); }
 .gen-preview-remove {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--card-bg);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 12px;
-    transition: var(--transition);
-    flex-shrink: 0;
+    border-radius: 50%; border: 1px solid var(--border); background: var(--card-bg);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: var(--transition); flex-shrink: 0;
 }
-.gen-preview-remove:hover {
-    background: var(--danger-light);
-    border-color: var(--danger);
-    color: var(--danger);
-}
+.gen-preview-remove:hover { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
 
 /* Type Selection */
 .gen-type-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    display: grid; grid-template-columns: 1fr; gap: 6px;
 }
-.gen-type-card {
-    cursor: pointer;
-    display: block;
-}
-.gen-type-card input[type="radio"] {
-    display: none;
-}
+.gen-type-card { cursor: pointer; display: block; }
+.gen-type-card input[type="radio"] { display: none; }
 .gen-type-card-inner {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    transition: var(--transition);
-    position: relative;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border: 1.5px solid var(--border); border-radius: var(--radius);
+    transition: var(--transition); position: relative;
 }
-.gen-type-card-inner:hover {
-    border-color: var(--primary);
-    background: #f8f9ff;
-}
+.gen-type-card-inner:hover { border-color: var(--primary); background: #f8f9ff; }
 .gen-type-card input:checked + .gen-type-card-inner {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    border-color: var(--primary); background: var(--primary-light);
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.1);
 }
 .gen-type-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
 }
 .gen-type-icon-purple { background: rgba(99,102,241,0.12); color: #6366f1; }
 .gen-type-icon-green { background: rgba(16,185,129,0.12); color: #10b981; }
@@ -545,76 +324,32 @@
 .gen-type-icon-gold { background: rgba(245,158,11,0.12); color: #f59e0b; }
 .gen-type-icon-teal { background: rgba(20,184,166,0.12); color: #14b8a6; }
 .gen-type-info { flex: 1; }
-.gen-type-info h4 {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-dark);
-    margin: 0 0 2px;
-}
-.gen-type-info p {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin: 0;
-}
-.gen-type-check {
-    color: transparent;
-    font-size: 18px;
-    transition: var(--transition);
-}
-.gen-type-card input:checked + .gen-type-card-inner .gen-type-check {
-    color: var(--primary);
-}
+.gen-type-info h4 { font-size: 11px; font-weight: 700; color: var(--text-dark); margin: 0 0 1px; }
+.gen-type-info p { font-size: 9px; color: var(--text-muted); margin: 0; }
+.gen-type-check { color: transparent; font-size: 14px; transition: var(--transition); }
+.gen-type-card input:checked + .gen-type-card-inner .gen-type-check { color: var(--primary); }
 
 /* Header Right */
-.modern-page-header-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
+.modern-page-header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
 /* Sticky Generate Bar */
 .certgen-sticky-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 999;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
     background: linear-gradient(135deg, #7c3aed, #a855f7);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px;
-    box-shadow: 0 -4px 20px rgba(124, 58, 237, 0.3);
-    border-radius: 0;
+    color: #fff; display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; box-shadow: 0 -4px 20px rgba(124, 58, 237, 0.3);
 }
-.certgen-sticky-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-}
-.certgen-sticky-bar-left i { font-size: 16px; }
+.certgen-sticky-bar-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.certgen-sticky-bar-left i { font-size: 14px; }
 .certgen-sticky-bar-right { display: flex; gap: 8px; }
 .certgen-sticky-bar .btn-modern-primary {
-    background: #fff;
-    color: #7c3aed;
-    border: none;
-    font-weight: 700;
+    background: #fff; color: #7c3aed; border: none; font-weight: 700;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
-.certgen-sticky-bar .btn-modern-primary:hover {
-    background: #f5f0ff;
-    transform: translateY(-1px);
-}
+.certgen-sticky-bar .btn-modern-primary:hover { background: #f5f0ff; transform: translateY(-1px); }
 .certgen-sticky-bar .btn-modern-primary:disabled {
-    background: rgba(255,255,255,0.4);
-    color: rgba(124,58,237,0.5);
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
+    background: rgba(255,255,255,0.4); color: rgba(124,58,237,0.5);
+    cursor: not-allowed; box-shadow: none; transform: none;
 }
 
 @media (max-width: 768px) {

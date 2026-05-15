@@ -72,11 +72,24 @@ class SettingController extends Controller
                 $key = $p[1] ?? $settingKey;
                 $group = $p[0] ?? 'general';
 
+                // Delete old file if exists
+                $oldPath = Setting::get($key);
+                if ($oldPath) {
+                    Storage::disk('public')->delete($oldPath);
+                    $oldPublicPath = public_path('storage/' . $oldPath);
+                    if (file_exists($oldPublicPath)) {
+                        @unlink($oldPublicPath);
+                    }
+                }
+
                 $path = $file->store('settings', 'public');
                 Setting::updateOrCreate(
                     ['key' => $key],
                     ['value' => $path, 'group' => $group]
                 );
+
+                // Copy to public/storage/ as fallback for XAMPP/symlink issues
+                $this->copyToPublicStorage($path);
             }
         }
 
@@ -93,6 +106,11 @@ class SettingController extends Controller
         $oldLogo = Setting::get('school_logo');
         if ($oldLogo) {
             Storage::disk('public')->delete($oldLogo);
+            // Also delete the public/storage/ fallback copy
+            $oldPublicPath = public_path('storage/' . $oldLogo);
+            if (file_exists($oldPublicPath)) {
+                @unlink($oldPublicPath);
+            }
         }
 
         $path = $request->file('logo')->store('settings', 'public');
@@ -101,7 +119,35 @@ class SettingController extends Controller
             ['value' => $path, 'group' => 'appearance']
         );
 
+        // Copy the file to public/storage/ as a fallback for XAMPP/symlink issues
+        $this->copyToPublicStorage($path);
+
         return redirect()->back()->with('success', 'School logo uploaded successfully.');
+    }
+
+    /**
+     * Copy a file from storage/app/public/ to public/storage/ as a fallback.
+     * This ensures images are accessible even when the symlink doesn't exist (XAMPP).
+     */
+    private function copyToPublicStorage($relativePath)
+    {
+        try {
+            $sourcePath = Storage::disk('public')->path($relativePath);
+            $destinationPath = public_path('storage/' . $relativePath);
+
+            // Ensure the destination directory exists
+            $destinationDir = dirname($destinationPath);
+            if (!is_dir($destinationDir)) {
+                mkdir($destinationDir, 0755, true);
+            }
+
+            // Copy the file if the source exists
+            if (file_exists($sourcePath)) {
+                copy($sourcePath, $destinationPath);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to copy logo to public storage fallback: ' . $e->getMessage());
+        }
     }
 
     public function destroy($id)
