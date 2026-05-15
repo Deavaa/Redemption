@@ -20,24 +20,24 @@
 
         /* ===== PAGE 1 OUTSIDE: LEFT = Grading Info, RIGHT = Cover ===== */
         .back-panel {
-            background: #fff; padding: 10mm 9mm; overflow-y: auto;
+            background: #fff; padding: 7mm 7mm; overflow-y: auto;
             border-right: 2px dashed #bbb;
         }
         .back-panel h3 {
-            font-size: 1.15rem; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 12px;
-            padding-bottom: 6px; border-bottom: 3px solid #2d2d3a; display: inline-block;
+            font-size: 0.95rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1.2px; color: #2d2d3a; margin-bottom: 6px;
+            padding-bottom: 4px; border-bottom: 2.5px solid #2d2d3a; display: inline-block;
         }
-        .back-panel h4 { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 14px 0 8px; }
-        .back-panel p, .back-panel li { font-size: 0.9rem; color: #4b5563; line-height: 1.8; }
-        .back-panel ul { padding-left: 18px; margin-bottom: 10px; }
-        .grading-scale { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.88rem; }
-        .grading-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 9px 10px; text-align: center; font-size: 0.82rem; font-weight: 700; }
-        .grading-scale td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.85rem; }
+        .back-panel h4 { font-size: 0.8rem; font-weight: 700; color: #1a1a2e; margin: 8px 0 3px; }
+        .back-panel p, .back-panel li { font-size: 0.7rem; color: #4b5563; line-height: 1.5; }
+        .back-panel ul { padding-left: 14px; margin-bottom: 4px; }
+        .grading-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.72rem; }
+        .grading-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 5px 6px; text-align: center; font-size: 0.68rem; font-weight: 700; }
+        .grading-scale td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.72rem; }
         .grading-scale td:first-child { font-weight: 700; text-align: left; }
-        .conduct-scale { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.88rem; }
-        .conduct-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 9px 10px; text-align: center; font-size: 0.82rem; font-weight: 700; }
-        .conduct-scale td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.85rem; }
+        .conduct-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.72rem; }
+        .conduct-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 5px 6px; text-align: center; font-size: 0.68rem; font-weight: 700; }
+        .conduct-scale td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.72rem; }
 
         /* FRONT COVER PANEL */
         .front-panel {
@@ -234,10 +234,10 @@
     <!-- PAGE 1: OUTSIDE - Back (left: grading rules) + Front (right: cover with student info) -->
     <div class="page">
         <div class="panel back-panel">
-            <h3>Grading &amp; Assessment Policy<br><span style="font-weight:600;font-size:0.85rem;opacity:0.8;">የውጤት ምዘና ፖሊሲ</span></h3>
+            <h3>Grading &amp; Assessment Policy<br><span style="font-weight:600;font-size:0.72rem;color:#6b7280;">የውጤት ምዘና ፖሊሲ</span></h3>
 
             <h4>1. Academic Grading Scale / የአካዳሚክ ውጤት ደረጃ</h4>
-            <p>Student performance is evaluated using the following grading scale. Each grade corresponds to a specific range of percentage scores and carries a designated grade point value used for computing cumulative averages. / የተማሪዎች ውጤት በሚከተለው የውጤት ደረጃ መሰረት ይገመገማል። እያንዳንዱ ደረጃ የተወሰነ የፍተሻ ውጤት ክልል እና የነጥብ እሴት ይዞ ይቀራል።</p>
+            <p>Student performance is evaluated using the following grading scale. / የተማሪዎች ውጤት በሚከተለው የውጤት ደረጃ መሰረት ይገመገማል።</p>
             <table class="grading-scale">
                 <thead><tr><th>Grade / ደረጃ</th><th>Score / ውጤት</th><th>Point / ነጥብ</th><th>Description / መግለጫ</th></tr></thead>
                 <tbody>
@@ -253,7 +253,7 @@
             </table>
 
             <h4>2. Behavioral Assessment / የባህሪ ምዘና</h4>
-            <p>Behavioral and character development is assessed alongside academic performance using the following 5-point scale. / የባህሪ እና ባህሪ ልማት ከአካዳሚክ ውጤት ጋር በመሆን በሚከተለው 5-ነጥብ ሚዛን ይገመገማል።</p>
+            <p>Behavior is assessed using the following 5-point scale. / የባህሪ ምዘና በሚከተለው 5-ነጥብ ሚዛን ይገመገማል።</p>
             <table class="conduct-scale">
                 <thead><tr><th>Rating / ደረጃ</th><th>Score / ነጥብ</th><th>Description / መግለጫ</th></tr></thead>
                 <tbody>
