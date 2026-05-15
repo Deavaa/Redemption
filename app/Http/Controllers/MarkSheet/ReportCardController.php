@@ -150,7 +150,7 @@ class ReportCardController extends Controller
         if ($schoolLogo) {
             $logoUrl = filter_var($schoolLogo, FILTER_VALIDATE_URL)
                 ? $schoolLogo
-                : (\Illuminate\Support\Facades\Storage::disk('public')->url($schoolLogo));
+                : Setting::getLogoUrl();
         }
 
         return view('admin.report-card.card', compact(

@@ -83,9 +83,9 @@
                     @csrf
                     <div class="logo-upload-area">
                         <div class="logo-preview" id="logoPreview">
-                            @php $logoPath = \App\Models\Setting::get('school_logo'); @endphp
-                            @if($logoPath && file_exists(public_path('storage/' . $logoPath)))
-                                <img src="{{ asset('storage/' . $logoPath) }}?t={{ time() }}" alt="School Logo" id="logoImg">
+                            @php $logoUrl = \App\Models\Setting::getLogoUrl(); @endphp
+                            @if($logoUrl)
+                                <img src="{{ $logoUrl }}?t={{ time() }}" alt="School Logo" id="logoImg">
                             @else
                                 <div class="logo-placeholder" id="logoPlaceholder">
                                     <i class="fas fa-school"></i>
@@ -163,7 +163,7 @@
                                 </label>
                                 @if($item->value)
                                 <div class="current-file-preview">
-                                    <img src="{{ asset('storage/' . $item->value) }}?t={{ time() }}" alt="{{ $item->key }}" class="file-preview-img">
+                                    <img src="{{ \App\Models\Setting::getLogoUrl() }}?t={{ time() }}" alt="{{ $item->key }}" class="file-preview-img">
                                 </div>
                                 @endif
                                 <div class="modern-input-wrapper">

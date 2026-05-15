@@ -39,9 +39,14 @@ class Setting extends Model
             if (Storage::disk('public')->exists($logo)) {
                 // Try to copy to public/storage/ for next time
                 self::ensurePublicCopy($logo);
-                return Storage::url($logo);
+                // Use asset() instead of Storage::url() — asset() respects the
+                // current request host/port, while Storage::url() hardcodes APP_URL
+                // which may not match the actual URL the browser is using.
+                return asset('storage/' . $logo);
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Log::warning('Setting::getLogoUrl Strategy 2 failed: ' . $e->getMessage());
+        }
 
         // Strategy 3: Storage app public directory (real file location)
         if (file_exists(storage_path('app/public/' . $logo))) {
@@ -81,7 +86,7 @@ class Setting extends Model
                 copy($sourcePath, $destinationPath);
             }
         } catch (\Throwable $e) {
-            // Silently fail — don't break the page
+            \Log::warning('Setting::ensurePublicCopy failed for "' . $relativePath . '": ' . $e->getMessage());
         }
     }
 }
