@@ -76,12 +76,19 @@
             background: linear-gradient(90deg, transparent, #c9a84c, transparent);
         }
 
-        /* Watermark */
+        /* Watermark — front side */
         .id-card-watermark {
             position: absolute; top: 50%; left: 55%; transform: translate(-50%, -50%);
-            width: 150px; height: 150px; opacity: 0.035; pointer-events: none; z-index: 0;
+            width: 160px; height: 160px; opacity: 0.07; pointer-events: none; z-index: 0;
         }
-        .id-card-watermark img { width: 100%; height: 100%; object-fit: contain; }
+        .id-card-watermark img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(30%); }
+
+        /* Watermark — back side */
+        .id-card-back-watermark {
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            width: 140px; height: 140px; opacity: 0.055; pointer-events: none; z-index: 0;
+        }
+        .id-card-back-watermark img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(30%); }
 
         /* Body */
         .id-card-body {
@@ -387,6 +394,13 @@
             <div class="id-card-back">
                 <div class="id-card-back-border-inner"></div>
                 <div class="id-card-top-bar"></div>
+
+                {{-- Back Watermark --}}
+                @if($hasLogo)
+                <div class="id-card-back-watermark">
+                    <img src="{{ $logoUrl }}" alt="" onerror="this.style.display='none';">
+                </div>
+                @endif
 
                 <div class="id-card-back-header">
                     <h4>{{ strtoupper($schoolName) }}</h4>
