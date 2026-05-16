@@ -1,4 +1,24 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # ── For XAMPP / shared hosting where document root is the project root ──
+    # Route all requests to Laravel's public directory.
+
+    # If request already points to public/, stop rewriting
+    RewriteCond %{THE_REQUEST} /public/ [NC]
+    RewriteRule ^ - [L]
+
+    # Rewrite everything else to public/
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
+
+# Disable directory listing
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# Block access to sensitive files from the web
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
