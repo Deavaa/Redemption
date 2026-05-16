@@ -158,6 +158,32 @@
                             <div class="gen-type-check"><i class="fas fa-check-circle"></i></div>
                         </div>
                     </label>
+                    <label class="gen-type-card">
+                        <input type="radio" name="type" value="transcript">
+                        <div class="gen-type-card-inner">
+                            <div class="gen-type-icon" style="background:rgba(139,92,246,0.12);color:#8b5cf6;">
+                                <i class="fas fa-scroll"></i>
+                            </div>
+                            <div class="gen-type-info">
+                                <h4>Academic Transcript</h4>
+                                <p>Complete academic record from enrollment to date with all terms and years</p>
+                            </div>
+                            <div class="gen-type-check"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                    </label>
+                    <label class="gen-type-card">
+                        <input type="radio" name="type" value="leaving_certificate">
+                        <div class="gen-type-card-inner">
+                            <div class="gen-type-icon" style="background:rgba(220,38,38,0.12);color:#dc2626;">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                            <div class="gen-type-info">
+                                <h4>Leaving Clearance Certificate</h4>
+                                <p>Official school leaving certificate with clearance checklist and academic summary</p>
+                            </div>
+                            <div class="gen-type-check"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                    </label>
                 </div>
             </div>
         </div>

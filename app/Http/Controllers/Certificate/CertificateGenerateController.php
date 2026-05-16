@@ -27,7 +27,7 @@ class CertificateGenerateController extends Controller
     {
         $r->validate([
             'student_id' => 'required|exists:students,id',
-            'type' => 'required|in:academic,completion,transfer,character,foldable',
+            'type' => 'required|in:academic,completion,transfer,character,foldable,transcript,leaving_certificate',
         ]);
 
         $student = Student::with(['classroom', 'section', 'branch'])->findOrFail($r->student_id);
@@ -68,6 +68,14 @@ class CertificateGenerateController extends Controller
             'content' => $r->type . ' certificate for ' . $student->first_name . ' ' . $student->last_name,
             'template' => $r->type,
         ]);
+
+        // Redirect to dedicated pages for transcript and leaving certificate
+        if ($r->type === 'transcript') {
+            return redirect()->route('admin.transcript.index');
+        }
+        if ($r->type === 'leaving_certificate') {
+            return redirect()->route('admin.leaving-certificate.index');
+        }
 
         if ($r->type === 'foldable') {
             return view('admin.certificate-generate.foldable', compact('student', 'marks', 'cert'));

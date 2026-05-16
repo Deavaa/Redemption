@@ -13,6 +13,8 @@ use App\Http\Controllers\CalendarEvent\AnnouncementController;
 use App\Http\Controllers\CalendarEvent\CalendarEventController;
 use App\Http\Controllers\Certificate\CertificateController;
 use App\Http\Controllers\Certificate\CertificateGenerateController;
+use App\Http\Controllers\Certificate\TranscriptController;
+use App\Http\Controllers\Certificate\LeavingCertificateController;
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\ClassAsset\ClassAssetController;
 use App\Http\Controllers\Classroom\ClassroomController;
@@ -144,6 +146,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('certificate-generate', [CertificateGenerateController::class, 'index'])->name('certificate-generate.index')->middleware('permission:certificates.generate');
     Route::post('certificate-generate', [CertificateGenerateController::class, 'generate'])->name('certificate-generate.generate')->middleware('permission:certificates.generate');
     Route::get('certificate-generate/api/students', [CertificateGenerateController::class, 'getStudents'])->name('certificate-generate.students');
+
+    // Transcript Generation
+    Route::get('transcript', [TranscriptController::class, 'index'])->name('transcript.index')->middleware('permission:certificates.generate');
+    Route::post('transcript/generate', [TranscriptController::class, 'generate'])->name('transcript.generate')->middleware('permission:certificates.generate');
+    Route::get('transcript/api/students', [TranscriptController::class, 'getStudents'])->name('transcript.students');
+
+    // Leaving Certificate Generation
+    Route::get('leaving-certificate', [LeavingCertificateController::class, 'index'])->name('leaving-certificate.index')->middleware('permission:certificates.generate');
+    Route::post('leaving-certificate/generate', [LeavingCertificateController::class, 'generate'])->name('leaving-certificate.generate')->middleware('permission:certificates.generate');
+    Route::get('leaving-certificate/api/students', [LeavingCertificateController::class, 'getStudents'])->name('leaving-certificate.students');
 
     // ── People ────────────────────────────────────────────
     Route::get('students/generate-ids', [StudentController::class, 'generateIds'])->name('students.generateIds');
