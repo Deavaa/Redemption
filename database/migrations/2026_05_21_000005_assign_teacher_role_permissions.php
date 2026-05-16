@@ -78,8 +78,7 @@ return new class extends Migration
 
         foreach ($permIds as $pid) {
             DB::table('permission_role')->updateOrInsert(
-                ['permission_id' => $pid, 'role_id' => $teacherRoleId],
-                ['created_at' => $now, 'updated_at' => $now]
+                ['permission_id' => $pid, 'role_id' => $teacherRoleId]
             );
         }
 
@@ -87,8 +86,7 @@ return new class extends Migration
         $teacherUserIds = DB::table('users')->where('role', 'teacher')->pluck('id');
         foreach ($teacherUserIds as $uid) {
             DB::table('role_user')->updateOrInsert(
-                ['role_id' => $teacherRoleId, 'user_id' => $uid],
-                ['created_at' => $now, 'updated_at' => $now]
+                ['role_id' => $teacherRoleId, 'user_id' => $uid]
             );
         }
     }

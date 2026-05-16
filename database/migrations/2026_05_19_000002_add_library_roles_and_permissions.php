@@ -47,21 +47,17 @@ return new class extends Migration
 
         // Assign all library permissions to librarian role
         foreach ($permissionIds as $pid) {
-            DB::table('permission_role')->insert([
+            DB::table('permission_role')->insertOrIgnore([
                 'permission_id' => $pid,
                 'role_id' => $librarianRoleId,
-                'created_at' => $now,
-                'updated_at' => $now,
             ]);
         }
 
         // Assign all library permissions to branch_principal role
         foreach ($permissionIds as $pid) {
-            DB::table('permission_role')->insert([
+            DB::table('permission_role')->insertOrIgnore([
                 'permission_id' => $pid,
                 'role_id' => $branchPrincipalRoleId,
-                'created_at' => $now,
-                'updated_at' => $now,
             ]);
         }
 
@@ -69,11 +65,9 @@ return new class extends Migration
         $viewOnlyRoles = DB::table('roles')->whereIn('name', ['teacher', 'student', 'staff', 'parent'])->pluck('id');
         $viewPermissionId = $permissionIds[0]; // library.view
         foreach ($viewOnlyRoles as $roleId) {
-            DB::table('permission_role')->insert([
+            DB::table('permission_role')->insertOrIgnore([
                 'permission_id' => $viewPermissionId,
                 'role_id' => $roleId,
-                'created_at' => $now,
-                'updated_at' => $now,
             ]);
         }
     }
