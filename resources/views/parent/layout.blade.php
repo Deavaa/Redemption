@@ -606,13 +606,26 @@
                 <div class="announcement-list">
                     @foreach($activeAnnouncements as $ann)
                     <div class="announcement-item">
-                        <div class="announcement-title">{{ $ann->title }}</div>
+                        <div class="announcement-item-header">
+                            <div class="announcement-title">{{ $ann->title }}</div>
+                            @if($ann->category)
+                                <span class="announcement-category">{{ ucfirst($ann->category) }}</span>
+                            @endif
+                        </div>
                         @if($ann->description)
                             <div class="announcement-desc">{{ strip_tags($ann->description) }}</div>
                         @endif
-                        @if($ann->start_date)
-                            <div class="announcement-date"><i class="fas fa-calendar-alt"></i> {{ $ann->start_date->format('M d, Y') }}</div>
-                        @endif
+                        <div class="announcement-meta">
+                            @if($ann->start_date)
+                                <span class="announcement-date"><i class="fas fa-calendar-alt"></i> {{ $ann->start_date->format('M d, Y') }}</span>
+                            @endif
+                            @if($ann->start_time)
+                                <span class="announcement-time"><i class="fas fa-clock"></i> {{ $ann->start_time->format('h:i A') }}</span>
+                            @endif
+                            @if($ann->end_date)
+                                <span class="announcement-end-date"><i class="fas fa-calendar-check"></i> Until {{ $ann->end_date->format('M d, Y') }}</span>
+                            @endif
+                        </div>
                     </div>
                     @endforeach
                 </div>
@@ -620,21 +633,22 @@
         </div>
         <style>
         .announcement-banner { color: #fff; position: relative; z-index: 60; padding: 0; }
-        .announcement-banner-inner { max-width: 100%; padding: 12px 20px; }
-        .announcement-banner-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .announcement-badge { font-weight: 700; font-size: .78rem; background: rgba(255,255,255,.2); padding: 3px 12px; border-radius: 4px; white-space: nowrap; letter-spacing: 0.5px; }
-        .announcement-close { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px; transition: all .2s; }
+        .announcement-banner-inner { max-width: 100%; padding: 16px 24px; }
+        .announcement-banner-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .announcement-badge { font-weight: 700; font-size: .85rem; background: rgba(255,255,255,.2); padding: 4px 14px; border-radius: 6px; white-space: nowrap; letter-spacing: 0.5px; }
+        .announcement-close { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: 4px; transition: all .2s; }
         .announcement-close:hover { background: rgba(255,255,255,.15); color: #fff; }
-        .announcement-list { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.3) transparent; }
-        .announcement-list::-webkit-scrollbar { height: 4px; }
-        .announcement-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.3); border-radius: 4px; }
-        .announcement-list::-webkit-scrollbar-track { background: transparent; }
-        .announcement-item { flex: 0 0 auto; min-width: 280px; max-width: 400px; background: rgba(255,255,255,.12); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(255,255,255,.15); transition: all .2s; }
+        .announcement-list { display: flex; flex-direction: column; gap: 12px; }
+        .announcement-item { width: 100%; background: rgba(255,255,255,.12); border-radius: 12px; padding: 16px 20px; border: 1px solid rgba(255,255,255,.15); transition: all .2s; }
         .announcement-item:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.3); }
-        .announcement-title { font-size: .92rem; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
-        .announcement-desc { font-size: .8rem; font-weight: 400; opacity: .9; line-height: 1.4; margin-bottom: 6px; max-height: 60px; overflow: hidden; }
-        .announcement-date { font-size: .7rem; opacity: .65; display: flex; align-items: center; gap: 4px; }
-        @media (max-width: 768px) { .announcement-item { min-width: 240px; } }
+        .announcement-item-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+        .announcement-title { font-size: 1.05rem; font-weight: 700; line-height: 1.4; }
+        .announcement-category { font-size: .75rem; font-weight: 600; background: rgba(255,255,255,.25); padding: 2px 10px; border-radius: 20px; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.3px; }
+        .announcement-desc { font-size: .92rem; font-weight: 400; opacity: .92; line-height: 1.5; margin-bottom: 8px; }
+        .announcement-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: .82rem; opacity: .75; }
+        .announcement-meta span { display: flex; align-items: center; gap: 5px; }
+        .announcement-date, .announcement-time, .announcement-end-date { display: flex; align-items: center; gap: 5px; }
+        @media (max-width: 768px) { .announcement-banner-inner { padding: 12px 16px; } .announcement-item { padding: 12px 14px; } .announcement-title { font-size: .95rem; } .announcement-desc { font-size: .85rem; } .announcement-meta { gap: 10px; font-size: .78rem; } }
         @media print { .announcement-banner { display: none !important; } }
         </style>
         @endif

@@ -52,17 +52,15 @@
 .fms-seq-table tbody tr:nth-child(even){background:#f9fafb}
 .fms-seq-table tbody tr:hover{background:#eef2ff}
 
-/* Rotated subject headers */
-.fms-seq-table .th-rotated{height:140px;white-space:nowrap;padding:0;border:1px solid #e5e7eb;position:relative}
-.fms-seq-table .th-rotated .th-rotate-inner{display:flex;align-items:flex-end;justify-content:center;width:100%;height:100%;position:relative;overflow:visible}
-.fms-seq-table .th-rotated .th-rotate-text{display:inline-block;transform:rotate(-90deg) translateX(-50%);transform-origin:left bottom;text-align:left;font-size:.78rem;font-weight:700;padding:4px 2px;white-space:nowrap;position:absolute;bottom:50%;left:50%}
+/* Rotated subject headers - using writing-mode for reliable 90° rotation */
+.fms-seq-table .th-rotated{height:140px;white-space:nowrap;padding:0;border:1px solid #e5e7eb;vertical-align:bottom}
+.fms-seq-table .th-rotated .th-rotate-inner{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
+.fms-seq-table .th-rotated .th-rotate-text{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.78rem;font-weight:700;padding:6px 2px;white-space:nowrap;letter-spacing:.3px;line-height:1.1}
 
 /* Fixed header columns */
 .fms-seq-table .th-fixed{padding:.55rem .5rem;white-space:nowrap;text-align:center}
 .fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:160px}
 .fms-seq-table .mark-val{font-weight:600}
-.fms-seq-table .mark-val.grade-fail{color:#ef4444;font-weight:700}
-.fms-seq-table .mark-val.grade-pass{color:#10b981}
 .fms-seq-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee}
 .fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.78rem}
 .fms-seq-table .rank-col{font-weight:700}
@@ -82,18 +80,15 @@
 
 /* Term 1 header */
 .fms-seq-table.term1-table .th-fixed{background:#eff6ff;color:#1e3a8a}
-.fms-seq-table.term1-table .th-rotated{background:#eff6ff}
-.fms-seq-table.term1-table .th-rotated .th-rotate-text{color:#1e3a8a}
+.fms-seq-table.term1-table .th-rotated{background:#eff6ff;color:#1e3a8a}
 .fms-seq-table.term1-table .rank-col{color:#2563eb;background:#dbeafe}
 /* Term 2 header */
 .fms-seq-table.term2-table .th-fixed{background:#f5f3ff;color:#5b21b6}
-.fms-seq-table.term2-table .th-rotated{background:#f5f3ff}
-.fms-seq-table.term2-table .th-rotated .th-rotate-text{color:#5b21b6}
+.fms-seq-table.term2-table .th-rotated{background:#f5f3ff;color:#5b21b6}
 .fms-seq-table.term2-table .rank-col{color:#7c3aed;background:#ede9fe}
 /* Annual header */
 .fms-seq-table.annual-table .th-fixed{background:#ecfdf5;color:#065f46}
-.fms-seq-table.annual-table .th-rotated{background:#ecfdf5}
-.fms-seq-table.annual-table .th-rotated .th-rotate-text{color:#065f46}
+.fms-seq-table.annual-table .th-rotated{background:#ecfdf5;color:#065f46}
 .fms-seq-table.annual-table .rank-col{color:#059669;background:#d1fae5}
 
 /* No data */
@@ -118,7 +113,7 @@
     .fms-seq-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .fms-term-section{page-break-inside:avoid}
     .avg-row td,.highest-row td,.lowest-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .fms-seq-table .th-rotated{height:120px!important}
+    .fms-seq-table .th-rotated{height:100px!important}
     .fms-seq-table .th-rotated .th-rotate-text{font-size:7pt!important}
 }
 
@@ -244,8 +239,7 @@
                 foreach ($subjects as $subj) {
                     $data = $row[$termKey][$subj->id] ?? null;
                     if ($data && $data[\'grand_total\'] !== null) {
-                        $cls = floatval($data[\'grand_total\']) < 40 ? \'grade-fail\' : \'grade-pass\';
-                        $html .= \'<td><span class="mark-val \' . $cls . \'">\' . $data[\'grand_total\'] . \'</span></td>\';
+                        $html .= \'<td><span class="mark-val">\' . $data[\'grand_total\'] . \'</span></td>\';
                     } else {
                         $html .= \'<td style="color:#d1d5db">-</td>\';
                     }
@@ -327,7 +321,7 @@
                             @php $t1 = $row['term1'][$subj->id] ?? null @endphp
                             <td>
                                 @if($t1 && $t1['grand_total'] !== null)
-                                    <span class="mark-val {{ floatval($t1['grand_total']) < 40 ? 'grade-fail' : 'grade-pass' }}">{{ $t1['grand_total'] }}</span>
+                                    <span class="mark-val">{{ $t1['grand_total'] }}</span>
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
@@ -432,7 +426,7 @@
                             @php $t2 = $row['term2'][$subj->id] ?? null @endphp
                             <td>
                                 @if($t2 && $t2['grand_total'] !== null)
-                                    <span class="mark-val {{ floatval($t2['grand_total']) < 40 ? 'grade-fail' : 'grade-pass' }}">{{ $t2['grand_total'] }}</span>
+                                    <span class="mark-val">{{ $t2['grand_total'] }}</span>
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
@@ -533,7 +527,7 @@
                             @php $ann = $row['annual'][$subj->id] ?? null @endphp
                             <td>
                                 @if($ann && $ann['grand_total'] !== null)
-                                    <span class="mark-val {{ floatval($ann['grand_total']) < 40 ? 'grade-fail' : 'grade-pass' }}">{{ $ann['grand_total'] }}</span>
+                                    <span class="mark-val">{{ $ann['grand_total'] }}</span>
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
