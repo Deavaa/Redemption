@@ -633,22 +633,22 @@
         </div>
         <style>
         .announcement-banner { color: #fff; position: relative; z-index: 60; padding: 0; }
-        .announcement-banner-inner { max-width: 100%; padding: 16px 24px; }
-        .announcement-banner-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .announcement-badge { font-weight: 700; font-size: .85rem; background: rgba(255,255,255,.2); padding: 4px 14px; border-radius: 6px; white-space: nowrap; letter-spacing: 0.5px; }
-        .announcement-close { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: 4px; transition: all .2s; }
+        .announcement-banner-inner { max-width: 100%; padding: 6px 16px; }
+        .announcement-banner-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+        .announcement-badge { font-weight: 700; font-size: .7rem; background: rgba(255,255,255,.2); padding: 2px 8px; border-radius: 4px; white-space: nowrap; letter-spacing: 0.5px; }
+        .announcement-close { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: all .2s; }
         .announcement-close:hover { background: rgba(255,255,255,.15); color: #fff; }
-        .announcement-list { display: flex; flex-direction: column; gap: 12px; }
-        .announcement-item { width: 100%; background: rgba(255,255,255,.12); border-radius: 12px; padding: 16px 20px; border: 1px solid rgba(255,255,255,.15); transition: all .2s; }
+        .announcement-list { display: flex; gap: 8px; }
+        .announcement-item { flex: 1; background: rgba(255,255,255,.12); border-radius: 8px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.15); transition: all .2s; }
         .announcement-item:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.3); }
-        .announcement-item-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
-        .announcement-title { font-size: 1.05rem; font-weight: 700; line-height: 1.4; }
-        .announcement-category { font-size: .75rem; font-weight: 600; background: rgba(255,255,255,.25); padding: 2px 10px; border-radius: 20px; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.3px; }
-        .announcement-desc { font-size: .92rem; font-weight: 400; opacity: .92; line-height: 1.5; margin-bottom: 8px; }
-        .announcement-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: .82rem; opacity: .75; }
-        .announcement-meta span { display: flex; align-items: center; gap: 5px; }
-        .announcement-date, .announcement-time, .announcement-end-date { display: flex; align-items: center; gap: 5px; }
-        @media (max-width: 768px) { .announcement-banner-inner { padding: 12px 16px; } .announcement-item { padding: 12px 14px; } .announcement-title { font-size: .95rem; } .announcement-desc { font-size: .85rem; } .announcement-meta { gap: 10px; font-size: .78rem; } }
+        .announcement-item-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+        .announcement-title { font-size: .82rem; font-weight: 700; line-height: 1.2; }
+        .announcement-category { font-size: .6rem; font-weight: 600; background: rgba(255,255,255,.25); padding: 1px 6px; border-radius: 10px; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.3px; }
+        .announcement-desc { font-size: .72rem; font-weight: 400; opacity: .9; line-height: 1.3; margin-bottom: 2px; max-height: 2.6em; overflow: hidden; }
+        .announcement-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .65rem; opacity: .7; }
+        .announcement-meta span { display: flex; align-items: center; gap: 3px; }
+        .announcement-date, .announcement-time, .announcement-end-date { display: flex; align-items: center; gap: 3px; }
+        @media (max-width: 768px) { .announcement-list { flex-direction: column; gap: 4px; } .announcement-banner-inner { padding: 5px 10px; } .announcement-item { padding: 4px 8px; } }
         @media print { .announcement-banner { display: none !important; } }
         </style>
         @endif
