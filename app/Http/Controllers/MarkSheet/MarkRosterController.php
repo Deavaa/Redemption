@@ -89,6 +89,7 @@ class MarkRosterController extends Controller
 
         // ── Authorization and subject scoping for teachers ──
         $teacher = $this->getTeacherForUser();
+        $isTeacher = (bool) $teacher;
         $isHomeroomForClass = false;
         $teacherSubjectIds = null; // null = show all subjects
 
