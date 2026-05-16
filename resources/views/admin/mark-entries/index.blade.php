@@ -537,10 +537,54 @@
     // --- Attach input validation & auto-save ---
     function attachAutoSave() {
         document.querySelectorAll('.mark-input').forEach(inp => {
+            // KEYDOWN: Intercept the physical period/comma key BEFORE the OS locale converts it.
+            // This is the primary fix for Ethiopian/Amharic and other locales where the
+            // period key produces a non-ASCII character (e.g. ። or ·) that gets stripped
+            // by our regex, making it appear impossible to type a decimal point.
+            inp.addEventListener('keydown', function(e) {
+                // Allow: backspace, delete, tab, escape, enter, arrows, home, end
+                if ([8, 9, 13, 27, 46, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) return;
+                // Allow: Ctrl+A/C/V/X/Z
+                if ((e.ctrlKey || e.metaKey) && [65, 67, 86, 88, 90].includes(e.keyCode)) return;
+
+                // Physical period key (keyCode 190) or numpad decimal (keyCode 110)
+                // or comma key (keyCode 188) — many locales use comma as decimal separator
+                // Also check e.code for the physical key name regardless of layout
+                var isPeriodKey = (e.keyCode === 190 || e.keyCode === 110 || e.keyCode === 188
+                    || e.code === 'Period' || e.code === 'NumpadDecimal' || e.code === 'Comma'
+                    // Also catch Amharic/Ethiopic characters that the period key might produce
+                    || e.key === '።' || e.key === '፡' || e.key === ',' || e.key === '·'
+                    || e.key === '．' || e.key === '。');
+
+                if (isPeriodKey) {
+                    e.preventDefault();
+                    // Only allow one decimal point
+                    if (this.value.indexOf('.') === -1) {
+                        var start = this.selectionStart;
+                        var end = this.selectionEnd;
+                        this.value = this.value.substring(0, start) + '.' + this.value.substring(end);
+                        this.setSelectionRange(start + 1, start + 1);
+                        // Trigger input event for recalc and auto-save
+                        this.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    return;
+                }
+
+                // Allow digit keys (0-9 on main keyboard and numpad)
+                if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) return;
+
+                // Block everything else (letters, symbols, etc.)
+                e.preventDefault();
+            });
+
+            // INPUT: Handle paste events and trigger recalc + auto-save
             inp.addEventListener('input', function() {
-                // Clean value: allow only digits and one decimal point with max 1 decimal place
                 var raw = this.value;
-                var cleaned = raw.replace(/[^0-9.]/g, '');
+                // Convert common alternate decimal characters to period
+                // This handles paste from clipboard and any characters that slip through keydown
+                var cleaned = raw.replace(/[，、።፡·．。]/g, '.');
+                // Remove everything except digits and periods
+                cleaned = cleaned.replace(/[^0-9.]/g, '');
                 // Keep only the first dot
                 var parts = cleaned.split('.');
                 if (parts.length > 2) {
@@ -575,6 +619,7 @@
                 if (saveTimer) clearTimeout(saveTimer);
                 saveTimer = setTimeout(() => saveMark(key, value), 900);
             });
+
             inp.addEventListener('blur', function() {
                 enforceMaxValue(this);
                 recalc();
