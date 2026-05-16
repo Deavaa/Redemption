@@ -236,22 +236,22 @@
                             @for ($i = 1; $i <= 10; $i++)
                             <div class="mc-ca-item">
                                 <span class="mc-ca-badge">{{ $i }}</span>
-                                <input type="number" data-field="ca{{ $i }}" data-group="ca" min="0" max="5" step="0.5" class="mc-ca-input mi" placeholder="/5">
+                                <input type="number" data-field="ca{{ $i }}" data-group="ca" min="0" max="5" step="0.1" class="mc-ca-input mi" placeholder="/5">
                             </div>
                             @endfor
                         </div>
                         <div class="mc-ca-extra">
                             <div class="mc-extra-item">
                                 <label class="mc-extra-label">Conduct /5</label>
-                                <input type="number" data-field="conduct" data-group="ca" min="0" max="5" step="0.5" class="mc-extra-input mi" placeholder="/5">
+                                <input type="number" data-field="conduct" data-group="ca" min="0" max="5" step="0.1" class="mc-extra-input mi" placeholder="/5">
                             </div>
                             <div class="mc-extra-item">
                                 <label class="mc-extra-label">Handwriting /5</label>
-                                <input type="number" data-field="handwriting" data-group="ca" min="0" max="5" step="0.5" class="mc-extra-input mi" placeholder="/5">
+                                <input type="number" data-field="handwriting" data-group="ca" min="0" max="5" step="0.1" class="mc-extra-input mi" placeholder="/5">
                             </div>
                             <div class="mc-extra-item">
                                 <label class="mc-extra-label">Creativity /10</label>
-                                <input type="number" data-field="creativity" data-group="ca" min="0" max="10" step="0.5" class="mc-extra-input mi" placeholder="/10">
+                                <input type="number" data-field="creativity" data-group="ca" min="0" max="10" step="0.1" class="mc-extra-input mi" placeholder="/10">
                             </div>
                         </div>
                     </div>
@@ -267,19 +267,19 @@
                         <div class="mc-exam-grid">
                             <div class="mc-exam-item">
                                 <label class="mc-exam-label">Test 1 <span class="mc-exam-max">/10</span></label>
-                                <input type="number" data-field="test1" data-group="exam" min="0" max="10" step="0.5" class="mc-exam-input mi" placeholder="0">
+                                <input type="number" data-field="test1" data-group="exam" min="0" max="10" step="0.1" class="mc-exam-input mi" placeholder="0">
                             </div>
                             <div class="mc-exam-item">
                                 <label class="mc-exam-label">Test 2 <span class="mc-exam-max">/10</span></label>
-                                <input type="number" data-field="test2" data-group="exam" min="0" max="10" step="0.5" class="mc-exam-input mi" placeholder="0">
+                                <input type="number" data-field="test2" data-group="exam" min="0" max="10" step="0.1" class="mc-exam-input mi" placeholder="0">
                             </div>
                             <div class="mc-exam-item">
                                 <label class="mc-exam-label">Mid-Term <span class="mc-exam-max">/20</span></label>
-                                <input type="number" data-field="mid_term" data-group="exam" min="0" max="20" step="0.5" class="mc-exam-input mi" placeholder="0">
+                                <input type="number" data-field="mid_term" data-group="exam" min="0" max="20" step="0.1" class="mc-exam-input mi" placeholder="0">
                             </div>
                             <div class="mc-exam-item">
                                 <label class="mc-exam-label">Final Exam <span class="mc-exam-max">/30</span></label>
-                                <input type="number" data-field="final_exam" data-group="exam" min="0" max="30" step="0.5" class="mc-exam-input mi" placeholder="0">
+                                <input type="number" data-field="final_exam" data-group="exam" min="0" max="30" step="0.1" class="mc-exam-input mi" placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -526,8 +526,9 @@
         document.querySelectorAll('.mi').forEach(function(inp) {
             inp.addEventListener('blur', function() {
                 var mx = parseFloat(this.max), v = parseFloat(this.value);
-                if (!isNaN(v) && v > mx) this.value = mx;
-                if (!isNaN(v) && v < 0) this.value = 0;
+                if (!isNaN(v) && v > mx) v = mx;
+                if (!isNaN(v) && v < 0) v = 0;
+                if (!isNaN(v)) this.value = Math.round(v * 10) / 10; // Round to 1 decimal
                 recalc();
                 if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
                 saveField(this.dataset.field, this.value);

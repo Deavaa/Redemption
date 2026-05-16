@@ -585,7 +585,7 @@
         if (isNaN(v)) { inp.value = ''; return; }
         if (!isNaN(max) && v > max) v = max;
         if (!isNaN(min) && v < min) v = min;
-        inp.value = v;
+        inp.value = Math.round(v * 10) / 10; // Round to 1 decimal place
     }
 
     function saveMark(key, value) {
