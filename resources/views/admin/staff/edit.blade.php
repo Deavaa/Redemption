@@ -149,6 +149,22 @@
 
                         <div class="modern-form-group" id="branchField" style="display:none;">
                             <label class="modern-form-label" for="branch_id">Branch <span class="modern-required">*</span></label>
+                            @if($isBranchPrincipal)
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-building modern-input-icon"></i>
+                                <select name="branch_id" id="branchSelect" class="modern-input modern-select modern-select-locked" disabled>
+                                    @foreach($branches as $branch)
+                                    @if($branch->id == $authBranchId)
+                                    <option value="{{ $branch->id }}" selected>
+                                        {{ $branch->name }}@if($branch->is_headquarters) (HQ)@endif
+                                    </option>
+                                    @endif
+                                    @endforeach
+                                </select>
+                                <input type="hidden" name="branch_id" value="{{ $authBranchId }}">
+                            </div>
+                            <div class="modern-input-hint modern-input-hint-locked"><i class="fas fa-lock"></i> Locked to your branch — branch principals can only assign staff to their own branch</div>
+                            @else
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-building modern-input-icon"></i>
                                 <select name="branch_id" id="branchSelect" class="modern-input modern-select {{ $errors->has('branch_id') ? 'is-invalid' : '' }}">
@@ -162,6 +178,7 @@
                             </div>
                             <div class="modern-input-hint"><i class="fas fa-info-circle"></i> Branch-scoped roles are limited to their assigned branch</div>
                             @error('branch_id')<span class="modern-form-error">{{ $message }}</span>@enderror
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -304,6 +321,8 @@
 
 .modern-input-hint { font-size: 0.78rem; color: #9ca3af; margin-top: 0.3rem; }
 .modern-input-hint i { margin-right: 3px; }
+.modern-input-hint-locked { color: #d97706; font-weight: 500; }
+.modern-select-locked { background: #f3f4f6 !important; cursor: not-allowed !important; opacity: 0.85; border-color: #d1d5db !important; }
 .modern-form-error { display: block; color: #ef4444; font-size: 0.8rem; margin-top: 0.35rem; font-weight: 500; }
 
 /* Custom Switch */
@@ -346,6 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var roleHint = document.getElementById('roleHint');
     var roleHintText = document.getElementById('roleHintText');
     var branchRoles = @json($branchRoles);
+    var isBranchPrincipal = @json($isBranchPrincipal);
 
     var roleDescriptions = {
         'admin': 'Full system access to all modules and settings',
