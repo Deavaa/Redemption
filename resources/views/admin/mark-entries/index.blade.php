@@ -540,7 +540,6 @@
             inp.addEventListener('input', function() {
                 // Clean value: allow only digits and one decimal point with max 1 decimal place
                 var raw = this.value;
-                // Remove everything except digits and dots
                 var cleaned = raw.replace(/[^0-9.]/g, '');
                 // Keep only the first dot
                 var parts = cleaned.split('.');
@@ -560,7 +559,8 @@
                     this.value = cleaned;
                     this.setSelectionRange(selStart, selStart);
                 }
-                enforceMaxValue(this);
+                // DO NOT call enforceMaxValue here — it destroys the decimal point mid-typing
+                // (parseFloat("3.") = 3, then Math.round writes back "3" killing the dot)
                 recalc();
                 const key = getFieldKey(this);
                 const value = this.value;
