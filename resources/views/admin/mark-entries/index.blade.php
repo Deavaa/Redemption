@@ -537,32 +537,29 @@
     // --- Attach input validation & auto-save ---
     function attachAutoSave() {
         document.querySelectorAll('.mark-input').forEach(inp => {
-            // Allow only digits, one decimal point, and max 1 decimal place
-            inp.addEventListener('keypress', function(e) {
-                var allowed = '0123456789.';
-                if (allowed.indexOf(e.key) === -1) { e.preventDefault(); return; }
-                // Prevent multiple decimal points
-                if (e.key === '.' && this.value.indexOf('.') !== -1) { e.preventDefault(); return; }
-                // Prevent more than 1 decimal place
-                var dotIdx = this.value.indexOf('.');
-                if (dotIdx !== -1 && this.selectionStart > dotIdx && this.value.length - dotIdx > 1) {
-                    e.preventDefault(); return;
-                }
-            });
-            // Paste handler: strip invalid characters
-            inp.addEventListener('paste', function(e) {
-                e.preventDefault();
-                var paste = (e.clipboardData || window.clipboardData).getData('text');
-                var cleaned = paste.replace(/[^0-9.]/g, '');
+            inp.addEventListener('input', function() {
+                // Clean value: allow only digits and one decimal point with max 1 decimal place
+                var raw = this.value;
+                // Remove everything except digits and dots
+                var cleaned = raw.replace(/[^0-9.]/g, '');
+                // Keep only the first dot
                 var parts = cleaned.split('.');
-                if (parts.length > 2) cleaned = parts[0] + '.' + parts.slice(1).join('');
+                if (parts.length > 2) {
+                    cleaned = parts[0] + '.' + parts.slice(1).join('');
+                }
+                // Limit to 1 decimal place
                 if (cleaned.indexOf('.') !== -1) {
                     var dp = cleaned.split('.');
-                    if (dp[1].length > 1) cleaned = dp[0] + '.' + dp[1].substring(0, 1);
+                    if (dp[1].length > 1) {
+                        cleaned = dp[0] + '.' + dp[1].substring(0, 1);
+                    }
                 }
-                document.execCommand('insertText', false, cleaned);
-            });
-            inp.addEventListener('input', function() {
+                // Only update if changed (prevent cursor jump)
+                if (cleaned !== raw) {
+                    var selStart = this.selectionStart;
+                    this.value = cleaned;
+                    this.setSelectionRange(selStart, selStart);
+                }
                 enforceMaxValue(this);
                 recalc();
                 const key = getFieldKey(this);
