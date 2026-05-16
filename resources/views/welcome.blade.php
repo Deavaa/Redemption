@@ -872,6 +872,32 @@
         </div>
     </nav>
 
+    {{-- Latest News Banner --}}
+    @isset($latestNews)
+    @if($latestNews->count() > 0)
+    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#264b73 100%);color:#fff;padding:12px 0;position:relative;z-index:100">
+        <div class="container">
+            <div class="d-flex align-items-center gap-3">
+                <span style="font-weight:700;font-size:.75rem;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:4px;white-space:nowrap;flex-shrink:0"><i class="fas fa-newspaper me-1"></i>NEWS</span>
+                <div style="overflow:hidden;flex:1">
+                    <div style="display:flex;gap:40px;animation:newsScroll 30s linear infinite;white-space:nowrap">
+                        @foreach($latestNews as $newsItem)
+                            <span style="font-size:.9rem;font-weight:500">
+                                <strong>{{ $newsItem->title }}</strong>
+                                @if($newsItem->content)<span style="opacity:.8"> — {{ Str::limit(strip_tags($newsItem->content), 120) }}</span>@endif
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+    @keyframes newsScroll { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
+    </style>
+    @endif
+    @endisset
+
     <!-- Hero Slider Section -->
     <section class="hero-slider" id="home">
         <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-pause="false">

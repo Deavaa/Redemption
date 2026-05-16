@@ -13,26 +13,37 @@ class AuthController extends Controller
     public function login(Request $r) {
         $r->validate(['login'=>'required','password'=>'required']);
 
-        // Determine if login is email or not
-        $loginField = filter_var($r->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'email';
-        $credentials = [$loginField => $r->login, 'password' => $r->password];
-
-        if (Auth::attempt($credentials, $r->boolean('remember'))) {
-            $user = Auth::user();
-
-            // Check if account is active
-            if (isset($user->is_active) && !$user->is_active) {
-                Auth::logout();
-                $r->session()->invalidate();
-                throw ValidationException::withMessages(['email' => 'Your account has been deactivated. Please contact the administrator.']);
-            }
-
-            $r->session()->regenerate();
-
-            // Redirect based on role
-            return redirect()->intended($this->getHomeRoute($user));
+        $login = $r->login;
+        $password = $r->password;
+        
+        // Try to find user by email, id_number, or phone
+        $user = User::where('email', $login)
+            ->orWhere('id_number', $login)
+            ->orWhere('phone', $login)
+            ->first();
+        
+        if (!$user) {
+            throw ValidationException::withMessages(['login' => 'Invalid credentials. Please check your login details.']);
         }
-        throw ValidationException::withMessages(['email' => 'Invalid credentials. Please check your email and password.']);
+        
+        // Check password
+        if (!Hash::check($password, $user->password)) {
+            throw ValidationException::withMessages(['login' => 'Invalid credentials. Please check your password.']);
+        }
+        
+        // Check if account is active
+        if (isset($user->is_active) && !$user->is_active) {
+            Auth::logout();
+            $r->session()->invalidate();
+            throw ValidationException::withMessages(['login' => 'Your account has been deactivated. Please contact the administrator.']);
+        }
+        
+        // Log in the user
+        Auth::login($user, $r->boolean('remember'));
+        $r->session()->regenerate();
+        
+        // Redirect based on role
+        return redirect()->intended($this->getHomeRoute($user));
     }
 
     public function logout(Request $r) {
@@ -47,8 +58,18 @@ class AuthController extends Controller
      */
     private function getHomeRoute(User $user): string
     {
+        // Students go to student portal
+        if ($user->role === 'student') {
+            return route('student.dashboard');
+        }
+
+        // Parents go to parent portal
+        if ($user->role === 'parent') {
+            return route('parent.dashboard');
+        }
+
         // Admin, teacher, staff all go to admin dashboard
-        $panelRoles = ['admin', 'teacher', 'staff', 'super_admin'];
+        $panelRoles = ['admin', 'teacher', 'staff', 'super_admin', 'branch_principal', 'general_manager', 'librarian', 'cashier', 'registrar'];
 
         if (in_array($user->role, $panelRoles)) {
             return route('admin.dashboard');

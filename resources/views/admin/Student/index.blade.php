@@ -17,6 +17,10 @@
             <p class="modern-page-subtitle">Manage student enrollment and records</p>
         </div>
         <div class="modern-page-header-right">
+            <a href="{{ route('admin.students.generateIds') }}" class="btn-modern btn-modern-outline">
+                <i class="fas fa-id-badge"></i>
+                <span>Generate Student IDs</span>
+            </a>
             <a href="{{ route('admin.students.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-plus"></i>
                 <span>Add Student</span>
@@ -579,6 +583,19 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
     color: #fff;
+}
+
+.btn-modern-outline {
+    background: #fff;
+    color: #4361ee;
+    border: 1.5px solid #4361ee;
+}
+
+.btn-modern-outline:hover {
+    background: #4361ee;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(67, 97, 238, 0.3);
 }
 
 /* Alert */

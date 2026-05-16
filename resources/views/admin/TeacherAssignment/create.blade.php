@@ -1,172 +1,136 @@
 @extends('layouts.admin')
-@section('title', 'Add Teacher Assignment')
-@section('content')
-<div class="modern-page">
-    <div class="modern-page-header">
-        <div class="modern-page-header-left">
-            <nav class="modern-breadcrumb">
-                <ol>
-                    <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                    <li>Academics</li>
-                    <li><a href="{{ route('admin.teacher-assignments.index') }}">Teacher Assignments</a></li>
-                    <li class="active">Add New</li>
-                </ol>
-            </nav>
-            <h1 class="modern-page-title">Add Teacher Assignment</h1>
-            <p class="modern-page-subtitle">Assign a teacher to a class, section, and subject</p>
-        </div>
-        <div class="modern-page-header-right">
-            <a href="{{ route('admin.teacher-assignments.index') }}" class="btn-modern btn-modern-ghost">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-        </div>
-    </div>
-
-    <form method="POST" action="{{ route('admin.teacher-assignments.store') }}" enctype="multipart/form-data">
-        @csrf
-
-        <div class="modern-form-section">
-            <div class="modern-form-section-header">
-                <div class="modern-form-section-icon modern-form-section-icon-purple">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                </div>
-                <div>
-                    <h3 class="modern-form-section-title">Assignment Details</h3>
-                    <p class="modern-form-section-desc">Select the teacher, class, section, subject and academic year</p>
-                </div>
-            </div>
-            <div class="modern-form-section-body">
-                <div class="modern-form-grid">
-                    <div class="modern-form-group">
-                        <label class="modern-form-label">Teacher <span class="modern-required">*</span></label>
-                        <div class="modern-input-wrapper">
-                            <i class="fas fa-user-tie modern-input-icon"></i>
-                            <input type="text" name="teacher_id" class="modern-input" value="{{ old('teacher_id') }}" placeholder="Enter teacher ID" required>
-                        </div>
-                        @error('teacher_id')
-                            <div class="modern-form-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="modern-form-group">
-                        <label class="modern-form-label">Class <span class="modern-required">*</span></label>
-                        <div class="modern-input-wrapper">
-                            <i class="fas fa-school modern-input-icon"></i>
-                            <input type="text" name="class_id" class="modern-input" value="{{ old('class_id') }}" placeholder="Enter class ID" required>
-                        </div>
-                        @error('class_id')
-                            <div class="modern-form-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="modern-form-group">
-                        <label class="modern-form-label">Section <span class="modern-required">*</span></label>
-                        <div class="modern-input-wrapper">
-                            <i class="fas fa-layer-group modern-input-icon"></i>
-                            <input type="text" name="section_id" class="modern-input" value="{{ old('section_id') }}" placeholder="Enter section ID" required>
-                        </div>
-                        @error('section_id')
-                            <div class="modern-form-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="modern-form-group">
-                        <label class="modern-form-label">Subject <span class="modern-required">*</span></label>
-                        <div class="modern-input-wrapper">
-                            <i class="fas fa-book modern-input-icon"></i>
-                            <input type="text" name="subject_id" class="modern-input" value="{{ old('subject_id') }}" placeholder="Enter subject ID" required>
-                        </div>
-                        @error('subject_id')
-                            <div class="modern-form-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="modern-form-group modern-form-span-2">
-                        <label class="modern-form-label">Academic Year <span class="modern-required">*</span></label>
-                        <div class="modern-input-wrapper">
-                            <i class="fas fa-calendar-alt modern-input-icon"></i>
-                            <input type="text" name="academic_year_id" class="modern-input" value="{{ old('academic_year_id') }}" placeholder="Enter academic year ID" required>
-                        </div>
-                        @error('academic_year_id')
-                            <div class="modern-form-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modern-form-actions">
-            <a href="{{ route('admin.teacher-assignments.index') }}" class="btn-modern btn-modern-ghost">Cancel</a>
-            <button type="submit" class="btn-modern btn-modern-primary">
-                <i class="fas fa-save"></i> Save Assignment
-            </button>
-        </div>
-    </form>
-</div>
+@section('title', 'Assign Teacher')
 
 @push('styles')
 <style>
-@keyframes fadeSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.modern-page{animation:fadeSlideIn .4s ease-out;padding:1.5rem}
-.modern-page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;gap:1rem}
-.modern-page-header-left{flex:1}
-.modern-page-header-right{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
-.modern-page-title{font-size:1.75rem;font-weight:700;color:#1e293b;margin:0}
-.modern-page-subtitle{font-size:.875rem;color:#64748b;margin:.25rem 0 0}
-.modern-breadcrumb{margin-bottom:.5rem}
-.modern-breadcrumb ol{display:flex;align-items:center;list-style:none;padding:0;margin:0;gap:.25rem;font-size:.8rem}
-.modern-breadcrumb li{color:#94a3b8}
-.modern-breadcrumb li:not(:last-child)::after{content:'/';margin-left:.25rem;color:#cbd5e1}
-.modern-breadcrumb li a{color:#64748b;text-decoration:none;transition:color .2s}
-.modern-breadcrumb li a:hover{color:#4361ee}
-.modern-breadcrumb li.active{color:#4361ee;font-weight:600}
-.modern-form-section{background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:1.5rem}
-.modern-form-section-header{display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem;border-bottom:1px solid #f1f5f9;background:#f8fafc}
-.modern-form-section-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
-.modern-form-section-icon-blue{background:rgba(67,97,238,.1);color:#4361ee}
-.modern-form-section-icon-green{background:rgba(16,185,129,.1);color:#10b981}
-.modern-form-section-icon-gold{background:rgba(245,158,11,.1);color:#f59e0b}
-.modern-form-section-icon-purple{background:rgba(139,92,246,.1);color:#8b5cf6}
-.modern-form-section-title{font-size:1.05rem;font-weight:600;color:#1e293b;margin:0}
-.modern-form-section-desc{font-size:.8rem;color:#94a3b8;margin:.2rem 0 0}
-.modern-form-section-body{padding:1.5rem}
-.modern-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem}
-.modern-form-span-2{grid-column:span 2}
-.modern-form-group{display:flex;flex-direction:column;gap:.375rem}
-.modern-form-label{font-size:.85rem;font-weight:500;color:#475569}
-.modern-required{color:#ef4444}
-.modern-input-wrapper{position:relative;display:flex;align-items:center}
-.modern-input-icon{position:absolute;left:.875rem;color:#94a3b8;font-size:.85rem;pointer-events:none;z-index:1}
-.modern-input{width:100%;padding:.65rem .875rem .65rem 2.5rem;border:1px solid #e2e8f0;border-radius:8px;font-size:.875rem;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff;color:#1e293b}
-.modern-input:focus{border-color:#4361ee;box-shadow:0 0 0 3px rgba(67,97,238,.1)}
-.modern-input::placeholder{color:#94a3b8}
-.modern-textarea{width:100%;padding:.65rem .875rem;border:1px solid #e2e8f0;border-radius:8px;font-size:.875rem;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff;color:#1e293b;resize:vertical;font-family:inherit}
-.modern-textarea:focus{border-color:#4361ee;box-shadow:0 0 0 3px rgba(67,97,238,.1)}
-.modern-textarea::placeholder{color:#94a3b8}
-.modern-select{width:100%;padding:.65rem .875rem .65rem 2.5rem;border:1px solid #e2e8f0;border-radius:8px;font-size:.875rem;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff;color:#1e293b;appearance:none;cursor:pointer}
-.modern-select:focus{border-color:#4361ee;box-shadow:0 0 0 3px rgba(67,97,238,.1)}
-.modern-form-error{font-size:.8rem;color:#ef4444;margin-top:.25rem}
-.modern-form-actions{display:flex;justify-content:flex-end;gap:.75rem;padding-top:.5rem}
-.btn-modern{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.25rem;border-radius:8px;font-size:.875rem;font-weight:500;cursor:pointer;transition:all .2s;border:none;text-decoration:none;line-height:1.4}
-.btn-modern-primary{background:#4361ee;color:#fff;box-shadow:0 1px 3px rgba(67,97,238,.3)}
-.btn-modern-primary:hover{background:#3a0ca3;box-shadow:0 4px 12px rgba(67,97,238,.4)}
-.btn-modern-outline{background:transparent;color:#4361ee;border:1px solid #4361ee}
-.btn-modern-outline:hover{background:#4361ee;color:#fff}
-.btn-modern-ghost{background:transparent;color:#64748b}
-.btn-modern-ghost:hover{background:#f1f5f9;color:#1e293b}
-@media(max-width:768px){
-.modern-page{padding:1rem}
-.modern-page-header{flex-direction:column;gap:.75rem}
-.modern-page-header-right{width:100%;justify-content:flex-start}
-.modern-page-title{font-size:1.4rem}
-.modern-form-grid{grid-template-columns:1fr}
-.modern-form-span-2{grid-column:span 1}
-.modern-form-actions{flex-direction:column}
-.modern-form-actions .btn-modern{width:100%;justify-content:center}
-}
-@media(max-width:480px){
-.btn-modern{padding:.5rem 1rem;font-size:.8rem}
-}
+.ta-page{animation:taIn .4s ease-out}
+@keyframes taIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.ta-card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #f0f0f0;overflow:hidden;margin-bottom:1.5rem}
+.ta-card-head{display:flex;align-items:center;gap:.75rem;padding:1rem 1.5rem;border-bottom:1px solid #f0f0f0;background:#fafbfc}
+.ta-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:#eef2ff;color:#4361ee}
+.ta-card-title{font-size:1rem;font-weight:700;color:#1a1a2e;margin:0}
+.ta-card-body{padding:1.25rem 1.5rem}
+.ta-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.ta-group{display:flex;flex-direction:column}
+.ta-label{font-weight:600;color:#374151;margin-bottom:.4rem;font-size:.85rem}
+.ta-select{width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:.6rem 2.2rem .6rem .8rem;font-size:.88rem;color:#1a1a2e;background:#fff;appearance:none;cursor:pointer;transition:all .2s;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");background-position:right .6rem center;background-repeat:no-repeat;background-size:1.15rem}
+.ta-select:focus{outline:none;border-color:#4361ee;box-shadow:0 0 0 3px rgba(67,97,238,.1)}
+.ta-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.25rem;border-radius:10px;font-weight:600;font-size:.88rem;border:none;cursor:pointer;transition:all .25s;color:#fff;background:linear-gradient(135deg,#4361ee,#3a0ca3);box-shadow:0 2px 8px rgba(67,97,238,.3)}
+.ta-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(67,97,238,.4)}
+.ta-btn-outline{background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;box-shadow:none}
+.ta-btn-outline:hover{border-color:#4361ee;color:#4361ee;background:#f8f9ff;transform:none;box-shadow:none}
+.ta-actions{display:flex;justify-content:flex-end;gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
+.ta-info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;color:#1e40af;font-weight:500;font-size:.88rem}
+@error('teacher_id') .ta-select[name="teacher_id"],@error('class_id') .ta-select[name="class_id"],@error('section_id') .ta-select[name="section_id"],@error('subject_id') .ta-select[name="subject_id"],@error('academic_year_id') .ta-select[name="academic_year_id"]{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.1)}
+.ta-error{font-size:.8rem;color:#ef4444;margin-top:.25rem}
+@media(max-width:768px){.ta-grid{grid-template-columns:1fr}.ta-group[style]{grid-column:1!important}}
 </style>
 @endpush
+
+@section('content')
+<div class="ta-page">
+    <div class="ta-card">
+        <div class="ta-card-head">
+            <div class="ta-card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div><h3 class="ta-card-title">Assign Teacher to Class & Subject</h3></div>
+        </div>
+        <form method="POST" action="{{ route('admin.teacher-assignments.store') }}">
+            @csrf
+            <div class="ta-card-body">
+                @if(session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
+                <div class="ta-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Select a teacher and assign them to a class, section, and subject. A teacher can be assigned to multiple subjects in the same class.</span>
+                </div>
+
+                <div class="ta-grid">
+                    <div class="ta-group">
+                        <label class="ta-label">Academic Year <span style="color:#ef4444">*</span></label>
+                        <select name="academic_year_id" class="ta-select" required>
+                            <option value="">-- Select Academic Year --</option>
+                            @foreach($academicYears as $ay)
+                                <option value="{{ $ay->id }}" {{ old('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('academic_year_id')<div class="ta-error">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="ta-group">
+                        <label class="ta-label">Teacher <span style="color:#ef4444">*</span></label>
+                        <select name="teacher_id" class="ta-select" required>
+                            <option value="">-- Select Teacher --</option>
+                            @foreach($teachers as $t)
+                                <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->first_name }} {{ $t->last_name }}@if($t->email) ({{ $t->email }})@endif</option>
+                            @endforeach
+                        </select>
+                        @error('teacher_id')<div class="ta-error">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="ta-group">
+                        <label class="ta-label">Class <span style="color:#ef4444">*</span></label>
+                        <select name="class_id" id="taClassSelect" class="ta-select" required>
+                            <option value="">-- Select Class --</option>
+                            @foreach($classes as $c)
+                                <option value="{{ $c->id }}" {{ old('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('class_id')<div class="ta-error">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="ta-group">
+                        <label class="ta-label">Section</label>
+                        <select name="section_id" id="taSectionSelect" class="ta-select">
+                            <option value="">-- All Sections --</option>
+                        </select>
+                        @error('section_id')<div class="ta-error">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="ta-group" style="grid-column:1/-1">
+                        <label class="ta-label">Subject <span style="color:#ef4444">*</span></label>
+                        <select name="subject_id" id="taSubjectSelect" class="ta-select" required>
+                            <option value="">-- Select Subject --</option>
+                        </select>
+                        @error('subject_id')<div class="ta-error">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+            </div>
+            <div class="ta-actions">
+                <a href="{{ route('admin.teacher-assignments.index') }}" class="ta-btn ta-btn-outline"><i class="fas fa-arrow-left"></i> Cancel</a>
+                <button type="submit" class="ta-btn"><i class="fas fa-plus"></i> Assign Teacher</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+    var classSel = document.getElementById('taClassSelect');
+    var secSel = document.getElementById('taSectionSelect');
+    var subjSel = document.getElementById('taSubjectSelect');
+
+    if(classSel){
+        classSel.addEventListener('change', function(){
+            var classId = this.value;
+            if(!classId){ secSel.innerHTML='<option value="">-- All Sections --</option>'; subjSel.innerHTML='<option value="">-- Select Subject --</option>'; return; }
+
+            // Load sections
+            fetch('{{ route("admin.teacher-assignments.api.sections") }}?class_id='+classId, {credentials:'same-origin'})
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                secSel.innerHTML = '<option value="">-- All Sections --</option>';
+                data.forEach(function(s){ secSel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
+            });
+
+            // Load subjects
+            fetch('{{ route("admin.teacher-assignments.api.subjects") }}?class_id='+classId, {credentials:'same-origin'})
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                subjSel.innerHTML = '<option value="">-- Select Subject --</option>';
+                data.forEach(function(s){ subjSel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>'; });
+            });
+        });
+    }
+})();
+</script>
+@endpush

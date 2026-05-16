@@ -77,6 +77,12 @@ class HomeController extends Controller
             'show_gallery' => Setting::get('show_gallery', '1'),
         ];
 
-        return view('welcome', compact('sliders', 'teamMembers', 'galleryImages', 'settings'));
+        // Get latest news for the news banner
+        $latestNews = collect();
+        try {
+            $latestNews = \App\Models\News::visibleOnWebsite()->limit(3)->get();
+        } catch (\Exception $e) {}
+
+        return view('welcome', compact('sliders', 'teamMembers', 'galleryImages', 'settings', 'latestNews'));
     }
 }

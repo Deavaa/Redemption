@@ -120,6 +120,7 @@
 
 /* Print styles — each subject on its own page */
 @media print{
+    .print-only { display: block !important; }
     .mr-header,.mr-filter-card,.mr-actions,.mr-btn{display:none!important}
     .mr-page{animation:none!important}
     .mr-subject-section{page-break-after:always;break-after:page}
@@ -161,17 +162,19 @@
                 <div class="mr-grid">
                     <div class="mr-group">
                         <label class="mr-label">Academic Year <span style="color:#ef4444">*</span></label>
-                        <select name="academic_year_id" class="mr-select" required>
+                        <select name="academic_year_id" class="mr-select" required {{ $isTeacher ?? false ? 'disabled' : '' }}>
                             <option value="">-- Select Year --</option>
                             @foreach($academicYears as $ay)<option value="{{ $ay->id }}" {{ old('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>@endforeach
                         </select>
+                        @if($isTeacher ?? false)<input type="hidden" name="academic_year_id" value="{{ $academicYears->first()->id ?? '' }}">@endif
                     </div>
                     <div class="mr-group">
                         <label class="mr-label">Term <span style="color:#ef4444">*</span></label>
-                        <select name="term_id" class="mr-select" required>
+                        <select name="term_id" class="mr-select" required {{ $isTeacher ?? false ? 'disabled' : '' }}>
                             <option value="">-- Select Term --</option>
                             @foreach($terms as $t)<option value="{{ $t->id }}" {{ old('term_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>@endforeach
                         </select>
+                        @if($isTeacher ?? false)<input type="hidden" name="term_id" value="{{ $terms->first()->id ?? '' }}">@endif
                     </div>
                     <div class="mr-group">
                         <label class="mr-label">Class <span style="color:#ef4444">*</span></label>
@@ -198,8 +201,14 @@
     @isset($subjectRosters)
     @if(count($subjectRosters) > 0)
 
+    {{-- Print-only header --}}
+    <div class="print-only" style="display:none;text-align:center;margin-bottom:1rem;padding:1rem 0;border-bottom:2px solid #333">
+        <h2 style="margin:0;font-size:1.3rem;font-weight:800">School of Redemption</h2>
+        <p style="margin:.25rem 0 0;font-size:.9rem;color:#666">Mark Roster - {{ $class->name ?? '' }} - {{ $term->name ?? '' }} - {{ $academicYear->name ?? '' }}</p>
+    </div>
+
     {{-- Info bar --}}
-    <div class="mr-card info-bar" style="margin-bottom:1.5rem">
+    <div class="mr-card info-bar no-print" style="margin-bottom:1.5rem">
         <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:linear-gradient(135deg,#1e3a5f,#264b73);color:#fff;flex-wrap:wrap">
             <span style="font-weight:800;font-size:1.05rem"><i class="fas fa-clipboard-list me-1"></i> Mark Roster</span>
             <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $academicYear->name ?? '' }}</span>

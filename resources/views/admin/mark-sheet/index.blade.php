@@ -35,24 +35,26 @@
                             <label class="modern-form-label">Academic Year <span class="modern-required">*</span></label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-calendar modern-input-icon"></i>
-                                <select name="academic_year_id" class="modern-input modern-select" required>
+                                <select name="academic_year_id" class="modern-input modern-select" required {{ $isTeacher ?? false ? 'disabled' : '' }}>
                                     <option value="">-- Select --</option>
                                     @foreach($academicYears as $ay)
                                         <option value="{{ $ay->id }}">{{ $ay->name }}</option>
                                     @endforeach
                                 </select>
+                                @if($isTeacher ?? false)<input type="hidden" name="academic_year_id" value="{{ $academicYears->first()->id ?? '' }}">@endif
                             </div>
                         </div>
                         <div class="modern-form-group">
                             <label class="modern-form-label">Term</label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-bookmark modern-input-icon"></i>
-                                <select name="term_id" class="modern-input modern-select">
+                                <select name="term_id" class="modern-input modern-select" {{ $isTeacher ?? false ? 'disabled' : '' }}>
                                     <option value="">-- All Terms --</option>
                                     @foreach($terms as $t)
                                         <option value="{{ $t->id }}">{{ $t->name }}</option>
                                     @endforeach
                                 </select>
+                                @if($isTeacher ?? false)<input type="hidden" name="term_id" value="{{ $terms->first()->id ?? '' }}">@endif
                             </div>
                         </div>
                         <div class="modern-form-group">

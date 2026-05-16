@@ -99,7 +99,35 @@ class StudentController extends Controller
             $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
         }
 
-        $validated['user_id'] = auth()->id();
+        // Auto-generate student ID number
+        $idNumber = $request->input('id_number');
+        if (empty($idNumber)) {
+            $year = date('Y');
+            $lastStudent = \App\Models\User::where('id_number', 'LIKE', "STD-{$year}-%")
+                ->orderBy('id_number', 'desc')->first();
+            $nextNum = 1;
+            if ($lastStudent && $lastStudent->id_number) {
+                $parts = explode('-', $lastStudent->id_number);
+                $nextNum = (int)end($parts) + 1;
+            }
+            $idNumber = "STD-{$year}-" . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
+        }
+
+        // Create user account for student
+        $defaultPassword = $request->filled('date_of_birth') 
+            ? str_replace('-', '', $request->date_of_birth) 
+            : 'Student@' . rand(1000, 9999);
+
+        $user = \App\Models\User::create([
+            'name' => $validated['first_name'] . ' ' . $validated['last_name'],
+            'email' => $validated['email'] ?? $idNumber . '@redemption.edu',
+            'id_number' => $idNumber,
+            'password' => bcrypt($defaultPassword),
+            'role' => 'student',
+            'is_active' => true,
+        ]);
+
+        $validated['user_id'] = $user->id;
 
         // Set default admission_date if not provided
         if (empty($validated['admission_date'])) {
@@ -191,6 +219,64 @@ class StudentController extends Controller
         $student->delete();
 
         return redirect()->route('admin.students.index')->with('success', 'Student deleted successfully!');
+    }
+
+    /**
+     * Generate ID numbers for students who don't have one yet.
+     */
+    public function generateIds()
+    {
+        // Find all students who don't have a user account with id_number
+        $students = \App\Models\Student::whereDoesntHave('user', function($q) {
+            $q->whereNotNull('id_number');
+        })->orWhereNull('user_id')->get();
+        
+        $generated = 0;
+        $year = date('Y');
+        
+        foreach ($students as $student) {
+            // Generate ID number
+            $lastUser = \App\Models\User::where('id_number', 'LIKE', "STD-{$year}-%")
+                ->orderBy('id_number', 'desc')->first();
+            $nextNum = 1;
+            if ($lastUser && $lastUser->id_number) {
+                $parts = explode('-', $lastUser->id_number);
+                $nextNum = (int)end($parts) + 1;
+            }
+            $idNumber = "STD-{$year}-" . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
+            
+            // Default password from DOB or random
+            $defaultPassword = $student->date_of_birth 
+                ? str_replace('-', '', $student->date_of_birth) 
+                : 'Student@' . rand(1000, 9999);
+            
+            if ($student->user_id) {
+                // Update existing user
+                $user = \App\Models\User::find($student->user_id);
+                if ($user && empty($user->id_number)) {
+                    $user->update([
+                        'id_number' => $idNumber,
+                        'role' => 'student',
+                        'is_active' => true,
+                    ]);
+                }
+            } else {
+                // Create new user account
+                $user = \App\Models\User::create([
+                    'name' => $student->first_name . ' ' . $student->last_name,
+                    'email' => $student->email ?? $idNumber . '@redemption.edu',
+                    'id_number' => $idNumber,
+                    'password' => bcrypt($defaultPassword),
+                    'role' => 'student',
+                    'is_active' => true,
+                ]);
+                $student->update(['user_id' => $user->id]);
+            }
+            $generated++;
+        }
+        
+        return redirect()->route('admin.students.index')
+            ->with('success', "Generated ID numbers for {$generated} students.");
     }
 
     /**

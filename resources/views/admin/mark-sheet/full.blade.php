@@ -129,7 +129,7 @@
     </div>
 
     {{-- Filter Card --}}
-    <div class="fms-card">
+    <div class="fms-card no-print">
         <div class="fms-card-head">
             <div class="fms-card-icon blue"><i class="fas fa-filter"></i></div>
             <div><h3 class="fms-card-title">Select Filters</h3><p class="fms-card-desc">Choose academic year and class to generate the full mark sheet</p></div>
@@ -140,10 +140,11 @@
                 <div class="fms-grid">
                     <div class="fms-group">
                         <label class="fms-label">Academic Year <span style="color:#ef4444">*</span></label>
-                        <select name="academic_year_id" class="fms-select" required>
+                        <select name="academic_year_id" class="fms-select" required {{ $isTeacher ?? false ? 'disabled' : '' }}>
                             <option value="">-- Select Year --</option>
                             @foreach($academicYears as $ay)<option value="{{ $ay->id }}" {{ old('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>@endforeach
                         </select>
+                        @if($isTeacher ?? false)<input type="hidden" name="academic_year_id" value="{{ $academicYears->first()->id ?? '' }}">@endif
                     </div>
                     <div class="fms-group">
                         <label class="fms-label">Class <span style="color:#ef4444">*</span></label>
@@ -169,6 +170,14 @@
     {{-- Results --}}
     @isset($roster)
     @if(count($roster) > 0)
+
+    {{-- Print & Export Actions --}}
+    <div class="fms-card no-print" style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:flex-end;gap:.75rem;padding:.75rem 1.5rem">
+            <button onclick="window.print()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print All</button>
+            <button onclick="exportCSV()" class="fms-btn fms-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+        </div>
+    </div>
 
     {{-- Compute highest and lowest marks for all terms --}}
     @php
@@ -502,7 +511,7 @@
     </div>
 
     {{-- Grade Legend & Actions --}}
-    <div class="fms-card">
+    <div class="fms-card no-print">
         <div class="fms-legend">
             <span style="font-weight:700;margin-right:.5rem">Grading Scale:</span>
             <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#10b981"></span> A+ (90+)</span>
@@ -512,10 +521,6 @@
             <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#f97316"></span> C+ to C- (45-59)</span>
             <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#ef4444"></span> D/F (&lt;45)</span>
             <span style="margin-left:1rem;font-weight:600">Annual = Average of Term 1 + Term 2</span>
-        </div>
-        <div class="fms-actions">
-            <button onclick="window.print()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print All</button>
-            <button onclick="exportCSV()" class="fms-btn fms-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
         </div>
     </div>
 

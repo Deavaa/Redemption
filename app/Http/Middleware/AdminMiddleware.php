@@ -45,7 +45,7 @@ class AdminMiddleware
         } catch (\Throwable $e) {}
 
         // 3. Legacy role check: teacher, staff, super_admin should access admin panel
-        $allowedLegacyRoles = ['teacher', 'staff', 'super_admin'];
+        $allowedLegacyRoles = ['teacher', 'staff', 'super_admin', 'branch_principal', 'general_manager', 'librarian', 'cashier', 'registrar'];
         if (in_array($user->role, $allowedLegacyRoles)) {
             return $next($request);
         }

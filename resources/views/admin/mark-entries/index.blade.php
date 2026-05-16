@@ -175,7 +175,7 @@
             <div class="me-filter-grid">
                 <div class="me-filter-group">
                     <label class="me-filter-label">Academic Year</label>
-                    <select id="filterAy" class="me-filter-select">
+                    <select id="filterAy" class="me-filter-select" {{ $isTeacher ? 'disabled' : '' }}>
                         @foreach ($academicYears as $ay)
                             <option value="{{ $ay->id }}" {{ $currentAy && $currentAy->id == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>
                         @endforeach
@@ -183,7 +183,7 @@
                 </div>
                 <div class="me-filter-group">
                     <label class="me-filter-label">Term</label>
-                    <select id="filterTerm" class="me-filter-select">
+                    <select id="filterTerm" class="me-filter-select" {{ $isTeacher ? 'disabled' : '' }}>
                         @foreach ($terms as $term)
                             <option value="{{ $term->id }}" {{ $currentTerm && $currentTerm->id == $term->id ? 'selected' : '' }}>{{ $term->name }}</option>
                         @endforeach
@@ -226,6 +226,9 @@
             {{-- Student Header --}}
             <div class="me-student-header">
                 <div class="me-student-header-row">
+                    <button type="button" class="me-nav-btn" id="btnUndo" onclick="undoLastChange()" disabled aria-label="Undo" title="Undo last change">
+                        <i class="fas fa-undo"></i>
+                    </button>
                     <button type="button" class="me-nav-btn" id="btnPrev" onclick="navigateStudent(-1)" aria-label="Previous Student">
                         <i class="fas fa-chevron-left"></i>
                     </button>
@@ -262,22 +265,22 @@
                                 @for ($i = 1; $i <= 10; $i++)
                                 <div class="me-ca-item">
                                     <span class="me-ca-badge">{{ $i }}</span>
-                                    <input type="number" class="me-ca-input mark-input" data-type="ca" data-number="{{ $i }}" min="0" max="5" step="0.5" placeholder="/5">
+                                    <input type="number" class="me-ca-input mark-input" data-type="ca" data-number="{{ $i }}" min="0" max="5" step="0.1" placeholder="/5">
                                 </div>
                                 @endfor
                             </div>
                             <div class="me-ca-extra">
                                 <div class="me-extra-item">
                                     <label class="me-extra-label">Conduct /5</label>
-                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="conduct" min="0" max="5" step="0.5" placeholder="/5">
+                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="conduct" min="0" max="5" step="0.1" placeholder="/5">
                                 </div>
                                 <div class="me-extra-item">
                                     <label class="me-extra-label">Handwriting /5</label>
-                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="handwriting" min="0" max="5" step="0.5" placeholder="/5">
+                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="handwriting" min="0" max="5" step="0.1" placeholder="/5">
                                 </div>
                                 <div class="me-extra-item">
                                     <label class="me-extra-label">Creativity /10</label>
-                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="creativity" min="0" max="10" step="0.5" placeholder="/10">
+                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="creativity" min="0" max="10" step="0.1" placeholder="/10">
                                 </div>
                             </div>
                         </div>
@@ -293,19 +296,19 @@
                             <div class="me-exam-grid">
                                 <div class="me-exam-item">
                                     <label class="me-exam-label">Test 1 <span class="me-exam-max">/10</span></label>
-                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="test1" min="0" max="10" step="0.5" placeholder="0">
+                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="test1" min="0" max="10" step="0.1" placeholder="0">
                                 </div>
                                 <div class="me-exam-item">
                                     <label class="me-exam-label">Test 2 <span class="me-exam-max">/10</span></label>
-                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="test2" min="0" max="10" step="0.5" placeholder="0">
+                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="test2" min="0" max="10" step="0.1" placeholder="0">
                                 </div>
                                 <div class="me-exam-item">
                                     <label class="me-exam-label">Mid-Term <span class="me-exam-max">/20</span></label>
-                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="mid_term" min="0" max="20" step="0.5" placeholder="0">
+                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="mid_term" min="0" max="20" step="0.1" placeholder="0">
                                 </div>
                                 <div class="me-exam-item">
                                     <label class="me-exam-label">Final Exam <span class="me-exam-max">/30</span></label>
-                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="final_exam" min="0" max="30" step="0.5" placeholder="0">
+                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="final_exam" min="0" max="30" step="0.1" placeholder="0">
                                 </div>
                             </div>
                         </div>
@@ -355,6 +358,8 @@
     let students = [];
     let currentIndex = 0;
     let saveTimer = null;
+    let undoStack = [];
+    const btnUndo = document.getElementById('btnUndo');
     const API_BASE = '{{ request()->root() }}/admin/mark-entries/api';
 
     // --- Filter handlers ---
@@ -445,6 +450,8 @@
 
                 if (students.length > 0) {
                     currentIndex = 0;
+                    undoStack = [];
+                    btnUndo.disabled = true;
                     showEntryState();
                     displayStudent(0);
                 } else {
@@ -498,6 +505,33 @@
         recalc();
     }
 
+    // --- Undo logic ---
+    window.undoLastChange = function() {
+        if (undoStack.length === 0) return;
+        const last = undoStack.pop();
+        currentIndex = last.idx;
+        displayStudent(currentIndex);
+
+        // Find the input for this key and set the old value
+        document.querySelectorAll('.mark-input').forEach(inp => {
+            const k = getFieldKey(inp);
+            if (k === last.key) {
+                inp.value = last.oldVal !== null ? last.oldVal : '';
+            }
+        });
+
+        // Update local data
+        if (students[last.idx]) {
+            students[last.idx].marks[last.key] = last.oldVal;
+        }
+
+        // Save the reverted value
+        saveMark(last.key, last.oldVal);
+        recalc();
+
+        btnUndo.disabled = undoStack.length === 0;
+    };
+
     // --- Navigation ---
     window.navigateStudent = function(dir) {
         const newIdx = currentIndex + dir;
@@ -514,8 +548,11 @@
                 recalc();
                 const key = getFieldKey(this);
                 const value = this.value;
-                // Update local data
+                // Track change for undo before updating local data
                 if (students[currentIndex]) {
+                    const oldVal = students[currentIndex].marks[key] ?? null;
+                    undoStack.push({ idx: currentIndex, key, oldVal });
+                    btnUndo.disabled = false;
                     students[currentIndex].marks = students[currentIndex].marks || {};
                     students[currentIndex].marks[key] = value;
                 }

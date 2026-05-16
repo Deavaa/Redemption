@@ -9,33 +9,142 @@ use App\Models\Subject;
 use App\Models\TeacherAssignment;
 use App\Models\Student;
 use App\Models\MarkEntry;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 class MarkEntryController extends Controller
 {
+    /**
+     * Resolve the logged-in user's Teacher record.
+     * Tries user_id FK first, then falls back to email match.
+     * Returns null for non-teacher users or if no Teacher record found.
+     */
+    private function getTeacherForUser()
+    {
+        $user = auth()->user();
+        if (!$user || $user->role !== 'teacher') return null;
+
+        // Try user_id FK first
+        $teacher = Teacher::where('user_id', $user->id)->first();
+        if (!$teacher) {
+            // Fall back to email match (legacy)
+            $teacher = Teacher::where('email', $user->email)->first();
+        }
+        return $teacher;
+    }
+
     public function index() {
         $academicYears = AcademicYear::orderBy('id','desc')->get();
         $currentAy = $academicYears->first();
         $terms = $currentAy ? Term::where('academic_year_id', $currentAy->id)->orderBy('id','asc')->get() : collect();
         $currentTerm = $terms->first();
-        $sections = Section::with('classRoom')->orderBy('class_id','asc')->orderBy('name','asc')->get();
-        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'currentAy', 'currentTerm'));
+
+        // Teacher-scoped filtering
+        $isTeacher = false;
+        $teacherAssignments = collect();
+        $teacher = $this->getTeacherForUser();
+
+        if ($teacher) {
+            $isTeacher = true;
+
+            // Auto-select current academic year and active term for teachers
+            $activeAy = AcademicYear::where('is_current', true)->first();
+            if ($activeAy) {
+                $currentAy = $activeAy;
+                $academicYears = collect([$activeAy]); // Only show active AY for teachers
+                $activeTerm = Term::where('academic_year_id', $activeAy->id)->where('is_active', true)->first();
+                if ($activeTerm) {
+                    $currentTerm = $activeTerm;
+                    $terms = collect([$activeTerm]); // Only show active term for teachers
+                }
+            }
+
+            // Only show sections from teacher's assignments + homeroom sections
+            $assignmentSectionIds = $teacher->assignments()->pluck('section_id')->filter()->unique();
+            $homeroomSectionIds = $teacher->sections()->pluck('id');
+            $sectionIds = $assignmentSectionIds->merge($homeroomSectionIds)->unique();
+
+            // Also include sections where teacher is assigned to a class (section_id is null on assignment)
+            $assignmentClassIds = $teacher->assignments()->pluck('class_id')->unique();
+            $homeroomClassIds = $teacher->classRooms()->pluck('id');
+            $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
+
+            $sections = Section::with('classRoom')
+                ->where(function($q) use ($sectionIds, $classIds) {
+                    $q->whereIn('id', $sectionIds)
+                      ->orWhereIn('class_id', $classIds);
+                })
+                ->orderBy('class_id','asc')
+                ->orderBy('name','asc')
+                ->get();
+
+            $teacherAssignments = $teacher->assignments()->get();
+        } else {
+            $sections = Section::with('classRoom')->orderBy('class_id','asc')->orderBy('name','asc')->get();
+        }
+
+        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments'));
     }
+
     public function apiClasses() {
+        $teacher = $this->getTeacherForUser();
+
+        if ($teacher) {
+            // Only return classes from teacher's assignments + homeroom classes
+            $assignmentClassIds = $teacher->assignments()->pluck('class_id')->unique();
+            $homeroomClassIds = $teacher->classRooms()->pluck('id');
+            $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
+
+            return response()->json(
+                ClassRoom::whereIn('id', $classIds)->orderBy('name','asc')->get(['id','name'])
+            );
+        }
+
         return response()->json(ClassRoom::orderBy('name','asc')->get(['id','name']));
     }
+
     public function apiTerms(Request $request) {
         $ayId = $request->query('academic_year_id');
         if (!$ayId) return response()->json([]);
         return response()->json(Term::where('academic_year_id',$ayId)->orderBy('id','asc')->get(['id','name']));
     }
+
     public function apiSections(Request $request) {
         $classId = $request->query('class_id');
         $classGrade = $request->query('class_grade');
+        $teacher = $this->getTeacherForUser();
 
         if ($classId) {
-            return response()->json(Section::where('class_id',$classId)->orderBy('name','asc')->get(['id','name']));
+            $query = Section::where('class_id',$classId);
+
+            if ($teacher) {
+                // Only return sections from teacher's assignments for this class
+                // + sections where they are homeroom teacher
+                $assignmentSectionIds = $teacher->assignments()
+                    ->where('class_id', $classId)
+                    ->pluck('section_id')
+                    ->filter()
+                    ->unique();
+                $homeroomSectionIds = $teacher->sections()
+                    ->where('class_id', $classId)
+                    ->pluck('id');
+
+                $allowedSectionIds = $assignmentSectionIds->merge($homeroomSectionIds)->unique();
+
+                // If teacher has assignments with null section_id for this class, they can see all sections
+                $hasNullSectionAssignment = $teacher->assignments()
+                    ->where('class_id', $classId)
+                    ->whereNull('section_id')
+                    ->exists();
+
+                if (!$hasNullSectionAssignment) {
+                    $query->whereIn('id', $allowedSectionIds);
+                }
+                // If they have null-section assignment, they see all sections in that class
+            }
+
+            return response()->json($query->orderBy('name','asc')->get(['id','name']));
         }
 
         if ($classGrade) {
@@ -50,11 +159,15 @@ class MarkEntryController extends Controller
 
         return response()->json([]);
     }
+
     public function apiSubjects(Request $request) {
         $classId = $request->query('class_id');
         $sectionId = $request->query('section_id');
         $ayId = $request->query('academic_year_id');
         if (!$classId || !$sectionId) return response()->json([]);
+
+        $teacher = $this->getTeacherForUser();
+
         $query = TeacherAssignment::with('subject')->where('class_id',$classId)
             ->where(function($q) use ($sectionId) { $q->where('section_id',$sectionId)->orWhereNull('section_id'); });
         if ($ayId) {
@@ -62,6 +175,20 @@ class MarkEntryController extends Controller
                 $q->whereNull('academic_year_id')->orWhere('academic_year_id',$ayId);
             });
         }
+
+        if ($teacher) {
+            // Only return subjects assigned to this teacher for the class+section
+            // OR if teacher is homeroom for this class/section, show all subjects
+            $isHomeroomClass = $teacher->classRooms()->where('id', $classId)->exists();
+            $isHomeroomSection = $teacher->sections()->where('id', $sectionId)->exists();
+
+            if (!$isHomeroomClass && !$isHomeroomSection) {
+                // Not homeroom — only show their own assigned subjects
+                $query->where('teacher_id', $teacher->id);
+            }
+            // If homeroom, show all subjects (no additional filter)
+        }
+
         $assignments = $query->get();
         $subjects = $assignments->map(function($a) {
             $subj = $a->subject;
@@ -182,6 +309,45 @@ class MarkEntryController extends Controller
         $ayId = $request->input('academic_year_id') ?: null;
         $termId = $request->input('term_id');
 
+        // ── Authorization check for teachers ──
+        $teacher = $this->getTeacherForUser();
+        if ($teacher) {
+            $classId = $request->input('class_id');
+            $sectionId = $request->input('section_id');
+
+            // Resolve class_id from class_grade if needed
+            if (empty($classId) && $request->filled('class_grade')) {
+                $classRoom = ClassRoom::where('name', $request->input('class_grade'))->first();
+                if ($classRoom) $classId = $classRoom->id;
+            }
+            // Resolve section_id from section if needed
+            if (empty($sectionId) && $request->filled('section') && !empty($classId)) {
+                $sectionModel = Section::where('class_id', $classId)
+                    ->where('name', $request->input('section'))->first();
+                if ($sectionModel) $sectionId = $sectionModel->id;
+            }
+
+            // Check if teacher is assigned to this class+section+subject
+            $isAssigned = TeacherAssignment::where('teacher_id', $teacher->id)
+                ->where('class_id', $classId)
+                ->where('subject_id', $subjectId)
+                ->where(function($q) use ($sectionId) {
+                    $q->where('section_id', $sectionId)->orWhereNull('section_id');
+                })
+                ->exists();
+
+            // Or check if teacher is homeroom for this class or section
+            $isHomeroomClass = !empty($classId) && $teacher->classRooms()->where('id', $classId)->exists();
+            $isHomeroomSection = !empty($sectionId) && $teacher->sections()->where('id', $sectionId)->exists();
+
+            if (!$isAssigned && !$isHomeroomClass && !$isHomeroomSection) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'You are not authorized to enter marks for this class/section/subject.',
+                ], 403);
+            }
+        }
+
         // Collect only the mark fields that were actually sent
         $markFieldNames = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10',
             'conduct','handwriting','creativity','test1','test2','mid_term','final_exam'];
@@ -213,12 +379,15 @@ class MarkEntryController extends Controller
             }
         }
 
-        // Set teacher_id — ONLY use teacher profile ID (avoid FK violation with users table)
+        // Set teacher_id — use user_id FK first, then email fallback
         $teacherId = null;
         if (auth()->check()) {
-            $teacher = \App\Models\Teacher::where('email', auth()->user()->email)->first();
-            if ($teacher) {
-                $teacherId = $teacher->id;
+            $t = Teacher::where('user_id', auth()->user()->id)->first();
+            if (!$t) {
+                $t = Teacher::where('email', auth()->user()->email)->first();
+            }
+            if ($t) {
+                $teacherId = $t->id;
             }
         }
         $data['teacher_id'] = $teacherId;

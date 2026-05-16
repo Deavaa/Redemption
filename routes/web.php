@@ -51,6 +51,8 @@ use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\WebContentController;
 use App\Http\Controllers\Slider\SliderController;
 use App\Http\Controllers\Student\StudentController;
+use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\Parent\ParentDashboardController;
 use App\Http\Controllers\Subject\SubjectController;
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
@@ -65,6 +67,7 @@ use App\Http\Controllers\UserAccess\TeacherAccessController;
 use App\Http\Controllers\UserAccess\StudentAccessController;
 use App\Http\Controllers\UserAccess\ParentAccessController;
 use App\Http\Controllers\ReportExchange\ReportExchangeController;
+use App\Http\Controllers\News\NewsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -143,6 +146,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('certificate-generate/api/students', [CertificateGenerateController::class, 'getStudents'])->name('certificate-generate.students');
 
     // ── People ────────────────────────────────────────────
+    Route::get('students/generate-ids', [StudentController::class, 'generateIds'])->name('students.generateIds');
     Route::resource('students', StudentController::class)->middleware('permission:students.view');
     Route::get('students/api/admission-preview', [StudentController::class, 'apiAdmissionPreview'])->name('students.api.admission-preview');
     Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
@@ -159,6 +163,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('gallery-videos', GalleryVideoController::class)->middleware('permission:gallery.view');
     Route::resource('branches', BranchController::class)->middleware('permission:branches.view');
     Route::resource('contact-messages', ContactMessageController::class)->middleware('permission:contact_messages.view');
+    Route::resource('news', NewsController::class)->middleware('permission:settings.view');
 
     // ── Classes & Sections ─────────────────────────────────
     Route::resource('classrooms', ClassroomController::class)->middleware('permission:classrooms.view');
@@ -166,6 +171,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('class-assets', ClassAssetController::class)->middleware('permission:class_assets.view');
     Route::get('class-assets/api/sections', [ClassAssetController::class, 'apiSections'])->name('class-assets.api-sections');
     Route::resource('teacher-assignments', TeacherAssignmentController::class)->middleware('permission:subject_assignments.view');
+    Route::get('teacher-assignments/api/sections', [TeacherAssignmentController::class, 'apiSections'])->name('teacher-assignments.api.sections');
+    Route::get('teacher-assignments/api/subjects', [TeacherAssignmentController::class, 'apiSubjects'])->name('teacher-assignments.api.subjects');
 
     // ── Documents ─────────────────────────────────────────
     Route::resource('id-cards', IdCardController::class)->middleware('permission:id_cards.generate');
@@ -306,4 +313,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('user-access/students/bulk', [StudentAccessController::class, 'bulkCreate'])->name('user-access.students.bulk');
     Route::get('user-access/parents', [ParentAccessController::class, 'index'])->name('user-access.parents');
     Route::post('user-access/parents/create', [ParentAccessController::class, 'createAccount'])->name('user-access.parents.create');
+});
+
+// ── Student Portal ──────────────────────────────────────────
+Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->group(function () {
+    Route::get('/dashboard', [StudentDashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/marks', [StudentDashboardController::class, 'marks'])->name('marks');
+    Route::get('/progress', [StudentDashboardController::class, 'progress'])->name('progress');
+    Route::get('/fees', [StudentDashboardController::class, 'fees'])->name('fees');
+    Route::get('/profile', [StudentDashboardController::class, 'profile'])->name('profile');
+});
+
+// ── Parent Portal ───────────────────────────────────────────
+Route::prefix('parent')->name('parent.')->middleware(['auth', 'parent'])->group(function () {
+    Route::get('/dashboard', [ParentDashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/child/{studentId}/marks', [ParentDashboardController::class, 'childMarks'])->name('child.marks');
+    Route::get('/child/{studentId}/progress', [ParentDashboardController::class, 'childProgress'])->name('child.progress');
+    Route::get('/child/{studentId}/fees', [ParentDashboardController::class, 'childFees'])->name('child.fees');
+    Route::get('/child/{studentId}/profile', [ParentDashboardController::class, 'childProfile'])->name('child.profile');
 });

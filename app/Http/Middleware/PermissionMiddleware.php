@@ -30,15 +30,8 @@ class PermissionMiddleware
             return $next($request);
         }
 
-        // RBAC users with roles assigned pass all permission checks
-        try {
-            if ($user->roles()->exists()) {
-                return $next($request);
-            }
-        } catch (\Throwable $e) {}
-
         // ── Role-based route restrictions ──────────────────────
-        // Teachers and staff only have access to certain sections.
+        // Teachers only have access to certain sections.
         // If the route has a permission middleware, check if this role
         // is allowed to access that permission category.
 
@@ -48,14 +41,10 @@ class PermissionMiddleware
                 // Marks & Assessment
                 'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
                 'mark_sheets.view', 'mark_sheets.generate',
-                // Reports
-                'mark_sheets.view', // progress & performance reports share this
-                // Students (view only)
+                // Students (view only — restricted by controller to assigned students)
                 'students.view',
                 // Teacher assignments
                 'subject_assignments.view',
-                // Analysis
-                'mark_sheets.view', // performance analysis, psychological, etc.
                 // Documents
                 'settings.view', // report exchange uses settings.view
                 // Library
@@ -64,6 +53,9 @@ class PermissionMiddleware
                 'calendar.view', 'calendar.manage',
                 'chat.access',
                 'notifications.view',
+                // ID Cards and Certificates (view/generate only)
+                'id_cards.generate',
+                'certificates.generate',
             ];
 
             if (!empty($permissions)) {
@@ -88,11 +80,180 @@ class PermissionMiddleware
             return $next($request);
         }
 
+        // Branch principal — similar to teacher but with more academic access
+        if ($user->role === 'branch_principal') {
+            $branchPrincipalAllowedPermissions = [
+                'dashboard.view',
+                // Academic setup
+                'academic_years.view', 'terms.view', 'subjects.view', 'subject_assignments.view',
+                'exams.view', 'classrooms.view', 'sections.view',
+                // Marks & Assessment
+                'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
+                'mark_sheets.view', 'mark_sheets.generate',
+                // People
+                'students.view', 'teachers.view', 'subject_assignments.view',
+                // Documents
+                'settings.view', 'id_cards.generate', 'certificates.generate',
+                // Library
+                'library.view',
+                // Communication
+                'calendar.view', 'calendar.manage', 'chat.access', 'notifications.view',
+                'announcements.view',
+                // Analysis
+                // Same as mark_sheets.view
+            ];
+
+            if (!empty($permissions)) {
+                $hasAccess = false;
+                foreach ($permissions as $perm) {
+                    if (in_array($perm, $branchPrincipalAllowedPermissions)) {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                if (!$hasAccess) {
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'message' => 'You do not have access to this section.',
+                            'required_any' => $permissions,
+                        ], 403);
+                    }
+                    abort(403, 'You do not have permission to access this section.');
+                }
+            }
+
+            return $next($request);
+        }
+
+        // General manager — broad access except system admin
+        if ($user->role === 'general_manager') {
+            $gmBlockedPermissions = [
+                'settings.edit', 'roles.view', 'roles.edit',
+                'database_backup', 'backup', 'audits.view',
+            ];
+
+            if (!empty($permissions)) {
+                foreach ($permissions as $perm) {
+                    if (in_array($perm, $gmBlockedPermissions)) {
+                        if ($request->expectsJson()) {
+                            return response()->json([
+                                'message' => 'You do not have access to this section.',
+                            ], 403);
+                        }
+                        abort(403, 'You do not have permission to access this section.');
+                    }
+                }
+            }
+
+            return $next($request);
+        }
+
+        // Librarian — only library access
+        if ($user->role === 'librarian') {
+            $librarianAllowedPermissions = [
+                'dashboard.view', 'library.view', 'chat.access', 'notifications.view', 'calendar.view',
+            ];
+
+            if (!empty($permissions)) {
+                $hasAccess = false;
+                foreach ($permissions as $perm) {
+                    if (in_array($perm, $librarianAllowedPermissions)) {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                if (!$hasAccess) {
+                    if ($request->expectsJson()) {
+                        return response()->json(['message' => 'Librarians do not have access to this section.'], 403);
+                    }
+                    abort(403, 'You do not have permission to access this section.');
+                }
+            }
+
+            return $next($request);
+        }
+
+        // Cashier — finance access only
+        if ($user->role === 'cashier') {
+            $cashierAllowedPermissions = [
+                'dashboard.view', 'fees.view', 'fee_payments.view', 'fee_payments.create',
+                'students.view', 'chat.access', 'notifications.view', 'calendar.view',
+            ];
+
+            if (!empty($permissions)) {
+                $hasAccess = false;
+                foreach ($permissions as $perm) {
+                    if (in_array($perm, $cashierAllowedPermissions)) {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                if (!$hasAccess) {
+                    if ($request->expectsJson()) {
+                        return response()->json(['message' => 'Cashiers do not have access to this section.'], 403);
+                    }
+                    abort(403, 'You do not have permission to access this section.');
+                }
+            }
+
+            return $next($request);
+        }
+
+        // Registrar — student and parent management
+        if ($user->role === 'registrar') {
+            $registrarAllowedPermissions = [
+                'dashboard.view', 'students.view', 'students.create', 'students.edit',
+                'parents.view', 'parents.create', 'parents.edit',
+                'academic_years.view', 'terms.view', 'classrooms.view', 'sections.view',
+                'fees.view', 'fee_payments.view', 'fee_payments.create',
+                'id_cards.generate', 'certificates.generate',
+                'chat.access', 'notifications.view', 'calendar.view',
+            ];
+
+            if (!empty($permissions)) {
+                $hasAccess = false;
+                foreach ($permissions as $perm) {
+                    if (in_array($perm, $registrarAllowedPermissions)) {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                if (!$hasAccess) {
+                    if ($request->expectsJson()) {
+                        return response()->json(['message' => 'Registrars do not have access to this section.'], 403);
+                    }
+                    abort(403, 'You do not have permission to access this section.');
+                }
+            }
+
+            return $next($request);
+        }
+
         // Staff role — similar restricted access
         if ($user->role === 'staff') {
             // Staff gets broader access than teachers but not full admin
             // For now, let them through to all permission-protected routes
             return $next($request);
+        }
+
+        // Student role — only access student portal routes (which don't use this middleware)
+        if ($user->role === 'student') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Students do not have access to this section.',
+                ], 403);
+            }
+            abort(403, 'You do not have permission to access this section.');
+        }
+
+        // Parent role — only access parent portal routes (which don't use this middleware)
+        if ($user->role === 'parent') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Parents do not have access to this section.',
+                ], 403);
+            }
+            abort(403, 'You do not have permission to access this section.');
         }
 
         // Default: no permissions set, no recognized role — fall through to permission check

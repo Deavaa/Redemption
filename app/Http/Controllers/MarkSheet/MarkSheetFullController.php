@@ -9,19 +9,56 @@ use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\Term;
 use App\Models\Student;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 
 class MarkSheetFullController extends Controller
 {
+    /**
+     * Resolve the logged-in user's Teacher record.
+     * Tries user_id FK first, then falls back to email match.
+     * Returns null for non-teacher users or if no Teacher record found.
+     */
+    private function getTeacherForUser()
+    {
+        $user = auth()->user();
+        if (!$user || $user->role !== 'teacher') return null;
+
+        // Try user_id FK first
+        $teacher = Teacher::where('user_id', $user->id)->first();
+        if (!$teacher) {
+            // Fall back to email match (legacy)
+            $teacher = Teacher::where('email', $user->email)->first();
+        }
+        return $teacher;
+    }
+
     /**
      * Show the filter form for the full mark sheet (Term1 + Term2 + Annual).
      */
     public function index()
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes       = ClassRoom::orderBy('name')->get();
 
-        return view('admin.mark-sheet.full', compact('academicYears', 'classes'));
+        $isTeacher = false;
+        $teacher = $this->getTeacherForUser();
+
+        if ($teacher) {
+            $isTeacher = true;
+
+            // Lock AY to active one for teachers
+            $activeAy = AcademicYear::where('is_current', true)->first();
+            if ($activeAy) {
+                $academicYears = collect([$activeAy]); // Only show active AY for teachers
+            }
+
+            // Only show classes where teacher is homeroom teacher
+            $classes = $teacher->classRooms()->orderBy('name')->get();
+        } else {
+            $classes = ClassRoom::orderBy('name')->get();
+        }
+
+        return view('admin.mark-sheet.full', compact('academicYears', 'classes', 'isTeacher'));
     }
 
     /**
@@ -36,6 +73,15 @@ class MarkSheetFullController extends Controller
             'class_id'         => 'required|exists:classes,id',
             'section_id'       => 'nullable|exists:sections,id',
         ]);
+
+        // ── Authorization check for teachers ──
+        $teacher = $this->getTeacherForUser();
+        if ($teacher) {
+            $isHomeroom = $teacher->classRooms()->where('id', $r->class_id)->exists();
+            if (!$isHomeroom) {
+                abort(403, 'You are not authorized to generate full mark sheets for this class. Only homeroom teachers can access this feature.');
+            }
+        }
 
         $academicYearId = $r->academic_year_id;
         $classId        = $r->class_id;
@@ -241,7 +287,18 @@ class MarkSheetFullController extends Controller
         $academicYear = AcademicYear::find($academicYearId);
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes       = ClassRoom::orderBy('name')->get();
+
+        // Re-apply teacher class filtering for the form dropdown
+        if ($teacher) {
+            // Lock AY to active one for teachers
+            $activeAy = AcademicYear::where('is_current', true)->first();
+            if ($activeAy) {
+                $academicYears = collect([$activeAy]);
+            }
+            $classes = $teacher->classRooms()->orderBy('name')->get();
+        } else {
+            $classes = ClassRoom::orderBy('name')->get();
+        }
 
         return view('admin.mark-sheet.full', compact(
             'roster',
@@ -253,7 +310,8 @@ class MarkSheetFullController extends Controller
             'term2',
             'academicYears',
             'classes',
-            'averages'
+            'averages',
+            'isTeacher'
         ));
     }
 
@@ -262,9 +320,16 @@ class MarkSheetFullController extends Controller
      */
     public function getSections(Request $r)
     {
-        $sections = Section::where('class_id', $r->class_id)
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        $teacher = $this->getTeacherForUser();
+
+        $query = Section::where('class_id', $r->class_id);
+
+        if ($teacher) {
+            // Only return sections where teacher is homeroom
+            $query->where('teacher_id', $teacher->id);
+        }
+
+        $sections = $query->orderBy('name')->get(['id', 'name']);
 
         return response()->json($sections);
     }

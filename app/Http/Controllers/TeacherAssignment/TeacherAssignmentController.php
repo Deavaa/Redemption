@@ -24,11 +24,11 @@ class TeacherAssignmentController extends Controller
 
     public function create()
     {
-        $teachers = Teacher::orderBy('first_name')->get();
+        $teachers = Teacher::orderBy('first_name')->orderBy('last_name')->get();
         $classes = Classroom::orderBy('name')->get();
-        $subjects = Subject::ordered()->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        return view('admin.TeacherAssignment.create', compact('teachers', 'classes', 'subjects', 'academicYears'));
+
+        return view('admin.TeacherAssignment.create', compact('teachers', 'classes', 'academicYears'));
     }
 
     public function store(Request $r)
@@ -52,12 +52,19 @@ class TeacherAssignmentController extends Controller
 
     public function edit(TeacherAssignment $teacher_assignment)
     {
-        $teachers = Teacher::orderBy('first_name')->get();
+        $teachers = Teacher::orderBy('first_name')->orderBy('last_name')->get();
         $classes = Classroom::orderBy('name')->get();
         $sections = Section::where('class_id', $teacher_assignment->class_id)->orderBy('name')->get();
-        $subjects = Subject::ordered()->get();
+        $subjects = Subject::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        return view('admin.TeacherAssignment.edit', ['item' => $teacher_assignment, 'teachers' => $teachers, 'classes' => $classes, 'sections' => $sections, 'subjects' => $subjects, 'academicYears' => $academicYears]);
+        return view('admin.TeacherAssignment.edit', [
+            'item' => $teacher_assignment,
+            'teachers' => $teachers,
+            'classes' => $classes,
+            'sections' => $sections,
+            'subjects' => $subjects,
+            'academicYears' => $academicYears
+        ]);
     }
 
     public function update(Request $r, TeacherAssignment $teacher_assignment)
@@ -74,4 +81,41 @@ class TeacherAssignmentController extends Controller
     }
 
     public function destroy(TeacherAssignment $teacher_assignment) { $teacher_assignment->delete(); return back()->with('success','Assignment deleted successfully'); }
+
+    /**
+     * API: Get sections for a given class
+     */
+    public function apiSections(Request $request)
+    {
+        $classId = $request->query('class_id');
+        if (!$classId) return response()->json([]);
+        return response()->json(
+            Section::where('class_id', $classId)->orderBy('name')->get(['id', 'name'])
+        );
+    }
+
+    /**
+     * API: Get subjects assigned to a given class
+     */
+    public function apiSubjects(Request $request)
+    {
+        $classId = $request->query('class_id');
+        if (!$classId) return response()->json([]);
+
+        // Get subjects already assigned to this class via teacher assignments
+        $subjectIds = TeacherAssignment::where('class_id', $classId)
+            ->pluck('subject_id')
+            ->unique();
+
+        // If subjects are assigned to this class, show only those; otherwise show all
+        if ($subjectIds->count() > 0) {
+            return response()->json(
+                Subject::whereIn('id', $subjectIds)->orderBy('name')->get(['id', 'name'])
+            );
+        }
+
+        return response()->json(
+            Subject::orderBy('name')->get(['id', 'name'])
+        );
+    }
 }
