@@ -156,6 +156,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'contact_messages.view',     'display_name' => 'View Contact Messages',     'module' => 'website'],
             ['name' => 'contact_messages.delete',   'display_name' => 'Delete Contact Messages',   'module' => 'website'],
 
+            // ── Library Module ────────────────────────────────
+            ['name' => 'library.view',              'display_name' => 'View Library',              'module' => 'library'],
+            ['name' => 'library.create',            'display_name' => 'Add Library Books',         'module' => 'library'],
+            ['name' => 'library.edit',              'display_name' => 'Edit Library Books',        'module' => 'library'],
+            ['name' => 'library.delete',            'display_name' => 'Delete Library Books',      'module' => 'library'],
+
             // ── Communication Module ─────────────────────────
             ['name' => 'chat.access',               'display_name' => 'Access Chat',               'module' => 'communication'],
             ['name' => 'telegram.manage',           'display_name' => 'Manage Telegram',           'module' => 'communication'],
@@ -212,6 +218,42 @@ class PermissionSeeder extends Seeder
             ['display_name' => 'Student', 'description' => 'Can view own academic records', 'is_system' => true]
         );
 
+        // ── New Staff Roles ──────────────────────────────────
+        $generalManagerRole = Role::updateOrCreate(
+            ['name' => 'general_manager'],
+            ['display_name' => 'General Manager', 'description' => 'Oversees all branches and operations', 'is_system' => true]
+        );
+
+        $branchPrincipalRole = Role::updateOrCreate(
+            ['name' => 'branch_principal'],
+            ['display_name' => 'Branch Principal', 'description' => 'Manages their assigned branch only', 'is_system' => true]
+        );
+
+        $registrarRole = Role::updateOrCreate(
+            ['name' => 'registrar'],
+            ['display_name' => 'Registrar', 'description' => 'Manages student enrollment and academic records', 'is_system' => true]
+        );
+
+        $financeRole = Role::updateOrCreate(
+            ['name' => 'finance'],
+            ['display_name' => 'Finance Officer', 'description' => 'Manages financial operations, budgets, and payroll', 'is_system' => true]
+        );
+
+        $hrRole = Role::updateOrCreate(
+            ['name' => 'hr'],
+            ['display_name' => 'HR Officer', 'description' => 'Manages human resources, leaves, and employee assets', 'is_system' => true]
+        );
+
+        $cashierRole = Role::updateOrCreate(
+            ['name' => 'cashier'],
+            ['display_name' => 'Cashier', 'description' => 'Processes fee payments', 'is_system' => true]
+        );
+
+        $librarianRole = Role::updateOrCreate(
+            ['name' => 'librarian'],
+            ['display_name' => 'Librarian', 'description' => 'Manages the digital library', 'is_system' => true]
+        );
+
         // Assign all permissions to admin role
         $adminRole->syncPermissions(Permission::pluck('id')->toArray());
 
@@ -262,6 +304,139 @@ class PermissionSeeder extends Seeder
         ];
         $studentRole->syncPermissions(
             Permission::whereIn('name', $studentPerms)->pluck('id')->toArray()
+        );
+
+        // ── New Staff Role Permissions ───────────────────────
+
+        // General Manager: broad access (like admin but without system settings)
+        $gmPerms = [
+            'dashboard.view',
+            // Academic
+            'academic_years.view', 'terms.view', 'subjects.view', 'subject_assignments.view',
+            'exams.view', 'classrooms.view', 'sections.view',
+            'mark_entries.view', 'mark_sheets.view', 'mark_sheets.generate',
+            // People
+            'students.view', 'teachers.view', 'staff.view', 'parents.view', 'team_members.view',
+            // Finance & HR
+            'fees.view', 'fee_payments.view', 'payrolls.view',
+            'budgets.view', 'income_expenses.view', 'finance_statements.view',
+            'leaves.view', 'employee_assets.view',
+            // Documents
+            'id_cards.generate', 'certificates.generate',
+            // Website
+            'branches.view',
+            // Communication
+            'calendar.view', 'calendar.manage', 'chat.access', 'notifications.view', 'telegram.manage',
+            // Analysis
+            'mark_sheets.generate',
+        ];
+        $generalManagerRole->syncPermissions(
+            Permission::whereIn('name', $gmPerms)->pluck('id')->toArray()
+        );
+
+        // Branch Principal: academic + people + documents for own branch
+        $bpPerms = [
+            'dashboard.view',
+            // Academic
+            'academic_years.view', 'terms.view', 'subjects.view', 'subject_assignments.view',
+            'exams.view', 'classrooms.view', 'sections.view',
+            'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
+            'mark_sheets.view', 'mark_sheets.generate',
+            // People
+            'students.view', 'teachers.view', 'staff.view', 'parents.view',
+            // Documents
+            'id_cards.generate', 'certificates.generate',
+            // Finance (view only)
+            'fees.view', 'fee_payments.view',
+            // Communication
+            'calendar.view', 'calendar.manage', 'chat.access', 'notifications.view',
+        ];
+        $branchPrincipalRole->syncPermissions(
+            Permission::whereIn('name', $bpPerms)->pluck('id')->toArray()
+        );
+
+        // Registrar: enrollment + academic records
+        $registrarPerms = [
+            'dashboard.view',
+            // Academic Setup
+            'academic_years.view', 'terms.view', 'classrooms.view', 'sections.view',
+            'subjects.view', 'subject_assignments.view', 'exams.view',
+            // People
+            'students.view', 'students.create', 'students.edit',
+            'parents.view', 'parents.create', 'parents.edit',
+            // Finance (view fees)
+            'fees.view', 'fee_payments.view', 'fee_payments.create',
+            // Documents
+            'id_cards.generate', 'certificates.generate',
+            // Communication
+            'calendar.view', 'chat.access', 'notifications.view',
+        ];
+        $registrarRole->syncPermissions(
+            Permission::whereIn('name', $registrarPerms)->pluck('id')->toArray()
+        );
+
+        // Finance Officer: full finance access
+        $financePerms = [
+            'dashboard.view',
+            // People (view only)
+            'students.view', 'teachers.view', 'staff.view',
+            // Finance
+            'fees.view', 'fees.create', 'fees.edit',
+            'fee_payments.view', 'fee_payments.create', 'fee_payments.edit',
+            'payrolls.view', 'payrolls.create', 'payrolls.edit',
+            'budgets.view', 'budgets.create', 'budgets.edit',
+            'income_expenses.view', 'income_expenses.create', 'income_expenses.edit',
+            'finance_statements.view',
+            // Communication
+            'calendar.view', 'chat.access', 'notifications.view',
+        ];
+        $financeRole->syncPermissions(
+            Permission::whereIn('name', $financePerms)->pluck('id')->toArray()
+        );
+
+        // HR Officer: HR-focused access
+        $hrPerms = [
+            'dashboard.view',
+            // People
+            'students.view', 'teachers.view', 'staff.view', 'staff.create', 'staff.edit',
+            'parents.view',
+            // HR
+            'leaves.view', 'leaves.create', 'leaves.edit', 'leaves.approve',
+            'employee_assets.view', 'employee_assets.create', 'employee_assets.edit',
+            'payrolls.view', 'payrolls.create', 'payrolls.edit',
+            // Communication
+            'calendar.view', 'chat.access', 'notifications.view',
+        ];
+        $hrRole->syncPermissions(
+            Permission::whereIn('name', $hrPerms)->pluck('id')->toArray()
+        );
+
+        // Cashier: payment processing
+        $cashierPerms = [
+            'dashboard.view',
+            // People (view only)
+            'students.view', 'teachers.view',
+            // Finance
+            'fees.view', 'fee_payments.view', 'fee_payments.create', 'fee_payments.edit',
+            // Communication
+            'calendar.view', 'chat.access', 'notifications.view',
+        ];
+        $cashierRole->syncPermissions(
+            Permission::whereIn('name', $cashierPerms)->pluck('id')->toArray()
+        );
+
+        // Librarian: library access
+        $librarianPerms = [
+            'dashboard.view',
+            // Library
+            'library.view', 'library.create', 'library.edit', 'library.delete',
+            // People (view only)
+            'students.view', 'teachers.view',
+            // Communication
+            'calendar.view', 'chat.access', 'notifications.view',
+        ];
+        $librarianRole->syncPermissions(
+            Permission::whereIn('name', $librarianPerms)->pluck('id')->toArray()
         );
     }
 }
