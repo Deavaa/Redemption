@@ -636,13 +636,13 @@
             align-items: center;
             gap: 12px;
             padding: 0 16px;
-            height: 36px;
+            height: 38px;
         }
         .announcement-badge {
             font-weight: 700;
-            font-size: .68rem;
+            font-size: .82rem;
             background: rgba(255,255,255,.2);
-            padding: 3px 10px;
+            padding: 3px 12px;
             border-radius: 20px;
             white-space: nowrap;
             letter-spacing: .5px;
@@ -659,11 +659,13 @@
         .announcement-ticker {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             white-space: nowrap;
-            animation: ticker-scroll {{ max($activeAnnouncements->count() * 12, 20) }}s linear infinite;
         }
-        .announcement-ticker:hover { animation-play-state: paused; }
+        .announcement-ticker.scrolling {
+            animation: ticker-scroll var(--ticker-duration, 60s) linear infinite;
+        }
+        .announcement-ticker.scrolling:hover { animation-play-state: paused; }
         @keyframes ticker-scroll {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
@@ -671,31 +673,31 @@
         .announcement-chip {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: .76rem;
-            padding-right: 18px;
+            gap: 8px;
+            font-size: .9rem;
+            padding-right: 22px;
             border-right: 1px solid rgba(255,255,255,.25);
         }
         .announcement-chip:last-child { border-right: none; }
         .announcement-chip strong { font-weight: 600; }
         .announcement-cat {
-            font-size: .58rem;
+            font-size: .72rem;
             font-weight: 600;
             background: rgba(255,255,255,.25);
-            padding: 1px 7px;
+            padding: 1px 8px;
             border-radius: 10px;
             text-transform: uppercase;
             letter-spacing: .3px;
         }
         .announcement-date-inline {
-            font-size: .66rem;
+            font-size: .8rem;
             opacity: .75;
             display: inline-flex;
             align-items: center;
-            gap: 3px;
+            gap: 4px;
         }
         .announcement-desc-inline {
-            font-size: .7rem;
+            font-size: .84rem;
             opacity: .8;
         }
         .announcement-close {
@@ -703,7 +705,7 @@
             border: none;
             color: rgba(255,255,255,.6);
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             padding: 4px 6px;
             border-radius: 50%;
             transition: all .2s;
@@ -714,12 +716,24 @@
             color: #fff;
         }
         @media (max-width: 768px) {
-            .announcement-banner-inner { padding: 0 10px; height: 34px; }
-            .announcement-badge { font-size: .6rem; padding: 2px 8px; }
-            .announcement-chip { font-size: .68rem; }
+            .announcement-banner-inner { padding: 0 10px; height: 36px; }
+            .announcement-badge { font-size: .72rem; padding: 2px 8px; }
+            .announcement-chip { font-size: .8rem; }
         }
         @media print { .announcement-banner { display: none !important; } }
         </style>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.announcement-ticker-wrap').forEach(function(wrap) {
+                var ticker = wrap.querySelector('.announcement-ticker');
+                if (ticker && ticker.scrollWidth > wrap.clientWidth + 10) {
+                    var duration = Math.max(ticker.scrollWidth / 25, 50);
+                    ticker.style.setProperty('--ticker-duration', duration + 's');
+                    ticker.classList.add('scrolling');
+                }
+            });
+        });
+        </script>
         @endif
         <nav class="parent-topbar">
             <div class="topbar-left">

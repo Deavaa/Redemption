@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('app.student_id_cards') }} - Redemption</title>
     <style>
-        @page { size: auto; margin: 6mm; }
+        @page { size: A4 portrait; margin: 6mm; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
