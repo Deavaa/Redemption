@@ -495,58 +495,127 @@
             } catch (\Exception $e) {}
         @endphp
         @if($activeAnnouncements->count() > 0)
-        <div id="studentAnnouncementBar" class="announcement-banner" style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 100%);">
+        <div id="studentAnnouncementBar" class="announcement-banner">
             <div class="announcement-banner-inner">
-                <div class="announcement-banner-header">
-                    <span class="announcement-badge"><i class="fas fa-bullhorn"></i> ANNOUNCEMENTS</span>
-                    <button onclick="document.getElementById('studentAnnouncementBar').style.display='none'" class="announcement-close"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="announcement-list">
-                    @foreach($activeAnnouncements as $ann)
-                    <div class="announcement-item">
-                        <div class="announcement-item-header">
-                            <div class="announcement-title">{{ $ann->title }}</div>
-                            @if($ann->category)
-                                <span class="announcement-category">{{ ucfirst($ann->category) }}</span>
-                            @endif
-                        </div>
-                        @if($ann->description)
-                            <div class="announcement-desc">{{ strip_tags($ann->description) }}</div>
-                        @endif
-                        <div class="announcement-meta">
-                            @if($ann->start_date)
-                                <span class="announcement-date"><i class="fas fa-calendar-alt"></i> {{ $ann->start_date->format('M d, Y') }}</span>
-                            @endif
-                            @if($ann->start_time)
-                                <span class="announcement-time"><i class="fas fa-clock"></i> {{ $ann->start_time->format('h:i A') }}</span>
-                            @endif
-                            @if($ann->end_date)
-                                <span class="announcement-end-date"><i class="fas fa-calendar-check"></i> Until {{ $ann->end_date->format('M d, Y') }}</span>
-                            @endif
-                        </div>
+                <div class="announcement-badge"><i class="fas fa-bullhorn"></i>&ensp;Announcements</div>
+                <div class="announcement-ticker-wrap">
+                    <div class="announcement-ticker">
+                        @foreach($activeAnnouncements as $ann)
+                        <span class="announcement-chip">
+                            <strong>{{ $ann->title }}</strong>
+                            @if($ann->category)<span class="announcement-cat">{{ ucfirst($ann->category) }}</span>@endif
+                            @if($ann->start_date)<span class="announcement-date-inline"><i class="fas fa-calendar-alt"></i> {{ $ann->start_date->format('M d') }}</span>@endif
+                            @if($ann->description)<span class="announcement-desc-inline">&mdash; {{ Str::limit(strip_tags($ann->description), 80) }}</span>@endif
+                        </span>
+                        @endforeach
+                        @foreach($activeAnnouncements as $ann)
+                        <span class="announcement-chip">
+                            <strong>{{ $ann->title }}</strong>
+                            @if($ann->category)<span class="announcement-cat">{{ ucfirst($ann->category) }}</span>@endif
+                            @if($ann->start_date)<span class="announcement-date-inline"><i class="fas fa-calendar-alt"></i> {{ $ann->start_date->format('M d') }}</span>@endif
+                            @if($ann->description)<span class="announcement-desc-inline">&mdash; {{ Str::limit(strip_tags($ann->description), 80) }}</span>@endif
+                        </span>
+                        @endforeach
                     </div>
-                    @endforeach
                 </div>
+                <button onclick="document.getElementById('studentAnnouncementBar').style.display='none'" class="announcement-close" title="Dismiss"><i class="fas fa-times"></i></button>
             </div>
         </div>
         <style>
-        .announcement-banner { color: #fff; position: relative; z-index: 60; padding: 0; }
-        .announcement-banner-inner { max-width: 100%; padding: 6px 16px; }
-        .announcement-banner-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-        .announcement-badge { font-weight: 700; font-size: .7rem; background: rgba(255,255,255,.2); padding: 2px 8px; border-radius: 4px; white-space: nowrap; letter-spacing: 0.5px; }
-        .announcement-close { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: all .2s; }
-        .announcement-close:hover { background: rgba(255,255,255,.15); color: #fff; }
-        .announcement-list { display: flex; gap: 8px; }
-        .announcement-item { flex: 1; background: rgba(255,255,255,.12); border-radius: 8px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.15); transition: all .2s; }
-        .announcement-item:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.3); }
-        .announcement-item-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
-        .announcement-title { font-size: .82rem; font-weight: 700; line-height: 1.2; }
-        .announcement-category { font-size: .6rem; font-weight: 600; background: rgba(255,255,255,.25); padding: 1px 6px; border-radius: 10px; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.3px; }
-        .announcement-desc { font-size: .72rem; font-weight: 400; opacity: .9; line-height: 1.3; margin-bottom: 2px; max-height: 2.6em; overflow: hidden; }
-        .announcement-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .65rem; opacity: .7; }
-        .announcement-meta span { display: flex; align-items: center; gap: 3px; }
-        .announcement-date, .announcement-time, .announcement-end-date { display: flex; align-items: center; gap: 3px; }
-        @media (max-width: 768px) { .announcement-list { flex-direction: column; gap: 4px; } .announcement-banner-inner { padding: 5px 10px; } .announcement-item { padding: 4px 8px; } }
+        .announcement-banner {
+            background: linear-gradient(90deg, #06b6d4 0%, #3b82f6 50%, #6366f1 100%);
+            color: #fff;
+            position: relative;
+            z-index: 60;
+            border-bottom: 1px solid rgba(255,255,255,.15);
+        }
+        .announcement-banner-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 16px;
+            height: 36px;
+        }
+        .announcement-badge {
+            font-weight: 700;
+            font-size: .68rem;
+            background: rgba(255,255,255,.2);
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+            letter-spacing: .5px;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        .announcement-ticker-wrap {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            mask-image: linear-gradient(90deg, transparent 0%, #000 3%, #000 97%, transparent 100%);
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 3%, #000 97%, transparent 100%);
+        }
+        .announcement-ticker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            animation: ticker-scroll {{ max($activeAnnouncements->count() * 12, 20) }}s linear infinite;
+        }
+        .announcement-ticker:hover { animation-play-state: paused; }
+        @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .announcement-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .76rem;
+            padding-right: 18px;
+            border-right: 1px solid rgba(255,255,255,.25);
+        }
+        .announcement-chip:last-child { border-right: none; }
+        .announcement-chip strong { font-weight: 600; }
+        .announcement-cat {
+            font-size: .58rem;
+            font-weight: 600;
+            background: rgba(255,255,255,.25);
+            padding: 1px 7px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+        .announcement-date-inline {
+            font-size: .66rem;
+            opacity: .75;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .announcement-desc-inline {
+            font-size: .7rem;
+            opacity: .8;
+        }
+        .announcement-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,.6);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px 6px;
+            border-radius: 50%;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+        .announcement-close:hover {
+            background: rgba(255,255,255,.2);
+            color: #fff;
+        }
+        @media (max-width: 768px) {
+            .announcement-banner-inner { padding: 0 10px; height: 34px; }
+            .announcement-badge { font-size: .6rem; padding: 2px 8px; }
+            .announcement-chip { font-size: .68rem; }
+        }
         @media print { .announcement-banner { display: none !important; } }
         </style>
         @endif
