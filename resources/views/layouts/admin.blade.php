@@ -409,23 +409,23 @@
         </div>
         <style>
         .announcement-banner {
-            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #fff;
             position: relative;
             z-index: 60;
-            border-bottom: 1px solid rgba(255,255,255,.15);
+            border-bottom: 2px solid #3b82f6;
         }
         .announcement-banner-inner {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             padding: 0 16px;
-            height: 38px;
+            height: 40px;
         }
         .announcement-badge {
             font-weight: 700;
             font-size: .82rem;
-            background: rgba(255,255,255,.2);
+            background: #3b82f6;
             padding: 3px 12px;
             border-radius: 20px;
             white-space: nowrap;
@@ -459,8 +459,8 @@
             align-items: center;
             gap: 8px;
             font-size: .9rem;
-            padding-right: 22px;
-            border-right: 1px solid rgba(255,255,255,.25);
+            padding: 0 24px;
+            border-right: 1px solid rgba(255,255,255,.15);
         }
         .announcement-chip:last-child { border-right: none; }
         .announcement-chip strong { font-weight: 600; }
