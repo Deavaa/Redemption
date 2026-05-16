@@ -80,16 +80,12 @@
 .mc-ca-item:focus-within { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); }
 .mc-ca-badge { min-width: 1.5rem; display: flex; align-items: center; justify-content: center; background: #4361ee; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.35rem 0; flex-shrink: 0; }
 .mc-ca-input { width: 100%; border: none; outline: none; text-align: center; padding: 0.35rem 0.1rem; font-size: 0.82rem; font-weight: 600; color: #1a1a2e; background: transparent; }
-.mc-ca-input::-webkit-outer-spin-button, .mc-ca-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.mc-ca-input[type=number] { -moz-appearance: textfield; }
 
 .mc-ca-extra { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.6rem; }
 .mc-extra-item { display: flex; flex-direction: column; }
 .mc-extra-label { font-size: 0.7rem; font-weight: 600; color: #6b7280; margin-bottom: 0.15rem; text-align: center; }
 .mc-extra-input { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.35rem; font-size: 0.82rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; }
 .mc-extra-input:focus { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); }
-.mc-extra-input::-webkit-outer-spin-button, .mc-extra-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.mc-extra-input[type=number] { -moz-appearance: textfield; }
 
 /* Exam Fields */
 .mc-exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
@@ -98,8 +94,6 @@
 .mc-exam-max { font-weight: 400; color: #9ca3af; font-size: 0.7rem; }
 .mc-exam-input { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.45rem; font-size: 0.88rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; }
 .mc-exam-input:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.08); }
-.mc-exam-input::-webkit-outer-spin-button, .mc-exam-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.mc-exam-input[type=number] { -moz-appearance: textfield; }
 
 /* Totals Bar */
 .mc-totals { margin-top: 1rem; background: linear-gradient(135deg, #1e293b, #334155); color: #fff; border-radius: 10px; padding: 0.9rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
@@ -236,22 +230,22 @@
                             @for ($i = 1; $i <= 10; $i++)
                             <div class="mc-ca-item">
                                 <span class="mc-ca-badge">{{ $i }}</span>
-                                <input type="number" data-field="ca{{ $i }}" data-group="ca" min="0" max="5" step="0.1" class="mc-ca-input mi" placeholder="/5">
+                                <input type="text" inputmode="decimal" data-field="ca{{ $i }}" data-group="ca" data-max="5" class="mc-ca-input mi" placeholder="/5">
                             </div>
                             @endfor
                         </div>
                         <div class="mc-ca-extra">
                             <div class="mc-extra-item">
                                 <label class="mc-extra-label">Conduct /5</label>
-                                <input type="number" data-field="conduct" data-group="ca" min="0" max="5" step="0.1" class="mc-extra-input mi" placeholder="/5">
+                                <input type="text" inputmode="decimal" data-field="conduct" data-group="ca" data-max="5" class="mc-extra-input mi" placeholder="/5">
                             </div>
                             <div class="mc-extra-item">
                                 <label class="mc-extra-label">Handwriting /5</label>
-                                <input type="number" data-field="handwriting" data-group="ca" min="0" max="5" step="0.1" class="mc-extra-input mi" placeholder="/5">
+                                <input type="text" inputmode="decimal" data-field="handwriting" data-group="ca" data-max="5" class="mc-extra-input mi" placeholder="/5">
                             </div>
                             <div class="mc-extra-item">
                                 <label class="mc-extra-label">Creativity /10</label>
-                                <input type="number" data-field="creativity" data-group="ca" min="0" max="10" step="0.1" class="mc-extra-input mi" placeholder="/10">
+                                <input type="text" inputmode="decimal" data-field="creativity" data-group="ca" data-max="10" class="mc-extra-input mi" placeholder="/10">
                             </div>
                         </div>
                     </div>
@@ -267,19 +261,19 @@
                         <div class="mc-exam-grid">
                             <div class="mc-exam-item">
                                 <label class="mc-exam-label">Test 1 <span class="mc-exam-max">/10</span></label>
-                                <input type="number" data-field="test1" data-group="exam" min="0" max="10" step="0.1" class="mc-exam-input mi" placeholder="0">
+                                <input type="text" inputmode="decimal" data-field="test1" data-group="exam" data-max="10" class="mc-exam-input mi" placeholder="0">
                             </div>
                             <div class="mc-exam-item">
                                 <label class="mc-exam-label">Test 2 <span class="mc-exam-max">/10</span></label>
-                                <input type="number" data-field="test2" data-group="exam" min="0" max="10" step="0.1" class="mc-exam-input mi" placeholder="0">
+                                <input type="text" inputmode="decimal" data-field="test2" data-group="exam" data-max="10" class="mc-exam-input mi" placeholder="0">
                             </div>
                             <div class="mc-exam-item">
                                 <label class="mc-exam-label">Mid-Term <span class="mc-exam-max">/20</span></label>
-                                <input type="number" data-field="mid_term" data-group="exam" min="0" max="20" step="0.1" class="mc-exam-input mi" placeholder="0">
+                                <input type="text" inputmode="decimal" data-field="mid_term" data-group="exam" data-max="20" class="mc-exam-input mi" placeholder="0">
                             </div>
                             <div class="mc-exam-item">
                                 <label class="mc-exam-label">Final Exam <span class="mc-exam-max">/30</span></label>
-                                <input type="number" data-field="final_exam" data-group="exam" min="0" max="30" step="0.1" class="mc-exam-input mi" placeholder="0">
+                                <input type="text" inputmode="decimal" data-field="final_exam" data-group="exam" data-max="30" class="mc-exam-input mi" placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -524,11 +518,40 @@
 
     function initMarkEntry() {
         document.querySelectorAll('.mi').forEach(function(inp) {
+            // Allow only digits, one decimal point, and max 1 decimal place
+            inp.addEventListener('keypress', function(e) {
+                var allowed = '0123456789.';
+                if (allowed.indexOf(e.key) === -1) { e.preventDefault(); return; }
+                // Prevent multiple decimal points
+                if (e.key === '.' && this.value.indexOf('.') !== -1) { e.preventDefault(); return; }
+                // Prevent more than 1 decimal place
+                var dotIdx = this.value.indexOf('.');
+                if (dotIdx !== -1 && this.selectionStart > dotIdx && this.value.length - dotIdx > 1) {
+                    e.preventDefault(); return;
+                }
+            });
+            // Paste handler: strip invalid characters
+            inp.addEventListener('paste', function(e) {
+                e.preventDefault();
+                var paste = (e.clipboardData || window.clipboardData).getData('text');
+                var cleaned = paste.replace(/[^0-9.]/g, '');
+                // Keep only first decimal point
+                var parts = cleaned.split('.');
+                if (parts.length > 2) cleaned = parts[0] + '.' + parts.slice(1).join('');
+                // Truncate to 1 decimal place
+                if (cleaned.indexOf('.') !== -1) {
+                    var dp = cleaned.split('.');
+                    if (dp[1].length > 1) cleaned = dp[0] + '.' + dp[1].substring(0, 1);
+                }
+                document.execCommand('insertText', false, cleaned);
+            });
             inp.addEventListener('blur', function() {
-                var mx = parseFloat(this.max), v = parseFloat(this.value);
+                var mx = parseFloat(this.dataset.max), v = parseFloat(this.value);
+                if (this.value === '') { recalc(); return; }
                 if (!isNaN(v) && v > mx) v = mx;
                 if (!isNaN(v) && v < 0) v = 0;
                 if (!isNaN(v)) this.value = Math.round(v * 10) / 10; // Round to 1 decimal
+                else this.value = '';
                 recalc();
                 if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
                 saveField(this.dataset.field, this.value);

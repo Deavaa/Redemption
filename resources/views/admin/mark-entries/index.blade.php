@@ -78,8 +78,6 @@
 .me-ca-item:focus-within { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); }
 .me-ca-badge { min-width: 1.6rem; height: 100%; display: flex; align-items: center; justify-content: center; background: #4361ee; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.4rem 0; flex-shrink: 0; }
 .me-ca-input { width: 100%; border: none; outline: none; text-align: center; padding: 0.4rem 0.15rem; font-size: 0.85rem; font-weight: 600; color: #1a1a2e; background: transparent; }
-.me-ca-input::-webkit-outer-spin-button, .me-ca-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.me-ca-input[type=number] { -moz-appearance: textfield; }
 
 /* Extra CA Row */
 .me-ca-extra { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.65rem; }
@@ -87,8 +85,6 @@
 .me-extra-label { font-size: 0.72rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2rem; text-align: center; }
 .me-extra-input { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.4rem; font-size: 0.85rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; }
 .me-extra-input:focus { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); }
-.me-extra-input::-webkit-outer-spin-button, .me-extra-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.me-extra-input[type=number] { -moz-appearance: textfield; }
 
 /* Exam Fields */
 .me-exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
@@ -97,8 +93,6 @@
 .me-exam-max { font-weight: 400; color: #9ca3af; font-size: 0.72rem; }
 .me-exam-input { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; }
 .me-exam-input:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.08); }
-.me-exam-input::-webkit-outer-spin-button, .me-exam-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.me-exam-input[type=number] { -moz-appearance: textfield; }
 
 /* Totals Bar */
 .me-totals-bar { background: linear-gradient(135deg, #1e293b, #334155); color: #fff; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
@@ -265,22 +259,22 @@
                                 @for ($i = 1; $i <= 10; $i++)
                                 <div class="me-ca-item">
                                     <span class="me-ca-badge">{{ $i }}</span>
-                                    <input type="number" class="me-ca-input mark-input" data-type="ca" data-number="{{ $i }}" min="0" max="5" step="0.1" placeholder="/5">
+                                    <input type="text" inputmode="decimal" class="me-ca-input mark-input" data-type="ca" data-number="{{ $i }}" data-max="5" placeholder="/5">
                                 </div>
                                 @endfor
                             </div>
                             <div class="me-ca-extra">
                                 <div class="me-extra-item">
                                     <label class="me-extra-label">Conduct /5</label>
-                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="conduct" min="0" max="5" step="0.1" placeholder="/5">
+                                    <input type="text" inputmode="decimal" class="me-extra-input mark-input" data-type="ca" data-number="conduct" data-max="5" placeholder="/5">
                                 </div>
                                 <div class="me-extra-item">
                                     <label class="me-extra-label">Handwriting /5</label>
-                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="handwriting" min="0" max="5" step="0.1" placeholder="/5">
+                                    <input type="text" inputmode="decimal" class="me-extra-input mark-input" data-type="ca" data-number="handwriting" data-max="5" placeholder="/5">
                                 </div>
                                 <div class="me-extra-item">
                                     <label class="me-extra-label">Creativity /10</label>
-                                    <input type="number" class="me-extra-input mark-input" data-type="ca" data-number="creativity" min="0" max="10" step="0.1" placeholder="/10">
+                                    <input type="text" inputmode="decimal" class="me-extra-input mark-input" data-type="ca" data-number="creativity" data-max="10" placeholder="/10">
                                 </div>
                             </div>
                         </div>
@@ -296,19 +290,19 @@
                             <div class="me-exam-grid">
                                 <div class="me-exam-item">
                                     <label class="me-exam-label">Test 1 <span class="me-exam-max">/10</span></label>
-                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="test1" min="0" max="10" step="0.1" placeholder="0">
+                                    <input type="text" inputmode="decimal" class="me-exam-input mark-input" data-type="exam" data-exam="test1" data-max="10" placeholder="0">
                                 </div>
                                 <div class="me-exam-item">
                                     <label class="me-exam-label">Test 2 <span class="me-exam-max">/10</span></label>
-                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="test2" min="0" max="10" step="0.1" placeholder="0">
+                                    <input type="text" inputmode="decimal" class="me-exam-input mark-input" data-type="exam" data-exam="test2" data-max="10" placeholder="0">
                                 </div>
                                 <div class="me-exam-item">
                                     <label class="me-exam-label">Mid-Term <span class="me-exam-max">/20</span></label>
-                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="mid_term" min="0" max="20" step="0.1" placeholder="0">
+                                    <input type="text" inputmode="decimal" class="me-exam-input mark-input" data-type="exam" data-exam="mid_term" data-max="20" placeholder="0">
                                 </div>
                                 <div class="me-exam-item">
                                     <label class="me-exam-label">Final Exam <span class="me-exam-max">/30</span></label>
-                                    <input type="number" class="me-exam-input mark-input" data-type="exam" data-exam="final_exam" min="0" max="30" step="0.1" placeholder="0">
+                                    <input type="text" inputmode="decimal" class="me-exam-input mark-input" data-type="exam" data-exam="final_exam" data-max="30" placeholder="0">
                                 </div>
                             </div>
                         </div>
@@ -540,9 +534,34 @@
         displayStudent(currentIndex);
     };
 
-    // --- Auto-save logic ---
+    // --- Attach input validation & auto-save ---
     function attachAutoSave() {
         document.querySelectorAll('.mark-input').forEach(inp => {
+            // Allow only digits, one decimal point, and max 1 decimal place
+            inp.addEventListener('keypress', function(e) {
+                var allowed = '0123456789.';
+                if (allowed.indexOf(e.key) === -1) { e.preventDefault(); return; }
+                // Prevent multiple decimal points
+                if (e.key === '.' && this.value.indexOf('.') !== -1) { e.preventDefault(); return; }
+                // Prevent more than 1 decimal place
+                var dotIdx = this.value.indexOf('.');
+                if (dotIdx !== -1 && this.selectionStart > dotIdx && this.value.length - dotIdx > 1) {
+                    e.preventDefault(); return;
+                }
+            });
+            // Paste handler: strip invalid characters
+            inp.addEventListener('paste', function(e) {
+                e.preventDefault();
+                var paste = (e.clipboardData || window.clipboardData).getData('text');
+                var cleaned = paste.replace(/[^0-9.]/g, '');
+                var parts = cleaned.split('.');
+                if (parts.length > 2) cleaned = parts[0] + '.' + parts.slice(1).join('');
+                if (cleaned.indexOf('.') !== -1) {
+                    var dp = cleaned.split('.');
+                    if (dp[1].length > 1) cleaned = dp[0] + '.' + dp[1].substring(0, 1);
+                }
+                document.execCommand('insertText', false, cleaned);
+            });
             inp.addEventListener('input', function() {
                 enforceMaxValue(this);
                 recalc();
@@ -579,12 +598,12 @@
     }
 
     function enforceMaxValue(inp) {
-        const min = parseFloat(inp.min), max = parseFloat(inp.max);
+        const max = parseFloat(inp.dataset.max);
         if (inp.value === '') return;
         let v = parseFloat(inp.value);
         if (isNaN(v)) { inp.value = ''; return; }
         if (!isNaN(max) && v > max) v = max;
-        if (!isNaN(min) && v < min) v = min;
+        if (v < 0) v = 0;
         inp.value = Math.round(v * 10) / 10; // Round to 1 decimal place
     }
 
