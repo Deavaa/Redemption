@@ -8,25 +8,47 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminMiddleware
 {
+    /**
+     * Allow access to the admin panel for:
+     *  1. Users with legacy role = 'admin'
+     *  2. Users with RBAC roles assigned (role_user table)
+     *  3. Users with legacy role = 'teacher' (they access via RBAC permissions)
+     *  4. Users with legacy role = 'staff' / 'super_admin'
+     *
+     * Students and parents should NOT access the admin panel —
+     * they get their own dedicated routes.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
         if (!$user) {
-            abort(403);
+            return redirect()->route('login');
         }
 
-        // Legacy check: users.role column
+        // Inactive users cannot access the panel
+        if (method_exists($user, 'is_active') && !$user->is_active) {
+            Auth()->logout();
+            abort(403, 'Your account has been deactivated.');
+        }
+
+        // 1. Legacy check: users.role column = admin
         if ($user->isAdmin()) {
             return $next($request);
         }
 
-        // RBAC check: user has any role that grants admin panel access
+        // 2. RBAC check: user has any role assigned via role_user table
         try {
             if ($user->roles()->exists()) {
                 return $next($request);
             }
         } catch (\Throwable $e) {}
+
+        // 3. Legacy role check: teacher, staff, super_admin should access admin panel
+        $allowedLegacyRoles = ['teacher', 'staff', 'super_admin'];
+        if (in_array($user->role, $allowedLegacyRoles)) {
+            return $next($request);
+        }
 
         abort(403, 'You do not have access to the admin panel.');
     }
