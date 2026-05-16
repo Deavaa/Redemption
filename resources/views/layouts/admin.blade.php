@@ -30,7 +30,7 @@
             $academicReportsRoutes = ['admin.report-card.*','admin.progress-reports.*','admin.performance-reports.*'];
             $peopleRoutes = ['admin.students.*','admin.teachers.*','admin.staff.*','admin.team-members.*','admin.parents.*','admin.teacher-assignments.*'];
             $financeRoutes = ['admin.fees.*','admin.fee-payments.*','admin.payrolls.*','admin.budgets.*','admin.income-expenses.*','admin.finance-statements.*','admin.budget-comparison.*','admin.financial-comparison.*'];
-            $hrRoutes = ['admin.leaves.*','admin.employee-assets.*','admin.stock.*','admin.trainings.*'];
+            $hrRoutes = ['admin.leaves.*','admin.employee-assets.*'];
             $analysisRoutes = ['admin.performance-analysis.*','admin.performance-comparison.*','admin.psychological-analysis.*','admin.performance.*'];
             $documentRoutes = ['admin.id-card-generate.*','admin.certificate-generate.*','admin.id-cards.*','admin.certificates.*','admin.report-exchange.*'];
             $libraryRoutes = ['admin.library.*'];
@@ -117,16 +117,6 @@
                         <li><a href="{{ route('admin.payrolls.index') }}" class="{{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i> Payroll</a></li>
                         <li><a href="{{ route('admin.leaves.index') }}" class="{{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}"><i class="fas fa-calendar-minus"></i> Leaves</a></li>
                         <li><a href="{{ route('admin.employee-assets.index') }}" class="{{ request()->routeIs('admin.employee-assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i> Employee Assets</a></li>
-                        <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Capacity Building</li>
-                        <li><a href="{{ route('admin.trainings.index') }}" class="{{ request()->routeIs('admin.trainings.*') ? 'active' : '' }}"><i class="fas fa-graduation-cap"></i> Training & Development</a></li>
-                        @if(Route::has('admin.stock.index'))
-                        <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Stock Management</li>
-                        <li><a href="{{ route('admin.stock.index') }}" class="{{ request()->routeIs('admin.stock.*') ? 'active' : '' }}"><i class="fas fa-warehouse"></i> Stock Items</a></li>
-                        <li><a href="{{ route('admin.stock.stock-in') }}" class="{{ request()->routeIs('admin.stock.stock-in') ? 'active' : '' }}"><i class="fas fa-plus-circle text-success"></i> Stock In</a></li>
-                        <li><a href="{{ route('admin.stock.stock-out') }}" class="{{ request()->routeIs('admin.stock.stock-out') ? 'active' : '' }}"><i class="fas fa-minus-circle text-warning"></i> Stock Out</a></li>
-                        <li><a href="{{ route('admin.stock.report') }}" class="{{ request()->routeIs('admin.stock.report') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i> Stock Report</a></li>
-                        <li><a href="{{ route('admin.stock.transactions') }}" class="{{ request()->routeIs('admin.stock.transactions') ? 'active' : '' }}"><i class="fas fa-history"></i> Transactions</a></li>
-                        @endif
                     </ul>
                 </li>
 
@@ -357,18 +347,6 @@
                 </div>
             </div>
         </nav>
-
-        {{-- Announcement Ticker Bar --}}
-        <div id="announcementTicker" style="display:none;">
-            <div class="ticker-inner">
-                <div class="ticker-badge"><i class="fas fa-bullhorn"></i> <span>Announcements</span></div>
-                <div class="ticker-content">
-                    <div class="ticker-track" id="tickerTrack"></div>
-                </div>
-                <button class="ticker-close" id="tickerClose" title="Dismiss"><i class="fas fa-times"></i></button>
-            </div>
-        </div>
-
         <div class="admin-content">
             @if(session('success'))
                 <div class="global-alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
@@ -551,178 +529,7 @@
     color: var(--text-muted);
     margin-top: 2px;
 }
-
-/* ===== Announcement Ticker Bar ===== */
-#announcementTicker {
-    background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-    color: #fff;
-    overflow: hidden;
-    position: relative;
-    z-index: 100;
-}
-.ticker-inner {
-    display: flex;
-    align-items: center;
-    height: 36px;
-    padding: 0;
-}
-.ticker-badge {
-    background: rgba(255,255,255,0.18);
-    padding: 0 14px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    border-right: 1px solid rgba(255,255,255,0.15);
-}
-.ticker-badge i { font-size: 13px; }
-.ticker-content {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    height: 100%;
-}
-.ticker-track {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    white-space: nowrap;
-    /* animation only applied via JS when content overflows */
-}
-.ticker-track.scrolling {
-    animation: ticker-scroll 120s linear infinite;
-}
-.ticker-track.scrolling:hover { animation-play-state: paused; }
-.ticker-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 24px;
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-}
-.ticker-item .ticker-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.ticker-item .ticker-cat {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    opacity: 0.7;
-}
-.ticker-item .ticker-date {
-    font-size: 11px;
-    opacity: 0.6;
-}
-.ticker-close {
-    background: rgba(255,255,255,0.12);
-    border: none;
-    color: #fff;
-    width: 36px;
-    height: 100%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    flex-shrink: 0;
-    transition: background 0.2s;
-    border-left: 1px solid rgba(255,255,255,0.15);
-}
-.ticker-close:hover { background: rgba(255,255,255,0.25); }
-
-@keyframes ticker-scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-@media (max-width: 768px) {
-    .ticker-badge span { display: none; }
-    .ticker-badge { padding: 0 10px; }
-    .ticker-item { padding: 0 14px; font-size: 12px; }
-    #announcementTicker { font-size: 12px; }
-}
 </style>
-<script>
-// Announcement Ticker - fetch and display
-(function() {
-    var tickerEl = document.getElementById('announcementTicker');
-    var trackEl = document.getElementById('tickerTrack');
-    var closeBtn = document.getElementById('tickerClose');
-    if (!tickerEl || !trackEl) return;
-
-    // Check if dismissed this session
-    if (sessionStorage.getItem('ticker_dismissed')) {
-        tickerEl.style.display = 'none';
-        return;
-    }
-
-    closeBtn.addEventListener('click', function() {
-        tickerEl.style.display = 'none';
-        sessionStorage.setItem('ticker_dismissed', '1');
-    });
-
-    var categoryLabels = {
-        'holiday': 'Holiday', 'exam': 'Exam', 'event': 'Event',
-        'meeting': 'Meeting', 'deadline': 'Deadline', 'other': 'Info'
-    };
-
-    fetch('{{ route("admin.api.announcements") }}', {
-        credentials: 'same-origin',
-        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (!data || data.length === 0) {
-            tickerEl.style.display = 'none';
-            return;
-        }
-
-        var html = '';
-        data.forEach(function(item) {
-            var dotColor = item.color || '#fff';
-            var cat = categoryLabels[item.category] || item.category || '';
-            html += '<span class="ticker-item">';
-            html += '<span class="ticker-dot" style="background:' + dotColor + '"></span>';
-            html += '<span class="ticker-cat">' + cat + '</span>';
-            html += ' ' + item.title;
-            if (item.start_date) html += ' <span class="ticker-date">(' + item.start_date + ')</span>';
-            html += '</span>';
-        });
-
-        // Duplicate for seamless loop only if content overflows
-        var contentWidth = trackEl.scrollWidth;
-        var containerWidth = trackEl.parentElement.offsetWidth;
-
-        if (contentWidth > containerWidth) {
-            // Content overflows — enable slow scrolling
-            trackEl.innerHTML = html + html;
-            trackEl.classList.add('scrolling');
-            // Very slow speed: ~5px per second, minimum 60s
-            var totalWidth = trackEl.scrollWidth / 2;
-            var speed = Math.max(60, totalWidth / 5);
-            trackEl.style.animationDuration = speed + 's';
-        } else {
-            // Content fits — static, no scrolling
-            trackEl.innerHTML = html;
-        }
-        tickerEl.style.display = 'block';
-    })
-    .catch(function() {
-        tickerEl.style.display = 'none';
-    });
-})();
-</script>
 @stack('scripts')
 @yield('scripts')
 </body>

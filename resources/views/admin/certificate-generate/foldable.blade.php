@@ -20,106 +20,111 @@
 
         /* ===== PAGE 1 OUTSIDE: LEFT = Grading Info, RIGHT = Cover ===== */
         .back-panel {
-            background: #fff; padding: 7mm 7mm; overflow-y: auto;
+            background: #fff; padding: 9mm 8mm; overflow-y: auto;
             border-right: 2px dashed #bbb;
         }
         .back-panel h3 {
-            font-size: 0.95rem; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 1.2px; color: #2d2d3a; margin-bottom: 6px;
-            padding-bottom: 4px; border-bottom: 2.5px solid #2d2d3a; display: inline-block;
+            font-size: 1rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 10px;
+            padding-bottom: 5px; border-bottom: 3px solid #2d2d3a; display: inline-block;
         }
-        .back-panel h4 { font-size: 0.8rem; font-weight: 700; color: #1a1a2e; margin: 8px 0 3px; }
-        .back-panel p, .back-panel li { font-size: 0.7rem; color: #4b5563; line-height: 1.5; }
-        .back-panel ul { padding-left: 14px; margin-bottom: 4px; }
-        .grading-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.72rem; }
-        .grading-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 5px 6px; text-align: center; font-size: 0.68rem; font-weight: 700; }
-        .grading-scale td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.72rem; }
+        .back-panel h4 { font-size: 0.9rem; font-weight: 700; color: #1a1a2e; margin: 12px 0 6px; }
+        .back-panel p, .back-panel li { font-size: 0.8rem; color: #4b5563; line-height: 1.7; }
+        .back-panel ul { padding-left: 16px; margin-bottom: 8px; }
+        .grading-scale { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.78rem; }
+        .grading-scale th { background: #1a1a2e; color: #fff; padding: 7px 9px; text-align: center; font-size: 0.72rem; }
+        .grading-scale td { padding: 6px 9px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.75rem; }
         .grading-scale td:first-child { font-weight: 700; text-align: left; }
-        .conduct-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.72rem; }
-        .conduct-scale th { border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 5px 6px; text-align: center; font-size: 0.68rem; font-weight: 700; }
-        .conduct-scale td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.72rem; }
+        .conduct-scale { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.78rem; }
+        .conduct-scale th { background: #2d2d3a; color: #fff; padding: 7px 9px; text-align: center; font-size: 0.72rem; }
+        .conduct-scale td { padding: 6px 9px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.75rem; }
 
         /* FRONT COVER PANEL */
         .front-panel {
-            background: #fff; color: #2d2d3a; display: flex; flex-direction: column;
+            background: linear-gradient(160deg, #1a1a2e 0%, #2d2d3a 50%, #3d3d52 100%);
+            color: #fff; display: flex; flex-direction: column;
             justify-content: space-between; position: relative;
-            border-left: 3px solid #2d2d3a;
         }
-        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 22mm; }
-        .front-logo { max-height: 95px; max-width: 130px; object-fit: contain; margin: 0 auto 18px; display: block; border-radius: 12px; border: 2px solid #2d2d3a; padding: 6px; }
-        .front-school-name { font-size: 1.85rem; font-weight: 800; letter-spacing: 3.5px; margin-bottom: 6px; }
-        .front-school-name-am { font-size: 1.4rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 12px; color: #4b5563; }
-        .front-line { width: 75px; height: 0; border-top: 2px solid #2d2d3a; margin: 0 auto 14px; }
-        .front-academic-year { font-size: 1.15rem; font-weight: 300; letter-spacing: 2.5px; color: #4b5563; }
-        .front-cert-title { font-size: 1.05rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 14px; color: #6b7280; }
-        .front-cert-title-am { font-size: 0.95rem; font-weight: 500; margin-top: 5px; color: #9ca3af; }
+        .front-panel::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 24mm; }
+        .front-logo { max-height: 85px; max-width: 120px; object-fit: contain; margin: 0 auto 16px; display: block; border-radius: 12px; background: rgba(255,255,255,0.15); padding: 6px; }
+        .front-school-name { font-size: 1.6rem; font-weight: 800; letter-spacing: 3.5px; margin-bottom: 5px; }
+        .front-school-name-am { font-size: 1.25rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 10px; opacity: 0.9; }
+        .front-line { width: 65px; height: 3px; background: rgba(255,255,255,0.5); margin: 0 auto 12px; }
+        .front-academic-year { font-size: 1rem; font-weight: 300; letter-spacing: 2.5px; opacity: 0.85; }
+        .front-cert-title { font-size: 0.9rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 12px; opacity: 0.7; }
+        .front-cert-title-am { font-size: 0.85rem; font-weight: 500; margin-top: 4px; opacity: 0.6; }
 
         .front-bottom {
             position: relative; z-index: 1;
-            background: #fff; padding: 12mm 14mm 18mm;
-            border-top: 2px solid #2d2d3a;
+            background: rgba(0,0,0,0.25); padding: 10mm 12mm 16mm;
+            border-top: 1px solid rgba(255,255,255,0.15);
         }
-        .front-student-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; color: #1a1a2e; }
-        .front-info-row { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 9px; }
-        .front-info-item { font-size: 0.9rem; color: #4b5563; }
-        .front-info-item strong { color: #1a1a2e; font-weight: 600; }
-        .front-status-badge { display: inline-block; padding: 6px 16px; border-radius: 5px; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-top: 10px; border: 1.5px solid; }
-        .front-status-promoted { border-color: #10b981; color: #059669; }
-        .front-status-detained { border-color: #ef4444; color: #dc2626; }
-        .front-status-conditional { border-color: #f59e0b; color: #d97706; }
-        .front-status-na { border-color: #9ca3af; color: #6b7280; }
+        .front-student-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; }
+        .front-info-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 7px; }
+        .front-info-item { font-size: 0.78rem; opacity: 0.85; }
+        .front-info-item strong { opacity: 1; font-weight: 600; }
+        .front-status-badge { display: inline-block; padding: 5px 14px; border-radius: 5px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-top: 8px; }
+        .front-status-promoted { background: rgba(16,185,129,0.3); color: #6ee7b7; }
+        .front-status-detained { background: rgba(220,38,38,0.3); color: #fca5a5; }
+        .front-status-conditional { background: rgba(217,119,6,0.3); color: #fcd34d; }
+        .front-status-na { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
 
         /* ===== PAGE 2 INSIDE: LEFT = Marks Table, RIGHT = Comments + Signatures ===== */
         .inside-left {
-            border-right: 2px dashed #e5e7eb; padding: 10mm 10mm; overflow-y: auto;
+            border-right: 2px dashed #e5e7eb; padding: 8mm 8mm; overflow-y: auto;
         }
         .inside-right {
-            padding: 10mm 10mm; display: flex; flex-direction: column;
+            padding: 8mm 8mm; display: flex; flex-direction: column;
         }
 
         .section-title {
-            font-size: 1.05rem; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 5px;
-            padding-bottom: 5px; border-bottom: 3px solid #2d2d3a; display: inline-block;
+            font-size: 0.9rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 4px;
+            padding-bottom: 4px; border-bottom: 3px solid #2d2d3a; display: inline-block;
         }
         .section-title-am {
-            font-size: 0.9rem; font-weight: 600; color: #6b7280;
-            margin-bottom: 12px; display: block;
+            font-size: 0.8rem; font-weight: 600; color: #6b7280;
+            margin-bottom: 10px; display: block;
         }
 
-        .marks-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .marks-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
         .marks-table th {
-            border-bottom: 2px solid #2d2d3a; color: #2d2d3a; padding: 9px 9px;
-            font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; font-weight: 700;
+            background: #1a1a2e; color: #fff; padding: 7px 7px;
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;
         }
         .marks-table th:first-child { text-align: left; }
-        .marks-table td { padding: 8px 9px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 0.9rem; }
+        .marks-table td { padding: 6px 7px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 0.78rem; }
         .marks-table td:first-child { text-align: left; font-weight: 600; }
-        .marks-table .summary-row { font-weight: 700; }
+        .marks-table .summary-row { background: #f5f5f8; font-weight: 700; }
         .marks-table .summary-row td { border-top: 2px solid #2d2d3a; }
 
-        .comment-section { margin-bottom: 18px; }
-        .comment-label { font-size: 0.98rem; font-weight: 700; color: #2d2d3a; margin-bottom: 6px; }
-        .comment-label-am { font-size: 0.82rem; font-weight: 500; color: #6b7280; margin-bottom: 6px; }
+        .comment-section { margin-bottom: 14px; }
+        .comment-label { font-size: 0.85rem; font-weight: 700; color: #2d2d3a; margin-bottom: 5px; }
+        .comment-label-am { font-size: 0.72rem; font-weight: 500; color: #6b7280; margin-bottom: 5px; }
         .comment-box {
-            border: 1px solid #2d2d3a; border-radius: 6px; padding: 12px;
-            min-height: 65px; font-size: 0.92rem; color: #374151; line-height: 1.7;
+            border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;
+            background: #fafbfc; min-height: 56px; font-size: 0.8rem; color: #374151; line-height: 1.6;
         }
 
         .overall-summary {
+            background: linear-gradient(135deg, #f5f5f8, #ececf0);
             border: 2px solid #2d2d3a; border-radius: 8px;
-            padding: 14px 18px; margin-bottom: 18px;
+            padding: 12px 16px; margin-bottom: 14px;
         }
         .overall-summary h4 {
-            font-size: 1.05rem; color: #1a1a2e; margin-bottom: 8px;
+            font-size: 0.9rem; color: #1a1a2e; margin-bottom: 6px;
         }
-        .overall-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
+        .overall-row { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 4px; }
         .overall-row strong { color: #1a1a2e; }
 
-        .signatures { display: flex; justify-content: space-between; margin-top: auto; padding-top: 18px; }
+        .signatures { display: flex; justify-content: space-between; margin-top: auto; padding-top: 14px; }
         .sig { text-align: center; }
-        .sig-line { width: 110px; border-top: 2px solid #333; margin: 30px auto 6px; }
-        .sig span { font-size: 0.78rem; color: #6b7280; }
+        .sig-line { width: 100px; border-top: 2px solid #333; margin: 28px auto 5px; }
+        .sig span { font-size: 0.68rem; color: #6b7280; }
 
         .no-print { text-align: center; margin: 20px 0; }
         .no-print button { padding: 10px 24px; background: #2d2d3a; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; margin: 0 5px; }
@@ -234,10 +239,10 @@
     <!-- PAGE 1: OUTSIDE - Back (left: grading rules) + Front (right: cover with student info) -->
     <div class="page">
         <div class="panel back-panel">
-            <h3>Grading &amp; Assessment Policy<br><span style="font-weight:600;font-size:0.72rem;color:#6b7280;">የውጤት ምዘና ፖሊሲ</span></h3>
+            <h3>Grading &amp; Assessment Policy<br><span style="font-weight:600;font-size:0.85rem;opacity:0.8;">የውጤት ምዘና ፖሊሲ</span></h3>
 
             <h4>1. Academic Grading Scale / የአካዳሚክ ውጤት ደረጃ</h4>
-            <p>Student performance is evaluated using the following grading scale. / የተማሪዎች ውጤት በሚከተለው የውጤት ደረጃ መሰረት ይገመገማል።</p>
+            <p>Student performance is evaluated using the following grading scale. Each grade corresponds to a specific range of percentage scores and carries a designated grade point value used for computing cumulative averages. / የተማሪዎች ውጤት በሚከተለው የውጤት ደረጃ መሰረት ይገመገማል። እያንዳንዱ ደረጃ የተወሰነ የፍተሻ ውጤት ክልል እና የነጥብ እሴት ይዞ ይቀራል።</p>
             <table class="grading-scale">
                 <thead><tr><th>Grade / ደረጃ</th><th>Score / ውጤት</th><th>Point / ነጥብ</th><th>Description / መግለጫ</th></tr></thead>
                 <tbody>
@@ -252,8 +257,15 @@
                 </tbody>
             </table>
 
-            <h4>2. Behavioral Assessment / የባህሪ ምዘና</h4>
-            <p>Behavior is assessed using the following 5-point scale. / የባህሪ ምዘና በሚከተለው 5-ነጥብ ሚዛን ይገመገማል።</p>
+            <h4>2. Marking Composition / የምዘና አካላት</h4>
+            <ul>
+                <li><strong>Continuous Assessment (CA) / የቀጥታ ምዘና:</strong> Comprises class tests, quizzes, homework, projects, and class participation. This accounts for 30% of the total mark. / የክፍል ፈተና፣ መልስ፣ የቤት ስራ፣ ፕሮጀክት እና የክፍል ተሳትፎ ያካትታል። ከጠቅላሉ 30% ይይዛል።</li>
+                <li><strong>Mid-Term Examination / የአጋማሽ ፈተና:</strong> A comprehensive assessment administered at the midpoint of each term covering all material taught. / በእያንዳንዱ ወር መካከል የሚሰጥ ሁሉንም ትምህርት የሚሸፍን ምዘና።</li>
+                <li><strong>Final Examination / የመጨረሻ ፈተና:</strong> A summative assessment at the end of each term evaluating the full term curriculum. This accounts for 70% of the total mark. / በእያንዳንዱ ወር መጨረሻ የሚሰጥ ከጠቅላሉ 70% የሚይዝ ምዘና።</li>
+            </ul>
+
+            <h4>3. Behavioral Assessment / የባህሪ ምዘና</h4>
+            <p>Behavioral and character development is assessed alongside academic performance using the following 5-point scale. / የባህሪ እና ባህሪ ልማት ከአካዳሚክ ውጤት ጋር በመሆን በሚከተለው 5-ነጥብ ሚዛን ይገመገማል።</p>
             <table class="conduct-scale">
                 <thead><tr><th>Rating / ደረጃ</th><th>Score / ነጥብ</th><th>Description / መግለጫ</th></tr></thead>
                 <tbody>
@@ -264,6 +276,16 @@
                     <tr><td>Poor / ደካማ</td><td>1</td><td>Consistently disruptive, intervention needed / በየጊዜው መበከል፣ ጣልቃ መግባት ይፈለጋል</td></tr>
                 </tbody>
             </table>
+
+            <h4>4. Promotion Policy / የማስተማሪያ ፖሊሲ</h4>
+            <ul>
+                <li><strong>Promoted / የተማረከ:</strong> Overall average of 50% or above with minimum passing grades in core subjects. Student advances to the next grade level. / አጠቃላይ አማካይ 50% እና ከዚያ በላይ በዋና የትምህርት ዘርፎች ዝቅተኛ የማለፍ ውጤት ሲኖር።</li>
+                <li><strong>Conditionally Promoted / በሁኔታ የተማረከ:</strong> Average between 40%-49% or fails no more than 2 subjects. Student must show improvement in the next term. / አማካይ ከ40%-49% መካከል ወይም ከ2 በላይ ያልተሳካ የለም። ተማሪው በሚቀጥለው ወር ማሻሻል አለበት።</li>
+                <li><strong>Detained / የተያዘ:</strong> Average below 40% or fails more than 2 subjects. Student must repeat the grade. / አማካይ ከ40% በታች ወይም ከ2 በላይ ያልተሳካ። ተማሪው ክፍሉን መድገም አለበት።</li>
+            </ul>
+
+            <h4>5. Attendance Requirement / የመገኘት መስፈርት</h4>
+            <p>Students must maintain a minimum attendance rate of 75% throughout the academic year. Failure to meet this requirement may affect promotion eligibility regardless of academic performance. / ተማሪዎች በአመቱ ውስጥ የመገኘት ምንም ከ75% በታች መሆን የለበትም። ይህንን መስፈርት ያላሟሉ ተማሪዎች ውጤታቸው ምንም ቢሆንም የማስተማሪያ ብቃታቸው ሊጎዳ ይችላል።</p>
         </div>
 
         <div class="panel front-panel" style="position:relative;">
@@ -324,6 +346,7 @@
                         <th>Term 1<br>ወር 1</th>
                         <th>Term 2<br>ወር 2</th>
                         <th>Yearly<br>ዓመታዊ</th>
+                        <th>Grade<br>ደረጃ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -333,6 +356,7 @@
                         <td>{{ $md['term1'] ?? '-' }}</td>
                         <td>{{ $md['term2'] ?? '-' }}</td>
                         <td><strong>{{ $md['yearly'] ?? '-' }}</strong></td>
+                        <td>{{ $md['grade'] }}</td>
                     </tr>
                     @endforeach
                     <tr class="summary-row">
@@ -340,20 +364,23 @@
                         <td>{{ $totalTerm1 ?: '-' }}</td>
                         <td>{{ $totalTerm2 ?: '-' }}</td>
                         <td>{{ $totalYearly ?: '-' }}</td>
+                        <td>-</td>
                     </tr>
                     <tr class="summary-row">
                         <td>Average / አማካይ</td>
                         <td>{{ $countWithMarks > 0 ? round($totalTerm1 / $countWithMarks, 1) : '-' }}</td>
                         <td>{{ $countWithMarks > 0 ? round($totalTerm2 / $countWithMarks, 1) : '-' }}</td>
                         <td>{{ $avgYearly }}</td>
+                        <td>{{ $overallGrade }}</td>
                     </tr>
                     <tr class="summary-row">
                         <td>Rank / ደረጃ</td>
-                        <td colspan="3">-</td>
+                        <td colspan="4">-</td>
                     </tr>
                     <tr class="summary-row">
                         <td>Conduct / ባህሪ</td>
                         <td colspan="3">{{ $conduct }}/5</td>
+                        <td>{{ is_numeric($conduct) && $conduct >= 4 ? 'Very Good' : (is_numeric($conduct) && $conduct >= 3 ? 'Good' : 'Fair') }}</td>
                     </tr>
                 </tbody>
             </table>

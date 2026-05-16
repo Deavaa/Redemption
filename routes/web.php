@@ -39,7 +39,6 @@ use App\Http\Controllers\Media\MediaController;
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\ParentModel\ParentModelController;
 use App\Http\Controllers\Payroll\PayrollController;
-use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\PerformanceReport\PerformanceComparisonController;
 use App\Http\Controllers\Performance\PerformanceAnalysisController;
 use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController as PerformanceReportAnalysisController;
@@ -66,13 +65,9 @@ use App\Http\Controllers\UserAccess\TeacherAccessController;
 use App\Http\Controllers\UserAccess\StudentAccessController;
 use App\Http\Controllers\UserAccess\ParentAccessController;
 use App\Http\Controllers\ReportExchange\ReportExchangeController;
-use App\Http\Controllers\Training\TrainingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// Public announcement ticker API (no auth)
-Route::get('api/public/announcements', [CalendarEventController::class, 'apiAnnouncements'])->name('api.public.announcements');
 
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
@@ -96,11 +91,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('terms', TermController::class)->middleware('permission:terms.view');
     Route::resource('exams', ExamController::class)->middleware('permission:exams.view');
     Route::resource('subjects', SubjectController::class)->middleware('permission:subjects.view');
-    // Subject Assignments (custom routes BEFORE resource to avoid route conflicts)
+    Route::resource('subject-assignments', SubjectAssignmentController::class)->middleware('permission:subject_assignments.view');
     Route::delete('subject-assignments/bulk-delete', [SubjectAssignmentController::class, 'bulkDelete'])->name('subject-assignments.bulk-delete')->middleware('permission:subject_assignments.delete');
     Route::get('subject-assignments/api/classes', [SubjectAssignmentController::class, 'apiClasses'])->name('subject-assignments.api.classes');
     Route::get('subject-assignments/api/sections', [SubjectAssignmentController::class, 'apiSections'])->name('subject-assignments.api.sections');
-    Route::resource('subject-assignments', SubjectAssignmentController::class)->middleware('permission:subject_assignments.view');
 
     Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
     Route::get('mark-entries/api/terms', [MarkEntryController::class, 'apiTerms'])->name('mark-entries.api.terms');
@@ -191,22 +185,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('payrolls', PayrollController::class)->middleware('permission:payrolls.view');
     Route::resource('leaves', LeaveController::class)->middleware('permission:leaves.view');
     Route::resource('employee-assets', EmployeeAssetController::class)->middleware('permission:employee_assets.view');
-
-    // Training & Capacity Building
-    Route::resource('trainings', TrainingController::class)->middleware('permission:trainings.view');
-    Route::post('trainings/{training}/participants', [TrainingController::class, 'addParticipant'])->name('trainings.participants.add')->middleware('permission:trainings.edit');
-    Route::post('trainings/{training}/participants/bulk', [TrainingController::class, 'addBulkParticipants'])->name('trainings.participants.add-bulk')->middleware('permission:trainings.edit');
-    Route::put('trainings/{training}/participants/{participantId}', [TrainingController::class, 'updateParticipant'])->name('trainings.participants.update')->middleware('permission:trainings.edit');
-    Route::delete('trainings/{training}/participants/{participantId}', [TrainingController::class, 'removeParticipant'])->name('trainings.participants.remove')->middleware('permission:trainings.edit');
-
-    // Stock Management
-    Route::resource('stock', StockController::class)->middleware('permission:stock.view');
-    Route::get('stock-in', [StockController::class, 'stockIn'])->name('stock.stock-in')->middleware('permission:stock.stock-in');
-    Route::post('stock-in', [StockController::class, 'storeStockIn'])->name('stock.store-stock-in')->middleware('permission:stock.stock-in');
-    Route::get('stock-out', [StockController::class, 'stockOut'])->name('stock.stock-out')->middleware('permission:stock.stock-out');
-    Route::post('stock-out', [StockController::class, 'storeStockOut'])->name('stock.store-stock-out')->middleware('permission:stock.stock-out');
-    Route::get('stock-transactions', [StockController::class, 'transactions'])->name('stock.transactions')->middleware('permission:stock.view');
-    Route::get('stock-report', [StockController::class, 'report'])->name('stock.report')->middleware('permission:stock.report');
     Route::resource('performance-reports', PerformanceReportController::class)->middleware('permission:mark_sheets.view');
     Route::resource('progress-reports', ProgressReportController::class)->middleware('permission:mark_sheets.view');
     Route::resource('audits', AuditController::class)->middleware('permission:audits.view');
@@ -226,7 +204,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::delete('calendar/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar.destroy')->middleware('permission:calendar.manage');
     Route::get('api/calendar/events', [CalendarEventController::class, 'apiEvents'])->name('calendar.api.events');
     Route::get('api/calendar/event/{calendar_event}', [CalendarEventController::class, 'apiEvent'])->name('calendar.api.event');
-    Route::get('api/announcements', [CalendarEventController::class, 'apiAnnouncements'])->name('api.announcements');
 
     // Chat
     Route::get('chat', [ChatController::class, 'index'])->name('chat.index')->middleware('permission:chat.access');
@@ -296,7 +273,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Web Content Management
     Route::get('web-content', [WebContentController::class, 'index'])->name('web-content.index')->middleware('permission:settings.view');
-    Route::match(['post', 'put'], 'web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
+    Route::post('web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
     Route::post('web-content/upload', [WebContentController::class, 'upload'])->name('web-content.upload')->middleware('permission:settings.edit');
 
     // Announcements

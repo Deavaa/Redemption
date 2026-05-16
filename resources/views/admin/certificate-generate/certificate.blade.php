@@ -43,9 +43,14 @@
 
         /* Line-pattern decorative band at top */
         .cert-top-band {
-            height: 4px; margin: 16px 24px 0;
-            border-top: 2px solid #2d2d3a;
-            border-bottom: 1px solid #999;
+            height: 8px; margin: 16px 24px 0;
+            background: repeating-linear-gradient(
+                90deg,
+                #2d2d3a 0px, #2d2d3a 12px,
+                transparent 12px, transparent 16px,
+                #666 16px, #666 20px,
+                transparent 20px, transparent 28px
+            );
         }
 
         /* Watermark */
@@ -59,75 +64,79 @@
 
         .cert-content {
             position: relative; z-index: 2;
-            padding: 16px 28px 24px;
+            padding: 12px 24px 20px;
         }
 
         /* Header */
-        .cert-header { text-align: center; margin-bottom: 12px; }
+        .cert-header { text-align: center; margin-bottom: 8px; }
         .cert-header-logo {
-            height: 52px; object-fit: contain; margin-bottom: 6px;
+            height: 45px; object-fit: contain; margin-bottom: 4px;
         }
         .cert-header h1 {
-            font-size: 1.5rem; color: #2d2d3a; margin: 0;
+            font-size: 1.3rem; color: #2d2d3a; margin: 0;
             letter-spacing: 3px; font-weight: 800;
         }
         .cert-header h2 {
-            font-size: 0.9rem; color: #555; margin: 5px 0;
+            font-size: 0.75rem; color: #555; margin: 3px 0;
             font-style: italic; font-weight: 400;
         }
 
         /* Decorative line under title */
         .cert-divider {
-            width: 200px; height: 0; margin: 6px auto;
-            border-top: 2px solid #2d2d3a;
+            width: 200px; height: 3px; margin: 6px auto;
+            background: repeating-linear-gradient(
+                90deg,
+                #2d2d3a 0px, #2d2d3a 20px,
+                transparent 20px, transparent 24px
+            );
         }
 
         /* Body */
-        .cert-body { text-align: center; margin: 14px 0; }
-        .cert-body p { font-size: 0.92rem; line-height: 1.8; color: #444; margin: 4px 0; }
+        .cert-body { text-align: center; margin: 10px 0; }
+        .cert-body p { font-size: 0.78rem; line-height: 1.7; color: #444; margin: 3px 0; }
         .cert-body .cert-name {
-            font-size: 1.35rem; font-weight: 700; color: #2d2d3a;
-            margin: 6px 0; display: inline-block;
-            border-bottom: 1.5px solid #2d2d3a; padding-bottom: 3px;
+            font-size: 1.15rem; font-weight: 700; color: #2d2d3a;
+            margin: 5px 0; display: inline-block;
+            border-bottom: 1.5px solid #2d2d3a; padding-bottom: 2px;
         }
         .cert-body .cert-type {
-            font-size: 0.95rem; color: #2d2d3a; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 2px; margin: 10px 0;
+            font-size: 0.8rem; color: #2d2d3a; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 2px; margin: 8px 0;
         }
 
         /* Details grid */
         .cert-details {
             display: grid; grid-template-columns: 1fr 1fr;
-            gap: 6px 18px; max-width: 420px; margin: 14px auto; text-align: left;
+            gap: 4px 16px; max-width: 380px; margin: 10px auto; text-align: left;
         }
-        .cert-detail-item { font-size: 0.85rem; color: #333; }
+        .cert-detail-item { font-size: 0.72rem; color: #333; }
         .cert-detail-item strong { color: #2d2d3a; }
 
         /* Marks table */
         .cert-marks-table {
-            width: 88%; margin: 12px auto; border-collapse: collapse;
+            width: 85%; margin: 8px auto; border-collapse: collapse;
         }
         .cert-marks-table th {
-            padding: 5px 10px; font-size: 0.8rem; text-transform: uppercase;
+            padding: 3px 8px; font-size: 0.68rem; text-transform: uppercase;
             letter-spacing: 0.4px; color: #2d2d3a;
             border-bottom: 2px solid #2d2d3a;
         }
         .cert-marks-table td {
-            padding: 5px 10px; font-size: 0.82rem; color: #333;
+            padding: 3px 8px; font-size: 0.72rem; color: #333;
             border-bottom: 1px solid #ddd;
         }
 
         /* Footer / Signatures */
         .cert-footer {
             display: flex; justify-content: space-between;
-            margin-top: 24px; padding: 0 20px;
+            margin-top: 20px; padding: 0 16px;
         }
-        .cert-signature { text-align: center; min-width: 130px; }
+        .cert-signature { text-align: center; min-width: 120px; }
         .cert-signature-line {
-            width: 120px; margin: 0 auto 4px;
+            width: 110px; margin: 0 auto 3px;
             border-top: 1.5px solid #2d2d3a;
         }
-        .cert-signature span { font-size: 0.78rem; color: #666; }
+        .cert-signature span { font-size: 0.65rem; color: #666; }
 
         /* Seal - line-based circle */
         .cert-seal {
@@ -150,9 +159,14 @@
 
         /* Bottom decorative band */
         .cert-bottom-band {
-            height: 4px; margin: 0 24px 16px;
-            border-top: 1px solid #999;
-            border-bottom: 2px solid #2d2d3a;
+            height: 6px; margin: 0 24px 16px;
+            background: repeating-linear-gradient(
+                90deg,
+                #2d2d3a 0px, #2d2d3a 12px,
+                transparent 12px, transparent 16px,
+                #666 16px, #666 20px,
+                transparent 20px, transparent 28px
+            );
         }
 
         .no-print { text-align: center; margin: 20px 0; }
@@ -200,7 +214,7 @@
         <div class="cert-content">
             {{-- Certificate Type Badge (top) --}}
             <div style="text-align:center;margin-bottom:2px;">
-                <span style="display:inline-block;padding:3px 16px;border:1.5px solid #2d2d3a;color:#2d2d3a;font-size:0.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
+                <span style="display:inline-block;padding:2px 14px;background:#2d2d3a;color:#fff;font-size:0.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
                     @if($cert->type === 'academic'){{ __('app.cert_academic') ?? 'Academic Certificate' }}
                     @elseif($cert->type === 'completion'){{ __('app.cert_completion') ?? 'Completion Certificate' }}
                     @elseif($cert->type === 'transfer'){{ __('app.cert_transfer') ?? 'Transfer Certificate' }}

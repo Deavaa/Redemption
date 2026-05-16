@@ -118,16 +118,19 @@
 .mr-empty i{font-size:2.5rem;margin-bottom:.75rem;display:block}
 .mr-empty p{margin:0;font-size:.95rem}
 
-/* Print styles */
+/* Print styles — each subject on its own page */
 @media print{
-    .mr-header,.mr-card,.mr-actions{display:none!important}
-    .mr-subject-section{page-break-inside:avoid}
+    .mr-header,.mr-filter-card,.mr-actions,.mr-btn{display:none!important}
+    .mr-page{animation:none!important}
+    .mr-subject-section{page-break-after:always;break-after:page}
+    .mr-subject-section:last-child{page-break-after:auto;break-after:auto}
     .mr-subject-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0!important}
     .mr-table{font-size:7pt}
     .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .mr-table .rot-th{height:70px;font-size:6pt}
     .group-ca th,.group-exam th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .avg-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .info-bar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
 /* Responsive */
@@ -147,7 +150,7 @@
     </div>
 
     {{-- Filter Card --}}
-    <div class="mr-card">
+    <div class="mr-card mr-filter-card">
         <div class="mr-card-head">
             <div class="mr-card-icon blue"><i class="fas fa-filter"></i></div>
             <div><h3 class="mr-card-title">Select Filters</h3><p class="mr-card-desc">Choose academic year, term, and class</p></div>
@@ -196,7 +199,7 @@
     @if(count($subjectRosters) > 0)
 
     {{-- Info bar --}}
-    <div class="mr-card" style="margin-bottom:1.5rem">
+    <div class="mr-card info-bar" style="margin-bottom:1.5rem">
         <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:linear-gradient(135deg,#1e3a5f,#264b73);color:#fff;flex-wrap:wrap">
             <span style="font-weight:800;font-size:1.05rem"><i class="fas fa-clipboard-list me-1"></i> Mark Roster</span>
             <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $academicYear->name ?? '' }}</span>
@@ -211,7 +214,7 @@
         </div>
     </div>
 
-    {{-- One table per subject --}}
+    {{-- One table per subject — each subject on its own page when printing --}}
     @foreach($subjectRosters as $si => $sr)
     <?php
         $subj = $sr['subject'];
