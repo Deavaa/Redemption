@@ -115,7 +115,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Full Mark Sheet
     Route::get('mark-sheet-full', [MarkSheetFullController::class, 'index'])->name('mark-sheet-full.index')->middleware('permission:mark_sheets.view');
-    Route::post('mark-sheet-full/generate', [MarkSheetFullController::class, 'generate'])->name('mark-sheet-full.generate')->middleware('permission:mark_sheets.generate');
+    Route::match(['get', 'post'], 'mark-sheet-full/generate', [MarkSheetFullController::class, 'generate'])->name('mark-sheet-full.generate')->middleware('permission:mark_sheets.generate');
     Route::get('mark-sheet-full/api/sections', [MarkSheetFullController::class, 'getSections'])->name('mark-sheet-full.sections');
 
     // Mark Roster

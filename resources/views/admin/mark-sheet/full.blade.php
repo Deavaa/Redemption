@@ -144,8 +144,7 @@
             <div class="fms-card-icon blue"><i class="fas fa-filter"></i></div>
             <div><h3 class="fms-card-title">Select Filters</h3><p class="fms-card-desc">Choose academic year and class to generate the full mark sheet</p></div>
         </div>
-        <form method="POST" action="{{ route('admin.mark-sheet-full.generate') }}">
-            @csrf
+        <form method="GET" action="{{ route('admin.mark-sheet-full.generate') }}">
             <div class="fms-card-body">
                 <div class="fms-grid">
                     <div class="fms-group">
