@@ -33,7 +33,7 @@
             </div>
             <div class="chat-list">
                 @forelse($conversations as $conv)
-                    <a href="{{ route('admin.chat.show', $conv->id) }}" class="chat-item {{ request()->route('id') == $conv->id ? 'active' : '' }}">
+                    <a href="{{ route($routePrefix . '.show', $conv->id) }}" class="chat-item {{ request()->route('id') == $conv->id ? 'active' : '' }}">
                         <div class="chat-item-avatar">
                             @if($conv->type === 'group')
                                 <i class="fas fa-users"></i>
@@ -93,7 +93,7 @@
 <div class="modal fade" id="newChatModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ route('admin.chat.store') }}">
+            <form method="POST" action="{{ route($routePrefix . '.store') }}">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">New Conversation</h5>
@@ -114,8 +114,8 @@
                     <div class="mb-3">
                         <label class="form-label">Select Member(s)</label>
                         <select name="participant_ids[]" class="form-select" id="participantSelect" size="8" required>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                            @foreach($users as $u)
+                                <option value="{{ $u->id }}">{{ $u->name }} ({{ ucfirst(str_replace('_', ' ', $u->role ?? 'user')) }})</option>
                             @endforeach
                         </select>
                         <small class="text-muted">Hold Ctrl/Cmd to select multiple for group chats</small>

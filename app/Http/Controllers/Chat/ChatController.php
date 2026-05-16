@@ -6,12 +6,194 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\ChatParticipant;
+use App\Models\ParentModel;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\TeacherAssignment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ChatController extends Controller
 {
+    /**
+     * Get the list of users this authenticated user can message, based on role.
+     */
+    private function getAvailableUsers(): object
+    {
+        $user = Auth::user();
+        $userId = $user->id;
+        $role = $user->role;
+
+        // Admin, super_admin, general_manager can message everyone
+        if (in_array($role, ['admin', 'super_admin', 'general_manager'])) {
+            return User::where('id', '!=', $userId)
+                ->where('is_active', 1)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'role']);
+        }
+
+        // Branch principal can message teachers in their branch, parents of students in their branch, and managers/admin
+        if ($role === 'branch_principal') {
+            return User::where('id', '!=', $userId)
+                ->where('is_active', 1)
+                ->whereIn('role', ['admin', 'super_admin', 'general_manager', 'teacher', 'parent', 'branch_principal'])
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'role']);
+        }
+
+        // Teacher can message: parents of students they teach, branch principal, manager, admin
+        if ($role === 'teacher') {
+            $teacher = Teacher::where('user_id', $userId)->first();
+            if (!$teacher) {
+                $teacher = Teacher::where('email', $user->email)->first();
+            }
+
+            $allowedUserIds = collect();
+
+            // Always can message admins, branch principals, general managers
+            $adminIds = User::where('is_active', 1)
+                ->whereIn('role', ['admin', 'super_admin', 'general_manager', 'branch_principal'])
+                ->pluck('id');
+            $allowedUserIds = $allowedUserIds->merge($adminIds);
+
+            if ($teacher) {
+                // Parents of students in classes the teacher teaches or is homeroom for
+                $assignmentClassIds = $teacher->assignments()->pluck('class_id')->unique();
+                $homeroomClassIds = $teacher->classRooms()->pluck('id');
+                $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
+
+                $studentIds = Student::whereIn('class_id', $classIds)->where('status', 'active')->pluck('id');
+                $parentUserIds = ParentModel::whereHas('students', function ($q) use ($studentIds) {
+                    $q->whereIn('students.id', $studentIds);
+                })->pluck('user_id')->filter();
+
+                $allowedUserIds = $allowedUserIds->merge($parentUserIds);
+
+                // Other teachers in same classes
+                $colleagueIds = TeacherAssignment::whereIn('class_id', $classIds)
+                    ->pluck('teacher_id')
+                    ->unique()
+                    ->filter();
+                $colleagueUserIds = Teacher::whereIn('id', $colleagueIds)->pluck('user_id')->filter();
+                $allowedUserIds = $allowedUserIds->merge($colleagueUserIds);
+            }
+
+            return User::where('id', '!=', $userId)
+                ->where('is_active', 1)
+                ->whereIn('id', $allowedUserIds->unique())
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'role']);
+        }
+
+        // Parent can message: homeroom teacher, branch principal, manager, admin
+        if ($role === 'parent') {
+            $parentModel = ParentModel::where('user_id', $userId)->first();
+            $allowedUserIds = collect();
+
+            // Always can message admins, branch principals, general managers
+            $adminIds = User::where('is_active', 1)
+                ->whereIn('role', ['admin', 'super_admin', 'general_manager', 'branch_principal'])
+                ->pluck('id');
+            $allowedUserIds = $allowedUserIds->merge($adminIds);
+
+            if ($parentModel) {
+                // Get children's classes and find homeroom teachers + subject teachers
+                $studentIds = $parentModel->students()->where('status', 'active')->pluck('students.id');
+                $classIds = Student::whereIn('id', $studentIds)->pluck('class_id')->unique();
+
+                // Homeroom teachers
+                $homeroomTeacherIds = \App\Models\Section::whereIn('class_id', $classIds)
+                    ->whereNotNull('teacher_id')
+                    ->pluck('teacher_id')
+                    ->unique();
+                $homeroomUserIds = Teacher::whereIn('id', $homeroomTeacherIds)->pluck('user_id')->filter();
+                $allowedUserIds = $allowedUserIds->merge($homeroomUserIds);
+
+                // Subject teachers for children's classes
+                $subjectTeacherIds = TeacherAssignment::whereIn('class_id', $classIds)
+                    ->pluck('teacher_id')
+                    ->unique();
+                $subjectUserIds = Teacher::whereIn('id', $subjectTeacherIds)->pluck('user_id')->filter();
+                $allowedUserIds = $allowedUserIds->merge($subjectUserIds);
+            }
+
+            return User::where('id', '!=', $userId)
+                ->where('is_active', 1)
+                ->whereIn('id', $allowedUserIds->unique())
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'role']);
+        }
+
+        // Student can message: homeroom teacher, branch principal, admin
+        if ($role === 'student') {
+            $student = Student::where('user_id', $userId)->first();
+            $allowedUserIds = collect();
+
+            // Always can message admins, branch principals, general managers
+            $adminIds = User::where('is_active', 1)
+                ->whereIn('role', ['admin', 'super_admin', 'general_manager', 'branch_principal'])
+                ->pluck('id');
+            $allowedUserIds = $allowedUserIds->merge($adminIds);
+
+            if ($student) {
+                // Homeroom teacher
+                $homeroomTeacherIds = \App\Models\Section::where('class_id', $student->class_id)
+                    ->whereNotNull('teacher_id')
+                    ->pluck('teacher_id')
+                    ->unique();
+                $homeroomUserIds = Teacher::whereIn('id', $homeroomTeacherIds)->pluck('user_id')->filter();
+                $allowedUserIds = $allowedUserIds->merge($homeroomUserIds);
+
+                // Subject teachers for their class
+                $subjectTeacherIds = TeacherAssignment::where('class_id', $student->class_id)
+                    ->pluck('teacher_id')
+                    ->unique();
+                $subjectUserIds = Teacher::whereIn('id', $subjectTeacherIds)->pluck('user_id')->filter();
+                $allowedUserIds = $allowedUserIds->merge($subjectUserIds);
+            }
+
+            return User::where('id', '!=', $userId)
+                ->where('is_active', 1)
+                ->whereIn('id', $allowedUserIds->unique())
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'role']);
+        }
+
+        // Default: other roles can message admins and managers
+        return User::where('id', '!=', $userId)
+            ->where('is_active', 1)
+            ->whereIn('role', ['admin', 'super_admin', 'general_manager', 'branch_principal'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'role']);
+    }
+
+    /**
+     * Determine which view to use based on the user's role.
+     */
+    private function resolveView(string $view): string
+    {
+        $role = Auth::user()->role;
+        if (in_array($role, ['student'])) {
+            return str_replace('admin.chat', 'portal.student.chat', $view);
+        }
+        if (in_array($role, ['parent'])) {
+            return str_replace('admin.chat', 'parent.chat', $view);
+        }
+        return $view;
+    }
+
+    /**
+     * Determine the route prefix based on the user's role.
+     */
+    private function resolveRoutePrefix(): string
+    {
+        $role = Auth::user()->role;
+        if ($role === 'student') return 'student.chat';
+        if ($role === 'parent') return 'parent.chat';
+        return 'admin.chat';
+    }
+
     public function index()
     {
         $userId = Auth::id();
@@ -22,13 +204,15 @@ class ChatController extends Controller
           ->orderByDesc('last_message_at')
           ->paginate(20);
 
-        $users = User::where('id', '!=', $userId)->orderBy('name')->get(['id', 'name', 'email']);
+        $users = $this->getAvailableUsers();
 
         $unreadCount = ChatMessage::whereHas('conversation.participants', function ($q) use ($userId) {
             $q->where('user_id', $userId);
         })->where('sender_id', '!=', $userId)->where('is_read', false)->count();
 
-        return view('admin.chat.index', compact('conversations', 'users', 'unreadCount'));
+        $routePrefix = $this->resolveRoutePrefix();
+
+        return view($this->resolveView('admin.chat.index'), compact('conversations', 'users', 'unreadCount', 'routePrefix'));
     }
 
     public function show($id)
@@ -51,7 +235,9 @@ class ChatController extends Controller
             ->where('user_id', $userId)
             ->update(['last_read_at' => now()]);
 
-        return view('admin.chat.show', compact('conversation'));
+        $routePrefix = $this->resolveRoutePrefix();
+
+        return view($this->resolveView('admin.chat.show'), compact('conversation', 'routePrefix'));
     }
 
     public function storeConversation(Request $r)
@@ -64,6 +250,15 @@ class ChatController extends Controller
         ]);
 
         $userId = Auth::id();
+        $routePrefix = $this->resolveRoutePrefix();
+
+        // Verify the user is allowed to message the selected participants
+        $availableUserIds = $this->getAvailableUsers()->pluck('id')->toArray();
+        foreach ($r->participant_ids as $pid) {
+            if (!in_array($pid, $availableUserIds)) {
+                abort(403, 'You are not authorized to message this user.');
+            }
+        }
 
         if ($r->type === 'private' && count($r->participant_ids) === 1) {
             // Check if private conversation already exists
@@ -77,7 +272,7 @@ class ChatController extends Controller
                 ->first();
 
             if ($existing) {
-                return redirect()->route('admin.chat.show', $existing->id);
+                return redirect()->route($routePrefix . '.show', $existing->id);
             }
         }
 
@@ -105,12 +300,13 @@ class ChatController extends Controller
             }
         }
 
-        return redirect()->route('admin.chat.show', $conversation->id)->with('success', 'Conversation created.');
+        return redirect()->route($routePrefix . '.show', $conversation->id)->with('success', 'Conversation created.');
     }
 
     public function sendMessage(Request $r, $id)
     {
         $userId = Auth::id();
+        $routePrefix = $this->resolveRoutePrefix();
 
         $conversation = ChatConversation::whereHas('participants', function ($q) use ($userId) {
             $q->where('user_id', $userId);
@@ -149,12 +345,13 @@ class ChatController extends Controller
             return response()->json($msg->load('sender'));
         }
 
-        return redirect()->route('admin.chat.show', $id);
+        return redirect()->route($routePrefix . '.show', $id);
     }
 
     public function destroyConversation($id)
     {
         $userId = Auth::id();
+        $routePrefix = $this->resolveRoutePrefix();
 
         $conversation = ChatConversation::whereHas('participants', function ($q) use ($userId) {
             $q->where('user_id', $userId)->where('role', 'admin');
@@ -162,7 +359,7 @@ class ChatController extends Controller
 
         $conversation->delete();
 
-        return redirect()->route('admin.chat.index')->with('success', 'Conversation deleted.');
+        return redirect()->route($routePrefix . '.index')->with('success', 'Conversation deleted.');
     }
 
     public function getMessages($id)

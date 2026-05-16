@@ -322,6 +322,14 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->gro
     Route::get('/progress', [StudentDashboardController::class, 'progress'])->name('progress');
     Route::get('/fees', [StudentDashboardController::class, 'fees'])->name('fees');
     Route::get('/profile', [StudentDashboardController::class, 'profile'])->name('profile');
+
+    // Student Chat
+    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('chat', [ChatController::class, 'storeConversation'])->name('chat.store');
+    Route::get('chat/{id}', [ChatController::class, 'show'])->name('chat.show');
+    Route::post('chat/{id}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::delete('chat/{id}', [ChatController::class, 'destroyConversation'])->name('chat.destroy');
+    Route::get('chat/{id}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
 });
 
 // ── Parent Portal ───────────────────────────────────────────
@@ -331,4 +339,12 @@ Route::prefix('parent')->name('parent.')->middleware(['auth', 'parent'])->group(
     Route::get('/child/{studentId}/progress', [ParentDashboardController::class, 'childProgress'])->name('child.progress');
     Route::get('/child/{studentId}/fees', [ParentDashboardController::class, 'childFees'])->name('child.fees');
     Route::get('/child/{studentId}/profile', [ParentDashboardController::class, 'childProfile'])->name('child.profile');
+
+    // Parent Chat
+    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('chat', [ChatController::class, 'storeConversation'])->name('chat.store');
+    Route::get('chat/{id}', [ChatController::class, 'show'])->name('chat.show');
+    Route::post('chat/{id}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::delete('chat/{id}', [ChatController::class, 'destroyConversation'])->name('chat.destroy');
+    Route::get('chat/{id}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
 });

@@ -8,7 +8,7 @@
             <nav aria-label="breadcrumb" class="modern-breadcrumb">
                 <ol>
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
-                    <li><a href="{{ route('admin.chat.index') }}">Chat</a></li>
+                    <li><a href="{{ route($routePrefix . '.index') }}">Chat</a></li>
                     <li class="active">
                         @if($conversation->type === 'group')
                             {{ $conversation->title ?? 'Group' }}
@@ -27,10 +27,10 @@
             </h1>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.chat.index') }}" class="btn-modern btn-modern-outline">
+            <a href="{{ route($routePrefix . '.index') }}" class="btn-modern btn-modern-outline">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
-            <form method="POST" action="{{ route('admin.chat.destroy', $conversation->id) }}" onsubmit="return confirm('Delete this conversation?')">
+            <form method="POST" action="{{ route($routePrefix . '.destroy', $conversation->id) }}" onsubmit="return confirm('Delete this conversation?')">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn-modern btn-modern-danger" style="margin-left:0.5rem">
                     <i class="fas fa-trash"></i> Delete
@@ -50,7 +50,7 @@
                       ->orderByDesc('last_message_at')->limit(30)->get();
                 @endphp
                 @foreach($allConvs as $conv)
-                    <a href="{{ route('admin.chat.show', $conv->id) }}" class="chat-item {{ $conv->id === $conversation->id ? 'active' : '' }}">
+                    <a href="{{ route($routePrefix . '.show', $conv->id) }}" class="chat-item {{ $conv->id === $conversation->id ? 'active' : '' }}">
                         <div class="chat-item-avatar">
                             @if($conv->type === 'group')
                                 <i class="fas fa-users"></i>
@@ -132,7 +132,7 @@
             </div>
 
             {{-- Message Input --}}
-            <form method="POST" action="{{ route('admin.chat.send', $conversation->id) }}" class="chat-input-area" enctype="multipart/form-data">
+            <form method="POST" action="{{ route($routePrefix . '.send', $conversation->id) }}" class="chat-input-area" enctype="multipart/form-data">
                 @csrf
                 <div class="chat-input-wrapper">
                     <label class="chat-attach-btn" title="Attach file">

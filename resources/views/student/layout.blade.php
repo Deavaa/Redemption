@@ -457,6 +457,13 @@
                         <i class="fas fa-user-circle"></i><span>My Profile</span>
                     </a>
                 </li>
+
+                <li class="menu-header">COMMUNICATION</li>
+                <li class="{{ request()->routeIs('student.chat.*') ? 'active' : '' }}">
+                    <a href="{{ route('student.chat.index') }}" class="{{ request()->routeIs('student.chat.*') ? 'active' : '' }}">
+                        <i class="fas fa-comments"></i><span>Messages</span>
+                    </a>
+                </li>
             </ul>
         </div>
         <div class="sidebar-footer">
@@ -474,6 +481,61 @@
 
     {{-- MAIN --}}
     <div class="student-main">
+        {{-- Announcement Banner --}}
+        @php
+            $activeAnnouncements = collect();
+            try {
+                $activeAnnouncements = \App\Models\CalendarEvent::where('is_announcement', true)
+                    ->where(function($q) {
+                        $q->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
+                    })
+                    ->orderBy('start_date', 'desc')
+                    ->limit(5)
+                    ->get();
+            } catch (\Exception $e) {}
+        @endphp
+        @if($activeAnnouncements->count() > 0)
+        <div id="studentAnnouncementBar" class="announcement-banner" style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 100%);">
+            <div class="announcement-banner-inner">
+                <div class="announcement-banner-header">
+                    <span class="announcement-badge"><i class="fas fa-bullhorn"></i> ANNOUNCEMENTS</span>
+                    <button onclick="document.getElementById('studentAnnouncementBar').style.display='none'" class="announcement-close"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="announcement-list">
+                    @foreach($activeAnnouncements as $ann)
+                    <div class="announcement-item">
+                        <div class="announcement-title">{{ $ann->title }}</div>
+                        @if($ann->description)
+                            <div class="announcement-desc">{{ strip_tags($ann->description) }}</div>
+                        @endif
+                        @if($ann->start_date)
+                            <div class="announcement-date"><i class="fas fa-calendar-alt"></i> {{ $ann->start_date->format('M d, Y') }}</div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <style>
+        .announcement-banner { color: #fff; position: relative; z-index: 60; padding: 0; }
+        .announcement-banner-inner { max-width: 100%; padding: 12px 20px; }
+        .announcement-banner-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .announcement-badge { font-weight: 700; font-size: .78rem; background: rgba(255,255,255,.2); padding: 3px 12px; border-radius: 4px; white-space: nowrap; letter-spacing: 0.5px; }
+        .announcement-close { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px; transition: all .2s; }
+        .announcement-close:hover { background: rgba(255,255,255,.15); color: #fff; }
+        .announcement-list { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.3) transparent; }
+        .announcement-list::-webkit-scrollbar { height: 4px; }
+        .announcement-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.3); border-radius: 4px; }
+        .announcement-list::-webkit-scrollbar-track { background: transparent; }
+        .announcement-item { flex: 0 0 auto; min-width: 280px; max-width: 400px; background: rgba(255,255,255,.12); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(255,255,255,.15); transition: all .2s; }
+        .announcement-item:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.3); }
+        .announcement-title { font-size: .92rem; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+        .announcement-desc { font-size: .8rem; font-weight: 400; opacity: .9; line-height: 1.4; margin-bottom: 6px; max-height: 60px; overflow: hidden; }
+        .announcement-date { font-size: .7rem; opacity: .65; display: flex; align-items: center; gap: 4px; }
+        @media (max-width: 768px) { .announcement-item { min-width: 240px; } }
+        @media print { .announcement-banner { display: none !important; } }
+        </style>
+        @endif
         <nav class="student-topbar">
             <div class="topbar-left">
                 <button class="sidebar-toggle" id="sidebarToggle">

@@ -44,18 +44,25 @@
 .fms-term-head .term-icon{font-size:1.3rem}
 .fms-term-head .term-label{font-size:.78rem;background:rgba(255,255,255,.2);padding:.1rem .5rem;border-radius:5px;margin-left:auto}
 
-/* Sequential table */
+/* Rotated header table */
 .fms-seq-table-wrap{overflow-x:auto}
 .fms-seq-table{width:100%;border-collapse:collapse;font-size:.82rem}
-.fms-seq-table th{padding:.55rem .5rem;border:1px solid #e5e7eb;white-space:nowrap;text-align:center;font-weight:700;position:sticky;top:0}
+.fms-seq-table th{border:1px solid #e5e7eb;font-weight:700;position:sticky;top:0;vertical-align:bottom;padding:0}
 .fms-seq-table td{padding:.45rem .5rem;border:1px solid #e5e7eb;text-align:center}
 .fms-seq-table tbody tr:nth-child(even){background:#f9fafb}
 .fms-seq-table tbody tr:hover{background:#eef2ff}
-.fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:140px}
+
+/* Rotated subject headers */
+.fms-seq-table .th-rotated{height:140px;white-space:nowrap;padding:0;border:1px solid #e5e7eb;position:relative}
+.fms-seq-table .th-rotated .th-rotate-inner{display:flex;align-items:flex-end;justify-content:center;width:100%;height:100%;position:relative;overflow:visible}
+.fms-seq-table .th-rotated .th-rotate-text{display:inline-block;transform:rotate(-90deg) translateX(-50%);transform-origin:left bottom;text-align:left;font-size:.78rem;font-weight:700;padding:4px 2px;white-space:nowrap;position:absolute;bottom:50%;left:50%}
+
+/* Fixed header columns */
+.fms-seq-table .th-fixed{padding:.55rem .5rem;white-space:nowrap;text-align:center}
+.fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:160px}
 .fms-seq-table .mark-val{font-weight:600}
-.fms-seq-table .mark-grade{font-size:.68rem;color:#6b7280;display:block;line-height:1}
-.fms-seq-table .grade-fail{color:#ef4444;font-weight:700}
-.fms-seq-table .grade-pass{color:#10b981}
+.fms-seq-table .mark-val.grade-fail{color:#ef4444;font-weight:700}
+.fms-seq-table .mark-val.grade-pass{color:#10b981}
 .fms-seq-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee}
 .fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.78rem}
 .fms-seq-table .rank-col{font-weight:700}
@@ -74,24 +81,25 @@
 .fms-seq-table .lowest-row .stu-name{font-weight:700}
 
 /* Term 1 header */
-.fms-seq-table.term1-table thead th{background:#eff6ff;color:#1e3a8a}
+.fms-seq-table.term1-table .th-fixed{background:#eff6ff;color:#1e3a8a}
+.fms-seq-table.term1-table .th-rotated{background:#eff6ff}
+.fms-seq-table.term1-table .th-rotated .th-rotate-text{color:#1e3a8a}
 .fms-seq-table.term1-table .rank-col{color:#2563eb;background:#dbeafe}
 /* Term 2 header */
-.fms-seq-table.term2-table thead th{background:#f5f3ff;color:#5b21b6}
+.fms-seq-table.term2-table .th-fixed{background:#f5f3ff;color:#5b21b6}
+.fms-seq-table.term2-table .th-rotated{background:#f5f3ff}
+.fms-seq-table.term2-table .th-rotated .th-rotate-text{color:#5b21b6}
 .fms-seq-table.term2-table .rank-col{color:#7c3aed;background:#ede9fe}
 /* Annual header */
-.fms-seq-table.annual-table thead th{background:#ecfdf5;color:#065f46}
+.fms-seq-table.annual-table .th-fixed{background:#ecfdf5;color:#065f46}
+.fms-seq-table.annual-table .th-rotated{background:#ecfdf5}
+.fms-seq-table.annual-table .th-rotated .th-rotate-text{color:#065f46}
 .fms-seq-table.annual-table .rank-col{color:#059669;background:#d1fae5}
 
 /* No data */
 .fms-empty{text-align:center;padding:3rem 1rem;color:#9ca3af}
 .fms-empty i{font-size:2.5rem;margin-bottom:.75rem;display:block}
 .fms-empty p{margin:0;font-size:.95rem}
-
-/* Grade legend */
-.fms-legend{display:flex;gap:.5rem;flex-wrap:wrap;padding:.75rem 1.5rem;border-top:1px solid #e5e7eb;background:#fafbfc;font-size:.72rem;color:#6b7280}
-.fms-legend-item{display:inline-flex;align-items:center;gap:.25rem}
-.fms-legend-dot{width:8px;height:8px;border-radius:2px;display:inline-block}
 
 /* Summary stats row under each table */
 .fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
@@ -104,12 +112,14 @@
 
 /* Print styles */
 @media print{
-    .fms-header,.fms-card,.fms-actions,.fms-legend,.fms-term-stats{display:none!important}
+    .fms-header,.fms-card,.fms-actions,.fms-term-stats{display:none!important}
     .fms-term-head{border-radius:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .fms-seq-table{font-size:9pt}
     .fms-seq-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .fms-term-section{page-break-inside:avoid}
     .avg-row td,.highest-row td,.lowest-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .fms-seq-table .th-rotated{height:120px!important}
+    .fms-seq-table .th-rotated .th-rotate-text{font-size:7pt!important}
 }
 
 /* Responsive */
@@ -211,6 +221,77 @@
         $lowest['annual_total']  = count($aTotals) ? min($aTotals) : 0;
     @endphp
 
+    {{-- Helper to render a term table with rotated headers --}}
+    @php
+        function renderTermTable($termKey, $subjects, $roster, $averages, $highest, $lowest, $tableClass) {
+            $html = '<div class="fms-seq-table-wrap">';
+            $html .= '<table class="fms-seq-table ' . $tableClass . '">';
+            $html .= '<thead><tr>';
+            $html .= '<th class="th-fixed" style="width:40px">#</th>';
+            $html .= '<th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>';
+            foreach ($subjects as $subj) {
+                $html .= '<th class="th-rotated"><div class="th-rotate-inner"><span class="th-rotate-text">' . e($subj->name) . '</span></div></th>';
+            }
+            $html .= '<th class="th-fixed">Total</th>';
+            $html .= '<th class="th-fixed">Average</th>';
+            $html .= '<th class="th-fixed">Rank</th>';
+            $html .= '</tr></thead>';
+            $html .= '<tbody>';
+
+            foreach ($roster as $i => $row) {
+                $html .= '<tr>';
+                $html .= '<td>' . ($i + 1) . '</td>';
+                $html .= '<td class="stu-name">' . e(($row[\'student\']->first_name ?? \'\') . \' \' . ($row[\'student\']->last_name ?? \'\')) . '</td>';
+                foreach ($subjects as $subj) {
+                    $data = $row[$termKey][$subj->id] ?? null;
+                    if ($data && $data[\'grand_total\'] !== null) {
+                        $cls = floatval($data[\'grand_total\']) < 40 ? \'grade-fail\' : \'grade-pass\';
+                        $html .= \'<td><span class="mark-val \' . $cls . \'">\' . $data[\'grand_total\'] . \'</span></td>\';
+                    } else {
+                        $html .= \'<td style="color:#d1d5db">-</td>\';
+                    }
+                }
+                $totalKey = $termKey . \'_total\';
+                $avgKey = $termKey . \'_avg\';
+                $rankKey = $termKey . \'_rank\';
+                $html .= \'<td class="total-col">\' . ($row[$totalKey] ?: \'-\') . \'</td>\';
+                $html .= \'<td class="avg-col">\' . ($row[$avgKey] ?: \'-\') . \'</td>\';
+                $html .= \'<td class="rank-col">\' . ($row[$rankKey] ?? \'-\') . \'</td>\';
+                $html .= \'</tr>\';
+            }
+
+            // Class Average row
+            $html .= \'<tr class="avg-row \' . $termKey . \'">\';
+            $html .= \'<td colspan="2" class="stu-name"><i class="fas fa-chart-bar"></i> Class Average</td>\';
+            foreach ($subjects as $subj) {
+                $html .= \'<td>\' . ($averages[$termKey][$subj->id] ?? \'-\') . \'</td>\';
+            }
+            $html .= \'<td>\' . ($averages[$termKey . \'_total_avg\'] ?? \'-\') . \'</td>\';
+            $html .= \'<td>-</td><td>-</td></tr>\';
+
+            // Highest row
+            $html .= \'<tr class="highest-row">\';
+            $html .= \'<td colspan="2" class="stu-name"><i class="fas fa-arrow-up"></i> Highest Mark</td>\';
+            foreach ($subjects as $subj) {
+                $html .= \'<td>\' . ($highest[$termKey][$subj->id] ?? \'-\') . \'</td>\';
+            }
+            $html .= \'<td>\' . ($highest[$termKey . \'_total\'] ?: \'-\') . \'</td>\';
+            $html .= \'<td>-</td><td>-</td></tr>\';
+
+            // Lowest row
+            $html .= \'<tr class="lowest-row">\';
+            $html .= \'<td colspan="2" class="stu-name"><i class="fas fa-arrow-down"></i> Lowest Mark</td>\';
+            foreach ($subjects as $subj) {
+                $html .= \'<td>\' . ($lowest[$termKey][$subj->id] ?? \'-\') . \'</td>\';
+            }
+            $html .= \'<td>\' . ($lowest[$termKey . \'_total\'] ?: \'-\') . \'</td>\';
+            $html .= \'<td>-</td><td>-</td></tr>\';
+
+            $html .= \'</tbody></table></div>\';
+            return $html;
+        }
+    @endphp
+
     {{-- ============================================================ --}}
     {{-- TERM 1 --}}
     {{-- ============================================================ --}}
@@ -224,12 +305,18 @@
             <table class="fms-seq-table term1-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th style="text-align:left">Student Name</th>
-                        @foreach($subjects as $subj)<th>{{ $subj->name }}</th>@endforeach
-                        <th>Total</th>
-                        <th>Average</th>
-                        <th>Rank</th>
+                        <th class="th-fixed" style="width:40px">#</th>
+                        <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>
+                        @foreach($subjects as $subj)
+                        <th class="th-rotated">
+                            <div class="th-rotate-inner">
+                                <span class="th-rotate-text">{{ $subj->name }}</span>
+                            </div>
+                        </th>
+                        @endforeach
+                        <th class="th-fixed">Total</th>
+                        <th class="th-fixed">Average</th>
+                        <th class="th-fixed">Rank</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -242,7 +329,6 @@
                             <td>
                                 @if($t1 && $t1['grand_total'] !== null)
                                     <span class="mark-val {{ floatval($t1['grand_total']) < 40 ? 'grade-fail' : 'grade-pass' }}">{{ $t1['grand_total'] }}</span>
-                                    @if($t1['grade'])<span class="mark-grade">{{ $t1['grade'] }}</span>@endif
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
@@ -324,12 +410,18 @@
             <table class="fms-seq-table term2-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th style="text-align:left">Student Name</th>
-                        @foreach($subjects as $subj)<th>{{ $subj->name }}</th>@endforeach
-                        <th>Total</th>
-                        <th>Average</th>
-                        <th>Rank</th>
+                        <th class="th-fixed" style="width:40px">#</th>
+                        <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>
+                        @foreach($subjects as $subj)
+                        <th class="th-rotated">
+                            <div class="th-rotate-inner">
+                                <span class="th-rotate-text">{{ $subj->name }}</span>
+                            </div>
+                        </th>
+                        @endforeach
+                        <th class="th-fixed">Total</th>
+                        <th class="th-fixed">Average</th>
+                        <th class="th-fixed">Rank</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -342,7 +434,6 @@
                             <td>
                                 @if($t2 && $t2['grand_total'] !== null)
                                     <span class="mark-val {{ floatval($t2['grand_total']) < 40 ? 'grade-fail' : 'grade-pass' }}">{{ $t2['grand_total'] }}</span>
-                                    @if($t2['grade'])<span class="mark-grade">{{ $t2['grade'] }}</span>@endif
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
@@ -354,7 +445,6 @@
                     </tr>
                     @endforeach
 
-                    {{-- Class Average --}}
                     <tr class="avg-row term2">
                         <td colspan="2" class="stu-name"><i class="fas fa-chart-bar"></i> Class Average</td>
                         @foreach($subjects as $subj)
@@ -365,7 +455,6 @@
                         <td>-</td>
                     </tr>
 
-                    {{-- Highest Mark --}}
                     <tr class="highest-row">
                         <td colspan="2" class="stu-name"><i class="fas fa-arrow-up"></i> Highest Mark</td>
                         @foreach($subjects as $subj)
@@ -376,7 +465,6 @@
                         <td>-</td>
                     </tr>
 
-                    {{-- Lowest Mark --}}
                     <tr class="lowest-row">
                         <td colspan="2" class="stu-name"><i class="fas fa-arrow-down"></i> Lowest Mark</td>
                         @foreach($subjects as $subj)
@@ -389,7 +477,6 @@
                 </tbody>
             </table>
         </div>
-        {{-- Term 2 Stats --}}
         <div class="fms-term-stats">
             <div class="fms-stat-card term2">
                 <div class="stat-label">Students</div>
@@ -424,12 +511,18 @@
             <table class="fms-seq-table annual-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th style="text-align:left">Student Name</th>
-                        @foreach($subjects as $subj)<th>{{ $subj->name }}</th>@endforeach
-                        <th>Total</th>
-                        <th>Average</th>
-                        <th>Rank</th>
+                        <th class="th-fixed" style="width:40px">#</th>
+                        <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>
+                        @foreach($subjects as $subj)
+                        <th class="th-rotated">
+                            <div class="th-rotate-inner">
+                                <span class="th-rotate-text">{{ $subj->name }}</span>
+                            </div>
+                        </th>
+                        @endforeach
+                        <th class="th-fixed">Total</th>
+                        <th class="th-fixed">Average</th>
+                        <th class="th-fixed">Rank</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -442,7 +535,6 @@
                             <td>
                                 @if($ann && $ann['grand_total'] !== null)
                                     <span class="mark-val {{ floatval($ann['grand_total']) < 40 ? 'grade-fail' : 'grade-pass' }}">{{ $ann['grand_total'] }}</span>
-                                    @if($ann['grade'])<span class="mark-grade">{{ $ann['grade'] }}</span>@endif
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
@@ -454,7 +546,6 @@
                     </tr>
                     @endforeach
 
-                    {{-- Class Average --}}
                     <tr class="avg-row annual">
                         <td colspan="2" class="stu-name"><i class="fas fa-chart-bar"></i> Class Average</td>
                         @foreach($subjects as $subj)
@@ -465,7 +556,6 @@
                         <td>-</td>
                     </tr>
 
-                    {{-- Highest Mark --}}
                     <tr class="highest-row">
                         <td colspan="2" class="stu-name"><i class="fas fa-arrow-up"></i> Highest Mark</td>
                         @foreach($subjects as $subj)
@@ -476,7 +566,6 @@
                         <td>-</td>
                     </tr>
 
-                    {{-- Lowest Mark --}}
                     <tr class="lowest-row">
                         <td colspan="2" class="stu-name"><i class="fas fa-arrow-down"></i> Lowest Mark</td>
                         @foreach($subjects as $subj)
@@ -489,7 +578,6 @@
                 </tbody>
             </table>
         </div>
-        {{-- Annual Stats --}}
         <div class="fms-term-stats">
             <div class="fms-stat-card annual">
                 <div class="stat-label">Students</div>
@@ -507,20 +595,6 @@
                 <div class="stat-label">Lowest Total</div>
                 <div class="stat-value">{{ $lowest['annual_total'] ?: '-' }}</div>
             </div>
-        </div>
-    </div>
-
-    {{-- Grade Legend & Actions --}}
-    <div class="fms-card no-print">
-        <div class="fms-legend">
-            <span style="font-weight:700;margin-right:.5rem">Grading Scale:</span>
-            <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#10b981"></span> A+ (90+)</span>
-            <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#22c55e"></span> A (80-89)</span>
-            <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#84cc16"></span> A- (75-79)</span>
-            <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#eab308"></span> B+ to B- (60-74)</span>
-            <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#f97316"></span> C+ to C- (45-59)</span>
-            <span class="fms-legend-item"><span class="fms-legend-dot" style="background:#ef4444"></span> D/F (&lt;45)</span>
-            <span style="margin-left:1rem;font-weight:600">Annual = Average of Term 1 + Term 2</span>
         </div>
     </div>
 
