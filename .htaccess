@@ -8,14 +8,19 @@
     RewriteCond %{THE_REQUEST} /public/ [NC]
     RewriteRule ^ - [L]
 
-    # Rewrite everything else to public/
+    # Don't rewrite if the request maps to an existing file/dir in public/
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -d
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Rewrite everything else to public/index.php (Laravel front controller)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
 # Disable directory listing
-<IfModule mod_autoindex.c>
-    Options -Indexes
-</IfModule>
+Options -Indexes
 
 # Block access to sensitive files from the web
 <FilesMatch "^\.">

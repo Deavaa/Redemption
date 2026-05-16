@@ -141,9 +141,22 @@ return [
     | be regarded as available. Typically, this will be the root path of
     | your application, but you're free to change this when necessary.
     |
+    | IMPORTANT for XAMPP/subdirectory installs: Set SESSION_PATH in .env
+    | to match your subdirectory (e.g., /school-of-redemption).
+    | If not set, it auto-detects from APP_URL.
+    |
     */
 
-    'path' => env('SESSION_PATH', '/'),
+    'path' => (function () {
+        $explicit = env('SESSION_PATH');
+        if ($explicit !== null) {
+            return $explicit;
+        }
+        // Auto-detect path from APP_URL for subdirectory installs (e.g., XAMPP)
+        $url = env('APP_URL', 'http://localhost');
+        $parsed = parse_url($url);
+        return isset($parsed['path']) ? rtrim($parsed['path'], '/') : '/';
+    })(),
 
     /*
     |--------------------------------------------------------------------------
