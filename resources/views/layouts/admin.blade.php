@@ -402,14 +402,6 @@
                             @if($ann->description)<span class="announcement-desc-inline">&mdash; {{ Str::limit(strip_tags($ann->description), 80) }}</span>@endif
                         </span>
                         @endforeach
-                        @foreach($activeAnnouncements as $ann)
-                        <span class="announcement-chip">
-                            <strong>{{ $ann->title }}</strong>
-                            @if($ann->category)<span class="announcement-cat">{{ ucfirst($ann->category) }}</span>@endif
-                            @if($ann->start_date)<span class="announcement-date-inline"><i class="fas fa-calendar-alt"></i> {{ $ann->start_date->format('M d') }}</span>@endif
-                            @if($ann->description)<span class="announcement-desc-inline">&mdash; {{ Str::limit(strip_tags($ann->description), 80) }}</span>@endif
-                        </span>
-                        @endforeach
                     </div>
                 </div>
                 <button onclick="document.getElementById('adminAnnouncementBar').style.display='none'" class="announcement-close" title="Dismiss"><i class="fas fa-times"></i></button>
@@ -518,8 +510,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.announcement-ticker-wrap').forEach(function(wrap) {
                 var ticker = wrap.querySelector('.announcement-ticker');
-                if (ticker && ticker.scrollWidth > wrap.clientWidth + 10) {
-                    var duration = Math.max(ticker.scrollWidth / 25, 50);
+                if (!ticker) return;
+                // Only scroll if content overflows the container
+                if (ticker.scrollWidth > wrap.clientWidth + 10) {
+                    // Clone the content for seamless infinite scroll
+                    var clone = ticker.innerHTML;
+                    ticker.insertAdjacentHTML('beforeend', clone);
+                    var duration = Math.max(ticker.scrollWidth / 2 / 25, 50);
                     ticker.style.setProperty('--ticker-duration', duration + 's');
                     ticker.classList.add('scrolling');
                 }

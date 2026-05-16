@@ -9,4 +9,9 @@ class Branch extends Model
     {
         return $this->belongsTo(Teacher::class,'principal_id');
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

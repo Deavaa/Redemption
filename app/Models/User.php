@@ -11,7 +11,7 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
 
-    protected $fillable = ['name', 'email', 'id_number', 'password', 'role', 'phone', 'address', 'profile_photo', 'is_active'];
+    protected $fillable = ['name', 'email', 'id_number', 'password', 'role', 'branch_id', 'phone', 'address', 'profile_photo', 'is_active'];
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
@@ -22,6 +22,9 @@ class User extends Authenticatable
             'is_active' => 'boolean',
         ];
     }
+
+    // ── Branch Relationship ────────────────────────────────
+    public function branch() { return $this->belongsTo(Branch::class); }
 
     // ── Existing Relationships ──────────────────────────────
     public function student() { return $this->hasOne(Student::class); }
