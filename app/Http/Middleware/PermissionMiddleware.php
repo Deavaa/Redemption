@@ -25,10 +25,21 @@ class PermissionMiddleware
             abort(401);
         }
 
-        // Admins always pass
-        if ($user->role === 'admin') {
+        // Admins and legacy panel roles always pass
+        // (These roles are allowed into the admin panel by AdminMiddleware
+        //  and should not be blocked by individual route permission checks
+        //  unless specific RBAC permissions are assigned to them.)
+        $legacyPanelRoles = ['admin', 'teacher', 'staff', 'super_admin'];
+        if (in_array($user->role, $legacyPanelRoles)) {
             return $next($request);
         }
+
+        // RBAC users with roles assigned also pass
+        try {
+            if ($user->roles()->exists()) {
+                return $next($request);
+            }
+        } catch (\Throwable $e) {}
 
         if (empty($permissions)) {
             return $next($request);
