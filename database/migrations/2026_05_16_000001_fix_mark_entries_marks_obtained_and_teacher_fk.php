@@ -39,8 +39,27 @@ return new class extends Migration
             }
         });
 
-        // Re-add with correct reference to teachers table (only if we dropped one)
-        if ($teacherFkDropped) {
+        // Clean up orphaned teacher_id values before adding the new FK.
+        // Old FK may have pointed to users.id, so some values won't exist in teachers.
+        DB::statement("
+            UPDATE mark_entries
+            SET teacher_id = NULL
+            WHERE teacher_id IS NOT NULL
+              AND teacher_id NOT IN (SELECT id FROM teachers)
+        ");
+
+        // Check if a teacher_id FK pointing to teachers already exists
+        $hasTeacherFk = collect(DB::select("
+            SELECT CONSTRAINT_NAME
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'mark_entries'
+              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+              AND CONSTRAINT_NAME LIKE '%teacher_id%
+        "))->isEmpty() === false;
+
+        // Add FK pointing to teachers table (if not already present)
+        if (!$hasTeacherFk) {
             Schema::table('mark_entries', function (Blueprint $table) {
                 $table->foreign('teacher_id')->references('id')->on('teachers')->nullOnDelete();
             });
