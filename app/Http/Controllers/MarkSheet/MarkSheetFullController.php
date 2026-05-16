@@ -76,6 +76,7 @@ class MarkSheetFullController extends Controller
 
         // ── Authorization check for teachers ──
         $teacher = $this->getTeacherForUser();
+        $isTeacher = (bool) $teacher;
         if ($teacher) {
             $isHomeroom = $teacher->classRooms()->where('id', $r->class_id)->exists();
             if (!$isHomeroom) {
