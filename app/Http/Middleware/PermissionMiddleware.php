@@ -229,6 +229,77 @@ class PermissionMiddleware
             return $next($request);
         }
 
+        // Finance — full finance & budgeting access, limited other access
+        if ($user->role === 'finance') {
+            $financeAllowedPermissions = [
+                'dashboard.view',
+                // Finance
+                'fees.view', 'fee_payments.view', 'fee_payments.create',
+                'budgets.view', 'budgets.manage',
+                'income_expenses.view', 'income_expenses.manage',
+                'finance_statements.view',
+                'payrolls.view',
+                // People (view only)
+                'students.view', 'teachers.view',
+                // Documents
+                'settings.view',
+                // Communication
+                'chat.access', 'notifications.view', 'calendar.view',
+            ];
+
+            if (!empty($permissions)) {
+                $hasAccess = false;
+                foreach ($permissions as $perm) {
+                    if (in_array($perm, $financeAllowedPermissions)) {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                if (!$hasAccess) {
+                    if ($request->expectsJson()) {
+                        return response()->json(['message' => 'Finance officers do not have access to this section.'], 403);
+                    }
+                    abort(403, 'You do not have permission to access this section.');
+                }
+            }
+
+            return $next($request);
+        }
+
+        // HR — employee management, leaves, payroll, trainings
+        if ($user->role === 'hr') {
+            $hrAllowedPermissions = [
+                'dashboard.view',
+                // People
+                'students.view', 'teachers.view', 'staff.view',
+                // HR
+                'leaves.view', 'leaves.manage',
+                'payrolls.view', 'payrolls.manage',
+                'trainings.view', 'trainings.manage',
+                'employee_assets.view',
+                // Communication
+                'chat.access', 'notifications.view', 'calendar.view',
+            ];
+
+            if (!empty($permissions)) {
+                $hasAccess = false;
+                foreach ($permissions as $perm) {
+                    if (in_array($perm, $hrAllowedPermissions)) {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                if (!$hasAccess) {
+                    if ($request->expectsJson()) {
+                        return response()->json(['message' => 'HR officers do not have access to this section.'], 403);
+                    }
+                    abort(403, 'You do not have permission to access this section.');
+                }
+            }
+
+            return $next($request);
+        }
+
         // Staff role — similar restricted access
         if ($user->role === 'staff') {
             // Staff gets broader access than teachers but not full admin

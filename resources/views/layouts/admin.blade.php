@@ -31,6 +31,8 @@
             $isLibrarian = Auth::user()->role === 'librarian';
             $isCashier = Auth::user()->role === 'cashier';
             $isRegistrar = Auth::user()->role === 'registrar';
+            $isFinance = Auth::user()->role === 'finance';
+            $isHR = Auth::user()->role === 'hr';
 
             // Menu level determines which sidebar sections are shown
             $menuLevel = 'full'; // default for admin/super_admin
@@ -38,6 +40,8 @@
             elseif ($isLibrarian) $menuLevel = 'librarian';
             elseif ($isCashier) $menuLevel = 'cashier';
             elseif ($isRegistrar) $menuLevel = 'registrar';
+            elseif ($isFinance) $menuLevel = 'finance';
+            elseif ($isHR) $menuLevel = 'hr';
             elseif ($isBranchPrincipal) $menuLevel = 'branch_principal';
             elseif ($isGeneralManager) $menuLevel = 'general_manager';
 
@@ -179,6 +183,19 @@
                         <li><a href="{{ route('admin.teacher-assignments.index') }}" class="{{ request()->routeIs('admin.teacher-assignments.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i> Teacher Assignments</a></li>
                     </ul>
                 </li>
+                @elseif($menuLevel === 'finance')
+                <li class="menu-header">PEOPLE</li>
+                <li>
+                    <a href="{{ route('admin.students.index') }}" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Students</a>
+                    <a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a>
+                </li>
+                @elseif($menuLevel === 'hr')
+                <li class="menu-header">PEOPLE</li>
+                <li>
+                    <a href="{{ route('admin.students.index') }}" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Students</a>
+                    <a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a>
+                    <a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a>
+                </li>
                 @elseif($menuLevel === 'registrar')
                 <li class="menu-header">PEOPLE</li>
                 <li class="{{ $isPeopleActive ? 'has-active-child' : '' }}">
@@ -212,6 +229,35 @@
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Payroll & HR</li>
                         <li><a href="{{ route('admin.payrolls.index') }}" class="{{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i> Payroll</a></li>
                         <li><a href="{{ route('admin.leaves.index') }}" class="{{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}"><i class="fas fa-calendar-minus"></i> Leaves</a></li>
+                        <li><a href="{{ route('admin.employee-assets.index') }}" class="{{ request()->routeIs('admin.employee-assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i> Employee Assets</a></li>
+                    </ul>
+                </li>
+                @elseif($menuLevel === 'finance')
+                <li class="menu-header">FINANCE</li>
+                <li class="{{ $isFinanceActive ? 'has-active-child' : '' }}">
+                    <a href="#financeSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
+                        <i class="fas fa-wallet"></i><span>Finance</span><i class="fas fa-chevron-down sidebar-chevron"></i>
+                    </a>
+                    <ul class="collapse {{ $isFinanceActive ? 'show' : '' }}" id="financeSubmenu">
+                        <li><a href="{{ route('admin.fees.index') }}" class="{{ request()->routeIs('admin.fees.*') ? 'active' : '' }}"><i class="fas fa-money-bill-wave"></i> Fee Structure</a></li>
+                        <li><a href="{{ route('admin.fee-payments.index') }}" class="{{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}"><i class="fas fa-credit-card"></i> Payments</a></li>
+                        <li><a href="{{ route('admin.budgets.index') }}" class="{{ request()->routeIs('admin.budgets.*') ? 'active' : '' }}"><i class="fas fa-chart-pie"></i> Budgets</a></li>
+                        <li><a href="{{ route('admin.income-expenses.index') }}" class="{{ request()->routeIs('admin.income-expenses.*') ? 'active' : '' }}"><i class="fas fa-exchange-alt"></i> Income / Expense</a></li>
+                        <li><a href="{{ route('admin.finance-statements.index') }}" class="{{ request()->routeIs('admin.finance-statements.*') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i> Statements</a></li>
+                        <li><a href="{{ route('admin.payrolls.index') }}" class="{{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i> Payroll</a></li>
+                    </ul>
+                </li>
+                @elseif($menuLevel === 'hr')
+                <li class="menu-header">HR</li>
+                <li class="{{ $isFinanceActive ? 'has-active-child' : '' }}">
+                    <a href="#financeSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
+                        <i class="fas fa-users-cog"></i><span>Human Resources</span><i class="fas fa-chevron-down sidebar-chevron"></i>
+                    </a>
+                    <ul class="collapse {{ $isFinanceActive ? 'show' : '' }}" id="financeSubmenu">
+                        <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
+                        <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a></li>
+                        <li><a href="{{ route('admin.leaves.index') }}" class="{{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}"><i class="fas fa-calendar-minus"></i> Leaves</a></li>
+                        <li><a href="{{ route('admin.payrolls.index') }}" class="{{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i> Payroll</a></li>
                         <li><a href="{{ route('admin.employee-assets.index') }}" class="{{ request()->routeIs('admin.employee-assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i> Employee Assets</a></li>
                     </ul>
                 </li>
@@ -298,7 +344,7 @@
                 {{-- COMMUNICATION --}}
                 <li class="menu-header">COMMUNICATION</li>
                 <li class="{{ $isCommActive ? 'has-active-child' : '' }}">
-                    @if(in_array($menuLevel, ['teacher', 'librarian', 'cashier']))
+                    @if(in_array($menuLevel, ['teacher', 'librarian', 'cashier', 'finance', 'hr']))
                     <a href="{{ route('admin.calendar.index') }}" class="{{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}">
                         <i class="fas fa-calendar-alt"></i><span>Calendar & Announcements</span>
                     </a>

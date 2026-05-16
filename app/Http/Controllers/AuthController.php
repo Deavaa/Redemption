@@ -69,7 +69,7 @@ class AuthController extends Controller
         }
 
         // Admin, teacher, staff all go to admin dashboard
-        $panelRoles = ['admin', 'teacher', 'staff', 'super_admin', 'branch_principal', 'general_manager', 'librarian', 'cashier', 'registrar'];
+        $panelRoles = ['admin', 'teacher', 'staff', 'super_admin', 'branch_principal', 'general_manager', 'librarian', 'cashier', 'registrar', 'finance', 'hr'];
 
         if (in_array($user->role, $panelRoles)) {
             return route('admin.dashboard');

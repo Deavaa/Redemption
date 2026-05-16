@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\BranchScope;
 use App\Http\Middleware\ParentMiddleware;
 use App\Http\Middleware\StudentMiddleware;
 use App\Http\Middleware\PermissionMiddleware;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'parent' => ParentMiddleware::class,
             'student' => StudentMiddleware::class,
             'permission' => PermissionMiddleware::class,
+            'branch-scope' => BranchScope::class,
             'locale' => SetLocale::class,
         ]);
         // Apply SetLocale to all web routes
