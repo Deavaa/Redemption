@@ -118,7 +118,8 @@
             @endif
 
             @if($staff->count() > 0)
-            <div class="modern-table-wrapper">
+            {{-- Desktop Table View --}}
+            <div class="modern-table-wrapper has-mobile-cards">
                 <table class="modern-table" id="staffTable">
                     <thead>
                         <tr>
@@ -208,6 +209,76 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Mobile Card View --}}
+            <div class="mobile-card-view" id="mobileCardView">
+                @foreach($staff as $s)
+                @php
+                    $roleColors = [
+                        'admin' => '#dc2626', 'teacher' => '#4361ee', 'general_manager' => '#7c3aed',
+                        'branch_principal' => '#0891b2', 'registrar' => '#059669', 'finance' => '#d97706',
+                        'hr' => '#e11d48', 'cashier' => '#ea580c', 'librarian' => '#4f46e5', 'staff' => '#6b7280',
+                    ];
+                    $rc = $roleColors[$s->role] ?? '#6b7280';
+                @endphp
+                <div class="mobile-card-item">
+                    <div class="mobile-card-item-header">
+                        <div class="mobile-card-item-avatar" style="background: linear-gradient(135deg, {{ $rc }}, {{ $rc }}cc);">
+                            {{ strtoupper(substr($s->name, 0, 1)) }}
+                        </div>
+                        <div class="mobile-card-item-title">
+                            <div class="mobile-card-item-name">{{ $s->name }}</div>
+                            <div class="mobile-card-item-sub">{{ $s->email }}</div>
+                        </div>
+                        <div class="mobile-card-item-actions">
+                            <a href="{{ route('admin.staff.edit', $s) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            @if($s->id !== auth()->id())
+                            <form method="POST" action="{{ route('admin.staff.destroy', $s) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="mobile-card-item-body">
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-field-label">Role</span>
+                            <span class="modern-role-chip" style="background:{{ $rc }}15;color:{{ $rc }};border:1px solid {{ $rc }}30;">
+                                {{ $allRoles[$s->role] ?? ucfirst(str_replace('_', ' ', $s->role)) }}
+                            </span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-field-label">Branch</span>
+                            <span class="mobile-card-field-value">
+                                @if($s->branch)
+                                    <i class="fas fa-building" style="font-size:.6rem;color:#3b82f6;"></i> {{ $s->branch->name }}
+                                @else
+                                    All Branches
+                                @endif
+                            </span>
+                        </div>
+                        @if($s->phone)
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-field-label">Phone</span>
+                            <span class="mobile-card-field-value"><i class="fas fa-phone" style="font-size:.6rem;color:#9ca3af;"></i> {{ $s->phone }}</span>
+                        </div>
+                        @endif
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-field-label">Status</span>
+                            @if($s->is_active)
+                                <span class="modern-badge modern-badge-success"><i class="fas fa-circle" style="font-size:.4rem;margin-right:4px;"></i> Active</span>
+                            @else
+                                <span class="modern-badge modern-badge-danger"><i class="fas fa-circle" style="font-size:.4rem;margin-right:4px;"></i> Inactive</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
             </div>
 
             @if($staff->hasPages())
@@ -376,6 +447,12 @@
     .modern-filter-pills { gap: 0.3rem; }
     .modern-filter-pill { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
 }
+@media (max-width: 480px) {
+    .modern-stats-row { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .modern-stat-card { padding: 0.85rem; }
+    .modern-stat-icon { width: 38px; height: 38px; font-size: 1rem; }
+    .modern-stat-value { font-size: 1.15rem; }
+}
 </style>
 @endpush
 
@@ -389,6 +466,12 @@ function filterTable() {
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(filter) ? '' : 'none';
+    });
+    // Also filter mobile card view
+    const mobileCards = document.querySelectorAll('.mobile-card-item');
+    mobileCards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(filter) ? '' : 'none';
     });
 }
 </script>

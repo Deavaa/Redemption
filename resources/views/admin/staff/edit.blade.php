@@ -147,7 +147,7 @@
                             @error('role')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
 
-                        <div class="modern-form-group" id="branchField" style="display:none;">
+                        <div class="modern-form-group" id="branchField" @if(!$isBranchPrincipal && !in_array(old('role', $user->role), $branchRoles)) style="display:none;" @endif>
                             <label class="modern-form-label" for="branch_id">Branch <span class="modern-required">*</span></label>
                             @if($isBranchPrincipal)
                             <div class="modern-input-wrapper">
@@ -352,7 +352,14 @@
     .modern-form-section-body { padding: 1rem 1.25rem 1.5rem; }
     .modern-form-grid { grid-template-columns: 1fr; }
     .modern-form-span-2 { grid-column: span 1; }
-    .modern-form-actions { padding: 1rem 1.25rem; }
+    .modern-form-actions { padding: 1rem 1.25rem; flex-direction: column; }
+    .btn-modern { width: 100%; justify-content: center; min-height: 44px; }
+    .modern-switch-wrapper { padding-top: 0.5rem; }
+}
+@media (max-width: 480px) {
+    .modern-form-section-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .modern-input { font-size: 16px; }
+    .modern-select { font-size: 16px; }
 }
 </style>
 @endpush
@@ -382,6 +389,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function toggleBranchField() {
         var selected = roleSelect.value;
+        // Branch principal: always show branch field (locked)
+        if (isBranchPrincipal) {
+            branchField.style.display = '';
+            return;
+        }
         if (branchRoles.includes(selected)) {
             branchField.style.display = '';
         } else {

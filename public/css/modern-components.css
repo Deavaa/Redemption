@@ -901,6 +901,124 @@
     font-size: 1rem;
 }
 
+/* ---- Mobile Card-View for Tables ---- */
+/* On mobile, table rows transform into stacked cards */
+.mobile-card-view {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .modern-table-wrapper.has-mobile-cards .modern-table { display: none; }
+    .mobile-card-view { display: block; }
+}
+
+.mobile-card-item {
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s;
+}
+.mobile-card-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.mobile-card-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mobile-card-item-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.mobile-card-item-title {
+    flex: 1;
+    min-width: 0;
+}
+.mobile-card-item-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1a1a2e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mobile-card-item-sub {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    margin-top: 1px;
+}
+
+.mobile-card-item-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.mobile-card-item-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.mobile-card-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.mobile-card-field-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #9ca3af;
+}
+.mobile-card-field-value {
+    font-size: 0.85rem;
+    color: #374151;
+    font-weight: 500;
+}
+
+.mobile-card-field-full {
+    grid-column: span 2;
+}
+
+/* Filter pills - horizontal scroll on mobile */
+@media (max-width: 768px) {
+    .modern-filter-bar {
+        padding: 0.6rem 1rem;
+        -webkit-overflow-scrolling: touch;
+    }
+    .modern-filter-pills {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+    }
+    .modern-filter-pills::-webkit-scrollbar { display: none; }
+    .modern-filter-pill {
+        flex-shrink: 0;
+        font-size: 0.72rem;
+        padding: 0.3rem 0.7rem;
+    }
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
     .modern-page-header {
@@ -908,36 +1026,57 @@
         align-items: stretch;
     }
 
+    .modern-page-header-right {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .modern-page-header-right .btn-modern {
+        flex: 1;
+        justify-content: center;
+    }
+
     .modern-page-title { font-size: 1.35rem; }
 
     .modern-stats-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
     }
+    .modern-stat-card { padding: 1rem; gap: 0.75rem; }
+    .modern-stat-icon { width: 42px; height: 42px; font-size: 1.1rem; }
+    .modern-stat-value { font-size: 1.3rem; }
 
     .modern-card-header {
         flex-direction: column;
         align-items: stretch;
     }
+    .modern-card-header-right {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .modern-card-header-right .modern-search-box { flex: 1; }
+    .modern-card-header-right .modern-search-box input { width: 100%; }
 
     .modern-search-box input { width: 100%; }
 
     .modern-table { font-size: 0.82rem; }
-
     .modern-cell-text { max-width: 150px; }
 
     .modern-form-grid,
     .modern-form-grid-3 {
         grid-template-columns: 1fr;
     }
-
     .modern-form-span-2 { grid-column: span 1; }
 
     .modern-form-section-body {
         padding: 1rem 1.25rem 1.5rem;
     }
-
     .modern-form-section-header {
         padding: 1.25rem 1.25rem 0.75rem;
+    }
+    .modern-form-section-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
     }
 
     .modern-form-actions {
@@ -948,16 +1087,18 @@
     .btn-modern {
         justify-content: center;
         width: 100%;
+        min-height: 44px;
     }
 
     .modern-detail-grid {
         grid-template-columns: 1fr;
     }
-
     .modern-detail-item:nth-child(odd) {
         border-right: none;
     }
-
+    .modern-detail-item {
+        padding: 0.85rem 1.25rem;
+    }
     .modern-detail-full {
         grid-column: span 1;
     }
@@ -965,8 +1106,69 @@
     .modern-filter-row {
         flex-direction: column;
     }
-
     .modern-filter-row .modern-input {
         width: 100%;
+    }
+
+    /* Section rows on mobile */
+    .modern-section-row-body {
+        padding: 0.75rem 1rem 1rem;
+    }
+    .modern-section-row-header {
+        padding: 0.6rem 1rem 0;
+    }
+
+    /* Empty state */
+    .modern-empty-state {
+        padding: 2.5rem 1.5rem;
+    }
+    .modern-empty-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+
+    /* Alerts */
+    .modern-alert {
+        margin: 0.75rem 1rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.82rem;
+    }
+
+    /* Pagination */
+    .modern-pagination-wrapper {
+        padding: 0.75rem 1rem;
+    }
+
+    /* Breadcrumb */
+    .modern-breadcrumb ol {
+        font-size: 0.75rem;
+        gap: 0.35rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .modern-stats-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    .modern-stat-card { padding: 0.85rem; gap: 0.6rem; }
+    .modern-stat-icon { width: 38px; height: 38px; font-size: 1rem; border-radius: 10px; }
+    .modern-stat-value { font-size: 1.15rem; }
+    .modern-stat-label { font-size: 0.72rem; }
+
+    /* Form section headers - stack on very small screens */
+    .modern-form-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    /* Card item body - single column on very small */
+    .mobile-card-item-body {
+        grid-template-columns: 1fr;
+    }
+    .mobile-card-field-full {
+        grid-column: span 1;
     }
 }

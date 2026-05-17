@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
 <body>
@@ -714,7 +715,152 @@
         </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- Mobile Bottom Navigation --}}
+<nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <div class="mobile-bottom-nav-inner">
+        <a href="{{ route('admin.dashboard') }}" class="mobile-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+            <i class="fas fa-th-large"></i>
+            <span>Home</span>
+        </a>
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+        <a href="{{ route('admin.students.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
+            <i class="fas fa-user-graduate"></i>
+            <span>Students</span>
+        </a>
+        @endif
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'hr']))
+        <a href="{{ route('admin.teachers.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <span>Teachers</span>
+        </a>
+        @endif
+        @if(in_array($menuLevel, ['full', 'general_manager']))
+        <a href="{{ route('admin.fee-payments.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}">
+            <i class="fas fa-credit-card"></i>
+            <span>Payments</span>
+        </a>
+        @elseif(in_array($menuLevel, ['finance', 'cashier', 'registrar']))
+        <a href="{{ route('admin.fee-payments.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}">
+            <i class="fas fa-credit-card"></i>
+            <span>Payments</span>
+        </a>
+        @elseif($menuLevel === 'teacher')
+        <a href="{{ route('admin.mark-entries.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}">
+            <i class="fas fa-pen"></i>
+            <span>Marks</span>
+        </a>
+        @endif
+        <div class="mobile-nav-item mobile-nav-more" id="mobileNavMore" onclick="toggleMobileMenu()">
+            <i class="fas fa-ellipsis-h"></i>
+            <span>More</span>
+        </div>
+    </div>
+</nav>
+
+{{-- Mobile Menu Sheet (slides up from bottom) --}}
+<div class="mobile-menu-sheet-backdrop" id="mobileMenuBackdrop" onclick="toggleMobileMenu()"></div>
+<div class="mobile-menu-sheet" id="mobileMenuSheet">
+    <div class="mobile-menu-sheet-handle"></div>
+    <div class="mobile-menu-sheet-title">Quick Access</div>
+    <div class="mobile-menu-sheet-links">
+        <a href="{{ route('admin.dashboard') }}" class="mobile-menu-link">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+        </a>
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        <a href="{{ route('admin.academic-years.index') }}" class="mobile-menu-link">
+            <i class="fas fa-calendar"></i>
+            <span>Academic Yr</span>
+        </a>
+        <a href="{{ route('admin.classrooms.index') }}" class="mobile-menu-link">
+            <i class="fas fa-building"></i>
+            <span>Classes</span>
+        </a>
+        <a href="{{ route('admin.subjects.index') }}" class="mobile-menu-link">
+            <i class="fas fa-book"></i>
+            <span>Subjects</span>
+        </a>
+        @endif
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'hr']))
+        <a href="{{ route('admin.staff.index') }}" class="mobile-menu-link">
+            <i class="fas fa-id-badge"></i>
+            <span>Staff</span>
+        </a>
+        @endif
+        @if(in_array($menuLevel, ['full', 'general_manager']))
+        <a href="{{ route('admin.fees.index') }}" class="mobile-menu-link">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Fees</span>
+        </a>
+        <a href="{{ route('admin.budgets.index') }}" class="mobile-menu-link">
+            <i class="fas fa-chart-pie"></i>
+            <span>Budgets</span>
+        </a>
+        <a href="{{ route('admin.payrolls.index') }}" class="mobile-menu-link">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span>Payroll</span>
+        </a>
+        <a href="{{ route('admin.leaves.index') }}" class="mobile-menu-link">
+            <i class="fas fa-calendar-minus"></i>
+            <span>Leaves</span>
+        </a>
+        @endif
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        <a href="{{ route('admin.exams.index') }}" class="mobile-menu-link">
+            <i class="fas fa-file-alt"></i>
+            <span>Exams</span>
+        </a>
+        @endif
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
+        <a href="{{ route('admin.library.index') }}" class="mobile-menu-link">
+            <i class="fas fa-book-open"></i>
+            <span>Library</span>
+        </a>
+        @endif
+        <a href="{{ route('admin.calendar.index') }}" class="mobile-menu-link">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Calendar</span>
+        </a>
+        <a href="{{ route('admin.announcements.index') }}" class="mobile-menu-link">
+            <i class="fas fa-bullhorn"></i>
+            <span>Announce</span>
+        </a>
+        <a href="{{ route('admin.chat.index') }}" class="mobile-menu-link">
+            <i class="fas fa-comment-dots"></i>
+            <span>Chat</span>
+        </a>
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        <a href="{{ route('admin.report-card.index') }}" class="mobile-menu-link">
+            <i class="fas fa-id-card"></i>
+            <span>Reports</span>
+        </a>
+        <a href="{{ route('admin.certificate-generate.index') }}" class="mobile-menu-link">
+            <i class="fas fa-award"></i>
+            <span>Certs</span>
+        </a>
+        @endif
+        @if(in_array($menuLevel, ['full', 'general_manager']))
+        <a href="{{ route('admin.branches.index') }}" class="mobile-menu-link">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Branches</span>
+        </a>
+        <a href="{{ route('admin.settings.index') }}" class="mobile-menu-link">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+        @endif
+        <a href="{{ route('admin.staff.edit', auth()->id()) }}" class="mobile-menu-link">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+        <a href="#" class="mobile-menu-link" onclick="event.preventDefault();document.getElementById('logoutForm').submit();">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>
+<form id="logoutForm" method="POST" action="{{ route('logout') }}" style="display:none">@csrf</form>
 <script>
 (function() {
     const sidebar = document.getElementById('adminSidebar');
@@ -758,6 +904,16 @@
         }, 4000);
     });
 })();
+
+// Mobile Menu Sheet Toggle
+function toggleMobileMenu() {
+    const sheet = document.getElementById('mobileMenuSheet');
+    const backdrop = document.getElementById('mobileMenuBackdrop');
+    const isOpen = sheet.classList.contains('show');
+    sheet.classList.toggle('show', !isOpen);
+    backdrop.classList.toggle('show', !isOpen);
+    document.body.style.overflow = isOpen ? '' : 'hidden';
+}
 </script>
 <style>
 /* ===== Topbar Icon Buttons (Chat, Notifications, Language) ===== */

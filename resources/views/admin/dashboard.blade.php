@@ -769,17 +769,31 @@
 @media (max-width: 768px) {
     .modern-page-header { flex-direction: column; align-items: stretch; }
     .modern-page-title { font-size: 1.35rem; }
-    .modern-stats-row { grid-template-columns: repeat(2, 1fr); }
-    .modern-quick-actions { justify-content: center; }
-    .modern-quick-action-label { display: none; }
-    .modern-quick-action-card { padding: 0.6rem; }
+    .modern-stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .modern-stat-card { padding: 1rem; gap: 0.75rem; }
+    .modern-stat-icon { width: 42px; height: 42px; font-size: 1.1rem; }
+    .modern-stat-value { font-size: 1.3rem; }
+    .modern-quick-actions { flex-wrap: wrap; gap: 0.5rem; }
+    .modern-quick-action-card { padding: 0.6rem 0.8rem; }
+    .modern-quick-action-label { font-size: 0.78rem; }
     .modern-table thead th, .modern-table tbody td { padding: 0.65rem 0.75rem; font-size: 0.82rem; }
+    .modern-activity-item { padding: 0.6rem 1rem; }
+    .modern-card-body { padding: 1rem; }
+    .btn-modern { min-height: 44px; }
+    .modern-page-header-right { width: 100%; }
+    .modern-page-header-right .btn-modern { flex: 1; justify-content: center; }
 }
 
 @media (max-width: 480px) {
-    .modern-stats-row { grid-template-columns: 1fr; }
+    .modern-stats-row { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .modern-stat-card { padding: 0.85rem; gap: 0.6rem; }
+    .modern-stat-icon { width: 38px; height: 38px; font-size: 1rem; border-radius: 10px; }
+    .modern-stat-value { font-size: 1.15rem; }
+    .modern-stat-label { font-size: 0.72rem; }
+    .modern-quick-action-label { display: none; }
+    .modern-quick-action-card { padding: 0.5rem; justify-content: center; }
     .modern-card-header { padding: 0.85rem 1rem; }
-    .modern-card-body { padding: 1rem; }
+    .modern-card-body { padding: 0.85rem; }
 }
 </style>
 @endpush
