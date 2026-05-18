@@ -103,8 +103,8 @@
 <div class="page">
     {{-- Header --}}
     <div class="transcript-header">
-        <div class="school-name">{{ \App\Models\Setting::value('school_name', 'School of Redemption') }}</div>
-        <div class="school-sub">{{ \App\Models\Setting::value('school_address', '') }} &bull; {{ \App\Models\Setting::value('school_phone', '') }} &bull; {{ \App\Models\Setting::value('school_email', '') }}</div>
+        <div class="school-name">{{ \App\Models\Setting::get('school_name', 'School of Redemption') }}</div>
+        <div class="school-sub">{{ \App\Models\Setting::get('school_address', '') }} &bull; {{ \App\Models\Setting::get('school_phone', '') }} &bull; {{ \App\Models\Setting::get('school_email', '') }}</div>
         <div class="doc-title">Official Academic Transcript</div>
         <div class="doc-number">Certificate No: {{ $cert->certificate_number }} &bull; Issued: {{ $cert->issue_date->format('F d, Y') }}</div>
     </div>
@@ -197,7 +197,7 @@
 </div>
 <div class="page">
     <div class="transcript-header" style="border-bottom:2px solid #6366f1;padding-bottom:6px;margin-bottom:10px;">
-        <div class="school-name" style="font-size:12px;">{{ \App\Models\Setting::value('school_name', 'School of Redemption') }}</div>
+        <div class="school-name" style="font-size:12px;">{{ \App\Models\Setting::get('school_name', 'School of Redemption') }}</div>
         <div class="doc-title" style="font-size:10px;padding:2px 16px;">Academic Transcript (Continued)</div>
         <div class="doc-number">{{ $student->first_name }} {{ $student->last_name }} &bull; {{ $student->admission_number ?? '' }}</div>
     </div>
@@ -267,7 +267,7 @@
                 </div>
             </div>
         </div>
-        <div class="official-stamp">OFFICIAL TRANSCRIPT &bull; This document is issued under the authority of {{ \App\Models\Setting::value('school_name', 'the School') }} &bull; Certificate No: {{ $cert->certificate_number }}</div>
+        <div class="official-stamp">OFFICIAL TRANSCRIPT &bull; This document is issued under the authority of {{ \App\Models\Setting::get('school_name', 'the School') }} &bull; Certificate No: {{ $cert->certificate_number }}</div>
     </div>
 </div>
 </body>

@@ -92,8 +92,8 @@
 <div class="page">
     {{-- Header --}}
     <div class="lc-header">
-        <div class="school-name">{{ \App\Models\Setting::value('school_name', 'School of Redemption') }}</div>
-        <div class="school-sub">{{ \App\Models\Setting::value('school_address', '') }} &bull; {{ \App\Models\Setting::value('school_phone', '') }} &bull; {{ \App\Models\Setting::value('school_email', '') }}</div>
+        <div class="school-name">{{ \App\Models\Setting::get('school_name', 'School of Redemption') }}</div>
+        <div class="school-sub">{{ \App\Models\Setting::get('school_address', '') }} &bull; {{ \App\Models\Setting::get('school_phone', '') }} &bull; {{ \App\Models\Setting::get('school_email', '') }}</div>
         <div class="doc-title">School Leaving Clearance Certificate</div>
         <div class="doc-number">Certificate No: {{ $cert->certificate_number }} &bull; Date of Issue: {{ $cert->issue_date->format('F d, Y') }}</div>
     </div>
@@ -257,7 +257,7 @@
         </div>
     </div>
 
-    <div class="official-stamp">OFFICIAL SCHOOL LEAVING CLEARANCE CERTIFICATE &bull; {{ \App\Models\Setting::value('school_name', 'the School') }} &bull; Certificate No: {{ $cert->certificate_number }} &bull; Date: {{ $cert->issue_date->format('M d, Y') }}</div>
+    <div class="official-stamp">OFFICIAL SCHOOL LEAVING CLEARANCE CERTIFICATE &bull; {{ \App\Models\Setting::get('school_name', 'the School') }} &bull; Certificate No: {{ $cert->certificate_number }} &bull; Date: {{ $cert->issue_date->format('M d, Y') }}</div>
 </div>
 </body>
 </html>
