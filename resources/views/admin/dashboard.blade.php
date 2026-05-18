@@ -26,14 +26,6 @@
             <div class="dash-stat-value">{{ $totalBranches }}</div>
             <div class="dash-stat-label">Branches</div>
         </a>
-        <a href="{{ route('admin.teachers.index') }}" class="dash-stat-card dash-stat-green">
-            <div class="dash-stat-top">
-                <div class="dash-stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-            </div>
-            <div class="dash-stat-value">{{ $totalTeachers }}</div>
-            <div class="dash-stat-label">Teachers</div>
-        </a>
         <a href="{{ route('admin.students.index') }}" class="dash-stat-card dash-stat-gold">
             <div class="dash-stat-top">
                 <div class="dash-stat-icon"><i class="fas fa-user-graduate"></i></div>
@@ -42,7 +34,23 @@
             <div class="dash-stat-value">{{ $totalStudents }}</div>
             <div class="dash-stat-label">Students</div>
         </a>
-        <a href="{{ route('admin.classrooms.index') }}" class="dash-stat-card dash-stat-purple">
+        <a href="{{ route('admin.teachers.index') }}" class="dash-stat-card dash-stat-green">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="dash-stat-value">{{ $totalTeachers }}</div>
+            <div class="dash-stat-label">Teachers</div>
+        </a>
+        <a href="{{ route('admin.staff.index') }}" class="dash-stat-card dash-stat-purple">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-id-badge"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="dash-stat-value">{{ $totalStaff }}</div>
+            <div class="dash-stat-label">Staff</div>
+        </a>
+        <a href="{{ route('admin.classrooms.index') }}" class="dash-stat-card dash-stat-teal">
             <div class="dash-stat-top">
                 <div class="dash-stat-icon"><i class="fas fa-chalkboard"></i></div>
                 <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
@@ -50,7 +58,7 @@
             <div class="dash-stat-value">{{ $totalClasses }}</div>
             <div class="dash-stat-label">Classes</div>
         </a>
-        <a href="{{ route('admin.subjects.index') }}" class="dash-stat-card dash-stat-teal">
+        <a href="{{ route('admin.subjects.index') }}" class="dash-stat-card dash-stat-blue">
             <div class="dash-stat-top">
                 <div class="dash-stat-icon"><i class="fas fa-book"></i></div>
                 <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
@@ -58,7 +66,23 @@
             <div class="dash-stat-value">{{ $totalSubjects }}</div>
             <div class="dash-stat-label">Subjects</div>
         </a>
-        <a href="{{ route('admin.chat.index') }}" class="dash-stat-card dash-stat-rose">
+        <a href="{{ route('admin.fee-payments.index') }}" class="dash-stat-card dash-stat-green">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="dash-stat-value" style="font-size:1.15rem;">{{ number_format($totalFeeCollected, 0) }}</div>
+            <div class="dash-stat-label">Fee Collected</div>
+        </a>
+        <a href="{{ route('admin.fees.index') }}" class="dash-stat-card dash-stat-rose">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="dash-stat-value" style="font-size:1.15rem;">{{ number_format($pendingFees, 0) }}</div>
+            <div class="dash-stat-label">Pending Fees</div>
+        </a>
+        <a href="{{ route('admin.chat.index') }}" class="dash-stat-card dash-stat-gold">
             <div class="dash-stat-top">
                 <div class="dash-stat-icon"><i class="fas fa-envelope"></i></div>
                 <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
@@ -397,15 +421,15 @@
 .dash-stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.875rem;
-    margin-bottom: 1.5rem;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .dash-stat-card {
     display: flex;
     flex-direction: column;
-    padding: 1.1rem 1.25rem;
-    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
     background: #fff;
     border: 1.5px solid #f0f0f0;
     text-decoration: none;
@@ -441,13 +465,13 @@
 }
 
 .dash-stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.05rem;
+    font-size: 0.95rem;
 }
 
 .dash-stat-arrow {
@@ -469,11 +493,11 @@
 }
 
 .dash-stat-value {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     font-weight: 800;
     color: #1a1a2e;
     line-height: 1.2;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.1rem;
 }
 
 .dash-stat-label {

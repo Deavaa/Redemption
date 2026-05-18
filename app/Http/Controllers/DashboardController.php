@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\Subject;
 use App\Models\AcademicYear;
 use App\Models\FeePayment;
+use App\Models\Fee;
 use App\Models\ContactMessage;
 
 class DashboardController extends Controller
@@ -22,6 +23,14 @@ class DashboardController extends Controller
         $unreadMessages = ContactMessage::where('is_read',0)->count();
         $recentPayments = FeePayment::latest()->take(5)->get();
         $currentYear = AcademicYear::where('is_current',1)->first();
-        return view('admin.dashboard', compact('totalStudents','totalTeachers','totalClasses','totalBranches','totalSubjects','unreadMessages','recentPayments','currentYear'));
+        $totalStaff = User::whereNotIn('role', ['student', 'parent'])->count();
+        $totalFeeCollected = FeePayment::sum('amount_paid');
+        $totalFeeExpected = Fee::sum('amount');
+        $pendingFees = max(0, $totalFeeExpected - $totalFeeCollected);
+        return view('admin.dashboard', compact(
+            'totalStudents','totalTeachers','totalClasses','totalBranches','totalSubjects',
+            'unreadMessages','recentPayments','currentYear','totalStaff',
+            'totalFeeCollected','totalFeeExpected','pendingFees'
+        ));
     }
 }

@@ -11,6 +11,7 @@
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
     @stack('styles')
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
 <div class="admin-wrapper">
@@ -434,10 +435,10 @@
                     ->get();
             } catch (\Exception $e) {}
         @endphp
-        @if($activeAnnouncements->count() > 0)
         <div id="adminAnnouncementBar" class="announcement-banner">
             <div class="announcement-banner-inner">
-                <div class="announcement-badge"><i class="fas fa-bullhorn"></i>&ensp;Announcements</div>
+                <a href="{{ route('admin.announcements.index') }}" class="announcement-badge" style="text-decoration:none;"><i class="fas fa-bullhorn"></i>&ensp;Announcements</a>
+                @if($activeAnnouncements->count() > 0)
                 <div class="announcement-ticker-wrap">
                     <div class="announcement-ticker">
                         @foreach($activeAnnouncements as $ann)
@@ -450,6 +451,13 @@
                         @endforeach
                     </div>
                 </div>
+                @else
+                <div class="announcement-ticker-wrap">
+                    <div class="announcement-ticker">
+                        <span class="announcement-chip" style="opacity:0.7;"><i class="fas fa-info-circle"></i>&ensp;No active announcements &mdash; <a href="{{ route('admin.announcements.index') }}" style="color:#93c5fd;text-decoration:underline;">Create one</a></span>
+                    </div>
+                </div>
+                @endif
                 <button onclick="document.getElementById('adminAnnouncementBar').style.display='none'" class="announcement-close" title="Dismiss"><i class="fas fa-times"></i></button>
             </div>
         </div>

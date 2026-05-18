@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('certificates', function (Blueprint $t) {
             $t->id();
             $t->foreignId('student_id')->constrained()->cascadeOnDelete();
-            $t->enum('type', ['character','transfer','experience','achievement','completion'])->default('character');
+            $t->string('type', 50)->default('character');
             $t->string('certificate_number')->unique();
             $t->date('issue_date');
             $t->text('content')->nullable();
