@@ -43,6 +43,14 @@ class TeacherController extends Controller
             $validated['status'] = 'active';
         }
 
+        // Handle NOT NULL columns: set defaults when values are empty/null
+        if (empty($validated['salary'])) {
+            $validated['salary'] = 0;
+        }
+        if (empty($validated['email'])) {
+            $validated['email'] = '';
+        }
+
         try {
             $t = Teacher::create($validated);
             if ($request->ajax() || $request->wantsJson()) {
@@ -93,6 +101,14 @@ class TeacherController extends Controller
         // Set default status if not provided
         if (empty($validated['status'])) {
             $validated['status'] = 'active';
+        }
+
+        // Handle NOT NULL columns: set defaults when values are empty/null
+        if (empty($validated['salary'])) {
+            $validated['salary'] = 0;
+        }
+        if (empty($validated['email'])) {
+            $validated['email'] = '';
         }
 
         $item->update($validated);
