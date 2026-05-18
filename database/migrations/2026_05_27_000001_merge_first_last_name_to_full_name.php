@@ -17,10 +17,8 @@ return new class extends Migration
         // Migrate existing data
         DB::statement("UPDATE students SET full_name = TRIM(CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')))");
 
-        // Make full_name NOT NULL after data migration (allow empty string for rows with no names)
-        Schema::table('students', function (Blueprint $table) {
-            $table->string('full_name')->nullable(false)->default('')->change();
-        });
+        // Make full_name NOT NULL after data migration (using raw SQL to avoid ->change() which requires doctrine/dbal)
+        DB::statement("ALTER TABLE students MODIFY COLUMN full_name VARCHAR(255) NOT NULL DEFAULT ''");
 
         Schema::table('students', function (Blueprint $table) {
             $table->dropColumn(['first_name', 'last_name']);
@@ -34,9 +32,8 @@ return new class extends Migration
         // Migrate existing data
         DB::statement("UPDATE teachers SET full_name = TRIM(CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')))");
 
-        Schema::table('teachers', function (Blueprint $table) {
-            $table->string('full_name')->nullable(false)->default('')->change();
-        });
+        // Make full_name NOT NULL using raw SQL (->change() requires doctrine/dbal and corrupts ENUM columns)
+        DB::statement("ALTER TABLE teachers MODIFY COLUMN full_name VARCHAR(255) NOT NULL DEFAULT ''");
 
         Schema::table('teachers', function (Blueprint $table) {
             $table->dropColumn(['first_name', 'last_name']);
