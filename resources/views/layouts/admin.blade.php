@@ -66,7 +66,7 @@
 
             // Route groups for active state detection
             $academicSetupRoutes = ['admin.academic-years.*','admin.terms.*','admin.subjects.*','admin.subject-assignments.*','admin.exams.*','admin.classrooms.*','admin.sections.*'];
-            $academicMarksRoutes = ['admin.mark-entries.*','admin.mark-sheet.*','admin.mark-sheet-full.*','admin.mark-roster.*','admin.attendance.*'];
+            $academicMarksRoutes = ['admin.mark-entries.*','admin.mark-sheet.*','admin.mark-sheet-full.*','admin.mark-roster.*','admin.attendance.*','admin.attendance-delegation.*','admin.mark-entry-locks.*','admin.mark-entry-permissions.*','admin.promotion.*'];
             $academicReportsRoutes = ['admin.report-card.*','admin.progress-reports.*','admin.performance-reports.*'];
             $documentRoutes = ['admin.id-card-generate.*','admin.certificate-generate.*','admin.id-cards.*','admin.certificates.*','admin.report-exchange.*','admin.transcript.*','admin.leaving-certificate.*','admin.report-card.*','admin.progress-reports.*'];
             $peopleRoutes = ['admin.students.*','admin.teachers.*','admin.staff.*','admin.team-members.*','admin.parents.*','admin.teacher-assignments.*'];
@@ -79,7 +79,7 @@
             $websiteRoutes = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*','admin.web-content.*','admin.news.*'];
             $adminRoutes = ['admin.user-access.*','admin.settings.*','admin.roles.*','admin.database-backup.*','admin.backup.*','admin.audits.*'];
 
-            $isAcademicActive = request()->routeIs([...$academicSetupRoutes, ...$academicMarksRoutes, 'admin.attendance.*']);
+            $isAcademicActive = request()->routeIs([...$academicSetupRoutes, ...$academicMarksRoutes, 'admin.attendance.*', 'admin.attendance-delegation.*']);
             $isPeopleActive = request()->routeIs($peopleRoutes);
             $isFinanceActive = request()->routeIs([...$financeRoutes, ...$hrRoutes]);
             $isAnalysisActive = request()->routeIs($analysisRoutes);
@@ -107,6 +107,7 @@
                     <ul class="collapse {{ $isAcademicActive ? 'show' : '' }}" id="academicSubmenu">
                         <li><a href="{{ route('admin.mark-entries.index') }}" class="{{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}"><i class="fas fa-pen"></i> Mark Entry</a></li>
                         <li><a href="{{ route('admin.attendance.index') }}" class="{{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+                        <li><a href="{{ route('admin.attendance-delegation.index') }}" class="{{ request()->routeIs('admin.attendance-delegation.*') ? 'active' : '' }}"><i class="fas fa-user-check"></i> Attendance Delegation</a></li>
                         @if($isHomeroomTeacher)
                         <li><a href="{{ route('admin.mark-sheet.index') }}" class="{{ request()->routeIs('admin.mark-sheet.*') ? 'active' : '' }}"><i class="fas fa-file-alt"></i> Mark Sheet</a></li>
                         <li><a href="{{ route('admin.mark-sheet-full.index') }}" class="{{ request()->routeIs('admin.mark-sheet-full.*') ? 'active' : '' }}"><i class="fas fa-table"></i> Full Mark Sheet</a></li>
@@ -147,9 +148,14 @@
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Marks & Assessment</li>
                         <li><a href="{{ route('admin.mark-entries.index') }}" class="{{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}"><i class="fas fa-pen"></i> Mark Entry</a></li>
                         <li><a href="{{ route('admin.attendance.index') }}" class="{{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+                        <li><a href="{{ route('admin.attendance-delegation.index') }}" class="{{ request()->routeIs('admin.attendance-delegation.*') ? 'active' : '' }}"><i class="fas fa-user-check"></i> Attendance Delegation</a></li>
                         <li><a href="{{ route('admin.mark-sheet.index') }}" class="{{ request()->routeIs('admin.mark-sheet.*') ? 'active' : '' }}"><i class="fas fa-file-alt"></i> Mark Sheet</a></li>
                         <li><a href="{{ route('admin.mark-sheet-full.index') }}" class="{{ request()->routeIs('admin.mark-sheet-full.*') ? 'active' : '' }}"><i class="fas fa-table"></i> Full Mark Sheet</a></li>
                         <li><a href="{{ route('admin.mark-roster.index') }}" class="{{ request()->routeIs('admin.mark-roster.*') ? 'active' : '' }}"><i class="fas fa-list-ol"></i> Mark Roster</a></li>
+                        <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Promotion & Locks</li>
+                        <li><a href="{{ route('admin.promotion.index') }}" class="{{ request()->routeIs('admin.promotion.*') ? 'active' : '' }}"><i class="fas fa-level-up-alt"></i> Promotion & Detention</a></li>
+                        <li><a href="{{ route('admin.mark-entry-locks.index') }}" class="{{ request()->routeIs('admin.mark-entry-locks.*') ? 'active' : '' }}"><i class="fas fa-lock"></i> Mark Entry Locks</a></li>
+                        <li><a href="{{ route('admin.mark-entry-permissions.index') }}" class="{{ request()->routeIs('admin.mark-entry-permissions.*') ? 'active' : '' }}"><i class="fas fa-key"></i> Mark Edit Permissions</a></li>
                     </ul>
                 </li>
                 @else
@@ -169,9 +175,14 @@
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Marks & Assessment</li>
                         <li><a href="{{ route('admin.mark-entries.index') }}" class="{{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}"><i class="fas fa-pen"></i> Mark Entry</a></li>
                         <li><a href="{{ route('admin.attendance.index') }}" class="{{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+                        <li><a href="{{ route('admin.attendance-delegation.index') }}" class="{{ request()->routeIs('admin.attendance-delegation.*') ? 'active' : '' }}"><i class="fas fa-user-check"></i> Attendance Delegation</a></li>
                         <li><a href="{{ route('admin.mark-sheet.index') }}" class="{{ request()->routeIs('admin.mark-sheet.*') ? 'active' : '' }}"><i class="fas fa-file-alt"></i> Mark Sheet</a></li>
                         <li><a href="{{ route('admin.mark-sheet-full.index') }}" class="{{ request()->routeIs('admin.mark-sheet-full.*') ? 'active' : '' }}"><i class="fas fa-table"></i> Full Mark Sheet</a></li>
                         <li><a href="{{ route('admin.mark-roster.index') }}" class="{{ request()->routeIs('admin.mark-roster.*') ? 'active' : '' }}"><i class="fas fa-list-ol"></i> Mark Roster</a></li>
+                        <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Promotion & Locks</li>
+                        <li><a href="{{ route('admin.promotion.index') }}" class="{{ request()->routeIs('admin.promotion.*') ? 'active' : '' }}"><i class="fas fa-level-up-alt"></i> Promotion & Detention</a></li>
+                        <li><a href="{{ route('admin.mark-entry-locks.index') }}" class="{{ request()->routeIs('admin.mark-entry-locks.*') ? 'active' : '' }}"><i class="fas fa-lock"></i> Mark Entry Locks</a></li>
+                        <li><a href="{{ route('admin.mark-entry-permissions.index') }}" class="{{ request()->routeIs('admin.mark-entry-permissions.*') ? 'active' : '' }}"><i class="fas fa-key"></i> Mark Edit Permissions</a></li>
                     </ul>
                 </li>
                 @endif
@@ -740,58 +751,48 @@
 {{-- Mobile Bottom Navigation --}}
 <nav class="mobile-bottom-nav" id="mobileBottomNav">
     <div class="mobile-bottom-nav-inner">
+        {{-- 1. Home — always first --}}
         <a href="{{ route('admin.dashboard') }}" class="mobile-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="fas fa-th-large"></i>
             <span>Home</span>
         </a>
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
-        <a href="{{ route('admin.students.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
-            <i class="fas fa-user-graduate"></i>
-            <span>Students</span>
-        </a>
-        @endif
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'hr']))
-        <a href="{{ route('admin.teachers.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}">
-            <i class="fas fa-chalkboard-teacher"></i>
-            <span>Teachers</span>
-        </a>
-        @endif
-        {{-- Mark Entry & Attendance - Main tasks accessible to admin, branch_principal, teacher --}}
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+        {{-- 2. Mark Entry — second item for all roles that can access it --}}
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher']))
         <a href="{{ route('admin.mark-entries.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}">
             <i class="fas fa-pen"></i>
             <span>Marks</span>
         </a>
+        @endif
+        {{-- 3. Attendance Taking — third item for all roles that can access it --}}
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher']))
         <a href="{{ route('admin.attendance.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
             <i class="fas fa-clipboard-check"></i>
             <span>Attend.</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['full', 'general_manager', 'finance']))
+        {{-- 4. Role-specific item --}}
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        <a href="{{ route('admin.students.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
+            <i class="fas fa-user-graduate"></i>
+            <span>Students</span>
+        </a>
+        @elseif(in_array($menuLevel, ['finance', 'cashier']))
         <a href="{{ route('admin.fee-payments.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}">
             <i class="fas fa-credit-card"></i>
             <span>Payments</span>
-        </a>
-        @elseif(in_array($menuLevel, ['cashier', 'registrar']))
-        <a href="{{ route('admin.fee-payments.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}">
-            <i class="fas fa-credit-card"></i>
-            <span>Payments</span>
-        </a>
-        @elseif($menuLevel === 'teacher')
-        <a href="{{ route('admin.mark-entries.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}">
-            <i class="fas fa-pen"></i>
-            <span>Marks</span>
-        </a>
-        <a href="{{ route('admin.attendance.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
-            <i class="fas fa-clipboard-check"></i>
-            <span>Attendance</span>
         </a>
         @elseif($menuLevel === 'librarian')
         <a href="{{ route('admin.library.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.library.*') ? 'active' : '' }}">
             <i class="fas fa-book-open"></i>
             <span>Library</span>
         </a>
+        @elseif($menuLevel === 'hr')
+        <a href="{{ route('admin.staff.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
+            <i class="fas fa-id-badge"></i>
+            <span>Staff</span>
+        </a>
         @endif
+        {{-- More — always last --}}
         <div class="mobile-nav-item mobile-nav-more" id="mobileNavMore" onclick="toggleMobileMenu()">
             <i class="fas fa-ellipsis-h"></i>
             <span>More</span>
@@ -886,6 +887,10 @@
             <i class="fas fa-clipboard-check"></i>
             <span>Attendance</span>
         </a>
+        <a href="{{ route('admin.attendance-delegation.index') }}" class="mobile-menu-link">
+            <i class="fas fa-user-check"></i>
+            <span>Delegate</span>
+        </a>
         @endif
         @if($menuLevel === 'teacher')
         <a href="{{ route('admin.mark-entries.index') }}" class="mobile-menu-link">
@@ -895,6 +900,10 @@
         <a href="{{ route('admin.attendance.index') }}" class="mobile-menu-link">
             <i class="fas fa-clipboard-check"></i>
             <span>Attendance</span>
+        </a>
+        <a href="{{ route('admin.attendance-delegation.index') }}" class="mobile-menu-link">
+            <i class="fas fa-user-check"></i>
+            <span>Delegate</span>
         </a>
         <a href="{{ route('admin.mark-roster.index') }}" class="mobile-menu-link">
             <i class="fas fa-list-ol"></i>

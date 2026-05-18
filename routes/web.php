@@ -70,7 +70,11 @@ use App\Http\Controllers\UserAccess\StudentAccessController;
 use App\Http\Controllers\UserAccess\ParentAccessController;
 use App\Http\Controllers\ReportExchange\ReportExchangeController;
 use App\Http\Controllers\News\NewsController;
+use App\Http\Controllers\Admin\MarkEntryLockController;
+use App\Http\Controllers\Admin\MarkEntryPermissionController;
+use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Attendance\AttendanceController;
+use App\Http\Controllers\Attendance\AttendanceDelegationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -109,6 +113,35 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('mark-entries/api/students', [MarkEntryController::class, 'apiStudents'])->name('mark-entries.api.students');
     Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students');
     Route::post('mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save');
+    Route::get('mark-entries/api/check-lock', [MarkEntryLockController::class, 'apiCheckLock'])->name('mark-entries.api.check-lock');
+
+    // Mark Entry Lock Management (Branch Principal / Admin)
+    Route::get('mark-entry-locks', [MarkEntryLockController::class, 'index'])->name('mark-entry-locks.index')->middleware('permission:mark_entries.view');
+    Route::post('mark-entry-locks/lock', [MarkEntryLockController::class, 'lock'])->name('mark-entry-locks.lock')->middleware('permission:mark_entries.manage');
+    Route::post('mark-entry-locks/unlock', [MarkEntryLockController::class, 'unlock'])->name('mark-entry-locks.unlock')->middleware('permission:mark_entries.manage');
+
+    // Mark Entry Permission Management (Branch Principal / Admin)
+    Route::get('mark-entry-permissions', [MarkEntryPermissionController::class, 'index'])->name('mark-entry-permissions.index')->middleware('permission:mark_entries.view');
+    Route::get('mark-entry-permissions/create', [MarkEntryPermissionController::class, 'create'])->name('mark-entry-permissions.create')->middleware('permission:mark_entries.manage');
+    Route::post('mark-entry-permissions', [MarkEntryPermissionController::class, 'store'])->name('mark-entry-permissions.store')->middleware('permission:mark_entries.manage');
+    Route::post('mark-entry-permissions/batch', [MarkEntryPermissionController::class, 'batchStore'])->name('mark-entry-permissions.batch')->middleware('permission:mark_entries.manage');
+    Route::delete('mark-entry-permissions/{id}/revoke', [MarkEntryPermissionController::class, 'revoke'])->name('mark-entry-permissions.revoke')->middleware('permission:mark_entries.manage');
+    Route::get('mark-entry-permissions/api/students', [MarkEntryPermissionController::class, 'apiStudents'])->name('mark-entry-permissions.api.students');
+    Route::get('mark-entry-permissions/api/teacher-subjects', [MarkEntryPermissionController::class, 'apiTeacherSubjects'])->name('mark-entry-permissions.api.teacher-subjects');
+
+    // Promotion & Detention Management
+    Route::get('promotion', [PromotionController::class, 'index'])->name('promotion.index')->middleware('permission:mark_entries.view');
+    Route::get('promotion/preview', [PromotionController::class, 'preview'])->name('promotion.preview')->middleware('permission:mark_entries.view');
+    Route::post('promotion/process', [PromotionController::class, 'processClass'])->name('promotion.process')->middleware('permission:mark_entries.manage');
+    Route::post('promotion/process-student', [PromotionController::class, 'processStudent'])->name('promotion.process-student')->middleware('permission:mark_entries.manage');
+    Route::patch('promotion/override', [PromotionController::class, 'processStudent'])->name('promotion.override')->middleware('permission:mark_entries.manage');
+    Route::get('promotion/{id}', [PromotionController::class, 'show'])->name('promotion.detail')->middleware('permission:mark_entries.view');
+    Route::get('promotion/{id}/edit', [PromotionController::class, 'show'])->name('promotion.edit')->middleware('permission:mark_entries.manage');
+    Route::get('promotion/settings/index', [PromotionController::class, 'settings'])->name('promotion.settings.index')->middleware('permission:mark_entries.manage');
+    Route::post('promotion/settings', [PromotionController::class, 'storeSettings'])->name('promotion.settings.store')->middleware('permission:mark_entries.manage');
+    Route::get('promotion/grade-scales/index', [PromotionController::class, 'gradeScales'])->name('promotion.grade-scales.index')->middleware('permission:mark_entries.manage');
+    Route::post('promotion/grade-scales', [PromotionController::class, 'storeGradeScale'])->name('promotion.grade-scales.store')->middleware('permission:mark_entries.manage');
+    Route::get('promotion/print', [PromotionController::class, 'print'])->name('promotion.print')->middleware('permission:mark_entries.view');
 
     // Mark Sheet
     Route::get('mark-sheet', [MarkSheetController::class, 'index'])->name('mark-sheet.index')->middleware('permission:mark_sheets.view');
@@ -165,6 +198,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
     Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
     Route::get('students/api/sections/{classId}', [StudentController::class, 'getSections'])->name('students.api.sections');
+    Route::get('students/inactive/list', [StudentController::class, 'inactive'])->name('students.inactive')->middleware('permission:students.view');
+    Route::get('students/{student}/readmit', [StudentController::class, 'readmit'])->name('students.readmit')->middleware('permission:students.manage');
+    Route::post('students/{student}/readmit', [StudentController::class, 'readmitStore'])->name('students.readmit-store')->middleware('permission:students.manage');
+    Route::post('students/{student}/mark-as-left', [StudentController::class, 'markAsLeft'])->name('students.mark-as-left')->middleware('permission:students.manage');
     Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');
     Route::resource('staff', StaffController::class)->middleware('permission:staff.view');
     Route::resource('team-members', TeamMemberController::class)->middleware('permission:team_members.view');
@@ -200,6 +237,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::put('attendance', [AttendanceController::class, 'update'])->name('attendance.update')->middleware('permission:attendance.manage');
     Route::get('attendance-report', [AttendanceController::class, 'report'])->name('attendance.report')->middleware('permission:attendance.view');
     Route::get('attendance-api/students', [AttendanceController::class, 'apiStudents'])->name('attendance.api.students');
+
+    // ── Attendance Delegation ──────────────────────────────
+    Route::get('attendance-delegation', [AttendanceDelegationController::class, 'index'])->name('attendance-delegation.index')->middleware('permission:attendance.manage');
+    Route::post('attendance-delegation', [AttendanceDelegationController::class, 'store'])->name('attendance-delegation.store')->middleware('permission:attendance.manage');
+    Route::post('attendance-delegation/{delegation}/revoke', [AttendanceDelegationController::class, 'revoke'])->name('attendance-delegation.revoke')->middleware('permission:attendance.manage');
+    Route::get('attendance-delegation-api/sections/{class}', [AttendanceDelegationController::class, 'apiSections'])->name('attendance-delegation.api.sections');
 
     // ── Library ───────────────────────────────────────────
     Route::resource('library', LibraryBookController::class)->middleware('permission:library.view');

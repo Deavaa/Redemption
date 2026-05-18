@@ -153,7 +153,12 @@ class LibraryBookController extends Controller
         $fileUrl = $library->getFileUrl();
         $isPdf = $library->file_type === 'application/pdf' || str_ends_with(strtolower($library->file_path), '.pdf');
 
-        return view('admin.library.read', compact('library', 'fileUrl', 'isPdf'));
+        // Generate a session token that the serve route will verify
+        // This ensures files can only be served through the reader, not directly
+        $readToken = Str::random(40);
+        session(['library_read_token_' . $library->id => $readToken]);
+
+        return view('admin.library.read', compact('library', 'fileUrl', 'isPdf', 'readToken'));
     }
 
     public function edit(LibraryBook $library)
@@ -274,6 +279,20 @@ class LibraryBookController extends Controller
             abort(403);
         }
 
+        // Verify session token — file can ONLY be served through the reader page
+        $tokenKey = 'library_read_token_' . $library->id;
+        $sessionToken = session($tokenKey);
+        $requestToken = request()->query('token');
+
+        if (!$sessionToken || !$requestToken || $sessionToken !== $requestToken) {
+            // No valid token — redirect to the reader page instead of serving the file
+            return redirect()->route('admin.library.read', $library->id);
+        }
+
+        // Consume the token after validation (one-time use per read session)
+        // The read page will generate a new token on each visit
+        // session()->forget($tokenKey);  // Keep token alive for multi-page PDF viewing
+
         // Check private disk first (new location), then fall back to public disk (legacy)
         $privatePath = storage_path('app/private/' . $library->file_path);
         $storagePath = storage_path('app/public/' . $library->file_path);
@@ -293,38 +312,26 @@ class LibraryBookController extends Controller
             abort(404, 'Book file not found.');
         }
 
-        // Serve with headers that prevent downloading and encourage inline viewing
-        // CRITICAL: Do NOT include filename in Content-Disposition to prevent browsers
-        // from auto-downloading. Use a generic name to avoid triggering save dialogs.
+        // Determine content type
         $contentType = $library->file_type ?? 'application/pdf';
-
-        // Force correct MIME type for common formats
         if (str_ends_with(strtolower($library->file_path), '.pdf')) {
             $contentType = 'application/pdf';
         } elseif (str_ends_with(strtolower($library->file_path), '.epub')) {
             $contentType = 'application/epub+zip';
         }
 
-        // Check if this is a reader request (from the PDF.js viewer)
-        // Only allow serving through the reader to prevent direct URL downloads
-        $referer = request()->header('referer', '');
-        $isFromReader = str_contains($referer, '/library/') && str_contains($referer, '/read');
-        $isXhr = request()->ajax() || request()->header('X-Requested-With') === 'XMLHttpRequest';
-
-        // If not from reader and not an XHR request, redirect to the read page
-        if (!$isFromReader && !$isXhr && !request()->has('reader')) {
-            return redirect()->route('admin.library.read', $library->id);
-        }
+        // Use a generic obfuscated filename to prevent the original filename from being exposed
+        $displayFilename = 'view.' . pathinfo($library->file_path, PATHINFO_EXTENSION);
 
         return response()->file($filePath, [
             'Content-Type' => $contentType,
-            'Content-Disposition' => 'inline',
+            'Content-Disposition' => 'inline; filename="' . $displayFilename . '"',
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
             'Expires' => '0',
             'X-Frame-Options' => 'SAMEORIGIN',
-            'Content-Security-Policy' => "default-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline';",
+            'Content-Security-Policy' => "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval';",
             'X-Download-Options' => 'noopen',
             'X-Read-Only' => 'true',
         ]);

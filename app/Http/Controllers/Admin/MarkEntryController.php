@@ -9,6 +9,8 @@ use App\Models\Subject;
 use App\Models\TeacherAssignment;
 use App\Models\Student;
 use App\Models\MarkEntry;
+use App\Models\MarkEntryLock;
+use App\Models\MarkEntryPermission;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -345,6 +347,49 @@ class MarkEntryController extends Controller
                     'success' => false,
                     'error' => 'You are not authorized to enter marks for this class/section/subject.',
                 ], 403);
+            }
+        }
+
+        // ── Mark Entry Lock & Permission Check ──
+        $user = auth()->user();
+        $isAdmin = $user && in_array($user->role, ['admin', 'super_admin']);
+
+        if (!$isAdmin) {
+            // Resolve class_id for lock check
+            $lockClassId = $request->input('class_id');
+            if (empty($lockClassId) && $request->filled('class_grade')) {
+                $cr = ClassRoom::where('name', $request->input('class_grade'))->first();
+                if ($cr) $lockClassId = $cr->id;
+            }
+            // Get branch_id from the class
+            $branchId = null;
+            if ($lockClassId) {
+                $classModel = ClassRoom::find($lockClassId);
+                if ($classModel) $branchId = $classModel->branch_id;
+            }
+            // Fallback: use user's branch
+            if (!$branchId && $user) {
+                $branchId = $user->branch_id;
+            }
+
+            $isLocked = $branchId && $ayId && $termId && MarkEntryLock::isLocked($branchId, $ayId, $termId);
+
+            if ($isLocked) {
+                // Mark entry is locked — check if teacher has special permission
+                $hasPermission = false;
+                if ($teacher) {
+                    $hasPermission = MarkEntryPermission::hasPermission(
+                        $teacher->id, $studentId, $subjectId, $ayId, $termId
+                    );
+                }
+
+                if (!$hasPermission) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Mark entry is locked for this term. You do not have permission to edit these marks.',
+                        'is_locked' => true,
+                    ], 403);
+                }
             }
         }
 

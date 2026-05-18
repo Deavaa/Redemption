@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Attendance;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\AttendanceDelegation;
 use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\Term;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,10 +23,28 @@ class AttendanceController extends Controller
         $date = $request->input('date', now()->toDateString());
         $classId = $request->input('class_id');
 
+        // For teachers, only show their assigned classes
+        $user = Auth::user();
+        $isTeacher = $user->role === 'teacher';
+        $teacherModel = null;
+        $assignableClassIds = [];
+
+        if ($isTeacher) {
+            $teacherModel = Teacher::where('user_id', $user->id)
+                ->orWhere('email', $user->email)
+                ->first();
+            if ($teacherModel) {
+                $assignableClassIds = AttendanceDelegation::getAssignableClasses($teacherModel->id, $date);
+            }
+        }
+
         // Stats for the selected date
         $baseQuery = Attendance::where('date', $date);
         if ($classId) {
             $baseQuery->where('class_id', $classId);
+        }
+        if ($isTeacher && $teacherModel) {
+            $baseQuery->whereIn('class_id', $assignableClassIds);
         }
 
         $totalRecords = (clone $baseQuery)->count();
@@ -38,9 +58,16 @@ class AttendanceController extends Controller
             : 0;
 
         // Summary by class
-        $classSummary = ClassRoom::withCount([
+        $classQuery = ClassRoom::withCount([
             'students as total_students' => fn($q) => $q->where('status', 'active'),
-        ])->with(['sections'])->orderBy('name')->get()->map(function ($class) use ($date) {
+        ])->with(['sections']);
+
+        // Filter classes for teachers
+        if ($isTeacher && $teacherModel) {
+            $classQuery->whereIn('id', $assignableClassIds);
+        }
+
+        $classSummary = $classQuery->orderBy('name')->get()->map(function ($class) use ($date) {
             $records = Attendance::where('date', $date)->where('class_id', $class->id)->get();
             $class->att_present = $records->where('status', 'present')->count();
             $class->att_absent  = $records->where('status', 'absent')->count();
@@ -57,16 +84,20 @@ class AttendanceController extends Controller
         $recentRecords = Attendance::with(['student', 'classRoom', 'section', 'recorder'])
             ->where('date', $date)
             ->when($classId, fn($q) => $q->where('class_id', $classId))
+            ->when($isTeacher && $teacherModel, fn($q) => $q->whereIn('class_id', $assignableClassIds))
             ->orderByDesc('created_at')
             ->limit(20)
             ->get();
 
         $classes = ClassRoom::orderBy('name')->get();
+        if ($isTeacher && $teacherModel) {
+            $classes = ClassRoom::whereIn('id', $assignableClassIds)->orderBy('name')->get();
+        }
 
         return view('admin.attendance.index', compact(
             'date', 'classId', 'totalRecords', 'presentCount', 'absentCount',
             'lateCount', 'excusedCount', 'attendanceRate', 'classSummary',
-            'recentRecords', 'classes'
+            'recentRecords', 'classes', 'isTeacher', 'teacherModel'
         ));
     }
 
@@ -74,12 +105,49 @@ class AttendanceController extends Controller
 
     public function create(Request $request)
     {
-        $classes = ClassRoom::with('sections')->orderBy('name')->get();
-        $terms = Term::orderByDesc('created_at')->get();
+        $user = Auth::user();
+        $isTeacher = $user->role === 'teacher';
+        $isAdmin = in_array($user->role, ['admin', 'full']);
+        $isBranchPrincipal = $user->role === 'branch_principal';
+        $isGeneralManager = $user->role === 'general_manager';
+
+        $teacherModel = null;
+        $assignableClassIds = [];
+
+        if ($isTeacher) {
+            $teacherModel = Teacher::where('user_id', $user->id)
+                ->orWhere('email', $user->email)
+                ->first();
+            if (!$teacherModel) {
+                return redirect()->route('admin.attendance.index')
+                    ->with('error', 'No teacher profile found for your account.');
+            }
+        }
 
         $selectedClass = $request->input('class_id');
         $selectedSection = $request->input('section_id');
         $selectedDate = $request->input('date', now()->toDateString());
+
+        // For teachers, enforce homeroom/delegation check
+        if ($isTeacher && $selectedClass) {
+            $canTake = AttendanceDelegation::canTakeAttendance(
+                $teacherModel->id, $selectedClass, $selectedSection, $selectedDate
+            );
+            if (!$canTake) {
+                return redirect()->route('admin.attendance.index')
+                    ->with('error', 'You are not authorized to take attendance for this class. Only homeroom teachers or delegated teachers can take attendance.');
+            }
+        }
+
+        // Get available classes
+        if ($isTeacher && $teacherModel) {
+            $assignableClassIds = AttendanceDelegation::getAssignableClasses($teacherModel->id, $selectedDate);
+            $classes = ClassRoom::whereIn('id', $assignableClassIds)->with('sections')->orderBy('name')->get();
+        } else {
+            $classes = ClassRoom::with('sections')->orderBy('name')->get();
+        }
+
+        $terms = Term::orderByDesc('created_at')->get();
 
         $students = collect();
         $existingAttendance = collect();
@@ -108,9 +176,33 @@ class AttendanceController extends Controller
             $sections = Section::where('class_id', $selectedClass)->orderBy('name')->get();
         }
 
+        // Check if current user is a homeroom teacher for the selected class
+        $isHomeroomForClass = false;
+        $delegationInfo = null;
+        if ($isTeacher && $teacherModel && $selectedClass) {
+            $isHomeroomForClass = ClassRoom::where('id', $selectedClass)
+                ->where('teacher_id', $teacherModel->id)
+                ->exists();
+
+            if (!$isHomeroomForClass && $selectedSection) {
+                $isHomeroomForClass = Section::where('id', $selectedSection)
+                    ->where('teacher_id', $teacherModel->id)
+                    ->exists();
+            }
+
+            if (!$isHomeroomForClass) {
+                $delegationInfo = AttendanceDelegation::where('class_id', $selectedClass)
+                    ->where('delegated_to_teacher_id', $teacherModel->id)
+                    ->where('date', $selectedDate)
+                    ->where('is_active', true)
+                    ->first();
+            }
+        }
+
         return view('admin.attendance.create', compact(
             'classes', 'terms', 'sections', 'students', 'existingAttendance',
-            'selectedClass', 'selectedSection', 'selectedDate'
+            'selectedClass', 'selectedSection', 'selectedDate',
+            'isTeacher', 'teacherModel', 'isHomeroomForClass', 'delegationInfo'
         ));
     }
 
@@ -134,6 +226,23 @@ class AttendanceController extends Controller
         $sectionId = $request->input('section_id');
         $termId = $request->input('term_id');
         $recordedBy = Auth::id();
+
+        // For teachers, verify they can take attendance for this class
+        $user = Auth::user();
+        if ($user->role === 'teacher') {
+            $teacherModel = Teacher::where('user_id', $user->id)
+                ->orWhere('email', $user->email)
+                ->first();
+            if ($teacherModel) {
+                $canTake = AttendanceDelegation::canTakeAttendance(
+                    $teacherModel->id, $classId, $sectionId, $date
+                );
+                if (!$canTake) {
+                    return redirect()->route('admin.attendance.index')
+                        ->with('error', 'You are not authorized to take attendance for this class.');
+                }
+            }
+        }
 
         $upsertData = [];
 

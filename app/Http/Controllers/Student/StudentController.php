@@ -9,7 +9,9 @@ use App\Models\Classroom;
 use App\Models\ParentModel;
 use App\Models\Section;
 use App\Models\Student;
+use App\Services\PromotionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -303,6 +305,119 @@ class StudentController extends Controller
             ->orderByRaw('rn DESC')
             ->first();
         return $maxRoll ? (((int) $maxRoll->rn) + 1) : 1;
+    }
+
+    /**
+     * Show inactive/transferred students who can be readmitted.
+     */
+    public function inactive(Request $request)
+    {
+        $query = Student::with(['classroom', 'section', 'branch'])
+            ->whereIn('status', ['inactive', 'transferred']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                    ->orWhere('admission_number', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $students = $query->latest()->paginate(20);
+        $totalInactive = Student::where('status', 'inactive')->count();
+        $totalTransferred = Student::where('status', 'transferred')->count();
+        $canBeReadmitted = Student::whereIn('status', ['inactive', 'transferred'])->count();
+
+        return view('admin.Student.inactive', compact('students', 'totalInactive', 'totalTransferred', 'canBeReadmitted'));
+    }
+
+    /**
+     * Show the readmission form for a student.
+     */
+    public function readmit(Student $student)
+    {
+        if (!$student->canBeReadmitted()) {
+            return redirect()->route('admin.students.inactive')
+                ->with('error', 'This student cannot be readmitted. They are currently active.');
+        }
+
+        $student->load(['classroom', 'section', 'branch']);
+        $classrooms = Classroom::with('sections', 'branch')->get();
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        if ($academicYears->isEmpty()) {
+            AcademicYear::create(['name' => '2024-2025']);
+            AcademicYear::create(['name' => '2025-2026']);
+            $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        }
+
+        return view('admin.Student.readmit', compact('student', 'classrooms', 'academicYears'));
+    }
+
+    /**
+     * Process student readmission.
+     */
+    public function readmitStore(Request $request, Student $student)
+    {
+        $validated = $request->validate([
+            'section_id' => 'required|exists:sections,id',
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'admission_date' => 'nullable|date',
+            'readmission_remarks' => 'nullable|string|max:1000',
+        ]);
+
+        $section = Section::find($validated['section_id']);
+        $academicYearId = $validated['academic_year_id'];
+        $admissionDate = $validated['admission_date'] ?? now()->toDateString();
+        $remarks = $validated['readmission_remarks'] ?? null;
+
+        try {
+            $promotionService = new PromotionService();
+            $student = $promotionService->readmitStudent(
+                $student->id,
+                $section->class_id,
+                $section->id,
+                $academicYearId,
+                auth()->id(),
+                $remarks
+            );
+
+            return redirect()->route('admin.students.show', $student)
+                ->with('success', 'Student readmitted successfully!');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Readmission failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Mark a student as left/inactive.
+     */
+    public function markAsLeft(Request $request, Student $student)
+    {
+        $validated = $request->validate([
+            'leave_reason' => 'required|string|max:500',
+            'leave_date' => 'nullable|date',
+        ]);
+
+        if ($student->status !== 'active') {
+            return back()->with('error', 'Only active students can be marked as left.');
+        }
+
+        $student->update([
+            'status' => 'inactive',
+            'leave_date' => $validated['leave_date'] ?? now()->toDateString(),
+            'leave_reason' => $validated['leave_reason'],
+            'previous_class_id' => $student->class_id,
+            'previous_section_id' => $student->section_id,
+        ]);
+
+        // Also deactivate user account
+        if ($student->user) {
+            $student->user->update(['is_active' => false]);
+        }
+
+        return redirect()->route('admin.students.index')
+            ->with('success', 'Student has been marked as left the school.');
     }
 
     /**

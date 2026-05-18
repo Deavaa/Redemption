@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 class Student extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id','branch_id','class_id','section_id','academic_year_id','first_name','last_name','email','phone','address','guardian_name','guardian_phone','roll_number','admission_number','admission_date','date_of_birth','gender','blood_group','religion','nationality','previous_school','ethnicity','place_of_birth','passport_number','medical_conditions','allergies','notes','teacher_comments','admin_comments','photo','status'];
-    protected function casts(): array { return ['admission_date'=>'date','date_of_birth'=>'date']; }
+    protected $fillable = ['user_id','branch_id','class_id','section_id','academic_year_id','first_name','last_name','email','phone','address','guardian_name','guardian_phone','roll_number','admission_number','admission_date','date_of_birth','gender','blood_group','religion','nationality','previous_school','ethnicity','place_of_birth','passport_number','medical_conditions','allergies','notes','teacher_comments','admin_comments','photo','status','original_admission_date','readmission_count','previous_class_id','previous_section_id','leave_date','leave_reason','is_readmitted'];
+    protected function casts(): array { return ['admission_date'=>'date','date_of_birth'=>'date','original_admission_date'=>'date','leave_date'=>'date','is_readmitted'=>'boolean']; }
     public function user() { return $this->belongsTo(User::class); }
     public function branch() { return $this->belongsTo(Branch::class); }
     public function classroom() { return $this->belongsTo(Classroom::class, 'class_id'); }
@@ -21,4 +21,25 @@ class Student extends Model
     public function performanceReports() { return $this->hasMany(PerformanceReport::class); }
     public function feePayments() { return $this->hasMany(FeePayment::class); }
     public function attendances() { return $this->hasMany(Attendance::class); }
+    public function promotionResults() { return $this->hasMany(PromotionResult::class); }
+    public function previousClassroom() { return $this->belongsTo(Classroom::class, 'previous_class_id'); }
+    public function previousSection() { return $this->belongsTo(Section::class, 'previous_section_id'); }
+
+    /**
+     * Scope: only active students
+     */
+    public function scopeActive($query) { return $query->where('status', 'active'); }
+
+    /**
+     * Scope: students who left (inactive/transferred/graduated)
+     */
+    public function scopeLeftSchool($query) { return $query->whereIn('status', ['inactive', 'transferred']); }
+
+    /**
+     * Check if student can be readmitted
+     */
+    public function canBeReadmitted(): bool
+    {
+        return in_array($this->status, ['inactive', 'transferred']);
+    }
 }

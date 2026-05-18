@@ -37,7 +37,12 @@
                     <select name="class_id" id="classSelect" class="form-select form-select-sm" style="border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;">
                         <option value="">-- Select Class --</option>
                         @foreach($classes as $c)
-                        <option value="{{ $c->id }}" {{ $selectedClass == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                        <option value="{{ $c->id }}" {{ $selectedClass == $c->id ? 'selected' : '' }}>
+                            {{ $c->name }}
+                            @if($c->teacher)
+                            ({{ trim($c->teacher->first_name . ' ' . $c->teacher->last_name) }})
+                            @endif
+                        </option>
                         @endforeach
                     </select>
                 </div>
@@ -46,7 +51,12 @@
                     <select name="section_id" id="sectionSelect" class="form-select form-select-sm" style="border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;">
                         <option value="">All Sections</option>
                         @foreach($sections as $s)
-                        <option value="{{ $s->id }}" {{ $selectedSection == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+                        <option value="{{ $s->id }}" {{ $selectedSection == $s->id ? 'selected' : '' }}>
+                            {{ $s->name }}
+                            @if($s->teacher)
+                            ({{ trim($s->teacher->first_name . ' ' . $s->teacher->last_name) }})
+                            @endif
+                        </option>
                         @endforeach
                     </select>
                 </div>
@@ -54,6 +64,21 @@
             </form>
         </div>
     </div>
+
+    {{-- Homeroom / Delegation Info Banner --}}
+    @if($isTeacher && isset($isHomeroomForClass))
+    @if($isHomeroomForClass)
+    <div style="padding:8px 14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-check-circle" style="color:#10b981;"></i>
+        <span style="font-size:0.72rem;font-weight:600;color:#065f46;">You are the homeroom teacher for this class. You can take attendance directly.</span>
+    </div>
+    @elseif($delegationInfo)
+    <div style="padding:8px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-exchange-alt" style="color:#f59e0b;"></i>
+        <span style="font-size:0.72rem;font-weight:600;color:#92400e;">You are taking attendance via delegation for {{ $selectedDate }}. {{ $delegationInfo->reason ? 'Reason: ' . $delegationInfo->reason : '' }}</span>
+    </div>
+    @endif
+    @endif
 
     {{-- Student Attendance Form --}}
     @if($students->isNotEmpty())

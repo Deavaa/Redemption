@@ -18,6 +18,24 @@
     </a>
 </div>
 
+{{-- Current Term Banner --}}
+@php
+    $currentAy = \App\Models\AcademicYear::where('is_current', true)->first();
+    $currentTerm = $currentAy ? \App\Models\Term::where('academic_year_id', $currentAy->id)->where('is_active', true)->first() : null;
+    $isViewingCurrentTerm = $selectedTerm && $currentTerm && $selectedTerm->id == $currentTerm->id;
+@endphp
+@if($currentAy && $currentTerm)
+<div style="background:{{ $isViewingCurrentTerm ? '#ecfdf5' : '#eff6ff' }};border:1px solid {{ $isViewingCurrentTerm ? '#a7f3d0' : '#bfdbfe' }};border-radius:12px;padding:0.75rem 1.25rem;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+    <i class="fas {{ $isViewingCurrentTerm ? 'fa-check-circle' : 'fa-info-circle' }}" style="color:{{ $isViewingCurrentTerm ? '#10b981' : '#3b82f6' }};font-size:1.1rem;"></i>
+    <span style="font-size:0.88rem;font-weight:500;color:{{ $isViewingCurrentTerm ? '#065f46' : '#1e40af' }};">
+        Current Academic Year: <strong>{{ $currentAy->name }}</strong> &bull; Current Term: <strong>{{ $currentTerm->name }}</strong>
+        @if($isViewingCurrentTerm)
+        <span style="margin-left:6px;padding:2px 8px;background:#d1fae5;border-radius:5px;font-size:0.75rem;font-weight:700;color:#059669;">VIEWING</span>
+        @endif
+    </span>
+</div>
+@endif
+
 {{-- Filter Bar --}}
 <div class="info-card" style="margin-bottom: 20px;">
     <div class="info-card-body" style="padding: 14px 18px;">
@@ -42,6 +60,7 @@
                     @foreach($terms as $term)
                     <option value="{{ $term->id }}" {{ $selectedTerm && $selectedTerm->id == $term->id ? 'selected' : '' }}>
                         {{ $term->name }}
+                        @if($currentTerm && $term->id == $currentTerm->id) (Current)@endif
                     </option>
                     @endforeach
                 </select>

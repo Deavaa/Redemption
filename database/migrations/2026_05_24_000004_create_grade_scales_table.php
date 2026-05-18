@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (Schema::hasTable('grade_scales')) {
+            return;
+        }
+        Schema::create('grade_scales', function (Blueprint $table) {
+            $table->id();
+            $table->decimal('min_score', 5, 2)->default(0);
+            $table->decimal('max_score', 5, 2)->default(100);
+            $table->string('grade', 10);
+            $table->decimal('grade_point', 3, 2)->default(0);
+            $table->text('description')->nullable();
+            $table->boolean('is_passing')->default(true);
+            $table->integer('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('grade_scales');
+    }
+};

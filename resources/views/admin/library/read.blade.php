@@ -69,7 +69,7 @@
                 <h3>{{ $library->title }}</h3>
                 <p>This file format is best viewed in the browser's built-in viewer.</p>
                 <div class="generic-viewer-iframe-wrapper">
-                    <iframe src="{{ route('admin.library.serve', $library->id) }}?reader=1#toolbar=0&navpanes=0&scrollbar=1"
+                    <iframe src="{{ route('admin.library.serve', $library->id) }}?token={{ $readToken }}#toolbar=0&navpanes=0&scrollbar=1"
                             style="width:100%;height:75vh;border:none;border-radius:12px;"
                             sandbox="allow-same-origin"
                             id="genericIframe">
@@ -290,7 +290,7 @@ const canvas = document.getElementById('pdfCanvas');
 const ctx = canvas.getContext('2d');
 
 // Load PDF using the serve route with reader flag (prevents direct file access/download)
-const pdfUrl = '{{ route('admin.library.serve', $library->id) }}?reader=1';
+const pdfUrl = '{{ route('admin.library.serve', $library->id) }}?token={{ $readToken }}';
 
 // Use fetch to load PDF as ArrayBuffer (prevents browser from intercepting as download)
 fetch(pdfUrl, {

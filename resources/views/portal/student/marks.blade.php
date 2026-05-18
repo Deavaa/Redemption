@@ -22,7 +22,25 @@
         if ($grandTotal >= 40) return 'grade-D';
         return 'grade-F';
     }
+    $currentAy = \App\Models\AcademicYear::where('is_current', true)->first();
+    $currentTerm = $currentAy ? \App\Models\Term::where('academic_year_id', $currentAy->id)->where('is_active', true)->first() : null;
+    $isViewingCurrentTerm = isset($selectedTermId) && $currentTerm && $selectedTermId == $currentTerm->id;
 @endphp
+
+{{-- Current Term Banner --}}
+@if($currentAy && $currentTerm)
+<div class="portal-card">
+    <div class="portal-card-body" style="padding:10px 16px;display:flex;align-items:center;gap:10px;background:{{ $isViewingCurrentTerm ? '#ecfdf5' : '#eff6ff' }};border:1px solid {{ $isViewingCurrentTerm ? '#a7f3d0' : '#bfdbfe' }};">
+        <i class="fas {{ $isViewingCurrentTerm ? 'fa-check-circle' : 'fa-info-circle' }}" style="color:{{ $isViewingCurrentTerm ? '#10b981' : '#3b82f6' }};font-size:1.1rem;"></i>
+        <span style="font-size:0.85rem;font-weight:500;color:{{ $isViewingCurrentTerm ? '#065f46' : '#1e40af' }};">
+            Current: <strong>{{ $currentAy->name }}</strong> &bull; <strong>{{ $currentTerm->name }}</strong>
+            @if($isViewingCurrentTerm)
+            <span style="margin-left:6px;padding:2px 8px;background:#d1fae5;border-radius:5px;font-size:0.72rem;font-weight:700;color:#059669;">VIEWING</span>
+            @endif
+        </span>
+    </div>
+</div>
+@endif
 
 {{-- Filter Row --}}
 <div class="portal-card">
@@ -46,6 +64,7 @@
                     @foreach($terms as $term)
                         <option value="{{ $term->id }}" {{ $selectedTermId == $term->id ? 'selected' : '' }}>
                             {{ $term->name ?? 'Term '.$term->term_number }}
+                            @if($currentTerm && $term->id == $currentTerm->id) (Current)@endif
                         </option>
                     @endforeach
                 </select>
