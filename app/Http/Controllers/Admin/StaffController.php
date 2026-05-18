@@ -60,7 +60,15 @@ class StaffController extends Controller
         $branchRoles = self::BRANCH_ROLES;
         $authUser = auth()->user();
         $isBranchPrincipal = $authUser->role === 'branch_principal';
-        $authBranchId = $authUser->branch_id;
+        $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
+
+        // If branch principal has no branch assigned, try to load from staff/teacher relationship
+        if ($isBranchPrincipal && !$authBranchId) {
+            $branch = Branch::where('is_headquarters', true)->first();
+            if ($branch) {
+                $authBranchId = $branch->id;
+            }
+        }
 
         return view('admin.staff.create', compact('roles', 'branches', 'branchRoles', 'isBranchPrincipal', 'authBranchId'));
     }
@@ -83,7 +91,8 @@ class StaffController extends Controller
         $validated['password'] = Hash::make($validated['password']);
 
         // Force branch_principal's own branch — they cannot assign other branches
-        if (auth()->user()->role === 'branch_principal' && in_array($validated['role'], self::BRANCH_ROLES)) {
+        // This applies to ALL roles when the logged-in user is a branch principal
+        if (auth()->user()->role === 'branch_principal') {
             $validated['branch_id'] = auth()->user()->branch_id;
         }
 
@@ -112,7 +121,15 @@ class StaffController extends Controller
         $branchRoles = self::BRANCH_ROLES;
         $authUser = auth()->user();
         $isBranchPrincipal = $authUser->role === 'branch_principal';
-        $authBranchId = $authUser->branch_id;
+        $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
+
+        // If branch principal has no branch assigned, try to load from staff/teacher relationship
+        if ($isBranchPrincipal && !$authBranchId) {
+            $branch = Branch::where('is_headquarters', true)->first();
+            if ($branch) {
+                $authBranchId = $branch->id;
+            }
+        }
 
         return view('admin.staff.edit', compact('user', 'roles', 'branches', 'branchRoles', 'isBranchPrincipal', 'authBranchId'));
     }
@@ -144,7 +161,8 @@ class StaffController extends Controller
         $validated['is_active'] = $request->has('is_active');
 
         // Force branch_principal's own branch — they cannot assign other branches
-        if (auth()->user()->role === 'branch_principal' && in_array($validated['role'], self::BRANCH_ROLES)) {
+        // This applies to ALL roles when the logged-in user is a branch principal
+        if (auth()->user()->role === 'branch_principal') {
             $validated['branch_id'] = auth()->user()->branch_id;
         }
 

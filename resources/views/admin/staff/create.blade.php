@@ -44,7 +44,7 @@
                             <label class="modern-form-label" for="name">Full Name <span class="modern-required">*</span></label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-user modern-input-icon"></i>
-                                <input type="text" name="name" id="name" class="modern-input {{ $errors->has('name') ? 'is-invalid' : '' }}" value="{{ old('name') }}" placeholder="e.g. Abebe Kebede" required autofocus>
+                                <input type="text" name="name" id="name" class="modern-input {{ $errors->has('name') ? 'is-invalid' : '' }}" value="{{ old('name') }}" placeholder="e.g. Abebe Kebede" required autofocus autocomplete="off">
                             </div>
                             @error('name')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
@@ -53,7 +53,7 @@
                             <label class="modern-form-label" for="email">Email <span class="modern-required">*</span></label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-envelope modern-input-icon"></i>
-                                <input type="email" name="email" id="email" class="modern-input {{ $errors->has('email') ? 'is-invalid' : '' }}" value="{{ old('email') }}" placeholder="e.g. abebe@school.com" required>
+                                <input type="email" name="email" id="email" class="modern-input {{ $errors->has('email') ? 'is-invalid' : '' }}" value="{{ old('email') }}" placeholder="e.g. abebe@school.com" required autocomplete="off">
                             </div>
                             @error('email')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
@@ -62,7 +62,7 @@
                             <label class="modern-form-label" for="id_number">ID Number</label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-id-card modern-input-icon"></i>
-                                <input type="text" name="id_number" id="id_number" class="modern-input {{ $errors->has('id_number') ? 'is-invalid' : '' }}" value="{{ old('id_number') }}" placeholder="Employee ID">
+                                <input type="text" name="id_number" id="id_number" class="modern-input {{ $errors->has('id_number') ? 'is-invalid' : '' }}" value="{{ old('id_number') }}" placeholder="Employee ID" autocomplete="off" data-lpignore="true" data-form-type="other">
                             </div>
                             @error('id_number')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
@@ -71,7 +71,7 @@
                             <label class="modern-form-label" for="phone">Phone</label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-phone modern-input-icon"></i>
-                                <input type="tel" name="phone" id="phone" class="modern-input {{ $errors->has('phone') ? 'is-invalid' : '' }}" value="{{ old('phone') }}" placeholder="+251-XXX-XXXXXX">
+                                <input type="tel" name="phone" id="phone" class="modern-input {{ $errors->has('phone') ? 'is-invalid' : '' }}" value="{{ old('phone') }}" placeholder="+251-XXX-XXXXXX" autocomplete="tel">
                             </div>
                             @error('phone')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
@@ -202,7 +202,7 @@
                             <label class="modern-form-label" for="password">Password <span class="modern-required">*</span></label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-key modern-input-icon"></i>
-                                <input type="password" name="password" id="password" class="modern-input {{ $errors->has('password') ? 'is-invalid' : '' }}" required minlength="6" placeholder="Minimum 6 characters">
+                                <input type="password" name="password" id="password" class="modern-input {{ $errors->has('password') ? 'is-invalid' : '' }}" required minlength="6" placeholder="Minimum 6 characters" autocomplete="new-password">
                             </div>
                             @error('password')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
@@ -211,7 +211,7 @@
                             <label class="modern-form-label" for="password_confirmation">Confirm Password <span class="modern-required">*</span></label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-check-double modern-input-icon"></i>
-                                <input type="password" name="password_confirmation" id="password_confirmation" class="modern-input" required placeholder="Re-enter password">
+                                <input type="password" name="password_confirmation" id="password_confirmation" class="modern-input" required placeholder="Re-enter password" autocomplete="new-password">
                             </div>
                         </div>
                     </div>
@@ -359,12 +359,18 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     var isBranchPrincipal = @json($isBranchPrincipal);
+    var authBranchId = @json($authBranchId);
 
     function toggleBranchField() {
         var selected = roleSelect.value;
         // Branch principal: always show branch field (locked)
         if (isBranchPrincipal) {
             branchField.style.display = '';
+            // Ensure the hidden input always has the correct branch ID
+            var hiddenInput = document.querySelector('input[name="branch_id"][type="hidden"]');
+            if (hiddenInput) {
+                hiddenInput.value = authBranchId;
+            }
             return;
         }
         // Show branch field for branch-scoped roles

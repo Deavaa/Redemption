@@ -1131,6 +1131,129 @@ a { text-decoration: none; color: inherit; }
     .mobile-menu-sheet-backdrop { display: none !important; }
 }
 
+/* ===== MOBILE SWIPE-TO-OPEN SIDEBAR ===== */
+.swipe-indicator {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 50px;
+    background: rgba(99,102,241,0.3);
+    border-radius: 0 4px 4px 0;
+    z-index: 80;
+    transition: opacity 0.3s;
+}
+@media (max-width: 768px) {
+    .swipe-indicator { display: block; }
+}
+
+/* ===== MOBILE TOUCH IMPROVEMENTS ===== */
+@media (max-width: 768px) {
+    /* Larger touch targets for all interactive elements */
+    .modern-btn-icon {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 16px !important;
+    }
+
+    /* Ensure select dropdowns are touch-friendly */
+    .modern-select {
+        font-size: 16px !important;
+        min-height: 48px;
+    }
+
+    /* Prevent text selection on nav items for better touch */
+    .mobile-nav-item,
+    .mobile-menu-link {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Better dropdown menus on mobile */
+    .dropdown-menu {
+        min-width: 200px;
+        max-width: 90vw;
+    }
+
+    /* Improve topbar on very small screens */
+    .topbar-right .topbar-icon-btn.hide-on-small {
+        display: none;
+    }
+
+    /* Ensure forms don't zoom on focus */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="password"],
+    input[type="number"],
+    input[type="search"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Mobile menu sheet improvements */
+    .mobile-menu-sheet-links {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2px;
+    }
+
+    /* Better spacing for mobile content */
+    .admin-content {
+        padding-bottom: 80px; /* Space for bottom nav + safe area */
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Improve sidebar toggle on mobile */
+    .sidebar-toggle {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Better mobile card items */
+    .mobile-card-item {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Full-width action buttons on mobile */
+    .modern-action-group {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    /* Search box full width */
+    .modern-search-box input {
+        width: 100% !important;
+        min-height: 44px;
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Mobile menu sheet: 3 columns on very small screens */
+    .mobile-menu-sheet-links {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .mobile-menu-link {
+        padding: 10px 6px;
+        font-size: 10px;
+    }
+
+    .mobile-menu-link i {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
+
 /* ===== PULL-TO-REFRESH INDICATOR ===== */
 .mobile-pull-indicator {
     display: none;

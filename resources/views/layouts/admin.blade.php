@@ -716,6 +716,9 @@
     </div>
 </div>
 
+{{-- Swipe Indicator for Mobile --}}
+<div class="swipe-indicator" id="swipeIndicator"></div>
+
 {{-- Mobile Bottom Navigation --}}
 <nav class="mobile-bottom-nav" id="mobileBottomNav">
     <div class="mobile-bottom-nav-inner">
@@ -723,7 +726,7 @@
             <i class="fas fa-th-large"></i>
             <span>Home</span>
         </a>
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
         <a href="{{ route('admin.students.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
             <i class="fas fa-user-graduate"></i>
             <span>Students</span>
@@ -735,12 +738,12 @@
             <span>Teachers</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['full', 'general_manager']))
+        @if(in_array($menuLevel, ['full', 'general_manager', 'finance']))
         <a href="{{ route('admin.fee-payments.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}">
             <i class="fas fa-credit-card"></i>
             <span>Payments</span>
         </a>
-        @elseif(in_array($menuLevel, ['finance', 'cashier', 'registrar']))
+        @elseif(in_array($menuLevel, ['cashier', 'registrar']))
         <a href="{{ route('admin.fee-payments.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}">
             <i class="fas fa-credit-card"></i>
             <span>Payments</span>
@@ -749,6 +752,11 @@
         <a href="{{ route('admin.mark-entries.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}">
             <i class="fas fa-pen"></i>
             <span>Marks</span>
+        </a>
+        @elseif($menuLevel === 'librarian')
+        <a href="{{ route('admin.library.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.library.*') ? 'active' : '' }}">
+            <i class="fas fa-book-open"></i>
+            <span>Library</span>
         </a>
         @endif
         <div class="mobile-nav-item mobile-nav-more" id="mobileNavMore" onclick="toggleMobileMenu()">
@@ -788,6 +796,16 @@
             <span>Staff</span>
         </a>
         @endif
+        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        <a href="{{ route('admin.students.index') }}" class="mobile-menu-link">
+            <i class="fas fa-user-graduate"></i>
+            <span>Students</span>
+        </a>
+        <a href="{{ route('admin.parents.index') }}" class="mobile-menu-link">
+            <i class="fas fa-user-friends"></i>
+            <span>Parents</span>
+        </a>
+        @endif
         @if(in_array($menuLevel, ['full', 'general_manager']))
         <a href="{{ route('admin.fees.index') }}" class="mobile-menu-link">
             <i class="fas fa-money-bill-wave"></i>
@@ -806,10 +824,40 @@
             <span>Leaves</span>
         </a>
         @endif
+        @if(in_array($menuLevel, ['finance', 'hr']))
+        <a href="{{ route('admin.fees.index') }}" class="mobile-menu-link">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Fees</span>
+        </a>
+        @endif
+        @if($menuLevel === 'hr')
+        <a href="{{ route('admin.leaves.index') }}" class="mobile-menu-link">
+            <i class="fas fa-calendar-minus"></i>
+            <span>Leaves</span>
+        </a>
+        <a href="{{ route('admin.payrolls.index') }}" class="mobile-menu-link">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span>Payroll</span>
+        </a>
+        @endif
         @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
         <a href="{{ route('admin.exams.index') }}" class="mobile-menu-link">
             <i class="fas fa-file-alt"></i>
             <span>Exams</span>
+        </a>
+        @endif
+        @if($menuLevel === 'teacher')
+        <a href="{{ route('admin.mark-entries.index') }}" class="mobile-menu-link">
+            <i class="fas fa-pen"></i>
+            <span>Mark Entry</span>
+        </a>
+        <a href="{{ route('admin.mark-roster.index') }}" class="mobile-menu-link">
+            <i class="fas fa-list-ol"></i>
+            <span>Mark Roster</span>
+        </a>
+        <a href="{{ route('admin.report-exchange.index') }}" class="mobile-menu-link">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Report Exchange</span>
         </a>
         @endif
         @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
@@ -914,6 +962,57 @@ function toggleMobileMenu() {
     backdrop.classList.toggle('show', !isOpen);
     document.body.style.overflow = isOpen ? '' : 'hidden';
 }
+
+// Swipe-to-open sidebar on mobile
+(function() {
+    var sidebar = document.getElementById('adminSidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    var swipeIndicator = document.getElementById('swipeIndicator');
+    var touchStartX = 0;
+    var touchStartY = 0;
+    var isSwiping = false;
+
+    document.addEventListener('touchstart', function(e) {
+        if (window.innerWidth >= 769) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        isSwiping = false;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+        if (window.innerWidth >= 769) return;
+        var dx = e.touches[0].clientX - touchStartX;
+        var dy = e.touches[0].clientY - touchStartY;
+
+        // Only detect horizontal swipe from the left edge (within 30px)
+        if (!isSwiping && touchStartX < 30 && Math.abs(dx) > Math.abs(dy) && dx > 10) {
+            isSwiping = true;
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+        if (window.innerWidth >= 769 || !isSwiping) return;
+        var dx = e.changedTouches[0].clientX - touchStartX;
+
+        // Swipe right from left edge opens sidebar
+        if (dx > 60 && sidebar && !sidebar.classList.contains('show')) {
+            sidebar.classList.add('show');
+            if (backdrop) {
+                backdrop.classList.remove('d-none');
+                backdrop.classList.add('show');
+            }
+        }
+        isSwiping = false;
+    }, { passive: true });
+
+    // Hide swipe indicator after 3 seconds
+    if (swipeIndicator) {
+        setTimeout(function() {
+            swipeIndicator.style.opacity = '0';
+            setTimeout(function() { swipeIndicator.style.display = 'none'; }, 300);
+        }, 3000);
+    }
+})();
 </script>
 <style>
 /* ===== Topbar Icon Buttons (Chat, Notifications, Language) ===== */
