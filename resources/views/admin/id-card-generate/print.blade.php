@@ -270,6 +270,9 @@
         $schoolAddress = \App\Models\Setting::get('school_address', '');
         $schoolWebsite = \App\Models\Setting::get('school_website', '');
         $hasLogo = !empty($logoUrl);
+        // Get academic year from the system (not Gregorian calendar year)
+        $currentAcademicYear = \App\Models\AcademicYear::where('is_current', true)->first();
+        $academicYearLabel = $currentAcademicYear ? $currentAcademicYear->name : now()->year;
     @endphp
 
     {{-- Ghost SVG definitions --}}
@@ -327,7 +330,7 @@
                         <h3>{{ strtoupper($schoolName) }}</h3>
                         <p>{{ __('app.student_id_cards') ?? 'Student Identity Card' }}</p>
                     </div>
-                    <div class="id-card-header-badge">{{ __('app.academic_year') ?? 'Academic Year' }} {{ now()->year }}</div>
+                    <div class="id-card-header-badge">{{ __('app.academic_year') ?? 'Academic Year' }} {{ $academicYearLabel }}</div>
                 </div>
 
                 <div class="id-card-separator"></div>

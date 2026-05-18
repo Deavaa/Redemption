@@ -3,8 +3,20 @@
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>@yield('title', __('app.dashboard')) - Redemption School</title>
+
+    {{-- PWA & Mobile Integration --}}
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Redemption">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#6366f1">
+    <meta name="msapplication-navbutton-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192x192.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1266,5 +1278,152 @@ function toggleMobileMenu() {
 </style>
 @stack('scripts')
 @yield('scripts')
+
+{{-- PWA Service Worker Registration & Notification Permission --}}
+<script>
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('{{ asset('sw.js') }}')
+            .then(function(registration) {
+                console.log('SW registered:', registration.scope);
+
+                // Check for updates periodically
+                setInterval(function() {
+                    registration.update();
+                }, 60 * 60 * 1000); // every hour
+            })
+            .catch(function(error) {
+                console.log('SW registration failed:', error);
+            });
+    });
+}
+
+// Request notification permission for mobile integration
+function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        console.log('This browser does not support notifications');
+        return;
+    }
+
+    if (Notification.permission === 'default') {
+        // Don't auto-request — let user trigger it
+        window._redemptionCanRequestNotifications = true;
+    }
+}
+
+// Call on first user interaction (click/tap) to comply with browser policies
+function setupNotificationOnInteraction() {
+    if (!window._redemptionNotificationSetupDone) {
+        window._redemptionNotificationSetupDone = true;
+        document.addEventListener('click', function requestOnFirstClick() {
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        console.log('Notification permission granted');
+                        // Subscribe to push notifications if available
+                        subscribeToPushNotifications();
+                    }
+                });
+            }
+            document.removeEventListener('click', requestOnFirstClick);
+        }, { once: false });
+    }
+}
+
+// Subscribe to push notifications via service worker
+function subscribeToPushNotifications() {
+    if (!('PushManager' in window)) return;
+
+    navigator.serviceWorker.ready.then(function(registration) {
+        registration.pushManager.getSubscription().then(function(subscription) {
+            if (!subscription) {
+                // Create a new subscription
+                // The public key needs to be generated on server and set in settings
+                // For now, we prepare the infrastructure
+                console.log('Push subscription not yet configured on server');
+            }
+        });
+    });
+}
+
+// Mobile-specific enhancements
+function initMobileIntegration() {
+    // Vibration API support
+    window.redemptionVibrate = function(pattern) {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(pattern || [100]);
+        }
+    };
+
+    // Share API
+    window.redemptionShare = function(data) {
+        if (navigator.share) {
+            navigator.share(data).catch(function(err) {
+                console.log('Share failed:', err);
+            });
+        }
+    };
+
+    // Network status
+    window.addEventListener('online', function() {
+        // Show online toast
+        showToast('Back online', 'success');
+        // Trigger background sync
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            navigator.serviceWorker.ready.then(function(reg) {
+                return reg.sync.register('data-sync');
+            });
+        }
+    });
+
+    window.addEventListener('offline', function() {
+        showToast('You are offline. Changes will sync when you reconnect.', 'warning');
+    });
+
+    // Request notification permission on interaction
+    setupNotificationOnInteraction();
+    requestNotificationPermission();
+}
+
+// Toast notification helper
+function showToast(message, type) {
+    type = type || 'info';
+    var colors = {
+        success: '#10b981',
+        warning: '#f59e0b',
+        danger: '#ef4444',
+        info: '#3b82f6'
+    };
+    var icons = {
+        success: 'fa-check-circle',
+        warning: 'fa-exclamation-triangle',
+        danger: 'fa-times-circle',
+        info: 'fa-info-circle'
+    };
+
+    var toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;background:' + (colors[type] || colors.info) + ';color:#fff;padding:12px 20px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;max-width:90vw;opacity:0;transform:translateY(-10px);transition:all 0.3s;';
+    toast.innerHTML = '<i class="fas ' + (icons[type] || icons.info) + '"></i><span>' + message + '</span>';
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(function() {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    });
+
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
+}
+
+// Initialize mobile integration on DOM ready
+document.addEventListener('DOMContentLoaded', initMobileIntegration);
+
+// Make functions globally available for other scripts
+window.showToast = showToast;
+</script>
 </body>
 </html>
