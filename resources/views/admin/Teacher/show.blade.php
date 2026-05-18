@@ -37,9 +37,9 @@
                 <div class="modern-detail-hero-info">
                     <h2 class="modern-detail-hero-title">{{ $data->full_name }}</h2>
                     <div class="modern-detail-hero-badges">
-                        @if($data->status === 'Active')
+                        @if($data->status === 'active')
                             <span class="modern-badge modern-badge-success"><i class="fas fa-check-circle"></i> Active</span>
-                        @elseif($data->status === 'On Leave')
+                        @elseif($data->status === 'on_leave')
                             <span class="modern-badge modern-badge-warning"><i class="fas fa-clock"></i> On Leave</span>
                         @else
                             <span class="modern-badge modern-badge-danger"><i class="fas fa-times-circle"></i> Inactive</span>
@@ -137,9 +137,9 @@
                             <i class="fas fa-toggle-on"></i> Status
                         </div>
                         <div class="modern-detail-value">
-                            @if($data->status === 'Active')
+                            @if($data->status === 'active')
                                 <span class="modern-badge modern-badge-success">Active</span>
-                            @elseif($data->status === 'On Leave')
+                            @elseif($data->status === 'on_leave')
                                 <span class="modern-badge modern-badge-warning">On Leave</span>
                             @else
                                 <span class="modern-badge modern-badge-danger">Inactive</span>

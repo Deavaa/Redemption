@@ -38,7 +38,7 @@
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->where('status', 'Active')->count() }}</span>
+                <span class="modern-stat-value">{{ $data->where('status', 'active')->count() }}</span>
                 <span class="modern-stat-label">Active</span>
             </div>
         </div>
@@ -56,7 +56,7 @@
                 <i class="fas fa-calendar-minus"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $data->where('status', 'On Leave')->count() }}</span>
+                <span class="modern-stat-value">{{ $data->where('status', 'on_leave')->count() }}</span>
                 <span class="modern-stat-label">On Leave</span>
             </div>
         </div>
@@ -140,9 +140,9 @@
                                 <div class="modern-cell-text">{{ $item->qualification ?? '-' }}</div>
                             </td>
                             <td class="td-center">
-                                @if($item->status === 'Active')
+                                @if($item->status === 'active')
                                     <span class="modern-badge modern-badge-success">Active</span>
-                                @elseif($item->status === 'On Leave')
+                                @elseif($item->status === 'on_leave')
                                     <span class="modern-badge modern-badge-warning">On Leave</span>
                                 @else
                                     <span class="modern-badge modern-badge-danger">Inactive</span>
