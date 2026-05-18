@@ -48,9 +48,11 @@ class LeavingCertificateController extends Controller
 
         // ---- Clearance Check ----
 
-        // 1. Fee clearance
-        $feePayments = FeePayment::where('student_id', $student->id)->get();
-        $totalFees = $feePayments->sum('amount_due');
+        // 1. Fee clearance (join with fees table to get total amount since fee_payments has no amount_due)
+        $feePayments = FeePayment::join('fees', 'fee_payments.fee_id', '=', 'fees.id')
+            ->where('fee_payments.student_id', $student->id)
+            ->get();
+        $totalFees = $feePayments->sum('amount'); // fees.amount is the total fee
         $totalPaid = $feePayments->sum('amount_paid');
         $feeOutstanding = max(0, $totalFees - $totalPaid);
         $feeClear = $feeOutstanding <= 0;

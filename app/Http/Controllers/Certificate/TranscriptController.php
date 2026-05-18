@@ -127,13 +127,14 @@ class TranscriptController extends Controller
             ];
         }
 
-        // Get fee payment summary
-        $feeSummary = FeePayment::where('student_id', $student->id)
+        // Get fee payment summary (join with fees table to get total amount)
+        $feeSummary = FeePayment::join('fees', 'fee_payments.fee_id', '=', 'fees.id')
+            ->where('fee_payments.student_id', $student->id)
             ->selectRaw('
                 COUNT(*) as total_payments,
-                SUM(amount_paid) as total_paid,
-                SUM(CASE WHEN status = "paid" THEN amount_paid ELSE 0 END) as paid_amount,
-                SUM(CASE WHEN status = "pending" OR status = "overdue" THEN amount_due - amount_paid ELSE 0 END) as outstanding
+                SUM(fee_payments.amount_paid) as total_paid,
+                SUM(CASE WHEN fee_payments.status = "paid" THEN fee_payments.amount_paid ELSE 0 END) as paid_amount,
+                SUM(CASE WHEN fee_payments.status = "pending" OR fee_payments.status = "overdue" OR fee_payments.status = "partial" THEN fees.amount - fee_payments.amount_paid ELSE 0 END) as outstanding
             ')
             ->first();
 
