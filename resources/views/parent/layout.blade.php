@@ -790,10 +790,15 @@
                 }
             });
 
-            // Show splash on every page load
+            // Show splash only on fresh load or browser refresh, NOT on menu navigation
             var splash = document.getElementById('parentAnnouncementSplash');
             if (splash) {
-                splash.style.display = 'flex';
+                var navEntry = performance.getEntriesByType('navigation')[0];
+                var isReload = navEntry ? navEntry.type === 'reload' : (performance.navigation && performance.navigation.type === 1);
+                var alreadyShown = sessionStorage.getItem('parent_announcement_splash_dismissed');
+                if (isReload || !alreadyShown) {
+                    splash.style.display = 'flex';
+                }
             }
         });
 
@@ -803,6 +808,7 @@
                 splash.style.opacity = '0';
                 splash.style.transition = 'opacity 0.3s';
                 setTimeout(function() { splash.style.display = 'none'; }, 300);
+                sessionStorage.setItem('parent_announcement_splash_dismissed', '1');
             }
         }
         </script>

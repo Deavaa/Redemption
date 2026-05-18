@@ -802,10 +802,18 @@
                 }
             });
 
-            // Announcement Splash: show on every page load
+            // Announcement Splash: show only on fresh load or browser refresh,
+            // NOT when navigating between pages via menu clicks.
+            // Uses sessionStorage flag + performance.navigation to detect refresh.
             var splash = document.getElementById('announcementSplash');
             if (splash) {
-                splash.classList.add('splash-show');
+                var navEntry = performance.getEntriesByType('navigation')[0];
+                var isReload = navEntry ? navEntry.type === 'reload' : (performance.navigation && performance.navigation.type === 1);
+                var alreadyShown = sessionStorage.getItem('announcement_splash_dismissed');
+                // Show on: first visit (no flag) OR browser refresh, but NOT on menu navigation
+                if (isReload || !alreadyShown) {
+                    splash.classList.add('splash-show');
+                }
             }
 
         });
@@ -820,6 +828,7 @@
                     splash.style.opacity = '';
                     splash.style.transition = '';
                 }, 300);
+                sessionStorage.setItem('announcement_splash_dismissed', '1');
             }
         }
         </script>
