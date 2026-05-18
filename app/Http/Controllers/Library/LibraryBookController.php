@@ -97,13 +97,10 @@ class LibraryBookController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        // Store the book file
+        // Store the book file - use private disk to prevent direct access
         $file = $request->file('file');
         $fileName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . time() . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs('library/books', $fileName, 'public');
-
-        // Ensure public copy exists
-        $this->ensurePublicCopy($filePath);
+        $filePath = $file->storeAs('library/books', $fileName, 'private');
 
         $validated['file_path'] = $filePath;
         $validated['file_name'] = $file->getClientOriginalName();
@@ -120,6 +117,7 @@ class LibraryBookController extends Controller
             $this->ensurePublicCopy($coverPath);
             $validated['cover_image'] = $coverPath;
         }
+        // Note: book files are stored in 'private' disk to prevent direct URL access/download
 
         LibraryBook::create($validated);
 
@@ -196,6 +194,9 @@ class LibraryBookController extends Controller
         if ($request->hasFile('file')) {
             // Delete old file
             try {
+                if (Storage::disk('private')->exists($library->file_path)) {
+                    Storage::disk('private')->delete($library->file_path);
+                }
                 if (Storage::disk('public')->exists($library->file_path)) {
                     Storage::disk('public')->delete($library->file_path);
                 }
@@ -203,8 +204,8 @@ class LibraryBookController extends Controller
 
             $file = $request->file('file');
             $fileName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . time() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('library/books', $fileName, 'public');
-            $this->ensurePublicCopy($filePath);
+            $filePath = $file->storeAs('library/books', $fileName, 'private');
+            // Note: book files stored in 'private' disk to prevent direct URL access
 
             $validated['file_path'] = $filePath;
             $validated['file_name'] = $file->getClientOriginalName();
@@ -243,6 +244,9 @@ class LibraryBookController extends Controller
 
         // Delete files
         try {
+            if (Storage::disk('private')->exists($library->file_path)) {
+                Storage::disk('private')->delete($library->file_path);
+            }
             if (Storage::disk('public')->exists($library->file_path)) {
                 Storage::disk('public')->delete($library->file_path);
             }
@@ -258,6 +262,7 @@ class LibraryBookController extends Controller
 
     /**
      * Serve the book file for reading (prevents direct download by disabling certain headers)
+     * Files are stored in the 'private' disk to prevent direct URL access.
      */
     public function serveBook(LibraryBook $library)
     {
@@ -269,29 +274,59 @@ class LibraryBookController extends Controller
             abort(403);
         }
 
+        // Check private disk first (new location), then fall back to public disk (legacy)
+        $privatePath = storage_path('app/private/' . $library->file_path);
         $storagePath = storage_path('app/public/' . $library->file_path);
         $publicPath = public_path('storage/' . $library->file_path);
 
         // Find the actual file
         $filePath = null;
-        if (file_exists($publicPath)) {
-            $filePath = $publicPath;
+        if (file_exists($privatePath)) {
+            $filePath = $privatePath;
         } elseif (file_exists($storagePath)) {
             $filePath = $storagePath;
+        } elseif (file_exists($publicPath)) {
+            $filePath = $publicPath;
         }
 
         if (!$filePath || !file_exists($filePath)) {
             abort(404, 'Book file not found.');
         }
 
-        // Serve with headers that discourage caching and downloading
+        // Serve with headers that prevent downloading and encourage inline viewing
+        // CRITICAL: Do NOT include filename in Content-Disposition to prevent browsers
+        // from auto-downloading. Use a generic name to avoid triggering save dialogs.
+        $contentType = $library->file_type ?? 'application/pdf';
+
+        // Force correct MIME type for common formats
+        if (str_ends_with(strtolower($library->file_path), '.pdf')) {
+            $contentType = 'application/pdf';
+        } elseif (str_ends_with(strtolower($library->file_path), '.epub')) {
+            $contentType = 'application/epub+zip';
+        }
+
+        // Check if this is a reader request (from the PDF.js viewer)
+        // Only allow serving through the reader to prevent direct URL downloads
+        $referer = request()->header('referer', '');
+        $isFromReader = str_contains($referer, '/library/') && str_contains($referer, '/read');
+        $isXhr = request()->ajax() || request()->header('X-Requested-With') === 'XMLHttpRequest';
+
+        // If not from reader and not an XHR request, redirect to the read page
+        if (!$isFromReader && !$isXhr && !request()->has('reader')) {
+            return redirect()->route('admin.library.read', $library->id);
+        }
+
         return response()->file($filePath, [
-            'Content-Type' => $library->file_type ?? 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $library->file_name . '"',
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'inline',
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
             'Expires' => '0',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Content-Security-Policy' => "default-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline';",
+            'X-Download-Options' => 'noopen',
+            'X-Read-Only' => 'true',
         ]);
     }
 

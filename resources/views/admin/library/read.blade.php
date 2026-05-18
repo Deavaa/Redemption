@@ -69,7 +69,7 @@
                 <h3>{{ $library->title }}</h3>
                 <p>This file format is best viewed in the browser's built-in viewer.</p>
                 <div class="generic-viewer-iframe-wrapper">
-                    <iframe src="{{ route('admin.library.serve', $library->id) }}#toolbar=0&navpanes=0&scrollbar=1"
+                    <iframe src="{{ route('admin.library.serve', $library->id) }}?reader=1#toolbar=0&navpanes=0&scrollbar=1"
                             style="width:100%;height:75vh;border:none;border-radius:12px;"
                             sandbox="allow-same-origin"
                             id="genericIframe">
@@ -289,13 +289,21 @@ let currentScale = 1.5;
 const canvas = document.getElementById('pdfCanvas');
 const ctx = canvas.getContext('2d');
 
-// Load PDF using the serve route (prevents direct file access)
-const pdfUrl = '{{ route('admin.library.serve', $library->id) }}';
+// Load PDF using the serve route with reader flag (prevents direct file access/download)
+const pdfUrl = '{{ route('admin.library.serve', $library->id) }}?reader=1';
 
-pdfjsLib.getDocument({
-    url: pdfUrl,
-    // Disable worker to prevent separate network requests that could be intercepted
-}).promise.then(function(pdf) {
+// Use fetch to load PDF as ArrayBuffer (prevents browser from intercepting as download)
+fetch(pdfUrl, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+})
+.then(function(response) {
+    if (!response.ok) throw new Error('Failed to load PDF');
+    return response.arrayBuffer();
+})
+.then(function(data) {
+    return pdfjsLib.getDocument({ data: data }).promise;
+})
+.then(function(pdf) {
     pdfDoc = pdf;
     document.getElementById('pageCount').textContent = pdf.numPages;
     renderPage(currentPage);
@@ -412,6 +420,32 @@ window.addEventListener('beforeprint', function(e) {
     };
     setInterval(check, 1000);
 })();
+
+// Prevent browser download bar / save dialog for PDF content
+// Intercept any navigation to the serve URL and block it
+window.addEventListener('beforeunload', function(e) {
+    // Only prevent if navigating directly to the PDF serve URL
+    if (e.target && e.target.location && String(e.target.location).includes('/serve')) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Add invisible watermark overlay to prevent screen capture abuse
+(function() {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:0.01;background:transparent;';
+    overlay.setAttribute('data-protected', 'true');
+    document.body.appendChild(overlay);
+})();
+
+// Block Ctrl+U (View Source)
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+        return false;
+    }
+});
 </script>
 @endpush
 @endif

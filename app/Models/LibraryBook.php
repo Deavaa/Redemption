@@ -77,15 +77,12 @@ class LibraryBook extends Model
     // Helpers
     public function getFileUrl(): string
     {
-        if (file_exists(public_path('storage/' . $this->file_path))) {
-            return asset('storage/' . $this->file_path);
-        }
+        // Book files should always be served through the authenticated serve route
+        // to prevent direct download access
         try {
-            if (Storage::disk('public')->exists($this->file_path)) {
-                return Storage::disk('public')->url($this->file_path);
-            }
+            return route('admin.library.serve', $this->id);
         } catch (\Throwable $e) {}
-        return asset('storage/' . $this->file_path);
+        return '#';
     }
 
     public function getCoverUrl(): string

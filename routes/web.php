@@ -70,6 +70,7 @@ use App\Http\Controllers\UserAccess\StudentAccessController;
 use App\Http\Controllers\UserAccess\ParentAccessController;
 use App\Http\Controllers\ReportExchange\ReportExchangeController;
 use App\Http\Controllers\News\NewsController;
+use App\Http\Controllers\Attendance\AttendanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -189,6 +190,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // ── Documents ─────────────────────────────────────────
     Route::resource('id-cards', IdCardController::class)->middleware('permission:id_cards.generate');
     Route::resource('certificates', CertificateController::class)->middleware('permission:certificates.generate');
+
+    // ── Attendance ────────────────────────────────────────
+    Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index')->middleware('permission:attendance.view');
+    Route::get('attendance/create', [AttendanceController::class, 'create'])->name('attendance.create')->middleware('permission:attendance.manage');
+    Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store')->middleware('permission:attendance.manage');
+    Route::get('attendance/{date}', [AttendanceController::class, 'show'])->name('attendance.show')->middleware('permission:attendance.view');
+    Route::get('attendance/{date}/{classId}/edit', [AttendanceController::class, 'edit'])->name('attendance.edit')->middleware('permission:attendance.manage');
+    Route::put('attendance', [AttendanceController::class, 'update'])->name('attendance.update')->middleware('permission:attendance.manage');
+    Route::get('attendance-report', [AttendanceController::class, 'report'])->name('attendance.report')->middleware('permission:attendance.view');
+    Route::get('attendance-api/students', [AttendanceController::class, 'apiStudents'])->name('attendance.api.students');
 
     // ── Library ───────────────────────────────────────────
     Route::resource('library', LibraryBookController::class)->middleware('permission:library.view');

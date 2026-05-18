@@ -63,6 +63,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'mark_sheets.view',          'display_name' => 'View Mark Sheets',          'module' => 'academic'],
             ['name' => 'mark_sheets.generate',      'display_name' => 'Generate Mark Sheets',      'module' => 'academic'],
 
+            ['name' => 'attendance.view',           'display_name' => 'View Attendance',            'module' => 'academic'],
+            ['name' => 'attendance.manage',          'display_name' => 'Record & Edit Attendance',   'module' => 'academic'],
+
             ['name' => 'id_cards.generate',         'display_name' => 'Generate ID Cards',         'module' => 'academic'],
             ['name' => 'certificates.generate',     'display_name' => 'Generate Certificates',     'module' => 'academic'],
 
@@ -264,6 +267,7 @@ class PermissionSeeder extends Seeder
             'exams.view', 'classrooms.view', 'sections.view',
             'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
             'mark_sheets.view', 'mark_sheets.generate',
+            'attendance.view', 'attendance.manage',
             'students.view', 'teachers.view',
             'id_cards.generate', 'certificates.generate',
             'calendar.view',
@@ -315,6 +319,7 @@ class PermissionSeeder extends Seeder
             'academic_years.view', 'terms.view', 'subjects.view', 'subject_assignments.view',
             'exams.view', 'classrooms.view', 'sections.view',
             'mark_entries.view', 'mark_sheets.view', 'mark_sheets.generate',
+            'attendance.view',
             // People
             'students.view', 'teachers.view', 'staff.view', 'parents.view', 'team_members.view',
             // Finance & HR
@@ -342,6 +347,7 @@ class PermissionSeeder extends Seeder
             'exams.view', 'classrooms.view', 'sections.view',
             'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
             'mark_sheets.view', 'mark_sheets.generate',
+            'attendance.view', 'attendance.manage',
             // People
             'students.view', 'teachers.view', 'staff.view', 'parents.view',
             // Documents
@@ -361,6 +367,7 @@ class PermissionSeeder extends Seeder
             // Academic Setup
             'academic_years.view', 'terms.view', 'classrooms.view', 'sections.view',
             'subjects.view', 'subject_assignments.view', 'exams.view',
+            'attendance.view', 'attendance.manage',
             // People
             'students.view', 'students.create', 'students.edit',
             'parents.view', 'parents.create', 'parents.edit',

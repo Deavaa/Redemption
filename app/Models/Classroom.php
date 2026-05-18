@@ -31,6 +31,7 @@ class ClassRoom extends Model
     }
 
     public function sections() { return $this->hasMany(Section::class, 'class_id'); }
+    public function students() { return $this->hasMany(Student::class, 'class_id'); }
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
     public function branch() { return $this->belongsTo(Branch::class); }
     public function teacher() { return $this->belongsTo(Teacher::class, 'teacher_id'); }

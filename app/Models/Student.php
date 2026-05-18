@@ -20,4 +20,5 @@ class Student extends Model
     public function progressReports() { return $this->hasMany(ProgressReport::class); }
     public function performanceReports() { return $this->hasMany(PerformanceReport::class); }
     public function feePayments() { return $this->hasMany(FeePayment::class); }
+    public function attendances() { return $this->hasMany(Attendance::class); }
 }
