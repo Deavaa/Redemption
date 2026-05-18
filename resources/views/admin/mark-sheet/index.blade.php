@@ -11,8 +11,6 @@
                     <li class="active">Mark Sheet</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Mark Sheet</h1>
-            <p class="modern-page-subtitle">Generate student mark sheets and report cards</p>
         </div>
     </div>
 

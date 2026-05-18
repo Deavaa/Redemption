@@ -13,8 +13,6 @@
                     <li class="active">Add New</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Add Budget</h1>
-            <p class="modern-page-subtitle">Create a new budget allocation</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.budgets.index') }}" class="btn-modern btn-modern-outline">
@@ -182,9 +180,6 @@
 @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .modern-page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem; }
 .modern-page-header-left { flex: 1; }
-.modern-page-title { font-size: 1.75rem; font-weight: 800; color: #1a1a2e; margin: 0; letter-spacing: -0.5px; }
-.modern-page-subtitle { font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0; }
-
 .modern-breadcrumb ol { display: flex; list-style: none; padding: 0; margin: 0 0 0.5rem; gap: 0.5rem; font-size: 0.8rem; align-items: center; }
 .modern-breadcrumb li { color: #adb5bd; }
 .modern-breadcrumb li a { color: #6c757d; text-decoration: none; transition: color 0.2s; }
@@ -233,7 +228,6 @@
 
 @media (max-width: 768px) {
     .modern-page-header { flex-direction: column; align-items: stretch; }
-    .modern-page-title { font-size: 1.35rem; }
     .modern-form-grid { grid-template-columns: 1fr; }
     .modern-form-span-2 { grid-column: span 1; }
     .modern-form-section-body { padding: 1rem 1.25rem 1.5rem; }

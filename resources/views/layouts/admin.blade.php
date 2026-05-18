@@ -452,19 +452,7 @@
 
     <div class="sidebar-backdrop d-none" id="sidebarBackdrop"></div>
     <div class="admin-main">
-        {{-- Announcement Banner --}}
-        @php
-            $activeAnnouncements = collect();
-            try {
-                $activeAnnouncements = \App\Models\CalendarEvent::where('is_announcement', true)
-                    ->where(function($q) {
-                        $q->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
-                    })
-                    ->orderBy('start_date', 'desc')
-                    ->limit(5)
-                    ->get();
-            } catch (\Exception $e) {}
-        @endphp
+        {{-- Announcement Banner — $activeAnnouncements is shared via AppServiceProvider view composer --}}
         <div id="adminAnnouncementBar" class="announcement-banner">
             <div class="announcement-banner-inner">
                 <a href="{{ route('admin.announcements.index') }}" class="announcement-badge" style="text-decoration:none;"><i class="fas fa-bullhorn"></i>&ensp;Announcements</a>
@@ -491,6 +479,43 @@
                 <button onclick="document.getElementById('adminAnnouncementBar').style.display='none'" class="announcement-close" title="Dismiss"><i class="fas fa-times"></i></button>
             </div>
         </div>
+
+        {{-- Announcement Splash Modal --}}
+        @if($activeAnnouncements->count() > 0)
+        <div class="announcement-splash-overlay" id="announcementSplash">
+            <div class="announcement-splash-modal">
+                <div class="announcement-splash-header">
+                    <div class="announcement-splash-icon"><i class="fas fa-bullhorn"></i></div>
+                    <h2>Announcements</h2>
+                    <span class="announcement-splash-count">{{ $activeAnnouncements->count() }} active</span>
+                </div>
+                <div class="announcement-splash-body">
+                    @foreach($activeAnnouncements as $splashAnn)
+                    <div class="announcement-splash-item">
+                        <div class="announcement-splash-item-dot" style="background:{{ $splashAnn->color ?? '#4361ee' }}"></div>
+                        <div class="announcement-splash-item-content">
+                            <div class="announcement-splash-item-title">{{ $splashAnn->title }}</div>
+                            @if($splashAnn->category)
+                            <span class="announcement-splash-item-cat" style="background:{{ $splashAnn->color ?? '#4361ee' }}20;color:{{ $splashAnn->color ?? '#4361ee' }}">{{ ucfirst($splashAnn->category) }}</span>
+                            @endif
+                            @if($splashAnn->start_date)
+                            <span class="announcement-splash-item-date"><i class="fas fa-calendar-alt"></i> {{ $splashAnn->start_date->format('M d, Y') }}</span>
+                            @endif
+                            @if($splashAnn->description)
+                            <p class="announcement-splash-item-desc">{{ Str::limit(strip_tags($splashAnn->description), 150) }}</p>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="announcement-splash-footer">
+                    <a href="{{ route('admin.announcements.index') }}" class="announcement-splash-viewall"><i class="fas fa-list"></i> View All Announcements</a>
+                    <button onclick="closeAnnouncementSplash()" class="announcement-splash-dismiss"><i class="fas fa-check"></i> Dismiss</button>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <style>
         .announcement-banner {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -583,12 +608,183 @@
             background: rgba(255,255,255,.2);
             color: #fff;
         }
+
+        /* ===== Announcement Splash Modal ===== */
+        .announcement-splash-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: none;  /* Hidden by default — JS shows it on page load if not dismissed */
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(4px);
+        }
+        .announcement-splash-overlay.splash-show {
+            display: flex;
+            animation: splashFadeIn 0.3s ease;
+        }
+        @keyframes splashFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .announcement-splash-modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: splashSlideUp 0.3s ease;
+            overflow: hidden;
+        }
+        @keyframes splashSlideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .announcement-splash-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .announcement-splash-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .announcement-splash-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            flex: 1;
+        }
+        .announcement-splash-count {
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        .announcement-splash-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .announcement-splash-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .announcement-splash-item:last-child { border-bottom: none; }
+        .announcement-splash-item-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+        .announcement-splash-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .announcement-splash-item-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+        .announcement-splash-item-cat {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+        .announcement-splash-item-date {
+            font-size: 11px;
+            color: #9ca3af;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .announcement-splash-item-desc {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 8px 0 0;
+            line-height: 1.5;
+        }
+        .announcement-splash-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .announcement-splash-viewall {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .announcement-splash-viewall:hover { text-decoration: underline; }
+        .announcement-splash-dismiss {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            border-radius: 10px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .announcement-splash-dismiss:hover { background: #2563eb; }
+
         @media (max-width: 768px) {
             .announcement-banner-inner { padding: 0 10px; height: 36px; }
             .announcement-badge { font-size: .72rem; padding: 2px 8px; }
             .announcement-chip { font-size: .8rem; }
+
+            /* Fix: prevent announcement ticker from causing horizontal scroll */
+            .announcement-banner { max-width: 100vw; overflow: hidden; }
+            .announcement-banner-inner { max-width: 100vw; overflow: hidden; }
+            .announcement-ticker-wrap { min-width: 0; }
+
+            .announcement-splash-overlay { padding: 8px; z-index: 10001; }
+            .announcement-splash-modal { max-width: 100%; max-height: 90vh; border-radius: 12px; }
+            .announcement-splash-header { padding: 16px; }
+            .announcement-splash-header h2 { font-size: 16px; }
+            .announcement-splash-body { padding: 12px 16px; }
+            .announcement-splash-footer { padding: 12px 16px; flex-direction: column; }
+            .announcement-splash-viewall, .announcement-splash-dismiss {
+                width: 100%; justify-content: center;
+                min-height: 44px;  /* Touch-friendly */
+            }
+            .announcement-splash-dismiss { font-size: 15px; font-weight: 700; }
         }
-        @media print { .announcement-banner { display: none !important; } }
+        @media print { .announcement-banner, .announcement-splash-overlay { display: none !important; } }
         </style>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -605,7 +801,28 @@
                     ticker.classList.add('scrolling');
                 }
             });
+
+            // Announcement Splash: show once per session
+            var splash = document.getElementById('announcementSplash');
+            if (splash && !sessionStorage.getItem('announcement_splash_dismissed')) {
+                splash.classList.add('splash-show');
+            }
+
         });
+
+        function closeAnnouncementSplash() {
+            var splash = document.getElementById('announcementSplash');
+            if (splash) {
+                splash.style.opacity = '0';
+                splash.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    splash.classList.remove('splash-show');
+                    splash.style.opacity = '';
+                    splash.style.transition = '';
+                }, 300);
+                sessionStorage.setItem('announcement_splash_dismissed', '1');
+            }
+        }
         </script>
         <nav class="admin-topbar">
             <div class="topbar-left">

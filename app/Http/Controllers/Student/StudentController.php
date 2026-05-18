@@ -101,10 +101,10 @@ class StudentController extends Controller
             $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
         }
 
-        // Auto-generate student ID number
+        // Auto-generate student ID number using the current academic year
         $idNumber = $request->input('id_number');
         if (empty($idNumber)) {
-            $year = date('Y');
+            $year = $this->getAyStartYear($this->getCurrentAcademicYear());
             $lastStudent = \App\Models\User::where('id_number', 'LIKE', "STD-{$year}-%")
                 ->orderBy('id_number', 'desc')->first();
             $nextNum = 1;
@@ -234,10 +234,10 @@ class StudentController extends Controller
         })->orWhereNull('user_id')->get();
         
         $generated = 0;
-        $year = date('Y');
-        
+        $year = $this->getAyStartYear($this->getCurrentAcademicYear());
+
         foreach ($students as $student) {
-            // Generate ID number
+            // Generate ID number using the current academic year
             $lastUser = \App\Models\User::where('id_number', 'LIKE', "STD-{$year}-%")
                 ->orderBy('id_number', 'desc')->first();
             $nextNum = 1;
@@ -282,11 +282,34 @@ class StudentController extends Controller
     }
 
     /**
-     * Generate the next admission number.
+     * Get the current academic year from the system.
+     * Falls back to the latest academic year, then to the calendar year.
+     */
+    private function getCurrentAcademicYear(): ?AcademicYear
+    {
+        return AcademicYear::where('is_current', true)->first()
+            ?? AcademicYear::orderBy('id', 'desc')->first();
+    }
+
+    /**
+     * Extract the start year from an AcademicYear name.
+     * e.g. "2024-2025" → "2024", "2025-2026" → "2025"
+     */
+    private function getAyStartYear(?AcademicYear $ay): string
+    {
+        if ($ay && $ay->name) {
+            $parts = explode('-', $ay->name);
+            return $parts[0];
+        }
+        return date('Y');
+    }
+
+    /**
+     * Generate the next admission number using the current academic year.
      */
     private function generateAdmissionNumber(): string
     {
-        $year = date('Y');
+        $year = $this->getAyStartYear($this->getCurrentAcademicYear());
         $lastAdmission = Student::where('admission_number', 'like', $year.'-%')
             ->selectRaw("CAST(SUBSTRING(admission_number, -4) AS UNSIGNED) as num")
             ->orderByRaw('num DESC')

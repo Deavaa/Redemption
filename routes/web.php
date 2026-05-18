@@ -183,7 +183,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Transcript Generation
     Route::get('transcript', [TranscriptController::class, 'index'])->name('transcript.index')->middleware('permission:certificates.generate');
-    Route::get('transcript/generate', function() { return redirect()->route('admin.transcript.index'); })->name('transcript.generate-form')->middleware('permission:certificates.generate');
+    Route::get('transcript/generate', [TranscriptController::class, 'generateForm'])->name('transcript.generate-form')->middleware('permission:certificates.generate');
     Route::post('transcript/generate', [TranscriptController::class, 'generate'])->name('transcript.generate')->middleware('permission:certificates.generate');
     Route::get('transcript/api/students', [TranscriptController::class, 'getStudents'])->name('transcript.students');
 

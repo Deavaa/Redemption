@@ -615,6 +615,39 @@
                 <button onclick="document.getElementById('parentAnnouncementBar').style.display='none'" class="announcement-close" title="Dismiss"><i class="fas fa-times"></i></button>
             </div>
         </div>
+
+        {{-- Announcement Splash Modal for Parent Portal --}}
+        <div class="announcement-splash-overlay" id="parentAnnouncementSplash" style="display:none;">
+            <div class="announcement-splash-modal" style="max-width:420px;">
+                <div class="announcement-splash-header" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);">
+                    <div class="announcement-splash-icon" style="background:#f59e0b;"><i class="fas fa-bullhorn"></i></div>
+                    <h2>Announcements</h2>
+                    <span class="announcement-splash-count">{{ $activeAnnouncements->count() }} active</span>
+                </div>
+                <div class="announcement-splash-body">
+                    @foreach($activeAnnouncements as $splashAnn)
+                    <div class="announcement-splash-item">
+                        <div class="announcement-splash-item-dot" style="background:{{ $splashAnn->color ?? '#f59e0b' }}"></div>
+                        <div class="announcement-splash-item-content">
+                            <div class="announcement-splash-item-title">{{ $splashAnn->title }}</div>
+                            @if($splashAnn->category)
+                            <span class="announcement-splash-item-cat" style="background:{{ $splashAnn->color ?? '#f59e0b' }}20;color:{{ $splashAnn->color ?? '#f59e0b' }}">{{ ucfirst($splashAnn->category) }}</span>
+                            @endif
+                            @if($splashAnn->start_date)
+                            <span class="announcement-splash-item-date"><i class="fas fa-calendar-alt"></i> {{ $splashAnn->start_date->format('M d, Y') }}</span>
+                            @endif
+                            @if($splashAnn->description)
+                            <p class="announcement-splash-item-desc">{{ Str::limit(strip_tags($splashAnn->description), 120) }}</p>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="announcement-splash-footer">
+                    <button onclick="closeParentAnnouncementSplash()" class="announcement-splash-dismiss" style="width:100%;justify-content:center;background:#f59e0b;"><i class="fas fa-check"></i> Dismiss</button>
+                </div>
+            </div>
+        </div>
         <style>
         .announcement-banner {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -712,7 +745,36 @@
             .announcement-badge { font-size: .72rem; padding: 2px 8px; }
             .announcement-chip { font-size: .8rem; }
         }
-        @media print { .announcement-banner { display: none !important; } }
+        @media print { .announcement-banner, .announcement-splash-overlay { display: none !important; } }
+
+        /* Splash Modal Styles */
+        .announcement-splash-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);animation:splashFadeIn .3s ease; }
+        @keyframes splashFadeIn { from{opacity:0}to{opacity:1} }
+        .announcement-splash-modal { background:#fff;border-radius:16px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:splashSlideUp .3s ease;overflow:hidden; }
+        @keyframes splashSlideUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
+        .announcement-splash-header { color:#fff;padding:20px 24px;display:flex;align-items:center;gap:12px; }
+        .announcement-splash-icon { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+        .announcement-splash-header h2 { font-size:18px;font-weight:700;margin:0;flex:1; }
+        .announcement-splash-count { font-size:12px;font-weight:600;background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px; }
+        .announcement-splash-body { padding:16px 20px;overflow-y:auto;flex:1; }
+        .announcement-splash-item { display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #f3f4f6; }
+        .announcement-splash-item:last-child { border-bottom:none; }
+        .announcement-splash-item-dot { width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0; }
+        .announcement-splash-item-content { flex:1;min-width:0; }
+        .announcement-splash-item-title { font-size:14px;font-weight:700;color:#1e293b;margin-bottom:6px; }
+        .announcement-splash-item-cat { display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;margin-right:8px; }
+        .announcement-splash-item-date { font-size:11px;color:#9ca3af;display:inline-flex;align-items:center;gap:4px; }
+        .announcement-splash-item-desc { font-size:13px;color:#6b7280;margin:8px 0 0;line-height:1.5; }
+        .announcement-splash-footer { padding:16px 20px;border-top:1px solid #f3f4f6; }
+        .announcement-splash-dismiss { display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:10px;color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s; }
+        .announcement-splash-dismiss:hover { filter:brightness(0.9); }
+        @media (max-width:768px) {
+            .announcement-splash-modal { max-width:100%;max-height:90vh;border-radius:12px; }
+            .announcement-splash-header { padding:16px; }
+            .announcement-splash-header h2 { font-size:16px; }
+            .announcement-splash-body { padding:12px 16px; }
+            .announcement-splash-footer { padding:12px 16px; }
+        }
         </style>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -727,7 +789,23 @@
                     ticker.classList.add('scrolling');
                 }
             });
+
+            // Show splash once per session
+            var splash = document.getElementById('parentAnnouncementSplash');
+            if (splash && !sessionStorage.getItem('parent_announcement_splash_dismissed')) {
+                splash.style.display = 'flex';
+            }
         });
+
+        function closeParentAnnouncementSplash() {
+            var splash = document.getElementById('parentAnnouncementSplash');
+            if (splash) {
+                splash.style.opacity = '0';
+                splash.style.transition = 'opacity 0.3s';
+                setTimeout(function() { splash.style.display = 'none'; }, 300);
+                sessionStorage.setItem('parent_announcement_splash_dismissed', '1');
+            }
+        }
         </script>
         @endif
         <nav class="parent-topbar">

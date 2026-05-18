@@ -46,7 +46,7 @@ class CalendarEventController extends Controller
         ]);
         $isAllDay = $r->input('is_all_day');
         $data['is_all_day'] = in_array($isAllDay, [true, 1, '1', 'on', 'true'], true) ? true : (!$r->filled('start_time'));
-        $data['is_announcement'] = $r->has('is_announcement') ? true : true; // Auto-announce all events
+        $data['is_announcement'] = $r->has('is_announcement') ? true : false; // Only announce if checkbox checked
         $data['created_by'] = Auth::id();
 
         if (empty($data['color'])) {
@@ -90,7 +90,7 @@ class CalendarEventController extends Controller
         ]);
         $isAllDay = $r->input('is_all_day');
         $data['is_all_day'] = in_array($isAllDay, [true, 1, '1', 'on', 'true'], true) ? true : (!$r->filled('start_time'));
-        $data['is_announcement'] = $r->has('is_announcement') ? true : true; // Auto-announce
+        $data['is_announcement'] = $r->has('is_announcement') ? true : false; // Only announce if checkbox checked
 
         if (empty($data['color'])) {
             $data['color'] = CalendarEvent::categoryColors()[$data['category']] ?? '#4361ee';

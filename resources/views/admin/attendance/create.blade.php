@@ -201,6 +201,30 @@
 <style>
 .att-status-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
 .att-status-active { font-weight: 700 !important; }
+
+/* Mobile responsive for attendance form */
+@media (max-width: 768px) {
+    .certgen-toolbar { font-size: 12px !important; }
+    #filterForm {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    #filterForm > div {
+        min-width: 100% !important;
+    }
+    .modern-table thead th:nth-child(3),
+    .modern-table thead th:nth-child(4),
+    .modern-table thead th:nth-child(6),
+    .modern-table tbody td:nth-child(3),
+    .modern-table tbody td:nth-child(4),
+    .modern-table tbody td:nth-child(6) {
+        display: none !important;
+    }
+    .att-status-btn {
+        font-size: 9px !important;
+        padding: 2px 5px !important;
+    }
+}
 </style>
 @endpush
 

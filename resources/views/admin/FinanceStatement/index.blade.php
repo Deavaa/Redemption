@@ -13,8 +13,6 @@
                     <li class="active">Statements</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Finance Statements</h1>
-            <p class="modern-page-subtitle">View and manage financial statements and reports</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.finance-statements.create') }}" class="btn-modern btn-modern-primary">
@@ -194,9 +192,6 @@
 
 .modern-page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem; }
 .modern-page-header-left { flex: 1; }
-.modern-page-title { font-size: 1.75rem; font-weight: 800; color: #1a1a2e; margin: 0; letter-spacing: -0.5px; }
-.modern-page-subtitle { font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0; }
-
 .modern-breadcrumb ol { display: flex; list-style: none; padding: 0; margin: 0 0 0.5rem; gap: 0.5rem; font-size: 0.8rem; align-items: center; }
 .modern-breadcrumb li { color: #adb5bd; }
 .modern-breadcrumb li a { color: #6c757d; text-decoration: none; transition: color 0.2s; }
@@ -277,7 +272,6 @@
 
 @media (max-width: 768px) {
     .modern-page-header { flex-direction: column; align-items: stretch; }
-    .modern-page-title { font-size: 1.35rem; }
     .modern-stats-row { grid-template-columns: 1fr; }
     .modern-card-header { flex-direction: column; align-items: stretch; }
     .modern-search-box input { width: 100%; }

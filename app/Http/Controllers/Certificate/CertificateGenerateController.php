@@ -69,8 +69,11 @@ class CertificateGenerateController extends Controller
             'template' => $r->type,
         ]);
 
-        // Redirect to dedicated pages for transcript and leaving certificate
+        // Delegate to dedicated pages for transcript and leaving certificate
+        // (these have their own certificate generation logic)
         if ($r->type === 'transcript') {
+            // Delete the certificate we just created — TranscriptController creates its own
+            $cert->delete();
             return redirect()->route('admin.transcript.index');
         }
         if ($r->type === 'leaving_certificate') {

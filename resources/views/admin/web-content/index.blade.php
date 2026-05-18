@@ -12,8 +12,6 @@
                     <li class="active">{{ __('app.web_content') ?? 'Web Content' }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ __('app.web_content') ?? 'Web Content Management' }}</h1>
-            <p class="modern-page-subtitle">{{ __('app.web_content_desc') ?? 'Manage website content, appearance, and branding' }}</p>
         </div>
     </div>
 

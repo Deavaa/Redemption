@@ -6,8 +6,6 @@
     <div class="modern-page-header">
         <div class="modern-page-header-left">
             <nav aria-label="breadcrumb" class="modern-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li><a href="{{ route('admin.performance-analysis.index') }}">{{ __('app.performance_analysis') ?? 'Performance' }}</a></li><li class="active">{{ __('app.psychological_analysis') ?? 'Psychological Analysis' }}</li></ol></nav>
-            <h1 class="modern-page-title">{{ __('app.psychological_analysis') ?? 'Psychological & Performance Analysis' }}</h1>
-            <p class="modern-page-subtitle">{{ __('app.psych_desc') ?? 'Analyze student psychological profiles, motivation, and progress' }}</p>
         </div>
     </div>
 

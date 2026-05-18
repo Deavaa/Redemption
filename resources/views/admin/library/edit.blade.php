@@ -12,8 +12,6 @@
                     <li class="active">Edit Book</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Edit Book</h1>
-            <p class="modern-page-subtitle">Update book details for "{{ $book->title }}"</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.library.index') }}" class="btn-modern btn-modern-outline">

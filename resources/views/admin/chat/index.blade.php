@@ -11,8 +11,6 @@
                     <li class="active">Chat</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Messages</h1>
-            <p class="modern-page-subtitle">Communicate with staff and teachers</p>
         </div>
         <div class="modern-page-header-right">
             <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#newChatModal">

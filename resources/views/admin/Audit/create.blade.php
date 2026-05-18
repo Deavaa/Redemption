@@ -13,8 +13,6 @@
                     <li class="active">Add New</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Add New Audit</h1>
-            <p class="modern-page-subtitle">Create a new audit record with findings and recommendations</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.audits.index') }}" class="btn-modern btn-modern-outline">
@@ -222,20 +220,6 @@
 .modern-page-header-right {
     display: flex;
     gap: 0.75rem;
-}
-
-.modern-page-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #1a1a2e;
-    margin: 0;
-    letter-spacing: -0.5px;
-}
-
-.modern-page-subtitle {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 0.25rem 0 0;
 }
 
 /* Breadcrumb */
@@ -463,8 +447,6 @@
         flex-direction: column;
         align-items: stretch;
     }
-
-    .modern-page-title { font-size: 1.35rem; }
 
     .modern-form-grid {
         grid-template-columns: 1fr;

@@ -13,8 +13,6 @@
                     <li class="active">Add New</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Add New Team Member</h1>
-            <p class="modern-page-subtitle">Create a new team member profile for the website</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.team-members.index') }}" class="btn-modern btn-modern-outline">

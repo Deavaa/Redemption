@@ -13,8 +13,6 @@
                     <li class="active">Details</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Team Member Details</h1>
-            <p class="modern-page-subtitle">Viewing profile for <strong>{{ $item->name }}</strong></p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.team-members.index') }}" class="btn-modern btn-modern-outline">

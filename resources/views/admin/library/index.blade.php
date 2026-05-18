@@ -12,8 +12,6 @@
                     <li class="active">{{ __('app.library') ?? 'Library' }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ __('app.library') ?? 'Digital Library' }}</h1>
-            <p class="modern-page-subtitle">Browse and read softcopy books — online reading only, no downloads</p>
         </div>
         <div class="modern-page-header-right">
             @if($canUpload)

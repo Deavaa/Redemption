@@ -12,8 +12,6 @@
                     <li class="active">Edit</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Edit Employee Asset</h1>
-            <p class="modern-page-subtitle">Update asset details for {{ $item->name ?? 'this asset' }}</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.employee-assets.index') }}" class="btn-modern btn-modern-ghost">
@@ -138,8 +136,6 @@
 .modern-page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;gap:1rem}
 .modern-page-header-left{flex:1}
 .modern-page-header-right{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
-.modern-page-title{font-size:1.75rem;font-weight:700;color:#1e293b;margin:0}
-.modern-page-subtitle{font-size:.875rem;color:#64748b;margin:.25rem 0 0}
 .modern-breadcrumb{margin-bottom:.5rem}
 .modern-breadcrumb ol{display:flex;align-items:center;list-style:none;padding:0;margin:0;gap:.25rem;font-size:.8rem}
 .modern-breadcrumb li{color:#94a3b8}
@@ -185,7 +181,6 @@
 .modern-page{padding:1rem}
 .modern-page-header{flex-direction:column;gap:.75rem}
 .modern-page-header-right{width:100%;justify-content:flex-start}
-.modern-page-title{font-size:1.4rem}
 .modern-form-grid{grid-template-columns:1fr}
 .modern-form-span-2{grid-column:span 1}
 .modern-form-actions{flex-direction:column}

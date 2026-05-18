@@ -11,12 +11,10 @@
                     <li class="active">{{ __('app.announcements') ?? 'Announcements' }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ __('app.announcements') ?? 'Announcements' }}</h1>
-            <p class="modern-page-subtitle">{{ __('app.announcements_desc') ?? 'Create announcements and send alerts automatically' }}</p>
         </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="announcements-grid">
         {{-- Create Announcement Form --}}
         <div class="modern-card">
             <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
@@ -61,20 +59,22 @@
             </div>
             <div style="padding:16px 20px;max-height:500px;overflow-y:auto;">
                 @forelse($pendingAnnouncements as $event)
-                    <div style="padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+                    <div class="announcement-pending-item">
                         <div style="width:8px;height:8px;border-radius:50%;background:{{ $event->color ?? '#4361ee' }};flex-shrink:0;"></div>
-                        <div style="flex:1;">
+                        <div style="flex:1;min-width:0;">
                             <div style="font-size:13px;font-weight:600;color:var(--text-dark);">{{ $event->title }}</div>
                             <div style="font-size:11px;color:var(--text-muted);">{{ $event->start_date->format('M d, Y') }} &bull; {{ ucfirst($event->category) }}</div>
                         </div>
-                        <form method="POST" action="{{ route('admin.announcements.send-telegram', $event->id) }}">
-                            @csrf
-                            <button type="submit" class="btn-modern btn-modern-sm" style="padding:4px 8px;font-size:10px;background:#0088cc;color:#fff;border:none;border-radius:4px;cursor:pointer;" title="Send to Telegram"><i class="fab fa-telegram"></i></button>
-                        </form>
-                        <form method="POST" action="{{ route('admin.announcements.destroy', $event->id) }}">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn-modern btn-modern-sm" style="padding:4px 8px;font-size:10px;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i></button>
-                        </form>
+                        <div class="announcement-pending-actions">
+                            <form method="POST" action="{{ route('admin.announcements.send-telegram', $event->id) }}">
+                                @csrf
+                                <button type="submit" class="btn-modern btn-modern-sm" style="padding:4px 8px;font-size:10px;background:#0088cc;color:#fff;border:none;border-radius:4px;cursor:pointer;" title="Send to Telegram"><i class="fab fa-telegram"></i></button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.announcements.destroy', $event->id) }}">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-modern btn-modern-sm" style="padding:4px 8px;font-size:10px;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </div>
                     </div>
                 @empty
                     <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">{{ __('app.no_announcements') ?? 'No upcoming announcements' }}</p>
@@ -88,7 +88,29 @@
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
             <h3 style="font-size:15px;font-weight:700;color:var(--text-dark);margin:0;"><i class="fas fa-history" style="color:var(--primary);"></i> {{ __('app.past_announcements') ?? 'Past Announcements' }}</h3>
         </div>
-        <div style="padding:0;">
+        {{-- Mobile card view --}}
+        <div class="announcement-past-cards">
+            @foreach($announcements as $announcement)
+            <div class="announcement-past-card">
+                <div class="announcement-past-card-header">
+                    <div class="announcement-past-card-dot" style="background:{{ $announcement->color ?? '#eee' }}"></div>
+                    <div class="announcement-past-card-info">
+                        <span class="announcement-past-card-title">{{ $announcement->title }}</span>
+                        <span class="announcement-past-card-meta">{{ $announcement->start_date->format('M d, Y') }}</span>
+                    </div>
+                    <span class="announcement-past-card-cat" style="background:{{ $announcement->color ?? '#eee' }}20;color:{{ $announcement->color ?? '#666' }}">{{ ucfirst($announcement->category) }}</span>
+                </div>
+                <div class="announcement-past-card-actions">
+                    <form method="POST" action="{{ route('admin.announcements.destroy', $announcement->id) }}">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn-modern btn-modern-sm" style="padding:4px 10px;font-size:11px;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i> Delete</button>
+                    </form>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        {{-- Desktop table view --}}
+        <div class="announcement-past-table">
             <table class="modern-table" style="width:100%;border-collapse:collapse;">
                 <thead>
                     <tr style="background:var(--bg-light);border-bottom:1px solid var(--border);">
@@ -114,8 +136,110 @@
                     @endforeach
                 </tbody>
             </table>
-            {{ $announcements->links() }}
         </div>
+        {{ $announcements->links() }}
     </div>
 </div>
+
+@push('styles')
+<style>
+/* Announcements grid - responsive */
+.announcements-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Pending announcement items */
+.announcement-pending-item {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.announcement-pending-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* Past announcements - dual view (mobile cards / desktop table) */
+.announcement-past-cards {
+    display: none;
+    padding: 12px;
+}
+.announcement-past-card {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+.announcement-past-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.announcement-past-card-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.announcement-past-card-info {
+    flex: 1;
+    min-width: 0;
+}
+.announcement-past-card-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+.announcement-past-card-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+.announcement-past-card-cat {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+.announcement-past-card-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+.announcement-past-table {
+    display: block;
+    padding: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .announcements-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .announcement-past-cards {
+        display: block;
+    }
+    .announcement-past-table {
+        display: none;
+    }
+    .announcement-pending-item {
+        flex-wrap: wrap;
+    }
+    .announcement-pending-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 4px;
+    }
+}
+</style>
+@endpush
 @endsection

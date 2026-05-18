@@ -1,7 +1,277 @@
-@extends('layouts.admin')
-@section('title', 'Reading: ' . $library->title)
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Reading: {{ $library->title }} - Redemption School</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+        font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        height: 100%;
+        overflow: hidden;
+        background: #1a1a2e;
+    }
 
-@section('content')
+    /* ===== READER PAGE ===== */
+    .reader-page {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background: #1a1a2e;
+        overflow: hidden;
+    }
+
+    /* ===== TOOLBAR ===== */
+    .reader-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.65rem 1.25rem;
+        background: #2d2d3a;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        flex-shrink: 0;
+    }
+
+    .reader-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .reader-back-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+    .reader-back-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    .reader-book-info { min-width: 0; }
+
+    .reader-book-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .reader-book-author {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.6);
+    }
+
+    .reader-toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .reader-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.7);
+    }
+
+    .reader-badge-info {
+        background: rgba(16,185,129,0.2);
+        color: #6ee7b7;
+    }
+
+    /* ===== COPYRIGHT BANNER ===== */
+    .copyright-banner {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 1.25rem;
+        background: rgba(217,119,6,0.15);
+        border-bottom: 1px solid rgba(217,119,6,0.3);
+        font-size: 0.78rem;
+        color: #fcd34d;
+        flex-shrink: 0;
+    }
+    .copyright-banner i { color: #fbbf24; }
+
+    /* ===== BACK TO LIBRARY BUTTON (visible, not at very bottom) ===== */
+    .reader-back-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1.25rem;
+        background: #2d2d3a;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        flex-shrink: 0;
+    }
+    .reader-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 1rem;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: background 0.2s, color 0.2s;
+    }
+    .reader-back-link:hover {
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+    }
+
+    /* ===== PDF VIEWER ===== */
+    .reader-container {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        padding: 1rem;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    .pdf-viewer-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    #pdfCanvas {
+        max-width: 100%;
+        background: #fff;
+        border-radius: 4px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .pdf-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.25rem;
+        background: #2d2d3a;
+        border-radius: 12px;
+        margin-top: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pdf-control-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: none;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-size: 0.82rem;
+    }
+    .pdf-control-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .pdf-page-info {
+        font-size: 0.78rem;
+        color: rgba(255,255,255,0.8);
+        font-weight: 600;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .pdf-separator {
+        color: rgba(255,255,255,0.2);
+        font-size: 0.9rem;
+    }
+
+    /* ===== GENERIC VIEWER ===== */
+    .generic-viewer {
+        width: 100%;
+        max-width: 900px;
+    }
+
+    .generic-viewer-content {
+        background: #fff;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .generic-viewer-iframe-wrapper {
+        margin-top: 1rem;
+    }
+
+    /* ===== MOBILE RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .reader-toolbar {
+            padding: 0.5rem 0.75rem;
+        }
+        .reader-toolbar-right {
+            display: none;
+        }
+        .reader-book-title {
+            font-size: 0.85rem;
+        }
+        .copyright-banner {
+            font-size: 0.7rem;
+            padding: 0.4rem 0.75rem;
+            gap: 0.5rem;
+        }
+        .reader-container {
+            padding: 0.5rem;
+        }
+        .pdf-controls {
+            gap: 0.35rem;
+            padding: 0.5rem 0.75rem;
+            margin-top: 0.75rem;
+        }
+        .pdf-control-btn {
+            width: 30px;
+            height: 30px;
+            font-size: 0.75rem;
+        }
+        .pdf-page-info {
+            font-size: 0.7rem;
+            min-width: 45px;
+        }
+        .reader-back-bar {
+            padding: 0.4rem 0.75rem;
+        }
+        .reader-back-link {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.75rem;
+        }
+    }
+    </style>
+</head>
+<body>
 <div class="reader-page">
     {{-- Reader Toolbar --}}
     <div class="reader-toolbar">
@@ -30,6 +300,13 @@
     <div class="copyright-banner">
         <i class="fas fa-lock"></i>
         <span>This book is protected by copyright. Download, copy, print, and screenshot are disabled. For authorized reading only.</span>
+    </div>
+
+    {{-- Back to Library bar (visible but NOT at very bottom — avoids mobile bottom nav conflict) --}}
+    <div class="reader-back-bar">
+        <a href="{{ route('admin.library.index') }}" class="reader-back-link">
+            <i class="fas fa-arrow-left"></i> Back to Library
+        </a>
     </div>
 
     {{-- PDF Reader Container --}}
@@ -81,202 +358,7 @@
     </div>
 </div>
 
-@push('styles')
-<style>
-/* Full-page reader layout */
-.reader-page {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 60px);
-    background: #1a1a2e;
-    overflow: hidden;
-    margin: -1.5rem;
-}
-
-.reader-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.65rem 1.25rem;
-    background: #2d2d3a;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    flex-shrink: 0;
-}
-
-.reader-toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-    min-width: 0;
-}
-
-.reader-back-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: background 0.2s;
-    flex-shrink: 0;
-}
-
-.reader-back-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
-
-.reader-book-info {
-    min-width: 0;
-}
-
-.reader-book-title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #fff;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.reader-book-author {
-    font-size: 0.75rem;
-    color: rgba(255,255,255,0.6);
-}
-
-.reader-toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-}
-
-.reader-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.7rem;
-    border-radius: 8px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    background: rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.7);
-}
-
-.reader-badge-info {
-    background: rgba(16,185,129,0.2);
-    color: #6ee7b7;
-}
-
-.copyright-banner {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 1.25rem;
-    background: rgba(217,119,6,0.15);
-    border-bottom: 1px solid rgba(217,119,6,0.3);
-    font-size: 0.78rem;
-    color: #fcd34d;
-    flex-shrink: 0;
-}
-
-.copyright-banner i { color: #fbbf24; }
-
-/* PDF Viewer */
-.reader-container {
-    flex: 1;
-    overflow: auto;
-    display: flex;
-    justify-content: center;
-    padding: 1rem;
-}
-
-.pdf-viewer-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
-
-#pdfCanvas {
-    max-width: 100%;
-    background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
-.pdf-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 1.25rem;
-    background: #2d2d3a;
-    border-radius: 12px;
-    margin-top: 1rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-
-.pdf-control-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    border: none;
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-size: 0.82rem;
-}
-
-.pdf-control-btn:hover { background: rgba(255,255,255,0.2); }
-
-.pdf-page-info {
-    font-size: 0.78rem;
-    color: rgba(255,255,255,0.8);
-    font-weight: 600;
-    min-width: 60px;
-    text-align: center;
-}
-
-.pdf-separator {
-    color: rgba(255,255,255,0.2);
-    font-size: 0.9rem;
-}
-
-/* Generic viewer */
-.generic-viewer {
-    width: 100%;
-    max-width: 900px;
-}
-
-.generic-viewer-content {
-    background: #fff;
-    border-radius: 12px;
-    padding: 2rem;
-    text-align: center;
-}
-
-.generic-viewer-iframe-wrapper {
-    margin-top: 1rem;
-}
-
-/* Disable selection to prevent copy */
-.reader-container {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-</style>
-@endpush
-
 @if($isPdf)
-@push('scripts')
 {{-- PDF.js library --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
@@ -371,7 +453,10 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prevPage(); }
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); nextPage(); }
 });
+</script>
+@endif
 
+<script>
 // ===== COPYRIGHT PROTECTION =====
 // Disable right-click
 document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
@@ -402,6 +487,14 @@ document.addEventListener('keydown', function(e) {
 // Disable drag
 document.addEventListener('dragstart', function(e) { e.preventDefault(); });
 
+// Block Ctrl+U (View Source)
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+        return false;
+    }
+});
+
 // Detect print attempt
 window.addEventListener('beforeprint', function(e) {
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1a1a2e;color:#fca5a5;font-family:sans-serif;text-align:center;"><div><h1>Printing is Disabled</h1><p>This content is protected by copyright.</p></div></div>';
@@ -422,9 +515,7 @@ window.addEventListener('beforeprint', function(e) {
 })();
 
 // Prevent browser download bar / save dialog for PDF content
-// Intercept any navigation to the serve URL and block it
 window.addEventListener('beforeunload', function(e) {
-    // Only prevent if navigating directly to the PDF serve URL
     if (e.target && e.target.location && String(e.target.location).includes('/serve')) {
         e.preventDefault();
         e.returnValue = '';
@@ -439,32 +530,8 @@ window.addEventListener('beforeunload', function(e) {
     document.body.appendChild(overlay);
 })();
 
-// Block Ctrl+U (View Source)
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
-        e.preventDefault();
-        return false;
-    }
-});
-</script>
-@endpush
-@endif
-
-@push('scripts')
-{{-- Non-PDF copyright protection --}}
 @if(!$isPdf)
-<script>
-// Copyright protection for non-PDF viewer
-document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p' || e.key === 'c')) { e.preventDefault(); return false; }
-    if (e.key === 'F12' || e.key === 'PrintScreen') { e.preventDefault(); return false; }
-});
-window.addEventListener('beforeprint', function(e) {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1a1a2e;color:#fca5a5;font-family:sans-serif;text-align:center;"><div><h1>Printing is Disabled</h1><p>This content is protected by copyright.</p></div></div>';
-});
-
-// Prevent iframe right-click
+// Copyright protection for non-PDF viewer (iframe)
 var iframe = document.getElementById('genericIframe');
 if (iframe) {
     iframe.onload = function() {
@@ -478,7 +545,7 @@ if (iframe) {
         }
     };
 }
-</script>
 @endif
-@endpush
-@endsection
+</script>
+</body>
+</html>

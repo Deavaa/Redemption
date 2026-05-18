@@ -11,8 +11,6 @@
                     <li class="active">Details</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ $item->name }}</h1>
-            <p class="modern-page-subtitle">Classroom details and information</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.classrooms.index') }}" class="btn-modern btn-modern-outline"><i class="fas fa-arrow-left"></i><span>Back to List</span></a>
@@ -160,8 +158,6 @@
 @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .modern-page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem; }
 .modern-page-header-left { flex: 1; }
-.modern-page-title { font-size: 1.75rem; font-weight: 800; color: #1a1a2e; margin: 0; letter-spacing: -0.5px; }
-.modern-page-subtitle { font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0; }
 .modern-page-header-right { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 .modern-breadcrumb ol { display: flex; list-style: none; padding: 0; margin: 0 0 0.5rem; gap: 0.5rem; font-size: 0.8rem; align-items: center; }
 .modern-breadcrumb li { color: #adb5bd; }
@@ -216,7 +212,7 @@
 .btn-modern-outline { background: transparent; color: #6b7280; border: 1.5px solid #e5e7eb; }
 .btn-modern-outline:hover { border-color: #4361ee; color: #4361ee; background: #f8f9ff; }
 @media (max-width: 992px) { .modern-detail-grid { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .modern-page-header { flex-direction: column; align-items: stretch; } .modern-page-title { font-size: 1.35rem; } .modern-detail-hero { padding: 1.25rem; flex-direction: column; text-align: center; } .modern-detail-hero-badges { justify-content: center; } .modern-detail-row { flex-direction: column; gap: 0.25rem; padding: 0.75rem 1.25rem; } .modern-detail-label { width: auto; } }
+@media (max-width: 768px) { .modern-page-header { flex-direction: column; align-items: stretch; } .modern-detail-hero { padding: 1.25rem; flex-direction: column; text-align: center; } .modern-detail-hero-badges { justify-content: center; } .modern-detail-row { flex-direction: column; gap: 0.25rem; padding: 0.75rem 1.25rem; } .modern-detail-label { width: auto; } }
 </style>
 @endpush
 @endsection

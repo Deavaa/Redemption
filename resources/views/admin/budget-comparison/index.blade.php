@@ -6,7 +6,6 @@
     <div class="modern-page-header">
         <div class="modern-page-header-left">
             <nav aria-label="breadcrumb" class="modern-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li><a href="{{ route('admin.budgets.index') }}">{{ __('app.budgets') }}</a></li><li class="active">{{ __('app.budget_comparison') }}</li></ol></nav>
-            <h1 class="modern-page-title">{{ __('app.budget_comparison') ?? 'Branch Budget Comparison' }}</h1>
         </div>
     </div>
 

@@ -11,8 +11,6 @@
                     <li class="active">Telegram Settings</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Telegram Settings</h1>
-            <p class="modern-page-subtitle">Configure your Telegram bot integration</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.telegram.send') }}" class="btn-modern btn-modern-primary">

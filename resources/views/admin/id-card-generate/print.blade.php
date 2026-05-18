@@ -270,8 +270,8 @@
         $schoolAddress = \App\Models\Setting::get('school_address', '');
         $schoolWebsite = \App\Models\Setting::get('school_website', '');
         $hasLogo = !empty($logoUrl);
-        // Get academic year from the system (not Gregorian calendar year)
-        $currentAcademicYear = \App\Models\AcademicYear::where('is_current', true)->first();
+        // Use the academic year passed from the controller (fetched from the system)
+        $currentAcademicYear = $currentAy ?? \App\Models\AcademicYear::where('is_current', true)->first();
         $academicYearLabel = $currentAcademicYear ? $currentAcademicYear->name : now()->year;
     @endphp
 
@@ -310,7 +310,13 @@
 
     <div class="id-cards-grid">
         @foreach($students as $student)
-            @php $idCard = $student->idCards()->first(); @endphp
+            @php
+                // Get the ID card for the current academic year, or fall back to the latest one
+                $idCard = $currentAcademicYear
+                    ? $student->idCards->where('academic_year_id', $currentAcademicYear->id)->first()
+                    : null;
+                $idCard = $idCard ?? $student->idCards->first();
+            @endphp
 
             {{-- ===== FRONT SIDE ===== --}}
             <div class="id-card">

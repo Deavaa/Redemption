@@ -20,6 +20,15 @@ class TranscriptController extends Controller
         return view('admin.certificate-generate.transcript-index', compact('classes'));
     }
 
+    /**
+     * Handle GET /transcript/generate — redirect to the transcript form
+     * (replaces the closure route to avoid route-cache issues)
+     */
+    public function generateForm()
+    {
+        return redirect()->route('admin.transcript.index');
+    }
+
     public function getStudents(Request $r)
     {
         $query = Student::with('classroom', 'section');

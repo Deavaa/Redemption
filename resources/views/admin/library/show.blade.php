@@ -12,8 +12,6 @@
                     <li class="active">{{ Str::limit($book->title, 30) }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ $book->title }}</h1>
-            <p class="modern-page-subtitle">Book details and information</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.library.read', $book->id) }}" class="btn-modern btn-modern-primary">

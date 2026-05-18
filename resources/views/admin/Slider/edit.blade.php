@@ -13,8 +13,6 @@
                     <li class="active">Edit</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Edit Slider</h1>
-            <p class="modern-page-subtitle">Update slider information for <strong>{{ $item->title }}</strong></p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.sliders.index') }}" class="btn-modern btn-modern-outline">
@@ -218,22 +216,6 @@
 }
 
 .modern-page-header-left { flex: 1; }
-
-.modern-page-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #1a1a2e;
-    margin: 0;
-    letter-spacing: -0.5px;
-}
-
-.modern-page-subtitle {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 0.25rem 0 0;
-}
-
-.modern-page-subtitle strong { color: #4361ee; }
 
 /* Breadcrumb */
 .modern-breadcrumb ol {
@@ -477,7 +459,6 @@
 /* Responsive */
 @media (max-width: 768px) {
     .modern-page-header { flex-direction: column; align-items: stretch; }
-    .modern-page-title { font-size: 1.35rem; }
     .modern-form-grid { grid-template-columns: 1fr; }
     .modern-form-span-2 { grid-column: span 1; }
     .modern-form-section-body { padding: 1rem 1.25rem 1.5rem; }

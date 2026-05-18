@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 class IdCard extends Model
 {
     use HasFactory;
-    protected $fillable = ['student_id','card_number','issue_date','valid_until','status'];
+    protected $fillable = ['student_id','academic_year_id','card_number','issue_date','valid_until','status'];
     protected function casts(): array { return ['issue_date'=>'date','valid_until'=>'date']; }
     public function student() { return $this->belongsTo(Student::class); }
+    public function academicYear() { return $this->belongsTo(AcademicYear::class); }
 }

@@ -6,7 +6,6 @@
     <div class="modern-page-header">
         <div class="modern-page-header-left">
             <nav aria-label="breadcrumb" class="modern-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li><a href="{{ route('admin.performance-analysis.index') }}">{{ __('app.performance_analysis') ?? 'Performance' }}</a></li><li class="active">{{ __('app.performance_comparison') }}</li></ol></nav>
-            <h1 class="modern-page-title">{{ __('app.performance_comparison') ?? 'Branch Performance Comparison' }}</h1>
         </div>
     </div>
 

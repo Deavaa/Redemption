@@ -13,8 +13,6 @@
                     <li class="active">{{ $item->card_number ?? 'Details' }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ $item->card_number ?? 'ID Card Details' }}</h1>
-            <p class="modern-page-subtitle">Identification card details and status</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.id-cards.index') }}" class="btn-modern btn-modern-outline">
@@ -179,20 +177,6 @@
 
 .modern-page-header-left { flex: 1; }
 .modern-page-header-right { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-
-.modern-page-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #1a1a2e;
-    margin: 0;
-    letter-spacing: -0.5px;
-}
-
-.modern-page-subtitle {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 0.25rem 0 0;
-}
 
 /* Breadcrumb */
 .modern-breadcrumb ol {
@@ -439,7 +423,6 @@
 
 @media (max-width: 768px) {
     .modern-page-header { flex-direction: column; align-items: stretch; }
-    .modern-page-title { font-size: 1.35rem; }
     .modern-detail-hero { padding: 1.25rem; flex-direction: column; text-align: center; }
     .modern-detail-hero-badges { justify-content: center; }
     .modern-detail-row { flex-direction: column; gap: 0.25rem; padding: 0.75rem 1.25rem; }

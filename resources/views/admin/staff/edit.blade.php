@@ -13,8 +13,6 @@
                     <li class="active">Edit</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Edit Staff Member</h1>
-            <p class="modern-page-subtitle">Update information for <strong>{{ $user->name }}</strong></p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.staff.index') }}" class="btn-modern btn-modern-outline">
@@ -278,10 +276,6 @@
 
 .modern-page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem; }
 .modern-page-header-left { flex: 1; }
-.modern-page-title { font-size: 1.75rem; font-weight: 800; color: #1a1a2e; margin: 0; letter-spacing: -0.5px; }
-.modern-page-subtitle { font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0; }
-.modern-page-subtitle strong { color: #4361ee; }
-
 .modern-breadcrumb ol { display: flex; list-style: none; padding: 0; margin: 0 0 0.5rem; gap: 0.5rem; font-size: 0.8rem; align-items: center; }
 .modern-breadcrumb li { color: #adb5bd; }
 .modern-breadcrumb li a { color: #6c757d; text-decoration: none; transition: color 0.2s; }
@@ -347,7 +341,6 @@
 
 @media (max-width: 768px) {
     .modern-page-header { flex-direction: column; align-items: stretch; }
-    .modern-page-title { font-size: 1.35rem; }
     .modern-form-section-header { padding: 1.25rem 1.25rem 0.75rem; }
     .modern-form-section-body { padding: 1rem 1.25rem 1.5rem; }
     .modern-form-grid { grid-template-columns: 1fr; }

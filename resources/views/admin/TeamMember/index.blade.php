@@ -13,8 +13,6 @@
                     <li class="active">Team Members</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Team Members</h1>
-            <p class="modern-page-subtitle">Manage team members, their roles, and public visibility</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.team-members.create') }}" class="btn-modern btn-modern-primary">

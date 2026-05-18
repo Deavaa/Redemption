@@ -12,8 +12,6 @@
                     <li class="active">Send Message</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Send Telegram Message</h1>
-            <p class="modern-page-subtitle">Send a message via your Telegram bot — to a specific chat ID or branch group</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.telegram.index') }}" class="btn-modern btn-modern-outline">

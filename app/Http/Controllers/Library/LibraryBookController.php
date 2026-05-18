@@ -149,8 +149,6 @@ class LibraryBookController extends Controller
         // Increment read count
         $library->incrementReadCount();
 
-        $library->load(['branch', 'uploader']);
-        $fileUrl = $library->getFileUrl();
         $isPdf = $library->file_type === 'application/pdf' || str_ends_with(strtolower($library->file_path), '.pdf');
 
         // Generate a session token that the serve route will verify
@@ -158,7 +156,7 @@ class LibraryBookController extends Controller
         $readToken = Str::random(40);
         session(['library_read_token_' . $library->id => $readToken]);
 
-        return view('admin.library.read', compact('library', 'fileUrl', 'isPdf', 'readToken'));
+        return view('admin.library.read', compact('library', 'isPdf', 'readToken'));
     }
 
     public function edit(LibraryBook $library)

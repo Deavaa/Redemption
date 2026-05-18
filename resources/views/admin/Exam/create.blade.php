@@ -13,9 +13,6 @@
                         <li class="active">Schedule New</li>
                     </ol>
                 </nav>
-                <h1 class="modern-page-title">Schedule Exam</h1>
-                <p class="modern-page-subtitle">This exam will apply to <strong>all subjects</strong> and <strong>all
-                        classes</strong></p>
             </div>
             <div class="modern-page-header-right">
                 <a href="{{ route('admin.exams.index') }}" class="btn-modern btn-modern-outline">
@@ -297,24 +294,6 @@
                 flex: 1;
             }
 
-            .modern-page-title {
-                font-size: 1.75rem;
-                font-weight: 800;
-                color: #1a1a2e;
-                margin: 0;
-                letter-spacing: -0.5px;
-            }
-
-            .modern-page-subtitle {
-                font-size: 0.9rem;
-                color: #6c757d;
-                margin: 0.25rem 0 0;
-            }
-
-            .modern-page-subtitle strong {
-                color: #4361ee;
-            }
-
             /* Breadcrumb */
             .modern-breadcrumb ol {
                 display: flex;
@@ -594,10 +573,6 @@
                 .modern-page-header {
                     flex-direction: column;
                     align-items: stretch;
-                }
-
-                .modern-page-title {
-                    font-size: 1.35rem;
                 }
 
                 .modern-form-grid {

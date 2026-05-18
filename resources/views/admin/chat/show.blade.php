@@ -18,13 +18,6 @@
                     </li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">
-                @if($conversation->type === 'group')
-                    {{ $conversation->title ?? 'Group Chat' }}
-                @else
-                    {{ $conversation->otherParticipant?->name ?? 'Chat' }}
-                @endif
-            </h1>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route($routePrefix . '.index') }}" class="btn-modern btn-modern-outline">

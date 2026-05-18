@@ -13,8 +13,6 @@
                     <li class="active">Terms</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Terms</h1>
-            <p class="modern-page-subtitle">Manage academic terms and semesters</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.terms.create') }}" class="btn-modern btn-modern-primary">
@@ -184,20 +182,6 @@
 }
 
 .modern-page-header-left { flex: 1; }
-
-.modern-page-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #1a1a2e;
-    margin: 0;
-    letter-spacing: -0.5px;
-}
-
-.modern-page-subtitle {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 0.25rem 0 0;
-}
 
 /* Breadcrumb */
 .modern-breadcrumb ol {
@@ -554,8 +538,6 @@
         flex-direction: column;
         align-items: stretch;
     }
-
-    .modern-page-title { font-size: 1.35rem; }
 
     .modern-stats-row {
         grid-template-columns: 1fr;

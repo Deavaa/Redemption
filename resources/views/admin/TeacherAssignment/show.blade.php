@@ -12,8 +12,6 @@
                     <li class="active">Details</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Assignment Details</h1>
-            <p class="modern-page-subtitle">Viewing teacher assignment information</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.teacher-assignments.index') }}" class="btn-modern btn-modern-ghost">
@@ -170,8 +168,6 @@
 .modern-page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;gap:1rem}
 .modern-page-header-left{flex:1}
 .modern-page-header-right{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
-.modern-page-title{font-size:1.75rem;font-weight:700;color:#1e293b;margin:0}
-.modern-page-subtitle{font-size:.875rem;color:#64748b;margin:.25rem 0 0}
 .modern-breadcrumb{margin-bottom:.5rem}
 .modern-breadcrumb ol{display:flex;align-items:center;list-style:none;padding:0;margin:0;gap:.25rem;font-size:.8rem}
 .modern-breadcrumb li{color:#94a3b8}
@@ -227,7 +223,6 @@
 .modern-page{padding:1rem}
 .modern-page-header{flex-direction:column;gap:.75rem}
 .modern-page-header-right{width:100%;justify-content:flex-start}
-.modern-page-title{font-size:1.4rem}
 .modern-detail-grid{grid-template-columns:1fr}
 .modern-detail-row{flex-direction:column;gap:.25rem}
 .modern-detail-label{min-width:unset}

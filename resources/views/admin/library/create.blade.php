@@ -13,8 +13,6 @@
                     <li class="active">{{ __('app.upload_book') ?? 'Upload Book' }}</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">{{ __('app.upload_book') ?? 'Upload Book' }}</h1>
-            <p class="modern-page-subtitle">Upload softcopy books for online reading (download is disabled for copyright protection)</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.library.index') }}" class="btn-modern btn-modern-outline">

@@ -13,8 +13,6 @@
                     <li class="active">Edit</li>
                 </ol>
             </nav>
-            <h1 class="modern-page-title">Edit Team Member</h1>
-            <p class="modern-page-subtitle">Update information for <strong>{{ $item->name }}</strong></p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.team-members.index') }}" class="btn-modern btn-modern-outline">
