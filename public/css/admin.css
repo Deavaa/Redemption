@@ -301,9 +301,10 @@ a { text-decoration: none; color: inherit; }
     background: rgba(0,0,0,0.4);
     z-index: 99;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.3s;
 }
-.sidebar-backdrop.show { opacity: 1; }
+.sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
 
 /* ===== MAIN AREA ===== */
 .admin-main {

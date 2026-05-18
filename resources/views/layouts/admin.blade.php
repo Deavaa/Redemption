@@ -49,6 +49,7 @@
 
             // Check if teacher is a homeroom teacher for any class/section
             $isHomeroomTeacher = false;
+            $userBranchId = Auth::user()->branch_id;
             if ($isTeacher) {
                 $teacherUser = Auth::user();
                 $teacherModel = \App\Models\Teacher::where('user_id', $teacherUser->id)->first();
@@ -59,6 +60,9 @@
                     $isHomeroomTeacher = $teacherModel->classRooms()->exists() || $teacherModel->sections()->exists();
                 }
             }
+
+            // Get user's branch for branch_principal dropdown locking
+            $userBranch = Auth::user()->branch;
 
             // Route groups for active state detection
             $academicSetupRoutes = ['admin.academic-years.*','admin.terms.*','admin.subjects.*','admin.subject-assignments.*','admin.exams.*','admin.classrooms.*','admin.sections.*'];
@@ -580,7 +584,6 @@
             });
         });
         </script>
-        @endif
         <nav class="admin-topbar">
             <div class="topbar-left">
                 <button class="sidebar-toggle" id="sidebarToggle">
@@ -950,6 +953,35 @@
 </div>
 <form id="logoutForm" method="POST" action="{{ route('logout') }}" style="display:none">@csrf</form>
 <script>
+// Global user context for branch principal locking
+window.currentUser = {
+    role: '{{ Auth::user()->role }}',
+    branchId: {{ Auth::user()->branch_id ?? 'null' }},
+    branchName: '{{ $userBranch?->name ?? '' }}'
+};
+
+// Auto-lock branch dropdowns for branch_principal
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.currentUser.role === 'branch_principal' && window.currentUser.branchId) {
+        document.querySelectorAll('select[name="branch_id"]').forEach(function(sel) {
+            // Set the value to the user's branch
+            sel.value = window.currentUser.branchId;
+            // Disable the select
+            sel.disabled = true;
+            // Add a hidden input with the same name and value so it's still submitted
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = sel.name;
+            hidden.value = window.currentUser.branchId;
+            sel.parentNode.insertBefore(hidden, sel.nextSibling);
+            // Add visual indicator
+            sel.style.opacity = '0.7';
+            sel.style.cursor = 'not-allowed';
+        });
+    }
+});
+</script>
+<script>
 (function() {
     const sidebar = document.getElementById('adminSidebar');
     const backdrop = document.getElementById('sidebarBackdrop');
@@ -965,8 +997,20 @@
             sidebar.classList.remove('show');
         }
         if (backdrop) {
-            backdrop.classList.toggle('d-none', !show);
-            backdrop.classList.toggle('show', show);
+            if (show) {
+                backdrop.classList.remove('d-none');
+                // Force reflow before adding show class for transition
+                void backdrop.offsetWidth;
+                backdrop.classList.add('show');
+            } else {
+                backdrop.classList.remove('show');
+                // Hide after transition
+                setTimeout(() => {
+                    if (!backdrop.classList.contains('show')) {
+                        backdrop.classList.add('d-none');
+                    }
+                }, 300);
+            }
         }
     }
 

@@ -14,7 +14,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE certificates MODIFY COLUMN type ENUM('character','transfer','experience','achievement','completion') NOT NULL DEFAULT 'character'");
+        DB::statement("ALTER TABLE certificates MODIFY COLUMN type ENUM('character','transfer','experience','achievement','completion','academic','foldable','transcript','leaving_certificate') NOT NULL DEFAULT 'character'");
     }
 
 };
