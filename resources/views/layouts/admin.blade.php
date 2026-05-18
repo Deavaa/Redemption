@@ -802,9 +802,9 @@
                 }
             });
 
-            // Announcement Splash: show once per session
+            // Announcement Splash: show on every page load
             var splash = document.getElementById('announcementSplash');
-            if (splash && !sessionStorage.getItem('announcement_splash_dismissed')) {
+            if (splash) {
                 splash.classList.add('splash-show');
             }
 
@@ -820,7 +820,6 @@
                     splash.style.opacity = '';
                     splash.style.transition = '';
                 }, 300);
-                sessionStorage.setItem('announcement_splash_dismissed', '1');
             }
         }
         </script>
