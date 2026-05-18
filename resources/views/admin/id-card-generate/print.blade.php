@@ -360,7 +360,11 @@
                         </div>
                         <div class="id-card-info-row">
                             <span class="id-card-info-label">{{ __('app.roll_number') ?? 'Roll No' }}</span>
-                            <span class="id-card-info-value">{{ $student->roll_number ?? '-' }}</span>
+                            @php
+                                $displayRoll = $student->roll_number ?? '-';
+                                if (str_contains(strtolower($displayRoll), 'auto')) $displayRoll = '-';
+                            @endphp
+                            <span class="id-card-info-value">{{ $displayRoll }}</span>
                         </div>
                         <div class="id-card-info-row">
                             <span class="id-card-info-label">{{ __('app.class_section') ?? 'Class/Sec' }}</span>
