@@ -372,7 +372,11 @@
                         </div>
                         <div class="id-card-info-row">
                             <span class="id-card-info-label">{{ __('app.card_number') ?? 'Card No' }}</span>
-                            <span class="id-card-info-value">{{ $idCard->card_number ?? 'ID-' . str_pad($student->id, 5, '0', STR_PAD_LEFT) }}</span>
+                            @php
+                                $displayCardNumber = $idCard->card_number ?? 'ID-' . str_pad($student->id, 5, '0', STR_PAD_LEFT);
+                                if (str_contains(strtolower($displayCardNumber), 'auto')) $displayCardNumber = 'ID-' . str_pad($student->id, 5, '0', STR_PAD_LEFT);
+                            @endphp
+                            <span class="id-card-info-value">{{ $displayCardNumber }}</span>
                         </div>
                         @if($student->guardian_phone)
                         <div class="id-card-info-row">
@@ -386,7 +390,11 @@
                 {{-- Footer --}}
                 <div class="id-card-footer">
                     <span>{{ __('app.valid') ?? 'Valid' }}: {{ $idCard->issue_date ?? now()->format('Y-m-d') }} — {{ $idCard->valid_until ?? now()->addYear()->format('Y-m-d') }}</span>
-                    <span class="id-card-barcode">*{{ $student->admission_number ?? $student->id }}*</span>
+                    @php
+                        $barcodeValue = $student->admission_number;
+                        if (empty($barcodeValue) || str_contains(strtolower($barcodeValue), 'auto')) $barcodeValue = $student->id;
+                    @endphp
+                    <span class="id-card-barcode">*{{ $barcodeValue }}*</span>
                 </div>
             </div>
 
