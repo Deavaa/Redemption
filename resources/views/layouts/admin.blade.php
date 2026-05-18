@@ -763,14 +763,25 @@
         .announcement-splash-dismiss:hover { background: #2563eb; }
 
         @media (max-width: 768px) {
-            .announcement-banner-inner { padding: 0 10px; height: 36px; }
-            .announcement-badge { font-size: .72rem; padding: 2px 8px; }
-            .announcement-chip { font-size: .8rem; }
-
-            /* Fix: prevent announcement ticker from causing horizontal scroll */
+            /* Mobile: stack badge on line 1, ticker on line 2 */
             .announcement-banner { max-width: 100vw; overflow: hidden; }
-            .announcement-banner-inner { max-width: 100vw; overflow: hidden; }
-            .announcement-ticker-wrap { min-width: 0; }
+            .announcement-banner-inner {
+                max-width: 100vw;
+                overflow: hidden;
+                flex-wrap: wrap;
+                height: auto;
+                padding: 6px 10px;
+                gap: 4px 10px;
+            }
+            .announcement-badge { font-size: .72rem; padding: 2px 8px; }
+            .announcement-close { order: 2; }
+            .announcement-ticker-wrap {
+                min-width: 0;
+                flex-basis: 100%;
+                order: 3;
+                overflow: hidden;
+            }
+            .announcement-chip { font-size: .8rem; }
 
             .announcement-splash-overlay { padding: 8px; z-index: 10001; }
             .announcement-splash-modal { max-width: 100%; max-height: 90vh; border-radius: 12px; }
