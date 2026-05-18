@@ -14,74 +14,62 @@
             <h1 class="modern-page-title">Dashboard</h1>
             <p class="modern-page-subtitle">Welcome back! Here's an overview of your school management system.</p>
         </div>
-        <div class="modern-page-header-right">
-            <a href="{{ route('admin.settings.index') }}" class="btn-modern btn-modern-outline">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </a>
-        </div>
     </div>
 
-    {{-- Stats Row --}}
-    <div class="modern-stats-row">
-        <div class="modern-stat-card">
-            <div class="modern-stat-icon modern-stat-icon-blue">
-                <i class="fas fa-building"></i>
+    {{-- Compact Clickable Stats Grid --}}
+    <div class="dash-stats-grid">
+        <a href="{{ route('admin.branches.index') }}" class="dash-stat-card dash-stat-blue">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-building"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
             </div>
-            <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $totalBranches }}</span>
-                <span class="modern-stat-label">Branches</span>
+            <div class="dash-stat-value">{{ $totalBranches }}</div>
+            <div class="dash-stat-label">Branches</div>
+        </a>
+        <a href="{{ route('admin.teachers.index') }}" class="dash-stat-card dash-stat-green">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
             </div>
-        </div>
-        <div class="modern-stat-card">
-            <div class="modern-stat-icon modern-stat-icon-green">
-                <i class="fas fa-chalkboard-teacher"></i>
+            <div class="dash-stat-value">{{ $totalTeachers }}</div>
+            <div class="dash-stat-label">Teachers</div>
+        </a>
+        <a href="{{ route('admin.students.index') }}" class="dash-stat-card dash-stat-gold">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-user-graduate"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
             </div>
-            <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $totalTeachers }}</span>
-                <span class="modern-stat-label">Teachers</span>
+            <div class="dash-stat-value">{{ $totalStudents }}</div>
+            <div class="dash-stat-label">Students</div>
+        </a>
+        <a href="{{ route('admin.classrooms.index') }}" class="dash-stat-card dash-stat-purple">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-chalkboard"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
             </div>
-        </div>
-        <div class="modern-stat-card">
-            <div class="modern-stat-icon modern-stat-icon-gold">
-                <i class="fas fa-user-graduate"></i>
+            <div class="dash-stat-value">{{ $totalClasses }}</div>
+            <div class="dash-stat-label">Classes</div>
+        </a>
+        <a href="{{ route('admin.subjects.index') }}" class="dash-stat-card dash-stat-teal">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-book"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
             </div>
-            <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $totalStudents }}</span>
-                <span class="modern-stat-label">Students</span>
+            <div class="dash-stat-value">{{ $totalSubjects }}</div>
+            <div class="dash-stat-label">Subjects</div>
+        </a>
+        <a href="{{ route('admin.chat.index') }}" class="dash-stat-card dash-stat-rose">
+            <div class="dash-stat-top">
+                <div class="dash-stat-icon"><i class="fas fa-envelope"></i></div>
+                <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
             </div>
-        </div>
-        <div class="modern-stat-card">
-            <div class="modern-stat-icon modern-stat-icon-purple">
-                <i class="fas fa-chalkboard"></i>
-            </div>
-            <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $totalClasses }}</span>
-                <span class="modern-stat-label">Classes</span>
-            </div>
-        </div>
-        <div class="modern-stat-card">
-            <div class="modern-stat-icon modern-stat-icon-blue">
-                <i class="fas fa-book"></i>
-            </div>
-            <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $totalSubjects }}</span>
-                <span class="modern-stat-label">Subjects</span>
-            </div>
-        </div>
-        <div class="modern-stat-card">
-            <div class="modern-stat-icon modern-stat-icon-gold">
-                <i class="fas fa-envelope"></i>
-            </div>
-            <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $unreadMessages }}</span>
-                <span class="modern-stat-label">Unread Messages</span>
-            </div>
-        </div>
+            <div class="dash-stat-value">{{ $unreadMessages }}</div>
+            <div class="dash-stat-label">Unread Messages</div>
+        </a>
     </div>
 
     {{-- Quick Actions --}}
-    <div class="modern-card" style="margin-bottom: 1.5rem;">
+    <div class="modern-card" style="margin-bottom: 1.25rem;">
         <div class="modern-card-header">
             <div class="modern-card-header-left">
                 <div class="modern-form-section-icon modern-form-section-icon-gold" style="width:36px;height:36px;border-radius:10px;font-size:0.95rem;">
@@ -267,8 +255,8 @@
                         <h3 class="modern-card-title" style="color:#fff;">Current Academic Year</h3>
                     </div>
                 </div>
-                <div class="modern-card-body" style="text-align:center;padding:1.5rem;">
-                    <h4 style="color:#10b981;font-weight:800;margin:0 0 0.35rem;font-size:1.35rem;">{{ $currentYear->name }}</h4>
+                <div class="modern-card-body" style="text-align:center;padding:1.25rem;">
+                    <h4 style="color:#10b981;font-weight:800;margin:0 0 0.35rem;font-size:1.25rem;">{{ $currentYear->name }}</h4>
                     @if($currentYear->start_date)
                         <p style="color:#6c757d;margin:0 0 0.75rem;font-size:0.85rem;">{{ $currentYear->start_date }} &mdash; {{ $currentYear->end_date }}</p>
                     @endif
@@ -332,7 +320,7 @@
                         </div>
                         <div class="modern-info-row">
                             <span class="modern-info-label">Framework</span>
-                            <span class="modern-info-value">Laravel 11</span>
+                            <span class="modern-info-value">Laravel 12</span>
                         </div>
                         <div class="modern-info-row">
                             <span class="modern-info-label">Branches</span>
@@ -367,13 +355,12 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1.75rem;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
     gap: 1rem;
 }
 
 .modern-page-header-left { flex: 1; }
-.modern-page-header-right { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
 .modern-page-title {
     font-size: 1.75rem;
@@ -406,61 +393,130 @@
 .modern-breadcrumb li + li::before { content: '/'; margin-right: 0.5rem; color: #dee2e6; }
 .modern-breadcrumb li.active { color: #4361ee; font-weight: 500; }
 
-/* Stats Row */
-.modern-stats-row {
+/* ===== Compact Clickable Stat Cards ===== */
+.dash-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.75rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
 }
 
-.modern-stat-card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 1.25rem;
+.dash-stat-card {
     display: flex;
+    flex-direction: column;
+    padding: 1.1rem 1.25rem;
+    border-radius: 14px;
+    background: #fff;
+    border: 1.5px solid #f0f0f0;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.dash-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 14px 14px 0 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+
+.dash-stat-card:hover::before { opacity: 1; }
+
+.dash-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    border-color: transparent;
+}
+
+.dash-stat-top {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    border: 1px solid #f0f0f0;
-    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 0.75rem;
 }
 
-.modern-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.modern-stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+.dash-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
-    flex-shrink: 0;
+    font-size: 1.05rem;
 }
 
-.modern-stat-icon-blue { background: #eef2ff; color: #4361ee; }
-.modern-stat-icon-green { background: #ecfdf5; color: #10b981; }
-.modern-stat-icon-gold { background: #fefce8; color: #d97706; }
-.modern-stat-icon-purple { background: #f5f3ff; color: #7c3aed; }
+.dash-stat-arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: all 0.25s;
+}
 
-.modern-stat-info { display: flex; flex-direction: column; }
+.dash-stat-card:hover .dash-stat-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
 
-.modern-stat-value {
-    font-size: 1.5rem;
+.dash-stat-value {
+    font-size: 1.6rem;
     font-weight: 800;
     color: #1a1a2e;
     line-height: 1.2;
+    margin-bottom: 0.15rem;
 }
 
-.modern-stat-label {
-    font-size: 0.8rem;
+.dash-stat-label {
+    font-size: 0.78rem;
     color: #6c757d;
     font-weight: 500;
 }
+
+/* Blue variant */
+.dash-stat-blue .dash-stat-icon { background: #eef2ff; color: #4361ee; }
+.dash-stat-blue .dash-stat-arrow { background: #eef2ff; color: #4361ee; }
+.dash-stat-blue::before { background: linear-gradient(90deg, #4361ee, #6366f1); }
+.dash-stat-blue:hover { border-color: rgba(67,97,238,0.15); }
+
+/* Green variant */
+.dash-stat-green .dash-stat-icon { background: #ecfdf5; color: #10b981; }
+.dash-stat-green .dash-stat-arrow { background: #ecfdf5; color: #10b981; }
+.dash-stat-green::before { background: linear-gradient(90deg, #10b981, #34d399); }
+.dash-stat-green:hover { border-color: rgba(16,185,129,0.15); }
+
+/* Gold variant */
+.dash-stat-gold .dash-stat-icon { background: #fefce8; color: #d97706; }
+.dash-stat-gold .dash-stat-arrow { background: #fefce8; color: #d97706; }
+.dash-stat-gold::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.dash-stat-gold:hover { border-color: rgba(245,158,11,0.15); }
+
+/* Purple variant */
+.dash-stat-purple .dash-stat-icon { background: #f5f3ff; color: #7c3aed; }
+.dash-stat-purple .dash-stat-arrow { background: #f5f3ff; color: #7c3aed; }
+.dash-stat-purple::before { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.dash-stat-purple:hover { border-color: rgba(124,58,237,0.15); }
+
+/* Teal variant */
+.dash-stat-teal .dash-stat-icon { background: #f0fdfa; color: #14b8a6; }
+.dash-stat-teal .dash-stat-arrow { background: #f0fdfa; color: #14b8a6; }
+.dash-stat-teal::before { background: linear-gradient(90deg, #14b8a6, #5eead4); }
+.dash-stat-teal:hover { border-color: rgba(20,184,166,0.15); }
+
+/* Rose variant */
+.dash-stat-rose .dash-stat-icon { background: #fff1f2; color: #f43f5e; }
+.dash-stat-rose .dash-stat-arrow { background: #fff1f2; color: #f43f5e; }
+.dash-stat-rose::before { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+.dash-stat-rose:hover { border-color: rgba(244,63,94,0.15); }
 
 /* Card */
 .modern-card {
@@ -570,7 +626,7 @@
 .modern-dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 360px;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .modern-dashboard-sidebar {
@@ -607,7 +663,6 @@
 }
 
 .modern-table tbody tr:last-child td { border-bottom: none; }
-
 .modern-table tbody tr:hover { background: #f9fafb; }
 
 .modern-table-module {
@@ -759,20 +814,33 @@
     background: #eef2ff;
 }
 
-/* Responsive */
+/* Stat Icon colors reused */
+.modern-stat-icon-blue { background: #eef2ff; color: #4361ee; }
+.modern-stat-icon-green { background: #ecfdf5; color: #10b981; }
+.modern-stat-icon-gold { background: #fefce8; color: #d97706; }
+.modern-stat-icon-purple { background: #f5f3ff; color: #7c3aed; }
+
+/* ===== Responsive ===== */
 @media (max-width: 1024px) {
     .modern-dashboard-grid {
         grid-template-columns: 1fr;
+    }
+    .dash-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 768px) {
     .modern-page-header { flex-direction: column; align-items: stretch; }
     .modern-page-title { font-size: 1.35rem; }
-    .modern-stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-    .modern-stat-card { padding: 1rem; gap: 0.75rem; }
-    .modern-stat-icon { width: 42px; height: 42px; font-size: 1.1rem; }
-    .modern-stat-value { font-size: 1.3rem; }
+    .dash-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+    .dash-stat-card { padding: 0.9rem 1rem; }
+    .dash-stat-icon { width: 36px; height: 36px; font-size: 0.95rem; }
+    .dash-stat-value { font-size: 1.35rem; }
+    .dash-stat-label { font-size: 0.72rem; }
     .modern-quick-actions { flex-wrap: wrap; gap: 0.5rem; }
     .modern-quick-action-card { padding: 0.6rem 0.8rem; }
     .modern-quick-action-label { font-size: 0.78rem; }
@@ -780,16 +848,18 @@
     .modern-activity-item { padding: 0.6rem 1rem; }
     .modern-card-body { padding: 1rem; }
     .btn-modern { min-height: 44px; }
-    .modern-page-header-right { width: 100%; }
-    .modern-page-header-right .btn-modern { flex: 1; justify-content: center; }
 }
 
 @media (max-width: 480px) {
-    .modern-stats-row { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-    .modern-stat-card { padding: 0.85rem; gap: 0.6rem; }
-    .modern-stat-icon { width: 38px; height: 38px; font-size: 1rem; border-radius: 10px; }
-    .modern-stat-value { font-size: 1.15rem; }
-    .modern-stat-label { font-size: 0.72rem; }
+    .dash-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    .dash-stat-card { padding: 0.8rem; }
+    .dash-stat-icon { width: 34px; height: 34px; border-radius: 9px; font-size: 0.9rem; }
+    .dash-stat-value { font-size: 1.2rem; }
+    .dash-stat-label { font-size: 0.7rem; }
+    .dash-stat-arrow { display: none; }
     .modern-quick-action-label { display: none; }
     .modern-quick-action-card { padding: 0.5rem; justify-content: center; }
     .modern-card-header { padding: 0.85rem 1rem; }

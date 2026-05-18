@@ -397,7 +397,6 @@
                         <li><a href="{{ route('admin.roles.index') }}" class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"><i class="fas fa-shield-alt"></i> Roles & Permissions</a></li>
                         @endif
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Configuration</li>
-                        <li><a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fas fa-cog"></i> Settings</a></li>
                         @if($menuLevel === 'full')
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Data & Backup</li>
                         <li><a href="{{ route('admin.database-backup.index') }}" class="{{ request()->routeIs('admin.database-backup.*') ? 'active' : '' }}"><i class="fas fa-database"></i> Database Export</a></li>
@@ -459,7 +458,7 @@
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #fff;
             position: relative;
-            z-index: 60;
+            z-index: 50;
             border-bottom: 2px solid #3b82f6;
         }
         .announcement-banner-inner {
@@ -674,6 +673,9 @@
                     </ul>
                 </div>
 
+                <a href="{{ route('admin.settings.index') }}" class="topbar-icon-btn topbar-icon-link" title="{{ __('app.settings') ?? 'Settings' }}">
+                    <i class="fas fa-cog"></i>
+                </a>
                 <a href="{{ url('/') }}" class="topbar-icon-btn topbar-icon-link" target="_blank" title="{{ __('app.view_website') }}">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
@@ -918,18 +920,31 @@
 
     function showSidebar(show) {
         if (!sidebar) return;
-        sidebar.classList.toggle('show', show);
+        if (show) {
+            sidebar.classList.add('show');
+            sidebar.removeAttribute('style');
+        } else {
+            sidebar.classList.remove('show');
+        }
         if (backdrop) {
             backdrop.classList.toggle('d-none', !show);
             backdrop.classList.toggle('show', show);
         }
     }
 
-    if (toggle) toggle.addEventListener('click', () => showSidebar(!sidebar.classList.contains('show')));
+    if (toggle) {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            showSidebar(!sidebar.classList.contains('show'));
+        });
+    }
     if (backdrop) backdrop.addEventListener('click', () => showSidebar(false));
 
+    // Close sidebar on non-submenu link click (mobile)
     document.querySelectorAll('.sidebar-menu a').forEach(link => {
-        link.addEventListener('click', () => {
+        link.addEventListener('click', function(e) {
+            // Don't close for submenu toggles — let Bootstrap handle them
             if (link.hasAttribute('data-bs-toggle')) return;
             if (window.innerWidth < 768) showSidebar(false);
         });

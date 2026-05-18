@@ -325,7 +325,10 @@
 
 /* Type Selection */
 .gen-type-grid {
-    display: grid; grid-template-columns: 1fr; gap: 6px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+}
+@media (max-width: 576px) {
+    .gen-type-grid { grid-template-columns: 1fr; }
 }
 .gen-type-card { cursor: pointer; display: block; }
 .gen-type-card input[type="radio"] { display: none; }
