@@ -6,99 +6,107 @@
     <title>Academic Transcript - {{ $student->first_name }} {{ $student->last_name }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @page { size: A4; margin: 12mm; }
+        @page { size: A4 landscape; margin: 10mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; font-size: 9.5px; color: #1e293b; line-height: 1.4; background: #fff; }
-        .page { page-break-after: always; position: relative; min-height: 270mm; }
+        body { font-family: 'Inter', sans-serif; font-size: 8px; color: #1e293b; line-height: 1.35; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .page { page-break-after: always; position: relative; min-height: 190mm; }
         .page:last-child { page-break-after: auto; }
 
         /* Header */
-        .transcript-header { text-align: center; border-bottom: 3px double #6366f1; padding-bottom: 10px; margin-bottom: 14px; }
-        .school-name { font-size: 16px; font-weight: 800; color: #1e1b4b; letter-spacing: 1px; text-transform: uppercase; }
-        .school-sub { font-size: 9px; color: #64748b; margin-top: 2px; }
-        .doc-title { display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 13px; font-weight: 700; padding: 4px 24px; border-radius: 4px; margin: 8px 0 4px; letter-spacing: 2px; text-transform: uppercase; }
-        .doc-number { font-size: 8px; color: #94a3b8; margin-top: 2px; }
+        .transcript-header { text-align: center; border-bottom: 3px double #6366f1; padding-bottom: 6px; margin-bottom: 8px; }
+        .school-name { font-size: 14px; font-weight: 800; color: #1e1b4b; letter-spacing: 1px; text-transform: uppercase; }
+        .school-sub { font-size: 8px; color: #64748b; margin-top: 1px; }
+        .doc-title { display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 20px; border-radius: 4px; margin: 5px 0 3px; letter-spacing: 2px; text-transform: uppercase; }
+        .doc-number { font-size: 7px; color: #94a3b8; margin-top: 1px; }
 
-        /* Student Info Grid */
-        .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 20px; margin-bottom: 14px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
-        .info-row { display: flex; padding: 3px 10px; border-bottom: 1px solid #f1f5f9; }
-        .info-row:nth-child(odd) { background: #fafafe; }
-        .info-label { font-weight: 600; color: #475569; min-width: 130px; font-size: 8.5px; }
-        .info-value { color: #1e293b; font-size: 8.5px; }
+        /* Student Info */
+        .student-info { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px 16px; margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; padding: 3px 8px; background: #fafbfc; }
+        .info-row { display: flex; padding: 1px 4px; }
+        .info-label { font-weight: 600; color: #475569; min-width: 90px; font-size: 7px; }
+        .info-value { color: #1e293b; font-size: 7px; }
 
-        /* Academic Year Section */
-        .year-section { margin-bottom: 14px; }
-        .year-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; padding: 4px 10px; background: linear-gradient(135deg, #eef2ff, #f5f3ff); border-left: 3px solid #6366f1; border-radius: 0 4px 4px 0; }
-        .year-title { font-size: 10px; font-weight: 700; color: #312e81; }
-        .year-class { font-size: 8.5px; color: #6366f1; font-weight: 600; background: rgba(99,102,241,0.1); padding: 1px 8px; border-radius: 10px; }
-        .year-rank { font-size: 8.5px; color: #059669; font-weight: 600; margin-left: auto; }
+        /* Transcript Table */
+        .transcript-table { width: 100%; border-collapse: collapse; font-size: 7.5px; margin-bottom: 6px; }
+        .transcript-table thead th { background: #1e1b4b; color: #fff; padding: 3px 4px; font-weight: 600; font-size: 6.5px; text-transform: uppercase; letter-spacing: 0.2px; border: 1px solid #312e81; text-align: center; }
+        .transcript-table thead th.subject-col { text-align: left; min-width: 100px; position: sticky; left: 0; z-index: 2; background: #1e1b4b; }
 
-        /* Term Section */
-        .term-section { margin-bottom: 8px; }
-        .term-header { font-size: 9px; font-weight: 700; color: #475569; padding: 2px 8px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; margin-bottom: 3px; }
+        /* Year header row - spans termCount+1 (terms + annual) */
+        .year-header-cell { background: #312e81 !important; font-size: 7.5px !important; font-weight: 700 !important; letter-spacing: 0.5px; padding: 3px 6px !important; border-bottom: 2px solid #c9a84c !important; }
 
-        /* Marks Table */
-        .marks-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 4px; }
-        .marks-table thead th { background: #1e1b4b; color: #fff; padding: 3px 6px; font-weight: 600; font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.3px; border: 1px solid #312e81; text-align: center; }
-        .marks-table thead th:first-child { text-align: left; width: 30%; }
-        .marks-table tbody td { padding: 2.5px 6px; border: 1px solid #e2e8f0; text-align: center; }
-        .marks-table tbody td:first-child { text-align: left; font-weight: 500; }
-        .marks-table tbody tr:nth-child(even) { background: #fafbfc; }
-        .marks-table tbody tr:hover { background: #f0f0ff; }
-        .grade-badge { display: inline-block; min-width: 22px; text-align: center; font-weight: 700; font-size: 8px; padding: 0 3px; border-radius: 3px; }
+        /* Term sub-header row */
+        .term-header-cell { background: #4338ca !important; font-size: 6.5px !important; }
+        .annual-header-cell { background: #3730a3 !important; font-weight: 700 !important; }
+
+        /* Body */
+        .transcript-table tbody td { padding: 2px 4px; border: 1px solid #e2e8f0; text-align: center; }
+        .transcript-table tbody td.subject-col { text-align: left; font-weight: 600; background: #f8fafc; position: sticky; left: 0; z-index: 1; min-width: 100px; }
+        .transcript-table tbody tr:nth-child(even) td { background: #fafbfc; }
+        .transcript-table tbody tr:nth-child(even) td.subject-col { background: #f1f5f9; }
+        .transcript-table tbody tr:hover td { background: #eef2ff; }
+        .transcript-table tbody tr:hover td.subject-col { background: #eef2ff; }
+        .transcript-table tbody tr.total-row td { background: linear-gradient(135deg, #eef2ff, #f5f3ff) !important; font-weight: 700; border-top: 2px solid #6366f1; }
+        .transcript-table tbody tr.total-row td.subject-col { background: linear-gradient(135deg, #eef2ff, #f5f3ff) !important; }
+        .transcript-table tbody tr.average-row td { background: #f0fdf4 !important; font-weight: 700; border-top: 1px solid #86efac; }
+        .transcript-table tbody tr.average-row td.subject-col { background: #f0fdf4 !important; }
+        .transcript-table tbody tr.rank-row td { background: #fffbeb !important; font-weight: 600; border-top: 1px solid #fde68a; }
+        .transcript-table tbody tr.rank-row td.subject-col { background: #fffbeb !important; }
+
+        /* Score highlights */
+        .score-high { color: #059669; font-weight: 700; }
+        .score-low { color: #dc2626; font-weight: 600; }
+        .score-null { color: #cbd5e1; }
+
+        /* Fee Summary */
+        .fee-section { margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; }
+        .fee-header { background: linear-gradient(135deg, #f0fdf4, #ecfdf5); padding: 3px 8px; font-weight: 700; font-size: 7.5px; color: #166534; border-bottom: 1px solid #bbf7d0; }
+        .fee-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1px; background: #e2e8f0; }
+        .fee-item { background: #fff; padding: 3px 6px; text-align: center; }
+        .fee-item-label { font-size: 6.5px; color: #64748b; text-transform: uppercase; font-weight: 600; }
+        .fee-item-value { font-size: 9px; font-weight: 700; color: #1e293b; margin-top: 1px; }
+        .fee-item-value.clear { color: #059669; }
+        .fee-item-value.outstanding { color: #dc2626; }
+
+        /* Grading Scale */
+        .grading-section { margin-top: 6px; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 4px; }
+        .grading-title { font-size: 7px; font-weight: 700; color: #475569; margin-bottom: 2px; }
+        .grading-scale { display: flex; flex-wrap: wrap; gap: 3px; }
+        .grading-item { font-size: 6.5px; padding: 1px 5px; border-radius: 2px; border: 1px solid #e2e8f0; }
+        .grading-item span { font-weight: 700; }
         .grade-a { background: #dcfce7; color: #166534; }
         .grade-b { background: #dbeafe; color: #1e40af; }
         .grade-c { background: #fef9c3; color: #854d0e; }
         .grade-d { background: #fed7aa; color: #9a3412; }
         .grade-f { background: #fecaca; color: #991b1b; }
 
-        /* Term Summary */
-        .term-summary { display: flex; gap: 12px; justify-content: flex-end; padding: 2px 6px; font-size: 8px; }
-        .term-summary span { color: #64748b; }
-        .term-summary strong { color: #1e1b4b; }
-
-        /* Year Summary */
-        .year-summary { display: flex; gap: 14px; justify-content: center; padding: 4px 10px; background: linear-gradient(135deg, #eef2ff, #faf5ff); border-radius: 4px; margin-top: 4px; border: 1px solid #e0e7ff; }
-        .year-summary-item { font-size: 8.5px; color: #475569; }
-        .year-summary-item strong { color: #1e1b4b; }
-
-        /* Fee Summary */
-        .fee-section { margin-top: 12px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
-        .fee-header { background: linear-gradient(135deg, #f0fdf4, #ecfdf5); padding: 4px 10px; font-weight: 700; font-size: 9px; color: #166534; border-bottom: 1px solid #bbf7d0; }
-        .fee-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1px; background: #e2e8f0; }
-        .fee-item { background: #fff; padding: 4px 8px; text-align: center; }
-        .fee-item-label { font-size: 7.5px; color: #64748b; text-transform: uppercase; font-weight: 600; }
-        .fee-item-value { font-size: 10px; font-weight: 700; color: #1e293b; margin-top: 1px; }
-        .fee-item-value.clear { color: #059669; }
-        .fee-item-value.outstanding { color: #dc2626; }
-
-        /* Grading Scale */
-        .grading-section { margin-top: 10px; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; }
-        .grading-title { font-size: 8.5px; font-weight: 700; color: #475569; margin-bottom: 3px; }
-        .grading-scale { display: flex; flex-wrap: wrap; gap: 4px; }
-        .grading-item { font-size: 7.5px; padding: 1px 6px; border-radius: 3px; border: 1px solid #e2e8f0; }
-        .grading-item span { font-weight: 700; }
-
         /* Footer / Signatures */
-        .footer-section { margin-top: 20px; }
-        .signatures { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center; margin-top: 40px; }
-        .sig-line { border-top: 1px solid #94a3b8; padding-top: 4px; }
-        .sig-title { font-size: 8px; font-weight: 700; color: #1e293b; text-transform: uppercase; }
-        .sig-name { font-size: 7.5px; color: #64748b; }
+        .footer-section { margin-top: 14px; }
+        .signatures { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center; margin-top: 30px; }
+        .sig-line { border-top: 1px solid #94a3b8; padding-top: 3px; }
+        .sig-title { font-size: 7px; font-weight: 700; color: #1e293b; text-transform: uppercase; }
+        .sig-name { font-size: 6.5px; color: #64748b; }
 
-        .official-stamp { text-align: center; margin-top: 10px; font-size: 7.5px; color: #94a3b8; border: 1px dashed #cbd5e1; padding: 4px; border-radius: 4px; }
+        .official-stamp { text-align: center; margin-top: 8px; font-size: 6.5px; color: #94a3b8; border: 1px dashed #cbd5e1; padding: 3px; border-radius: 3px; }
 
         /* Watermark */
-        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 60px; font-weight: 800; color: rgba(99,102,241,0.03); text-transform: uppercase; letter-spacing: 10px; z-index: -1; pointer-events: none; }
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 50px; font-weight: 800; color: rgba(99,102,241,0.03); text-transform: uppercase; letter-spacing: 8px; z-index: -1; pointer-events: none; }
 
         .print-btn { position: fixed; top: 10px; right: 10px; z-index: 999; background: #6366f1; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(99,102,241,0.3); transition: all 0.2s; }
         .print-btn:hover { background: #4f46e5; transform: translateY(-1px); }
-        @media print { .print-btn { display: none; } .watermark { color: rgba(99,102,241,0.03); } }
+        @media print { .print-btn { display: none; } }
     </style>
 </head>
 <body>
 <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Transcript</button>
 <div class="watermark">TRANSCRIPT</div>
+
+@php
+    $yearCount = count($yearColumns);
+    // Determine how many years fit per page (landscape A4 ~ 270mm usable width)
+    // Subject col ~100px, each year needs (termCount + 1 for annual) * ~36px
+    // With 2 terms: 3 cols * 36 = 108px per year + 100px subject = ~208px for 1 year
+    // Available width ~960px, so max ~7-8 years with 2 terms on landscape
+    $yearsPerPage = max(1, $yearCount); // All years in one table if possible
+@endphp
 
 <div class="page">
     {{-- Header --}}
@@ -112,97 +120,110 @@
     {{-- Student Info --}}
     <div class="student-info">
         <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">{{ $student->first_name }} {{ $student->last_name }}</span></div>
-        <div class="info-row"><span class="info-label">Admission Number</span><span class="info-value">{{ $student->admission_number ?? '-' }}</span></div>
+        <div class="info-row"><span class="info-label">Admission No.</span><span class="info-value">{{ $student->admission_number ?? '-' }}</span></div>
         <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value">{{ $student->date_of_birth ? $student->date_of_birth->format('M d, Y') : '-' }}</span></div>
         <div class="info-row"><span class="info-label">Gender</span><span class="info-value">{{ ucfirst($student->gender ?? '-') }}</span></div>
         <div class="info-row"><span class="info-label">Nationality</span><span class="info-value">{{ $student->nationality ?? '-' }}</span></div>
         <div class="info-row"><span class="info-label">Admission Date</span><span class="info-value">{{ $student->admission_date ? $student->admission_date->format('M d, Y') : '-' }}</span></div>
         <div class="info-row"><span class="info-label">Current Class</span><span class="info-value">{{ $student->classroom?->name ?? '-' }}</span></div>
         <div class="info-row"><span class="info-label">Roll Number</span><span class="info-value">{{ $student->roll_number ?? '-' }}</span></div>
-        @if($student->parents && $student->parents->count() > 0)
-        <div class="info-row"><span class="info-label">Parent/Guardian</span><span class="info-value">{{ $student->parents->first()->father_name ?? $student->parents->first()->guardian_name ?? '-' }}</span></div>
-        <div class="info-row"><span class="info-label">Parent Phone</span><span class="info-value">{{ $student->parents->first()->father_phone ?? $student->parents->first()->guardian_phone ?? '-' }}</span></div>
-        @else
-        <div class="info-row"><span class="info-label">Guardian Name</span><span class="info-value">{{ $student->guardian_name ?? '-' }}</span></div>
-        <div class="info-row"><span class="info-label">Guardian Phone</span><span class="info-value">{{ $student->guardian_phone ?? '-' }}</span></div>
-        @endif
         <div class="info-row"><span class="info-label">Previous School</span><span class="info-value">{{ $student->previous_school ?? '-' }}</span></div>
     </div>
 
-    {{-- Academic Years --}}
-    @foreach($yearsData as $yi => $yearData)
-    <div class="year-section">
-        <div class="year-header">
-            <span class="year-title">{{ $yearData['year_name'] }}</span>
-            <span class="year-class">Class: {{ $yearData['class_name'] }}</span>
-            @if($yearData['class_rank'])
-            <span class="year-rank"><i class="fas fa-trophy" style="font-size:8px;"></i> Rank: {{ $yearData['class_rank'] }}</span>
-            @endif
-        </div>
-
-        @foreach($yearData['terms'] as $termData)
-        <div class="term-section">
-            <div class="term-header">{{ $termData['term_name'] }}</div>
-            <table class="marks-table">
-                <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>CA (30%)</th>
-                        <th>Exam (70%)</th>
-                        <th>Total (100)</th>
-                        <th>Grade</th>
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($termData['subjects'] as $subj)
-                    <tr>
-                        <td>{{ $subj['name'] }}</td>
-                        <td>{{ $subj['ca_total'] ?? '-' }}</td>
-                        <td>{{ $subj['exam_total'] ?? '-' }}</td>
-                        <td><strong>{{ $subj['grand_total'] ?? '-' }}</strong></td>
-                        <td>
-                            @php
-                                $gClass = 'grade-c';
-                                $g = $subj['grade'] ?? '';
-                                if (in_array($g, ['A+','A','A-'])) $gClass = 'grade-a';
-                                elseif (in_array($g, ['B+','B','B-'])) $gClass = 'grade-b';
-                                elseif (in_array($g, ['C+','C','C-'])) $gClass = 'grade-c';
-                                elseif ($g === 'D') $gClass = 'grade-d';
-                                elseif ($g === 'F') $gClass = 'grade-f';
-                            @endphp
-                            <span class="grade-badge {{ $gClass }}">{{ $g }}</span>
-                        </td>
-                        <td>{{ $subj['remarks'] ?? '' }}</td>
-                    </tr>
+    {{-- Main Transcript Table: Subjects as rows, Years as column groups --}}
+    <table class="transcript-table">
+        <thead>
+            {{-- Row 1: Year headers (each spans termCount + 1 for annual) --}}
+            <tr>
+                <th class="subject-col" rowspan="2">Subject</th>
+                @foreach($yearColumns as $yi => $yc)
+                    <th class="year-header-cell" colspan="{{ $termCount + 1 }}">
+                        {{ $yc['year_name'] }} &mdash; {{ $yc['class_name'] }}
+                    </th>
+                @endforeach
+            </tr>
+            {{-- Row 2: Term sub-headers + Annual --}}
+            <tr>
+                @foreach($yearColumns as $yi => $yc)
+                    @foreach($allTermNames as $tName)
+                        <th class="term-header-cell">{{ $tName }}</th>
                     @endforeach
-                </tbody>
-            </table>
-            <div class="term-summary">
-                <span>Total: <strong>{{ $termData['total'] }}</strong></span>
-                <span>Average: <strong>{{ $termData['average'] }}</strong></span>
-                <span>Subjects: <strong>{{ $termData['subject_count'] }}</strong></span>
-            </div>
-        </div>
-        @endforeach
+                    <th class="term-header-cell annual-header-cell">Annual</th>
+                @endforeach
+            </tr>
+        </thead>
+        <tbody>
+            {{-- Subject rows --}}
+            @foreach($subjectRows as $subjectName => $yearData)
+            <tr>
+                <td class="subject-col">{{ $subjectName }}</td>
+                @foreach($yearColumns as $yi => $yc)
+                    @php $cellData = $yearData[$yi] ?? array_fill_keys(array_merge($allTermNames, ['annual']), null); @endphp
+                    @foreach($allTermNames as $tName)
+                        @php
+                            $val = $cellData[$tName] ?? null;
+                            $cls = '';
+                            if ($val === null) $cls = 'score-null';
+                            elseif ($val >= 80) $cls = 'score-high';
+                            elseif ($val < 50) $cls = 'score-low';
+                        @endphp
+                        <td class="{{ $cls }}">{{ $val !== null ? $val : '&mdash;' }}</td>
+                    @endforeach
+                    @php
+                        $annualVal = $cellData['annual'] ?? null;
+                        $annualCls = '';
+                        if ($annualVal === null) $annualCls = 'score-null';
+                        elseif ($annualVal >= 80) $annualCls = 'score-high';
+                        elseif ($annualVal < 50) $annualCls = 'score-low';
+                    @endphp
+                    <td class="{{ $annualCls }}" style="font-weight:700;">{{ $annualVal !== null ? $annualVal : '&mdash;' }}</td>
+                @endforeach
+            </tr>
+            @endforeach
 
-        <div class="year-summary">
-            <span class="year-summary-item">Year Average: <strong>{{ $yearData['year_average'] }}</strong></span>
-            <span class="year-summary-item">Terms: <strong>{{ count($yearData['terms']) }}</strong></span>
-        </div>
-    </div>
+            {{-- Total row --}}
+            <tr class="total-row">
+                <td class="subject-col">Total</td>
+                @foreach($yearColumns as $yi => $yc)
+                    @php $yt = $yearTotals[$yi] ?? []; @endphp
+                    @foreach($allTermNames as $tName)
+                        <td>{{ $yt[$tName] ?? 0 }}</td>
+                    @endforeach
+                    <td>{{ $yt['annual'] ?? 0 }}</td>
+                @endforeach
+            </tr>
 
-    {{-- Page break after every 2 years to avoid overflow --}}
-    @if($yi % 2 === 1 && !$loop->last)
-</div>
-<div class="page">
-    <div class="transcript-header" style="border-bottom:2px solid #6366f1;padding-bottom:6px;margin-bottom:10px;">
-        <div class="school-name" style="font-size:12px;">{{ \App\Models\Setting::get('school_name', 'School of Redemption') }}</div>
-        <div class="doc-title" style="font-size:10px;padding:2px 16px;">Academic Transcript (Continued)</div>
-        <div class="doc-number">{{ $student->first_name }} {{ $student->last_name }} &bull; {{ $student->admission_number ?? '' }}</div>
-    </div>
-    @endif
-    @endforeach
+            {{-- Average row --}}
+            <tr class="average-row">
+                <td class="subject-col">Average</td>
+                @foreach($yearColumns as $yi => $yc)
+                    @php
+                        $yt = $yearTotals[$yi] ?? [];
+                        $count = $yt['count'] ?? 1;
+                    @endphp
+                    @foreach($allTermNames as $tName)
+                        @php $tTotal = $yt[$tName] ?? 0; @endphp
+                        <td>{{ $count > 0 ? round($tTotal / $count, 1) : 0 }}</td>
+                    @endforeach
+                    <td>{{ $yearAverages[$yi] ?? 0 }}</td>
+                @endforeach
+            </tr>
+
+            {{-- Rank row --}}
+            <tr class="rank-row">
+                <td class="subject-col">Class Rank</td>
+                @foreach($yearColumns as $yi => $yc)
+                    <td colspan="{{ $termCount + 1 }}">
+                        @if($yearRanks[$yi])
+                            <i class="fas fa-trophy" style="font-size:6px;color:#d97706;"></i> {{ $yearRanks[$yi] }}
+                        @else
+                            &mdash;
+                        @endif
+                    </td>
+                @endforeach
+            </tr>
+        </tbody>
+    </table>
 
     {{-- Fee Summary --}}
     <div class="fee-section">
@@ -267,7 +288,7 @@
                 </div>
             </div>
         </div>
-        <div class="official-stamp">OFFICIAL TRANSCRIPT &bull; This document is issued under the authority of {{ \App\Models\Setting::get('school_name', 'the School') }} &bull; Certificate No: {{ $cert->certificate_number }}</div>
+        <div class="official-stamp">OFFICIAL TRANSCRIPT &bull; Issued under the authority of {{ \App\Models\Setting::get('school_name', 'the School') }} &bull; Certificate No: {{ $cert->certificate_number }}</div>
     </div>
 </div>
 </body>

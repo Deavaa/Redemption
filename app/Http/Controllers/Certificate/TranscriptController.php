@@ -39,7 +39,7 @@ class TranscriptController extends Controller
             'parents',
         ])->findOrFail($r->student_id);
 
-        // Get ALL mark entries across ALL academic years, grouped by year then term
+        // Get ALL mark entries across ALL academic years
         $allMarks = MarkEntry::with(['subject', 'term', 'academicYear', 'classRoom'])
             ->where('student_id', $student->id)
             ->orderBy('academic_year_id')
@@ -47,67 +47,111 @@ class TranscriptController extends Controller
             ->orderBy('subject_id')
             ->get();
 
-        // Group by academic year
-        $yearsData = [];
+        // ── Build the new data structure ──
+        // Goal: one row per subject, columns = academic years, each year has Term1 | Term2 | Annual
+        // Also need to track all unique terms (could be 2 or 3 per year)
+
+        $yearColumns = [];   // ordered list of year info
+        $subjectRows  = [];  // [subjectName => [yearIndex => [term1 => score, term2 => score, ..., annual => score]]]
+        $yearTotals   = [];  // [yearIndex => [term1 => sum, term2 => sum, ..., annual => sum, count => n]]
+        $yearAverages = [];
+        $yearRanks    = [];
+
+        // 1) Identify all unique terms across all years (e.g. Term 1, Term 2, Term 3)
+        $allTermNames = [];
+        $allMarks->each(function ($m) use (&$allTermNames) {
+            $tName = $m->term ? $m->term->name : 'Term';
+            if (!in_array($tName, $allTermNames)) {
+                $allTermNames[] = $tName;
+            }
+        });
+        // Sort term names naturally (Term 1, Term 2, Term 3...)
+        natsort($allTermNames);
+        $allTermNames = array_values($allTermNames);
+        $termCount = count($allTermNames);
+
+        // 2) Group marks by academic year
         $academicYears = $allMarks->groupBy('academic_year_id');
 
         foreach ($academicYears as $yearId => $yearMarks) {
             $ay = $yearMarks->first()->academicYear;
-            $termsData = [];
+            $classRoom = $yearMarks->first()->classRoom;
+
+            $yearIndex = count($yearColumns);
+            $yearColumns[] = [
+                'year_name'  => $ay ? $ay->name : 'Unknown Year',
+                'class_name' => $classRoom ? $classRoom->name : '-',
+            ];
+
+            // Initialize totals for this year
+            $yearTotals[$yearIndex] = array_fill_keys($allTermNames, 0);
+            $yearTotals[$yearIndex]['annual'] = 0;
+            $yearTotals[$yearIndex]['count'] = 0;
 
             // Group by term within this year
             $terms = $yearMarks->groupBy('term_id');
+
+            // Build a map: termName => [subjectId => bestGrandTotal]
+            $termSubjectScores = [];
             foreach ($terms as $termId => $termMarks) {
                 $term = $termMarks->first()->term;
-                $subjects = [];
-                $totalGrand = 0;
-                $subjectCount = 0;
+                $tName = $term ? $term->name : 'Term';
 
-                // Group by subject (in case multiple exams per subject per term)
                 $subjectMarks = $termMarks->groupBy('subject_id');
                 foreach ($subjectMarks as $subjectId => $marks) {
                     $subject = $marks->first()->subject;
-                    // Take the best mark if multiple exams
+                    $sName = $subject ? $subject->name : 'Unknown';
                     $bestMark = $marks->sortByDesc('grand_total')->first();
 
-                    $subjects[] = [
-                        'name' => $subject ? $subject->name : 'Unknown',
-                        'code' => $subject ? $subject->code : '-',
-                        'ca_total' => $bestMark->ca_total,
-                        'exam_total' => $bestMark->exam_total,
-                        'grand_total' => $bestMark->grand_total,
-                        'grade' => $bestMark->grade,
-                        'remarks' => $bestMark->remarks,
-                    ];
-                    $totalGrand += $bestMark->grand_total;
-                    $subjectCount++;
+                    // Store in subjectRows
+                    if (!isset($subjectRows[$sName])) {
+                        $subjectRows[$sName] = [];
+                    }
+                    if (!isset($subjectRows[$sName][$yearIndex])) {
+                        $subjectRows[$sName][$yearIndex] = array_fill_keys(array_merge($allTermNames, ['annual']), null);
+                    }
+
+                    $score = $bestMark->grand_total ?? 0;
+                    $subjectRows[$sName][$yearIndex][$tName] = $score;
+
+                    // Track for totals
+                    $yearTotals[$yearIndex][$tName] = ($yearTotals[$yearIndex][$tName] ?? 0) + $score;
                 }
-
-                $average = $subjectCount > 0 ? round($totalGrand / $subjectCount, 2) : 0;
-
-                $termsData[] = [
-                    'term' => $term,
-                    'term_name' => $term ? $term->name : 'Unknown Term',
-                    'subjects' => $subjects,
-                    'total' => $totalGrand,
-                    'average' => $average,
-                    'subject_count' => $subjectCount,
-                ];
             }
 
-            // Calculate year average
-            $yearTotalAvg = 0;
-            $yearSubjectCount = 0;
-            foreach ($termsData as $td) {
-                $yearTotalAvg += $td['average'];
-                $yearSubjectCount++;
+            // Calculate annual (average of all terms) for each subject in this year
+            foreach ($subjectRows as $sName => &$yearData) {
+                if (isset($yearData[$yearIndex])) {
+                    $scores = [];
+                    foreach ($allTermNames as $tName) {
+                        if ($yearData[$yearIndex][$tName] !== null) {
+                            $scores[] = $yearData[$yearIndex][$tName];
+                        }
+                    }
+                    $yearData[$yearIndex]['annual'] = count($scores) > 0
+                        ? round(array_sum($scores) / count($scores), 1)
+                        : null;
+                }
             }
-            $yearAverage = $yearSubjectCount > 0 ? round($yearTotalAvg / $yearSubjectCount, 2) : 0;
+            unset($yearData);
 
-            // Get class info from marks
-            $classRoom = $yearMarks->first()->classRoom;
+            // Calculate year totals for annual column
+            $annualSum = 0;
+            $subjectCountForYear = 0;
+            foreach ($subjectRows as $sName => $yearData) {
+                if (isset($yearData[$yearIndex]) && $yearData[$yearIndex]['annual'] !== null) {
+                    $annualSum += $yearData[$yearIndex]['annual'];
+                    $subjectCountForYear++;
+                }
+            }
+            $yearTotals[$yearIndex]['annual'] = $annualSum;
+            $yearTotals[$yearIndex]['count'] = $subjectCountForYear;
 
-            // Get class rank if available
+            $yearAverages[$yearIndex] = $subjectCountForYear > 0
+                ? round($annualSum / $subjectCountForYear, 2)
+                : 0;
+
+            // Class rank
             $classRank = null;
             $progressReport = ProgressReport::where('student_id', $student->id)
                 ->where('academic_year_id', $yearId)
@@ -116,16 +160,11 @@ class TranscriptController extends Controller
             if ($progressReport) {
                 $classRank = $progressReport->class_rank ?? $progressReport->rank;
             }
-
-            $yearsData[] = [
-                'academic_year' => $ay,
-                'year_name' => $ay ? $ay->name : 'Unknown Year',
-                'class_name' => $classRoom ? $classRoom->name : '-',
-                'terms' => $termsData,
-                'year_average' => $yearAverage,
-                'class_rank' => $classRank,
-            ];
+            $yearRanks[$yearIndex] = $classRank;
         }
+
+        // Sort subjects alphabetically
+        ksort($subjectRows);
 
         // Get fee payment summary (join with fees table to get total amount)
         $feeSummary = FeePayment::join('fees', 'fee_payments.fee_id', '=', 'fees.id')
@@ -167,7 +206,9 @@ class TranscriptController extends Controller
         ]);
 
         return view('admin.certificate-generate.transcript', compact(
-            'student', 'yearsData', 'feeSummary', 'cert'
+            'student', 'cert', 'feeSummary',
+            'yearColumns', 'subjectRows', 'yearTotals', 'yearAverages', 'yearRanks',
+            'allTermNames', 'termCount'
         ));
     }
 }
