@@ -10,7 +10,7 @@ class TeacherController extends Controller
 {
     public function index()
     {
-        $data = Teacher::orderBy('first_name')->paginate(20);
+        $data = Teacher::orderBy('full_name')->paginate(20);
         return view('admin.Teacher.index', compact('data'));
     }
 
@@ -22,8 +22,7 @@ class TeacherController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'first_name'    => 'required|string|max:255',
-            'last_name'     => 'required|string|max:255',
+            'full_name'     => 'required|string|max:255',
             'email'         => 'nullable|email|max:255|unique:teachers,email',
             'phone'         => 'nullable|string|max:20',
             'qualification' => 'nullable|string|max:255',
@@ -47,7 +46,7 @@ class TeacherController extends Controller
         try {
             $t = Teacher::create($validated);
             if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['id' => $t->id, 'first_name' => $t->first_name, 'last_name' => $t->last_name, 'email' => $t->email ?? '', 'department' => $t->department ?? '']);
+                return response()->json(['id' => $t->id, 'full_name' => $t->full_name, 'email' => $t->email ?? '', 'department' => $t->department ?? '']);
             }
             return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully.');
         } catch (\Exception $e) {
@@ -75,8 +74,7 @@ class TeacherController extends Controller
         $item = Teacher::findOrFail($id);
 
         $validated = $request->validate([
-            'first_name'    => 'required|string|max:255',
-            'last_name'     => 'required|string|max:255',
+            'full_name'     => 'required|string|max:255',
             'email'         => 'nullable|email|max:255|unique:teachers,email,' . $id,
             'phone'         => 'nullable|string|max:20',
             'qualification' => 'nullable|string|max:255',

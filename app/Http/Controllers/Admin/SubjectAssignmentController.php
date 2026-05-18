@@ -24,7 +24,7 @@ class SubjectAssignmentController extends Controller
     public function create() {
         $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
-        $teachers=Teacher::orderBy('first_name')->select('id','first_name','last_name')->get();
+        $teachers=Teacher::orderBy('full_name')->select('id','full_name')->get();
         return view('admin.subject-assignments.create',compact('academicYears','classes','subjects','teachers'));
     }
     public function store(Request $request) {
@@ -52,7 +52,7 @@ class SubjectAssignmentController extends Controller
         $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
         $sections=Section::where('class_id',$subject_assignment->class_id)->orderBy('name','asc')->get();
-        $teachers=Teacher::orderBy('first_name')->select('id','first_name','last_name')->get();
+        $teachers=Teacher::orderBy('full_name')->select('id','full_name')->get();
         $assignment=$subject_assignment;
         return view('admin.subject-assignments.edit',compact('academicYears','classes','subjects','sections','teachers','assignment'));
     }

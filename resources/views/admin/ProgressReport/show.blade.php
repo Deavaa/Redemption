@@ -34,7 +34,7 @@
                     <i class="fas fa-file-alt"></i>
                 </div>
                 <div class="modern-detail-hero-info">
-                    <h2 class="modern-detail-hero-title">{{ $progress_report->student->first_name ?? '-' }} {{ $progress_report->student->last_name ?? '' }}</h2>
+                    <h2 class="modern-detail-hero-title">{{ $progress_report->student->full_name ?? '' }}</h2>
                     <div class="modern-detail-hero-badges">
                         @if($progress_report->status === 'published')
                             <span class="modern-badge modern-badge-success"><i class="fas fa-check-circle"></i> Published</span>
@@ -66,7 +66,7 @@
                     <div class="modern-detail-label">
                         <i class="fas fa-user"></i> Student
                     </div>
-                    <div class="modern-detail-value">{{ $progress_report->student->first_name ?? '-' }} {{ $progress_report->student->last_name ?? '' }}</div>
+                    <div class="modern-detail-value">{{ $progress_report->student->full_name ?? '' }}</div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label">

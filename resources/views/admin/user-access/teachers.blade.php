@@ -149,7 +149,7 @@
                     @php
                         $colors = ['#4361ee','#7c3aed','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#ec4899'];
                         $color = $colors[$teacher->id % count($colors)];
-                        $initials = strtoupper(substr($teacher->first_name, 0, 1) . substr($teacher->last_name, 0, 1));
+                        $initials = strtoupper(substr($teacher->full_name, 0, 1) . substr(strrchr(' ' . $teacher->full_name, ' '), 1, 1));
                     @endphp
                     <tr>
                         <td>

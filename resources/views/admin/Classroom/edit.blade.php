@@ -105,7 +105,7 @@
                                 <select name="teacher_id" id="teacher_id" class="modern-input modern-select">
                                     <option value="">-- Select Teacher --</option>
                                     @foreach($teachers as $t)
-                                        <option value="{{ $t->id }}" {{ old('teacher_id', $data->teacher_id) == $t->id ? 'selected' : '' }}>{{ $t->first_name }} {{ $t->last_name }}</option>
+                                        <option value="{{ $t->id }}" {{ old('teacher_id', $data->teacher_id) == $t->id ? 'selected' : '' }}>{{ $t->full_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -177,7 +177,7 @@
                                             <select name="sections[{{ $idx }}][teacher_id]" class="modern-input modern-select">
                                                 <option value="">-- Not Assigned --</option>
                                                 @foreach($teachers as $t)
-                                                    <option value="{{ $t->id }}" {{ $sec->teacher_id == $t->id ? 'selected' : '' }}>{{ $t->first_name }} {{ $t->last_name }}</option>
+                                                    <option value="{{ $t->id }}" {{ $sec->teacher_id == $t->id ? 'selected' : '' }}>{{ $t->full_name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -221,7 +221,7 @@
                                             <select name="sections[0][teacher_id]" class="modern-input modern-select">
                                                 <option value="">-- Not Assigned --</option>
                                                 @foreach($teachers as $t)
-                                                    <option value="{{ $t->id }}">{{ $t->first_name }} {{ $t->last_name }}</option>
+                                                    <option value="{{ $t->id }}">{{ $t->full_name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>

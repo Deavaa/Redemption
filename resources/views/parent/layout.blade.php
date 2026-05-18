@@ -549,7 +549,7 @@
                 @foreach($children as $child)
                 <li class="{{ request()->segment(3) == $child->id ? 'has-active-child' : '' }}">
                     <a href="#childMenu{{ $child->id }}" data-bs-toggle="collapse" class="submenu-toggle" style="{{ request()->segment(3) == $child->id ? 'color:rgba(255,255,255,0.9)' : '' }}">
-                        <i class="fas fa-user-graduate"></i><span>{{ $child->first_name }} {{ $child->last_name }}</span><i class="fas fa-chevron-down sidebar-chevron" style="font-size:10px;transition:transform 0.25s ease;opacity:0.5;margin-left:auto;"></i>
+                        <i class="fas fa-user-graduate"></i><span>{{ $child->full_name }}</span><i class="fas fa-chevron-down sidebar-chevron" style="font-size:10px;transition:transform 0.25s ease;opacity:0.5;margin-left:auto;"></i>
                     </a>
                     <ul class="collapse {{ request()->segment(3) == $child->id ? 'show' : '' }}" id="childMenu{{ $child->id }}">
                         <li><a href="{{ route('parent.child.marks', $child->id) }}" class="{{ request()->routeIs('parent.child.marks') && request()->route('studentId') == $child->id ? 'active' : '' }}"><i class="fas fa-pen"></i> Marks</a></li>

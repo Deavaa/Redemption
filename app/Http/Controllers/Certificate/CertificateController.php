@@ -13,7 +13,7 @@ class CertificateController extends Controller
         if ($r->filled('search')) {
             $s = $r->search;
             $q->whereHas('student', function($x) use ($s) {
-                $x->where('first_name', 'LIKE', "%$s%")->orWhere('last_name', 'LIKE', "%$s%");
+                $x->where('full_name', 'LIKE', "%$s%");
             })->orWhere('certificate_number', 'LIKE', "%$s%");
         }
         if ($r->filled('type')) $q->where('type', $r->type);
@@ -24,7 +24,7 @@ class CertificateController extends Controller
 
     public function create()
     {
-        $students = Student::where('status', 'active')->orderBy('first_name')->get();
+        $students = Student::where('status', 'active')->orderBy('full_name')->get();
         return view('admin.Certificate.create', compact('students'));
     }
 
@@ -50,7 +50,7 @@ class CertificateController extends Controller
 
     public function edit(Certificate $certificate)
     {
-        $students = Student::where('status', 'active')->orderBy('first_name')->get();
+        $students = Student::where('status', 'active')->orderBy('full_name')->get();
         return view('admin.Certificate.edit', ['item' => $certificate, 'students' => $students]);
     }
 

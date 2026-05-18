@@ -13,7 +13,7 @@ class StudentAccessController extends Controller
 {
     public function index()
     {
-        $students = Student::with(['user', 'classroom', 'section'])->orderBy('first_name')->paginate(50);
+        $students = Student::with(['user', 'classroom', 'section'])->orderBy('full_name')->paginate(50);
         $studentRole = Role::where('name', 'student')->first();
         return view('admin.user-access.students', compact('students', 'studentRole'));
     }
@@ -41,7 +41,7 @@ class StudentAccessController extends Controller
 
         $tempPassword = Str::random(10);
         $user = User::create([
-            'name' => $student->first_name . ' ' . $student->last_name,
+            'name' => $student->full_name,
             'email' => $student->email ?? $student->admission_number . '@school.local',
             'password' => Hash::make($tempPassword),
             'role' => 'student',
@@ -82,7 +82,7 @@ class StudentAccessController extends Controller
             } else {
                 $tempPassword = Str::random(10);
                 $user = User::create([
-                    'name' => $student->first_name . ' ' . $student->last_name,
+                    'name' => $student->full_name,
                     'email' => $email,
                     'password' => Hash::make($tempPassword),
                     'role' => 'student',

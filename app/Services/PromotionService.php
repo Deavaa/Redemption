@@ -185,7 +185,7 @@ class PromotionService
             } catch (\Throwable $e) {
                 $results['errors'][] = [
                     'student_id' => $student->id,
-                    'student'    => $student->first_name . ' ' . $student->last_name,
+                    'student'    => $student->full_name,
                     'error'      => $e->getMessage(),
                 ];
                 Log::error('Promotion processing failed for student', [

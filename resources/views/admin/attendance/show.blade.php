@@ -78,7 +78,7 @@
                     <tbody>
                         @foreach($classRecords as $record)
                         <tr style="border-bottom:1px solid var(--border);">
-                            <td style="padding:6px 14px;font-weight:600;color:var(--text-dark);">{{ $record->student?->first_name }} {{ $record->student?->last_name }}</td>
+                            <td style="padding:6px 14px;font-weight:600;color:var(--text-dark);">{{ $record->student?->full_name ?? '' }}</td>
                             <td style="padding:6px 10px;color:var(--text-muted);">{{ $record->student?->roll_number ?? '-' }}</td>
                             <td style="padding:6px 10px;color:var(--text-muted);">{{ $record->section?->name ?? '-' }}</td>
                             <td style="padding:6px 10px;text-align:center;">

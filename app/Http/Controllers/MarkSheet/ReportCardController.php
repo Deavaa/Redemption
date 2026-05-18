@@ -91,7 +91,7 @@ class ReportCardController extends Controller
         $studentsList = $studentQuery
             ->selectRaw("*, CAST(roll_number AS UNSIGNED) as rn_sort")
             ->orderByRaw('rn_sort ASC')
-            ->orderBy('first_name')
+            ->orderBy('full_name')
             ->get();
 
         // Build student cards data
@@ -186,8 +186,8 @@ class ReportCardController extends Controller
             $rollB = $b['student']->roll_number ?? '';
             if ($rollA !== $rollB) return strcmp($rollA, $rollB);
             return strcmp(
-                ($a['student']->first_name ?? '') . ($a['student']->last_name ?? ''),
-                ($b['student']->first_name ?? '') . ($b['student']->last_name ?? '')
+                $a['student']->full_name ?? '',
+                $b['student']->full_name ?? ''
             );
         });
 
@@ -238,7 +238,7 @@ class ReportCardController extends Controller
     {
         $query = Student::where('class_id', $r->class_id)->where('status', 'active');
         if ($r->filled('section_id')) $query->where('section_id', $r->section_id);
-        $students = $query->selectRaw("*, CAST(roll_number AS UNSIGNED) as rn_sort")->orderByRaw('rn_sort ASC')->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'roll_number']);
+        $students = $query->selectRaw("*, CAST(roll_number AS UNSIGNED) as rn_sort")->orderByRaw('rn_sort ASC')->orderBy('full_name')->get(['id', 'full_name', 'roll_number']);
         return response()->json($students);
     }
 

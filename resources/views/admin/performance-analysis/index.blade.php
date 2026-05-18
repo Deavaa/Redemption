@@ -194,7 +194,7 @@
                     @foreach($analysis as $row)
                     <tr>
                         <td class="{{ $row['rank'] <= 3 ? 'rank-'.$row['rank'] : '' }}">{{ $row['rank'] }}</td>
-                        <td class="stu-name">{{ $row['student']->first_name ?? '' }} {{ $row['student']->last_name ?? '' }}</td>
+                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
                         <td>{{ $row['subject_count'] }}</td>
                         <td>{{ $row['total_marks'] }}</td>
                         <td>{{ $row['average'] }}</td>

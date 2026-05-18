@@ -146,7 +146,7 @@ document.getElementById('rcClassId').addEventListener('change', function() {
     .then(r => r.json())
     .then(data => {
         data.forEach(s => {
-            studentSel.innerHTML += '<option value="' + s.id + '">' + (s.roll_number ? s.roll_number + ' - ' : '') + s.first_name + ' ' + s.last_name + '</option>';
+            studentSel.innerHTML += '<option value="' + s.id + '">' + (s.roll_number ? s.roll_number + ' - ' : '') + (s.full_name || s.first_name + ' ' + s.last_name) + '</option>';
         });
     });
 });
@@ -168,7 +168,7 @@ document.getElementById('rcSectionId').addEventListener('change', function() {
     .then(r => r.json())
     .then(data => {
         data.forEach(s => {
-            studentSel.innerHTML += '<option value="' + s.id + '">' + (s.roll_number ? s.roll_number + ' - ' : '') + s.first_name + ' ' + s.last_name + '</option>';
+            studentSel.innerHTML += '<option value="' + s.id + '">' + (s.roll_number ? s.roll_number + ' - ' : '') + (s.full_name || s.first_name + ' ' + s.last_name) + '</option>';
         });
     });
 });

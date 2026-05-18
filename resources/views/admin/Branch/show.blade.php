@@ -85,7 +85,7 @@
                         <i class="fas fa-user-tie"></i> Principal
                     </div>
                     <div class="modern-detail-value">
-                        {{ $item->principal->first_name }} {{ $item->principal->last_name }}
+                        {{ $item->principal->full_name }}
                     </div>
                 </div>
                 @endif

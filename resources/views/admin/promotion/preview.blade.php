@@ -197,10 +197,10 @@
                                 <td>
                                     <div class="prev-student-cell">
                                         <div class="prev-student-avatar">
-                                            {{ strtoupper(substr($student->first_name ?? 'S', 0, 1)) }}
+                                            {{ strtoupper(substr($student->full_name ?? 'S', 0, 1)) }}
                                         </div>
                                         <div>
-                                            <div style="font-weight:600;">{{ $student->first_name ?? '' }} {{ $student->last_name ?? '' }}</div>
+                                            <div style="font-weight:600;">{{ $student->full_name ?? '' }}</div>
                                             <div style="font-size:0.72rem;color:var(--text-muted);">{{ $student->roll_number ?? '-' }}</div>
                                         </div>
                                     </div>

@@ -108,7 +108,7 @@
                                 <span class="modern-row-number">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
                             </td>
                             <td>
-                                <div class="modern-cell-title">{{ $item->student?->first_name ?? '' }} {{ $item->student?->last_name ?? 'Student #' . $item->student_id }}</div>
+                                <div class="modern-cell-title">{{ $item->student?->full_name ?? 'Student #' . $item->student_id }}</div>
                                 <div class="modern-cell-sub">ID: {{ $item->student_id }}</div>
                             </td>
                             <td>

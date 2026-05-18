@@ -10,7 +10,7 @@
                 <ol>
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                     <li><a href="{{ route('admin.students.index') }}">Students</a></li>
-                    <li class="active">{{ $data->first_name }} {{ $data->last_name }}</li>
+                    <li class="active">{{ $data->full_name }}</li>
                 </ol>
             </nav>
         </div>
@@ -32,14 +32,14 @@
             {{-- Hero Section --}}
             <div class="modern-detail-hero">
                 @if($data->photo)
-                    <img src="{{ asset('storage/' . $data->photo) }}" alt="{{ $data->first_name }}" class="modern-detail-hero-avatar">
+                    <img src="{{ asset('storage/' . $data->photo) }}" alt="{{ $data->full_name }}" class="modern-detail-hero-avatar">
                 @else
                     <div class="modern-detail-hero-icon">
-                        {{ strtoupper(substr($data->first_name, 0, 1)) }}
+                        {{ strtoupper(substr($data->full_name, 0, 1)) }}
                     </div>
                 @endif
                 <div class="modern-detail-hero-info">
-                    <h2 class="modern-detail-hero-title">{{ $data->first_name }} {{ $data->last_name }}</h2>
+                    <h2 class="modern-detail-hero-title">{{ $data->full_name }}</h2>
                     <div class="modern-detail-hero-badges">
                         @php
                             $statusBadge = match($data->status ?? '') {
@@ -75,7 +75,7 @@
                         <div class="modern-detail-label">
                             <i class="fas fa-user"></i> Full Name
                         </div>
-                        <div class="modern-detail-value">{{ $data->first_name }} {{ $data->last_name }}</div>
+                        <div class="modern-detail-value">{{ $data->full_name }}</div>
                     </div>
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
@@ -250,7 +250,7 @@
                     <i class="fas fa-camera"></i> Student Photo
                 </div>
                 <div class="modern-photo-card">
-                    <img src="{{ asset('storage/' . $data->photo) }}" alt="{{ $data->first_name }}" class="modern-photo-img">
+                    <img src="{{ asset('storage/' . $data->photo) }}" alt="{{ $data->full_name }}" class="modern-photo-img">
                 </div>
             </div>
             @endif

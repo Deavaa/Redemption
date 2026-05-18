@@ -40,41 +40,22 @@
                 </div>
                 <div class="modern-form-section-body">
                     <div class="modern-form-grid">
-                        <div class="modern-form-group">
-                            <label class="modern-form-label" for="first_name">
-                                First Name <span class="modern-required">*</span>
+                        <div class="modern-form-group modern-form-span-2">
+                            <label class="modern-form-label" for="full_name">
+                                Full Name <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-user modern-input-icon"></i>
                                 <input type="text"
-                                    name="first_name"
-                                    id="first_name"
-                                    class="modern-input {{ $errors->has('first_name') ? 'is-invalid' : '' }}"
-                                    value="{{ old('first_name') }}"
-                                    placeholder="e.g. John"
+                                    name="full_name"
+                                    id="full_name"
+                                    class="modern-input {{ $errors->has('full_name') ? 'is-invalid' : '' }}"
+                                    value="{{ old('full_name') }}"
+                                    placeholder="e.g. John Smith"
                                     required
                                     autofocus>
                             </div>
-                            @error('first_name')
-                                <span class="modern-form-error">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="modern-form-group">
-                            <label class="modern-form-label" for="last_name">
-                                Last Name <span class="modern-required">*</span>
-                            </label>
-                            <div class="modern-input-wrapper">
-                                <i class="fas fa-user modern-input-icon"></i>
-                                <input type="text"
-                                    name="last_name"
-                                    id="last_name"
-                                    class="modern-input {{ $errors->has('last_name') ? 'is-invalid' : '' }}"
-                                    value="{{ old('last_name') }}"
-                                    placeholder="e.g. Smith"
-                                    required>
-                            </div>
-                            @error('last_name')
+                            @error('full_name')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror
                         </div>

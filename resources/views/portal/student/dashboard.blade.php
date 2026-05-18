@@ -23,7 +23,7 @@
         return 'grade-F';                              // F
     }
 
-    $studentName = trim(($student->first_name ?? '') . ' ' . ($student->last_name ?? ''));
+    $studentName = $student->full_name ?? 'Student';
     $className = $student->classroom->name ?? 'N/A';
     $avgScore = $recentMarks->count() > 0 ? round($recentMarks->avg('grand_total'), 1) : '—';
     $termName = $activeTerm->name ?? 'N/A';
@@ -37,7 +37,7 @@
                 {{ strtoupper(substr($studentName, 0, 1)) }}
             </div>
             <div>
-                <h4 class="mb-1" style="font-weight:800; font-size:1.25rem;">Welcome back, {{ $student->first_name ?? 'Student' }}!</h4>
+                <h4 class="mb-1" style="font-weight:800; font-size:1.25rem;">Welcome back, {{ $student->full_name ?? 'Student' }}!</h4>
                 <p class="mb-0" style="opacity:0.85; font-size:0.9rem;">
                     @if($currentAy) {{ $currentAy->name ?? $currentAy->year }} &mdash; @endif
                     {{ $termName }} &bull; {{ $className }}

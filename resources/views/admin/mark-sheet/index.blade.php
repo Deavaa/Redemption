@@ -125,7 +125,7 @@ document.getElementById('classSelect')?.addEventListener('change', function() {
         .then(data => {
             const sel = document.getElementById('studentSelect');
             sel.innerHTML = '<option value="">-- All Students --</option>';
-            data.forEach(s => sel.innerHTML += `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.roll_number})</option>`);
+            data.forEach(s => sel.innerHTML += `<option value="${s.id}">${s.full_name || s.first_name + ' ' + s.last_name} (${s.roll_number})</option>`);
         });
 });
 </script>

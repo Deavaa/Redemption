@@ -141,7 +141,7 @@
                         <tr>
                             <td>{{ $i + 1 }}</td>
                             <td class="stu-name">
-                                {{ $risk['student']->first_name ?? '' }} {{ $risk['student']->last_name ?? '' }}
+                                {{ $risk['student']->full_name ?? '' }}
                                 @if($risk['student']->classroom)<div style="font-size:.72rem;color:#9ca3af;font-weight:400">{{ $risk['student']->classroom->name }}</div>@endif
                             </td>
                             <td style="font-weight:800;color:{{ $risk['average'] < 30 ? '#dc2626' : ($risk['average'] < 40 ? '#d97706' : '#4361ee') }}">{{ $risk['average'] }}</td>

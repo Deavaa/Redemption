@@ -200,7 +200,7 @@
                     @foreach($topPerformers as $i => $student)
                     <tr>
                         <td style="font-weight:800;color:{{ $i < 3 ? '#d97706' : '#6b7280' }}">{{ $i + 1 }}</td>
-                        <td class="stu-name">{{ $student->first_name ?? '' }} {{ $student->last_name ?? '' }}</td>
+                        <td class="stu-name">{{ $student->full_name ?? '' }}</td>
                         <td style="font-weight:700;color:#4361ee">{{ $student->performance_avg }}</td>
                         <td><strong>{{ $student->performance_grade ?? '' }}</strong></td>
                         <td><a href="{{ route('admin.performance.student', $student->id) }}" style="color:#4361ee;font-size:.78rem;text-decoration:none;font-weight:600"><i class="fas fa-eye"></i> View</a></td>
@@ -236,7 +236,7 @@
                 <tbody>
                     @foreach($atRiskStudents as $risk)
                     <tr>
-                        <td class="stu-name">{{ $risk['student']->first_name ?? '' }} {{ $risk['student']->last_name ?? '' }}</td>
+                        <td class="stu-name">{{ $risk['student']->full_name ?? '' }}</td>
                         <td style="font-weight:700;color:#ef4444">{{ $risk['average'] }}</td>
                         <td><span class="pf-risk-badge {{ $risk['risk_level'] }}">{{ ucfirst($risk['risk_level']) }}</span></td>
                         <td style="font-size:.8rem">{{ ($risk['weak_subjects'][0]['subject']->name ?? 'N/A') . ' (' . ($risk['weak_subjects'][0]['score'] ?? 0) . ')' }}</td>

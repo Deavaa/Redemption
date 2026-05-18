@@ -15,7 +15,7 @@ class PerformanceReportController extends Controller
         if ($r->filled('search')) {
             $s = $r->search;
             $q->whereHas('student', function($x) use ($s) {
-                $x->where('first_name', 'LIKE', "%$s%")->orWhere('last_name', 'LIKE', "%$s%");
+                $x->where('full_name', 'LIKE', "%$s%");
             });
         }
         if ($r->filled('academic_year_id')) $q->where('academic_year_id', $r->academic_year_id);
@@ -27,7 +27,7 @@ class PerformanceReportController extends Controller
 
     public function create()
     {
-        $students = Student::where('status', 'active')->orderBy('first_name')->get();
+        $students = Student::where('status', 'active')->orderBy('full_name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
         $terms = Term::orderBy('name')->get();
         return view('admin.PerformanceReport.create', compact('students', 'academicYears', 'terms'));
@@ -58,7 +58,7 @@ class PerformanceReportController extends Controller
 
     public function edit(PerformanceReport $performance_report)
     {
-        $students = Student::where('status', 'active')->orderBy('first_name')->get();
+        $students = Student::where('status', 'active')->orderBy('full_name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
         $terms = Term::orderBy('name')->get();
         return view('admin.PerformanceReport.edit', ['item' => $performance_report, 'students' => $students, 'academicYears' => $academicYears, 'terms' => $terms]);

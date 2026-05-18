@@ -107,7 +107,7 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="modern-cell-title">{{ $item->student->first_name ?? '' }} {{ $item->student->last_name ?? '-' }}</div>
+                                <div class="modern-cell-title">{{ $item->student->full_name ?? '-' }}</div>
                             </td>
                             <td>
                                 <div class="modern-cell-text">{{ ucfirst($item->fee->fee_type ?? '-') }}</div>

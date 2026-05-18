@@ -1,13 +1,13 @@
 @extends('parent.layout')
 
-@section('title', 'Fees - ' . $student->first_name . ' ' . $student->last_name)
+@section('title', 'Fees - ' . $student->full_name)
 
 @section('content')
 <div class="page-header">
     <div>
         <h4><i class="fas fa-money-bill-wave me-2" style="color: var(--primary);"></i> Fee Details</h4>
         <div class="page-header-sub">
-            {{ $student->first_name }} {{ $student->last_name }}
+            {{ $student->full_name }}
             &bull; {{ $student->classroom->name ?? 'No Class' }}
         </div>
     </div>

@@ -394,9 +394,7 @@ class AttendanceController extends Controller
             ->get()
             ->map(fn($s) => [
                 'id'              => $s->id,
-                'first_name'      => $s->first_name,
-                'last_name'       => $s->last_name,
-                'full_name'       => trim($s->first_name . ' ' . $s->last_name),
+                'full_name'       => $s->full_name,
                 'roll_number'     => $s->roll_number,
                 'admission_number'=> $s->admission_number,
                 'class_name'      => $s->classRoom?->name,

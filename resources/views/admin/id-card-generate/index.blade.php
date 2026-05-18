@@ -422,7 +422,7 @@
             const row = document.createElement('div');
             row.className = 'idgen-student-row' + (selectedIds.has(String(s.id)) ? ' checked' : '');
             row.dataset.studentId = s.id;
-            const initials = ((s.first_name || '?')[0] + (s.last_name || '?')[0]).toUpperCase();
+            const initials = ((s.full_name || s.first_name || '?')[0]).toUpperCase();
 
             let avatarContent = initials;
             if (s.photo) {
@@ -433,7 +433,7 @@
                 <div class="idgen-student-check"><i class="fas fa-check"></i></div>
                 <div class="idgen-student-avatar">${avatarContent}</div>
                 <div class="idgen-student-info">
-                    <div class="idgen-student-name">${s.first_name} ${s.last_name}</div>
+                    <div class="idgen-student-name">${s.full_name || s.first_name + ' ' + s.last_name}</div>
                     <div class="idgen-student-meta">${s.roll_number ? 'Roll: ' + s.roll_number : ''} ${s.classroom ? '| ' + s.classroom.name : ''} ${s.section ? '| ' + s.section.name : ''}</div>
                 </div>
             `;
@@ -495,10 +495,10 @@
         allStudents.filter(s => selectedIds.has(String(s.id))).forEach(s => {
             const item = document.createElement('div');
             item.className = 'idgen-preview-item';
-            const initials = ((s.first_name || '?')[0] + (s.last_name || '?')[0]).toUpperCase();
+            const initials = ((s.full_name || s.first_name || '?')[0]).toUpperCase();
             item.innerHTML = `
                 <div class="idgen-preview-item-avatar">${initials}</div>
-                <div class="idgen-preview-item-name">${s.first_name} ${s.last_name}</div>
+                <div class="idgen-preview-item-name">${s.full_name || s.first_name + ' ' + s.last_name}</div>
                 <button type="button" class="idgen-preview-item-remove" data-id="${s.id}"><i class="fas fa-times"></i></button>
             `;
             item.querySelector('.idgen-preview-item-remove').addEventListener('click', (e) => {
@@ -530,7 +530,7 @@
         const q = this.value.toLowerCase().trim();
         if (!q) { renderStudents(allStudents); return; }
         const filtered = allStudents.filter(s =>
-            (s.first_name + ' ' + s.last_name).toLowerCase().includes(q) ||
+            (s.full_name || s.first_name + ' ' + s.last_name).toLowerCase().includes(q) ||
             (s.roll_number || '').toLowerCase().includes(q)
         );
         renderStudents(filtered);

@@ -40,7 +40,7 @@
                         <option value="{{ $c->id }}" {{ $selectedClass == $c->id ? 'selected' : '' }}>
                             {{ $c->name }}
                             @if($c->teacher)
-                            ({{ trim($c->teacher->first_name . ' ' . $c->teacher->last_name) }})
+                            ({{ $c->teacher->full_name }})
                             @endif
                         </option>
                         @endforeach
@@ -54,7 +54,7 @@
                         <option value="{{ $s->id }}" {{ $selectedSection == $s->id ? 'selected' : '' }}>
                             {{ $s->name }}
                             @if($s->teacher)
-                            ({{ trim($s->teacher->first_name . ' ' . $s->teacher->last_name) }})
+                            ({{ $s->teacher->full_name }})
                             @endif
                         </option>
                         @endforeach
@@ -136,7 +136,7 @@
                             <tr style="border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
                                 <td style="padding:8px 14px;color:var(--text-muted);font-weight:600;">{{ $index + 1 }}</td>
                                 <td style="padding:8px 10px;font-weight:600;color:var(--text-dark);">
-                                    {{ $student->first_name }} {{ $student->last_name }}
+                                    {{ $student->full_name }}
                                     @if($existing)
                                     <i class="fas fa-check-circle" style="color:#10b981;font-size:9px;margin-left:4px;" title="Already recorded"></i>
                                     @endif

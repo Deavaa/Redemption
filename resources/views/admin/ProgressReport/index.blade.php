@@ -103,7 +103,7 @@
                                 <span class="modern-row-number">{{ $loop->iteration + ($reports->currentPage() - 1) * $reports->perPage() }}</span>
                             </td>
                             <td>
-                                <div class="modern-cell-title">{{ $item->student->first_name ?? '-' }} {{ $item->student->last_name ?? '' }}</div>
+                                <div class="modern-cell-title">{{ $item->student->full_name ?? '' }}</div>
                             </td>
                             <td>
                                 <div class="modern-cell-text">{{ $item->academicYear->name ?? '-' }}</div>

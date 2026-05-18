@@ -39,7 +39,7 @@
 <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width:28px;height:28px;">
 <i class="fas fa-user-tie text-primary" style="font-size:0.7rem"></i>
 </div>
-{{$b->principal->first_name}} {{$b->principal->last_name}}
+{{$b->principal->full_name}}
 </span>
 @else
 <span class="text-muted"><i class="fas fa-user-slash me-1"></i>Not assigned</span>

@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Mark Sheet - ' . $student->first_name . ' ' . $student->last_name)
+@section('title', 'Mark Sheet - ' . $student->full_name)
 
 @section('content')
 <div class="modern-page mark-sheet-print">
@@ -9,7 +9,7 @@
     </div>
     <div class="mark-sheet-info">
         <table class="mark-info-table">
-            <tr><td><strong>Student:</strong></td><td>{{ $student->first_name }} {{ $student->last_name }}</td><td><strong>Roll No:</strong></td><td>{{ $student->roll_number }}</td></tr>
+            <tr><td><strong>Student:</strong></td><td>{{ $student->full_name }}</td><td><strong>Roll No:</strong></td><td>{{ $student->roll_number }}</td></tr>
             <tr><td><strong>Class:</strong></td><td>{{ $class->name }}</td><td><strong>Academic Year:</strong></td><td>{{ $academicYear->name }}</td></tr>
             <tr><td><strong>Term:</strong></td><td>{{ $term->name ?? 'All Terms' }}</td><td><strong>Admission No:</strong></td><td>{{ $student->admission_number }}</td></tr>
         </table>

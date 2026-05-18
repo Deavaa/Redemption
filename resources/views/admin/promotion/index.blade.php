@@ -271,10 +271,10 @@
                                 <td>
                                     <div class="promo-student-name">
                                         <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;flex-shrink:0;">
-                                            {{ strtoupper(substr($result->student->first_name ?? 'S', 0, 1)) }}
+                                            {{ strtoupper(substr($result->student->full_name ?? 'S', 0, 1)) }}
                                         </div>
                                         <div>
-                                            <div style="font-weight:600;color:var(--text-dark);">{{ $result->student->first_name ?? '' }} {{ $result->student->last_name ?? '' }}</div>
+                                            <div style="font-weight:600;color:var(--text-dark);">{{ $result->student->full_name ?? '' }}</div>
                                             <div style="font-size:0.72rem;color:var(--text-muted);">{{ $result->student->roll_number ?? '-' }}</div>
                                         </div>
                                     </div>
@@ -321,7 +321,7 @@
                                         <a href="{{ route('admin.promotion.edit', $result->id) }}" class="promo-action-btn" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="promo-action-btn promo-action-override" title="Override Status" data-id="{{ $result->id }}" data-student="{{ $result->student->first_name ?? '' }} {{ $result->student->last_name ?? '' }}" data-status="{{ $result->status ?? 'pending' }}" onclick="openOverrideModal(this)">
+                                        <button type="button" class="promo-action-btn promo-action-override" title="Override Status" data-id="{{ $result->id }}" data-student="{{ $result->student->full_name ?? '' }}" data-status="{{ $result->status ?? 'pending' }}" onclick="openOverrideModal(this)">
                                             <i class="fas fa-exchange-alt"></i>
                                         </button>
                                     </div>

@@ -110,7 +110,7 @@ class MarkSheetFullController extends Controller
         $students = $studentQuery
             ->selectRaw("*, CAST(roll_number AS UNSIGNED) as rn_sort")
             ->orderByRaw('rn_sort ASC')
-            ->orderBy('first_name')
+            ->orderBy('full_name')
             ->get();
 
         // Query all mark entries for this academic year and class

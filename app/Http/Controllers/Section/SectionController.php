@@ -26,7 +26,7 @@ class SectionController extends Controller {
     public function create()
     {
         $classes = ClassRoom::orderBy('name')->get();
-        $teachers = Teacher::orderBy('first_name')->get();
+        $teachers = Teacher::orderBy('full_name')->get();
         return view('admin.Section.create', compact('classes','teachers'));
     }
 
@@ -54,7 +54,7 @@ class SectionController extends Controller {
     public function edit(Section $section)
     {
         $classes = ClassRoom::orderBy('name')->get();
-        $teachers = Teacher::orderBy('first_name')->get();
+        $teachers = Teacher::orderBy('full_name')->get();
         return view('admin.Section.edit', compact('section','classes','teachers'));
     }
 

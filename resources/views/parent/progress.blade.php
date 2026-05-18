@@ -1,13 +1,13 @@
 @extends('parent.layout')
 
-@section('title', 'Progress - ' . $student->first_name . ' ' . $student->last_name)
+@section('title', 'Progress - ' . $student->full_name)
 
 @section('content')
 <div class="page-header">
     <div>
         <h4><i class="fas fa-chart-line me-2" style="color: var(--primary);"></i> Academic Progress</h4>
         <div class="page-header-sub">
-            {{ $student->first_name }} {{ $student->last_name }}
+            {{ $student->full_name }}
             &bull; {{ $student->classroom->name ?? 'No Class' }}
             @if($student->section) &mdash; {{ $student->section->name }}@endif
         </div>

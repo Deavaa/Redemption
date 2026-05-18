@@ -49,15 +49,15 @@
                 <div class="modern-info-item">
                     <div class="modern-info-avatar">
                         @if($student->photo)
-                            <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->first_name }}" class="modern-avatar modern-avatar-img">
+                            <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->full_name }}" class="modern-avatar modern-avatar-img">
                         @else
                             <div class="modern-avatar modern-avatar-placeholder">
-                                {{ strtoupper(substr($student->first_name ?? 'S', 0, 1)) }}
+                                {{ strtoupper(substr($student->full_name ?? 'S', 0, 1)) }}
                             </div>
                         @endif
                     </div>
                     <div class="modern-info-details">
-                        <div class="modern-info-name">{{ $student->first_name }} {{ $student->last_name }}</div>
+                        <div class="modern-info-name">{{ $student->full_name }}</div>
                         <div class="modern-info-meta">
                             <span><i class="fas fa-id-badge"></i> {{ $student->admission_number ?? 'N/A' }}</span>
                         </div>

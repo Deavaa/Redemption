@@ -192,7 +192,7 @@
 
         {{-- Student Info --}}
         <div class="rc-stu-info">
-            <div class="rc-stu-info-item"><span class="rc-stu-info-label">Name:</span> <span class="rc-stu-info-value">{{ $student->first_name ?? '' }} {{ $student->last_name ?? '' }}</span></div>
+            <div class="rc-stu-info-item"><span class="rc-stu-info-label">Name:</span> <span class="rc-stu-info-value">{{ $student->full_name ?? '' }}</span></div>
             <div class="rc-stu-info-item"><span class="rc-stu-info-label">Roll:</span> <span class="rc-stu-info-value">{{ $student->roll_number ?? '-' }}</span></div>
             <div class="rc-stu-info-item"><span class="rc-stu-info-label">Class:</span> <span class="rc-stu-info-value">{{ $class->name ?? '-' }}@if($section) / {{ $section->name }}@endif</span></div>
             <div class="rc-stu-info-item"><span class="rc-stu-info-label">Year:</span> <span class="rc-stu-info-value">{{ $academicYear->name ?? '-' }}</span></div>
@@ -289,7 +289,7 @@
         {{-- Student Info Extended --}}
         <div class="rc-section-title">Student Details</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-bottom:10px;font-size:9px;">
-            <div><span style="color:#6b7280;font-weight:600">Full Name:</span> <strong>{{ $student->first_name ?? '' }} {{ $student->last_name ?? '' }}</strong></div>
+            <div><span style="color:#6b7280;font-weight:600">Full Name:</span> <strong>{{ $student->full_name ?? '' }}</strong></div>
             <div><span style="color:#6b7280;font-weight:600">Roll No:</span> <strong>{{ $student->roll_number ?? '-' }}</strong></div>
             <div><span style="color:#6b7280;font-weight:600">Class:</span> <strong>{{ $class->name ?? '-' }}@if($section) / {{ $section->name }}@endif</strong></div>
             <div><span style="color:#6b7280;font-weight:600">Year:</span> <strong>{{ $academicYear->name ?? '-' }}</strong></div>

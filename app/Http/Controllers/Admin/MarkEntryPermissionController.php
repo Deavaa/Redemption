@@ -27,7 +27,7 @@ class MarkEntryPermissionController extends Controller
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $currentAy = AcademicYear::where('is_current', true)->first();
-        $teachers = Teacher::where('status', 'active')->orderBy('first_name')->get();
+        $teachers = Teacher::where('status', 'active')->orderBy('full_name')->get();
 
         $selectedAy = $request->filled('academic_year_id') ? AcademicYear::find($request->academic_year_id) : $currentAy;
         $selectedTerm = $request->filled('term_id') ? Term::find($request->term_id) : null;
@@ -61,7 +61,7 @@ class MarkEntryPermissionController extends Controller
      */
     public function create()
     {
-        $teachers = Teacher::where('status', 'active')->orderBy('first_name')->get();
+        $teachers = Teacher::where('status', 'active')->orderBy('full_name')->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $currentAy = AcademicYear::where('is_current', true)->first();
         $terms = $currentAy ? Term::where('academic_year_id', $currentAy->id)->orderBy('id')->get() : collect();
@@ -147,8 +147,8 @@ class MarkEntryPermissionController extends Controller
         $request->validate(['class_id' => 'required|exists:classrooms,id']);
         $students = Student::where('class_id', $request->class_id)
             ->where('status', 'active')
-            ->select('id', 'first_name', 'last_name', 'roll_number')
-            ->orderBy('first_name')
+            ->select('id', 'full_name', 'roll_number')
+            ->orderBy('full_name')
             ->get();
         return response()->json($students);
     }

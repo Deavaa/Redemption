@@ -24,7 +24,7 @@ class TeacherAssignmentController extends Controller
 
     public function create()
     {
-        $teachers = Teacher::orderBy('first_name')->orderBy('last_name')->get();
+        $teachers = Teacher::orderBy('full_name')->get();
         $classes = Classroom::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
 
@@ -52,7 +52,7 @@ class TeacherAssignmentController extends Controller
 
     public function edit(TeacherAssignment $teacher_assignment)
     {
-        $teachers = Teacher::orderBy('first_name')->orderBy('last_name')->get();
+        $teachers = Teacher::orderBy('full_name')->get();
         $classes = Classroom::orderBy('name')->get();
         $sections = Section::where('class_id', $teacher_assignment->class_id)->orderBy('name')->get();
         $subjects = Subject::orderBy('name')->get();

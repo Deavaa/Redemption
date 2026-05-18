@@ -228,10 +228,10 @@
             const card = document.createElement('div');
             card.className = 'gen-student-card' + (selectedStudentId == s.id ? ' active' : '');
             card.dataset.studentId = s.id;
-            const initials = ((s.first_name || '?')[0] + (s.last_name || '?')[0]).toUpperCase();
+            const initials = ((s.full_name || '?')[0]).toUpperCase();
             let avatarContent = initials;
             if (s.photo) avatarContent = '<img src="{{ asset("storage/") }}/' + s.photo + '" alt="">';
-            card.innerHTML = `<div class="gen-student-avatar">${avatarContent}</div><div class="gen-student-info"><div class="gen-student-name">${s.first_name} ${s.last_name}</div><div class="gen-student-meta">${s.roll_number ? '#' + s.roll_number : ''} ${s.classroom ? s.classroom.name : ''}</div></div><div class="gen-student-check"><i class="fas fa-check"></i></div>`;
+            card.innerHTML = `<div class="gen-student-avatar">${avatarContent}</div><div class="gen-student-info"><div class="gen-student-name">${s.full_name}</div><div class="gen-student-meta">${s.roll_number ? '#' + s.roll_number : ''} ${s.classroom ? s.classroom.name : ''}</div></div><div class="gen-student-check"><i class="fas fa-check"></i></div>`;
             card.addEventListener('click', () => selectStudent(s, card));
             studentContainer.appendChild(card);
         });
@@ -244,9 +244,9 @@
         studentInput.value = student.id;
         genBtn.disabled = false;
         if (genBtnTop) genBtnTop.disabled = false;
-        const initials = ((student.first_name || '?')[0] + (student.last_name || '?')[0]).toUpperCase();
+        const initials = ((student.full_name || '?')[0]).toUpperCase();
         previewAvatar.textContent = student.photo ? '' : initials;
-        previewName.textContent = student.first_name + ' ' + student.last_name;
+        previewName.textContent = student.full_name;
         previewRoll.textContent = student.roll_number || '-';
         previewClass.textContent = student.classroom?.name || '-';
         previewSection.textContent = student.section?.name || '-';
@@ -267,7 +267,7 @@
     studentSearch?.addEventListener('input', function() {
         const q = this.value.toLowerCase().trim();
         if (!q) { renderStudents(allStudents); return; }
-        const filtered = allStudents.filter(s => (s.first_name + ' ' + s.last_name).toLowerCase().includes(q) || (s.roll_number || '').toLowerCase().includes(q) || (s.admission_number || '').toLowerCase().includes(q));
+        const filtered = allStudents.filter(s => (s.full_name).toLowerCase().includes(q) || (s.roll_number || '').toLowerCase().includes(q) || (s.admission_number || '').toLowerCase().includes(q));
         renderStudents(filtered);
     });
 

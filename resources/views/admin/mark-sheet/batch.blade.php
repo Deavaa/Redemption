@@ -12,7 +12,7 @@
     @foreach($students as $studentId => $studentMarks)
         @php $student = $studentMarks->first()->student; @endphp
         <div class="mark-roster-student">
-            <h3>{{ $student->first_name ?? '' }} {{ $student->last_name ?? '' }} <small class="text-muted">({{ $student->roll_number ?? '' }})</small></h3>
+            <h3>{{ $student->full_name ?? '' }} <small class="text-muted">({{ $student->roll_number ?? '' }})</small></h3>
             <table class="mark-sheet-table">
                 <thead><tr><th>#</th><th>Subject</th><th>CA</th><th>Mid</th><th>Final</th><th>Total</th><th>Grade</th></tr></thead>
                 <tbody>

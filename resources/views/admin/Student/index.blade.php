@@ -115,14 +115,14 @@
                             <td>
                                 <div class="modern-cell-user">
                                     @if($student->photo)
-                                        <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->first_name }}" class="modern-avatar modern-avatar-img">
+                                        <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->full_name }}" class="modern-avatar modern-avatar-img">
                                     @else
                                         <div class="modern-avatar modern-avatar-placeholder">
-                                            {{ strtoupper(substr($student->first_name, 0, 1)) }}
+                                            {{ strtoupper(substr($student->full_name, 0, 1)) }}
                                         </div>
                                     @endif
                                     <div class="modern-cell-user-info">
-                                        <div class="modern-cell-title">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                        <div class="modern-cell-title">{{ $student->full_name }}</div>
                                         @if($student->email)
                                             <div class="modern-cell-sub">{{ $student->email }}</div>
                                         @endif

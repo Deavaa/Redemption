@@ -26,7 +26,7 @@ class AttendanceDelegationController extends Controller
             ->get();
 
         $classes = ClassRoom::with(['sections', 'teacher'])->orderBy('name')->get();
-        $teachers = Teacher::with('user')->orderBy('first_name')->get();
+        $teachers = Teacher::with('user')->orderBy('full_name')->get();
 
         return view('admin.attendance.delegation', compact(
             'date', 'delegations', 'classes', 'teachers'
@@ -99,7 +99,7 @@ class AttendanceDelegationController extends Controller
         return response()->json($sections->map(fn($s) => [
             'id' => $s->id,
             'name' => $s->name,
-            'teacher_name' => $s->teacher ? trim($s->teacher->first_name . ' ' . $s->teacher->last_name) : null,
+            'teacher_name' => $s->teacher ? $s->teacher->full_name : null,
         ]));
     }
 }

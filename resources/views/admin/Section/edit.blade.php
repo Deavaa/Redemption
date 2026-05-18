@@ -90,7 +90,7 @@
                                     <option value="">-- Select Teacher --</option>
                                     @foreach($teachers as $teacher)
                                         <option value="{{ $teacher->id }}" {{ old('teacher_id', $section->teacher_id) == $teacher->id ? 'selected' : '' }}>
-                                            {{ $teacher->first_name }} {{ $teacher->last_name }}
+                                            {{ $teacher->full_name }}
                                         </option>
                                     @endforeach
                                 </select>

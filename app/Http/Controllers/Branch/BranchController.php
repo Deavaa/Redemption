@@ -16,7 +16,7 @@ class BranchController extends Controller
 
     public function create()
     {
-        $teachers = \App\Models\Teacher::orderBy('first_name')->get();
+        $teachers = \App\Models\Teacher::orderBy('full_name')->get();
         return view('admin.Branch.create', compact('teachers'));
     }
 
@@ -50,7 +50,7 @@ class BranchController extends Controller
 
     public function edit(Branch $branch)
     {
-        $teachers = \App\Models\Teacher::orderBy('first_name')->get();
+        $teachers = \App\Models\Teacher::orderBy('full_name')->get();
         return view('admin.Branch.edit', ['item' => $branch, 'teachers' => $teachers]);
     }
 

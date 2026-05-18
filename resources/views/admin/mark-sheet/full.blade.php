@@ -247,7 +247,7 @@
                     @foreach($roster as $i => $row)
                     <tr>
                         <td>{{ $i + 1 }}</td>
-                        <td class="stu-name">{{ $row['student']->first_name ?? '' }} {{ $row['student']->last_name ?? '' }}</td>
+                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
                         @foreach($subjects as $subj)
                             @php $t1 = $row['term1'][$subj->id] ?? null @endphp
                             <td>
@@ -352,7 +352,7 @@
                     @foreach($roster as $i => $row)
                     <tr>
                         <td>{{ $i + 1 }}</td>
-                        <td class="stu-name">{{ $row['student']->first_name ?? '' }} {{ $row['student']->last_name ?? '' }}</td>
+                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
                         @foreach($subjects as $subj)
                             @php $t2 = $row['term2'][$subj->id] ?? null @endphp
                             <td>
@@ -453,7 +453,7 @@
                     @foreach($roster as $i => $row)
                     <tr>
                         <td>{{ $i + 1 }}</td>
-                        <td class="stu-name">{{ $row['student']->first_name ?? '' }} {{ $row['student']->last_name ?? '' }}</td>
+                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
                         @foreach($subjects as $subj)
                             @php $ann = $row['annual'][$subj->id] ?? null @endphp
                             <td>

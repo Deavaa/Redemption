@@ -28,7 +28,7 @@
             <nav class="stu-breadcrumb"><ol>
                 <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                 <li><a href="{{ route('admin.students.index') }}">Students</a></li>
-                <li class="active">{{ $student->first_name }} {{ $student->last_name }}</li>
+                <li class="active">{{ $student->full_name }}</li>
             </ol></nav>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
@@ -46,10 +46,10 @@
     {{-- Profile Header --}}
     <div class="modern-card" style="margin-bottom:1.25rem;">
         <div class="stu-profile-header">
-            <div class="stu-avatar-lg">{{ strtoupper(substr($student->first_name ?? 'S', 0, 1)) }}{{ strtoupper(substr($student->last_name ?? '', 0, 1)) }}</div>
+            <div class="stu-avatar-lg">{{ strtoupper(substr($student->full_name ?? 'S', 0, 1)) }}</div>
             <div style="flex:1;">
                 <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-                    <h2 style="font-size:1.35rem;font-weight:800;color:var(--text-dark);margin:0;">{{ $student->first_name }} {{ $student->last_name }}</h2>
+                    <h2 style="font-size:1.35rem;font-weight:800;color:var(--text-dark);margin:0;">{{ $student->full_name }}</h2>
                     @php $statusBadge = match($student->status) { 'active' => 'modern-badge-success', 'inactive' => 'modern-badge-danger', 'transferred' => 'modern-badge-warning', 'graduated' => 'modern-badge-info', default => 'modern-badge-light' }; @endphp
                     <span class="modern-badge {{ $statusBadge }}">{{ ucfirst($student->status) }}</span>
                     @if($student->is_readmitted)
@@ -75,8 +75,7 @@
         </div>
         <div class="modern-card-body" style="padding:1.25rem 1.5rem;">
             <div class="stu-info-grid">
-                <div class="stu-info-item"><div class="stu-info-label">First Name</div><div class="stu-info-value">{{ $student->first_name ?? '-' }}</div></div>
-                <div class="stu-info-item"><div class="stu-info-label">Last Name</div><div class="stu-info-value">{{ $student->last_name ?? '-' }}</div></div>
+                <div class="stu-info-item"><div class="stu-info-label">Full Name</div><div class="stu-info-value">{{ $student->full_name ?? '-' }}</div></div>
                 <div class="stu-info-item"><div class="stu-info-label">Gender</div><div class="stu-info-value">{{ $student->gender ?? '-' }}</div></div>
                 <div class="stu-info-item"><div class="stu-info-label">Date of Birth</div><div class="stu-info-value">{{ $student->date_of_birth ? $student->date_of_birth->format('M d, Y') : '-' }}</div></div>
                 <div class="stu-info-item"><div class="stu-info-label">Blood Group</div><div class="stu-info-value">{{ $student->blood_group ?? '-' }}</div></div>

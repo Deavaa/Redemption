@@ -353,7 +353,7 @@
                     <div class="id-card-photo-wrapper">
                         <div class="id-card-photo">
                             @if($student->photo)
-                                <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->first_name }}" onerror="this.parentElement.innerHTML='<div class=\'ghost-photo\'><svg><use href=\'#ghost-person\'/></svg></div>';">
+                                <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->full_name }}" onerror="this.parentElement.innerHTML='<div class=\'ghost-photo\'><svg><use href=\'#ghost-person\'/></svg></div>';">
                             @else
                                 <div class="ghost-photo"><svg><use href="#ghost-person"/></svg></div>
                             @endif
@@ -365,7 +365,7 @@
                     <div class="id-card-info">
                         <div class="id-card-info-row">
                             <span class="id-card-info-label">{{ __('app.name') ?? 'Name' }}</span>
-                            <span class="id-card-info-value">{{ $student->first_name }} {{ $student->last_name }}</span>
+                            <span class="id-card-info-value">{{ $student->full_name }}</span>
                         </div>
                         <div class="id-card-info-row">
                             <span class="id-card-info-label">{{ __('app.roll_number') ?? 'Roll No' }}</span>

@@ -89,7 +89,7 @@
                                 <option value="{{ $c->id }}" data-has-teacher="{{ $c->teacher_id ? '1' : '0' }}">
                                     {{ $c->name }}
                                     @if($c->teacher)
-                                    (Homeroom: {{ trim($c->teacher->first_name . ' ' . $c->teacher->last_name) }})
+                                    (Homeroom: {{ $c->teacher->full_name }})
                                     @endif
                                 </option>
                                 @endforeach
@@ -112,7 +112,7 @@
                                 style="border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;width:100%;">
                                 <option value="">-- Select Teacher --</option>
                                 @foreach($teachers as $t)
-                                <option value="{{ $t->id }}">{{ trim($t->first_name . ' ' . $t->last_name) }}</option>
+                                <option value="{{ $t->id }}">{{ $t->full_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -162,7 +162,7 @@
                                     <td style="font-weight:600;">{{ $d->classRoom?->name ?? '-' }}</td>
                                     <td>{{ $d->section?->name ?? 'All' }}</td>
                                     <td>
-                                        <span style="font-weight:600;">{{ trim($d->delegatedTeacher?->first_name . ' ' . $d->delegatedTeacher?->last_name) }}</span>
+                                        <span style="font-weight:600;">{{ $d->delegatedTeacher?->full_name }}</span>
                                     </td>
                                     <td style="font-size:0.72rem;color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                                         {{ $d->reason ?? '-' }}

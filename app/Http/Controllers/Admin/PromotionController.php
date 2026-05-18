@@ -172,7 +172,7 @@ class PromotionController extends Controller
         $class = Classroom::find($validated['class_id']);
         $students = Student::where('class_id', $validated['class_id'])
             ->where('status', 'active')
-            ->orderBy('first_name')
+            ->orderBy('full_name')
             ->get();
 
         $previews = [];

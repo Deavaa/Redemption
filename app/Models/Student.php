@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 class Student extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id','branch_id','class_id','section_id','academic_year_id','first_name','last_name','email','phone','address','guardian_name','guardian_phone','roll_number','admission_number','admission_date','date_of_birth','gender','blood_group','religion','nationality','previous_school','ethnicity','place_of_birth','passport_number','medical_conditions','allergies','notes','teacher_comments','admin_comments','photo','status','original_admission_date','readmission_count','previous_class_id','previous_section_id','leave_date','leave_reason','is_readmitted'];
+    protected $fillable = ['user_id','branch_id','class_id','section_id','academic_year_id','full_name','email','phone','address','guardian_name','guardian_phone','roll_number','admission_number','admission_date','date_of_birth','gender','blood_group','religion','nationality','previous_school','ethnicity','place_of_birth','passport_number','medical_conditions','allergies','notes','teacher_comments','admin_comments','photo','status','original_admission_date','readmission_count','previous_class_id','previous_section_id','leave_date','leave_reason','is_readmitted'];
+    protected $appends = [];
     protected function casts(): array { return ['admission_date'=>'date','date_of_birth'=>'date','original_admission_date'=>'date','leave_date'=>'date','is_readmitted'=>'boolean']; }
     public function user() { return $this->belongsTo(User::class); }
     public function branch() { return $this->belongsTo(Branch::class); }
@@ -24,6 +25,37 @@ class Student extends Model
     public function promotionResults() { return $this->hasMany(PromotionResult::class); }
     public function previousClassroom() { return $this->belongsTo(Classroom::class, 'previous_class_id'); }
     public function previousSection() { return $this->belongsTo(Section::class, 'previous_section_id'); }
+
+    /**
+     * Full name is now a real column.
+     * Accessor kept for backward compatibility but just returns the column value.
+     */
+    public function getFullNameAttribute()
+    {
+        return $this->attributes['full_name'] ?? '';
+    }
+
+    /**
+     * Backward-compatible accessor: split full_name into first part.
+     * Used by legacy Blade views that still reference $student->first_name.
+     */
+    public function getFirstNameAttribute()
+    {
+        $full = $this->attributes['full_name'] ?? '';
+        return explode(' ', $full)[0] ?? '';
+    }
+
+    /**
+     * Backward-compatible accessor: split full_name into remaining parts.
+     * Used by legacy Blade views that still reference $student->last_name.
+     */
+    public function getLastNameAttribute()
+    {
+        $full = $this->attributes['full_name'] ?? '';
+        $parts = explode(' ', $full);
+        array_shift($parts);
+        return implode(' ', $parts);
+    }
 
     /**
      * Scope: only active students

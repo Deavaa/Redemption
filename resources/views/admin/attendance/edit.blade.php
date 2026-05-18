@@ -73,7 +73,7 @@
                             @endphp
                             <tr style="border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
                                 <td style="padding:8px 14px;color:var(--text-muted);font-weight:600;">{{ $index + 1 }}</td>
-                                <td style="padding:8px 10px;font-weight:600;color:var(--text-dark);">{{ $student->first_name }} {{ $student->last_name }}</td>
+                                <td style="padding:8px 10px;font-weight:600;color:var(--text-dark);">{{ $student->full_name }}</td>
                                 <td style="padding:8px 10px;color:var(--text-muted);">{{ $student->roll_number ?? '-' }}</td>
                                 <td style="padding:8px 10px;color:var(--text-muted);">{{ $student->section?->name ?? '-' }}</td>
                                 <td style="padding:8px 10px;">

@@ -10,7 +10,7 @@
                 <ol>
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                     <li><a href="{{ route('admin.teachers.index') }}">Teachers</a></li>
-                    <li class="active">{{ $data->first_name }} {{ $data->last_name }}</li>
+                    <li class="active">{{ $data->full_name }}</li>
                 </ol>
             </nav>
         </div>
@@ -32,10 +32,10 @@
             {{-- Hero Section --}}
             <div class="modern-detail-hero">
                 <div class="modern-detail-hero-avatar">
-                    {{ strtoupper(substr($data->first_name ?? 'N', 0, 1)) }}{{ strtoupper(substr($data->last_name ?? 'A', 0, 1)) }}
+                    {{ strtoupper(substr($data->full_name ?? 'NA', 0, 1)) }}{{ strtoupper(substr(preg_replace('/^[^ ]+\\s*/', '', $data->full_name ?? 'A'), 0, 1)) }}
                 </div>
                 <div class="modern-detail-hero-info">
-                    <h2 class="modern-detail-hero-title">{{ $data->first_name }} {{ $data->last_name }}</h2>
+                    <h2 class="modern-detail-hero-title">{{ $data->full_name }}</h2>
                     <div class="modern-detail-hero-badges">
                         @if($data->status === 'Active')
                             <span class="modern-badge modern-badge-success"><i class="fas fa-check-circle"></i> Active</span>
@@ -61,7 +61,7 @@
                         <div class="modern-detail-label">
                             <i class="fas fa-id-card"></i> Full Name
                         </div>
-                        <div class="modern-detail-value">{{ $data->first_name }} {{ $data->last_name }}</div>
+                        <div class="modern-detail-value">{{ $data->full_name }}</div>
                     </div>
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">

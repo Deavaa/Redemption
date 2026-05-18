@@ -150,10 +150,10 @@
                         <td>
                             <div class="stu-name-cell">
                                 <div class="stu-avatar" style="background:{{ $avatarColors[$colorIndex] }};">
-                                    {{ strtoupper(substr($student->first_name ?? 'S', 0, 1)) }}{{ strtoupper(substr($student->last_name ?? '', 0, 1)) }}
+                                    {{ strtoupper(substr($student->full_name ?? 'S', 0, 1)) }}
                                 </div>
                                 <div>
-                                    <div style="font-weight:600;color:var(--text-dark);">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                    <div style="font-weight:600;color:var(--text-dark);">{{ $student->full_name }}</div>
                                     <div style="font-size:0.72rem;color:var(--text-muted);">{{ $student->gender ?? '-' }}</div>
                                 </div>
                             </div>
@@ -168,7 +168,7 @@
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="promo-action-btn" title="View"><i class="fas fa-eye"></i></a>
                                 <a href="{{ route('admin.students.edit', $student->id) }}" class="promo-action-btn" title="Edit"><i class="fas fa-edit"></i></a>
                                 @if($student->status === 'active')
-                                <button type="button" class="promo-action-btn promo-action-override" title="Mark as Left" data-id="{{ $student->id }}" data-name="{{ $student->first_name }} {{ $student->last_name }}" onclick="openLeaveModal(this)"><i class="fas fa-sign-out-alt"></i></button>
+                                <button type="button" class="promo-action-btn promo-action-override" title="Mark as Left" data-id="{{ $student->id }}" data-name="{{ $student->full_name }}" onclick="openLeaveModal(this)"><i class="fas fa-sign-out-alt"></i></button>
                                 @endif
                                 @if($student->canBeReadmitted())
                                 <a href="{{ route('admin.students.readmit', $student->id) }}" class="promo-action-btn" title="Readmit" style="border-color:#10b981;color:#10b981;"><i class="fas fa-redo"></i></a>

@@ -216,8 +216,8 @@ class MarkEntryController extends Controller
             $query->where('section', $request->section);
         }
 
-        // Sort alphabetically by first_name then last_name
-        $students = $query->orderBy('first_name', 'asc')->orderBy('last_name', 'asc')->get();
+        // Sort alphabetically by full_name
+        $students = $query->orderBy('full_name', 'asc')->get();
 
         $subjectId = $request->get('subject_id');
         $ayId = $request->get('academic_year_id');
@@ -239,8 +239,7 @@ class MarkEntryController extends Controller
         foreach ($students as $student) {
             $studentsData[] = [
                 'id' => $student->id,
-                'first_name' => $student->first_name,
-                'last_name' => $student->last_name,
+                'full_name' => $student->full_name,
                 'admission_number' => $student->admission_number,
                 'roll_number' => $student->roll_number,
                 'class_grade' => $student->class_grade,
@@ -264,8 +263,8 @@ class MarkEntryController extends Controller
         if (!$ayId||!$termId||!$classId||!$sectionId||!$subjectId) return response()->json(['error'=>'All filters required'],400);
         $students = DB::table('students')
             ->where('students.class_id',$classId)->where('students.section_id',$sectionId)->where('students.academic_year_id',$ayId)
-            ->orderBy('students.first_name','asc')->orderBy('students.last_name','asc')
-            ->select('students.id as student_id',DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"),'students.roll_number','students.gender')->get();
+            ->orderBy('students.full_name','asc')
+            ->select('students.id as student_id','students.full_name as student_name','students.roll_number','students.gender')->get();
         $existingMarks = MarkEntry::where('academic_year_id',$ayId)->where('term_id',$termId)
             ->where('class_id',$classId)->where('section_id',$sectionId)->where('subject_id',$subjectId)->get()->keyBy('student_id');
         $markFields = MarkEntry::getMarkFields();

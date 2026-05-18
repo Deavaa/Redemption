@@ -53,7 +53,7 @@
         </div>
         <div class="modern-card-body" style="padding:1.25rem 1.5rem;">
             <div class="stu-info-grid">
-                <div><div class="stu-info-label">Student</div><div class="stu-info-value">{{ $promotion->student->first_name ?? '' }} {{ $promotion->student->last_name ?? '' }}</div></div>
+                <div><div class="stu-info-label">Student</div><div class="stu-info-value">{{ $promotion->student->full_name ?? '' }}</div></div>
                 <div><div class="stu-info-label">From Class</div><div class="stu-info-value">{{ $promotion->fromClass->name ?? '-' }}</div></div>
                 <div><div class="stu-info-label">To Class</div><div class="stu-info-value">{{ $promotion->toClass->name ?? '-' }}</div></div>
                 <div><div class="stu-info-label">Academic Year</div><div class="stu-info-value">{{ $promotion->academicYear->name ?? '-' }}</div></div>

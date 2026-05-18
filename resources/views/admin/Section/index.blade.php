@@ -118,7 +118,7 @@
                             </td>
                             <td>
                                 @if($item->teacher)
-                                    <div class="modern-cell-title">{{ $item->teacher->first_name }} {{ $item->teacher->last_name }}</div>
+                                    <div class="modern-cell-title">{{ $item->teacher->full_name }}</div>
                                 @else
                                     <span class="modern-badge modern-badge-warning">Unassigned</span>
                                 @endif

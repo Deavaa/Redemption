@@ -514,7 +514,7 @@
                 return;
             }
             var filtered = allStudents.filter(function(s) {
-                var name = (s.first_name || '') + ' ' + (s.last_name || '');
+                var name = (s.full_name || (s.first_name || '') + ' ' + (s.last_name || ''));
                 name = name.toLowerCase();
                 var adm = (s.admission_number || s.roll_number || '').toLowerCase();
                 return name.indexOf(query) !== -1 || adm.indexOf(query) !== -1;
@@ -536,7 +536,7 @@
             var item = document.createElement('label');
             item.className = 'gmp-student-item';
 
-            var studentName = [s.first_name, s.last_name].filter(Boolean).join(' ') || s.name || 'Student';
+            var studentName = s.full_name || [s.first_name, s.last_name].filter(Boolean).join(' ') || s.name || 'Student';
             var admNum = s.admission_number || s.roll_number || '';
 
             var checkbox = document.createElement('input');

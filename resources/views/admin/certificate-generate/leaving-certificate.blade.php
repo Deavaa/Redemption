@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Leaving Clearance Certificate - {{ $student->first_name }} {{ $student->last_name }}</title>
+    <title>School Leaving Clearance Certificate - {{ $student->full_name }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         @page { size: A4; margin: 15mm; }
@@ -106,7 +106,7 @@
 
     {{-- Formal Declaration --}}
     <div class="formal-text">
-        This is to certify that <strong>{{ $student->first_name }} {{ $student->last_name }}</strong>,
+        This is to certify that <strong>{{ $student->full_name }}</strong>,
         @if($student->admission_number)
         Admission Number <strong>{{ $student->admission_number }}</strong>,
         @endif
@@ -128,7 +128,7 @@
 
     {{-- Student Info --}}
     <div class="student-info">
-        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">{{ $student->first_name }} {{ $student->last_name }}</span></div>
+        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">{{ $student->full_name }}</span></div>
         <div class="info-row"><span class="info-label">Admission Number</span><span class="info-value">{{ $student->admission_number ?? '-' }}</span></div>
         <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value">{{ $student->date_of_birth ? $student->date_of_birth->format('M d, Y') : '-' }}</span></div>
         <div class="info-row"><span class="info-label">Gender</span><span class="info-value">{{ ucfirst($student->gender ?? '-') }}</span></div>

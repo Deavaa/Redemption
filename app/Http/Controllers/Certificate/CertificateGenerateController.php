@@ -20,7 +20,7 @@ class CertificateGenerateController extends Controller
         $query = Student::with('classroom', 'section');
         if ($r->filled('class_id')) $query->where('class_id', $r->class_id);
         if ($r->filled('section_id')) $query->where('section_id', $r->section_id);
-        return response()->json($query->orderBy('first_name')->get());
+        return response()->json($query->orderBy('full_name')->get());
     }
 
     public function generate(Request $r)
@@ -65,7 +65,7 @@ class CertificateGenerateController extends Controller
             'type' => $r->type,
             'certificate_number' => $certificateNumber,
             'issue_date' => now()->format('Y-m-d'),
-            'content' => $r->type . ' certificate for ' . $student->first_name . ' ' . $student->last_name,
+            'content' => $r->type . ' certificate for ' . $student->full_name,
             'template' => $r->type,
         ]);
 

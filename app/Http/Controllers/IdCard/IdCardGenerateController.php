@@ -29,7 +29,7 @@ class IdCardGenerateController extends Controller
         if ($r->filled('class_id')) $query->where('class_id', $r->class_id);
         if ($r->filled('section_id')) $query->where('section_id', $r->section_id);
         return response()->json(
-            $query->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'roll_number', 'class_id', 'section_id'])
+            $query->orderBy('full_name')->get(['id', 'full_name', 'roll_number', 'class_id', 'section_id'])
         );
     }
 

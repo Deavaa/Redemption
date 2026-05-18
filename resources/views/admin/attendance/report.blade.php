@@ -106,7 +106,7 @@
                         @forelse($records as $record)
                         <tr style="border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
                             <td style="padding:6px 14px;font-weight:600;color:var(--text-dark);">{{ $record->date?->format('M d, Y') }}</td>
-                            <td style="padding:6px 10px;font-weight:600;color:var(--text-dark);">{{ $record->student?->first_name }} {{ $record->student?->last_name }}</td>
+                            <td style="padding:6px 10px;font-weight:600;color:var(--text-dark);">{{ $record->student?->full_name ?? '' }}</td>
                             <td style="padding:6px 10px;color:var(--text-muted);">{{ $record->classRoom?->name }}</td>
                             <td style="padding:6px 10px;color:var(--text-muted);">{{ $record->section?->name ?? '-' }}</td>
                             <td style="padding:6px 10px;text-align:center;">

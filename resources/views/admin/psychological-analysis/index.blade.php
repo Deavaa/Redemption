@@ -39,7 +39,7 @@
                     @foreach($analysis as $a)
                     @php $p = $a['psych_profile']; @endphp
                     <tr style="border-bottom:1px solid var(--border);background:{{ $p['risk_level'] === 'high' ? '#fef2f2' : ($p['risk_level'] === 'moderate' ? '#fffbeb' : 'transparent') }};">
-                        <td style="padding:10px 14px;font-size:13px;font-weight:600;">{{ $a['student']->first_name }} {{ $a['student']->last_name }}</td>
+                        <td style="padding:10px 14px;font-size:13px;font-weight:600;">{{ $a['student']->full_name }}</td>
                         <td style="padding:10px 14px;text-align:center;font-size:13px;font-weight:700;">{{ $a['average_mark'] }}</td>
                         <td style="padding:10px 14px;text-align:center;">
                             <span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:{{ $p['risk_level'] === 'high' ? '#fee2e2' : ($p['risk_level'] === 'moderate' ? '#fef3c7' : ($p['risk_level'] === 'low' ? '#dbeafe' : '#dcfce7')) }};color:{{ $p['risk_level'] === 'high' ? '#dc2626' : ($p['risk_level'] === 'moderate' ? '#d97706' : ($p['risk_level'] === 'low' ? '#2563eb' : '#16a34a')) }};">{{ ucfirst($p['risk_level']) }}</span>

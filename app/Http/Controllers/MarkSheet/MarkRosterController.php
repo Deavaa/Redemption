@@ -169,7 +169,7 @@ class MarkRosterController extends Controller
         $students = $studentQuery
             ->selectRaw("*, CAST(roll_number AS UNSIGNED) as rn_sort")
             ->orderByRaw('rn_sort ASC')
-            ->orderBy('first_name')
+            ->orderBy('full_name')
             ->get();
 
         // ── Build detailed mark data per subject ─────────────────────

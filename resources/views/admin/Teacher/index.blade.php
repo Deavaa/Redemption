@@ -110,10 +110,10 @@
                             <td>
                                 <div class="modern-cell-user">
                                     <div class="modern-avatar modern-avatar-{{ collect(['blue','green','purple','orange','pink','teal'])[crc32($item->id) % 6] }}">
-                                        {{ strtoupper(substr($item->first_name ?? 'N', 0, 1)) }}{{ strtoupper(substr($item->last_name ?? 'A', 0, 1)) }}
+                                        {{ strtoupper(substr($item->full_name ?? 'NA', 0, 1)) }}{{ strtoupper(substr(preg_replace('/^[^ ]+\\s*/', '', $item->full_name ?? 'A'), 0, 1)) }}
                                     </div>
                                     <div>
-                                        <div class="modern-cell-title">{{ $item->first_name }} {{ $item->last_name }}</div>
+                                        <div class="modern-cell-title">{{ $item->full_name }}</div>
                                         @if($item->email)
                                             <div class="modern-cell-sub">{{ $item->email }}</div>
                                         @endif

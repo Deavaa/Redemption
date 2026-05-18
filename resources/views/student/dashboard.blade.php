@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dash-welcome">
-    <h2>Welcome, {{ $student->first_name }} {{ $student->last_name }}!</h2>
+    <h2>Welcome, {{ $student->full_name }}!</h2>
     <p>Here's an overview of your academic progress and activities.</p>
 </div>
 

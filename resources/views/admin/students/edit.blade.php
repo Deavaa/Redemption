@@ -28,7 +28,7 @@
             <nav class="stu-breadcrumb"><ol>
                 <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                 <li><a href="{{ route('admin.students.index') }}">Students</a></li>
-                <li class="active">Edit {{ $student->first_name }}</li>
+                <li class="active">Edit {{ $student->full_name }}</li>
             </ol></nav>
             <h1 class="stu-title">Edit Student</h1>
         </div>
@@ -48,12 +48,8 @@
             <div class="modern-card-body" style="padding:1.25rem 1.5rem;">
                 <div class="stu-form-grid">
                     <div class="stu-form-group">
-                        <label class="stu-form-label">First Name <span class="required">*</span></label>
-                        <input type="text" name="first_name" class="stu-form-input" value="{{ old('first_name', $student->first_name) }}" required>
-                    </div>
-                    <div class="stu-form-group">
-                        <label class="stu-form-label">Last Name <span class="required">*</span></label>
-                        <input type="text" name="last_name" class="stu-form-input" value="{{ old('last_name', $student->last_name) }}" required>
+                        <label class="stu-form-label">Full Name <span class="required">*</span></label>
+                        <input type="text" name="full_name" class="stu-form-input" value="{{ old('full_name', $student->full_name) }}" required>
                     </div>
                     <div class="stu-form-group">
                         <label class="stu-form-label">Email</label>

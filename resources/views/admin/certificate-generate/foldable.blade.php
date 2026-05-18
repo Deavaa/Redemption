@@ -3,7 +3,7 @@
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
-    <title>Foldable Certificate - {{ $student->first_name }}</title>
+    <title>Foldable Certificate - {{ $student->full_name }}</title>
     <style>
         @page { size: A4 landscape; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -306,7 +306,7 @@
             </div>
 
             <div class="front-bottom">
-                <div class="front-student-name">{{ $student->first_name }} {{ $student->last_name }}</div>
+                <div class="front-student-name">{{ $student->full_name }}</div>
                 <div class="front-info-row">
                     <div class="front-info-item"><strong>Class / ክፍል:</strong> {{ $student->classroom->name ?? '-' }}</div>
                     <div class="front-info-item"><strong>Section / መደብ:</strong> {{ $student->section->name ?? '-' }}</div>
@@ -404,7 +404,7 @@
                     @if($t1Comment)
                         {{ $t1Comment }}
                     @else
-                        {{ $student->first_name }} has shown {{ $avgYearly >= 70 ? 'excellent / በጣም ጥሩ' : ($avgYearly >= 50 ? 'good / ጥሩ' : 'below average / ከመካከለኛ በታች') }} performance in the first semester. {{ $avgYearly >= 70 ? 'Continue to encourage this level of dedication. / ይህን የትጋት ደረጃ ማስቀጠል ይቻላል።' : ($avgYearly >= 50 ? 'There is room for improvement. Additional focus will help. / ማሻሻያ አለ። ተጨማሪ ትኩረት ይረዳል።' : 'Significant improvement is needed. Please provide extra support at home. / ከፍተኛ ማሻሻያ ይፈለጋል። እባክዎ በቤት ተጨማሪ ድጋፍ ያድርጉ።') }}
+                        {{ $student->full_name }} has shown {{ $avgYearly >= 70 ? 'excellent / በጣም ጥሩ' : ($avgYearly >= 50 ? 'good / ጥሩ' : 'below average / ከመካከለኛ በታች') }} performance in the first semester. {{ $avgYearly >= 70 ? 'Continue to encourage this level of dedication. / ይህን የትጋት ደረጃ ማስቀጠል ይቻላል።' : ($avgYearly >= 50 ? 'There is room for improvement. Additional focus will help. / ማሻሻያ አለ። ተጨማሪ ትኩረት ይረዳል።' : 'Significant improvement is needed. Please provide extra support at home. / ከፍተኛ ማሻሻያ ይፈለጋል። እባክዎ በቤት ተጨማሪ ድጋፍ ያድርጉ።') }}
                     @endif
                 </div>
             </div>
@@ -416,7 +416,7 @@
                     @if($t2Comment)
                         {{ $t2Comment }}
                     @else
-                        {{ $student->first_name }} has shown {{ $avgYearly >= 70 ? 'excellent / በጣም ጥሩ' : ($avgYearly >= 50 ? 'good / ጥሩ' : 'below average / ከመካከለኛ በታች') }} performance in the second semester. {{ $promotionStatus === 'promoted' ? 'I am pleased to recommend this student for promotion. / ይህን ተማሪ ለማስተማር መመረካችን አለ።' : ($promotionStatus === 'detained' ? 'Unfortunately, this student will need to repeat this class. / ለማዘንበት ይህ ተማሪ ክፍሉን መድገም አለበት።' : 'This student is conditionally promoted and must improve. / ይህ ተማሪ በሁኔታ የተማረከ ሲሆን ማሻሻል አለበት።') }}
+                        {{ $student->full_name }} has shown {{ $avgYearly >= 70 ? 'excellent / በጣም ጥሩ' : ($avgYearly >= 50 ? 'good / ጥሩ' : 'below average / ከመካከለኛ በታች') }} performance in the second semester. {{ $promotionStatus === 'promoted' ? 'I am pleased to recommend this student for promotion. / ይህን ተማሪ ለማስተማር መመረካችን አለ።' : ($promotionStatus === 'detained' ? 'Unfortunately, this student will need to repeat this class. / ለማዘንበት ይህ ተማሪ ክፍሉን መድገም አለበት።' : 'This student is conditionally promoted and must improve. / ይህ ተማሪ በሁኔታ የተማረከ ሲሆን ማሻሻል አለበት።') }}
                     @endif
                 </div>
             </div>

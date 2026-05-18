@@ -92,7 +92,7 @@
                         </div>
                         <div class="modern-detail-value">
                             @if($item->student)
-                                {{ $item->student->first_name ?? '' }} {{ $item->student->last_name ?? '' }}
+                                {{ $item->student->full_name ?? '' }}
                             @else
                                 Student #{{ $item->student_id }}
                             @endif

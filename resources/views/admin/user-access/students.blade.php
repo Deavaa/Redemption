@@ -144,14 +144,14 @@
                     @php
                         $colors = ['#4361ee','#7c3aed','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#ec4899'];
                         $color = $colors[$student->id % count($colors)];
-                        $initials = strtoupper(substr($student->first_name ?? 'S', 0, 1) . substr($student->last_name ?? '?', 0, 1));
+                        $initials = strtoupper(substr($student->full_name ?? 'S', 0, 1));
                     @endphp
                     <tr>
                         <td>
                             <div style="display:flex;align-items:center;gap:.75rem">
                                 <div class="ua-avatar" style="background:{{ $color }}">{{ $initials }}</div>
                                 <div>
-                                    <div style="font-weight:600;color:#1a1a2e">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                    <div style="font-weight:600;color:#1a1a2e">{{ $student->full_name }}</div>
                                 </div>
                             </div>
                         </td>

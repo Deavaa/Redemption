@@ -62,7 +62,7 @@
                         <select name="teacher_id" class="ta-select" required>
                             <option value="">-- Select Teacher --</option>
                             @foreach($teachers as $t)
-                                <option value="{{ $t->id }}" {{ old('teacher_id', $item->teacher_id) == $t->id ? 'selected' : '' }}>{{ $t->first_name }} {{ $t->last_name }}@if($t->email) ({{ $t->email }})@endif</option>
+                                <option value="{{ $t->id }}" {{ old('teacher_id', $item->teacher_id) == $t->id ? 'selected' : '' }}>{{ $t->full_name }}@if($t->email) ({{ $t->email }})@endif</option>
                             @endforeach
                         </select>
                         @error('teacher_id')<div class="ta-error">{{ $message }}</div>@enderror

@@ -50,7 +50,7 @@
 <select name="principal_id" id="principalSelect" class="form-select">
 <option value="">-- Select Principal --</option>
 @foreach($teachers as $t)
-<option value="{{$t->id}}" {{old('principal_id')==$t->id?'selected':''}}>{{$t->first_name}} {{$t->last_name}} @if($t->department)({{$t->department}})@endif</option>
+<option value="{{$t->id}}" {{old('principal_id')==$t->id?'selected':''}}>{{$t->full_name}} @if($t->department)({{$t->department}})@endif</option>
 @endforeach
 </select>
 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addTeacherModal" title="Add New Teacher"><i class="fas fa-plus"></i></button>
@@ -153,8 +153,7 @@
 <form id="addTeacherForm">
 <div class="modal-body">
 <div class="row g-3">
-<div class="col-md-6"><label class="form-label">First Name *</label><input type="text" name="first_name" class="form-control" required></div>
-<div class="col-md-6"><label class="form-label">Last Name *</label><input type="text" name="last_name" class="form-control" required></div>
+<div class="col-md-12"><label class="form-label">Full Name *</label><input type="text" name="full_name" class="form-control" required></div>
 <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
 <div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control"></div>
 <div class="col-md-6"><label class="form-label">Qualification</label><input type="text" name="qualification" class="form-control"></div>
@@ -190,11 +189,11 @@ function updateMapPreview(){
         data:$(this).serialize()+'&_token={{csrf_token()}}',
         success:function(res){
             var sel=$('#principalSelect');
-            sel.append('<option value="'+res.id+'" selected>'+res.first_name+' '+res.last_name+(res.department?' ('+res.department+')':'')+'</option>');
+            sel.append('<option value="'+res.id+'" selected>'+res.full_name+(res.department?' ('+res.department+')':'')+'</option>');
             sel.trigger('change');
             bootstrap.Modal.getInstance(document.getElementById('addTeacherModal')).hide();
             $('#addTeacherForm')[0].reset();
-            toastr.success(res.first_name+' '+res.last_name+' added as principal');
+            toastr.success(res.full_name+' added as principal');
         },
         error:function(xhr){
             var msg=xhr.responseJSON&&xhr.responseJSON.message?xhr.responseJSON.message:'Error saving teacher';

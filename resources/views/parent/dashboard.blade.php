@@ -33,7 +33,7 @@
             <i class="fas fa-user-graduate"></i>
         </div>
         <div class="stat-info">
-            <h3>{{ $child->first_name }}</h3>
+            <h3>{{ $child->full_name }}</h3>
             <p>{{ $child->classroom->name ?? 'No Class' }} - {{ $child->section->name ?? 'N/A' }}</p>
         </div>
     </div>
@@ -54,10 +54,10 @@
         <div class="child-card">
             <div class="child-card-header">
                 <div class="child-avatar">
-                    {{ strtoupper(substr($child->first_name, 0, 1)) }}
+                    {{ strtoupper(substr($child->full_name, 0, 1)) }}
                 </div>
                 <div>
-                    <h5>{{ $child->first_name }} {{ $child->last_name }}</h5>
+                    <h5>{{ $child->full_name }}</h5>
                     <small>
                         {{ $child->classroom->name ?? 'No Class' }}
                         @if($child->section) &mdash; {{ $child->section->name }}@endif

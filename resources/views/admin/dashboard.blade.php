@@ -316,8 +316,7 @@
                                             <i class="fas fa-check"></i>
                                         </div>
                                         <div class="modern-activity-info">
-                                            <span class="modern-activity-title">{{ $payment->student->first_name ?? 'Unknown' }}
-                                                {{ $payment->student->last_name ?? '' }}</span>
+                                            <span class="modern-activity-title">{{ $payment->student->full_name ?? 'Unknown' }}</span>
                                             <span class="modern-activity-desc">{{ $payment->payment_date?->format('M d, Y') ?? '-' }}
                                                 &middot; {{ $payment->payment_method ?? '-' }}</span>
                                         </div>

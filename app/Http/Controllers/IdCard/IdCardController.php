@@ -13,7 +13,7 @@ class IdCardController extends Controller
         if ($r->filled('search')) {
             $s = $r->search;
             $q->where('card_number', 'LIKE', "%$s%")->orWhereHas('student', function($x) use ($s) {
-                $x->where('first_name', 'LIKE', "%$s%")->orWhere('last_name', 'LIKE', "%$s%");
+                $x->where('full_name', 'LIKE', "%$s%");
             });
         }
         if ($r->filled('status')) $q->where('status', $r->status);
@@ -24,7 +24,7 @@ class IdCardController extends Controller
 
     public function create()
     {
-        $students = Student::where('status', 'active')->orderBy('first_name')->get();
+        $students = Student::where('status', 'active')->orderBy('full_name')->get();
         return view('admin.IdCard.create', compact('students'));
     }
 
@@ -49,7 +49,7 @@ class IdCardController extends Controller
 
     public function edit(IdCard $id_card)
     {
-        $students = Student::where('status', 'active')->orderBy('first_name')->get();
+        $students = Student::where('status', 'active')->orderBy('full_name')->get();
         return view('admin.IdCard.edit', ['item' => $id_card, 'students' => $students]);
     }
 

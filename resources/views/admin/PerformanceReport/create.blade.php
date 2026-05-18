@@ -48,9 +48,9 @@
                                 <i class="fas fa-user modern-input-icon"></i>
                                 <select name="student_id" id="student_id" class="modern-input modern-select {{ $errors->has('student_id') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Student --</option>
-                                    @foreach(\App\Models\Student::where('status', 'active')->orderBy('first_name')->get() as $student)
+                                    @foreach(\App\Models\Student::where('status', 'active')->orderBy('full_name')->get() as $student)
                                         <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>
-                                            {{ $student->first_name }} {{ $student->last_name }}
+                                            {{ $student->full_name }}
                                         </option>
                                     @endforeach
                                 </select>

@@ -13,7 +13,7 @@ class TeacherAccessController extends Controller
 {
     public function index()
     {
-        $teachers = Teacher::with('user')->orderBy('first_name')->get();
+        $teachers = Teacher::with('user')->orderBy('full_name')->get();
         $teacherRole = Role::where('name', 'teacher')->first();
         return view('admin.user-access.teachers', compact('teachers', 'teacherRole'));
     }
@@ -47,7 +47,7 @@ class TeacherAccessController extends Controller
         // Create new user account
         $tempPassword = Str::random(10);
         $user = User::create([
-            'name' => $teacher->first_name . ' ' . $teacher->last_name,
+            'name' => $teacher->full_name,
             'email' => $teacher->email,
             'password' => Hash::make($tempPassword),
             'role' => 'teacher',

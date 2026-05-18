@@ -157,7 +157,7 @@
                     @foreach($item->students as $student)
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
-                            <i class="fas fa-user-graduate"></i> {{ $student->first_name ?? '' }} {{ $student->last_name ?? '' }}
+                            <i class="fas fa-user-graduate"></i> {{ $student->full_name ?? '' }}
                         </div>
                         <div class="modern-detail-value">
                             @if($student->pivot && $student->pivot->relation)

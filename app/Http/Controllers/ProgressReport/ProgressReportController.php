@@ -17,7 +17,7 @@ class ProgressReportController extends Controller
         if ($r->filled("search")) {
             $s = $r->search;
             $q->whereHas("student", function($x) use ($s) {
-                $x->where("first_name", "LIKE", "%$s%")->orWhere("last_name", "LIKE", "%$s%");
+                $x->where("full_name", "LIKE", "%$s%");
             });
         }
         if ($r->filled("academic_year_id")) $q->where("academic_year_id", $r->academic_year_id);
@@ -29,7 +29,7 @@ class ProgressReportController extends Controller
 
     public function create()
     {
-        $s = Student::where("status", "active")->orderBy("first_name")->get();
+        $s = Student::where("status", "active")->orderBy("full_name")->get();
         $ay = AcademicYear::orderBy("name")->get();
         $t = Term::orderBy("name")->get();
         $c = Classroom::orderBy("name")->get();
@@ -95,7 +95,7 @@ class ProgressReportController extends Controller
     public function edit(ProgressReport $progress_report)
     {
         $progress_report->load("subjects");
-        $s = Student::where("status", "active")->orderBy("first_name")->get();
+        $s = Student::where("status", "active")->orderBy("full_name")->get();
         $ay = AcademicYear::orderBy("name")->get();
         $t = Term::orderBy("name")->get();
         $c = Classroom::orderBy("name")->get();

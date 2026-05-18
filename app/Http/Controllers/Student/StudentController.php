@@ -21,8 +21,7 @@ class StudentController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'LIKE', "%{$search}%")
-                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                $q->where('full_name', 'LIKE', "%{$search}%")
                     ->orWhere('email', 'LIKE', "%{$search}%")
                     ->orWhere('roll_number', 'LIKE', "%{$search}%");
             });
@@ -81,12 +80,6 @@ class StudentController extends Controller
             $validated['photo'] = $photoPath;
         }
 
-        // Split full name into first and last name
-        $nameParts = explode(' ', $validated['full_name'], 2);
-        $validated['first_name'] = $nameParts[0] ?? '';
-        $validated['last_name'] = $nameParts[1] ?? '';
-        unset($validated['full_name']);
-
         // Get class_id from section_id
         $section = Section::find($validated['section_id']);
         $validated['class_id'] = $section->class_id;
@@ -121,7 +114,7 @@ class StudentController extends Controller
             : 'Student@' . rand(1000, 9999);
 
         $user = \App\Models\User::create([
-            'name' => $validated['first_name'] . ' ' . $validated['last_name'],
+            'name' => $validated['full_name'],
             'email' => $validated['email'] ?? $idNumber . '@redemption.edu',
             'id_number' => $idNumber,
             'password' => bcrypt($defaultPassword),
@@ -197,12 +190,6 @@ class StudentController extends Controller
             $validated['photo'] = $photoPath;
         }
 
-        // Split full name into first and last name
-        $nameParts = explode(' ', $validated['full_name'], 2);
-        $validated['first_name'] = $nameParts[0] ?? '';
-        $validated['last_name'] = $nameParts[1] ?? '';
-        unset($validated['full_name']);
-
         // Get class_id from section_id
         $section = Section::find($validated['section_id']);
         $validated['class_id'] = $section->class_id;
@@ -265,7 +252,7 @@ class StudentController extends Controller
             } else {
                 // Create new user account
                 $user = \App\Models\User::create([
-                    'name' => $student->first_name . ' ' . $student->last_name,
+                    'name' => $student->full_name,
                     'email' => $student->email ?? $idNumber . '@redemption.edu',
                     'id_number' => $idNumber,
                     'password' => bcrypt($defaultPassword),
@@ -341,8 +328,7 @@ class StudentController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'LIKE', "%{$search}%")
-                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                $q->where('full_name', 'LIKE', "%{$search}%")
                     ->orWhere('admission_number', 'LIKE', "%{$search}%");
             });
         }

@@ -21,7 +21,7 @@ class ClassroomController extends Controller
     public function create()
     {
         $academicYears = AcademicYear::orderBy('name')->get();
-        $teachers = Teacher::orderBy('first_name')->get();
+        $teachers = Teacher::orderBy('full_name')->get();
         $branches = Branch::orderBy('name')->get();
         return view('admin.Classroom.create', compact('academicYears','teachers','branches'));
     }
@@ -55,7 +55,7 @@ class ClassroomController extends Controller
     {
         $data = Classroom::with(['sections.teacher','academicYear','teacher','branch'])->findOrFail($id);
         $academicYears = AcademicYear::orderBy('name')->get();
-        $teachers = Teacher::orderBy('first_name')->get();
+        $teachers = Teacher::orderBy('full_name')->get();
         $branches = Branch::orderBy('name')->get();
         return view('admin.Classroom.edit', compact('data','academicYears','teachers','branches'));
     }

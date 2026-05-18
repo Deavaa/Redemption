@@ -85,9 +85,9 @@
 
     {{-- Student Info Card --}}
     <div class="pf-info-card">
-        <div class="pf-avatar">{{ strtoupper(substr($student->first_name ?? 'S', 0, 1)) }}</div>
+        <div class="pf-avatar">{{ strtoupper(substr($student->full_name ?? 'S', 0, 1)) }}</div>
         <div class="pf-info-details">
-            <h2 class="pf-info-name">{{ $student->first_name ?? '' }} {{ $student->last_name ?? '' }}</h2>
+            <h2 class="pf-info-name">{{ $student->full_name ?? '' }}</h2>
             <div class="pf-info-meta">
                 @if($student->classroom)<span><i class="fas fa-chalkboard me-1"></i>{{ $student->classroom->name }}</span>@endif
                 @if($student->section)<span><i class="fas fa-layer-group me-1"></i>{{ $student->section->name }}</span>@endif

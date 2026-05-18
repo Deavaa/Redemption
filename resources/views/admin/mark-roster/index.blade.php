@@ -290,7 +290,7 @@
                     @foreach($rows as $row)
                     <tr>
                         <td class="stu-serial">{{ $row['serial'] }}</td>
-                        <td class="stu-name">{{ $row['student']->first_name ?? '' }} {{ $row['student']->last_name ?? '' }}</td>
+                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
                         {{-- CA raw fields (1 decimal) --}}
                         <td class="ca-col">{{ $fmt1($row['ca1'] ?? null) }}</td>
                         <td class="ca-col">{{ $fmt1($row['ca2'] ?? null) }}</td>

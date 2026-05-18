@@ -34,7 +34,7 @@ class TranscriptController extends Controller
         $query = Student::with('classroom', 'section');
         if ($r->filled('class_id')) $query->where('class_id', $r->class_id);
         if ($r->filled('section_id')) $query->where('section_id', $r->section_id);
-        return response()->json($query->orderBy('first_name')->get());
+        return response()->json($query->orderBy('full_name')->get());
     }
 
     public function generate(Request $r)
@@ -210,7 +210,7 @@ class TranscriptController extends Controller
             'type' => 'transcript',
             'certificate_number' => $certificateNumber,
             'issue_date' => now()->format('Y-m-d'),
-            'content' => 'Academic transcript for ' . $student->first_name . ' ' . $student->last_name,
+            'content' => 'Academic transcript for ' . $student->full_name,
             'template' => 'transcript',
         ]);
 

@@ -3,7 +3,7 @@
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
-    <title>{{ __('app.certificates') }} - {{ $student->first_name }} {{ $student->last_name }}</title>
+    <title>{{ __('app.certificates') }} - {{ $student->full_name }}</title>
     <style>
         @page { size: A5 landscape; margin: 10mm; }
         * { box-sizing: border-box; }
@@ -237,7 +237,7 @@
             {{-- Body --}}
             <div class="cert-body">
                 <p>{{ __('app.cert_this_is_to_certify') ?? 'This is to certify that' }}</p>
-                <div class="cert-name">{{ $student->first_name }} {{ $student->last_name }}</div>
+                <div class="cert-name">{{ $student->full_name }}</div>
                 <p>
                     @if($cert->type === 'completion')
                         {{ __('app.cert_has_completed') ?? 'has successfully completed the academic program.' }}

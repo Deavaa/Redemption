@@ -188,9 +188,9 @@
                                 <i class="fas fa-user-tie modern-input-icon"></i>
                                 <select name="principal_id" id="principal_id" class="modern-input modern-select">
                                     <option value="">-- Select Principal --</option>
-                                    @foreach(\App\Models\Teacher::orderBy('first_name')->get() as $teacher)
+                                    @foreach(\App\Models\Teacher::orderBy('full_name')->get() as $teacher)
                                         <option value="{{ $teacher->id }}" {{ old('principal_id') == $teacher->id ? 'selected' : '' }}>
-                                            {{ $teacher->first_name }} {{ $teacher->last_name }}
+                                            {{ $teacher->full_name }}
                                         </option>
                                     @endforeach
                                 </select>

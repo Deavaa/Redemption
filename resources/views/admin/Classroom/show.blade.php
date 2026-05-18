@@ -69,7 +69,7 @@
                     <div class="modern-detail-label"><i class="fas fa-user-tie"></i> Class Teacher</div>
                     <div class="modern-detail-value">
                         @if($item->teacher)
-                            {{ $item->teacher->first_name ?? '' }} {{ $item->teacher->last_name ?? '' }}
+                            {{ $item->teacher->full_name ?? '' }}
                         @else
                             <span class="modern-muted">Not Assigned</span>
                         @endif

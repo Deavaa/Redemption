@@ -64,10 +64,10 @@
                         <td>
                             <div style="display:flex;align-items:center;gap:8px;">
                                 <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#ef4444,#f87171);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;flex-shrink:0;">
-                                    {{ strtoupper(substr($student->first_name ?? 'S', 0, 1)) }}
+                                    {{ strtoupper(substr($student->full_name ?? 'S', 0, 1)) }}
                                 </div>
                                 <div>
-                                    <div style="font-weight:600;color:var(--text-dark);">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                    <div style="font-weight:600;color:var(--text-dark);">{{ $student->full_name }}</div>
                                 </div>
                             </div>
                         </td>

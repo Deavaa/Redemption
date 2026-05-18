@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Transcript - {{ $student->first_name }} {{ $student->last_name }}</title>
+    <title>Academic Transcript - {{ $student->full_name }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         @page { size: A4 portrait; margin: 12mm 10mm; }
@@ -129,7 +129,7 @@
         </div>
         <div class="header-photo">
             @if($student->photo)
-                <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->first_name }}" class="student-photo">
+                <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->full_name }}" class="student-photo">
             @else
                 <div class="student-photo-placeholder">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -140,7 +140,7 @@
 
     {{-- Student Info --}}
     <div class="student-info">
-        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">{{ $student->first_name }} {{ $student->last_name }}</span></div>
+        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">{{ $student->full_name }}</span></div>
         <div class="info-row"><span class="info-label">Admission No.</span><span class="info-value">{{ $student->admission_number ?? '-' }}</span></div>
         <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value">{{ $student->date_of_birth ? $student->date_of_birth->format('M d, Y') : '-' }}</span></div>
         <div class="info-row"><span class="info-label">Gender</span><span class="info-value">{{ ucfirst($student->gender ?? '-') }}</span></div>

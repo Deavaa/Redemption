@@ -68,7 +68,7 @@
                                             <i class="fas fa-user modern-input-icon"></i>
                                             <input type="text" name="full_name" id="full_name"
                                                 class="modern-input {{ $errors->has('full_name') ? 'is-invalid' : '' }}"
-                                                value="{{ old('full_name', $data->first_name . ' ' . $data->last_name) }}"
+                                                value="{{ old('full_name', $data->full_name) }}"
                                                 placeholder="e.g. Abebe Kebede" required autofocus>
                                         </div>
                                         @error('full_name')

@@ -2,11 +2,35 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class Teacher extends Model {
-protected $fillable = ['user_id','first_name','last_name','email','phone','qualification','department','hire_date','salary','status','address','photo'];
+protected $fillable = ['user_id','full_name','email','phone','qualification','department','hire_date','salary','status','address','photo'];
 
 public function user() { return $this->belongsTo(User::class); }
 
-public function getFullNameAttribute() { return trim($this->first_name . ' ' . $this->last_name); }
+/**
+ * Full name is now a real column.
+ * Accessor kept for backward compatibility but just returns the column value.
+ */
+public function getFullNameAttribute() { return $this->attributes['full_name'] ?? ''; }
+
+/**
+ * Backward-compatible accessor: split full_name into first part.
+ */
+public function getFirstNameAttribute()
+{
+    $full = $this->attributes['full_name'] ?? '';
+    return explode(' ', $full)[0] ?? '';
+}
+
+/**
+ * Backward-compatible accessor: split full_name into remaining parts.
+ */
+public function getLastNameAttribute()
+{
+    $full = $this->attributes['full_name'] ?? '';
+    $parts = explode(' ', $full);
+    array_shift($parts);
+    return implode(' ', $parts);
+}
 
 public function sections() { return $this->hasMany(Section::class, 'teacher_id'); }
 public function classRooms() { return $this->hasMany(ClassRoom::class, 'teacher_id'); }

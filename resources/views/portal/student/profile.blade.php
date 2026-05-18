@@ -15,7 +15,7 @@
 
 @section('content')
 @php
-    $studentName = trim(($student->first_name ?? '') . ' ' . ($student->last_name ?? ''));
+    $studentName = $student->full_name ?? 'Student';
     $photo = $student->photo ?? null;
 @endphp
 

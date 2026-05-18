@@ -12,13 +12,13 @@
 <div class="profile-header">
     <div class="profile-avatar">
         @if($student->photo)
-            <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->first_name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->full_name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
         @else
-            {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
+            {{ strtoupper(substr($student->full_name, 0, 1)) }}
         @endif
     </div>
     <div class="profile-info">
-        <h3>{{ $student->first_name }} {{ $student->last_name }}</h3>
+        <h3>{{ $student->full_name }}</h3>
         <p><i class="fas fa-id-badge me-1"></i> Admission No: {{ $student->admission_number ?? 'N/A' }}
             &nbsp;&bull;&nbsp;
             <i class="fas fa-hashtag me-1"></i> Roll No: {{ $student->roll_number ?? 'N/A' }}
@@ -45,12 +45,8 @@
             <div class="student-card-body">
                 <div class="info-grid">
                     <div class="info-item">
-                        <label>First Name</label>
-                        <span>{{ $student->first_name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Last Name</label>
-                        <span>{{ $student->last_name ?? 'N/A' }}</span>
+                        <label>Full Name</label>
+                        <span>{{ $student->full_name ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <label>Email</label>

@@ -15,7 +15,7 @@ class FeePaymentController extends Controller
     }
     public function create(){
         $fees = Fee::with("classroom","academicYear")->where("is_active",1)->get();
-        $students = Student::orderBy("first_name")->get();
+        $students = Student::orderBy("full_name")->get();
         return view("admin.FeePayment.create", compact("fees","students"));
     }
     public function store(Request $r){
@@ -26,7 +26,7 @@ class FeePaymentController extends Controller
     public function show(FeePayment $fee_payment){ return view("admin.FeePayment.show", ["item" => $fee_payment]); }
     public function edit(FeePayment $fee_payment){
         $fees = Fee::with("classroom","academicYear")->where("is_active",1)->get();
-        $students = Student::orderBy("first_name")->get();
+        $students = Student::orderBy("full_name")->get();
         return view("admin.FeePayment.edit", ['item' => $fee_payment, 'fees' => $fees, 'students' => $students]);
     }
     public function update(Request $r, FeePayment $fee_payment){

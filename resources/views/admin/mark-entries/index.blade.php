@@ -808,7 +808,7 @@
                 students = responseStudents.map(function(s) {
                     var studentObj = {
                         id: s.student_id || s.id,
-                        student_name: s.student_name || (s.first_name ? s.first_name + ' ' + (s.last_name || '') : 'Student'),
+                        student_name: s.student_name || s.full_name || (s.first_name ? s.first_name + ' ' + (s.last_name || '') : 'Student'),
                         roll_number: s.roll_number || s.admission_number || '',
                         marks: {}
                     };

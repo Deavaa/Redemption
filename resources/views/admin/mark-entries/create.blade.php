@@ -386,7 +386,7 @@
 
     function showStudent(i) {
         var s = students[i];
-        var studentName = [s.first_name || s.student_name || s.name, s.last_name].filter(Boolean).join(' ') || 'Student';
+        var studentName = s.full_name || [s.first_name || s.student_name || s.name, s.last_name].filter(Boolean).join(' ') || 'Student';
         var subjectText = document.getElementById('sel_subject').selectedOptions[0]?.text || '--';
         var yearText = document.getElementById('sel_ay').selectedOptions[0]?.text || '--';
         document.getElementById('studentName').textContent = studentName;

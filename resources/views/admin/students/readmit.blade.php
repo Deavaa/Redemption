@@ -52,7 +52,7 @@
         </div>
         <div class="modern-card-body" style="padding:1.25rem 1.5rem;">
             <div class="stu-info-grid">
-                <div><div class="stu-info-label">Student Name</div><div class="stu-info-value">{{ $student->first_name }} {{ $student->last_name }}</div></div>
+                <div><div class="stu-info-label">Student Name</div><div class="stu-info-value">{{ $student->full_name }}</div></div>
                 <div><div class="stu-info-label">Admission Number</div><div class="stu-info-value">{{ $student->admission_number }}</div></div>
                 <div><div class="stu-info-label">Previous Class</div><div class="stu-info-value">{{ $student->previousClassroom->name ?? $student->classroom->name ?? '-' }}</div></div>
                 <div><div class="stu-info-label">Leave Date</div><div class="stu-info-value">{{ $student->leave_date ? $student->leave_date->format('M d, Y') : '-' }}</div></div>

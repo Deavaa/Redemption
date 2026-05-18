@@ -152,7 +152,7 @@
                         <td>
                             <div class="ua-student-chips">
                                 @foreach($parent->students as $student)
-                                <span class="ua-student-chip">{{ $student->first_name }} {{ $student->last_name }}</span>
+                                <span class="ua-student-chip">{{ $student->full_name }}</span>
                                 @endforeach
                                 @if($parent->students->isEmpty())
                                 <span style="color:#9ca3af;font-size:.78rem">No students linked</span>

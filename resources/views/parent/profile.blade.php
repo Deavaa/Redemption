@@ -1,13 +1,13 @@
 @extends('parent.layout')
 
-@section('title', 'Profile - ' . $student->first_name . ' ' . $student->last_name)
+@section('title', 'Profile - ' . $student->full_name)
 
 @section('content')
 <div class="page-header">
     <div>
         <h4><i class="fas fa-id-card me-2" style="color: var(--primary);"></i> Student Profile</h4>
         <div class="page-header-sub">
-            {{ $student->first_name }} {{ $student->last_name }}
+            {{ $student->full_name }}
         </div>
     </div>
     <a href="{{ route('parent.dashboard') }}" class="btn-modern btn-modern-outline">
@@ -20,11 +20,11 @@
     <div class="info-card-body" style="padding: 24px;">
         <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
             <div style="width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg, var(--primary), var(--accent)); color:#fff; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; flex-shrink:0;">
-                {{ strtoupper(substr($student->first_name, 0, 1)) }}
+                {{ strtoupper(substr($student->full_name, 0, 1)) }}
             </div>
             <div style="flex:1; min-width:200px;">
                 <h3 style="font-size:20px; font-weight:700; color:var(--text-dark); margin-bottom:4px;">
-                    {{ $student->first_name }} {{ $student->last_name }}
+                    {{ $student->full_name }}
                 </h3>
                 <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:13px; color:var(--text-muted);">
                     <span><i class="fas fa-building me-1"></i>{{ $student->classroom->name ?? 'No Class' }}</span>
@@ -56,12 +56,8 @@
         <div class="info-card-body">
             <div class="profile-detail">
                 <div class="profile-item">
-                    <div class="profile-item-label">First Name</div>
-                    <div class="profile-item-value">{{ $student->first_name ?? '—' }}</div>
-                </div>
-                <div class="profile-item">
-                    <div class="profile-item-label">Last Name</div>
-                    <div class="profile-item-value">{{ $student->last_name ?? '—' }}</div>
+                    <div class="profile-item-label">Full Name</div>
+                    <div class="profile-item-value">{{ $student->full_name ?? '—' }}</div>
                 </div>
                 <div class="profile-item">
                     <div class="profile-item-label">Gender</div>
