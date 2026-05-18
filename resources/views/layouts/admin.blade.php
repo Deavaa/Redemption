@@ -687,9 +687,11 @@
                     </ul>
                 </div>
 
+                @if(in_array($menuLevel, ['full', 'general_manager']))
                 <a href="{{ route('admin.settings.index') }}" class="topbar-icon-btn topbar-icon-link" title="{{ __('app.settings') ?? 'Settings' }}">
                     <i class="fas fa-cog"></i>
                 </a>
+                @endif
                 <a href="{{ url('/') }}" class="topbar-icon-btn topbar-icon-link" target="_blank" title="{{ __('app.view_website') }}">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
