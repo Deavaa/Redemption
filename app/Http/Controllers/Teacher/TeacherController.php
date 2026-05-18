@@ -29,18 +29,13 @@ class TeacherController extends Controller
             'department'    => 'nullable|string|max:255',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
-            'status'        => 'nullable|in:active,inactive,on_leave',
+            'status'        => 'required|in:active,inactive,on_leave',
             'address'       => 'nullable|string|max:500',
             'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('teacher-photos', 'public');
-        }
-
-        // Set default status if not provided
-        if (empty($validated['status'])) {
-            $validated['status'] = 'active';
         }
 
         // Handle NOT NULL columns: set defaults when values are empty/null
@@ -89,18 +84,13 @@ class TeacherController extends Controller
             'department'    => 'nullable|string|max:255',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
-            'status'        => 'nullable|in:active,inactive,on_leave',
+            'status'        => 'required|in:active,inactive,on_leave',
             'address'       => 'nullable|string|max:500',
             'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('teacher-photos', 'public');
-        }
-
-        // Set default status if not provided
-        if (empty($validated['status'])) {
-            $validated['status'] = 'active';
         }
 
         // Handle NOT NULL columns: set defaults when values are empty/null
