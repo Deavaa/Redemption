@@ -102,29 +102,56 @@ class StudentDataSeeder extends Seeder
                 $this->command->info("    ✓ Auto-created Grade {$g} (Class ID:{$class->id})");
             }
 
+            // Also try to load sections that may have been created after the initial scan
             if (!isset($sectionsByClass[$g]) || $sectionsByClass[$g]->isEmpty()) {
                 $class = $classes[$g];
-                $secs = collect();
-                foreach (['A', 'B'] as $letter) {
-                    $sec = Section::updateOrCreate(
-                        [
-                            'class_id' => $class->id,
-                            'name'     => $letter,
-                        ],
-                        [
-                            'academic_year_id' => $ay->id,
-                        ]
-                    );
-                    $secs->push($sec);
+                $secs = Section::where('class_id', $class->id)
+                    ->orderBy('name')
+                    ->get()
+                    ->values();
+
+                if ($secs->isEmpty()) {
+                    // Create sections matching SchoolDataSeeder format: "Section A", "Section B"
+                    $secs = collect();
+                    foreach (['A', 'B'] as $letter) {
+                        $sec = Section::updateOrCreate(
+                            [
+                                'class_id' => $class->id,
+                                'name'     => 'Section ' . $letter,
+                            ],
+                            [
+                                'max_students' => 40,
+                            ]
+                        );
+                        $secs->push($sec);
+                    }
+                    $this->command->info("    ✓ Auto-created sections for Grade {$g}: Section A, Section B");
                 }
+
                 $sectionsByClass[$g] = $secs;
-                $this->command->info("    ✓ Auto-created sections for Grade {$g}: A, B");
             }
         }
 
         if ($classes->isEmpty()) {
             $this->command->error('  ✗ No classes found. Run SchoolDataSeeder first.');
             return;
+        }
+
+        // ── Delete demo students from SchoolDataSeeder ────────────────
+        // SchoolDataSeeder creates dummy students without user_id, which
+        // can conflict with our real students. Remove them first.
+        $demoCount = Student::whereNull('user_id')->count();
+        if ($demoCount > 0) {
+            Student::whereNull('user_id')->delete();
+            $this->command->info("  ✓ Deleted {$demoCount} demo students (no user_id) from SchoolDataSeeder");
+        }
+
+        // Also delete students with admission numbers starting from SOR/2025/1XXX (SchoolDataSeeder range)
+        // but keep SOR/2025/2XXX+ (our real data range)
+        $demoAdmissions = Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->count();
+        if ($demoAdmissions > 0) {
+            Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->delete();
+            $this->command->info("  ✓ Deleted {$demoAdmissions} demo students (admission SOR/2025/1XXX)");
         }
 
         // ── Student raw data ──────────────────────────────────────────
@@ -254,113 +281,127 @@ class StudentDataSeeder extends Seeder
 
         // ── Grade assignment logic ────────────────────────────────────
         $gradeCounters = [];
-        $admissionNum = 2001;
+        $admissionNum = 3001; // Start at 3001 to avoid conflict with SchoolDataSeeder (1001-2XXX)
         $userCounter = 0;
         $created = 0;
         $skipped = 0;
+        $errors = [];
+
+        // Pre-cache the student role
+        $studentRole = Role::where('name', 'student')->first();
 
         foreach ($students as $row) {
             [$fullName, $gender, $dob, $phone] = $row;
 
-            // Calculate grade from DOB
-            $birthYear = (int) substr($dob, 0, 4);
-            $gradeNum = max(1, min(8, 2025 - $birthYear - 5));
+            try {
+                // Calculate grade from DOB
+                $birthYear = (int) substr($dob, 0, 4);
+                $gradeNum = max(1, min(8, 2025 - $birthYear - 5));
 
-            // Find the class for this grade
-            $class = $classes[$gradeNum] ?? null;
-            if (!$class) {
-                $this->command->warn("  ⚠ No class found for Grade {$gradeNum} — skipping {$fullName}");
+                // Find the class for this grade
+                $class = $classes[$gradeNum] ?? null;
+                if (!$class) {
+                    $this->command->warn("  ⚠ No class found for Grade {$gradeNum} — skipping {$fullName}");
+                    $skipped++;
+                    continue;
+                }
+
+                // Distribute between sections A/B
+                if (!isset($gradeCounters[$gradeNum])) {
+                    $gradeCounters[$gradeNum] = [0, 0];
+                }
+
+                $sectionIdx = ($gradeCounters[$gradeNum][0] <= $gradeCounters[$gradeNum][1]) ? 0 : 1;
+                $section = $sectionsByClass[$gradeNum][$sectionIdx] ?? null;
+
+                if (!$section) {
+                    $section = $sectionsByClass[$gradeNum][0] ?? null;
+                    $sectionIdx = 0;
+                }
+
+                if (!$section) {
+                    $this->command->warn("  ⚠ No section for Grade {$gradeNum} — skipping {$fullName}");
+                    $skipped++;
+                    continue;
+                }
+
+                $gradeCounters[$gradeNum][$sectionIdx]++;
+
+                $sectionLetter = $sectionIdx === 0 ? 'A' : 'B';
+                // Use G{grade}{section}{counter} format to guarantee uniqueness across grades
+                $rollNumber = 'G' . $gradeNum . $sectionLetter . '-' . str_pad($gradeCounters[$gradeNum][$sectionIdx], 2, '0', STR_PAD_LEFT);
+                $admission = 'SOR/2025/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
+                $admissionNum++;
+                $genderLower = strtolower($gender);
+
+                // Guardian info from name parts
+                $nameParts = explode(' ', $fullName);
+                $lastName = count($nameParts) >= 2 ? $nameParts[count($nameParts) - 1] : $nameParts[0];
+                $secondName = count($nameParts) >= 3 ? $nameParts[1] : $lastName;
+                $guardianName = $secondName . ' ' . $lastName;
+                $guardianPhone = $phone;
+
+                // ── Create User account (required by students.user_id FK) ──
+                $idNumber = 'STU-' . date('Y') . '-' . str_pad($userCounter + 1, 4, '0', STR_PAD_LEFT);
+                $email = $idNumber . '@redemption.edu';
+                $defaultPassword = str_replace('-', '', $dob); // e.g. 20180806
+
+                $user = User::updateOrCreate(
+                    ['email' => $email],
+                    [
+                        'name'       => $fullName,
+                        'id_number'  => $idNumber,
+                        'password'   => bcrypt($defaultPassword),
+                        'role'       => 'student',
+                        'gender'     => $genderLower,
+                        'phone'      => $phone,
+                        'branch_id'  => $branch->id,
+                        'is_active'  => true,
+                    ]
+                );
+                // Set email_verified_at separately (not in $fillable)
+                if (!$user->email_verified_at) {
+                    $user->email_verified_at = now();
+                    $user->save();
+                }
+                $userCounter++;
+
+                // Assign Spatie 'student' role if not already assigned
+                if ($studentRole && !$user->roles()->where('role_id', $studentRole->id)->exists()) {
+                    $user->roles()->attach($studentRole->id);
+                }
+
+                // ── Create Student record ──────────────────────────────────
+                Student::updateOrCreate(
+                    ['admission_number' => $admission],
+                    [
+                        'user_id'            => $user->id,
+                        'full_name'          => $fullName,
+                        'branch_id'          => $branch->id,
+                        'class_id'           => $class->id,
+                        'section_id'         => $section->id,
+                        'academic_year_id'   => $ay->id,
+                        'gender'             => $genderLower,
+                        'phone'              => $phone,
+                        'roll_number'        => $rollNumber,
+                        'admission_date'     => '2025-09-01',
+                        'date_of_birth'      => $dob,
+                        'guardian_name'      => $guardianName,
+                        'guardian_phone'     => $guardianPhone,
+                        'status'             => 'active',
+                    ]
+                );
+
+                $created++;
+
+            } catch (\Exception $e) {
                 $skipped++;
+                $errMsg = $fullName . ': ' . $e->getMessage();
+                $errors[] = $errMsg;
+                $this->command->warn("  ✗ Error importing {$fullName}: " . $e->getMessage());
+                // Continue with next student instead of stopping
                 continue;
             }
-
-            // Distribute between sections A/B
-            if (!isset($gradeCounters[$gradeNum])) {
-                $gradeCounters[$gradeNum] = [0, 0];
-            }
-
-            $sectionIdx = ($gradeCounters[$gradeNum][0] <= $gradeCounters[$gradeNum][1]) ? 0 : 1;
-            $section = $sectionsByClass[$gradeNum][$sectionIdx] ?? null;
-
-            if (!$section) {
-                $section = $sectionsByClass[$gradeNum][0] ?? null;
-                $sectionIdx = 0;
-            }
-
-            if (!$section) {
-                $this->command->warn("  ⚠ No section for Grade {$gradeNum} — skipping {$fullName}");
-                $skipped++;
-                continue;
-            }
-
-            $gradeCounters[$gradeNum][$sectionIdx]++;
-
-            $sectionLetter = $sectionIdx === 0 ? 'A' : 'B';
-            $rollInSection = str_pad($gradeCounters[$gradeNum][$sectionIdx], 2, '0', STR_PAD_LEFT);
-            $admission = 'SOR/2025/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
-            $admissionNum++;
-            $genderLower = strtolower($gender);
-
-            // Guardian info from name parts
-            $nameParts = explode(' ', $fullName);
-            $lastName = count($nameParts) >= 2 ? $nameParts[count($nameParts) - 1] : $nameParts[0];
-            $secondName = count($nameParts) >= 3 ? $nameParts[1] : $lastName;
-            $guardianName = $secondName . ' ' . $lastName;
-            $guardianPhone = $phone;
-
-            // ── Create User account (required by students.user_id FK) ──
-            $idNumber = 'STU-' . date('Y') . '-' . str_pad($userCounter + 1, 4, '0', STR_PAD_LEFT);
-            $email = $idNumber . '@redemption.edu';
-            $defaultPassword = str_replace('-', '', $dob); // e.g. 20180806
-
-            $user = User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'name'       => $fullName,
-                    'id_number'  => $idNumber,
-                    'password'   => bcrypt($defaultPassword),
-                    'role'       => 'student',
-                    'gender'     => $genderLower,
-                    'phone'      => $phone,
-                    'branch_id'  => $branch->id,
-                    'is_active'  => true,
-                ]
-            );
-            // Set email_verified_at separately (not in $fillable)
-            if (!$user->email_verified_at) {
-                $user->email_verified_at = now();
-                $user->save();
-            }
-            $userCounter++;
-
-            // Assign Spatie 'student' role if not already assigned
-            $studentRole = Role::where('name', 'student')->first();
-            if ($studentRole && !$user->roles()->where('role_id', $studentRole->id)->exists()) {
-                $user->roles()->attach($studentRole->id);
-            }
-
-            // ── Create Student record ──────────────────────────────────
-            Student::updateOrCreate(
-                ['admission_number' => $admission],
-                [
-                    'user_id'            => $user->id,
-                    'full_name'          => $fullName,
-                    'branch_id'          => $branch->id,
-                    'class_id'           => $class->id,
-                    'section_id'         => $section->id,
-                    'academic_year_id'   => $ay->id,
-                    'gender'             => $genderLower,
-                    'phone'              => $phone,
-                    'roll_number'        => $sectionLetter . '-' . $rollInSection,
-                    'admission_date'     => '2025-09-01',
-                    'date_of_birth'      => $dob,
-                    'guardian_name'      => $guardianName,
-                    'guardian_phone'     => $guardianPhone,
-                    'status'             => 'active',
-                ]
-            );
-
-            $created++;
         }
 
         // ── Summary ───────────────────────────────────────────────────
@@ -368,7 +409,14 @@ class StudentDataSeeder extends Seeder
         $this->command->info("  ✓ Students created/updated: {$created}");
         $this->command->info("  ✓ User accounts created: {$userCounter}");
         if ($skipped) {
-            $this->command->warn("  ⚠ Students skipped: {$skipped}");
+            $this->command->warn("  ⚠ Students skipped/errored: {$skipped}");
+        }
+        if (!empty($errors)) {
+            $this->command->newLine();
+            $this->command->error('  Error details:');
+            foreach ($errors as $i => $err) {
+                $this->command->error('    ' . ($i + 1) . '. ' . $err);
+            }
         }
 
         $this->command->newLine();
