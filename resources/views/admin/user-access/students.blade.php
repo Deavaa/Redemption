@@ -174,6 +174,11 @@
                             </form>
                             @else
                             <span class="ua-badge ua-badge-info"><i class="fas fa-check-circle"></i> Active</span>
+                            <form method="POST" action="{{ route('admin.user-access.students.reset-password') }}" style="display:inline" onsubmit="return confirm('Reset password to default (123456)?')">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $student->user->id }}">
+                                <button type="submit" class="ua-btn ua-btn-warning ua-btn-sm"><i class="fas fa-redo"></i> Reset Password</button>
+                            </form>
                             @endif
                         </td>
                     </tr>

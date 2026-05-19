@@ -17,10 +17,23 @@ class AuthController extends Controller
         $password = $r->password;
         
         // Try to find user by email, id_number, or phone
-        $user = User::where('email', $login)
-            ->orWhere('id_number', $login)
-            ->orWhere('phone', $login)
-            ->first();
+        // Check which columns actually exist to avoid QueryException
+        try {
+            $hasIdNumber = \Schema::hasColumn('users', 'id_number');
+            $hasPhone = \Schema::hasColumn('users', 'phone');
+        } catch (\Throwable $e) {
+            $hasIdNumber = false;
+            $hasPhone = false;
+        }
+        
+        $query = User::where('email', $login);
+        if ($hasIdNumber) {
+            $query->orWhere('id_number', $login);
+        }
+        if ($hasPhone) {
+            $query->orWhere('phone', $login);
+        }
+        $user = $query->first();
         
         if (!$user) {
             throw ValidationException::withMessages(['login' => 'Invalid credentials. Please check your login details.']);
@@ -51,6 +64,106 @@ class AuthController extends Controller
         $r->session()->invalidate();
         $r->session()->regenerateToken();
         return redirect('/');
+    }
+
+    // ── Forgot Password Flow ──────────────────────────────────
+
+    /**
+     * Show forgot password form.
+     */
+    public function showForgotPassword()
+    {
+        return redirect()->route('login')->with('show_forgot', true);
+    }
+
+    /**
+     * Find user account by email or id_number.
+     */
+    public function submitForgotPassword(Request $r)
+    {
+        $r->validate(['login' => 'required']);
+
+        $login = $r->login;
+
+        // Find user by email or id_number
+        $query = User::where('email', $login);
+        try {
+            if (\Schema::hasColumn('users', 'id_number')) {
+                $query->orWhere('id_number', $login);
+            }
+        } catch (\Throwable $e) {}
+
+        $user = $query->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages(['login' => 'No account found with that email or ID number.']);
+        }
+
+        // If user has a security question, show it
+        if (!empty($user->security_question) && !empty($user->security_answer)) {
+            return redirect()->route('login')
+                ->with('show_security', true)
+                ->with('security_email', $user->email)
+                ->with('security_question', $user->security_question);
+        }
+
+        // No security question — go directly to password reset
+        return redirect()->route('login')
+            ->with('show_reset_form', true)
+            ->with('reset_email', $user->email)
+            ->with('reset_user_name', $user->name);
+    }
+
+    /**
+     * Verify security answer.
+     */
+    public function verifySecurityAnswer(Request $r)
+    {
+        $r->validate([
+            'email' => 'required|email',
+            'security_answer' => 'required',
+        ]);
+
+        $user = User::where('email', $r->email)->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages(['security_answer' => 'Account not found.']);
+        }
+
+        if (!Hash::check($r->security_answer, $user->security_answer)) {
+            return redirect()->route('login')
+                ->with('show_security', true)
+                ->with('security_email', $user->email)
+                ->with('security_question', $user->security_question)
+                ->withErrors(['security_answer' => 'Incorrect answer. Please try again.']);
+        }
+
+        return redirect()->route('login')
+            ->with('show_reset_form', true)
+            ->with('reset_email', $user->email)
+            ->with('reset_user_name', $user->name);
+    }
+
+    /**
+     * Reset the password.
+     */
+    public function submitResetPassword(Request $r)
+    {
+        $r->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:4|confirmed',
+        ]);
+
+        $user = User::where('email', $r->email)->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages(['password' => 'Account not found.']);
+        }
+
+        $user->update(['password' => Hash::make($r->password)]);
+
+        return redirect()->route('login')
+            ->with('reset_success', 'Password reset successfully! You can now log in with your new password.');
     }
 
     /**

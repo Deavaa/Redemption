@@ -44,12 +44,12 @@ class TeacherAccessController extends Controller
             return redirect()->back()->with('success', 'Existing user linked to teacher successfully.');
         }
 
-        // Create new user account
-        $tempPassword = Str::random(10);
+        // Create new user account with default password
+        $defaultPassword = '123456';
         $user = User::create([
             'name' => $teacher->full_name,
             'email' => $teacher->email,
-            'password' => Hash::make($tempPassword),
+            'password' => Hash::make($defaultPassword),
             'role' => 'teacher',
             'is_active' => true,
         ]);
@@ -61,7 +61,7 @@ class TeacherAccessController extends Controller
         // Link to teacher
         $teacher->update(['user_id' => $user->id]);
 
-        return redirect()->back()->with('success', "Teacher account created. Temporary password: {$tempPassword}");
+        return redirect()->back()->with('success', "Teacher account created. Default password: {$defaultPassword}");
     }
 
     public function assignPermissions(Request $request)
@@ -78,5 +78,21 @@ class TeacherAccessController extends Controller
         $user->directPermissions()->sync($permissionIds);
 
         return redirect()->back()->with('success', 'Permissions updated successfully.');
+    }
+
+    /**
+     * Reset a user's password to the default password.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $defaultPassword = '123456';
+        $user->update(['password' => Hash::make($defaultPassword)]);
+
+        return redirect()->back()->with('success', "Password reset to default: {$defaultPassword}");
     }
 }

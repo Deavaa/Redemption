@@ -8,10 +8,10 @@ class DemoAdminSeeder extends Seeder {
         User::create([
             'name'=>'Admin User',
             'email'=>'admin@school.com',
-            'password'=>bcrypt('password'),
+            'password'=>bcrypt('123456'),
             'role'=>'admin',
             'email_verified_at'=>now(),
         ]);
-        $this->command->info('Demo admin: admin@school.com / password');
+        $this->command->info('Demo admin: admin@school.com / 123456');
     }
 }

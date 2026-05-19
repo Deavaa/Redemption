@@ -704,13 +704,13 @@
                 }
             });
 
-            // Show splash only on fresh load or browser refresh, NOT on menu navigation
+            // Announcement Splash: show ONCE PER DAY per user.
             var splash = document.getElementById('studentAnnouncementSplash');
             if (splash) {
-                var navEntry = performance.getEntriesByType('navigation')[0];
-                var isReload = navEntry ? navEntry.type === 'reload' : (performance.navigation && performance.navigation.type === 1);
-                var alreadyShown = sessionStorage.getItem('student_announcement_splash_dismissed');
-                if (isReload || !alreadyShown) {
+                var today = new Date().toISOString().slice(0, 10);
+                var splashKey = 'student_announcement_splash_dismissed_' + today;
+                var alreadyShownToday = localStorage.getItem(splashKey);
+                if (!alreadyShownToday) {
                     splash.style.display = 'flex';
                 }
             }
@@ -722,7 +722,8 @@
                 splash.style.opacity = '0';
                 splash.style.transition = 'opacity 0.3s';
                 setTimeout(function() { splash.style.display = 'none'; }, 300);
-                sessionStorage.setItem('student_announcement_splash_dismissed', '1');
+                var today = new Date().toISOString().slice(0, 10);
+                localStorage.setItem('student_announcement_splash_dismissed_' + today, '1');
             }
         }
         </script>

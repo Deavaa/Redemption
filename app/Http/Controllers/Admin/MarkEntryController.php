@@ -47,6 +47,9 @@ class MarkEntryController extends Controller
         $teacherAssignments = collect();
         $teacher = $this->getTeacherForUser();
 
+        // ── Load classes for server-side dropdown population ──
+        $classes = collect();
+
         if ($teacher) {
             $isTeacher = true;
 
@@ -72,6 +75,9 @@ class MarkEntryController extends Controller
             $homeroomClassIds = $teacher->classRooms()->pluck('id');
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
 
+            // Load teacher-scoped classes for dropdown
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name','asc')->get(['id','name']);
+
             $sections = Section::with('classRoom')
                 ->where(function($q) use ($sectionIds, $classIds) {
                     $q->whereIn('id', $sectionIds)
@@ -81,12 +87,66 @@ class MarkEntryController extends Controller
                 ->orderBy('name','asc')
                 ->get();
 
-            $teacherAssignments = $teacher->assignments()->get();
+            $teacherAssignments = $teacher->assignments()
+                ->with(['classRoom', 'section', 'subject'])
+                ->get()
+                ->map(function($a) {
+                    return [
+                        'id' => $a->id,
+                        'teacher_id' => $a->teacher_id,
+                        'class_id' => $a->class_id,
+                        'class_name' => $a->classRoom ? $a->classRoom->name : null,
+                        'section_id' => $a->section_id,
+                        'section_name' => $a->section ? $a->section->name : null,
+                        'subject_id' => $a->subject_id,
+                        'subject_name' => $a->subject ? $a->subject->name : null,
+                        'academic_year_id' => $a->academic_year_id,
+                        'is_homeroom' => false,
+                    ];
+                });
+
+            // Mark homeroom assignments + add homeroom classes/sections that may not have subject assignments
+            $homeroomClassIds = $teacher->classRooms()->pluck('id');
+            $homeroomSectionIds = $teacher->sections()->pluck('id');
+
+            $teacherAssignments = $teacherAssignments->map(function($a) use ($homeroomClassIds, $homeroomSectionIds) {
+                if ($homeroomSectionIds->contains($a['section_id']) || $homeroomClassIds->contains($a['class_id'])) {
+                    $a['is_homeroom'] = true;
+                }
+                return $a;
+            });
+
+            // Add homeroom classes/sections that aren't already in assignments
+            $existingKeys = $teacherAssignments->map(function($a) {
+                return $a['class_id'] . '_' . $a['section_id'] . '_' . $a['subject_id'];
+            })->toArray();
+
+            foreach ($teacher->classRooms as $hrClass) {
+                foreach ($teacher->sections->where('class_id', $hrClass->id) as $hrSection) {
+                    $key = $hrClass->id . '_' . $hrSection->id . '_null';
+                    if (!in_array($key, $existingKeys)) {
+                        $teacherAssignments->push([
+                            'id' => null,
+                            'teacher_id' => $teacher->id,
+                            'class_id' => $hrClass->id,
+                            'class_name' => $hrClass->name,
+                            'section_id' => $hrSection->id,
+                            'section_name' => $hrSection->name,
+                            'subject_id' => null,
+                            'subject_name' => null,
+                            'academic_year_id' => null,
+                            'is_homeroom' => true,
+                        ]);
+                    }
+                }
+            }
         } else {
+            // Admin: load ALL classes for dropdown
+            $classes = ClassRoom::orderBy('name','asc')->get(['id','name']);
             $sections = Section::with('classRoom')->orderBy('class_id','asc')->orderBy('name','asc')->get();
         }
 
-        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments'));
+        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'classes', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments'));
     }
 
     public function apiClasses() {

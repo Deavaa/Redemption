@@ -39,11 +39,11 @@ class StudentAccessController extends Controller
             return redirect()->back()->with('success', 'Existing user linked to student successfully.');
         }
 
-        $tempPassword = Str::random(10);
+        $defaultPassword = '123456';
         $user = User::create([
             'name' => $student->full_name,
             'email' => $student->email ?? $student->admission_number . '@school.local',
-            'password' => Hash::make($tempPassword),
+            'password' => Hash::make($defaultPassword),
             'role' => 'student',
             'is_active' => true,
         ]);
@@ -52,7 +52,7 @@ class StudentAccessController extends Controller
         $user->roles()->syncWithoutDetaching([$studentRole->id]);
         $student->update(['user_id' => $user->id]);
 
-        return redirect()->back()->with('success', "Student account created. Temporary password: {$tempPassword}");
+        return redirect()->back()->with('success', "Student account created. Default password: {$defaultPassword}");
     }
 
     public function bulkCreate(Request $request)
@@ -80,11 +80,11 @@ class StudentAccessController extends Controller
                 $existingUser->roles()->syncWithoutDetaching([$studentRole->id]);
                 $existingUser->update(['role' => 'student']);
             } else {
-                $tempPassword = Str::random(10);
+                $defaultPassword = '123456';
                 $user = User::create([
                     'name' => $student->full_name,
                     'email' => $email,
-                    'password' => Hash::make($tempPassword),
+                    'password' => Hash::make($defaultPassword),
                     'role' => 'student',
                     'is_active' => true,
                 ]);
@@ -96,5 +96,21 @@ class StudentAccessController extends Controller
         }
 
         return redirect()->back()->with('success', "{$count} student accounts created/linked.");
+    }
+
+    /**
+     * Reset a student user's password to the default password.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $defaultPassword = '123456';
+        $user->update(['password' => Hash::make($defaultPassword)]);
+
+        return redirect()->back()->with('success', "Password reset to default: {$defaultPassword}");
     }
 }

@@ -75,6 +75,7 @@ use App\Http\Controllers\Admin\MarkEntryPermissionController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Attendance\AttendanceController;
 use App\Http\Controllers\Attendance\AttendanceDelegationController;
+use App\Http\Controllers\Admin\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -86,6 +87,12 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Password Reset (self-service)
+Route::get('/password/forgot', [AuthController::class, 'showForgotPassword'])->name('password.forgot');
+Route::post('/password/forgot', [AuthController::class, 'submitForgotPassword'])->name('password.forgot.submit');
+Route::post('/password/verify-security', [AuthController::class, 'verifySecurityAnswer'])->name('password.verify.security');
+Route::post('/password/reset', [AuthController::class, 'submitResetPassword'])->name('password.reset.submit');
+
 // Telegram webhook (public)
 Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 
@@ -95,6 +102,11 @@ Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');
+
+    // Admin Profile & Password Change
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/reset-user-password', [ProfileController::class, 'resetUserPassword'])->name('profile.reset-user-password');
 
     // ── Academic ──────────────────────────────────────────
     Route::resource('academic-years', AcademicYearController::class)->middleware('permission:academic_years.view');
@@ -108,6 +120,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
     Route::get('mark-entries/api/terms', [MarkEntryController::class, 'apiTerms'])->name('mark-entries.api.terms');
+    Route::get('mark-entries/api/classes', [MarkEntryController::class, 'apiClasses'])->name('mark-entries.api.classes');
     Route::get('mark-entries/api/sections', [MarkEntryController::class, 'apiSections'])->name('mark-entries.api.sections');
     Route::get('mark-entries/api/subjects', [MarkEntryController::class, 'apiSubjects'])->name('mark-entries.api.subjects');
     Route::get('mark-entries/api/students', [MarkEntryController::class, 'apiStudents'])->name('mark-entries.api.students');
@@ -375,11 +388,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('user-access/teachers', [TeacherAccessController::class, 'index'])->name('user-access.teachers');
     Route::post('user-access/teachers/create', [TeacherAccessController::class, 'createAccount'])->name('user-access.teachers.create');
     Route::post('user-access/teachers/permissions', [TeacherAccessController::class, 'assignPermissions'])->name('user-access.teachers.permissions');
+    Route::post('user-access/teachers/reset-password', [TeacherAccessController::class, 'resetPassword'])->name('user-access.teachers.reset-password');
     Route::get('user-access/students', [StudentAccessController::class, 'index'])->name('user-access.students');
     Route::post('user-access/students/create', [StudentAccessController::class, 'createAccount'])->name('user-access.students.create');
     Route::post('user-access/students/bulk', [StudentAccessController::class, 'bulkCreate'])->name('user-access.students.bulk');
+    Route::post('user-access/students/reset-password', [StudentAccessController::class, 'resetPassword'])->name('user-access.students.reset-password');
     Route::get('user-access/parents', [ParentAccessController::class, 'index'])->name('user-access.parents');
     Route::post('user-access/parents/create', [ParentAccessController::class, 'createAccount'])->name('user-access.parents.create');
+    Route::post('user-access/parents/reset-password', [ParentAccessController::class, 'resetPassword'])->name('user-access.parents.reset-password');
 });
 
 // ── Student Portal ──────────────────────────────────────────

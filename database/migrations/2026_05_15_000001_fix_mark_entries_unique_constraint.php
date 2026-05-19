@@ -9,67 +9,91 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('mark_entries')) {
+            return;
+        }
+
         // Step 1: Find and drop any foreign keys that reference exam_id
-        // MySQL won't let us drop the unique index while a foreign key depends on it
-        $foreignKeys = DB::select("
-            SELECT CONSTRAINT_NAME
-            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'mark_entries'
-              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-        ");
-
-        Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys) {
-            foreach ($foreignKeys as $fk) {
-                $name = $fk->CONSTRAINT_NAME;
-                // Drop foreign keys that involve exam_id or student_id
-                if (str_contains($name, 'exam_id') || str_contains($name, 'student_id')) {
-                    $table->dropForeign($name);
-                }
-            }
-        });
-
-        // Step 2: Now drop the old unique constraint
-        Schema::table('mark_entries', function (Blueprint $table) {
-            // Check if the unique index exists before dropping
-            $indexes = DB::select("
-                SELECT INDEX_NAME
-                FROM INFORMATION_SCHEMA.STATISTICS
+        try {
+            $foreignKeys = DB::select("
+                SELECT CONSTRAINT_NAME
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
                 WHERE TABLE_SCHEMA = DATABASE()
                   AND TABLE_NAME = 'mark_entries'
-                  AND INDEX_NAME = 'mark_entries_exam_id_student_id_unique'
-                GROUP BY INDEX_NAME
+                  AND CONSTRAINT_TYPE = 'FOREIGN KEY'
             ");
-            if (!empty($indexes)) {
-                $table->dropUnique(['exam_id', 'student_id']);
-            }
-        });
+
+            Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys) {
+                foreach ($foreignKeys as $fk) {
+                    $name = is_object($fk) ? ($fk->CONSTRAINT_NAME ?? '') : '';
+                    if ($name && (str_contains($name, 'exam_id') || str_contains($name, 'student_id'))) {
+                        try {
+                            $table->dropForeign($name);
+                        } catch (\Throwable $e) {}
+                    }
+                }
+            });
+        } catch (\Throwable $e) {}
+
+        // Step 2: Drop the old unique constraint
+        try {
+            Schema::table('mark_entries', function (Blueprint $table) {
+                $indexes = DB::select("
+                    SELECT INDEX_NAME
+                    FROM INFORMATION_SCHEMA.STATISTICS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = 'mark_entries'
+                      AND INDEX_NAME = 'mark_entries_exam_id_student_id_unique'
+                    GROUP BY INDEX_NAME
+                ");
+                if (!empty($indexes)) {
+                    $table->dropUnique(['exam_id', 'student_id']);
+                }
+            });
+        } catch (\Throwable $e) {}
 
         // Step 3: Add new unique constraint + make exam_id nullable
-        Schema::table('mark_entries', function (Blueprint $table) {
-            // Add the new unique constraint matching the actual upsert key
-            $table->unique(['student_id', 'subject_id', 'academic_year_id', 'term_id'], 'mark_entries_student_subject_ay_term_unique');
+        try {
+            Schema::table('mark_entries', function (Blueprint $table) {
+                // Check if unique already exists
+                $existing = collect(DB::select("
+                    SELECT INDEX_NAME
+                    FROM INFORMATION_SCHEMA.STATISTICS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = 'mark_entries'
+                      AND INDEX_NAME = 'mark_entries_student_subject_ay_term_unique'
+                    GROUP BY INDEX_NAME
+                "))->isEmpty();
 
-            // Make exam_id nullable
-            $table->unsignedBigInteger('exam_id')->nullable()->change();
-        });
+                if ($existing) {
+                    $table->unique(['student_id', 'subject_id', 'academic_year_id', 'term_id'], 'mark_entries_student_subject_ay_term_unique');
+                }
+            });
+        } catch (\Throwable $e) {}
+
+        try {
+            if (Schema::hasColumn('mark_entries', 'exam_id')) {
+                Schema::table('mark_entries', function (Blueprint $table) {
+                    $table->unsignedBigInteger('exam_id')->nullable()->change();
+                });
+            }
+        } catch (\Throwable $e) {}
 
         // Step 4: Re-add the foreign keys we dropped
-        Schema::table('mark_entries', function (Blueprint $table) {
-            $table->foreign('exam_id')->references('id')->on('exams')->nullOnDelete();
-            $table->foreign('student_id')->references('id')->on('students')->cascadeOnDelete();
-        });
+        try {
+            Schema::table('mark_entries', function (Blueprint $table) {
+                if (Schema::hasColumn('mark_entries', 'exam_id') && Schema::hasTable('exams')) {
+                    $table->foreign('exam_id')->references('id')->on('exams')->nullOnDelete();
+                }
+                if (Schema::hasColumn('mark_entries', 'student_id') && Schema::hasTable('students')) {
+                    $table->foreign('student_id')->references('id')->on('students')->cascadeOnDelete();
+                }
+            });
+        } catch (\Throwable $e) {}
     }
 
     public function down(): void
     {
-        Schema::table('mark_entries', function (Blueprint $table) {
-            $table->dropForeign(['exam_id']);
-            $table->dropForeign(['student_id']);
-            $table->dropUnique('mark_entries_student_subject_ay_term_unique');
-            $table->unique(['exam_id', 'student_id']);
-            $table->foreign('exam_id')->references('id')->on('exams')->nullOnDelete();
-            $table->foreign('student_id')->references('id')->on('students')->cascadeOnDelete();
-        });
+        // No down migration — too risky to reverse
     }
 };

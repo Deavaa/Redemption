@@ -11,55 +11,76 @@ return new class extends Migration
     {
         // Make marks_obtained nullable since the new mark entry system
         // uses grand_total as the primary total field
-        Schema::table('mark_entries', function (Blueprint $table) {
-            $table->decimal('marks_obtained', 8, 2)->nullable()->change();
-        });
+        try {
+            if (Schema::hasColumn('mark_entries', 'marks_obtained')) {
+                Schema::table('mark_entries', function (Blueprint $table) {
+                    $table->decimal('marks_obtained', 8, 2)->nullable()->change();
+                });
+            }
+        } catch (\Throwable $e) {
+            // Column may already be nullable or doctrine/dbal not installed
+        }
 
         // Fix teacher_id FK: drop old constraint (may point to users) and re-add pointing to teachers
-        $foreignKeys = DB::select("
-            SELECT CONSTRAINT_NAME
-            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'mark_entries'
-              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-        ");
+        try {
+            $foreignKeys = DB::select("
+                SELECT CONSTRAINT_NAME
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'mark_entries'
+                  AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+            ");
+        } catch (\Throwable $e) {
+            $foreignKeys = [];
+        }
 
         $teacherFkDropped = false;
-        Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys, &$teacherFkDropped) {
-            foreach ($foreignKeys as $fk) {
-                $name = $fk->CONSTRAINT_NAME;
-                if (str_contains($name, 'teacher_id')) {
-                    try {
-                        $table->dropForeign($name);
-                        $teacherFkDropped = true;
-                    } catch (\Throwable $e) {
-                        // FK may already be dropped
+        if (!empty($foreignKeys)) {
+            Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys, &$teacherFkDropped) {
+                foreach ($foreignKeys as $fk) {
+                    $name = is_object($fk) ? ($fk->CONSTRAINT_NAME ?? '') : '';
+                    if ($name && str_contains($name, 'teacher_id')) {
+                        try {
+                            $table->dropForeign($name);
+                            $teacherFkDropped = true;
+                        } catch (\Throwable $e) {
+                            // FK may already be dropped
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // Clean up orphaned teacher_id values before adding the new FK.
         // Old FK may have pointed to users.id, so some values won't exist in teachers.
-        DB::statement("
-            UPDATE mark_entries
-            SET teacher_id = NULL
-            WHERE teacher_id IS NOT NULL
-              AND teacher_id NOT IN (SELECT id FROM teachers)
-        ");
+        try {
+            DB::statement("
+                UPDATE mark_entries
+                SET teacher_id = NULL
+                WHERE teacher_id IS NOT NULL
+                  AND teacher_id NOT IN (SELECT id FROM teachers)
+            ");
+        } catch (\Throwable $e) {
+            // teachers table may not exist yet
+        }
 
         // Check if a teacher_id FK pointing to teachers already exists
-        $hasTeacherFk = collect(DB::select("
-            SELECT CONSTRAINT_NAME
-            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'mark_entries'
-              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-              AND CONSTRAINT_NAME LIKE '%teacher_id%
-        "))->isEmpty() === false;
+        $hasTeacherFk = false;
+        try {
+            $hasTeacherFk = collect(DB::select("
+                SELECT CONSTRAINT_NAME
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'mark_entries'
+                  AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+                  AND CONSTRAINT_NAME LIKE '%teacher_id%'
+            "))->isEmpty() === false;
+        } catch (\Throwable $e) {
+            // Ignore errors
+        }
 
         // Add FK pointing to teachers table (if not already present)
-        if (!$hasTeacherFk) {
+        if (!$hasTeacherFk && Schema::hasTable('teachers')) {
             Schema::table('mark_entries', function (Blueprint $table) {
                 $table->foreign('teacher_id')->references('id')->on('teachers')->nullOnDelete();
             });
@@ -68,30 +89,40 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('mark_entries', function (Blueprint $table) {
-            $table->decimal('marks_obtained', 8, 2)->default(0)->change();
-        });
+        try {
+            if (Schema::hasColumn('mark_entries', 'marks_obtained')) {
+                Schema::table('mark_entries', function (Blueprint $table) {
+                    $table->decimal('marks_obtained', 8, 2)->default(0)->change();
+                });
+            }
+        } catch (\Throwable $e) {}
 
-        $foreignKeys = DB::select("
-            SELECT CONSTRAINT_NAME
-            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'mark_entries'
-              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-        ");
+        try {
+            $foreignKeys = DB::select("
+                SELECT CONSTRAINT_NAME
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'mark_entries'
+                  AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+            ");
+        } catch (\Throwable $e) {
+            $foreignKeys = [];
+        }
 
         $teacherFkDropped = false;
-        Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys, &$teacherFkDropped) {
-            foreach ($foreignKeys as $fk) {
-                $name = $fk->CONSTRAINT_NAME;
-                if (str_contains($name, 'teacher_id')) {
-                    try {
-                        $table->dropForeign($name);
-                        $teacherFkDropped = true;
-                    } catch (\Throwable $e) {}
+        if (!empty($foreignKeys)) {
+            Schema::table('mark_entries', function (Blueprint $table) use ($foreignKeys, &$teacherFkDropped) {
+                foreach ($foreignKeys as $fk) {
+                    $name = is_object($fk) ? ($fk->CONSTRAINT_NAME ?? '') : '';
+                    if ($name && str_contains($name, 'teacher_id')) {
+                        try {
+                            $table->dropForeign($name);
+                            $teacherFkDropped = true;
+                        } catch (\Throwable $e) {}
+                    }
                 }
-            }
-        });
+            });
+        }
 
         if ($teacherFkDropped) {
             Schema::table('mark_entries', function (Blueprint $table) {

@@ -11,7 +11,7 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
 
-    protected $fillable = ['name', 'email', 'id_number', 'password', 'role', 'branch_id', 'phone', 'address', 'profile_photo', 'is_active'];
+    protected $fillable = ['name', 'email', 'id_number', 'password', 'role', 'branch_id', 'phone', 'address', 'profile_photo', 'is_active', 'security_question', 'security_answer', 'gender', 'qualification'];
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array

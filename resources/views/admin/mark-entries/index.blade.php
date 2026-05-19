@@ -177,12 +177,12 @@
         </div>
         <div class="me-header-right d-flex gap-2 align-items-center flex-wrap">
             @can('mark-entry.lock')
-                <a href="{{ route('admin.mark-locks.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.82rem;padding:0.45rem 1rem;">
+                <a href="{{ route('admin.mark-entry-locks.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.82rem;padding:0.45rem 1rem;">
                     <i class="fas fa-lock"></i> Lock Management
                 </a>
             @endcan
             @can('mark-entry.permissions')
-                <a href="{{ route('admin.mark-permissions.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.82rem;padding:0.45rem 1rem;">
+                <a href="{{ route('admin.mark-entry-permissions.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.82rem;padding:0.45rem 1rem;">
                     <i class="fas fa-key"></i> Permissions
                 </a>
             @endcan
@@ -236,6 +236,9 @@
                     <label class="me-filter-label" for="filterClass">Class</label>
                     <select id="filterClass" class="me-filter-select">
                         <option value="">-- Select Class --</option>
+                        @foreach ($classes as $cls)
+                            <option value="{{ $cls->id }}">{{ $cls->name }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="me-filter-group">
@@ -412,6 +415,8 @@
 
     // ========== API ROUTES ==========
     var API_TERMS = '{{ route("admin.mark-entries.api.terms") }}';
+    var API_CLASSES = '{{ route("admin.mark-entries.api.classes") }}';
+    var API_SECTIONS = '{{ route("admin.mark-entries.api.sections") }}';
     var API_SUBJECTS = '{{ route("admin.mark-entries.api.subjects") }}';
     var API_LOAD_STUDENTS = '{{ route("admin.mark-entries.api.load-students") }}';
     var API_SAVE = '{{ route("admin.mark-entries.api.save") }}';
@@ -441,20 +446,26 @@
 
     // ========== INIT ==========
     function init() {
+        console.log('[MarkEntry] Initializing... isTeacher={{ $isTeacher ? "true" : "false" }}, classes={{ $classes->count() }}');
+
         // If teacher, populate class dropdown from assignments
         if (teacherAssignments && teacherAssignments.length > 0) {
             populateTeacherClasses();
         } else if (!{{ $isTeacher ? 'true' : 'false' }}) {
-            // Admin: load classes on AY change
-            loadClasses();
+            // Admin: classes are already populated server-side in the HTML <select>.
+            // Only call loadClasses() if the server-side dropdown is empty (no classes found)
+            var hasServerClasses = filterClass.querySelectorAll('option[value!=""]').length > 0;
+            if (!hasServerClasses) {
+                console.log('[MarkEntry] No server-side classes, loading via API...');
+                loadClasses();
+            } else {
+                console.log('[MarkEntry] Classes already populated from server (' + filterClass.querySelectorAll('option[value!=""]').length + ' classes)');
+            }
         }
 
-        // If we have current AY & Term, check lock and populate cascades
+        // If we have current AY & Term, check lock
         if (filterAy.value && filterTerm.value) {
             checkLockStatus();
-            if (!{{ $isTeacher ? 'true' : 'false' }}) {
-                loadClasses();
-            }
         }
 
         updateLoadButton();
@@ -464,13 +475,12 @@
     function populateTeacherClasses() {
         var ayId = filterAy.value;
         var classes = {};
-        var seenSections = {};
 
         teacherAssignments.forEach(function(a) {
-            if (a.academic_year_id == ayId || !ayId) {
-                if (a.class_id && a.class_name) {
-                    classes[a.class_id] = a.class_name;
-                }
+            // Include if: no AY selected, or assignment matches AY, or assignment has no AY (homeroom)
+            var ayMatch = !ayId || a.academic_year_id == ayId || !a.academic_year_id;
+            if (ayMatch && a.class_id && a.class_name) {
+                classes[a.class_id] = a.class_name;
             }
         });
 
@@ -615,14 +625,31 @@
 
     // ========== LOAD CLASSES ==========
     function loadClasses() {
-        var ayId = filterAy.value;
-        if (!ayId) return;
+        console.log('[MarkEntry] loadClasses() called, API_CLASSES=' + API_CLASSES);
 
-        fetch(API_SUBJECTS + '?academic_year_id=' + ayId + '&load_classes=1', { credentials: 'same-origin' })
-            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        fetch(API_CLASSES, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                console.log('[MarkEntry] API response status:', r.status, 'redirected:', r.redirected);
+                if (!r.ok) {
+                    // If redirected (e.g. to login), the response won't be JSON
+                    if (r.status === 302 || r.redirected) {
+                        throw new Error('Session expired. Please refresh the page and log in again.');
+                    }
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
             .then(function(data) {
                 filterClass.innerHTML = '<option value="">-- Select Class --</option>';
-                var classes = data.classes || [];
+                // API returns array of {id, name} directly
+                var classes = Array.isArray(data) ? data : (data.classes || data.data || []);
+                console.log('[MarkEntry] API returned ' + classes.length + ' classes:', classes);
+                if (classes.length === 0) {
+                    var opt = document.createElement('option');
+                    opt.disabled = true;
+                    opt.textContent = 'No classes found';
+                    filterClass.appendChild(opt);
+                }
                 classes.forEach(function(c) {
                     var opt = document.createElement('option');
                     opt.value = c.id;
@@ -630,7 +657,10 @@
                     filterClass.appendChild(opt);
                 });
             })
-            .catch(function(err) { console.error('Failed to load classes:', err); });
+            .catch(function(err) {
+                console.error('[MarkEntry] Failed to load classes:', err);
+                filterClass.innerHTML = '<option value="">-- Error loading classes --</option>';
+            });
     }
 
     // ========== LOAD SECTIONS ==========
@@ -639,12 +669,13 @@
         var ayId = filterAy.value;
         if (!classId) return;
 
-        var url = API_SUBJECTS + '?class_id=' + classId + '&academic_year_id=' + ayId + '&load_sections=1';
+        var url = API_SECTIONS + '?class_id=' + classId;
         fetch(url, { credentials: 'same-origin' })
             .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(function(data) {
                 filterSection.innerHTML = '<option value="">-- Select Section --</option>';
-                var sections = data.sections || [];
+                // API returns array of {id, name} directly
+                var sections = Array.isArray(data) ? data : (data.sections || []);
 
                 // Filter by teacher assignments if teacher
                 if (teacherAssignments && teacherAssignments.length > 0) {

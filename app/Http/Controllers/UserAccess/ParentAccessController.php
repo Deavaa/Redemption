@@ -42,11 +42,11 @@ class ParentAccessController extends Controller
             return redirect()->back()->with('success', 'Existing user linked to parent successfully.');
         }
 
-        $tempPassword = Str::random(10);
+        $defaultPassword = '123456';
         $user = User::create([
             'name' => $parent->guardian_name ?? $parent->father_name ?? 'Parent',
             'email' => $email,
-            'password' => Hash::make($tempPassword),
+            'password' => Hash::make($defaultPassword),
             'role' => 'parent',
             'is_active' => true,
         ]);
@@ -55,6 +55,22 @@ class ParentAccessController extends Controller
         $user->roles()->syncWithoutDetaching([$parentRole->id]);
         $parent->update(['user_id' => $user->id]);
 
-        return redirect()->back()->with('success', "Parent account created. Temporary password: {$tempPassword}");
+        return redirect()->back()->with('success', "Parent account created. Default password: {$defaultPassword}");
+    }
+
+    /**
+     * Reset a parent user's password to the default password.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $defaultPassword = '123456';
+        $user->update(['password' => Hash::make($defaultPassword)]);
+
+        return redirect()->back()->with('success', "Password reset to default: {$defaultPassword}");
     }
 }

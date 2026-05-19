@@ -185,6 +185,11 @@
                             </form>
                             @else
                             <button type="button" class="ua-btn ua-btn-outline ua-btn-sm" onclick="openPermModal({{ $teacher->user->id }}, '{{ $teacher->full_name }}')"><i class="fas fa-key"></i> Permissions</button>
+                            <form method="POST" action="{{ route('admin.user-access.teachers.reset-password') }}" style="display:inline" onsubmit="return confirm('Reset password to default (123456)?')">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $teacher->user->id }}">
+                                <button type="submit" class="ua-btn ua-btn-warning ua-btn-sm"><i class="fas fa-redo"></i> Reset Password</button>
+                            </form>
                             @endif
                         </td>
                     </tr>

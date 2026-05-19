@@ -770,8 +770,10 @@
                 overflow: hidden;
                 flex-wrap: wrap;
                 height: auto;
+                min-height: 40px;
                 padding: 6px 10px;
                 gap: 4px 10px;
+                align-items: center;
             }
             .announcement-badge { font-size: .72rem; padding: 2px 8px; }
             .announcement-close { order: 2; }
@@ -781,7 +783,7 @@
                 order: 3;
                 overflow: hidden;
             }
-            .announcement-chip { font-size: .8rem; }
+            .announcement-chip { font-size: .8rem; white-space: normal; word-break: break-word; line-height: 1.3; }
 
             .announcement-splash-overlay { padding: 8px; z-index: 10001; }
             .announcement-splash-modal { max-width: 100%; max-height: 90vh; border-radius: 12px; }
@@ -813,16 +815,14 @@
                 }
             });
 
-            // Announcement Splash: show only on fresh load or browser refresh,
-            // NOT when navigating between pages via menu clicks.
-            // Uses sessionStorage flag + performance.navigation to detect refresh.
+            // Announcement Splash: show ONCE PER DAY per user.
+            // Uses localStorage with today's date key so it reappears the next day.
             var splash = document.getElementById('announcementSplash');
             if (splash) {
-                var navEntry = performance.getEntriesByType('navigation')[0];
-                var isReload = navEntry ? navEntry.type === 'reload' : (performance.navigation && performance.navigation.type === 1);
-                var alreadyShown = sessionStorage.getItem('announcement_splash_dismissed');
-                // Show on: first visit (no flag) OR browser refresh, but NOT on menu navigation
-                if (isReload || !alreadyShown) {
+                var today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                var splashKey = 'announcement_splash_dismissed_' + today;
+                var alreadyShownToday = localStorage.getItem(splashKey);
+                if (!alreadyShownToday) {
                     splash.classList.add('splash-show');
                 }
             }
@@ -839,7 +839,8 @@
                     splash.style.opacity = '';
                     splash.style.transition = '';
                 }, 300);
-                sessionStorage.setItem('announcement_splash_dismissed', '1');
+                var today = new Date().toISOString().slice(0, 10);
+                localStorage.setItem('announcement_splash_dismissed_' + today, '1');
             }
         }
         </script>
@@ -964,6 +965,7 @@
                             <div class="dropdown-header-email">{{ Auth::user()->email }}</div>
                         </li>
                         <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ route('admin.profile') }}"><i class="fas fa-user-cog me-2"></i>Profile & Password</a></li>
                         <li><a class="dropdown-item" href="{{ url('/') }}"><i class="fas fa-external-link-alt me-2"></i>{{ __('app.view_website') }}</a></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">@csrf
