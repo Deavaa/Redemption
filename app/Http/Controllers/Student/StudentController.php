@@ -188,10 +188,13 @@ class StudentController extends Controller
             'academic_year_id' => 'required|exists:academic_years,id',
             'section_id' => 'required|exists:sections,id',
             'admission_number' => 'required|string|max:50|unique:students,admission_number,'.$student->id,
+            'roll_number' => 'nullable|string|max:50',
             'admission_date' => 'nullable|date',
             'status' => 'nullable|in:active,inactive,graduated,transferred',
             'notes' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'guardian_id' => 'nullable|integer|exists:parents,id',
+            'new_comment' => 'nullable|string|max:2000',
         ]);
 
         // Handle photo upload
@@ -208,7 +211,28 @@ class StudentController extends Controller
             $validated['admission_date'] = now()->toDateString();
         }
 
+        // Extract non-fillable fields before update
+        $guardianId = $validated['guardian_id'] ?? null;
+        $newComment = $validated['new_comment'] ?? null;
+        unset($validated['guardian_id'], $validated['new_comment']);
+
+        // Update student record
         $student->update($validated);
+
+        // Sync parent relationship if guardian_id provided
+        if ($guardianId) {
+            $student->parents()->syncWithoutDetaching([
+                $guardianId => ['relation' => 'guardian']
+            ]);
+        }
+
+        // Append new comment to admin_comments
+        if ($newComment) {
+            $existingComments = $student->admin_comments ? $student->admin_comments . "\n" : '';
+            $student->update([
+                'admin_comments' => $existingComments . '[' . now()->format('M d, Y') . '] ' . $newComment,
+            ]);
+        }
 
         return redirect()->route('admin.students.index')->with('success', 'Student updated successfully!');
     }

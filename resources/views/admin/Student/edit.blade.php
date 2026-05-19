@@ -77,6 +77,22 @@
                                     </div>
 
                                     <div class="modern-form-group">
+                                        <label class="modern-form-label" for="email">
+                                            Email
+                                        </label>
+                                        <div class="modern-input-wrapper">
+                                            <i class="fas fa-envelope modern-input-icon"></i>
+                                            <input type="email" name="email" id="email"
+                                                class="modern-input {{ $errors->has('email') ? 'is-invalid' : '' }}"
+                                                value="{{ old('email', $data->email) }}"
+                                                placeholder="e.g. student@school.com">
+                                        </div>
+                                        @error('email')
+                                            <span class="modern-form-error">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="modern-form-group">
                                         <label class="modern-form-label" for="dob">
                                             Date of Birth
                                         </label>
