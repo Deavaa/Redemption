@@ -37,9 +37,10 @@
 .me-filter-title { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0; }
 .me-filter-desc { font-size: 0.82rem; color: #9ca3af; margin: 0.1rem 0 0; }
 .me-filter-body { padding: 1.25rem 1.5rem; }
-.me-filter-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
+.me-filter-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
 .me-filter-group { display: flex; flex-direction: column; }
 .me-filter-label { font-weight: 600; color: #374151; margin-bottom: 0.4rem; font-size: 0.85rem; }
+.me-filter-label .me-required { color: #ef4444; margin-left: 2px; }
 .me-filter-select { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 0.6rem 2.2rem 0.6rem 0.8rem; font-size: 0.88rem; color: #1a1a2e; background: #fff; appearance: none; cursor: pointer; transition: all 0.2s; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.6rem center; background-repeat: no-repeat; background-size: 1.15rem; }
 .me-filter-select:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(67,97,238,0.1); }
 .me-filter-select:disabled { background: #f9fafb; color: #9ca3af; cursor: not-allowed; }
@@ -71,6 +72,14 @@
 .me-save-badge.error { background: #fee2e2; color: #dc2626; }
 .me-save-badge.idle { background: #f3f4f6; color: #9ca3af; }
 
+/* Field Badge - shows which mark field is active */
+.me-field-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 10px; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.75rem; animation: meFadeIn 0.3s ease-out; }
+.me-field-badge.badge-ca { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1d4ed8; }
+.me-field-badge.badge-extra-ca { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; }
+.me-field-badge.badge-exam { background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #059669; }
+.me-field-badge.badge-all { background: #f5f3ff; border: 1.5px solid #ddd6fe; color: #7c3aed; }
+.me-field-badge i { font-size: 0.85rem; }
+
 /* Mark Entry Table */
 .me-table-wrapper { overflow-x: auto; max-height: 65vh; overflow-y: auto; }
 .me-table-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -96,6 +105,12 @@
 .me-table tbody tr.row-highlight { background: rgba(67,97,238,0.07); }
 .me-table tbody tr.row-highlight td.col-sticky { background: #eef2ff; }
 
+/* Single-field mode table adjustments */
+.me-table.me-table-single { font-size: 0.9rem; }
+.me-table.me-table-single thead th { font-size: 0.78rem; padding: 10px 12px; }
+.me-table.me-table-single tbody td { padding: 8px 8px; }
+.me-table.me-table-single td.col-row-num { min-width: 40px; text-align: center; }
+
 /* Student Name Cell */
 .me-student-cell { display: flex; align-items: center; gap: 8px; padding: 2px 8px; }
 .me-student-avatar { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #4361ee, #818cf8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
@@ -109,6 +124,17 @@
 .me-mark-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; border-color: #e5e7eb; }
 .me-mark-input.input-saved { border-color: #10b981; background: #ecfdf5; }
 .me-mark-input.input-error { border-color: #ef4444; background: #fef2f2; }
+
+/* Large Mark Input for single-field mode */
+.me-mark-input-large { width: 100%; min-width: 80px; max-width: 120px; border: 2px solid #4361ee; border-radius: 10px; outline: none; text-align: center; padding: 10px 8px; font-size: 1.1rem; font-weight: 700; color: #1a1a2e; background: #f8f9ff; transition: all 0.2s; }
+.me-mark-input-large:focus { border-color: #3b52d4; box-shadow: 0 0 0 3px rgba(67,97,238,0.2); background: #fff; }
+.me-mark-input-large.exam-input { border-color: #10b981; background: #f0fdf4; }
+.me-mark-input-large.exam-input:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); background: #fff; }
+.me-mark-input-large.extra-ca-input { border-color: #15803d; background: #f0fdf4; }
+.me-mark-input-large.extra-ca-input:focus { border-color: #15803d; box-shadow: 0 0 0 3px rgba(21,128,61,0.2); background: #fff; }
+.me-mark-input-large:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; border-color: #e5e7eb; }
+.me-mark-input-large.input-saved { border-color: #10b981; background: #ecfdf5; }
+.me-mark-input-large.input-error { border-color: #ef4444; background: #fef2f2; }
 
 /* Total Cell */
 .me-total-cell { font-weight: 700; font-size: 0.85rem; padding: 4px 6px; }
@@ -211,13 +237,13 @@
             <div class="me-filter-icon"><i class="fas fa-filter"></i></div>
             <div>
                 <h3 class="me-filter-title">Select Class & Subject</h3>
-                <p class="me-filter-desc">Choose academic year, term, class, section, and subject to load students</p>
+                <p class="me-filter-desc">Choose academic year, term, class, section, subject, and mark field to load students</p>
             </div>
         </div>
         <div class="me-filter-body">
             <div class="me-filter-grid">
                 <div class="me-filter-group">
-                    <label class="me-filter-label" for="filterAy">Academic Year</label>
+                    <label class="me-filter-label" for="filterAy">Academic Year <span class="me-required">*</span></label>
                     <select id="filterAy" class="me-filter-select" {{ $isTeacher ? 'disabled' : '' }}>
                         @foreach ($academicYears as $ay)
                             <option value="{{ $ay->id }}" {{ $currentAy && $currentAy->id == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>
@@ -225,7 +251,7 @@
                     </select>
                 </div>
                 <div class="me-filter-group">
-                    <label class="me-filter-label" for="filterTerm">Term</label>
+                    <label class="me-filter-label" for="filterTerm">Term <span class="me-required">*</span></label>
                     <select id="filterTerm" class="me-filter-select" {{ $isTeacher ? 'disabled' : '' }}>
                         @foreach ($terms as $term)
                             <option value="{{ $term->id }}" {{ $currentTerm && $currentTerm->id == $term->id ? 'selected' : '' }}>{{ $term->name }}</option>
@@ -233,7 +259,7 @@
                     </select>
                 </div>
                 <div class="me-filter-group">
-                    <label class="me-filter-label" for="filterClass">Class</label>
+                    <label class="me-filter-label" for="filterClass">Class <span class="me-required">*</span></label>
                     <select id="filterClass" class="me-filter-select">
                         <option value="">-- Select Class --</option>
                         @foreach ($classes as $cls)
@@ -242,15 +268,47 @@
                     </select>
                 </div>
                 <div class="me-filter-group">
-                    <label class="me-filter-label" for="filterSection">Section</label>
+                    <label class="me-filter-label" for="filterSection">Section <span class="me-required">*</span></label>
                     <select id="filterSection" class="me-filter-select" disabled>
                         <option value="">-- Select Section --</option>
                     </select>
                 </div>
                 <div class="me-filter-group">
-                    <label class="me-filter-label" for="filterSubject">Subject</label>
+                    <label class="me-filter-label" for="filterSubject">Subject <span class="me-required">*</span></label>
                     <select id="filterSubject" class="me-filter-select" disabled>
                         <option value="">-- Select Subject --</option>
+                    </select>
+                </div>
+                <div class="me-filter-group">
+                    <label class="me-filter-label" for="filterMarkField">Mark Field <span class="me-required">*</span></label>
+                    <select id="filterMarkField" class="me-filter-select">
+                        <option value="">-- Select Mark Field --</option>
+                        <optgroup label="All Fields">
+                            <option value="all">All Fields (Full Table)</option>
+                        </optgroup>
+                        <optgroup label="Continuous Assessment">
+                            <option value="ca1">CA1 (/5)</option>
+                            <option value="ca2">CA2 (/5)</option>
+                            <option value="ca3">CA3 (/5)</option>
+                            <option value="ca4">CA4 (/5)</option>
+                            <option value="ca5">CA5 (/5)</option>
+                            <option value="ca6">CA6 (/5)</option>
+                            <option value="ca7">CA7 (/5)</option>
+                            <option value="ca8">CA8 (/5)</option>
+                            <option value="ca9">CA9 (/5)</option>
+                            <option value="ca10">CA10 (/5)</option>
+                        </optgroup>
+                        <optgroup label="Extra CA">
+                            <option value="conduct">Conduct (/5)</option>
+                            <option value="handwriting">Handwriting (/5)</option>
+                            <option value="creativity">Creativity (/10)</option>
+                        </optgroup>
+                        <optgroup label="Examination">
+                            <option value="test1">Test 1 (/10)</option>
+                            <option value="test2">Test 2 (/10)</option>
+                            <option value="mid_term">Mid-Term (/20)</option>
+                            <option value="final_exam">Final Exam (/30)</option>
+                        </optgroup>
                     </select>
                 </div>
             </div>
@@ -280,8 +338,8 @@
     {{-- Empty State --}}
     <div id="emptyState" class="me-empty">
         <i class="fas fa-hand-pointer"></i>
-        <p>Select academic year, term, class, section, and subject above to begin entering marks</p>
-        <p class="me-empty-hint">Use the filter panel to choose the class and subject, then click "Load Students"</p>
+        <p>Select academic year, term, class, section, subject, and mark field above to begin entering marks</p>
+        <p class="me-empty-hint">Use the filter panel to choose the class, subject, and mark field, then click "Load Students"</p>
     </div>
 
     {{-- No Students State --}}
@@ -293,6 +351,12 @@
 
     {{-- Mark Entry Table Card (hidden until students load) --}}
     <div id="markEntryArea" class="d-none">
+        {{-- Active Field Badge --}}
+        <div id="fieldBadge" class="me-field-badge badge-all" style="display:none;">
+            <i class="fas fa-th-list"></i>
+            <span id="fieldBadgeText">All Fields</span>
+        </div>
+
         <div class="me-table-card">
             {{-- Table Header with Nav --}}
             <div class="me-table-card-header">
@@ -320,42 +384,8 @@
             {{-- Table --}}
             <div class="me-table-wrapper" id="tableWrapper">
                 <table class="me-table" id="markTable">
-                    <thead>
-                        <tr>
-                            <th class="col-sticky" rowspan="2">#</th>
-                            <th class="col-sticky" rowspan="2">Student Name</th>
-                            <th class="section-ca" colspan="10">Continuous Assessment (CA)</th>
-                            <th class="section-ca" colspan="3">Extra CA</th>
-                            <th class="section-exam" colspan="4">Examination</th>
-                            <th class="section-total" colspan="3">Totals</th>
-                            <th class="section-grade" rowspan="2">Grade</th>
-                        </tr>
-                        <tr>
-                            {{-- CA1-10 --}}
-                            <th class="section-ca">CA1<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA2<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA3<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA4<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA5<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA6<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA7<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA8<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA9<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">CA10<span class="th-sub"><br>/5</span></th>
-                            {{-- Extra CA --}}
-                            <th class="section-ca">Conduct<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">Handwriting<span class="th-sub"><br>/5</span></th>
-                            <th class="section-ca">Creativity<span class="th-sub"><br>/10</span></th>
-                            {{-- Exam --}}
-                            <th class="section-exam">Test 1<span class="th-sub"><br>/10</span></th>
-                            <th class="section-exam">Test 2<span class="th-sub"><br>/10</span></th>
-                            <th class="section-exam">Mid-Term<span class="th-sub"><br>/20</span></th>
-                            <th class="section-exam">Final<span class="th-sub"><br>/30</span></th>
-                            {{-- Totals --}}
-                            <th class="section-total-ca">CA Total<span class="th-sub"><br>/30</span></th>
-                            <th class="section-total-exam">Exam Total<span class="th-sub"><br>/70</span></th>
-                            <th class="section-total">Grand Total<span class="th-sub"><br>/100</span></th>
-                        </tr>
+                    <thead id="markTableHead">
+                        {{-- thead dynamically built based on mark field selection --}}
                     </thead>
                     <tbody id="markTableBody">
                         {{-- Rows dynamically injected --}}
@@ -365,7 +395,7 @@
         </div>
 
         {{-- Keyboard Hint --}}
-        <div class="me-keyboard-hint">
+        <div class="me-keyboard-hint" id="keyboardHint">
             Use <kbd>&uarr;</kbd> <kbd>&darr;</kbd> arrow keys to navigate between students &middot;
             <kbd>Tab</kbd> to move between fields &middot;
             Marks auto-save after 900ms
@@ -386,6 +416,7 @@
     var isLocked = false;
     var hasPermission = false;
     var undoStack = [];
+    var currentMarkField = 'all'; // 'all' or a specific field key like 'ca1', 'test1', etc.
 
     // ========== DOM REFS ==========
     var filterAy = document.getElementById('filterAy');
@@ -393,6 +424,7 @@
     var filterClass = document.getElementById('filterClass');
     var filterSection = document.getElementById('filterSection');
     var filterSubject = document.getElementById('filterSubject');
+    var filterMarkField = document.getElementById('filterMarkField');
     var btnLoad = document.getElementById('btnLoadStudents');
     var filterHint = document.getElementById('filterHint');
 
@@ -405,10 +437,14 @@
     var emptyState = document.getElementById('emptyState');
     var noStudentsState = document.getElementById('noStudentsState');
     var markEntryArea = document.getElementById('markEntryArea');
+    var markTableHead = document.getElementById('markTableHead');
     var markTableBody = document.getElementById('markTableBody');
     var tableSubtitle = document.getElementById('tableSubtitle');
     var navCounter = document.getElementById('navCounter');
     var globalSaveStatus = document.getElementById('globalSaveStatus');
+    var fieldBadge = document.getElementById('fieldBadge');
+    var fieldBadgeText = document.getElementById('fieldBadgeText');
+    var keyboardHint = document.getElementById('keyboardHint');
 
     // ========== TEACHER ASSIGNMENTS DATA ==========
     var teacherAssignments = @json($teacherAssignments);
@@ -425,10 +461,11 @@
 
     // ========== MARK FIELDS DEFINITION ==========
     var CA_FIELDS = [
-        { key: 'ca1', max: 5 }, { key: 'ca2', max: 5 }, { key: 'ca3', max: 5 },
-        { key: 'ca4', max: 5 }, { key: 'ca5', max: 5 }, { key: 'ca6', max: 5 },
-        { key: 'ca7', max: 5 }, { key: 'ca8', max: 5 }, { key: 'ca9', max: 5 },
-        { key: 'ca10', max: 5 }
+        { key: 'ca1', max: 5, label: 'CA1' }, { key: 'ca2', max: 5, label: 'CA2' },
+        { key: 'ca3', max: 5, label: 'CA3' }, { key: 'ca4', max: 5, label: 'CA4' },
+        { key: 'ca5', max: 5, label: 'CA5' }, { key: 'ca6', max: 5, label: 'CA6' },
+        { key: 'ca7', max: 5, label: 'CA7' }, { key: 'ca8', max: 5, label: 'CA8' },
+        { key: 'ca9', max: 5, label: 'CA9' }, { key: 'ca10', max: 5, label: 'CA10' }
     ];
     var EXTRA_CA_FIELDS = [
         { key: 'conduct', max: 5, label: 'Conduct' },
@@ -436,13 +473,28 @@
         { key: 'creativity', max: 10, label: 'Creativity' }
     ];
     var EXAM_FIELDS = [
-        { key: 'test1', max: 10 }, { key: 'test2', max: 10 },
-        { key: 'mid_term', max: 20 }, { key: 'final_exam', max: 30 }
+        { key: 'test1', max: 10, label: 'Test 1' }, { key: 'test2', max: 10, label: 'Test 2' },
+        { key: 'mid_term', max: 20, label: 'Mid-Term' }, { key: 'final_exam', max: 30, label: 'Final Exam' }
     ];
     var ALL_MARK_FIELDS = CA_FIELDS.concat(EXTRA_CA_FIELDS).concat(EXAM_FIELDS);
     var CA_KEYS = CA_FIELDS.map(function(f) { return f.key; });
     var EXTRA_CA_KEYS = EXTRA_CA_FIELDS.map(function(f) { return f.key; });
     var EXAM_KEYS = EXAM_FIELDS.map(function(f) { return f.key; });
+
+    // ========== FIELD INFO LOOKUP ==========
+    function getFieldInfo(key) {
+        for (var i = 0; i < ALL_MARK_FIELDS.length; i++) {
+            if (ALL_MARK_FIELDS[i].key === key) return ALL_MARK_FIELDS[i];
+        }
+        return null;
+    }
+
+    function getFieldCategory(key) {
+        if (CA_KEYS.indexOf(key) !== -1) return 'ca';
+        if (EXTRA_CA_KEYS.indexOf(key) !== -1) return 'extra-ca';
+        if (EXAM_KEYS.indexOf(key) !== -1) return 'exam';
+        return 'ca';
+    }
 
     // ========== INIT ==========
     function init() {
@@ -599,8 +651,29 @@
     filterSubject.addEventListener('change', function() {
         updateLoadButton();
         if (this.value) {
-            // Auto-load if all filters are set
-            if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value) {
+            // Auto-load if all filters are set (including mark field)
+            if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterMarkField.value) {
+                loadStudents();
+            }
+        } else {
+            hideMarkEntry();
+        }
+    });
+
+    // ========== CASCADE: Mark Field ==========
+    filterMarkField.addEventListener('change', function() {
+        currentMarkField = this.value || 'all';
+        updateLoadButton();
+
+        // If students already loaded and other filters are set, reload with new field
+        if (this.value && filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value) {
+            if (students.length > 0) {
+                // Rebuild table without re-fetching students
+                buildTable();
+                showMarkEntry();
+                updateFieldBadge();
+                updateInputLockState();
+            } else {
                 loadStudents();
             }
         } else {
@@ -610,13 +683,13 @@
 
     // ========== LOAD BUTTON ==========
     btnLoad.addEventListener('click', function() {
-        if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value) {
+        if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value && filterMarkField.value) {
             loadStudents();
         }
     });
 
     function updateLoadButton() {
-        var ready = filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value;
+        var ready = filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value && filterMarkField.value;
         btnLoad.disabled = !ready;
         filterHint.textContent = ready
             ? 'Click "Load Students" to view marks'
@@ -806,7 +879,7 @@
 
     function updateInputLockState() {
         var disabled = isLocked && !hasPermission;
-        document.querySelectorAll('.me-mark-input').forEach(function(inp) {
+        document.querySelectorAll('.me-mark-input, .me-mark-input-large').forEach(function(inp) {
             inp.disabled = disabled;
         });
     }
@@ -820,6 +893,9 @@
         var subjectId = filterSubject.value;
 
         if (!ayId || !termId || !classId || !sectionId || !subjectId) return;
+
+        // Update current mark field from dropdown
+        currentMarkField = filterMarkField.value || 'all';
 
         showLoading();
 
@@ -860,6 +936,7 @@
                 if (students.length > 0) {
                     buildTable();
                     showMarkEntry();
+                    updateFieldBadge();
                     // Re-check lock status to ensure inputs are correctly disabled
                     updateInputLockState();
                 } else {
@@ -872,13 +949,104 @@
             });
     }
 
+    // ========== UPDATE FIELD BADGE ==========
+    function updateFieldBadge() {
+        if (currentMarkField === 'all') {
+            fieldBadge.className = 'me-field-badge badge-all';
+            fieldBadge.querySelector('i').className = 'fas fa-th-list';
+            fieldBadgeText.textContent = 'All Fields';
+        } else {
+            var info = getFieldInfo(currentMarkField);
+            var category = getFieldCategory(currentMarkField);
+            var label = info ? info.label : currentMarkField;
+            var maxVal = info ? info.max : '';
+
+            if (category === 'ca') {
+                fieldBadge.className = 'me-field-badge badge-ca';
+                fieldBadge.querySelector('i').className = 'fas fa-clipboard-list';
+            } else if (category === 'extra-ca') {
+                fieldBadge.className = 'me-field-badge badge-extra-ca';
+                fieldBadge.querySelector('i').className = 'fas fa-star';
+            } else {
+                fieldBadge.className = 'me-field-badge badge-exam';
+                fieldBadge.querySelector('i').className = 'fas fa-file-alt';
+            }
+            fieldBadgeText.textContent = label + ' (/' + maxVal + ')';
+        }
+        fieldBadge.style.display = '';
+    }
+
     // ========== BUILD TABLE ==========
     function buildTable() {
+        // Build thead and tbody based on currentMarkField
+        if (currentMarkField === 'all') {
+            buildAllFieldsTable();
+        } else {
+            buildSingleFieldTable();
+        }
+
+        // Update subtitle
+        var subjectName = filterSubject.selectedOptions[0] ? filterSubject.selectedOptions[0].textContent : '--';
+        var className = filterClass.selectedOptions[0] ? filterClass.selectedOptions[0].textContent : '--';
+        var sectionName = filterSection.selectedOptions[0] ? filterSection.selectedOptions[0].textContent : '--';
+        tableSubtitle.textContent = students.length + ' students \u00B7 ' + subjectName + ' \u00B7 ' + className + ' - ' + sectionName;
+
+        navCounter.textContent = '0 / ' + students.length;
+
+        // Update keyboard hint
+        if (currentMarkField === 'all') {
+            keyboardHint.innerHTML = 'Use <kbd>&uarr;</kbd> <kbd>&darr;</kbd> arrow keys to navigate between students &middot; <kbd>Tab</kbd> to move between fields &middot; Marks auto-save after 900ms';
+        } else {
+            keyboardHint.innerHTML = 'Use <kbd>&uarr;</kbd> <kbd>&darr;</kbd> arrow keys or <kbd>Enter</kbd> to navigate between students &middot; Marks auto-save after 900ms';
+        }
+
+        // Remove single-field class by default
+        var table = document.getElementById('markTable');
+        table.classList.remove('me-table-single');
+
+        // Attach auto-save listeners
+        attachMarkInputListeners();
+    }
+
+    // ========== BUILD ALL FIELDS TABLE ==========
+    function buildAllFieldsTable() {
+        // Build thead - full table with all mark columns
+        var thead = '<tr>'
+            + '<th class="col-sticky" rowspan="2">#</th>'
+            + '<th class="col-sticky" rowspan="2">Student Name</th>'
+            + '<th class="section-ca" colspan="10">Continuous Assessment (CA)</th>'
+            + '<th class="section-ca" colspan="3">Extra CA</th>'
+            + '<th class="section-exam" colspan="4">Examination</th>'
+            + '<th class="section-total" colspan="3">Totals</th>'
+            + '<th class="section-grade" rowspan="2">Grade</th>'
+            + '</tr><tr>';
+
+        // CA1-10
+        CA_FIELDS.forEach(function(f) {
+            thead += '<th class="section-ca">' + f.label + '<span class="th-sub"><br>/' + f.max + '</span></th>';
+        });
+        // Extra CA
+        EXTRA_CA_FIELDS.forEach(function(f) {
+            thead += '<th class="section-ca">' + f.label + '<span class="th-sub"><br>/' + f.max + '</span></th>';
+        });
+        // Exam
+        EXAM_FIELDS.forEach(function(f) {
+            thead += '<th class="section-exam">' + f.label + '<span class="th-sub"><br>/' + f.max + '</span></th>';
+        });
+        // Totals
+        thead += '<th class="section-total-ca">CA Total<span class="th-sub"><br>/30</span></th>';
+        thead += '<th class="section-total-exam">Exam Total<span class="th-sub"><br>/70</span></th>';
+        thead += '<th class="section-total">Grand Total<span class="th-sub"><br>/100</span></th>';
+        thead += '</tr>';
+
+        markTableHead.innerHTML = thead;
+
+        // Build tbody
         var html = '';
         students.forEach(function(s, idx) {
             html += '<tr data-student-index="' + idx + '" data-student-id="' + s.id + '">';
 
-            // Row number
+            // Row number + Student Name
             html += '<td class="col-sticky"><div class="me-student-cell">'
                 + '<span class="me-row-num">' + (idx + 1) + '</span>'
                 + '<div class="me-student-avatar">' + getInitials(s.student_name) + '</div>'
@@ -940,17 +1108,90 @@
         });
 
         markTableBody.innerHTML = html;
+    }
 
-        // Update subtitle
-        var subjectName = filterSubject.selectedOptions[0] ? filterSubject.selectedOptions[0].textContent : '--';
-        var className = filterClass.selectedOptions[0] ? filterClass.selectedOptions[0].textContent : '--';
-        var sectionName = filterSection.selectedOptions[0] ? filterSection.selectedOptions[0].textContent : '--';
-        tableSubtitle.textContent = students.length + ' students · ' + subjectName + ' · ' + className + ' - ' + sectionName;
+    // ========== BUILD SINGLE FIELD TABLE ==========
+    function buildSingleFieldTable() {
+        var fieldInfo = getFieldInfo(currentMarkField);
+        if (!fieldInfo) {
+            // Fallback to all fields
+            buildAllFieldsTable();
+            return;
+        }
 
-        navCounter.textContent = '0 / ' + students.length;
+        var category = getFieldCategory(currentMarkField);
+        var inputClass = 'me-mark-input-large mark-input';
+        if (category === 'exam') inputClass += ' exam-input';
+        if (category === 'extra-ca') inputClass += ' extra-ca-input';
 
-        // Attach auto-save listeners
-        attachMarkInputListeners();
+        // Add single-field table class for larger row styling
+        var table = document.getElementById('markTable');
+        table.classList.add('me-table-single');
+
+        // Build thead - single field view: #, Student Name, Field Name, CA Total, Exam Total, Grand Total, Grade
+        var thead = '<tr>'
+            + '<th style="min-width:40px;">#</th>'
+            + '<th class="col-sticky" style="min-width:200px;">Student Name</th>';
+
+        // The selected field header
+        var sectionClass = 'section-ca';
+        if (category === 'exam') sectionClass = 'section-exam';
+        if (category === 'extra-ca') sectionClass = 'section-ca';
+
+        thead += '<th class="' + sectionClass + '" style="min-width:120px;">' + fieldInfo.label + '<span class="th-sub"><br>/' + fieldInfo.max + '</span></th>';
+        thead += '<th class="section-total-ca">CA Total<span class="th-sub"><br>/30</span></th>';
+        thead += '<th class="section-total-exam">Exam Total<span class="th-sub"><br>/70</span></th>';
+        thead += '<th class="section-total">Grand Total<span class="th-sub"><br>/100</span></th>';
+        thead += '<th class="section-grade">Grade</th>';
+        thead += '</tr>';
+
+        markTableHead.innerHTML = thead;
+
+        // Build tbody
+        var html = '';
+        students.forEach(function(s, idx) {
+            html += '<tr data-student-index="' + idx + '" data-student-id="' + s.id + '">';
+
+            // Row number
+            html += '<td class="col-row-num"><span class="me-row-num">' + (idx + 1) + '</span></td>';
+
+            // Student Name (sticky)
+            html += '<td class="col-sticky"><div class="me-student-cell">'
+                + '<div class="me-student-avatar">' + getInitials(s.student_name) + '</div>'
+                + '<div><span class="me-student-name-text">' + escapeHtml(s.student_name) + '</span>'
+                + '<span class="me-student-roll">' + escapeHtml(s.roll_number) + '</span></div>'
+                + '</div></td>';
+
+            // The selected mark field input (large)
+            var val = s.marks[currentMarkField];
+            html += '<td><input type="text" inputmode="decimal" class="' + inputClass + '"'
+                + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
+                + ' data-mark-key="' + currentMarkField + '" data-max="' + fieldInfo.max + '"'
+                + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
+                + ' placeholder="/' + fieldInfo.max + '"'
+                + '></td>';
+
+            // CA Total (read-only)
+            var caTotal = s.marks.ca_total;
+            html += '<td><div class="me-total-cell ca-total" id="caTotal_' + s.id + '">' + (caTotal !== null ? caTotal : '-') + '</div></td>';
+
+            // Exam Total (read-only)
+            var examTotal = s.marks.exam_total;
+            html += '<td><div class="me-total-cell exam-total" id="examTotal_' + s.id + '">' + (examTotal !== null ? examTotal : '-') + '</div></td>';
+
+            // Grand Total (read-only)
+            var grandTotal = s.marks.grand_total;
+            html += '<td><div class="me-total-cell grand-total" id="grandTotal_' + s.id + '">' + (grandTotal !== null ? grandTotal : '-') + '</div></td>';
+
+            // Grade (read-only)
+            var grade = s.marks.grade || '-';
+            var gradeClass = getGradeClass(grade);
+            html += '<td><div class="me-total-cell grade-cell"><span class="me-grade-badge ' + gradeClass + '" id="grade_' + s.id + '">' + grade + '</span></div></td>';
+
+            html += '</tr>';
+        });
+
+        markTableBody.innerHTML = html;
     }
 
     // ========== MARK INPUT LISTENERS ==========
@@ -966,11 +1207,24 @@
                 if (e.keyCode === 38 && e.ctrlKey) { e.preventDefault(); navigateStudent(-1); return; }
                 if (e.keyCode === 40 && e.ctrlKey) { e.preventDefault(); navigateStudent(1); return; }
 
+                // In single-field mode, Enter moves to next student
+                if (e.keyCode === 13 && currentMarkField !== 'all') {
+                    e.preventDefault();
+                    navigateStudent(1);
+                    return;
+                }
+
+                // In single-field mode, Arrow Up/Down navigates students directly
+                if (currentMarkField !== 'all') {
+                    if (e.keyCode === 38) { e.preventDefault(); navigateStudent(-1); return; }
+                    if (e.keyCode === 40) { e.preventDefault(); navigateStudent(1); return; }
+                }
+
                 // Period/comma/Amharic decimal interception
                 var isPeriodKey = (e.keyCode === 190 || e.keyCode === 110 || e.keyCode === 188
                     || e.code === 'Period' || e.code === 'NumpadDecimal' || e.code === 'Comma'
-                    || e.key === '።' || e.key === '፡' || e.key === ',' || e.key === '·'
-                    || e.key === '．' || e.key === '。');
+                    || e.key === '\u135E' || e.key === '\u1361' || e.key === ',' || e.key === '\u00B7'
+                    || e.key === '\uFF0E' || e.key === '\u3002');
 
                 if (isPeriodKey) {
                     e.preventDefault();
@@ -995,7 +1249,7 @@
             inp.addEventListener('input', function() {
                 var raw = this.value;
                 // Convert alternate decimal characters
-                var cleaned = raw.replace(/[，、።፡·．。]/g, '.');
+                var cleaned = raw.replace(/[\uFF0C\u3001\u135E\u1361\u00B7\uFF0E\u3002]/g, '.');
                 // Remove non-numeric except dots
                 cleaned = cleaned.replace(/[^0-9.]/g, '');
                 // Keep only first dot
@@ -1235,7 +1489,7 @@
         highlightRow(newIdx);
         scrollToRow(newIdx);
 
-        // Focus first input in that row
+        // Focus the mark input in that row
         var row = markTableBody.querySelector('tr[data-student-index="' + newIdx + '"]');
         if (row) {
             var firstInput = row.querySelector('.mark-input');
@@ -1271,9 +1525,11 @@
     document.addEventListener('keydown', function(e) {
         // Arrow up/down when not in a mark input
         if (e.target.classList.contains('mark-input')) {
-            // Ctrl+Arrow for student navigation while in input
-            if (e.ctrlKey && e.key === 'ArrowUp') { e.preventDefault(); navigateStudent(-1); }
-            if (e.ctrlKey && e.key === 'ArrowDown') { e.preventDefault(); navigateStudent(1); }
+            // Ctrl+Arrow for student navigation while in input (all-fields mode)
+            if (currentMarkField === 'all') {
+                if (e.ctrlKey && e.key === 'ArrowUp') { e.preventDefault(); navigateStudent(-1); }
+                if (e.ctrlKey && e.key === 'ArrowDown') { e.preventDefault(); navigateStudent(1); }
+            }
             return;
         }
 
@@ -1284,6 +1540,7 @@
     // ========== UI STATE HELPERS ==========
     function hideMarkEntry() {
         markEntryArea.classList.add('d-none');
+        fieldBadge.style.display = 'none';
         emptyState.classList.remove('d-none');
         noStudentsState.classList.add('d-none');
         loadingState.classList.add('d-none');
@@ -1299,6 +1556,7 @@
     function showLoading() {
         loadingState.classList.remove('d-none');
         markEntryArea.classList.add('d-none');
+        fieldBadge.style.display = 'none';
         emptyState.classList.add('d-none');
         noStudentsState.classList.add('d-none');
     }
@@ -1306,6 +1564,7 @@
     function showNoStudents() {
         noStudentsState.classList.remove('d-none');
         markEntryArea.classList.add('d-none');
+        fieldBadge.style.display = 'none';
         emptyState.classList.add('d-none');
         loadingState.classList.add('d-none');
     }
