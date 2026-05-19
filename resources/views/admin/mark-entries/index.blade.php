@@ -4,7 +4,9 @@
 @push('styles')
 <style>
 /* ===== MARK ENTRY INDEX - ALL-CARDS LAYOUT ===== */
-.me-page { animation: meFadeIn 0.4s ease-out; }
+/* Remove top spacing from layout wrapper */
+.admin-content { padding-top: 0 !important; margin-top: 0 !important; }
+.me-page { animation: meFadeIn 0.4s ease-out; margin-top: 0; padding-top: 0; }
 @keyframes meFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Page Header */
