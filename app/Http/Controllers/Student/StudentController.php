@@ -35,16 +35,13 @@ class StudentController extends Controller
             $query->where('status', $statusFilter);
         }
 
-        $students = $query->orderBy('full_name')->paginate(10)->withQueryString();
+        $students = $query->orderBy('full_name')->paginate(25)->withQueryString();
 
-        $statusCounts = [
-            'total' => Student::count(),
-            'active' => Student::where('status', 'active')->count(),
-            'inactive' => Student::where('status', 'inactive')->count(),
-            'transferred' => Student::where('status', 'transferred')->count(),
-        ];
+        $totalStudents = Student::count();
+        $activeStudents = Student::where('status', 'active')->count();
+        $inactiveStudents = Student::where('status', 'inactive')->count();
 
-        return view('admin.Student.index', compact('students', 'statusCounts', 'search', 'statusFilter'));
+        return view('admin.Student.index', compact('students', 'totalStudents', 'activeStudents', 'inactiveStudents', 'search', 'statusFilter'));
     }
 
     public function create()
