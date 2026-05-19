@@ -121,7 +121,7 @@
                             <div class="sl-actions">
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="sl-act sl-act-view" title="View"><i class="fas fa-eye"></i></a>
                                 <a href="{{ route('admin.students.edit', $student->id) }}" class="sl-act sl-act-edit" title="Edit"><i class="fas fa-pen"></i></a>
-                                <form method="POST" action="{{ route('admin.students.destroy', $student->id }}" style="display:inline" onsubmit="return confirm('Are you sure?')">
+                                <form method="POST" action="{{ route('admin.students.destroy', $student->id) }}" style="display:inline" onsubmit="return confirm('Are you sure?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="sl-act sl-act-del" title="Delete"><i class="fas fa-trash-alt"></i></button>
                                 </form>
