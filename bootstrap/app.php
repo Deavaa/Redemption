@@ -9,6 +9,7 @@ use App\Http\Middleware\ParentMiddleware;
 use App\Http\Middleware\StudentMiddleware;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\TrustProxies;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust all proxies (needed for XAMPP HTTPS / reverse proxies)
+        $middleware->trustProxies(at: '*');
+
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
         ]);
