@@ -17,21 +17,34 @@ class StudentController extends Controller
 {
     public function index(Request $request)
     {
+        $search = $request->get('search', '');
+        $statusFilter = $request->get('status', '');
+
         $query = Student::with(['classroom', 'section']);
-        if ($request->filled('search')) {
-            $search = $request->search;
+
+        if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'LIKE', "%{$search}%")
-                    ->orWhere('email', 'LIKE', "%{$search}%")
-                    ->orWhere('roll_number', 'LIKE', "%{$search}%");
+                    ->orWhere('admission_number', 'LIKE', "%{$search}%")
+                    ->orWhere('roll_number', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%");
             });
         }
-        $students = $query->latest()->paginate(20);
-        $totalStudents = Student::count();
-        $activeStudents = Student::where('status', 'active')->count();
-        $inactiveStudents = Student::where('status', 'inactive')->count();
 
-        return view('admin.Student.index', compact('students', 'totalStudents', 'activeStudents', 'inactiveStudents'));
+        if ($statusFilter && in_array($statusFilter, ['active', 'inactive', 'transferred', 'graduated'])) {
+            $query->where('status', $statusFilter);
+        }
+
+        $students = $query->orderBy('full_name')->paginate(10)->withQueryString();
+
+        $statusCounts = [
+            'total' => Student::count(),
+            'active' => Student::where('status', 'active')->count(),
+            'inactive' => Student::where('status', 'inactive')->count(),
+            'transferred' => Student::where('status', 'transferred')->count(),
+        ];
+
+        return view('admin.Student.index', compact('students', 'statusCounts', 'search', 'statusFilter'));
     }
 
     public function create()
