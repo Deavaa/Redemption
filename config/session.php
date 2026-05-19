@@ -18,7 +18,9 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'file'),
+    'driver' => in_array(env('SESSION_DRIVER'), ['file', 'cookie', 'database', 'memcached', 'redis', 'dynamodb', 'array']) 
+        ? env('SESSION_DRIVER') 
+        : 'file',
 
     /*
     |--------------------------------------------------------------------------
