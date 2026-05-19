@@ -26,16 +26,28 @@ class FixEnvCommand extends Command
         // === CRITICAL FIXES ===
 
         // 1. DB_CONNECTION must be mysql (not sqlite)
-        $content = preg_replace('/^DB_CONNECTION=.*$/m', 'DB_CONNECTION=mysql', $content, -1, $count);
-        if ($count) $changes[] = 'DB_CONNECTION=mysql';
+        if (preg_match('/^DB_CONNECTION=/m', $content)) {
+            $content = preg_replace('/^DB_CONNECTION=.*$/m', 'DB_CONNECTION=mysql', $content, -1, $count);
+            if ($count) $changes[] = 'DB_CONNECTION=mysql';
+        } else {
+            $content .= "\nDB_CONNECTION=mysql";
+            $changes[] = 'DB_CONNECTION=mysql (added)';
+        }
 
         // 2. SESSION_DRIVER must be file (not database - no sessions table)
-        $content = preg_replace('/^SESSION_DRIVER=.*$/m', 'SESSION_DRIVER=file', $content, -1, $count);
-        if ($count) $changes[] = 'SESSION_DRIVER=file';
+        if (preg_match('/^SESSION_DRIVER=/m', $content)) {
+            $content = preg_replace('/^SESSION_DRIVER=.*$/m', 'SESSION_DRIVER=file', $content, -1, $count);
+            if ($count) $changes[] = 'SESSION_DRIVER=file';
+        } else {
+            $content .= "\nSESSION_DRIVER=file";
+            $changes[] = 'SESSION_DRIVER=file (added)';
+        }
 
         // 3. SESSION_DOMAIN must be empty (not "null" or "localhost")
-        $content = preg_replace('/^SESSION_DOMAIN=.*$/m', 'SESSION_DOMAIN=', $content, -1, $count);
-        if ($count) $changes[] = 'SESSION_DOMAIN= (empty)';
+        if (preg_match('/^SESSION_DOMAIN=/m', $content)) {
+            $content = preg_replace('/^SESSION_DOMAIN=.*$/m', 'SESSION_DOMAIN=', $content, -1, $count);
+            if ($count) $changes[] = 'SESSION_DOMAIN= (empty)';
+        }
 
         // 4. SESSION_SECURE_COOKIE must be false for XAMPP
         if (preg_match('/^SESSION_SECURE_COOKIE=/m', $content)) {
@@ -72,14 +84,27 @@ class FixEnvCommand extends Command
             $changes[] = 'SESSION_PATH=' . $path . ' (added)';
         }
 
+        // Write updated .env
         file_put_contents($envPath, $content);
 
+        // Ensure session storage directory exists and is writable
+        $sessionDir = storage_path('framework/sessions');
+        if (!is_dir($sessionDir)) {
+            mkdir($sessionDir, 0755, true);
+            $changes[] = 'Created sessions directory';
+        }
+        if (!is_writable($sessionDir)) {
+            chmod($sessionDir, 0755);
+            $changes[] = 'Fixed sessions directory permissions';
+        }
+
+        // Display results
         if (empty($changes)) {
-            $this->info('✓ .env is already correct!');
+            $this->info('.env is already correct - no changes needed.');
         } else {
-            $this->info('Fixed ' . count($changes) . ' setting(s):');
+            $this->info('Applied ' . count($changes) . ' fix(es):');
             foreach ($changes as $change) {
-                $this->line('  • ' . $change);
+                $this->line('  - ' . $change);
             }
         }
 
@@ -95,7 +120,9 @@ class FixEnvCommand extends Command
         $this->call('cache:clear');
 
         $this->newLine();
-        $this->info('Done! Try logging in again now.');
+        $this->info('Done! Sessions now use FILE storage (not database).');
+        $this->info('Database connection is now MYSQL (not sqlite).');
+        $this->info('Try logging in again now.');
 
         return 0;
     }

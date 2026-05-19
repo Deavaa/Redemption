@@ -18,9 +18,13 @@ return [
     |
     */
 
-    'driver' => in_array(env('SESSION_DRIVER'), ['file', 'cookie', 'database', 'memcached', 'redis', 'dynamodb', 'array']) 
-        ? env('SESSION_DRIVER') 
-        : 'file',
+    /*
+    |--------------------------------------------------------------------------
+    | HARD-CODED to 'file' to prevent .env misconfiguration.
+    | This app uses file-based sessions. If you need a different driver
+    | (e.g., redis, database), change it here directly.
+    |--------------------------------------------------------------------------*/
+    'driver' => 'file',
 
     /*
     |--------------------------------------------------------------------------

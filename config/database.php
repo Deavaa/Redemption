@@ -17,7 +17,14 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION') ?: 'mysql',
+    /*
+    |--------------------------------------------------------------------------
+    | HARD-CODED to 'mysql' to prevent .env misconfiguration.
+    | This app only uses MySQL/MariaDB. If you need a different DB,
+    | change it here directly — .env DB_CONNECTION is ignored.
+    |--------------------------------------------------------------------------
+    */
+    'default' => 'mysql',
 
     /*
     |--------------------------------------------------------------------------
