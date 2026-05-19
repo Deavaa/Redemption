@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
 
             // 3. Full school data (branches, AY, terms, teachers, subjects, classes, sections, students, assignments)
             \Database\Seeders\SchoolDataSeeder::class,
+
+            // 4. Real student data (121 students from school records)
+            \Database\Seeders\StudentDataSeeder::class,
         ]);
     }
 }
