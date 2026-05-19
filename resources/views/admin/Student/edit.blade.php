@@ -9,13 +9,13 @@
             <nav aria-label="breadcrumb" class="modern-breadcrumb">
                 <ol>
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
-                    <li><a href="{{ route('admin.students.index') }}">Students</a></li>
+                    <li><a href="{{ route('admin.students.index', ['page' => request()->get('page', 1)]) }}">Students</a></li>
                     <li class="active">Edit</li>
                 </ol>
             </nav>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.students.index') }}" class="btn-modern btn-modern-outline">
+            <a href="{{ route('admin.students.index', ['page' => request()->get('page', 1)]) }}" class="btn-modern btn-modern-outline">
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to List</span>
             </a>
@@ -42,6 +42,7 @@
 
         <form action="{{ route('admin.students.update', ['student' => $data->id]) }}" method="POST" enctype="multipart/form-data">
             @csrf @method('PUT')
+            <input type="hidden" name="page" value="{{ request()->get('page', 1) }}">
 
             {{-- Personal Info Tab --}}
             <div class="modern-tab-content active" id="tab-personal">
@@ -467,7 +468,7 @@
 
             {{-- Form Actions --}}
             <div class="modern-form-actions">
-                <a href="{{ route('admin.students.index') }}" class="btn-modern btn-modern-ghost">
+                <a href="{{ route('admin.students.index', ['page' => request()->get('page', 1)]) }}" class="btn-modern btn-modern-ghost">
                     Cancel
                 </a>
                 <button type="submit" class="btn-modern btn-modern-primary">

@@ -35,7 +35,7 @@ class StudentController extends Controller
             $query->where('status', $statusFilter);
         }
 
-        $students = $query->orderBy('full_name')->paginate(25)->withQueryString();
+        $students = $query->orderBy('full_name')->paginate(10)->withQueryString();
 
         $totalStudents = Student::count();
         $activeStudents = Student::where('status', 'active')->count();
@@ -234,14 +234,16 @@ class StudentController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.students.index')->with('success', 'Student updated successfully!');
+        $page = $request->input('page', 1);
+        return redirect()->route('admin.students.index', ['page' => $page])->with('success', 'Student updated successfully!');
     }
 
     public function destroy(Student $student)
     {
         $student->delete();
 
-        return redirect()->route('admin.students.index')->with('success', 'Student deleted successfully!');
+        $page = request()->input('page', 1);
+        return redirect()->route('admin.students.index', ['page' => $page])->with('success', 'Student deleted successfully!');
     }
 
     /**

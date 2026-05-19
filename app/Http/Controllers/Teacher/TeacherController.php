@@ -11,7 +11,7 @@ class TeacherController extends Controller
 {
     public function index()
     {
-        $data = Teacher::orderBy('full_name')->paginate(20);
+        $data = Teacher::orderBy('full_name')->paginate(10)->withQueryString();
         return view('admin.Teacher.index', compact('data'));
     }
 
@@ -151,7 +151,8 @@ class TeacherController extends Controller
             'status_from_db' => Teacher::find($id)?->status,
         ]);
 
-        return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully.');
+        $page = $request->input('page', 1);
+        return redirect()->route('admin.teachers.index', ['page' => $page])->with('success', 'Teacher updated successfully.');
     }
 
     public function destroy($id)

@@ -15,6 +15,10 @@
             </nav>
         </div>
         <div class="modern-page-header-right">
+            <a href="{{ route('admin.chat.index') }}" class="btn-modern btn-modern-ghost" style="color:#ea580c;border-color:#ea580c;" title="Send Message to Teachers">
+                <i class="fas fa-paper-plane"></i>
+                <span>Message</span>
+            </a>
             <a href="{{ route('admin.teachers.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-plus"></i>
                 <span>Add Teacher</span>
@@ -156,6 +160,9 @@
                                     <a href="{{ route('admin.teachers.edit', $item->id) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                         <i class="fas fa-pen"></i>
                                     </a>
+                                    <a href="{{ route('admin.chat.index') }}?recipient_id={{ $item->user_id ?? '' }}&recipient_type=teacher" class="modern-btn-icon modern-btn-msg" title="Send Message">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </a>
                                     <form method="POST" action="{{ route('admin.teachers.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this teacher?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
@@ -172,8 +179,34 @@
 
             {{-- Pagination --}}
             @if($data->hasPages())
-            <div class="modern-pagination-wrapper">
-                {{ $data->withQueryString()->links() }}
+            <div class="modern-pagination-wrapper" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;">
+                <div style="display:flex;align-items:center;gap:3px;">
+                    @if($data->onFirstPage())
+                        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border-radius:6px;font-size:0.75rem;font-weight:600;color:#d1d5db;background:#f9fafb;border:1px solid #e5e7eb;cursor:not-allowed;">&lsaquo;</span>
+                    @else
+                        <a href="{{ $data->previousPageUrl() }}" style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border-radius:6px;font-size:0.75rem;font-weight:600;color:#4b5563;background:#f3f4f6;border:1px solid #e5e7eb;text-decoration:none;cursor:pointer;transition:all 0.15s;">&lsaquo;</a>
+                    @endif
+
+                    @php
+                        $cp = $data->currentPage();
+                        $lp = $data->lastPage();
+                        $s = max(1, $cp - 2);
+                        $e = min($lp, $cp + 2);
+                        if ($s > 1) { echo '<a href="' . $data->url(1) . '" style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border-radius:6px;font-size:0.75rem;font-weight:600;color:#4b5563;background:#f3f4f6;border:1px solid #e5e7eb;text-decoration:none;cursor:pointer;">1</a>'; if ($s > 2) echo '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:28px;font-size:0.75rem;color:#9ca3af;">...</span>'; }
+                        for ($i = $s; $i <= $e; $i++) {
+                            if ($i == $cp) echo '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border-radius:6px;font-size:0.75rem;font-weight:600;color:#fff;background:#4361ee;border:1px solid #4361ee;">' . $i . '</span>';
+                            else echo '<a href="' . $data->url($i) . '" style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border-radius:6px;font-size:0.75rem;font-weight:600;color:#4b5563;background:#f3f4f6;border:1px solid #e5e7eb;text-decoration:none;cursor:pointer;">' . $i . '</a>';
+                        }
+                        if ($e < $lp) { if ($e < $lp - 1) echo '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:28px;font-size:0.75rem;color:#9ca3af;">...</span>'; echo '<a href="' . $data->url($lp) . '" style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border-radius:6px;font-size:0.75rem;font-weight:600;color:#4b5563;background:#f3f4f6;border:1px solid #e5e7eb;text-decoration:none;cursor:pointer;">' . $lp . '</a>'; }
+                    @endphp
+
+                    @if($data->hasMorePages())
+                        <a href="{{ $data->nextPageUrl() }}" style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border-radius:6px;font-size:0.75rem;font-weight:600;color:#4b5563;background:#f3f4f6;border:1px solid #e5e7eb;text-decoration:none;cursor:pointer;transition:all 0.15s;">&rsaquo;</a>
+                    @else
+                        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border-radius:6px;font-size:0.75rem;font-weight:600;color:#d1d5db;background:#f9fafb;border:1px solid #e5e7eb;cursor:not-allowed;">&rsaquo;</span>
+                    @endif
+                </div>
+                <span style="font-size:0.7rem;color:#9ca3af;">{{ $data->firstItem() }}-{{ $data->lastItem() }} of {{ $data->total() }}</span>
             </div>
             @endif
             @else
@@ -521,6 +554,12 @@
     color: #dc2626;
 }
 .modern-btn-delete:hover { background: #dc2626; color: #fff; transform: translateY(-1px); }
+
+.modern-btn-msg {
+    background: #fff7ed;
+    color: #ea580c;
+}
+.modern-btn-msg:hover { background: #ea580c; color: #fff; transform: translateY(-1px); }
 
 /* Modern Button */
 .btn-modern {

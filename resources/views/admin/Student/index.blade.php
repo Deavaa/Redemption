@@ -15,8 +15,17 @@
             </nav>
         </div>
         <div class="sl-header-right">
-            <a href="{{ route('admin.students.generateIds') }}" class="sl-btn sl-btn-outline">
+            <a href="{{ route('admin.students.generateIds') }}" class="sl-btn sl-btn-outline" title="Generate Student ID Numbers">
                 <i class="fas fa-id-badge"></i> Generate IDs
+            </a>
+            <a href="{{ route('admin.id-card-generate.index') }}" class="sl-btn sl-btn-outline" style="color:#7c3aed;border-color:#7c3aed;" title="Generate & Print ID Cards">
+                <i class="fas fa-id-card"></i> ID Cards
+            </a>
+            <a href="{{ route('admin.certificate-generate.index') }}" class="sl-btn sl-btn-outline" style="color:#059669;border-color:#059669;" title="Generate Certificates">
+                <i class="fas fa-certificate"></i> Certificates
+            </a>
+            <a href="{{ route('admin.chat.index') }}" class="sl-btn sl-btn-outline" style="color:#ea580c;border-color:#ea580c;" title="Send Message">
+                <i class="fas fa-paper-plane"></i> Message
             </a>
             <a href="{{ route('admin.students.create') }}" class="sl-btn sl-btn-primary">
                 <i class="fas fa-plus"></i> Add Student
@@ -120,7 +129,10 @@
                         <td class="sl-td-right">
                             <div class="sl-actions">
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="sl-act sl-act-view" title="View"><i class="fas fa-eye"></i></a>
-                                <a href="{{ route('admin.students.edit', $student->id) }}" class="sl-act sl-act-edit" title="Edit"><i class="fas fa-pen"></i></a>
+                                <a href="{{ route('admin.students.edit', ['student' => $student->id, 'page' => $students->currentPage()]) }}" class="sl-act sl-act-edit" title="Edit"><i class="fas fa-pen"></i></a>
+                                <a href="{{ route('admin.chat.index') }}?recipient_id={{ $student->user_id ?? '' }}&recipient_type=student" class="sl-act sl-act-msg" title="Send Message"><i class="fas fa-paper-plane"></i></a>
+                                <a href="{{ route('admin.id-card-generate.index') }}?student_id={{ $student->id }}" class="sl-act sl-act-id" title="Generate ID Card"><i class="fas fa-id-card"></i></a>
+                                <a href="{{ route('admin.certificate-generate.index') }}?student_id={{ $student->id }}" class="sl-act sl-act-cert" title="Generate Certificate"><i class="fas fa-certificate"></i></a>
                                 <form method="POST" action="{{ route('admin.students.destroy', $student->id) }}" style="display:inline" onsubmit="return confirm('Are you sure?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="sl-act sl-act-del" title="Delete"><i class="fas fa-trash-alt"></i></button>
@@ -353,6 +365,12 @@
 .sl-act-edit:hover { background: #d97706; color: #fff; }
 .sl-act-del { background: #fef2f2; color: #dc2626; }
 .sl-act-del:hover { background: #dc2626; color: #fff; }
+.sl-act-msg { background: #fff7ed; color: #ea580c; }
+.sl-act-msg:hover { background: #ea580c; color: #fff; }
+.sl-act-id { background: #f3e8ff; color: #7c3aed; }
+.sl-act-id:hover { background: #7c3aed; color: #fff; }
+.sl-act-cert { background: #ecfdf5; color: #059669; }
+.sl-act-cert:hover { background: #059669; color: #fff; }
 
 /* --- Pagination --- */
 .sl-pag {
