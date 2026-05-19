@@ -120,7 +120,7 @@ body{min-height:100vh;display:flex;align-items:center;justify-content:center;bac
   <div class="alert">{{ session('error') }}</div>
   @endif
   @if($errors->any())
-  <div class="alert">{{ $errors->first('login') || $errors->first('email') || $errors->first() }}</div>
+  <div class="alert">{{ $errors->first('login') ?: ($errors->first('email') ?: $errors->first()) }}</div>
   @endif
   <form method="POST" action="{{ route('login') }}">
     @csrf
