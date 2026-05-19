@@ -210,108 +210,142 @@
     .me-filter-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ===== MOBILE CARD VIEW (hidden on desktop) ===== */
-.me-mobile-card-area { display: none; }
+/* ===== CARD VIEW (one student per card — desktop + mobile) ===== */
+.me-mobile-card-area { display: block; }
+.me-table-card { display: none !important; }
+.me-field-badge { display: none !important; }
+
+/* Desktop Card Container */
+.me-card-wrapper {
+    max-width: 860px; margin: 0 auto;
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+}
+
+/* Desktop Card Nav Bar */
+.me-card-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; background: #fafbfc;
+    border-bottom: 1px solid #e5e7eb;
+}
+.me-card-nav-btn {
+    width: 42px; height: 42px; border-radius: 12px; border: 1.5px solid #e5e7eb;
+    background: #fff; color: #4361ee; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+}
+.me-card-nav-btn:hover { background: #eef2ff; border-color: #4361ee; }
+.me-card-nav-btn:disabled { background: #f9fafb; color: #d1d5db; border-color: #e5e7eb; cursor: not-allowed; }
+.me-card-nav-btn:not(:disabled):active { transform: scale(0.95); }
+.me-card-student-info { flex: 1; text-align: center; padding: 0 16px; min-width: 0; }
+.me-card-student-name { display: block; font-weight: 800; font-size: 1.15rem; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.me-card-student-meta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 2px; }
+.me-card-counter { font-size: 0.78rem; color: #6b7280; font-weight: 600; }
+.me-card-avatar {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, #4361ee, #818cf8); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+}
+.me-card-save-badge { margin-left: auto; }
+
+/* Desktop Card Body */
+.me-card-body { padding: 20px 24px; }
+
+/* Section Label (desktop) */
+.me-card-section-label {
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+    padding: 0 0 8px; margin: 0 0 10px; color: #6b7280;
+    border-bottom: 2px solid #e5e7eb;
+}
+.me-card-section-label.ca-label { color: #1d4ed8; border-bottom-color: #bfdbfe; }
+.me-card-section-label.exam-label { color: #059669; border-bottom-color: #a7f3d0; }
+
+/* Desktop CA grid — 5 columns */
+.me-card-ca-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 8px; margin-bottom: 16px;
+}
+
+/* Desktop Exam grid — 4 columns */
+.me-card-exam-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin-bottom: 16px;
+}
+
+/* Desktop Card Field Item */
+.me-card-field {
+    display: flex; flex-direction: column; align-items: center;
+    background: #f9fafb; border-radius: 10px; padding: 8px 4px 6px;
+    border: 1.5px solid #f0f0f0; transition: all 0.2s;
+}
+.me-card-field:hover { border-color: #e5e7eb; background: #fff; }
+.me-card-field.field-exam { background: #f0fdf4; border-color: #d1fae5; }
+.me-card-field.field-exam:hover { border-color: #a7f3d0; background: #ecfdf5; }
+.me-card-field-label {
+    font-size: 0.7rem; font-weight: 700; color: #6b7280;
+    text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px;
+}
+.me-card-field.field-exam .me-card-field-label { color: #059669; }
+.me-card-field-input {
+    width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px;
+    text-align: center; padding: 8px 4px; font-size: 1.05rem; font-weight: 700;
+    color: #1a1a2e; background: #fff; outline: none; transition: all 0.2s;
+}
+.me-card-field-input:focus { border-color: #4361ee; box-shadow: 0 0 0 3px rgba(67,97,238,0.12); background: #f8f9ff; }
+.me-card-field.field-exam .me-card-field-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); background: #f0fdf4; }
+.me-card-field-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+.me-card-field-input.input-saved { border-color: #10b981; background: #ecfdf5; }
+.me-card-field-input.input-error { border-color: #ef4444; background: #fef2f2; }
+.me-card-field-max { font-size: 0.6rem; color: #9ca3af; margin-top: 2px; }
+
+/* Desktop Card Totals Footer */
+.me-card-totals {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; padding: 14px 24px; background: #fafbfc;
+    border-top: 1px solid #e5e7eb;
+}
+.me-card-total-item { text-align: center; }
+.me-card-total-label { font-size: 0.65rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.3px; }
+.me-card-total-value { font-size: 1.1rem; font-weight: 800; margin-top: 2px; }
+.me-card-total-value.ca-val { color: #1d4ed8; }
+.me-card-total-value.exam-val { color: #059669; }
+.me-card-total-value.grand-val { color: #7c3aed; }
+
+/* Keyboard hint for card view */
+.me-card-hint {
+    text-align: center; padding: 8px; font-size: 0.78rem; color: #9ca3af;
+}
+.me-card-hint kbd { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; font-family: inherit; }
 
 @media (max-width: 768px) {
-    /* Show mobile card, hide table card */
-    .me-mobile-card-area { display: block; }
-    .me-table-card { display: none !important; }
-    .me-field-badge { display: none !important; }
-    .me-keyboard-hint { display: none !important; }
-
-    /* Mobile nav bar */
-    .me-mobile-nav {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 8px 12px; background: #fff; border-bottom: 1px solid #e5e7eb;
-        position: sticky; top: 0; z-index: 50;
-    }
-    .me-mobile-nav-btn {
-        width: 40px; height: 40px; border-radius: 50%; border: none;
-        background: #4361ee; color: #fff; font-size: 1rem;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; transition: all 0.2s; flex-shrink: 0;
-    }
-    .me-mobile-nav-btn:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
-    .me-mobile-nav-btn:not(:disabled):active { transform: scale(0.92); }
-    .me-mobile-student-info { flex: 1; text-align: center; padding: 0 8px; min-width: 0; }
-    .me-mobile-student-name { display: block; font-weight: 700; font-size: 0.95rem; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .me-mobile-counter { display: block; font-size: 0.72rem; color: #6b7280; font-weight: 600; }
-
-    /* Mobile form container */
-    .me-mobile-form {
-        padding: 8px; background: #fff;
-        touch-action: pan-y; /* allow vertical scroll but handle horizontal swipe */
-    }
-
-    /* Section label */
-    .me-mobile-section-label {
-        font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-        padding: 6px 0 4px; margin: 0; color: #6b7280;
-    }
-    .me-mobile-section-label.ca-label { color: #1d4ed8; }
-    .me-mobile-section-label.exam-label { color: #059669; }
-
-    /* 3-column grid for CA fields */
-    .me-mobile-ca-grid {
-        display: grid; grid-template-columns: repeat(3, 1fr);
-        gap: 4px; margin-bottom: 6px;
-    }
-
-    /* 2-column grid for Exam fields */
-    .me-mobile-exam-grid {
-        display: grid; grid-template-columns: repeat(2, 1fr);
-        gap: 4px; margin-bottom: 6px;
-    }
-
-    /* Individual field item */
-    .me-mobile-field {
-        display: flex; flex-direction: column; align-items: center;
-        background: #f9fafb; border-radius: 6px; padding: 4px 2px;
-        border: 1px solid #f0f0f0;
-    }
-    .me-mobile-field.field-exam { background: #f0fdf4; border-color: #d1fae5; }
-    .me-mobile-field-label {
-        font-size: 0.62rem; font-weight: 700; color: #6b7280;
-        text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px;
-    }
-    .me-mobile-field.field-exam .me-mobile-field-label { color: #059669; }
-    .me-mobile-field-input {
-        width: 100%; border: 1.5px solid #e5e7eb; border-radius: 6px;
-        text-align: center; padding: 6px 2px; font-size: 1rem; font-weight: 700;
-        color: #1a1a2e; background: #fff; outline: none; transition: all 0.2s;
-    }
-    .me-mobile-field-input:focus { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.12); background: #f8f9ff; }
-    .me-mobile-field.field-exam .me-mobile-field-input:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.12); background: #f0fdf4; }
-    .me-mobile-field-input:disabled { background: #f3f4f6; color: #9ca3af; }
-    .me-mobile-field-input.input-saved { border-color: #10b981; background: #ecfdf5; }
-    .me-mobile-field-input.input-error { border-color: #ef4444; background: #fef2f2; }
-    .me-mobile-field-max { font-size: 0.55rem; color: #9ca3af; margin-top: 1px; }
-
-    /* Totals row */
-    .me-mobile-totals {
-        display: grid; grid-template-columns: repeat(4, 1fr);
-        gap: 4px; padding: 6px 8px; background: #fafbfc;
-        border-top: 1px solid #e5e7eb;
-    }
-    .me-mobile-total-item { text-align: center; }
-    .me-mobile-total-label { font-size: 0.58rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
-    .me-mobile-total-value { font-size: 0.85rem; font-weight: 800; }
-    .me-mobile-total-value.ca-val { color: #1d4ed8; }
-    .me-mobile-total-value.exam-val { color: #059669; }
-    .me-mobile-total-value.grand-val { color: #7c3aed; }
-
-    /* Save status */
-    .me-mobile-save-status { text-align: center; padding: 4px; background: #fff; }
+    /* Mobile overrides for card layout */
+    .me-card-wrapper { border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .me-card-nav { padding: 8px 12px; }
+    .me-card-nav-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #4361ee; color: #fff; }
+    .me-card-nav-btn:disabled { background: #e5e7eb; color: #9ca3af; }
+    .me-card-nav-btn:not(:disabled):active { transform: scale(0.92); }
+    .me-card-student-name { font-size: 0.95rem; font-weight: 700; }
+    .me-card-avatar { width: 30px; height: 30px; font-size: 0.7rem; }
+    .me-card-body { padding: 10px 12px; touch-action: pan-y; }
+    .me-card-section-label { font-size: 0.7rem; padding: 0 0 4px; margin: 0 0 8px; border-bottom-width: 1.5px; }
+    .me-card-ca-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 10px; }
+    .me-card-exam-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 10px; }
+    .me-card-field { padding: 4px 2px; border-radius: 6px; border-width: 1px; }
+    .me-card-field-label { font-size: 0.62rem; margin-bottom: 2px; }
+    .me-card-field-input { font-size: 1rem; padding: 6px 2px; border-radius: 6px; border-width: 1.5px; }
+    .me-card-field-max { font-size: 0.55rem; }
+    .me-card-totals { grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px 12px; }
+    .me-card-total-label { font-size: 0.58rem; }
+    .me-card-total-value { font-size: 0.85rem; }
 
     /* Other mobile overrides */
     .me-header { flex-direction: column; align-items: stretch; }
     .me-title { font-size: 1.35rem; }
     .me-filter-grid { grid-template-columns: 1fr 1fr; }
-    .me-table-card-header { flex-direction: column; align-items: stretch; padding: 0.75rem 1rem; }
     .me-term-bar { flex-direction: column; align-items: flex-start; }
-    .me-table-card-header-left, .me-table-card-header-right { width: 100%; }
-    .me-student-nav { justify-content: center; }
     .me-filter-summary { font-size: 0.75rem; gap: 0.35rem; padding: 0.5rem 0.75rem; }
 }
 
@@ -321,8 +355,10 @@
     .me-filter-header { padding: 0.6rem 0.75rem; }
     .me-term-bar { gap: 0.4rem; }
     .me-term-chip { font-size: 0.78rem; padding: 5px 10px; }
-    .me-mobile-field-input { font-size: 0.95rem; padding: 5px 1px; }
-    .me-mobile-student-name { font-size: 0.88rem; }
+    .me-card-field-input { font-size: 0.95rem; padding: 5px 1px; }
+    .me-card-student-name { font-size: 0.88rem; }
+    .me-card-ca-grid { grid-template-columns: repeat(3, 1fr); }
+    .me-card-body { padding: 8px; }
 }
 </style>
 @endpush
@@ -467,73 +503,42 @@
         <p class="me-empty-hint">Try selecting a different class, section, or subject</p>
     </div>
 
-    {{-- Mark Entry Table Card (hidden until students load) --}}
+    {{-- Mark Entry Card View (hidden until students load) --}}
     <div id="markEntryArea" class="d-none">
-        {{-- Active Field Badge --}}
-        <div id="fieldBadge" class="me-field-badge badge-all" style="display:none;">
-            <i class="fas fa-th-list"></i>
-            <span id="fieldBadgeText">All Fields</span>
-        </div>
-
-        {{-- Mobile Student Card View --}}
-        <div id="mobileCardArea" class="me-mobile-card-area d-none">
-            <div class="me-mobile-nav">
-                <button type="button" class="me-mobile-nav-btn" id="mobilePrev" onclick="mobileNavigate(-1)"><i class="fas fa-chevron-left"></i></button>
-                <div class="me-mobile-student-info">
-                    <span class="me-mobile-student-name" id="mobileStudentName">--</span>
-                    <span class="me-mobile-counter" id="mobileCounter">0 / 0</span>
+        {{-- Student Card --}}
+        <div class="me-card-wrapper" id="studentCardWrapper">
+            {{-- Card Navigation Bar --}}
+            <div class="me-card-nav">
+                <button type="button" class="me-card-nav-btn" id="cardPrev" onclick="cardNavigate(-1)" aria-label="Previous Student" title="Previous Student">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="me-card-student-info">
+                    <div class="me-card-student-meta">
+                        <div class="me-card-avatar" id="cardAvatar">?</div>
+                        <span class="me-card-student-name" id="cardStudentName">--</span>
+                    </div>
+                    <span class="me-card-counter" id="cardCounter">0 / 0</span>
                 </div>
-                <button type="button" class="me-mobile-nav-btn" id="mobileNext" onclick="mobileNavigate(1)"><i class="fas fa-chevron-right"></i></button>
+                <span class="me-save-badge idle me-card-save-badge" id="globalSaveStatus">Ready</span>
+                <button type="button" class="me-card-nav-btn" id="cardNext" onclick="cardNavigate(1)" aria-label="Next Student" title="Next Student">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
-            <div class="me-mobile-form" id="mobileForm">
+
+            {{-- Card Body (mark fields) --}}
+            <div class="me-card-body" id="cardBody">
                 {{-- dynamically built --}}
             </div>
-            <div class="me-mobile-totals" id="mobileTotals">
+
+            {{-- Card Totals Footer --}}
+            <div class="me-card-totals" id="cardTotals">
                 {{-- dynamically built --}}
-            </div>
-            <div class="me-mobile-save-status"><span class="me-save-badge idle" id="mobileSaveStatus">Ready</span></div>
-        </div>
-
-        <div class="me-table-card">
-            {{-- Table Header with Nav --}}
-            <div class="me-table-card-header">
-                <div class="me-table-card-header-left">
-                    <div class="me-table-card-icon"><i class="fas fa-table"></i></div>
-                    <div>
-                        <h3 class="me-table-card-title">Student Marks</h3>
-                        <p class="me-table-card-subtitle" id="tableSubtitle">--</p>
-                    </div>
-                </div>
-                <div class="me-table-card-header-right">
-                    <span class="me-save-badge idle" id="globalSaveStatus">Ready</span>
-                    <div class="me-student-nav">
-                        <button type="button" class="me-nav-btn" id="btnPrev" onclick="navigateStudent(-1)" aria-label="Previous Student" title="Previous Student (↑)">
-                            <i class="fas fa-chevron-up"></i>
-                        </button>
-                        <span class="me-nav-counter" id="navCounter">0 / 0</span>
-                        <button type="button" class="me-nav-btn" id="btnNext" onclick="navigateStudent(1)" aria-label="Next Student" title="Next Student (↓)">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Table --}}
-            <div class="me-table-wrapper" id="tableWrapper">
-                <table class="me-table" id="markTable">
-                    <thead id="markTableHead">
-                        {{-- thead dynamically built based on mark field selection --}}
-                    </thead>
-                    <tbody id="markTableBody">
-                        {{-- Rows dynamically injected --}}
-                    </tbody>
-                </table>
             </div>
         </div>
 
         {{-- Keyboard Hint --}}
-        <div class="me-keyboard-hint" id="keyboardHint">
-            Use <kbd>&uarr;</kbd> <kbd>&darr;</kbd> arrow keys to navigate between students &middot;
+        <div class="me-card-hint" id="keyboardHint">
+            Use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> arrow keys to navigate between students &middot;
             <kbd>Tab</kbd> to move between fields &middot;
             Marks auto-save after 900ms
         </div>
@@ -574,21 +579,15 @@
     var emptyState = document.getElementById('emptyState');
     var noStudentsState = document.getElementById('noStudentsState');
     var markEntryArea = document.getElementById('markEntryArea');
-    var markTableHead = document.getElementById('markTableHead');
-    var markTableBody = document.getElementById('markTableBody');
-    var tableSubtitle = document.getElementById('tableSubtitle');
-    var navCounter = document.getElementById('navCounter');
     var globalSaveStatus = document.getElementById('globalSaveStatus');
-    var fieldBadge = document.getElementById('fieldBadge');
-    var fieldBadgeText = document.getElementById('fieldBadgeText');
     var keyboardHint = document.getElementById('keyboardHint');
 
-    // Mobile card DOM refs
-    var mobileCardArea = document.getElementById('mobileCardArea');
-    var mobileForm = document.getElementById('mobileForm');
-    var mobileStudentName = document.getElementById('mobileStudentName');
-    var mobileCounter = document.getElementById('mobileCounter');
-    var mobileSaveStatus = document.getElementById('mobileSaveStatus');
+    // Card DOM refs
+    var cardBody = document.getElementById('cardBody');
+    var cardTotals = document.getElementById('cardTotals');
+    var cardStudentName = document.getElementById('cardStudentName');
+    var cardCounter = document.getElementById('cardCounter');
+    var cardAvatar = document.getElementById('cardAvatar');
 
     // ========== TEACHER ASSIGNMENTS DATA ==========
     var teacherAssignments = @json($teacherAssignments);
@@ -1161,379 +1160,131 @@
             });
     }
 
-    // ========== UPDATE FIELD BADGE ==========
-    function updateFieldBadge() {
-        if (currentMarkField === 'all') {
-            fieldBadge.className = 'me-field-badge badge-all';
-            fieldBadge.querySelector('i').className = 'fas fa-th-list';
-            fieldBadgeText.textContent = 'All Fields';
-        } else {
-            var info = getFieldInfo(currentMarkField);
-            var category = getFieldCategory(currentMarkField);
-            var label = info ? info.label : currentMarkField;
-            var maxVal = info ? info.max : '';
-
-            if (category === 'ca') {
-                fieldBadge.className = 'me-field-badge badge-ca';
-                fieldBadge.querySelector('i').className = 'fas fa-clipboard-list';
-            } else if (category === 'extra-ca') {
-                fieldBadge.className = 'me-field-badge badge-extra-ca';
-                fieldBadge.querySelector('i').className = 'fas fa-star';
-            } else {
-                fieldBadge.className = 'me-field-badge badge-exam';
-                fieldBadge.querySelector('i').className = 'fas fa-file-alt';
-            }
-            fieldBadgeText.textContent = label + ' (/' + maxVal + ')';
-        }
-        fieldBadge.style.display = '';
-    }
-
-    // ========== BUILD TABLE ==========
+    // ========== BUILD STUDENT CARD ==========
     function buildTable() {
-        // Build thead and tbody based on currentMarkField
-        if (currentMarkField === 'all') {
-            buildAllFieldsTable();
-        } else {
-            buildSingleFieldTable();
-        }
-
-        // Update subtitle
-        var subjectName = filterSubject.selectedOptions[0] ? filterSubject.selectedOptions[0].textContent : '--';
-        var className = filterClass.selectedOptions[0] ? filterClass.selectedOptions[0].textContent : '--';
-        var sectionName = filterSection.selectedOptions[0] ? filterSection.selectedOptions[0].textContent : '--';
-        tableSubtitle.textContent = students.length + ' students \u00B7 ' + subjectName + ' \u00B7 ' + className + ' - ' + sectionName;
-
-        navCounter.textContent = '0 / ' + students.length;
+        // Always build card view (one student at a time)
+        if (currentIndex < 0) currentIndex = 0;
+        buildStudentCard(currentIndex);
 
         // Update keyboard hint
-        if (currentMarkField === 'all') {
-            keyboardHint.innerHTML = 'Use <kbd>&uarr;</kbd> <kbd>&darr;</kbd> arrow keys to navigate between students &middot; <kbd>Tab</kbd> to move between fields &middot; Marks auto-save after 900ms';
-        } else {
-            keyboardHint.innerHTML = 'Use <kbd>&uarr;</kbd> <kbd>&darr;</kbd> arrow keys or <kbd>Enter</kbd> to navigate between students &middot; Marks auto-save after 900ms';
-        }
-
-        // Remove single-field class by default
-        var table = document.getElementById('markTable');
-        table.classList.remove('me-table-single');
-
-        // Attach auto-save listeners
-        attachMarkInputListeners();
-
-        // Show mobile card if on mobile
-        if (isMobileView()) {
-            mobileCardArea.classList.remove('d-none');
-            if (currentIndex < 0) currentIndex = 0;
-            buildMobileCard(currentIndex);
-        } else {
-            mobileCardArea.classList.add('d-none');
-        }
+        keyboardHint.innerHTML = 'Use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> arrow keys to navigate between students &middot; <kbd>Tab</kbd> to move between fields &middot; Marks auto-save after 900ms';
     }
 
-    // ========== BUILD ALL FIELDS TABLE ==========
-    function buildAllFieldsTable() {
-        // Build thead - full table with all mark columns
-        var thead = '<tr>'
-            + '<th class="col-sticky" rowspan="2">#</th>'
-            + '<th class="col-sticky" rowspan="2">Student Name</th>'
-            + '<th class="section-ca" colspan="10">Continuous Assessment (CA)</th>'
-            + '<th class="section-ca" colspan="3">Extra CA</th>'
-            + '<th class="section-exam" colspan="4">Examination</th>'
-            + '<th class="section-total" colspan="3">Totals</th>'
-            + '<th class="section-grade" rowspan="2">Grade</th>'
-            + '</tr><tr>';
-
-        // CA1-10
-        CA_FIELDS.forEach(function(f) {
-            thead += '<th class="section-ca">' + f.label + '<span class="th-sub"><br>/' + f.max + '</span></th>';
-        });
-        // Extra CA
-        EXTRA_CA_FIELDS.forEach(function(f) {
-            thead += '<th class="section-ca">' + f.label + '<span class="th-sub"><br>/' + f.max + '</span></th>';
-        });
-        // Exam
-        EXAM_FIELDS.forEach(function(f) {
-            thead += '<th class="section-exam">' + f.label + '<span class="th-sub"><br>/' + f.max + '</span></th>';
-        });
-        // Totals
-        thead += '<th class="section-total-ca">CA Total<span class="th-sub"><br>/30</span></th>';
-        thead += '<th class="section-total-exam">Exam Total<span class="th-sub"><br>/70</span></th>';
-        thead += '<th class="section-total">Grand Total<span class="th-sub"><br>/100</span></th>';
-        thead += '</tr>';
-
-        markTableHead.innerHTML = thead;
-
-        // Build tbody
-        var html = '';
-        students.forEach(function(s, idx) {
-            html += '<tr data-student-index="' + idx + '" data-student-id="' + s.id + '">';
-
-            // Row number + Student Name
-            html += '<td class="col-sticky"><div class="me-student-cell">'
-                + '<span class="me-row-num">' + (idx + 1) + '</span>'
-                + '<div class="me-student-avatar">' + getInitials(s.student_name) + '</div>'
-                + '<div><span class="me-student-name-text">' + escapeHtml(s.student_name) + '</span>'
-                + '<span class="me-student-roll">' + escapeHtml(s.roll_number) + '</span></div>'
-                + '</div></td>';
-
-            // CA1-10
-            CA_FIELDS.forEach(function(f) {
-                var val = s.marks[f.key];
-                html += '<td><input type="text" inputmode="decimal" class="me-mark-input mark-input"'
-                    + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
-                    + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
-                    + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
-                    + ' placeholder="/' + f.max + '"'
-                    + '></td>';
-            });
-
-            // Extra CA (Conduct, Handwriting, Creativity)
-            EXTRA_CA_FIELDS.forEach(function(f) {
-                var val = s.marks[f.key];
-                html += '<td><input type="text" inputmode="decimal" class="me-mark-input mark-input"'
-                    + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
-                    + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
-                    + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
-                    + ' placeholder="/' + f.max + '"'
-                    + '></td>';
-            });
-
-            // Exam fields
-            EXAM_FIELDS.forEach(function(f) {
-                var val = s.marks[f.key];
-                html += '<td><input type="text" inputmode="decimal" class="me-mark-input exam-input mark-input"'
-                    + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
-                    + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
-                    + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
-                    + ' placeholder="/' + f.max + '"'
-                    + '></td>';
-            });
-
-            // CA Total /30
-            var caTotal = s.marks.ca_total;
-            html += '<td><div class="me-total-cell ca-total" id="caTotal_' + s.id + '">' + (caTotal !== null ? caTotal : '-') + '</div></td>';
-
-            // Exam Total /70
-            var examTotal = s.marks.exam_total;
-            html += '<td><div class="me-total-cell exam-total" id="examTotal_' + s.id + '">' + (examTotal !== null ? examTotal : '-') + '</div></td>';
-
-            // Grand Total /100
-            var grandTotal = s.marks.grand_total;
-            html += '<td><div class="me-total-cell grand-total" id="grandTotal_' + s.id + '">' + (grandTotal !== null ? grandTotal : '-') + '</div></td>';
-
-            // Grade
-            var grade = s.marks.grade || '-';
-            var gradeClass = getGradeClass(grade);
-            html += '<td><div class="me-total-cell grade-cell"><span class="me-grade-badge ' + gradeClass + '" id="grade_' + s.id + '">' + grade + '</span></div></td>';
-
-            html += '</tr>';
-        });
-
-        markTableBody.innerHTML = html;
-    }
-
-    // ========== BUILD SINGLE FIELD TABLE ==========
-    function buildSingleFieldTable() {
-        var fieldInfo = getFieldInfo(currentMarkField);
-        if (!fieldInfo) {
-            // Fallback to all fields
-            buildAllFieldsTable();
-            return;
-        }
-
-        var category = getFieldCategory(currentMarkField);
-        var inputClass = 'me-mark-input-large mark-input';
-        if (category === 'exam') inputClass += ' exam-input';
-        if (category === 'extra-ca') inputClass += ' extra-ca-input';
-
-        // Add single-field table class for larger row styling
-        var table = document.getElementById('markTable');
-        table.classList.add('me-table-single');
-
-        // Build thead - single field view: #, Student Name, Field Name, CA Total, Exam Total, Grand Total, Grade
-        var thead = '<tr>'
-            + '<th class="col-row-num-head" style="min-width:40px;">#</th>'
-            + '<th class="col-sticky" style="min-width:200px;">Student Name</th>';
-
-        // The selected field header
-        var sectionClass = 'section-ca';
-        if (category === 'exam') sectionClass = 'section-exam';
-        if (category === 'extra-ca') sectionClass = 'section-ca';
-
-        thead += '<th class="' + sectionClass + '" style="min-width:120px;">' + fieldInfo.label + '<span class="th-sub"><br>/' + fieldInfo.max + '</span></th>';
-        thead += '<th class="section-total-ca col-total-ca">CA Total<span class="th-sub"><br>/30</span></th>';
-        thead += '<th class="section-total-exam col-total-exam">Exam Total<span class="th-sub"><br>/70</span></th>';
-        thead += '<th class="section-total col-total-grand">Grand Total<span class="th-sub"><br>/100</span></th>';
-        thead += '<th class="section-grade col-grade">Grade</th>';
-        thead += '</tr>';
-
-        markTableHead.innerHTML = thead;
-
-        // Build tbody
-        var html = '';
-        students.forEach(function(s, idx) {
-            html += '<tr data-student-index="' + idx + '" data-student-id="' + s.id + '">';
-
-            // Row number
-            html += '<td class="col-row-num"><span class="me-row-num">' + (idx + 1) + '</span></td>';
-
-            // Student Name (sticky)
-            html += '<td class="col-sticky"><div class="me-student-cell">'
-                + '<div class="me-student-avatar">' + getInitials(s.student_name) + '</div>'
-                + '<div><span class="me-student-name-text">' + escapeHtml(s.student_name) + '</span>'
-                + '<span class="me-student-roll">' + escapeHtml(s.roll_number) + '</span></div>'
-                + '</div></td>';
-
-            // The selected mark field input (large)
-            var val = s.marks[currentMarkField];
-            html += '<td><input type="text" inputmode="decimal" class="' + inputClass + '"'
-                + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
-                + ' data-mark-key="' + currentMarkField + '" data-max="' + fieldInfo.max + '"'
-                + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
-                + ' placeholder="/' + fieldInfo.max + '"'
-                + '></td>';
-
-            // CA Total (read-only)
-            var caTotal = s.marks.ca_total;
-            html += '<td class="col-total-ca"><div class="me-total-cell ca-total" id="caTotal_' + s.id + '">' + (caTotal !== null ? caTotal : '-') + '</div></td>';
-
-            // Exam Total (read-only)
-            var examTotal = s.marks.exam_total;
-            html += '<td class="col-total-exam"><div class="me-total-cell exam-total" id="examTotal_' + s.id + '">' + (examTotal !== null ? examTotal : '-') + '</div></td>';
-
-            // Grand Total (read-only)
-            var grandTotal = s.marks.grand_total;
-            html += '<td class="col-total-grand"><div class="me-total-cell grand-total" id="grandTotal_' + s.id + '">' + (grandTotal !== null ? grandTotal : '-') + '</div></td>';
-
-            // Grade (read-only)
-            var grade = s.marks.grade || '-';
-            var gradeClass = getGradeClass(grade);
-            html += '<td class="col-grade"><div class="me-total-cell grade-cell"><span class="me-grade-badge ' + gradeClass + '" id="grade_' + s.id + '">' + grade + '</span></div></td>';
-
-            html += '</tr>';
-        });
-
-        markTableBody.innerHTML = html;
-    }
-
-    // ========== MOBILE CARD VIEW ==========
-    function isMobileView() {
-        return window.innerWidth <= 768;
-    }
-
-    function buildMobileCard(idx) {
+    function buildStudentCard(idx) {
         if (idx < 0 || idx >= students.length) return;
         var s = students[idx];
 
-        mobileStudentName.textContent = s.student_name;
-        mobileCounter.textContent = (idx + 1) + ' / ' + students.length;
-
-        // Update nav buttons
-        document.getElementById('mobilePrev').disabled = idx === 0;
-        document.getElementById('mobileNext').disabled = idx === students.length - 1;
+        // Update nav bar
+        cardStudentName.textContent = s.student_name;
+        cardAvatar.textContent = getInitials(s.student_name);
+        cardCounter.textContent = (idx + 1) + ' / ' + students.length;
+        document.getElementById('cardPrev').disabled = idx === 0;
+        document.getElementById('cardNext').disabled = idx === students.length - 1;
 
         var html = '';
 
         // CA Section
-        html += '<div class="me-mobile-section-label ca-label">Continuous Assessment</div>';
-        html += '<div class="me-mobile-ca-grid">';
+        html += '<div class="me-card-section-label ca-label">Continuous Assessment</div>';
+        html += '<div class="me-card-ca-grid">';
 
         // CA1-CA10
         CA_FIELDS.forEach(function(f) {
             var val = s.marks[f.key];
-            html += '<div class="me-mobile-field">'
-                + '<span class="me-mobile-field-label">' + f.label + '</span>'
-                + '<input type="text" inputmode="decimal" class="me-mobile-field-input mark-input"'
+            html += '<div class="me-card-field">'
+                + '<span class="me-card-field-label">' + f.label + '</span>'
+                + '<input type="text" inputmode="decimal" class="me-card-field-input mark-input"'
                 + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
                 + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
                 + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
+                + ' placeholder="/' + f.max + '"'
                 + (isLocked ? ' disabled' : '')
                 + '>'
-                + '<span class="me-mobile-field-max">/' + f.max + '</span>'
+                + '<span class="me-card-field-max">/' + f.max + '</span>'
                 + '</div>';
         });
 
         // Extra CA: Conduct, Handwriting, Creativity
         EXTRA_CA_FIELDS.forEach(function(f) {
             var val = s.marks[f.key];
-            html += '<div class="me-mobile-field">'
-                + '<span class="me-mobile-field-label">' + f.label + '</span>'
-                + '<input type="text" inputmode="decimal" class="me-mobile-field-input mark-input"'
+            html += '<div class="me-card-field">'
+                + '<span class="me-card-field-label">' + f.label + '</span>'
+                + '<input type="text" inputmode="decimal" class="me-card-field-input mark-input"'
                 + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
                 + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
                 + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
+                + ' placeholder="/' + f.max + '"'
                 + (isLocked ? ' disabled' : '')
                 + '>'
-                + '<span class="me-mobile-field-max">/' + f.max + '</span>'
+                + '<span class="me-card-field-max">/' + f.max + '</span>'
                 + '</div>';
         });
 
         html += '</div>';
 
         // Exam Section
-        html += '<div class="me-mobile-section-label exam-label">Examination</div>';
-        html += '<div class="me-mobile-exam-grid">';
+        html += '<div class="me-card-section-label exam-label">Examination</div>';
+        html += '<div class="me-card-exam-grid">';
 
         EXAM_FIELDS.forEach(function(f) {
             var val = s.marks[f.key];
-            html += '<div class="me-mobile-field field-exam">'
-                + '<span class="me-mobile-field-label">' + f.label + '</span>'
-                + '<input type="text" inputmode="decimal" class="me-mobile-field-input mark-input exam-input"'
+            html += '<div class="me-card-field field-exam">'
+                + '<span class="me-card-field-label">' + f.label + '</span>'
+                + '<input type="text" inputmode="decimal" class="me-card-field-input mark-input exam-input"'
                 + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
                 + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
                 + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
+                + ' placeholder="/' + f.max + '"'
                 + (isLocked ? ' disabled' : '')
                 + '>'
-                + '<span class="me-mobile-field-max">/' + f.max + '</span>'
+                + '<span class="me-card-field-max">/' + f.max + '</span>'
                 + '</div>';
         });
 
         html += '</div>';
 
-        mobileForm.innerHTML = html;
+        cardBody.innerHTML = html;
 
-        // Build totals
+        // Build totals footer
         var caTotal = s.marks.ca_total;
         var examTotal = s.marks.exam_total;
         var grandTotal = s.marks.grand_total;
         var grade = s.marks.grade || '-';
         var gradeClass = getGradeClass(grade);
 
-        var totalsHtml = '<div class="me-mobile-total-item">'
-            + '<div class="me-mobile-total-label">CA /30</div>'
-            + '<div class="me-mobile-total-value ca-val" id="mobileCaTotal_' + s.id + '">' + (caTotal !== null && caTotal !== undefined ? parseFloat(caTotal).toFixed(1) : '-') + '</div>'
+        var totalsHtml = '<div class="me-card-total-item">'
+            + '<div class="me-card-total-label">CA /30</div>'
+            + '<div class="me-card-total-value ca-val" id="cardCaTotal_' + s.id + '">' + (caTotal !== null && caTotal !== undefined ? parseFloat(caTotal).toFixed(1) : '-') + '</div>'
             + '</div>'
-            + '<div class="me-mobile-total-item">'
-            + '<div class="me-mobile-total-label">Exam /70</div>'
-            + '<div class="me-mobile-total-value exam-val" id="mobileExamTotal_' + s.id + '">' + (examTotal !== null && examTotal !== undefined ? parseFloat(examTotal).toFixed(1) : '-') + '</div>'
+            + '<div class="me-card-total-item">'
+            + '<div class="me-card-total-label">Exam /70</div>'
+            + '<div class="me-card-total-value exam-val" id="cardExamTotal_' + s.id + '">' + (examTotal !== null && examTotal !== undefined ? parseFloat(examTotal).toFixed(1) : '-') + '</div>'
             + '</div>'
-            + '<div class="me-mobile-total-item">'
-            + '<div class="me-mobile-total-label">Total /100</div>'
-            + '<div class="me-mobile-total-value grand-val" id="mobileGrandTotal_' + s.id + '">' + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</div>'
+            + '<div class="me-card-total-item">'
+            + '<div class="me-card-total-label">Total /100</div>'
+            + '<div class="me-card-total-value grand-val" id="cardGrandTotal_' + s.id + '">' + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</div>'
             + '</div>'
-            + '<div class="me-mobile-total-item">'
-            + '<div class="me-mobile-total-label">Grade</div>'
-            + '<div class="me-mobile-total-value"><span class="me-grade-badge ' + gradeClass + '" id="mobileGrade_' + s.id + '">' + grade + '</span></div>'
+            + '<div class="me-card-total-item">'
+            + '<div class="me-card-total-label">Grade</div>'
+            + '<div class="me-card-total-value"><span class="me-grade-badge ' + gradeClass + '" id="cardGrade_' + s.id + '">' + grade + '</span></div>'
             + '</div>';
 
-        document.getElementById('mobileTotals').innerHTML = totalsHtml;
+        cardTotals.innerHTML = totalsHtml;
 
         // Attach listeners to the new inputs
         attachMarkInputListeners();
     }
 
-    window.mobileNavigate = function(dir) {
+    // Card navigation
+    window.cardNavigate = function(dir) {
         var newIdx = currentIndex + dir;
         if (newIdx < 0) newIdx = 0;
         if (newIdx >= students.length) newIdx = students.length - 1;
         if (newIdx === currentIndex) return;
         currentIndex = newIdx;
-        if (isMobileView()) {
-            buildMobileCard(currentIndex);
-        }
-        // Also update table nav
-        navCounter.textContent = (currentIndex + 1) + ' / ' + students.length;
-        document.getElementById('btnPrev').disabled = currentIndex === 0;
-        document.getElementById('btnNext').disabled = currentIndex === students.length - 1;
+        buildStudentCard(currentIndex);
+        // Focus the first input in the card
+        var firstInput = cardBody.querySelector('.mark-input');
+        if (firstInput) firstInput.focus();
     };
 
     // Swipe gesture support
@@ -1541,37 +1292,27 @@
     var swipeStartY = 0;
     var swipeThreshold = 50;
 
-    if (mobileForm) {
-        mobileForm.addEventListener('touchstart', function(e) {
+    if (cardBody) {
+        cardBody.addEventListener('touchstart', function(e) {
             swipeStartX = e.changedTouches[0].screenX;
             swipeStartY = e.changedTouches[0].screenY;
         }, { passive: true });
 
-        mobileForm.addEventListener('touchend', function(e) {
+        cardBody.addEventListener('touchend', function(e) {
             var deltaX = e.changedTouches[0].screenX - swipeStartX;
             var deltaY = e.changedTouches[0].screenY - swipeStartY;
             // Only trigger if horizontal swipe is dominant
             if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
                 if (deltaX > 0) {
-                    mobileNavigate(-1); // swipe right = previous
+                    cardNavigate(-1); // swipe right = previous
                 } else {
-                    mobileNavigate(1); // swipe left = next
+                    cardNavigate(1); // swipe left = next
                 }
             }
         }, { passive: true });
     }
 
-    // Handle resize: switch between table and card view
-    window.addEventListener('resize', function() {
-        if (students.length > 0 && !markEntryArea.classList.contains('d-none')) {
-            if (isMobileView()) {
-                mobileCardArea.classList.remove('d-none');
-                buildMobileCard(currentIndex >= 0 ? currentIndex : 0);
-            } else {
-                mobileCardArea.classList.add('d-none');
-            }
-        }
-    });
+    // No resize handler needed — card view works on all sizes
 
     // ========== MARK INPUT LISTENERS ==========
     function attachMarkInputListeners() {
@@ -1582,21 +1323,15 @@
                 if ([8, 9, 13, 27, 46, 35, 36, 37, 38, 39, 40].indexOf(e.keyCode) !== -1) return;
                 if ((e.ctrlKey || e.metaKey) && [65, 67, 86, 88, 90].indexOf(e.keyCode) !== -1) return;
 
-                // Arrow up/down for student navigation when not in an input context
-                if (e.keyCode === 38 && e.ctrlKey) { e.preventDefault(); navigateStudent(-1); return; }
-                if (e.keyCode === 40 && e.ctrlKey) { e.preventDefault(); navigateStudent(1); return; }
+                // Ctrl+Arrow left/right for student navigation while in input
+                if (e.keyCode === 37 && e.ctrlKey) { e.preventDefault(); cardNavigate(-1); return; }
+                if (e.keyCode === 39 && e.ctrlKey) { e.preventDefault(); cardNavigate(1); return; }
 
-                // In single-field mode, Enter moves to next student
-                if (e.keyCode === 13 && currentMarkField !== 'all') {
+                // Enter moves to next student
+                if (e.keyCode === 13) {
                     e.preventDefault();
-                    navigateStudent(1);
+                    cardNavigate(1);
                     return;
-                }
-
-                // In single-field mode, Arrow Up/Down navigates students directly
-                if (currentMarkField !== 'all') {
-                    if (e.keyCode === 38) { e.preventDefault(); navigateStudent(-1); return; }
-                    if (e.keyCode === 40) { e.preventDefault(); navigateStudent(1); return; }
                 }
 
                 // Period/comma/Amharic decimal interception
@@ -1676,10 +1411,10 @@
                 saveMark(studentId, markKey, this.value);
             });
 
-            // FOCUS: Highlight row
+            // FOCUS: Update current index
             inp.addEventListener('focus', function() {
                 var idx = parseInt(this.dataset.studentIndex);
-                highlightRow(idx);
+                if (!isNaN(idx) && idx >= 0) currentIndex = idx;
             });
         });
     }
@@ -1719,15 +1454,15 @@
         s.marks.exam_total = examTotal;
         s.marks.grand_total = grandTotal;
 
-        // Update DOM
-        var caEl = document.getElementById('caTotal_' + s.id);
-        var exEl = document.getElementById('examTotal_' + s.id);
-        var gtEl = document.getElementById('grandTotal_' + s.id);
-        var grEl = document.getElementById('grade_' + s.id);
+        // Update DOM — card totals
+        var caEl = document.getElementById('cardCaTotal_' + s.id);
+        var exEl = document.getElementById('cardExamTotal_' + s.id);
+        var gtEl = document.getElementById('cardGrandTotal_' + s.id);
+        var grEl = document.getElementById('cardGrade_' + s.id);
 
-        if (caEl) caEl.textContent = caScaled.toFixed(2);
+        if (caEl) caEl.textContent = caScaled.toFixed(1);
         if (exEl) exEl.textContent = examTotal.toFixed(1);
-        if (gtEl) gtEl.textContent = grandTotal.toFixed(2);
+        if (gtEl) gtEl.textContent = grandTotal.toFixed(1);
 
         // Grade calculation
         var grade = calcGrade(grandTotal);
@@ -1736,16 +1471,6 @@
             grEl.textContent = grade;
             grEl.className = 'me-grade-badge ' + getGradeClass(grade);
         }
-
-        // Update mobile card totals if visible
-        var mCaEl = document.getElementById('mobileCaTotal_' + s.id);
-        var mExEl = document.getElementById('mobileExamTotal_' + s.id);
-        var mGtEl = document.getElementById('mobileGrandTotal_' + s.id);
-        var mGrEl = document.getElementById('mobileGrade_' + s.id);
-        if (mCaEl) mCaEl.textContent = caScaled.toFixed(1);
-        if (mExEl) mExEl.textContent = examTotal.toFixed(1);
-        if (mGtEl) mGtEl.textContent = grandTotal.toFixed(1);
-        if (mGrEl) { mGrEl.textContent = grade; mGrEl.className = 'me-grade-badge ' + getGradeClass(grade); }
     }
 
     function calcGrade(total) {
@@ -1827,28 +1552,18 @@
                     if (res.grand_total !== undefined) students[idx].marks.grand_total = res.grand_total;
                     if (res.grade !== undefined) students[idx].marks.grade = res.grade;
 
-                    // Update total DOM cells
-                    var caEl = document.getElementById('caTotal_' + studentId);
-                    var exEl = document.getElementById('examTotal_' + studentId);
-                    var gtEl = document.getElementById('grandTotal_' + studentId);
-                    var grEl = document.getElementById('grade_' + studentId);
-                    if (caEl) caEl.textContent = res.ca_total !== undefined ? parseFloat(res.ca_total).toFixed(2) : '-';
+                    // Update card total DOM cells
+                    var caEl = document.getElementById('cardCaTotal_' + studentId);
+                    var exEl = document.getElementById('cardExamTotal_' + studentId);
+                    var gtEl = document.getElementById('cardGrandTotal_' + studentId);
+                    var grEl = document.getElementById('cardGrade_' + studentId);
+                    if (caEl) caEl.textContent = res.ca_total !== undefined ? parseFloat(res.ca_total).toFixed(1) : '-';
                     if (exEl) exEl.textContent = res.exam_total !== undefined ? parseFloat(res.exam_total).toFixed(1) : '-';
-                    if (gtEl) gtEl.textContent = res.grand_total !== undefined ? parseFloat(res.grand_total).toFixed(2) : '-';
+                    if (gtEl) gtEl.textContent = res.grand_total !== undefined ? parseFloat(res.grand_total).toFixed(1) : '-';
                     if (grEl && res.grade) {
                         grEl.textContent = res.grade;
                         grEl.className = 'me-grade-badge ' + getGradeClass(res.grade);
                     }
-
-                    // Update mobile card totals
-                    var mCaEl = document.getElementById('mobileCaTotal_' + studentId);
-                    var mExEl = document.getElementById('mobileExamTotal_' + studentId);
-                    var mGtEl = document.getElementById('mobileGrandTotal_' + studentId);
-                    var mGrEl = document.getElementById('mobileGrade_' + studentId);
-                    if (mCaEl) mCaEl.textContent = res.ca_total !== undefined ? parseFloat(res.ca_total).toFixed(1) : '-';
-                    if (mExEl) mExEl.textContent = res.exam_total !== undefined ? parseFloat(res.exam_total).toFixed(1) : '-';
-                    if (mGtEl) mGtEl.textContent = res.grand_total !== undefined ? parseFloat(res.grand_total).toFixed(1) : '-';
-                    if (mGrEl && res.grade) { mGrEl.textContent = res.grade; mGrEl.className = 'me-grade-badge ' + getGradeClass(res.grade); }
                 }
 
                 setTimeout(function() { setGlobalSaveStatus('idle', 'Ready'); }, 2000);
@@ -1876,83 +1591,30 @@
     function setGlobalSaveStatus(state, text) {
         globalSaveStatus.className = 'me-save-badge ' + state;
         globalSaveStatus.textContent = text;
-        if (mobileSaveStatus) {
-            mobileSaveStatus.className = 'me-save-badge ' + state;
-            mobileSaveStatus.textContent = text;
-        }
     }
 
     // ========== NAVIGATION ==========
     window.navigateStudent = function(dir) {
-        if (students.length === 0) return;
-        var newIdx = currentIndex + dir;
-        if (newIdx < 0) newIdx = 0;
-        if (newIdx >= students.length) newIdx = students.length - 1;
-
-        highlightRow(newIdx);
-        scrollToRow(newIdx);
-
-        // Focus the mark input in that row
-        var row = markTableBody.querySelector('tr[data-student-index="' + newIdx + '"]');
-        if (row) {
-            var firstInput = row.querySelector('.mark-input');
-            if (firstInput) firstInput.focus();
-        }
-
-        // Update mobile card if on mobile
-        if (isMobileView()) {
-            buildMobileCard(newIdx);
-        }
+        cardNavigate(dir);
     };
-
-    function highlightRow(idx) {
-        // Remove previous highlight
-        markTableBody.querySelectorAll('tr.row-highlight').forEach(function(tr) {
-            tr.classList.remove('row-highlight');
-        });
-        // Add highlight
-        var row = markTableBody.querySelector('tr[data-student-index="' + idx + '"]');
-        if (row) row.classList.add('row-highlight');
-
-        currentIndex = idx;
-        navCounter.textContent = (idx + 1) + ' / ' + students.length;
-
-        // Update nav buttons
-        document.getElementById('btnPrev').disabled = idx === 0;
-        document.getElementById('btnNext').disabled = idx === students.length - 1;
-    }
-
-    function scrollToRow(idx) {
-        var row = markTableBody.querySelector('tr[data-student-index="' + idx + '"]');
-        if (row) {
-            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
 
     // ========== KEYBOARD NAVIGATION ==========
     document.addEventListener('keydown', function(e) {
-        // Arrow up/down when not in a mark input
+        // Arrow left/right for student navigation when not in a mark input
         if (e.target.classList.contains('mark-input')) {
-            // Ctrl+Arrow for student navigation while in input (all-fields mode)
-            if (currentMarkField === 'all') {
-                if (e.ctrlKey && e.key === 'ArrowUp') { e.preventDefault(); navigateStudent(-1); }
-                if (e.ctrlKey && e.key === 'ArrowDown') { e.preventDefault(); navigateStudent(1); }
-            }
             return;
         }
 
-        if (e.key === 'ArrowUp') { e.preventDefault(); navigateStudent(-1); }
-        if (e.key === 'ArrowDown') { e.preventDefault(); navigateStudent(1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); cardNavigate(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); cardNavigate(1); }
     });
 
     // ========== UI STATE HELPERS ==========
     function hideMarkEntry() {
         markEntryArea.classList.add('d-none');
-        fieldBadge.style.display = 'none';
         emptyState.classList.remove('d-none');
         noStudentsState.classList.add('d-none');
         loadingState.classList.add('d-none');
-        mobileCardArea.classList.add('d-none');
         // Show the filter panel again when mark entry is hidden
         expandFilterPanel();
     }
@@ -2006,18 +1668,16 @@
         loadingState.classList.add('d-none');
         // Collapse the filter panel and show summary
         collapseFilterPanel();
-        // Show mobile card if on mobile
-        if (isMobileView() && students.length > 0) {
-            mobileCardArea.classList.remove('d-none');
+        // Build the first student card
+        if (students.length > 0) {
             currentIndex = 0;
-            buildMobileCard(0);
+            buildStudentCard(0);
         }
     }
 
     function showLoading() {
         loadingState.classList.remove('d-none');
         markEntryArea.classList.add('d-none');
-        fieldBadge.style.display = 'none';
         emptyState.classList.add('d-none');
         noStudentsState.classList.add('d-none');
     }
@@ -2025,7 +1685,6 @@
     function showNoStudents() {
         noStudentsState.classList.remove('d-none');
         markEntryArea.classList.add('d-none');
-        fieldBadge.style.display = 'none';
         emptyState.classList.add('d-none');
         loadingState.classList.add('d-none');
     }
