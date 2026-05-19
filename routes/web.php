@@ -118,7 +118,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('subject-assignments/api/classes', [SubjectAssignmentController::class, 'apiClasses'])->name('subject-assignments.api.classes');
     Route::get('subject-assignments/api/sections', [SubjectAssignmentController::class, 'apiSections'])->name('subject-assignments.api.sections');
 
-    Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
+    // Mark Entry API routes (MUST be defined BEFORE the resource route to avoid conflicts)
     Route::get('mark-entries/api/terms', [MarkEntryController::class, 'apiTerms'])->name('mark-entries.api.terms');
     Route::get('mark-entries/api/classes', [MarkEntryController::class, 'apiClasses'])->name('mark-entries.api.classes');
     Route::get('mark-entries/api/sections', [MarkEntryController::class, 'apiSections'])->name('mark-entries.api.sections');
@@ -127,6 +127,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students');
     Route::post('mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save');
     Route::get('mark-entries/api/check-lock', [MarkEntryLockController::class, 'apiCheckLock'])->name('mark-entries.api.check-lock');
+    Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
 
     // Mark Entry Lock Management (Branch Principal / Admin)
     Route::get('mark-entry-locks', [MarkEntryLockController::class, 'index'])->name('mark-entry-locks.index')->middleware('permission:mark_entries.view');

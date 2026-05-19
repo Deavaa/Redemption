@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\AcademicYear;
 use App\Models\ClassRoom;
 use App\Models\Section;
+use App\Models\Role;
 
 class StudentDataSeeder extends Seeder
 {
@@ -285,7 +286,18 @@ class StudentDataSeeder extends Seeder
                     'is_active'  => true,
                 ]
             );
+            // Set email_verified_at separately (not in $fillable)
+            if (!$user->email_verified_at) {
+                $user->email_verified_at = now();
+                $user->save();
+            }
             $userCounter++;
+
+            // Assign Spatie 'student' role if not already assigned
+            $studentRole = Role::where('name', 'student')->first();
+            if ($studentRole && !$user->roles()->where('role_id', $studentRole->id)->exists()) {
+                $user->roles()->attach($studentRole->id);
+            }
 
             // ── Create Student record ──────────────────────────────────
             Student::updateOrCreate(

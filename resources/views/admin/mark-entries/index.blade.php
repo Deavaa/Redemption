@@ -624,6 +624,9 @@
     // ========== TEACHER ASSIGNMENTS DATA ==========
     var teacherAssignments = @json($teacherAssignments);
 
+    // ========== SERVER-SIDE SECTIONS DATA (fallback) ==========
+    var serverSections = @json($sections->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'class_id' => $s->class_id]));
+
     // ========== API ROUTES ==========
     var API_TERMS = '{{ route("admin.mark-entries.api.terms") }}';
     var API_CLASSES = '{{ route("admin.mark-entries.api.classes") }}';
@@ -746,8 +749,14 @@
         if (!ayId) { updateLoadButton(); return; }
 
         // Load terms
-        fetch(API_TERMS + '?academic_year_id=' + ayId, { credentials: 'same-origin' })
-            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        fetch(API_TERMS + '?academic_year_id=' + ayId, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                if (!r.ok) {
+                    if (r.status === 302 || r.redirected) throw new Error('Session expired. Please refresh the page.');
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
             .then(function(data) {
                 filterTerm.innerHTML = '<option value="">-- Select Term --</option>';
                 data.forEach(function(t) {
@@ -762,7 +771,7 @@
                     filterTerm.dispatchEvent(new Event('change'));
                 }
             })
-            .catch(function(err) { console.error('Failed to load terms:', err); });
+            .catch(function(err) { console.error('[MarkEntry] Failed to load terms:', err); });
 
         // Load classes
         if (teacherAssignments && teacherAssignments.length > 0) {
@@ -917,13 +926,25 @@
         var ayId = filterAy.value;
         if (!classId) return;
 
+        console.log('[MarkEntry] loadSections() called, classId=' + classId + ', API_SECTIONS=' + API_SECTIONS);
+
         var url = API_SECTIONS + '?class_id=' + classId;
-        fetch(url, { credentials: 'same-origin' })
-            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                console.log('[MarkEntry] loadSections response: status=' + r.status + ', redirected=' + r.redirected);
+                if (!r.ok) {
+                    if (r.status === 302 || r.redirected) {
+                        throw new Error('Session expired. Please refresh the page and log in again.');
+                    }
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
             .then(function(data) {
                 filterSection.innerHTML = '<option value="">-- Select Section --</option>';
                 // API returns array of {id, name} directly
                 var sections = Array.isArray(data) ? data : (data.sections || []);
+                console.log('[MarkEntry] loadSections returned ' + sections.length + ' sections for classId=' + classId, sections);
 
                 // Filter by teacher assignments if teacher
                 if (teacherAssignments && teacherAssignments.length > 0) {
@@ -937,21 +958,46 @@
                     }
                 }
 
-                sections.forEach(function(s) {
-                    var opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.textContent = s.name;
-                    filterSection.appendChild(opt);
-                });
-                filterSection.disabled = sections.length === 0;
-
-                // Auto-select if only one
-                if (sections.length === 1) {
-                    filterSection.value = sections[0].id;
-                    filterSection.dispatchEvent(new Event('change'));
-                }
+                populateSectionsDropdown(sections, classId);
             })
-            .catch(function(err) { console.error('Failed to load sections:', err); });
+            .catch(function(err) {
+                console.error('[MarkEntry] Failed to load sections via API:', err);
+                // FALLBACK: Use server-side sections data
+                console.log('[MarkEntry] Falling back to server-side sections data...');
+                var fallbackSections = serverSections.filter(function(s) { return s.class_id == classId; });
+                if (fallbackSections.length > 0) {
+                    populateSectionsDropdown(fallbackSections, classId);
+                } else {
+                    filterSection.innerHTML = '<option value="">-- Error loading sections --</option>';
+                    filterSection.disabled = true;
+                }
+            });
+    }
+
+    // Helper: populate sections dropdown from data
+    function populateSectionsDropdown(sections, classId) {
+        filterSection.innerHTML = '<option value="">-- Select Section --</option>';
+
+        if (sections.length === 0) {
+            var opt = document.createElement('option');
+            opt.disabled = true;
+            opt.textContent = 'No sections found';
+            filterSection.appendChild(opt);
+        }
+
+        sections.forEach(function(s) {
+            var opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name;
+            filterSection.appendChild(opt);
+        });
+        filterSection.disabled = sections.length === 0;
+
+        // Auto-select if only one
+        if (sections.length === 1) {
+            filterSection.value = sections[0].id;
+            filterSection.dispatchEvent(new Event('change'));
+        }
     }
 
     // ========== LOAD SUBJECTS ==========
@@ -961,12 +1007,24 @@
         var ayId = filterAy.value;
         if (!classId || !ayId) return;
 
+        console.log('[MarkEntry] loadSubjects() called, classId=' + classId + ', sectionId=' + sectionId);
+
         var url = API_SUBJECTS + '?class_id=' + classId + '&section_id=' + (sectionId || '') + '&academic_year_id=' + ayId;
-        fetch(url, { credentials: 'same-origin' })
-            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                console.log('[MarkEntry] loadSubjects response: status=' + r.status + ', redirected=' + r.redirected);
+                if (!r.ok) {
+                    if (r.status === 302 || r.redirected) {
+                        throw new Error('Session expired. Please refresh the page and log in again.');
+                    }
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
             .then(function(data) {
                 filterSubject.innerHTML = '<option value="">-- Select Subject --</option>';
                 var subjects = Array.isArray(data) ? data : (data.subjects || []);
+                console.log('[MarkEntry] loadSubjects returned ' + subjects.length + ' subjects', subjects);
 
                 // Filter by teacher assignments if teacher
                 if (teacherAssignments && teacherAssignments.length > 0) {
@@ -986,6 +1044,13 @@
                     }
                 }
 
+                if (subjects.length === 0) {
+                    var opt = document.createElement('option');
+                    opt.disabled = true;
+                    opt.textContent = 'No subjects found';
+                    filterSubject.appendChild(opt);
+                }
+
                 subjects.forEach(function(s) {
                     var opt = document.createElement('option');
                     opt.value = s.id;
@@ -1002,7 +1067,11 @@
 
                 updateLoadButton();
             })
-            .catch(function(err) { console.error('Failed to load subjects:', err); });
+            .catch(function(err) {
+                console.error('[MarkEntry] Failed to load subjects:', err);
+                filterSubject.innerHTML = '<option value="">-- Error loading subjects --</option>';
+                filterSubject.disabled = true;
+            });
     }
 
     // ========== CHECK LOCK STATUS ==========
@@ -1011,8 +1080,16 @@
         var termId = filterTerm.value;
         if (!ayId || !termId) { hideLockBanner(); return; }
 
-        fetch(API_CHECK_LOCK + '?academic_year_id=' + ayId + '&term_id=' + termId, { credentials: 'same-origin' })
-            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        fetch(API_CHECK_LOCK + '?academic_year_id=' + ayId + '&term_id=' + termId, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                if (!r.ok) {
+                    if (r.status === 302 || r.redirected) {
+                        throw new Error('Session expired. Please refresh the page and log in again.');
+                    }
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
             .then(function(data) {
                 isLocked = !!(data.is_locked);
                 hasPermission = !!(data.has_permission);
@@ -1029,7 +1106,7 @@
                 updateInputLockState();
             })
             .catch(function(err) {
-                console.error('Failed to check lock status:', err);
+                console.error('[MarkEntry] Failed to check lock status:', err);
                 hideLockBanner();
             });
     }
@@ -1085,8 +1162,14 @@
             + '&section_id=' + sectionId
             + '&subject_id=' + subjectId;
 
-        fetch(url, { credentials: 'same-origin' })
-            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                if (!r.ok) {
+                    if (r.status === 302 || r.redirected) throw new Error('Session expired. Please refresh the page.');
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
             .then(function(data) {
                 if (data.error) throw new Error(data.error);
 
