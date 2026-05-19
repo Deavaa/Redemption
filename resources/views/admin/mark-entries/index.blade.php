@@ -37,7 +37,7 @@
 .me-filter-title { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0; }
 .me-filter-desc { font-size: 0.82rem; color: #9ca3af; margin: 0.1rem 0 0; }
 .me-filter-body { padding: 1.25rem 1.5rem; }
-.me-filter-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
+.me-filter-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
 .me-filter-group { display: flex; flex-direction: column; }
 .me-filter-label { font-weight: 600; color: #374151; margin-bottom: 0.4rem; font-size: 0.85rem; }
 .me-filter-label .me-required { color: #ef4444; margin-left: 2px; }
@@ -386,7 +386,7 @@
             <div class="me-filter-icon"><i class="fas fa-filter"></i></div>
             <div>
                 <h3 class="me-filter-title">Select Class & Subject</h3>
-                <p class="me-filter-desc">Choose academic year, term, class, section, subject, and mark field to load students</p>
+                <p class="me-filter-desc">Choose academic year, term, class, section, and subject to load students</p>
             </div>
         </div>
         <div class="me-filter-body">
@@ -428,38 +428,7 @@
                         <option value="">-- Select Subject --</option>
                     </select>
                 </div>
-                <div class="me-filter-group">
-                    <label class="me-filter-label" for="filterMarkField">Mark Field <span class="me-required">*</span></label>
-                    <select id="filterMarkField" class="me-filter-select">
-                        <option value="">-- Select Mark Field --</option>
-                        <optgroup label="All Fields">
-                            <option value="all">All Fields (Full Table)</option>
-                        </optgroup>
-                        <optgroup label="Continuous Assessment">
-                            <option value="ca1">CA1 (/5)</option>
-                            <option value="ca2">CA2 (/5)</option>
-                            <option value="ca3">CA3 (/5)</option>
-                            <option value="ca4">CA4 (/5)</option>
-                            <option value="ca5">CA5 (/5)</option>
-                            <option value="ca6">CA6 (/5)</option>
-                            <option value="ca7">CA7 (/5)</option>
-                            <option value="ca8">CA8 (/5)</option>
-                            <option value="ca9">CA9 (/5)</option>
-                            <option value="ca10">CA10 (/5)</option>
-                        </optgroup>
-                        <optgroup label="Extra CA">
-                            <option value="conduct">Conduct (/5)</option>
-                            <option value="handwriting">Handwriting (/5)</option>
-                            <option value="creativity">Creativity (/10)</option>
-                        </optgroup>
-                        <optgroup label="Examination">
-                            <option value="test1">Test 1 (/10)</option>
-                            <option value="test2">Test 2 (/10)</option>
-                            <option value="mid_term">Mid-Term (/20)</option>
-                            <option value="final_exam">Final Exam (/30)</option>
-                        </optgroup>
-                    </select>
-                </div>
+
             </div>
             <div style="margin-top:1rem;display:flex;gap:0.75rem;align-items:center;">
                 <button type="button" class="btn-modern btn-modern-primary" id="btnLoadStudents" style="font-size:0.85rem;padding:0.55rem 1.25rem;" disabled>
@@ -487,8 +456,8 @@
     {{-- Empty State --}}
     <div id="emptyState" class="me-empty">
         <i class="fas fa-hand-pointer"></i>
-        <p>Select academic year, term, class, section, subject, and mark field above to begin entering marks</p>
-        <p class="me-empty-hint">Use the filter panel to choose the class, subject, and mark field, then click "Load Students"</p>
+        <p>Select academic year, term, class, section, and subject above to begin entering marks</p>
+        <p class="me-empty-hint">Use the filter panel to choose the class and subject, then click "Load Students"</p>
     </div>
 
     {{-- No Students State --}}
@@ -592,7 +561,7 @@
     var filterClass = document.getElementById('filterClass');
     var filterSection = document.getElementById('filterSection');
     var filterSubject = document.getElementById('filterSubject');
-    var filterMarkField = document.getElementById('filterMarkField');
+    // Mark Field removed from filter — always show all fields
     var btnLoad = document.getElementById('btnLoadStudents');
     var filterHint = document.getElementById('filterHint');
 
@@ -835,8 +804,8 @@
     filterSubject.addEventListener('change', function() {
         updateLoadButton();
         if (this.value) {
-            // Auto-load if all filters are set (including mark field)
-            if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterMarkField.value) {
+            // Auto-load if all filters are set
+            if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value) {
                 loadStudents();
             }
         } else {
@@ -844,36 +813,17 @@
         }
     });
 
-    // ========== CASCADE: Mark Field ==========
-    filterMarkField.addEventListener('change', function() {
-        currentMarkField = this.value || 'all';
-        updateLoadButton();
 
-        // If students already loaded and other filters are set, reload with new field
-        if (this.value && filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value) {
-            if (students.length > 0) {
-                // Rebuild table without re-fetching students
-                buildTable();
-                showMarkEntry();
-                updateFieldBadge();
-                updateInputLockState();
-            } else {
-                loadStudents();
-            }
-        } else {
-            hideMarkEntry();
-        }
-    });
 
     // ========== LOAD BUTTON ==========
     btnLoad.addEventListener('click', function() {
-        if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value && filterMarkField.value) {
+        if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value) {
             loadStudents();
         }
     });
 
     function updateLoadButton() {
-        var ready = filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value && filterMarkField.value;
+        var ready = filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value;
         btnLoad.disabled = !ready;
         filterHint.textContent = ready
             ? 'Click "Load Students" to view marks'
@@ -1150,8 +1100,8 @@
 
         if (!ayId || !termId || !classId || !sectionId || !subjectId) return;
 
-        // Update current mark field from dropdown
-        currentMarkField = filterMarkField.value || 'all';
+        // Mark field is always 'all' now
+        currentMarkField = 'all';
 
         showLoading();
 
@@ -2039,12 +1989,10 @@
         var className = filterClass.selectedOptions[0] ? filterClass.selectedOptions[0].textContent : '';
         var sectionName = filterSection.selectedOptions[0] ? filterSection.selectedOptions[0].textContent : '';
         var subjectName = filterSubject.selectedOptions[0] ? filterSubject.selectedOptions[0].textContent : '';
-        var fieldName = filterMarkField.selectedOptions[0] ? filterMarkField.selectedOptions[0].textContent : '';
 
         if (className) parts.push(className);
         if (sectionName) parts.push(sectionName);
         if (subjectName) parts.push(subjectName);
-        if (fieldName) parts.push(fieldName);
 
         summaryText.innerHTML = parts.map(function(p) {
             return '<span class="me-filter-summary-chip"><i class="fas fa-check"></i> ' + p + '</span>';

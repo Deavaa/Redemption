@@ -82,6 +82,46 @@ class StudentDataSeeder extends Seeder
             $this->command->info("    Grade {$gradeNum} → Class ID:{$class->id} → {$secs->count()} sections");
         }
 
+        // ── Auto-create missing classes & sections ──────────────────
+        // The user wants ALL students imported. If a grade's class/section
+        // doesn't exist yet, create it on the fly so no student is skipped.
+        for ($g = 1; $g <= 8; $g++) {
+            if (!isset($classes[$g])) {
+                $class = ClassRoom::updateOrCreate(
+                    [
+                        'branch_id'         => $branch->id,
+                        'academic_year_id'  => $ay->id,
+                        'numeric_name'      => $g,
+                    ],
+                    [
+                        'name'     => 'Grade ' . $g,
+                        'capacity' => 40,
+                    ]
+                );
+                $classes[$g] = $class;
+                $this->command->info("    ✓ Auto-created Grade {$g} (Class ID:{$class->id})");
+            }
+
+            if (!isset($sectionsByClass[$g]) || $sectionsByClass[$g]->isEmpty()) {
+                $class = $classes[$g];
+                $secs = collect();
+                foreach (['A', 'B'] as $letter) {
+                    $sec = Section::updateOrCreate(
+                        [
+                            'class_id' => $class->id,
+                            'name'     => $letter,
+                        ],
+                        [
+                            'academic_year_id' => $ay->id,
+                        ]
+                    );
+                    $secs->push($sec);
+                }
+                $sectionsByClass[$g] = $secs;
+                $this->command->info("    ✓ Auto-created sections for Grade {$g}: A, B");
+            }
+        }
+
         if ($classes->isEmpty()) {
             $this->command->error('  ✗ No classes found. Run SchoolDataSeeder first.');
             return;
