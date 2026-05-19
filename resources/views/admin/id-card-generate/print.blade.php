@@ -117,10 +117,12 @@
         .id-card-info { flex: 1; padding-top: 2px; }
         .id-card-info-row { margin-bottom: 3px; display: flex; align-items: baseline; gap: 4px; }
         .id-card-info-label {
-            font-size: 0.5rem; color: #999; text-transform: uppercase;
-            letter-spacing: 0.4px; font-weight: 600; min-width: 52px;
+            font-size: 0.48rem; color: #999; text-transform: uppercase;
+            letter-spacing: 0.4px; font-weight: 600; min-width: 48px;
         }
-        .id-card-info-value { font-size: 0.74rem; font-weight: 700; color: #1a1a2e; }
+        .id-card-info-value { font-size: 0.7rem; font-weight: 700; color: #1a1a2e; }
+        .id-card-info-row.branch-row .id-card-info-label { font-size: 0.42rem; }
+        .id-card-info-row.branch-row .id-card-info-value { font-size: 0.6rem; color: #666; }
 
         /* Blood group badge */
         .id-card-blood {
@@ -178,24 +180,24 @@
         }
 
         .id-card-back-body {
-            padding: 5px 14px; display: flex; gap: 12px; height: 145px;
+            padding: 4px 14px; display: flex; gap: 10px; height: 148px;
         }
 
         .id-card-rules {
-            flex: 1; overflow: hidden;
+            flex: 1; overflow: visible;
         }
         .id-card-rules-title {
-            font-size: 0.5rem; font-weight: 700; color: #1a1a2e;
+            font-size: 0.46rem; font-weight: 700; color: #1a1a2e;
             text-transform: uppercase; letter-spacing: 0.5px;
-            margin-bottom: 3px; display: flex; align-items: center; gap: 4px;
+            margin-bottom: 2px; display: flex; align-items: center; gap: 3px;
         }
         .id-card-rules-title svg { width: 10px; height: 10px; }
         .id-card-rules-list {
             list-style: none; padding: 0; margin: 0;
         }
         .id-card-rules-list li {
-            font-size: 0.4rem; color: #444; line-height: 1.45;
-            padding: 1px 0 1px 10px; position: relative;
+            font-size: 0.38rem; color: #444; line-height: 1.35;
+            padding: 0px 0 0px 10px; position: relative;
         }
         .id-card-rules-list li::before {
             content: ''; position: absolute; left: 0; top: 5px;
@@ -204,20 +206,27 @@
         }
 
         .id-card-contact-section {
-            width: 115px; flex-shrink: 0;
-            border-left: 1px solid #eee; padding-left: 10px;
+            width: 110px; flex-shrink: 0;
+            border-left: 1px solid #eee; padding-left: 8px;
         }
         .id-card-contact-title {
-            font-size: 0.5rem; font-weight: 700; color: #1a1a2e;
+            font-size: 0.46rem; font-weight: 700; color: #1a1a2e;
             text-transform: uppercase; letter-spacing: 0.5px;
-            margin-bottom: 3px; display: flex; align-items: center; gap: 4px;
+            margin-bottom: 2px; display: flex; align-items: center; gap: 3px;
         }
-        .id-card-contact-title svg { width: 10px; height: 10px; }
+        .id-card-contact-title svg { width: 9px; height: 9px; }
         .id-card-contact-item {
-            font-size: 0.4rem; color: #555; margin-bottom: 3px;
-            display: flex; align-items: flex-start; gap: 3px; line-height: 1.3;
+            font-size: 0.38rem; color: #555; margin-bottom: 2px;
+            display: flex; align-items: flex-start; gap: 3px; line-height: 1.25;
         }
-        .id-card-contact-item svg { width: 8px; height: 8px; flex-shrink: 0; margin-top: 1px; opacity: 0.5; }
+        .id-card-contact-item svg { width: 7px; height: 7px; flex-shrink: 0; margin-top: 1px; opacity: 0.5; }
+        .id-card-branch-address {
+            font-size: 0.36rem; color: #777; margin-bottom: 2px;
+            display: flex; align-items: flex-start; gap: 3px; line-height: 1.25;
+            border-top: 1px solid #eee; padding-top: 2px; margin-top: 2px;
+        }
+        .id-card-branch-address svg { width: 7px; height: 7px; flex-shrink: 0; margin-top: 1px; opacity: 0.5; }
+        .id-card-branch-label { font-weight: 600; color: #1a1a2e; }
 
         /* QR placeholder */
         .id-card-qr {
@@ -397,6 +406,12 @@
                             <span class="id-card-info-value">{{ $student->guardian_phone }}</span>
                         </div>
                         @endif
+                        @if($student->branch && $student->branch->address)
+                        <div class="id-card-info-row branch-row">
+                            <span class="id-card-info-label">{{ __('app.branch') ?? 'Branch' }}</span>
+                            <span class="id-card-info-value">{{ $student->branch->name }} - {{ $student->branch->address }}</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -484,6 +499,16 @@
                         <div class="id-card-contact-item">
                             <svg><use href="#icon-web"/></svg>
                             {{ $schoolWebsite }}
+                        </div>
+                        @endif
+                        {{-- Branch Address --}}
+                        @php
+                            $studentBranch = $student->branch;
+                        @endphp
+                        @if($studentBranch && $studentBranch->address && (!$schoolAddress || $studentBranch->address !== $schoolAddress))
+                        <div class="id-card-branch-address">
+                            <svg><use href="#icon-location"/></svg>
+                            <span><span class="id-card-branch-label">{{ $studentBranch->name }}:</span> {{ $studentBranch->address }}</span>
                         </div>
                         @endif
 

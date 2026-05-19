@@ -167,6 +167,41 @@
 /* Row number */
 .me-row-num { font-weight: 600; color: #9ca3af; font-size: 0.75rem; min-width: 24px; text-align: center; }
 
+/* Filter collapse/expand */
+.me-filter-card.me-filter-collapsed .me-filter-body { display: none; }
+.me-filter-card.me-filter-collapsed .me-filter-header { border-bottom: none; padding: 0.65rem 1rem; }
+
+/* Compact summary bar when filter is collapsed */
+.me-filter-summary {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #f0fdf4;
+    border: 1.5px solid #a7f3d0;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #065f46;
+    flex-wrap: wrap;
+    animation: meFadeIn 0.3s ease-out;
+}
+.me-filter-summary.visible { display: flex; }
+.me-filter-summary-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; background: #fff; border: 1px solid #d1fae5;
+    border-radius: 6px; font-size: 0.78rem; color: #1a1a2e;
+}
+.me-filter-summary-chip i { font-size: 0.7rem; color: #10b981; }
+.me-filter-change-btn {
+    margin-left: auto;
+    padding: 4px 12px; border-radius: 6px; border: 1px solid #a7f3d0;
+    background: #fff; color: #059669; font-size: 0.78rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.me-filter-change-btn:hover { background: #ecfdf5; border-color: #10b981; }
+
 /* Responsive */
 @media (max-width: 1200px) {
     .me-filter-grid { grid-template-columns: repeat(3, 1fr); }
@@ -180,9 +215,24 @@
     .me-filter-grid { grid-template-columns: 1fr 1fr; }
     .me-table-card-header { flex-direction: column; align-items: stretch; }
     .me-term-bar { flex-direction: column; align-items: flex-start; }
+    .me-table-wrapper { max-height: 55vh; }
+    .me-table-card-header-left, .me-table-card-header-right { width: 100%; }
+    .me-student-nav { justify-content: center; }
 }
 @media (max-width: 480px) {
     .me-filter-grid { grid-template-columns: 1fr; }
+    .me-filter-body { padding: 1rem; }
+    .me-filter-header { padding: 0.75rem 1rem; }
+    .me-table-wrapper { max-height: 50vh; }
+    .me-term-bar { gap: 0.4rem; }
+    .me-term-chip { font-size: 0.78rem; padding: 5px 10px; }
+    .me-keyboard-hint { display: none; }
+    .me-filter-summary { font-size: 0.75rem; gap: 0.35rem; padding: 0.5rem 0.75rem; }
+    .me-filter-summary-chip { font-size: 0.72rem; padding: 2px 7px; }
+    .me-student-cell { gap: 5px; padding: 2px 4px; }
+    .me-student-avatar { width: 26px; height: 26px; font-size: 0.6rem; }
+    .me-student-name-text { font-size: 0.82rem; }
+    .me-table.me-table-single .me-mark-input-large { min-width: 70px; max-width: 90px; padding: 8px 4px; font-size: 1rem; }
 }
 </style>
 @endpush
@@ -229,6 +279,15 @@
             <i class="fas fa-lock"></i>
             <span id="chipLockText">--</span>
         </div>
+    </div>
+
+    {{-- Compact Filter Summary (shown when filter is collapsed) --}}
+    <div class="me-filter-summary" id="filterSummary">
+        <i class="fas fa-check-circle" style="color:#10b981;"></i>
+        <span id="filterSummaryText">--</span>
+        <button type="button" class="me-filter-change-btn" id="btnChangeFilter" onclick="showFilterPanel()">
+            <i class="fas fa-filter"></i> Change
+        </button>
     </div>
 
     {{-- Filter Panel --}}
@@ -1544,6 +1603,52 @@
         emptyState.classList.remove('d-none');
         noStudentsState.classList.add('d-none');
         loadingState.classList.add('d-none');
+        // Show the filter panel again when mark entry is hidden
+        expandFilterPanel();
+    }
+
+    // ========== FILTER PANEL COLLAPSE/EXPAND ==========
+    function collapseFilterPanel() {
+        var panel = document.getElementById('filterPanel');
+        var summary = document.getElementById('filterSummary');
+        panel.classList.add('me-filter-collapsed');
+        summary.classList.add('visible');
+        updateFilterSummary();
+    }
+
+    function expandFilterPanel() {
+        var panel = document.getElementById('filterPanel');
+        var summary = document.getElementById('filterSummary');
+        panel.classList.remove('me-filter-collapsed');
+        summary.classList.remove('visible');
+    }
+
+    // Global function called by the "Change" button
+    window.showFilterPanel = function() {
+        expandFilterPanel();
+        // Scroll to filter panel
+        document.getElementById('filterPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    function updateFilterSummary() {
+        var summaryText = document.getElementById('filterSummaryText');
+        var parts = [];
+
+        var ayName = filterAy.selectedOptions[0] ? filterAy.selectedOptions[0].textContent : '';
+        var termName = filterTerm.selectedOptions[0] ? filterTerm.selectedOptions[0].textContent : '';
+        var className = filterClass.selectedOptions[0] ? filterClass.selectedOptions[0].textContent : '';
+        var sectionName = filterSection.selectedOptions[0] ? filterSection.selectedOptions[0].textContent : '';
+        var subjectName = filterSubject.selectedOptions[0] ? filterSubject.selectedOptions[0].textContent : '';
+        var fieldName = filterMarkField.selectedOptions[0] ? filterMarkField.selectedOptions[0].textContent : '';
+
+        if (className) parts.push(className);
+        if (sectionName) parts.push(sectionName);
+        if (subjectName) parts.push(subjectName);
+        if (fieldName) parts.push(fieldName);
+
+        summaryText.innerHTML = parts.map(function(p) {
+            return '<span class="me-filter-summary-chip"><i class="fas fa-check"></i> ' + p + '</span>';
+        }).join('');
     }
 
     function showMarkEntry() {
@@ -1551,6 +1656,8 @@
         emptyState.classList.add('d-none');
         noStudentsState.classList.add('d-none');
         loadingState.classList.add('d-none');
+        // Collapse the filter panel and show summary
+        collapseFilterPanel();
     }
 
     function showLoading() {

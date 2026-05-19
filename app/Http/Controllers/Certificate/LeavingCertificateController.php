@@ -25,7 +25,7 @@ class LeavingCertificateController extends Controller
         $query = Student::with('classroom', 'section');
         if ($r->filled('class_id')) $query->where('class_id', $r->class_id);
         if ($r->filled('section_id')) $query->where('section_id', $r->section_id);
-        return response()->json($query->orderBy('full_name')->get());
+        return response()->json($query->orderBy('full_name')->get(['id','full_name','roll_number','admission_number','class_id','section_id','status','leave_date','leave_reason','photo']));
     }
 
     public function generate(Request $r)
@@ -150,6 +150,13 @@ class LeavingCertificateController extends Controller
             'issue_date' => now()->format('Y-m-d'),
             'content' => 'School Leaving Clearance Certificate for ' . $student->full_name,
             'template' => 'leaving_certificate',
+        ]);
+
+        // Mark student as inactive and record leave details
+        $student->update([
+            'status' => 'inactive',
+            'leave_date' => $leavingDate->format('Y-m-d'),
+            'leave_reason' => $reason,
         ]);
 
         return view('admin.certificate-generate.leaving-certificate', compact(

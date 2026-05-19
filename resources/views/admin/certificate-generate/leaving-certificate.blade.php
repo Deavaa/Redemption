@@ -124,6 +124,7 @@
         @endif
         The student is now being discharged on <strong>{{ $leavingDate->format('F d, Y') }}</strong>
         on account of <strong>{{ $reason }}</strong>.
+        <span style="color:#dc2626;font-weight:700;">The student's enrollment status has been updated to INACTIVE and the student record has been marked as having left the school.</span>
     </div>
 
     {{-- Student Info --}}

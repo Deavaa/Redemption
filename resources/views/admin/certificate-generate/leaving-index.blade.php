@@ -161,6 +161,11 @@
 .gen-student-meta { font-size:9px;color:var(--text-muted); }
 .gen-student-check { width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--transition);font-size:9px;color:transparent; }
 .gen-student-card.active .gen-student-check { border-color:var(--primary);background:var(--primary);color:#fff; }
+.gen-student-status { display:inline-block;padding:1px 6px;border-radius:8px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-left:4px; }
+.gen-student-status.status-inactive { background:#fef2f2;color:#991b1b;border:1px solid #fecaca; }
+.gen-student-status.status-transferred { background:#fef3c7;color:#92400e;border:1px solid #fde68a; }
+.gen-student-status.status-active { background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0; }
+.gen-preview-status { display:inline-block;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-left:6px; }
 .gen-empty-state { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;color:var(--text-muted);grid-column:1/-1; }
 .gen-empty-state i { font-size:24px;opacity:0.3;margin-bottom:6px; }
 .gen-empty-state p { font-size:12px; }
@@ -231,7 +236,15 @@
             const initials = ((s.full_name || '?')[0]).toUpperCase();
             let avatarContent = initials;
             if (s.photo) avatarContent = '<img src="{{ asset("storage/") }}/' + s.photo + '" alt="">';
-            card.innerHTML = `<div class="gen-student-avatar">${avatarContent}</div><div class="gen-student-info"><div class="gen-student-name">${s.full_name}</div><div class="gen-student-meta">${s.roll_number ? '#' + s.roll_number : ''} ${s.classroom ? s.classroom.name : ''}</div></div><div class="gen-student-check"><i class="fas fa-check"></i></div>`;
+            // Status badge
+            let statusBadge = '';
+            const status = (s.status || 'active').toLowerCase();
+            if (status !== 'active') {
+                const statusClass = 'status-' + status;
+                const statusLabel = status === 'inactive' ? 'Left School' : status.charAt(0).toUpperCase() + status.slice(1);
+                statusBadge = '<span class="gen-student-status ' + statusClass + '">' + statusLabel + '</span>';
+            }
+            card.innerHTML = `<div class="gen-student-avatar">${avatarContent}</div><div class="gen-student-info"><div class="gen-student-name">${s.full_name}${statusBadge}</div><div class="gen-student-meta">${s.roll_number ? '#' + s.roll_number : ''} ${s.classroom ? s.classroom.name : ''}</div></div><div class="gen-student-check"><i class="fas fa-check"></i></div>`;
             card.addEventListener('click', () => selectStudent(s, card));
             studentContainer.appendChild(card);
         });
@@ -247,6 +260,17 @@
         const initials = ((student.full_name || '?')[0]).toUpperCase();
         previewAvatar.textContent = student.photo ? '' : initials;
         previewName.textContent = student.full_name;
+        // Show status badge next to name
+        const status = (student.status || 'active').toLowerCase();
+        let statusHtml = '';
+        if (status !== 'active') {
+            const statusColor = status === 'inactive' ? '#991b1b' : '#92400e';
+            const statusBg = status === 'inactive' ? '#fef2f2' : '#fef3c7';
+            const statusBorder = status === 'inactive' ? '#fecaca' : '#fde68a';
+            const statusLabel = status === 'inactive' ? 'LEFT SCHOOL' : status.toUpperCase();
+            statusHtml = '<span class="gen-preview-status" style="background:' + statusBg + ';color:' + statusColor + ';border:1px solid ' + statusBorder + ';">' + statusLabel + '</span>';
+        }
+        previewName.innerHTML = student.full_name + statusHtml;
         previewRoll.textContent = student.roll_number || '-';
         previewClass.textContent = student.classroom?.name || '-';
         previewSection.textContent = student.section?.name || '-';
