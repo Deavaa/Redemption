@@ -3,7 +3,7 @@
 
 @push('styles')
 <style>
-/* ===== MARK ENTRY INDEX - MODERN DESIGN ===== */
+/* ===== MARK ENTRY INDEX - ALL-CARDS LAYOUT ===== */
 .me-page { animation: meFadeIn 0.4s ease-out; }
 @keyframes meFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -53,101 +53,12 @@
 .me-lock-banner.unlocked { background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #065f46; }
 .me-lock-banner.unlocked i { color: #059669; }
 
-/* Mark Entry Table Card */
-.me-table-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; overflow: hidden; }
-.me-table-card-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid #f0f0f0; background: #fafbfc; gap: 1rem; flex-wrap: wrap; }
-.me-table-card-header-left { display: flex; align-items: center; gap: 0.75rem; }
-.me-table-card-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; background: #eef2ff; color: #4361ee; }
-.me-table-card-title { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0; }
-.me-table-card-subtitle { font-size: 0.82rem; color: #9ca3af; margin: 0.1rem 0 0; }
-.me-table-card-header-right { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.me-student-nav { display: flex; align-items: center; gap: 0.5rem; }
-.me-nav-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; color: #6b7280; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
-.me-nav-btn:hover { border-color: #4361ee; color: #4361ee; background: #eef2ff; }
-.me-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; background: #f9fafb; }
-.me-nav-counter { font-size: 0.82rem; font-weight: 600; color: #6b7280; min-width: 60px; text-align: center; }
+/* Save badge */
 .me-save-badge { font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600; white-space: nowrap; }
 .me-save-badge.saving { background: #fef3c7; color: #d97706; }
 .me-save-badge.saved { background: #d1fae5; color: #059669; }
 .me-save-badge.error { background: #fee2e2; color: #dc2626; }
 .me-save-badge.idle { background: #f3f4f6; color: #9ca3af; }
-
-/* Field Badge - shows which mark field is active */
-.me-field-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 10px; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.75rem; animation: meFadeIn 0.3s ease-out; }
-.me-field-badge.badge-ca { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1d4ed8; }
-.me-field-badge.badge-extra-ca { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; }
-.me-field-badge.badge-exam { background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #059669; }
-.me-field-badge.badge-all { background: #f5f3ff; border: 1.5px solid #ddd6fe; color: #7c3aed; }
-.me-field-badge i { font-size: 0.85rem; }
-
-/* Mark Entry Table */
-.me-table-wrapper { overflow-x: auto; max-height: 65vh; overflow-y: auto; }
-.me-table-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
-.me-table-wrapper::-webkit-scrollbar-track { background: #f9fafb; }
-.me-table-wrapper::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-.me-table-wrapper::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-.me-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.82rem; }
-.me-table thead th { position: sticky; top: 0; z-index: 10; padding: 9px 8px; text-align: center; font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px; color: #6b7280; background: #f9fafb; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
-.me-table thead th.col-sticky { position: sticky; left: 0; z-index: 20; background: #f9fafb; min-width: 160px; text-align: left; }
-.me-table thead th.section-ca { background: #eff6ff; border-bottom-color: #bfdbfe; color: #1d4ed8; }
-.me-table thead th.section-exam { background: #ecfdf5; border-bottom-color: #a7f3d0; color: #059669; }
-.me-table thead th.section-total { background: #f5f3ff; border-bottom-color: #ddd6fe; color: #7c3aed; }
-.me-table thead th.section-total-ca { background: #eff6ff; border-bottom-color: #bfdbfe; color: #1d4ed8; }
-.me-table thead th.section-total-exam { background: #ecfdf5; border-bottom-color: #a7f3d0; color: #059669; }
-.me-table thead th.section-grade { background: #fefce8; border-bottom-color: #fde68a; color: #a16207; }
-.me-table thead th.th-sub { font-size: 0.68rem; font-weight: 500; color: #9ca3af; padding-top: 0; }
-
-.me-table tbody td { padding: 4px 4px; border-bottom: 1px solid #f0f0f0; color: #1f2937; vertical-align: middle; text-align: center; }
-.me-table tbody td.col-sticky { position: sticky; left: 0; z-index: 5; background: #fff; text-align: left; min-width: 160px; border-right: 1px solid #e5e7eb; }
-.me-table tbody tr { transition: background 0.15s; }
-.me-table tbody tr:hover { background: rgba(67,97,238,0.03); }
-.me-table tbody tr:hover td.col-sticky { background: #f8f9ff; }
-.me-table tbody tr.row-highlight { background: rgba(67,97,238,0.07); }
-.me-table tbody tr.row-highlight td.col-sticky { background: #eef2ff; }
-
-/* Single-field mode table adjustments */
-.me-table.me-table-single { font-size: 0.9rem; }
-.me-table.me-table-single thead th { font-size: 0.78rem; padding: 10px 12px; }
-.me-table.me-table-single tbody td { padding: 8px 8px; }
-.me-table.me-table-single td.col-row-num { min-width: 40px; text-align: center; }
-
-/* Student Name Cell */
-.me-student-cell { display: flex; align-items: center; gap: 8px; padding: 2px 8px; }
-.me-student-avatar { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #4361ee, #818cf8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
-.me-student-name-text { font-weight: 600; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.me-student-roll { font-size: 0.68rem; color: #9ca3af; display: block; }
-
-/* Mark Input Cell */
-.me-mark-input { width: 100%; min-width: 42px; border: 1.5px solid #e5e7eb; border-radius: 6px; outline: none; text-align: center; padding: 4px 2px; font-size: 0.82rem; font-weight: 600; color: #1a1a2e; background: #fff; transition: all 0.2s; }
-.me-mark-input:focus { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.12); background: #f8f9ff; }
-.me-mark-input.exam-input:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.12); background: #f0fdf4; }
-.me-mark-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; border-color: #e5e7eb; }
-.me-mark-input.input-saved { border-color: #10b981; background: #ecfdf5; }
-.me-mark-input.input-error { border-color: #ef4444; background: #fef2f2; }
-
-/* Large Mark Input for single-field mode */
-.me-mark-input-large { width: 100%; min-width: 80px; max-width: 120px; border: 2px solid #4361ee; border-radius: 10px; outline: none; text-align: center; padding: 10px 8px; font-size: 1.1rem; font-weight: 700; color: #1a1a2e; background: #f8f9ff; transition: all 0.2s; }
-.me-mark-input-large:focus { border-color: #3b52d4; box-shadow: 0 0 0 3px rgba(67,97,238,0.2); background: #fff; }
-.me-mark-input-large.exam-input { border-color: #10b981; background: #f0fdf4; }
-.me-mark-input-large.exam-input:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); background: #fff; }
-.me-mark-input-large.extra-ca-input { border-color: #15803d; background: #f0fdf4; }
-.me-mark-input-large.extra-ca-input:focus { border-color: #15803d; box-shadow: 0 0 0 3px rgba(21,128,61,0.2); background: #fff; }
-.me-mark-input-large:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; border-color: #e5e7eb; }
-.me-mark-input-large.input-saved { border-color: #10b981; background: #ecfdf5; }
-.me-mark-input-large.input-error { border-color: #ef4444; background: #fef2f2; }
-
-/* Total Cell */
-.me-total-cell { font-weight: 700; font-size: 0.85rem; padding: 4px 6px; }
-.me-total-cell.ca-total { color: #1d4ed8; background: #eff6ff; border-radius: 6px; }
-.me-total-cell.exam-total { color: #059669; background: #ecfdf5; border-radius: 6px; }
-.me-total-cell.grand-total { color: #7c3aed; background: #f5f3ff; border-radius: 6px; font-size: 0.92rem; }
-.me-total-cell.grade-cell { font-size: 0.92rem; }
-.me-grade-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.82rem; }
-.me-grade-A { background: rgba(52,211,153,0.15); color: #059669; }
-.me-grade-B { background: rgba(96,165,250,0.15); color: #2563eb; }
-.me-grade-C { background: rgba(251,191,36,0.15); color: #d97706; }
-.me-grade-D { background: rgba(251,146,60,0.15); color: #ea580c; }
-.me-grade-F { background: rgba(248,113,113,0.15); color: #dc2626; }
 
 /* Empty State */
 .me-empty { text-align: center; padding: 3rem 1.5rem; background: #fff; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; }
@@ -155,17 +66,10 @@
 .me-empty p { color: #9ca3af; font-size: 0.95rem; margin: 0; }
 .me-empty-hint { font-size: 0.82rem; color: #b0b8c4; margin-top: 0.5rem; }
 
-/* Keyboard hint */
-.me-keyboard-hint { text-align: center; padding: 0.5rem; font-size: 0.75rem; color: #9ca3af; }
-.me-keyboard-hint kbd { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.7rem; font-family: inherit; }
-
 /* Loading Spinner */
 .me-loading { display: flex; align-items: center; justify-content: center; padding: 3rem; gap: 0.75rem; color: #9ca3af; font-size: 0.9rem; }
 .me-spinner { width: 24px; height: 24px; border: 3px solid #e5e7eb; border-top-color: #4361ee; border-radius: 50%; animation: meSpin 0.7s linear infinite; }
 @keyframes meSpin { to { transform: rotate(360deg); } }
-
-/* Row number */
-.me-row-num { font-weight: 600; color: #9ca3af; font-size: 0.75rem; min-width: 24px; text-align: center; }
 
 /* Filter collapse/expand */
 .me-filter-card.me-filter-collapsed .me-filter-body { display: none; }
@@ -202,7 +106,7 @@
 }
 .me-filter-change-btn:hover { background: #ecfdf5; border-color: #10b981; }
 
-/* Responsive */
+/* Responsive filters */
 @media (max-width: 1200px) {
     .me-filter-grid { grid-template-columns: repeat(3, 1fr); }
 }
@@ -210,143 +114,169 @@
     .me-filter-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ===== CARD VIEW (one student per card — desktop + mobile) ===== */
-.me-mobile-card-area { display: block; }
-.me-table-card { display: none !important; }
-.me-field-badge { display: none !important; }
+/* ===== ALL-CARDS VIEW (one card per student, all visible) ===== */
 
-/* Desktop Card Container */
-.me-card-wrapper {
-    max-width: 860px; margin: 0 auto;
-    background: #fff; border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+/* Global status bar */
+.me-global-status {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; margin-bottom: 1rem;
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #f0f0f0;
+    flex-wrap: wrap; gap: 0.5rem;
+}
+.me-global-status-left { display: flex; align-items: center; gap: 0.75rem; }
+.me-global-status-right { display: flex; align-items: center; gap: 0.5rem; }
+.me-student-count {
+    font-size: 0.88rem; font-weight: 700; color: #1a1a2e;
+    display: flex; align-items: center; gap: 6px;
+}
+.me-student-count i { color: #4361ee; }
+
+/* Cards scroll container */
+.me-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 2rem;
+}
+
+/* Individual Student Card */
+.me-student-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
     border: 1px solid #f0f0f0;
     overflow: hidden;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+.me-student-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+    border-color: #e5e7eb;
+}
+.me-student-card.card-active {
+    border-color: #4361ee;
+    box-shadow: 0 4px 16px rgba(67,97,238,0.12), 0 2px 6px rgba(67,97,238,0.06);
 }
 
-/* Desktop Card Nav Bar */
-.me-card-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 20px; background: #fafbfc;
+/* Card Header */
+.me-sc-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px;
+    background: #fafbfc;
     border-bottom: 1px solid #e5e7eb;
 }
-.me-card-nav-btn {
-    width: 42px; height: 42px; border-radius: 12px; border: 1.5px solid #e5e7eb;
-    background: #fff; color: #4361ee; font-size: 1rem;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s; flex-shrink: 0;
-}
-.me-card-nav-btn:hover { background: #eef2ff; border-color: #4361ee; }
-.me-card-nav-btn:disabled { background: #f9fafb; color: #d1d5db; border-color: #e5e7eb; cursor: not-allowed; }
-.me-card-nav-btn:not(:disabled):active { transform: scale(0.95); }
-.me-card-student-info { flex: 1; text-align: center; padding: 0 16px; min-width: 0; }
-.me-card-student-name { display: block; font-weight: 800; font-size: 1.15rem; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.me-card-student-meta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 2px; }
-.me-card-counter { font-size: 0.78rem; color: #6b7280; font-weight: 600; }
-.me-card-avatar {
-    width: 36px; height: 36px; border-radius: 10px;
+.me-sc-avatar {
+    width: 40px; height: 40px; border-radius: 10px;
     background: linear-gradient(135deg, #4361ee, #818cf8); color: #fff;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
 }
-.me-card-save-badge { margin-left: auto; }
+.me-sc-info { flex: 1; min-width: 0; }
+.me-sc-name { font-weight: 800; font-size: 1.05rem; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.me-sc-roll { font-size: 0.78rem; color: #9ca3af; font-weight: 500; }
+.me-sc-number { font-size: 0.75rem; font-weight: 700; color: #6b7280; background: #f3f4f6; padding: 2px 10px; border-radius: 6px; white-space: nowrap; }
 
-/* Desktop Card Body */
-.me-card-body { padding: 20px 24px; }
+/* Card Body */
+.me-sc-body { padding: 16px 20px; }
 
-/* Section Label (desktop) */
-.me-card-section-label {
-    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
-    padding: 0 0 8px; margin: 0 0 10px; color: #6b7280;
+/* Section Label */
+.me-sc-section-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+    padding: 0 0 6px; margin: 0 0 8px; color: #6b7280;
     border-bottom: 2px solid #e5e7eb;
 }
-.me-card-section-label.ca-label { color: #1d4ed8; border-bottom-color: #bfdbfe; }
-.me-card-section-label.exam-label { color: #059669; border-bottom-color: #a7f3d0; }
+.me-sc-section-label.ca-label { color: #1d4ed8; border-bottom-color: #bfdbfe; }
+.me-sc-section-label.exam-label { color: #059669; border-bottom-color: #a7f3d0; }
 
-/* Desktop CA grid — 5 columns */
-.me-card-ca-grid {
+/* CA Grid — 5 columns on desktop */
+.me-sc-ca-grid {
     display: grid; grid-template-columns: repeat(5, 1fr);
-    gap: 8px; margin-bottom: 16px;
+    gap: 8px; margin-bottom: 14px;
 }
 
-/* Desktop Exam grid — 4 columns */
-.me-card-exam-grid {
+/* Exam Grid — 4 columns on desktop */
+.me-sc-exam-grid {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 8px; margin-bottom: 16px;
+    gap: 8px; margin-bottom: 14px;
 }
 
-/* Desktop Card Field Item */
-.me-card-field {
+/* Card Field Item */
+.me-sc-field {
     display: flex; flex-direction: column; align-items: center;
     background: #f9fafb; border-radius: 10px; padding: 8px 4px 6px;
     border: 1.5px solid #f0f0f0; transition: all 0.2s;
 }
-.me-card-field:hover { border-color: #e5e7eb; background: #fff; }
-.me-card-field.field-exam { background: #f0fdf4; border-color: #d1fae5; }
-.me-card-field.field-exam:hover { border-color: #a7f3d0; background: #ecfdf5; }
-.me-card-field-label {
-    font-size: 0.7rem; font-weight: 700; color: #6b7280;
+.me-sc-field:hover { border-color: #e5e7eb; background: #fff; }
+.me-sc-field.field-exam { background: #f0fdf4; border-color: #d1fae5; }
+.me-sc-field.field-exam:hover { border-color: #a7f3d0; background: #ecfdf5; }
+.me-sc-field-label {
+    font-size: 0.68rem; font-weight: 700; color: #6b7280;
     text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px;
 }
-.me-card-field.field-exam .me-card-field-label { color: #059669; }
-.me-card-field-input {
+.me-sc-field.field-exam .me-sc-field-label { color: #059669; }
+.me-sc-field-input {
     width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px;
     text-align: center; padding: 8px 4px; font-size: 1.05rem; font-weight: 700;
     color: #1a1a2e; background: #fff; outline: none; transition: all 0.2s;
 }
-.me-card-field-input:focus { border-color: #4361ee; box-shadow: 0 0 0 3px rgba(67,97,238,0.12); background: #f8f9ff; }
-.me-card-field.field-exam .me-card-field-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); background: #f0fdf4; }
-.me-card-field-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
-.me-card-field-input.input-saved { border-color: #10b981; background: #ecfdf5; }
-.me-card-field-input.input-error { border-color: #ef4444; background: #fef2f2; }
-.me-card-field-max { font-size: 0.6rem; color: #9ca3af; margin-top: 2px; }
+.me-sc-field-input:focus { border-color: #4361ee; box-shadow: 0 0 0 3px rgba(67,97,238,0.12); background: #f8f9ff; }
+.me-sc-field.field-exam .me-sc-field-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); background: #f0fdf4; }
+.me-sc-field-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+.me-sc-field-input.input-saved { border-color: #10b981; background: #ecfdf5; }
+.me-sc-field-input.input-error { border-color: #ef4444; background: #fef2f2; }
+.me-sc-field-max { font-size: 0.58rem; color: #9ca3af; margin-top: 2px; }
 
-/* Desktop Card Totals Footer */
-.me-card-totals {
+/* Card Totals Footer */
+.me-sc-totals {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 8px; padding: 14px 24px; background: #fafbfc;
+    gap: 8px; padding: 12px 20px; background: #fafbfc;
     border-top: 1px solid #e5e7eb;
 }
-.me-card-total-item { text-align: center; }
-.me-card-total-label { font-size: 0.65rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.3px; }
-.me-card-total-value { font-size: 1.1rem; font-weight: 800; margin-top: 2px; }
-.me-card-total-value.ca-val { color: #1d4ed8; }
-.me-card-total-value.exam-val { color: #059669; }
-.me-card-total-value.grand-val { color: #7c3aed; }
+.me-sc-total-item { text-align: center; }
+.me-sc-total-label { font-size: 0.62rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.3px; }
+.me-sc-total-value { font-size: 1rem; font-weight: 800; margin-top: 2px; }
+.me-sc-total-value.ca-val { color: #1d4ed8; }
+.me-sc-total-value.exam-val { color: #059669; }
+.me-sc-total-value.grand-val { color: #7c3aed; }
 
-/* Keyboard hint for card view */
+/* Grade Badge */
+.me-grade-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.82rem; }
+.me-grade-A { background: rgba(52,211,153,0.15); color: #059669; }
+.me-grade-B { background: rgba(96,165,250,0.15); color: #2563eb; }
+.me-grade-C { background: rgba(251,191,36,0.15); color: #d97706; }
+.me-grade-D { background: rgba(251,146,60,0.15); color: #ea580c; }
+.me-grade-F { background: rgba(248,113,113,0.15); color: #dc2626; }
+
+/* Keyboard hint */
 .me-card-hint {
-    text-align: center; padding: 8px; font-size: 0.78rem; color: #9ca3af;
+    text-align: center; padding: 8px; font-size: 0.78rem; color: #9ca3af; margin-top: 0.5rem;
 }
 .me-card-hint kbd { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; font-family: inherit; }
 
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    /* Mobile overrides for card layout */
-    .me-card-wrapper { border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .me-card-nav { padding: 8px 12px; }
-    .me-card-nav-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #4361ee; color: #fff; }
-    .me-card-nav-btn:disabled { background: #e5e7eb; color: #9ca3af; }
-    .me-card-nav-btn:not(:disabled):active { transform: scale(0.92); }
-    .me-card-student-name { font-size: 0.95rem; font-weight: 700; }
-    .me-card-avatar { width: 30px; height: 30px; font-size: 0.7rem; }
-    .me-card-body { padding: 10px 12px; touch-action: pan-y; }
-    .me-card-section-label { font-size: 0.7rem; padding: 0 0 4px; margin: 0 0 8px; border-bottom-width: 1.5px; }
-    .me-card-ca-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 10px; }
-    .me-card-exam-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 10px; }
-    .me-card-field { padding: 4px 2px; border-radius: 6px; border-width: 1px; }
-    .me-card-field-label { font-size: 0.62rem; margin-bottom: 2px; }
-    .me-card-field-input { font-size: 1rem; padding: 6px 2px; border-radius: 6px; border-width: 1.5px; }
-    .me-card-field-max { font-size: 0.55rem; }
-    .me-card-totals { grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px 12px; }
-    .me-card-total-label { font-size: 0.58rem; }
-    .me-card-total-value { font-size: 0.85rem; }
-
-    /* Other mobile overrides */
     .me-header { flex-direction: column; align-items: stretch; }
     .me-title { font-size: 1.35rem; }
     .me-filter-grid { grid-template-columns: 1fr 1fr; }
     .me-term-bar { flex-direction: column; align-items: flex-start; }
     .me-filter-summary { font-size: 0.75rem; gap: 0.35rem; padding: 0.5rem 0.75rem; }
+    .me-global-status { padding: 8px 12px; }
+
+    .me-student-card { border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .me-sc-header { padding: 10px 12px; gap: 8px; }
+    .me-sc-avatar { width: 34px; height: 34px; font-size: 0.75rem; }
+    .me-sc-name { font-size: 0.92rem; font-weight: 700; }
+    .me-sc-body { padding: 10px 12px; }
+    .me-sc-section-label { font-size: 0.68rem; padding: 0 0 4px; margin: 0 0 6px; border-bottom-width: 1.5px; }
+    .me-sc-ca-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 10px; }
+    .me-sc-exam-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 10px; }
+    .me-sc-field { padding: 4px 2px; border-radius: 6px; border-width: 1px; }
+    .me-sc-field-label { font-size: 0.6rem; margin-bottom: 2px; }
+    .me-sc-field-input { font-size: 1rem; padding: 6px 2px; border-radius: 6px; border-width: 1.5px; }
+    .me-sc-field-max { font-size: 0.52rem; }
+    .me-sc-totals { grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px 12px; }
+    .me-sc-total-label { font-size: 0.55rem; }
+    .me-sc-total-value { font-size: 0.85rem; }
 }
 
 @media (max-width: 480px) {
@@ -355,10 +285,9 @@
     .me-filter-header { padding: 0.6rem 0.75rem; }
     .me-term-bar { gap: 0.4rem; }
     .me-term-chip { font-size: 0.78rem; padding: 5px 10px; }
-    .me-card-field-input { font-size: 0.95rem; padding: 5px 1px; }
-    .me-card-student-name { font-size: 0.88rem; }
-    .me-card-ca-grid { grid-template-columns: repeat(3, 1fr); }
-    .me-card-body { padding: 8px; }
+    .me-sc-field-input { font-size: 0.95rem; padding: 5px 1px; }
+    .me-sc-name { font-size: 0.85rem; }
+    .me-sc-body { padding: 8px; }
 }
 </style>
 @endpush
@@ -503,44 +432,29 @@
         <p class="me-empty-hint">Try selecting a different class, section, or subject</p>
     </div>
 
-    {{-- Mark Entry Card View (hidden until students load) --}}
+    {{-- Mark Entry All-Cards View (hidden until students load) --}}
     <div id="markEntryArea" class="d-none">
-        {{-- Student Card --}}
-        <div class="me-card-wrapper" id="studentCardWrapper">
-            {{-- Card Navigation Bar --}}
-            <div class="me-card-nav">
-                <button type="button" class="me-card-nav-btn" id="cardPrev" onclick="cardNavigate(-1)" aria-label="Previous Student" title="Previous Student">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <div class="me-card-student-info">
-                    <div class="me-card-student-meta">
-                        <div class="me-card-avatar" id="cardAvatar">?</div>
-                        <span class="me-card-student-name" id="cardStudentName">--</span>
-                    </div>
-                    <span class="me-card-counter" id="cardCounter">0 / 0</span>
-                </div>
-                <span class="me-save-badge idle me-card-save-badge" id="globalSaveStatus">Ready</span>
-                <button type="button" class="me-card-nav-btn" id="cardNext" onclick="cardNavigate(1)" aria-label="Next Student" title="Next Student">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+        {{-- Global Status Bar --}}
+        <div class="me-global-status">
+            <div class="me-global-status-left">
+                <span class="me-student-count">
+                    <i class="fas fa-users"></i>
+                    <span id="totalStudentCount">0</span> Students
+                </span>
             </div>
+            <div class="me-global-status-right">
+                <span class="me-save-badge idle" id="globalSaveStatus">Ready</span>
+            </div>
+        </div>
 
-            {{-- Card Body (mark fields) --}}
-            <div class="me-card-body" id="cardBody">
-                {{-- dynamically built --}}
-            </div>
-
-            {{-- Card Totals Footer --}}
-            <div class="me-card-totals" id="cardTotals">
-                {{-- dynamically built --}}
-            </div>
+        {{-- Cards Container (all student cards rendered here) --}}
+        <div class="me-cards-container" id="cardsContainer">
+            {{-- dynamically built --}}
         </div>
 
         {{-- Keyboard Hint --}}
         <div class="me-card-hint" id="keyboardHint">
-            Use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> arrow keys to navigate between students &middot;
-            <kbd>Tab</kbd> to move between fields &middot;
-            Marks auto-save after 900ms
+            <kbd>Tab</kbd> to move between fields &middot; Marks auto-save after 900ms
         </div>
     </div>
 </div>
@@ -553,12 +467,10 @@
 
     // ========== STATE ==========
     var students = [];
-    var currentIndex = -1;
     var saveTimers = {};  // keyed by student_id + mark_key
     var isLocked = false;
     var hasPermission = false;
-    var undoStack = [];
-    var currentMarkField = 'all'; // 'all' or a specific field key like 'ca1', 'test1', etc.
+    var currentMarkField = 'all';
 
     // ========== DOM REFS ==========
     var filterAy = document.getElementById('filterAy');
@@ -566,7 +478,6 @@
     var filterClass = document.getElementById('filterClass');
     var filterSection = document.getElementById('filterSection');
     var filterSubject = document.getElementById('filterSubject');
-    // Mark Field removed from filter — always show all fields
     var btnLoad = document.getElementById('btnLoadStudents');
     var filterHint = document.getElementById('filterHint');
 
@@ -581,13 +492,8 @@
     var markEntryArea = document.getElementById('markEntryArea');
     var globalSaveStatus = document.getElementById('globalSaveStatus');
     var keyboardHint = document.getElementById('keyboardHint');
-
-    // Card DOM refs
-    var cardBody = document.getElementById('cardBody');
-    var cardTotals = document.getElementById('cardTotals');
-    var cardStudentName = document.getElementById('cardStudentName');
-    var cardCounter = document.getElementById('cardCounter');
-    var cardAvatar = document.getElementById('cardAvatar');
+    var cardsContainer = document.getElementById('cardsContainer');
+    var totalStudentCount = document.getElementById('totalStudentCount');
 
     // ========== TEACHER ASSIGNMENTS DATA ==========
     var teacherAssignments = @json($teacherAssignments);
@@ -646,12 +552,9 @@
     function init() {
         console.log('[MarkEntry] Initializing... isTeacher={{ $isTeacher ? "true" : "false" }}, classes={{ $classes->count() }}');
 
-        // If teacher, populate class dropdown from assignments
         if (teacherAssignments && teacherAssignments.length > 0) {
             populateTeacherClasses();
         } else if (!{{ $isTeacher ? 'true' : 'false' }}) {
-            // Admin: classes are already populated server-side in the HTML <select>.
-            // Only call loadClasses() if the server-side dropdown is empty (no classes found)
             var hasServerClasses = filterClass.querySelectorAll('option[value!=""]').length > 0;
             if (!hasServerClasses) {
                 console.log('[MarkEntry] No server-side classes, loading via API...');
@@ -661,7 +564,6 @@
             }
         }
 
-        // If we have current AY & Term, check lock
         if (filterAy.value && filterTerm.value) {
             checkLockStatus();
         }
@@ -675,7 +577,6 @@
         var classes = {};
 
         teacherAssignments.forEach(function(a) {
-            // Include if: no AY selected, or assignment matches AY, or assignment has no AY (homeroom)
             var ayMatch = !ayId || a.academic_year_id == ayId || !a.academic_year_id;
             if (ayMatch && a.class_id && a.class_name) {
                 classes[a.class_id] = a.class_name;
@@ -690,7 +591,6 @@
             filterClass.appendChild(opt);
         });
 
-        // If only one class, auto-select
         if (Object.keys(classes).length === 1) {
             filterClass.value = Object.keys(classes)[0];
             loadSections();
@@ -700,12 +600,10 @@
     // ========== CASCADE: AY -> Terms ==========
     filterAy.addEventListener('change', function() {
         var ayId = this.value;
-        // Update chip
         document.getElementById('chipAy').textContent = ayId
             ? filterAy.selectedOptions[0].textContent
             : 'No Academic Year';
 
-        // Reset downstream
         filterTerm.innerHTML = '<option value="">-- Select Term --</option>';
         filterClass.innerHTML = '<option value="">-- Select Class --</option>';
         filterSection.innerHTML = '<option value="">-- Select Section --</option>';
@@ -716,7 +614,6 @@
 
         if (!ayId) { updateLoadButton(); return; }
 
-        // Load terms
         fetch(API_TERMS + '?academic_year_id=' + ayId, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) {
                 if (!r.ok) {
@@ -733,130 +630,161 @@
                     opt.textContent = t.name;
                     filterTerm.appendChild(opt);
                 });
-                // Auto-select if only one term
+                // Auto-select if there's only one term
                 if (data.length === 1) {
                     filterTerm.value = data[0].id;
                     filterTerm.dispatchEvent(new Event('change'));
                 }
             })
-            .catch(function(err) { console.error('[MarkEntry] Failed to load terms:', err); });
+            .catch(function(err) {
+                console.error('Failed to load terms:', err);
+            });
 
-        // Load classes
         if (teacherAssignments && teacherAssignments.length > 0) {
             populateTeacherClasses();
-        } else {
-            loadClasses();
         }
 
         updateLoadButton();
     });
 
-    // ========== CASCADE: Term -> Check Lock ==========
+    // ========== CASCADE: Term -> Classes ==========
     filterTerm.addEventListener('change', function() {
         var termId = this.value;
         document.getElementById('chipTerm').textContent = termId
             ? filterTerm.selectedOptions[0].textContent
             : 'No Active Term';
 
-        // Reset downstream
-        filterSubject.innerHTML = '<option value="">-- Select Subject --</option>';
-        filterSubject.disabled = true;
-        hideMarkEntry();
-
-        if (termId) {
-            checkLockStatus();
-            // Reload subjects if section is selected
-            if (filterSection.value) loadSubjects();
-        } else {
-            hideLockBanner();
-        }
-        updateLoadButton();
-    });
-
-    // ========== CASCADE: Class -> Sections ==========
-    filterClass.addEventListener('change', function() {
+        filterClass.innerHTML = '<option value="">-- Select Class --</option>';
         filterSection.innerHTML = '<option value="">-- Select Section --</option>';
         filterSection.disabled = true;
         filterSubject.innerHTML = '<option value="">-- Select Subject --</option>';
         filterSubject.disabled = true;
         hideMarkEntry();
 
-        if (this.value) {
-            loadSections();
-        }
+        if (termId) checkLockStatus();
+
         updateLoadButton();
     });
 
-    // ========== CASCADE: Section -> Subjects ==========
-    filterSection.addEventListener('change', function() {
+    // ========== CASCADE: Class -> Sections ==========
+    filterClass.addEventListener('change', function() {
+        var classId = this.value;
+        filterSection.innerHTML = '<option value="">-- Select Section --</option>';
+        filterSection.disabled = true;
         filterSubject.innerHTML = '<option value="">-- Select Subject --</option>';
         filterSubject.disabled = true;
         hideMarkEntry();
 
-        if (this.value) {
-            loadSubjects();
-        }
-        updateLoadButton();
+        if (!classId) { updateLoadButton(); return; }
+        loadSections();
     });
 
-    // ========== CASCADE: Subject ==========
-    filterSubject.addEventListener('change', function() {
-        updateLoadButton();
-        if (this.value) {
-            // Auto-load if all filters are set
-            if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value) {
-                loadStudents();
+    function loadSections() {
+        var classId = filterClass.value;
+        if (!classId) return;
+
+        // Try server-side sections first
+        var filtered = serverSections.filter(function(s) { return s.class_id == classId; });
+
+        if (filtered.length > 0) {
+            filterSection.innerHTML = '<option value="">-- Select Section --</option>';
+            filtered.forEach(function(s) {
+                var opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                filterSection.appendChild(opt);
+            });
+            filterSection.disabled = false;
+            if (filtered.length === 1) {
+                filterSection.value = filtered[0].id;
+                loadSubjects();
             }
-        } else {
-            hideMarkEntry();
+            updateLoadButton();
+            return;
         }
-    });
 
-
-
-    // ========== LOAD BUTTON ==========
-    btnLoad.addEventListener('click', function() {
-        if (filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value) {
-            loadStudents();
-        }
-    });
-
-    function updateLoadButton() {
-        var ready = filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value;
-        btnLoad.disabled = !ready;
-        filterHint.textContent = ready
-            ? 'Click "Load Students" to view marks'
-            : 'Select all filters above to load students';
+        // Fallback: API
+        fetch(API_SECTIONS + '?class_id=' + classId, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function(data) {
+                filterSection.innerHTML = '<option value="">-- Select Section --</option>';
+                data.forEach(function(s) {
+                    var opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    filterSection.appendChild(opt);
+                });
+                filterSection.disabled = data.length === 0;
+                if (data.length === 1) {
+                    filterSection.value = data[0].id;
+                    loadSubjects();
+                }
+                updateLoadButton();
+            })
+            .catch(function(err) {
+                console.error('Failed to load sections:', err);
+                filterSection.disabled = true;
+            });
     }
 
-    // ========== LOAD CLASSES ==========
-    function loadClasses() {
-        console.log('[MarkEntry] loadClasses() called, API_CLASSES=' + API_CLASSES);
+    // ========== CASCADE: Section -> Subjects ==========
+    filterSection.addEventListener('change', function() {
+        var sectionId = this.value;
+        filterSubject.innerHTML = '<option value="">-- Select Subject --</option>';
+        filterSubject.disabled = true;
+        hideMarkEntry();
 
+        if (!sectionId) { updateLoadButton(); return; }
+        loadSubjects();
+    });
+
+    function loadSubjects() {
+        var classId = filterClass.value;
+        var sectionId = filterSection.value;
+        if (!classId) return;
+
+        fetch(API_SUBJECTS + '?class_id=' + classId + (sectionId ? '&section_id=' + sectionId : ''), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function(data) {
+                filterSubject.innerHTML = '<option value="">-- Select Subject --</option>';
+                data.forEach(function(s) {
+                    var opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    filterSubject.appendChild(opt);
+                });
+                filterSubject.disabled = data.length === 0;
+                if (data.length === 1) {
+                    filterSubject.value = data[0].id;
+                }
+                updateLoadButton();
+            })
+            .catch(function(err) {
+                console.error('Failed to load subjects:', err);
+                filterSubject.disabled = true;
+            });
+    }
+
+    filterSubject.addEventListener('change', function() {
+        updateLoadButton();
+    });
+
+    // ========== LOAD CLASSES (API fallback) ==========
+    function loadClasses() {
         fetch(API_CLASSES, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) {
-                console.log('[MarkEntry] API response status:', r.status, 'redirected:', r.redirected);
-                if (!r.ok) {
-                    // If redirected (e.g. to login), the response won't be JSON
-                    if (r.status === 302 || r.redirected) {
-                        throw new Error('Session expired. Please refresh the page and log in again.');
-                    }
-                    throw new Error('HTTP ' + r.status);
-                }
+                if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
             })
             .then(function(data) {
                 filterClass.innerHTML = '<option value="">-- Select Class --</option>';
-                // API returns array of {id, name} directly
-                var classes = Array.isArray(data) ? data : (data.classes || data.data || []);
-                console.log('[MarkEntry] API returned ' + classes.length + ' classes:', classes);
-                if (classes.length === 0) {
-                    var opt = document.createElement('option');
-                    opt.disabled = true;
-                    opt.textContent = 'No classes found';
-                    filterClass.appendChild(opt);
-                }
-                classes.forEach(function(c) {
+                data.forEach(function(c) {
                     var opt = document.createElement('option');
                     opt.value = c.id;
                     opt.textContent = c.name;
@@ -864,227 +792,70 @@
                 });
             })
             .catch(function(err) {
-                console.error('[MarkEntry] Failed to load classes:', err);
-                filterClass.innerHTML = '<option value="">-- Error loading classes --</option>';
+                console.error('Failed to load classes:', err);
             });
     }
 
-    // ========== LOAD SECTIONS ==========
-    function loadSections() {
-        var classId = filterClass.value;
-        var ayId = filterAy.value;
-        if (!classId) return;
-
-        console.log('[MarkEntry] loadSections() called, classId=' + classId + ', API_SECTIONS=' + API_SECTIONS);
-
-        var url = API_SECTIONS + '?class_id=' + classId;
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function(r) {
-                console.log('[MarkEntry] loadSections response: status=' + r.status + ', redirected=' + r.redirected);
-                if (!r.ok) {
-                    if (r.status === 302 || r.redirected) {
-                        throw new Error('Session expired. Please refresh the page and log in again.');
-                    }
-                    throw new Error('HTTP ' + r.status);
-                }
-                return r.json();
-            })
-            .then(function(data) {
-                filterSection.innerHTML = '<option value="">-- Select Section --</option>';
-                // API returns array of {id, name} directly
-                var sections = Array.isArray(data) ? data : (data.sections || []);
-                console.log('[MarkEntry] loadSections returned ' + sections.length + ' sections for classId=' + classId, sections);
-
-                // Filter by teacher assignments if teacher
-                if (teacherAssignments && teacherAssignments.length > 0) {
-                    var assignedSections = teacherAssignments
-                        .filter(function(a) { return a.class_id == classId; })
-                        .map(function(a) { return a.section_id; });
-                    if (assignedSections.length > 0 && assignedSections[0] !== null) {
-                        sections = sections.filter(function(s) {
-                            return assignedSections.indexOf(String(s.id)) !== -1 || assignedSections.indexOf(s.id) !== -1;
-                        });
-                    }
-                }
-
-                populateSectionsDropdown(sections, classId);
-            })
-            .catch(function(err) {
-                console.error('[MarkEntry] Failed to load sections via API:', err);
-                // FALLBACK: Use server-side sections data
-                console.log('[MarkEntry] Falling back to server-side sections data...');
-                var fallbackSections = serverSections.filter(function(s) { return s.class_id == classId; });
-                if (fallbackSections.length > 0) {
-                    populateSectionsDropdown(fallbackSections, classId);
-                } else {
-                    filterSection.innerHTML = '<option value="">-- Error loading sections --</option>';
-                    filterSection.disabled = true;
-                }
-            });
+    // ========== UPDATE LOAD BUTTON ==========
+    function updateLoadButton() {
+        var ready = filterAy.value && filterTerm.value && filterClass.value && filterSection.value && filterSubject.value;
+        btnLoad.disabled = !ready;
+        filterHint.textContent = ready ? 'Ready to load students' : 'Select all filters above to load students';
     }
 
-    // Helper: populate sections dropdown from data
-    function populateSectionsDropdown(sections, classId) {
-        filterSection.innerHTML = '<option value="">-- Select Section --</option>';
-
-        if (sections.length === 0) {
-            var opt = document.createElement('option');
-            opt.disabled = true;
-            opt.textContent = 'No sections found';
-            filterSection.appendChild(opt);
-        }
-
-        sections.forEach(function(s) {
-            var opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = s.name;
-            filterSection.appendChild(opt);
-        });
-        filterSection.disabled = sections.length === 0;
-
-        // Auto-select if only one
-        if (sections.length === 1) {
-            filterSection.value = sections[0].id;
-            filterSection.dispatchEvent(new Event('change'));
-        }
-    }
-
-    // ========== LOAD SUBJECTS ==========
-    function loadSubjects() {
-        var classId = filterClass.value;
-        var sectionId = filterSection.value;
-        var ayId = filterAy.value;
-        if (!classId || !ayId) return;
-
-        console.log('[MarkEntry] loadSubjects() called, classId=' + classId + ', sectionId=' + sectionId);
-
-        var url = API_SUBJECTS + '?class_id=' + classId + '&section_id=' + (sectionId || '') + '&academic_year_id=' + ayId;
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function(r) {
-                console.log('[MarkEntry] loadSubjects response: status=' + r.status + ', redirected=' + r.redirected);
-                if (!r.ok) {
-                    if (r.status === 302 || r.redirected) {
-                        throw new Error('Session expired. Please refresh the page and log in again.');
-                    }
-                    throw new Error('HTTP ' + r.status);
-                }
-                return r.json();
-            })
-            .then(function(data) {
-                filterSubject.innerHTML = '<option value="">-- Select Subject --</option>';
-                var subjects = Array.isArray(data) ? data : (data.subjects || []);
-                console.log('[MarkEntry] loadSubjects returned ' + subjects.length + ' subjects', subjects);
-
-                // Filter by teacher assignments if teacher
-                if (teacherAssignments && teacherAssignments.length > 0) {
-                    var isHomeroom = teacherAssignments.some(function(a) {
-                        return a.class_id == classId && a.section_id == sectionId && a.is_homeroom;
-                    });
-
-                    if (!isHomeroom) {
-                        var assignedSubjects = teacherAssignments
-                            .filter(function(a) { return a.class_id == classId && (!a.section_id || a.section_id == sectionId); })
-                            .map(function(a) { return a.subject_id; });
-                        if (assignedSubjects.length > 0 && assignedSubjects[0] !== null) {
-                            subjects = subjects.filter(function(s) {
-                                return assignedSubjects.indexOf(String(s.id)) !== -1 || assignedSubjects.indexOf(s.id) !== -1;
-                            });
-                        }
-                    }
-                }
-
-                if (subjects.length === 0) {
-                    var opt = document.createElement('option');
-                    opt.disabled = true;
-                    opt.textContent = 'No subjects found';
-                    filterSubject.appendChild(opt);
-                }
-
-                subjects.forEach(function(s) {
-                    var opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.textContent = s.name;
-                    filterSubject.appendChild(opt);
-                });
-                filterSubject.disabled = subjects.length === 0;
-
-                // Auto-select if only one
-                if (subjects.length === 1) {
-                    filterSubject.value = subjects[0].id;
-                    filterSubject.dispatchEvent(new Event('change'));
-                }
-
-                updateLoadButton();
-            })
-            .catch(function(err) {
-                console.error('[MarkEntry] Failed to load subjects:', err);
-                filterSubject.innerHTML = '<option value="">-- Error loading subjects --</option>';
-                filterSubject.disabled = true;
-            });
-    }
+    // ========== LOAD STUDENTS BUTTON ==========
+    btnLoad.addEventListener('click', function() {
+        loadStudents();
+    });
 
     // ========== CHECK LOCK STATUS ==========
     function checkLockStatus() {
         var ayId = filterAy.value;
         var termId = filterTerm.value;
-        if (!ayId || !termId) { hideLockBanner(); return; }
+        var branchId = '{{ auth()->user()->branch_id ?? "" }}';
 
-        fetch(API_CHECK_LOCK + '?academic_year_id=' + ayId + '&term_id=' + termId, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        if (!ayId || !termId) return;
+
+        fetch(API_CHECK_LOCK + '?academic_year_id=' + ayId + '&term_id=' + termId + (branchId ? '&branch_id=' + branchId : ''), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) {
-                if (!r.ok) {
-                    if (r.status === 302 || r.redirected) {
-                        throw new Error('Session expired. Please refresh the page and log in again.');
-                    }
-                    throw new Error('HTTP ' + r.status);
-                }
+                if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
             })
             .then(function(data) {
-                isLocked = !!(data.is_locked);
-                hasPermission = !!(data.has_permission);
+                isLocked = !!data.locked;
+                hasPermission = !!data.has_permission;
 
                 if (isLocked && !hasPermission) {
-                    showLockBanner(true, data.message || 'Mark entry is locked for this term. Contact administrator for permission.');
+                    lockBanner.classList.remove('d-none');
+                    lockBanner.className = 'me-lock-banner locked';
+                    lockBannerText.textContent = 'Mark entry is locked for this term. Contact admin for permission.';
+                    chipLock.style.display = '';
+                    chipLock.className = 'me-term-chip chip-lock';
+                    chipLockText.textContent = 'Locked';
                 } else if (isLocked && hasPermission) {
-                    showLockBanner(true, 'Mark entry is locked, but you have permission to edit.');
+                    lockBanner.classList.remove('d-none');
+                    lockBanner.className = 'me-lock-banner unlocked';
+                    lockBannerText.textContent = 'Mark entry is locked, but you have permission to edit.';
+                    chipLock.style.display = '';
+                    chipLock.className = 'me-term-chip chip-unlock';
+                    chipLockText.textContent = 'Edit Permitted';
                 } else {
-                    showLockBanner(false, 'Mark entry is open for this term.');
+                    lockBanner.classList.add('d-none');
+                    chipLock.style.display = '';
+                    chipLock.className = 'me-term-chip chip-unlock';
+                    chipLockText.textContent = 'Unlocked';
                 }
 
-                // Disable/enable mark inputs
                 updateInputLockState();
             })
             .catch(function(err) {
-                console.error('[MarkEntry] Failed to check lock status:', err);
-                hideLockBanner();
+                console.error('Lock check error:', err);
             });
-    }
-
-    function showLockBanner(locked, message) {
-        lockBanner.classList.remove('d-none', 'locked', 'unlocked');
-        lockBanner.classList.add(locked ? 'locked' : 'unlocked');
-        lockBanner.querySelector('i').className = locked ? 'fas fa-lock' : 'fas fa-lock-open';
-        lockBannerText.textContent = message;
-
-        chipLock.style.display = '';
-        chipLock.className = 'me-term-chip ' + (locked ? 'chip-lock' : 'chip-unlock');
-        chipLock.querySelector('i').className = locked ? 'fas fa-lock' : 'fas fa-lock-open';
-        chipLockText.textContent = locked ? 'Locked' : 'Unlocked';
-    }
-
-    function hideLockBanner() {
-        lockBanner.classList.add('d-none');
-        chipLock.style.display = 'none';
-        isLocked = false;
     }
 
     function updateInputLockState() {
         var disabled = isLocked && !hasPermission;
-        document.querySelectorAll('.me-mark-input, .me-mark-input-large').forEach(function(inp) {
-            inp.disabled = disabled;
-        });
-        // Also update mobile inputs
-        document.querySelectorAll('.me-mobile-field-input').forEach(function(inp) {
+        document.querySelectorAll('.me-sc-field-input').forEach(function(inp) {
             inp.disabled = disabled;
         });
     }
@@ -1099,9 +870,7 @@
 
         if (!ayId || !termId || !classId || !sectionId || !subjectId) return;
 
-        // Mark field is always 'all' now
         currentMarkField = 'all';
-
         showLoading();
 
         var url = API_LOAD_STUDENTS
@@ -1131,11 +900,9 @@
                         marks: {}
                     };
 
-                    // Populate marks from response
                     ALL_MARK_FIELDS.forEach(function(f) {
                         studentObj.marks[f.key] = (s[f.key] !== null && s[f.key] !== undefined) ? s[f.key] : null;
                     });
-                    // Also grab server-calculated totals if available
                     studentObj.marks.ca_total = s.ca_total || null;
                     studentObj.marks.exam_total = s.exam_total || null;
                     studentObj.marks.grand_total = s.grand_total || null;
@@ -1145,10 +912,8 @@
                 });
 
                 if (students.length > 0) {
-                    buildTable();
+                    renderAllCards();
                     showMarkEntry();
-                    updateFieldBadge();
-                    // Re-check lock status to ensure inputs are correctly disabled
                     updateInputLockState();
                 } else {
                     showNoStudents();
@@ -1160,159 +925,123 @@
             });
     }
 
-    // ========== BUILD STUDENT CARD ==========
-    function buildTable() {
-        // Always build card view (one student at a time)
-        if (currentIndex < 0) currentIndex = 0;
-        buildStudentCard(currentIndex);
-
-        // Update keyboard hint
-        keyboardHint.innerHTML = 'Use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> arrow keys to navigate between students &middot; <kbd>Tab</kbd> to move between fields &middot; Marks auto-save after 900ms';
-    }
-
-    function buildStudentCard(idx) {
-        if (idx < 0 || idx >= students.length) return;
-        var s = students[idx];
-
-        // Update nav bar
-        cardStudentName.textContent = s.student_name;
-        cardAvatar.textContent = getInitials(s.student_name);
-        cardCounter.textContent = (idx + 1) + ' / ' + students.length;
-        document.getElementById('cardPrev').disabled = idx === 0;
-        document.getElementById('cardNext').disabled = idx === students.length - 1;
+    // ========== RENDER ALL STUDENT CARDS ==========
+    function renderAllCards() {
+        totalStudentCount.textContent = students.length;
 
         var html = '';
+        students.forEach(function(s, idx) {
+            var initials = getInitials(s.student_name);
+            var caTotal = s.marks.ca_total;
+            var examTotal = s.marks.exam_total;
+            var grandTotal = s.marks.grand_total;
+            var grade = s.marks.grade || '-';
+            var gradeClass = getGradeClass(grade);
 
-        // CA Section
-        html += '<div class="me-card-section-label ca-label">Continuous Assessment</div>';
-        html += '<div class="me-card-ca-grid">';
+            html += '<div class="me-student-card" id="card_' + s.id + '" data-student-index="' + idx + '">';
 
-        // CA1-CA10
-        CA_FIELDS.forEach(function(f) {
-            var val = s.marks[f.key];
-            html += '<div class="me-card-field">'
-                + '<span class="me-card-field-label">' + f.label + '</span>'
-                + '<input type="text" inputmode="decimal" class="me-card-field-input mark-input"'
-                + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
-                + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
-                + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
-                + ' placeholder="/' + f.max + '"'
-                + (isLocked ? ' disabled' : '')
-                + '>'
-                + '<span class="me-card-field-max">/' + f.max + '</span>'
+            // Card Header
+            html += '<div class="me-sc-header">';
+            html += '<div class="me-sc-avatar">' + escapeHtml(initials) + '</div>';
+            html += '<div class="me-sc-info">';
+            html += '<div class="me-sc-name">' + escapeHtml(s.student_name) + '</div>';
+            html += '<div class="me-sc-roll">' + (s.roll_number ? 'Roll: ' + escapeHtml(s.roll_number) : '') + '</div>';
+            html += '</div>';
+            html += '<span class="me-sc-number">#' + (idx + 1) + '</span>';
+            html += '</div>';
+
+            // Card Body
+            html += '<div class="me-sc-body">';
+
+            // CA Section
+            html += '<div class="me-sc-section-label ca-label">Continuous Assessment</div>';
+            html += '<div class="me-sc-ca-grid">';
+
+            // CA1-CA10
+            CA_FIELDS.forEach(function(f) {
+                var val = s.marks[f.key];
+                html += '<div class="me-sc-field">'
+                    + '<span class="me-sc-field-label">' + f.label + '</span>'
+                    + '<input type="text" inputmode="decimal" class="me-sc-field-input mark-input"'
+                    + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
+                    + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
+                    + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
+                    + ' placeholder="/' + f.max + '"'
+                    + (isLocked ? ' disabled' : '')
+                    + '>'
+                    + '<span class="me-sc-field-max">/' + f.max + '</span>'
+                    + '</div>';
+            });
+
+            // Extra CA: Conduct, Handwriting, Creativity
+            EXTRA_CA_FIELDS.forEach(function(f) {
+                var val = s.marks[f.key];
+                html += '<div class="me-sc-field">'
+                    + '<span class="me-sc-field-label">' + f.label + '</span>'
+                    + '<input type="text" inputmode="decimal" class="me-sc-field-input mark-input"'
+                    + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
+                    + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
+                    + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
+                    + ' placeholder="/' + f.max + '"'
+                    + (isLocked ? ' disabled' : '')
+                    + '>'
+                    + '<span class="me-sc-field-max">/' + f.max + '</span>'
+                    + '</div>';
+            });
+
+            html += '</div>';
+
+            // Exam Section
+            html += '<div class="me-sc-section-label exam-label">Examination</div>';
+            html += '<div class="me-sc-exam-grid">';
+
+            EXAM_FIELDS.forEach(function(f) {
+                var val = s.marks[f.key];
+                html += '<div class="me-sc-field field-exam">'
+                    + '<span class="me-sc-field-label">' + f.label + '</span>'
+                    + '<input type="text" inputmode="decimal" class="me-sc-field-input mark-input exam-input"'
+                    + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
+                    + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
+                    + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
+                    + ' placeholder="/' + f.max + '"'
+                    + (isLocked ? ' disabled' : '')
+                    + '>'
+                    + '<span class="me-sc-field-max">/' + f.max + '</span>'
+                    + '</div>';
+            });
+
+            html += '</div>';
+
+            html += '</div>'; // end me-sc-body
+
+            // Card Totals Footer
+            html += '<div class="me-sc-totals">';
+            html += '<div class="me-sc-total-item">'
+                + '<div class="me-sc-total-label">CA /30</div>'
+                + '<div class="me-sc-total-value ca-val" id="cardCaTotal_' + s.id + '">' + (caTotal !== null && caTotal !== undefined ? parseFloat(caTotal).toFixed(1) : '-') + '</div>'
                 + '</div>';
+            html += '<div class="me-sc-total-item">'
+                + '<div class="me-sc-total-label">Exam /70</div>'
+                + '<div class="me-sc-total-value exam-val" id="cardExamTotal_' + s.id + '">' + (examTotal !== null && examTotal !== undefined ? parseFloat(examTotal).toFixed(1) : '-') + '</div>'
+                + '</div>';
+            html += '<div class="me-sc-total-item">'
+                + '<div class="me-sc-total-label">Total /100</div>'
+                + '<div class="me-sc-total-value grand-val" id="cardGrandTotal_' + s.id + '">' + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</div>'
+                + '</div>';
+            html += '<div class="me-sc-total-item">'
+                + '<div class="me-sc-total-label">Grade</div>'
+                + '<div class="me-sc-total-value"><span class="me-grade-badge ' + gradeClass + '" id="cardGrade_' + s.id + '">' + grade + '</span></div>'
+                + '</div>';
+            html += '</div>';
+
+            html += '</div>'; // end me-student-card
         });
 
-        // Extra CA: Conduct, Handwriting, Creativity
-        EXTRA_CA_FIELDS.forEach(function(f) {
-            var val = s.marks[f.key];
-            html += '<div class="me-card-field">'
-                + '<span class="me-card-field-label">' + f.label + '</span>'
-                + '<input type="text" inputmode="decimal" class="me-card-field-input mark-input"'
-                + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
-                + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
-                + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
-                + ' placeholder="/' + f.max + '"'
-                + (isLocked ? ' disabled' : '')
-                + '>'
-                + '<span class="me-card-field-max">/' + f.max + '</span>'
-                + '</div>';
-        });
+        cardsContainer.innerHTML = html;
 
-        html += '</div>';
-
-        // Exam Section
-        html += '<div class="me-card-section-label exam-label">Examination</div>';
-        html += '<div class="me-card-exam-grid">';
-
-        EXAM_FIELDS.forEach(function(f) {
-            var val = s.marks[f.key];
-            html += '<div class="me-card-field field-exam">'
-                + '<span class="me-card-field-label">' + f.label + '</span>'
-                + '<input type="text" inputmode="decimal" class="me-card-field-input mark-input exam-input"'
-                + ' data-student-id="' + s.id + '" data-student-index="' + idx + '"'
-                + ' data-mark-key="' + f.key + '" data-max="' + f.max + '"'
-                + ' value="' + (val !== null && val !== undefined ? val : '') + '"'
-                + ' placeholder="/' + f.max + '"'
-                + (isLocked ? ' disabled' : '')
-                + '>'
-                + '<span class="me-card-field-max">/' + f.max + '</span>'
-                + '</div>';
-        });
-
-        html += '</div>';
-
-        cardBody.innerHTML = html;
-
-        // Build totals footer
-        var caTotal = s.marks.ca_total;
-        var examTotal = s.marks.exam_total;
-        var grandTotal = s.marks.grand_total;
-        var grade = s.marks.grade || '-';
-        var gradeClass = getGradeClass(grade);
-
-        var totalsHtml = '<div class="me-card-total-item">'
-            + '<div class="me-card-total-label">CA /30</div>'
-            + '<div class="me-card-total-value ca-val" id="cardCaTotal_' + s.id + '">' + (caTotal !== null && caTotal !== undefined ? parseFloat(caTotal).toFixed(1) : '-') + '</div>'
-            + '</div>'
-            + '<div class="me-card-total-item">'
-            + '<div class="me-card-total-label">Exam /70</div>'
-            + '<div class="me-card-total-value exam-val" id="cardExamTotal_' + s.id + '">' + (examTotal !== null && examTotal !== undefined ? parseFloat(examTotal).toFixed(1) : '-') + '</div>'
-            + '</div>'
-            + '<div class="me-card-total-item">'
-            + '<div class="me-card-total-label">Total /100</div>'
-            + '<div class="me-card-total-value grand-val" id="cardGrandTotal_' + s.id + '">' + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</div>'
-            + '</div>'
-            + '<div class="me-card-total-item">'
-            + '<div class="me-card-total-label">Grade</div>'
-            + '<div class="me-card-total-value"><span class="me-grade-badge ' + gradeClass + '" id="cardGrade_' + s.id + '">' + grade + '</span></div>'
-            + '</div>';
-
-        cardTotals.innerHTML = totalsHtml;
-
-        // Attach listeners to the new inputs
+        // Attach listeners to all inputs
         attachMarkInputListeners();
     }
-
-    // Card navigation
-    window.cardNavigate = function(dir) {
-        var newIdx = currentIndex + dir;
-        if (newIdx < 0) newIdx = 0;
-        if (newIdx >= students.length) newIdx = students.length - 1;
-        if (newIdx === currentIndex) return;
-        currentIndex = newIdx;
-        buildStudentCard(currentIndex);
-        // Focus the first input in the card
-        var firstInput = cardBody.querySelector('.mark-input');
-        if (firstInput) firstInput.focus();
-    };
-
-    // Swipe gesture support
-    var swipeStartX = 0;
-    var swipeStartY = 0;
-    var swipeThreshold = 50;
-
-    if (cardBody) {
-        cardBody.addEventListener('touchstart', function(e) {
-            swipeStartX = e.changedTouches[0].screenX;
-            swipeStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
-
-        cardBody.addEventListener('touchend', function(e) {
-            var deltaX = e.changedTouches[0].screenX - swipeStartX;
-            var deltaY = e.changedTouches[0].screenY - swipeStartY;
-            // Only trigger if horizontal swipe is dominant
-            if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-                if (deltaX > 0) {
-                    cardNavigate(-1); // swipe right = previous
-                } else {
-                    cardNavigate(1); // swipe left = next
-                }
-            }
-        }, { passive: true });
-    }
-
-    // No resize handler needed — card view works on all sizes
 
     // ========== MARK INPUT LISTENERS ==========
     function attachMarkInputListeners() {
@@ -1323,14 +1052,15 @@
                 if ([8, 9, 13, 27, 46, 35, 36, 37, 38, 39, 40].indexOf(e.keyCode) !== -1) return;
                 if ((e.ctrlKey || e.metaKey) && [65, 67, 86, 88, 90].indexOf(e.keyCode) !== -1) return;
 
-                // Ctrl+Arrow left/right for student navigation while in input
-                if (e.keyCode === 37 && e.ctrlKey) { e.preventDefault(); cardNavigate(-1); return; }
-                if (e.keyCode === 39 && e.ctrlKey) { e.preventDefault(); cardNavigate(1); return; }
-
-                // Enter moves to next student
+                // Enter moves focus to next input
                 if (e.keyCode === 13) {
                     e.preventDefault();
-                    cardNavigate(1);
+                    // Find all mark inputs in order and focus the next one
+                    var allInputs = Array.from(document.querySelectorAll('.mark-input'));
+                    var currentIdx = allInputs.indexOf(this);
+                    if (currentIdx < allInputs.length - 1) {
+                        allInputs[currentIdx + 1].focus();
+                    }
                     return;
                 }
 
@@ -1411,10 +1141,21 @@
                 saveMark(studentId, markKey, this.value);
             });
 
-            // FOCUS: Update current index
+            // FOCUS: Highlight the active card
             inp.addEventListener('focus', function() {
-                var idx = parseInt(this.dataset.studentIndex);
-                if (!isNaN(idx) && idx >= 0) currentIndex = idx;
+                // Highlight the parent card
+                var card = this.closest('.me-student-card');
+                document.querySelectorAll('.me-student-card.card-active').forEach(function(c) { c.classList.remove('card-active'); });
+                if (card) card.classList.add('card-active');
+
+                // Scroll card into view if needed
+                if (card) {
+                    var rect = card.getBoundingClientRect();
+                    var viewHeight = window.innerHeight || document.documentElement.clientHeight;
+                    if (rect.top < 80 || rect.bottom > viewHeight - 80) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
             });
         });
     }
@@ -1442,19 +1183,14 @@
         var examRaw = 0;
         EXAM_KEYS.forEach(function(k) { examRaw += parseFloat(s.marks[k]) || 0; });
 
-        // CA scaled: round(($caRaw / 70) * 30, 2)
         var caScaled = Math.round((caRaw / 70) * 30 * 100) / 100;
-        // Exam total: min($examRaw, 70)
         var examTotal = Math.min(examRaw, 70);
-        // Grand total: round($caScaled + $examTotal, 2)
         var grandTotal = Math.round((caScaled + examTotal) * 100) / 100;
 
-        // Update local data
         s.marks.ca_total = caScaled;
         s.marks.exam_total = examTotal;
         s.marks.grand_total = grandTotal;
 
-        // Update DOM — card totals
         var caEl = document.getElementById('cardCaTotal_' + s.id);
         var exEl = document.getElementById('cardExamTotal_' + s.id);
         var gtEl = document.getElementById('cardGrandTotal_' + s.id);
@@ -1464,7 +1200,6 @@
         if (exEl) exEl.textContent = examTotal.toFixed(1);
         if (gtEl) gtEl.textContent = grandTotal.toFixed(1);
 
-        // Grade calculation
         var grade = calcGrade(grandTotal);
         s.marks.grade = grade;
         if (grEl) {
@@ -1552,7 +1287,6 @@
                     if (res.grand_total !== undefined) students[idx].marks.grand_total = res.grand_total;
                     if (res.grade !== undefined) students[idx].marks.grade = res.grade;
 
-                    // Update card total DOM cells
                     var caEl = document.getElementById('cardCaTotal_' + studentId);
                     var exEl = document.getElementById('cardExamTotal_' + studentId);
                     var gtEl = document.getElementById('cardGrandTotal_' + studentId);
@@ -1569,7 +1303,6 @@
                 setTimeout(function() { setGlobalSaveStatus('idle', 'Ready'); }, 2000);
             } else {
                 setGlobalSaveStatus('error', res.error || 'Failed');
-                // Flash input red
                 var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
                 if (inp) {
                     inp.classList.add('input-error');
@@ -1593,30 +1326,35 @@
         globalSaveStatus.textContent = text;
     }
 
-    // ========== NAVIGATION ==========
-    window.navigateStudent = function(dir) {
-        cardNavigate(dir);
-    };
-
-    // ========== KEYBOARD NAVIGATION ==========
-    document.addEventListener('keydown', function(e) {
-        // Arrow left/right for student navigation when not in a mark input
-        if (e.target.classList.contains('mark-input')) {
-            return;
-        }
-
-        if (e.key === 'ArrowLeft') { e.preventDefault(); cardNavigate(-1); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); cardNavigate(1); }
-    });
-
     // ========== UI STATE HELPERS ==========
     function hideMarkEntry() {
         markEntryArea.classList.add('d-none');
         emptyState.classList.remove('d-none');
         noStudentsState.classList.add('d-none');
         loadingState.classList.add('d-none');
-        // Show the filter panel again when mark entry is hidden
         expandFilterPanel();
+    }
+
+    function showMarkEntry() {
+        markEntryArea.classList.remove('d-none');
+        emptyState.classList.add('d-none');
+        noStudentsState.classList.add('d-none');
+        loadingState.classList.add('d-none');
+        collapseFilterPanel();
+    }
+
+    function showLoading() {
+        loadingState.classList.remove('d-none');
+        markEntryArea.classList.add('d-none');
+        emptyState.classList.add('d-none');
+        noStudentsState.classList.add('d-none');
+    }
+
+    function showNoStudents() {
+        noStudentsState.classList.remove('d-none');
+        markEntryArea.classList.add('d-none');
+        emptyState.classList.add('d-none');
+        loadingState.classList.add('d-none');
     }
 
     // ========== FILTER PANEL COLLAPSE/EXPAND ==========
@@ -1635,10 +1373,8 @@
         summary.classList.remove('visible');
     }
 
-    // Global function called by the "Change" button
     window.showFilterPanel = function() {
         expandFilterPanel();
-        // Scroll to filter panel
         document.getElementById('filterPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
@@ -1646,8 +1382,6 @@
         var summaryText = document.getElementById('filterSummaryText');
         var parts = [];
 
-        var ayName = filterAy.selectedOptions[0] ? filterAy.selectedOptions[0].textContent : '';
-        var termName = filterTerm.selectedOptions[0] ? filterTerm.selectedOptions[0].textContent : '';
         var className = filterClass.selectedOptions[0] ? filterClass.selectedOptions[0].textContent : '';
         var sectionName = filterSection.selectedOptions[0] ? filterSection.selectedOptions[0].textContent : '';
         var subjectName = filterSubject.selectedOptions[0] ? filterSubject.selectedOptions[0].textContent : '';
@@ -1659,34 +1393,6 @@
         summaryText.innerHTML = parts.map(function(p) {
             return '<span class="me-filter-summary-chip"><i class="fas fa-check"></i> ' + p + '</span>';
         }).join('');
-    }
-
-    function showMarkEntry() {
-        markEntryArea.classList.remove('d-none');
-        emptyState.classList.add('d-none');
-        noStudentsState.classList.add('d-none');
-        loadingState.classList.add('d-none');
-        // Collapse the filter panel and show summary
-        collapseFilterPanel();
-        // Build the first student card
-        if (students.length > 0) {
-            currentIndex = 0;
-            buildStudentCard(0);
-        }
-    }
-
-    function showLoading() {
-        loadingState.classList.remove('d-none');
-        markEntryArea.classList.add('d-none');
-        emptyState.classList.add('d-none');
-        noStudentsState.classList.add('d-none');
-    }
-
-    function showNoStudents() {
-        noStudentsState.classList.remove('d-none');
-        markEntryArea.classList.add('d-none');
-        emptyState.classList.add('d-none');
-        loadingState.classList.add('d-none');
     }
 
     // ========== UTILITY ==========
