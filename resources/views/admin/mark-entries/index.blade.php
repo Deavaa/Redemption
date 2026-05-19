@@ -296,47 +296,27 @@
 
 @section('content')
 <div class="me-page">
-    {{-- Page Header --}}
-    <div class="me-header">
-        <div class="me-header-left">
-            <nav aria-label="breadcrumb" class="me-breadcrumb">
-                <ol>
-                    <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
-                    <li class="active">Mark Entry</li>
-                </ol>
-            </nav>
-            <h1 class="me-title">Mark Entry</h1>
-            <p class="me-subtitle">Enter and manage student marks by class, section, and subject</p>
-        </div>
-        <div class="me-header-right d-flex gap-2 align-items-center flex-wrap">
-            @can('mark-entry.lock')
-                <a href="{{ route('admin.mark-entry-locks.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.82rem;padding:0.45rem 1rem;">
-                    <i class="fas fa-lock"></i> Lock Management
-                </a>
-            @endcan
-            @can('mark-entry.permissions')
-                <a href="{{ route('admin.mark-entry-permissions.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.82rem;padding:0.45rem 1rem;">
-                    <i class="fas fa-key"></i> Permissions
-                </a>
-            @endcan
-        </div>
+    {{-- Compact top bar: Lock/Permissions only --}}
+    @canany(['mark-entry.lock', 'mark-entry.permissions'])
+    <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0 0 0.5rem;flex-wrap:wrap;">
+        @can('mark-entry.lock')
+            <a href="{{ route('admin.mark-entry-locks.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.78rem;padding:0.35rem 0.85rem;">
+                <i class="fas fa-lock"></i> Lock Management
+            </a>
+        @endcan
+        @can('mark-entry.permissions')
+            <a href="{{ route('admin.mark-entry-permissions.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.78rem;padding:0.35rem 0.85rem;">
+                <i class="fas fa-key"></i> Permissions
+            </a>
+        @endcan
     </div>
+    @endcanany
 
-    {{-- Current Term Info Bar --}}
-    <div class="me-term-bar" id="termInfoBar">
-        <div class="me-term-chip chip-ay">
-            <i class="fas fa-calendar-alt"></i>
-            <span id="chipAy">{{ $currentAy ? $currentAy->name : 'No Academic Year' }}</span>
-        </div>
-        <div class="me-term-chip chip-term">
-            <i class="fas fa-list-ol"></i>
-            <span id="chipTerm">{{ $currentTerm ? $currentTerm->name : 'No Active Term' }}</span>
-        </div>
-        <div class="me-term-chip" id="chipLock" style="display:none;">
-            <i class="fas fa-lock"></i>
-            <span id="chipLockText">--</span>
-        </div>
-    </div>
+    {{-- Hidden elements for JS state (academic year, term, lock info) --}}
+    <span id="chipAy" style="display:none;">{{ $currentAy ? $currentAy->name : 'No Academic Year' }}</span>
+    <span id="chipTerm" style="display:none;">{{ $currentTerm ? $currentTerm->name : 'No Active Term' }}</span>
+    <span id="chipLock" style="display:none;"></span>
+    <span id="chipLockText" style="display:none;">--</span>
 
     {{-- Compact Filter Summary (shown when filter is collapsed) --}}
     <div class="me-filter-summary" id="filterSummary">
@@ -349,14 +329,7 @@
 
     {{-- Filter Panel --}}
     <div class="me-filter-card" id="filterPanel">
-        <div class="me-filter-header">
-            <div class="me-filter-icon"><i class="fas fa-filter"></i></div>
-            <div>
-                <h3 class="me-filter-title">Select Class & Subject</h3>
-                <p class="me-filter-desc">Choose academic year, term, class, section, and subject to load students</p>
-            </div>
-        </div>
-        <div class="me-filter-body">
+        <div class="me-filter-body" style="padding:0.75rem 1rem;">
             <div class="me-filter-grid">
                 <div class="me-filter-group">
                     <label class="me-filter-label" for="filterAy">Academic Year <span class="me-required">*</span></label>
