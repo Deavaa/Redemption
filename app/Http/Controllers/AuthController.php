@@ -54,7 +54,10 @@ class AuthController extends Controller
         // Log in the user
         Auth::login($user, $r->boolean('remember'));
         $r->session()->regenerate();
-        
+
+        // Force-save the session to disk immediately (prevents session loss)
+        $r->session()->save();
+
         // Redirect based on role
         return redirect()->intended($this->getHomeRoute($user));
     }
