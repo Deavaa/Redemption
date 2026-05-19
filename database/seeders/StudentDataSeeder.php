@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Student;
+use App\Models\User;
 use App\Models\Branch;
 use App\Models\AcademicYear;
 use App\Models\ClassRoom;
@@ -43,21 +44,41 @@ class StudentDataSeeder extends Seeder
             return;
         }
 
-        // Build grade → class/section maps
-        $classes = ClassRoom::where('branch_id', $branch->id)
-            ->where('academic_year_id', $ay->id)
-            ->get()
-            ->keyBy(function ($c) {
-                // "Grade 1" → 1, "Grade 8" → 8
-                return (int) preg_replace('/[^0-9]/', '', $c->name);
-            });
+        $this->command->info("  Using Branch: {$branch->name} (ID: {$branch->id})");
+        $this->command->info("  Using AY: {$ay->name} (ID: {$ay->id})");
 
+        // Build grade → class/section maps
+        $allClasses = ClassRoom::where('branch_id', $branch->id)
+            ->where('academic_year_id', $ay->id)
+            ->get();
+
+        $this->command->info("  Found {$allClasses->count()} classes in database:");
+        foreach ($allClasses as $c) {
+            $this->command->info("    - ID:{$c->id} Name:{$c->name} NumericName:{$c->numeric_name}");
+        }
+
+        // Key by numeric_name (more reliable), fallback to regex from name
+        $classes = $allClasses->keyBy(function ($c) {
+            if ($c->numeric_name) {
+                return (int) $c->numeric_name;
+            }
+            if (preg_match('/(\d+)/', $c->name, $m)) {
+                return (int) $m[1];
+            }
+            return 0;
+        })->filter(fn($c, $k) => $k > 0);
+
+        $this->command->info("  Parsed class map (grade → class_id): " . $classes->map(fn($c, $k) => "G{$k}→ID{$c->id}")->implode(', '));
+
+        // Build sections per class
         $sectionsByClass = [];
         foreach ($classes as $gradeNum => $class) {
-            $sectionsByClass[$gradeNum] = Section::where('class_id', $class->id)
+            $secs = Section::where('class_id', $class->id)
                 ->orderBy('name')
                 ->get()
-                ->values();   // [0 => Section A, 1 => Section B]
+                ->values();
+            $sectionsByClass[$gradeNum] = $secs;
+            $this->command->info("    Grade {$gradeNum} → Class ID:{$class->id} → {$secs->count()} sections");
         }
 
         if ($classes->isEmpty()) {
@@ -66,7 +87,6 @@ class StudentDataSeeder extends Seeder
         }
 
         // ── Student raw data ──────────────────────────────────────────
-        // Each row: [full_name, gender, date_of_birth, phone]
         $students = [
             ['Helana Tesfaye Gebrekidan', 'Female', '2018-08-06', '0911302896'],
             ['Yohana Dawit Ayalew', 'Female', '2011-02-23', '0911998833'],
@@ -89,13 +109,13 @@ class StudentDataSeeder extends Seeder
             ['Naol Getu Teresa', 'Male', '2019-08-22', '0912477041'],
             ['Leul Matiyos Beyene', 'Male', '2018-06-11', '0930130570'],
             ['Hanifa Mohammod Adem', 'Female', '2018-06-17', '0974179999'],
-            ['Maya Addisu Abinet', 'Female', '2018-07-17', '0913912514'],   // corrected from 2025
+            ['Maya Addisu Abinet', 'Female', '2018-07-17', '0913912514'],
             ['Selman Seid Yesuf', 'Male', '2019-03-06', '0920101067'],
             ['Atinaf Shunke Kebede', 'Female', '2019-06-11', '0920487826'],
             ['Eldana Fikadu Tamrat', 'Female', '2018-12-13', '0947410742'],
             ['Rebira Merga Bifa', 'Male', '2018-02-13', '0911879469'],
             ['Naol Abiy', 'Male', '2018-01-18', '0911223344'],
-            ['Shem Demissie Tsige', 'Male', '2017-07-23', '0911560448'],   // corrected from 2025
+            ['Shem Demissie Tsige', 'Male', '2017-07-23', '0911560448'],
             ['Mekdelawit Michael Getu', 'Female', '2017-12-11', '0910546947'],
             ['Younis Abdurazak Abdulaziz', 'Male', '2017-11-04', '0911901715'],
             ['Elshaday Samuel Paulos', 'Female', '2017-12-16', '0917954202'],
@@ -103,7 +123,7 @@ class StudentDataSeeder extends Seeder
             ['Maranat Surafel Getachew', 'Female', '2017-11-21', '0947976200'],
             ['Kalkidan Dagim Desalegn', 'Female', '2017-03-02', '0911786353'],
             ['Eyosias Befikadu Driba', 'Male', '2018-01-09', '0913472453'],
-            ['Zenaida Tadele Kebede', 'Female', '2018-10-23', '0913972376'], // corrected from 2025
+            ['Zenaida Tadele Kebede', 'Female', '2018-10-23', '0913972376'],
             ['Kirubel Wubetu Abera', 'Male', '2018-01-31', '0912659836'],
             ['Surafel Wubetu Abera', 'Female', '2018-01-31', '0912659836'],
             ['Dagmawit Mulubirhan Zelalem', 'Female', '2017-04-20', '0912487288'],
@@ -117,12 +137,12 @@ class StudentDataSeeder extends Seeder
             ['Emnet Azene Azene', 'Female', '2017-05-02', '0911542769'],
             ['Abigel Gezahagn Guta', 'Female', '2016-11-24', '0931707027'],
             ['Daniel Mulugeta Tegegne', 'Male', '2016-05-16', '0911670386'],
-            ['Krubel Semere Mezgebu', 'Male', '2018-08-20', '0911212187'],   // corrected from 2025
+            ['Krubel Semere Mezgebu', 'Male', '2018-08-20', '0911212187'],
             ['Tselote Tsegaye Zeleke', 'Female', '2015-01-27', '091133445555'],
-            ['Niftalem Habte Birhanu', 'Male', '2015-08-14', '0965580481'],  // corrected from 2025
+            ['Niftalem Habte Birhanu', 'Male', '2015-08-14', '0965580481'],
             ['Absalat Hermen Tadesse', 'Female', '2015-12-19', '0976141780'],
             ['Natan Mekdem Alemayehu', 'Male', '2015-06-05', '0911400244'],
-            ['Menar Abdulnasir Bedru', 'Female', '2015-08-27', '0966968653'], // corrected from 2025
+            ['Menar Abdulnasir Bedru', 'Female', '2015-08-27', '0966968653'],
             ['Ruhama Demisse Kebede', 'Female', '2015-01-13', '0910420404'],
             ['Edidia Yosef Sisay', 'Female', '2016-10-08', '0912229439'],
             ['Ruth Henok Getachew', 'Female', '2015-03-20', '0910025368'],
@@ -192,11 +212,9 @@ class StudentDataSeeder extends Seeder
         ];
 
         // ── Grade assignment logic ────────────────────────────────────
-        // In 2025/2026 AY:  grade = 2025 - birth_year - 5
-        // Clamped to [1, 8]
-        $gradeCounters = [];  // [gradeNum => [A_count, B_count]]
-        $admissionNum = 2001; // Start from 2001 to avoid conflict with SchoolDataSeeder data
-
+        $gradeCounters = [];
+        $admissionNum = 2001;
+        $userCounter = 0;
         $created = 0;
         $skipped = 0;
 
@@ -217,15 +235,13 @@ class StudentDataSeeder extends Seeder
 
             // Distribute between sections A/B
             if (!isset($gradeCounters[$gradeNum])) {
-                $gradeCounters[$gradeNum] = [0, 0]; // [sectionA_count, sectionB_count]
+                $gradeCounters[$gradeNum] = [0, 0];
             }
 
-            // Assign to the section with fewer students (balance)
             $sectionIdx = ($gradeCounters[$gradeNum][0] <= $gradeCounters[$gradeNum][1]) ? 0 : 1;
             $section = $sectionsByClass[$gradeNum][$sectionIdx] ?? null;
 
             if (!$section) {
-                // Fallback: try first section
                 $section = $sectionsByClass[$gradeNum][0] ?? null;
                 $sectionIdx = 0;
             }
@@ -238,28 +254,44 @@ class StudentDataSeeder extends Seeder
 
             $gradeCounters[$gradeNum][$sectionIdx]++;
 
-            // Section letter for roll number
             $sectionLetter = $sectionIdx === 0 ? 'A' : 'B';
             $rollInSection = str_pad($gradeCounters[$gradeNum][$sectionIdx], 2, '0', STR_PAD_LEFT);
-
-            // Admission number
             $admission = 'SOR/2025/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
             $admissionNum++;
-
-            // Gender normalisation
             $genderLower = strtolower($gender);
 
-            // Build guardian info from name parts
+            // Guardian info from name parts
             $nameParts = explode(' ', $fullName);
             $lastName = count($nameParts) >= 2 ? $nameParts[count($nameParts) - 1] : $nameParts[0];
             $secondName = count($nameParts) >= 3 ? $nameParts[1] : $lastName;
             $guardianName = $secondName . ' ' . $lastName;
-            $guardianPhone = $phone; // Use same phone as guardian phone by default
+            $guardianPhone = $phone;
 
-            // Create or update the student
+            // ── Create User account (required by students.user_id FK) ──
+            $idNumber = 'STU-' . date('Y') . '-' . str_pad($userCounter + 1, 4, '0', STR_PAD_LEFT);
+            $email = $idNumber . '@redemption.edu';
+            $defaultPassword = str_replace('-', '', $dob); // e.g. 20180806
+
+            $user = User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name'       => $fullName,
+                    'id_number'  => $idNumber,
+                    'password'   => bcrypt($defaultPassword),
+                    'role'       => 'student',
+                    'gender'     => $genderLower,
+                    'phone'      => $phone,
+                    'branch_id'  => $branch->id,
+                    'is_active'  => true,
+                ]
+            );
+            $userCounter++;
+
+            // ── Create Student record ──────────────────────────────────
             Student::updateOrCreate(
                 ['admission_number' => $admission],
                 [
+                    'user_id'            => $user->id,
                     'full_name'          => $fullName,
                     'branch_id'          => $branch->id,
                     'class_id'           => $class->id,
@@ -282,11 +314,11 @@ class StudentDataSeeder extends Seeder
         // ── Summary ───────────────────────────────────────────────────
         $this->command->newLine();
         $this->command->info("  ✓ Students created/updated: {$created}");
+        $this->command->info("  ✓ User accounts created: {$userCounter}");
         if ($skipped) {
             $this->command->warn("  ⚠ Students skipped: {$skipped}");
         }
 
-        // Grade distribution
         $this->command->newLine();
         $this->command->info('  Grade distribution:');
         $gradeLabels = [1 => 'Grade 1', 2 => 'Grade 2', 3 => 'Grade 3', 4 => 'Grade 4',
@@ -297,6 +329,7 @@ class StudentDataSeeder extends Seeder
         }
 
         $this->command->newLine();
+        $this->command->info('  Student login: email = <idNumber>@redemption.edu, password = DOB (e.g. 20180806)');
         $this->command->info('🎉 Student data seeded successfully!');
     }
 }
