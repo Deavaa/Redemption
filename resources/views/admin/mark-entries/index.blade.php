@@ -213,11 +213,72 @@
     .me-header { flex-direction: column; align-items: stretch; }
     .me-title { font-size: 1.35rem; }
     .me-filter-grid { grid-template-columns: 1fr 1fr; }
-    .me-table-card-header { flex-direction: column; align-items: stretch; }
+    .me-table-card-header { flex-direction: column; align-items: stretch; padding: 0.75rem 1rem; }
     .me-term-bar { flex-direction: column; align-items: flex-start; }
     .me-table-wrapper { max-height: 55vh; }
     .me-table-card-header-left, .me-table-card-header-right { width: 100%; }
     .me-student-nav { justify-content: center; }
+
+    /* Mobile: hide extra columns in single-field mode */
+    .me-table.me-table-single .col-row-num,
+    .me-table.me-table-single .me-student-avatar,
+    .me-table.me-table-single .me-student-roll,
+    .me-table.me-table-single .col-total-ca,
+    .me-table.me-table-single .col-total-exam,
+    .me-table.me-table-single .col-total-grand,
+    .me-table.me-table-single .col-grade,
+    .me-table.me-table-single th.col-total-ca,
+    .me-table.me-table-single th.col-total-exam,
+    .me-table.me-table-single th.col-total-grand,
+    .me-table.me-table-single th.col-grade,
+    .me-table.me-table-single th.col-row-num-head {
+        display: none !important;
+    }
+    /* Mobile: name column not sticky, takes remaining space */
+    .me-table.me-table-single td.col-sticky,
+    .me-table.me-table-single th.col-sticky {
+        position: static !important;
+        min-width: auto !important;
+        max-width: 60vw !important;
+        border-right: none !important;
+    }
+    /* Mobile: mark input fills available space */
+    .me-table.me-table-single .me-mark-input-large {
+        min-width: 60px !important;
+        max-width: none !important;
+        width: 100% !important;
+        padding: 8px 4px !important;
+        font-size: 1rem !important;
+    }
+    /* Mobile: single-field table layout fits screen - no horizontal scroll */
+    .me-table.me-table-single {
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+    .me-table.me-table-single + .me-table-wrapper,
+    .me-table-wrapper:has(.me-table-single) {
+        overflow-x: hidden !important;
+    }
+    .me-table.me-table-single thead th:first-child,
+    .me-table.me-table-single tbody td:first-child {
+        width: 60%;
+    }
+    .me-table.me-table-single thead th:nth-child(2),
+    .me-table.me-table-single tbody td:nth-child(2) {
+        width: 40%;
+    }
+    /* Mobile: compact student cell */
+    .me-student-cell { gap: 4px; padding: 2px 4px; }
+    .me-student-name-text { font-size: 0.85rem; }
+
+    /* Mobile: all-fields table - smaller name column */
+    .me-table:not(.me-table-single) td.col-sticky,
+    .me-table:not(.me-table-single) th.col-sticky {
+        min-width: 120px !important;
+    }
+    .me-table:not(.me-table-single) .me-student-avatar { width: 24px; height: 24px; font-size: 0.55rem; }
+    .me-table:not(.me-table-single) .me-student-cell { gap: 4px; padding: 2px 4px; }
+    .me-table:not(.me-table-single) .me-mark-input { min-width: 36px; font-size: 0.78rem; padding: 3px 1px; }
 }
 @media (max-width: 480px) {
     .me-filter-grid { grid-template-columns: 1fr; }
@@ -229,10 +290,28 @@
     .me-keyboard-hint { display: none; }
     .me-filter-summary { font-size: 0.75rem; gap: 0.35rem; padding: 0.5rem 0.75rem; }
     .me-filter-summary-chip { font-size: 0.72rem; padding: 2px 7px; }
-    .me-student-cell { gap: 5px; padding: 2px 4px; }
-    .me-student-avatar { width: 26px; height: 26px; font-size: 0.6rem; }
-    .me-student-name-text { font-size: 0.82rem; }
-    .me-table.me-table-single .me-mark-input-large { min-width: 70px; max-width: 90px; padding: 8px 4px; font-size: 1rem; }
+    .me-student-cell { gap: 3px; padding: 2px 2px; }
+    .me-student-name-text { font-size: 0.8rem; }
+
+    /* 480px: even more compact single-field */
+    .me-table.me-table-single {
+        font-size: 0.82rem;
+    }
+    .me-table.me-table-single thead th { font-size: 0.7rem; padding: 6px 4px; }
+    .me-table.me-table-single tbody td { padding: 5px 4px; }
+    .me-table.me-table-single .me-mark-input-large {
+        min-width: 50px !important;
+        padding: 6px 2px !important;
+        font-size: 0.95rem !important;
+    }
+    .me-table.me-table-single thead th:first-child,
+    .me-table.me-table-single tbody td:first-child {
+        width: 55%;
+    }
+    .me-table.me-table-single thead th:nth-child(2),
+    .me-table.me-table-single tbody td:nth-child(2) {
+        width: 45%;
+    }
 }
 </style>
 @endpush
@@ -1189,7 +1268,7 @@
 
         // Build thead - single field view: #, Student Name, Field Name, CA Total, Exam Total, Grand Total, Grade
         var thead = '<tr>'
-            + '<th style="min-width:40px;">#</th>'
+            + '<th class="col-row-num-head" style="min-width:40px;">#</th>'
             + '<th class="col-sticky" style="min-width:200px;">Student Name</th>';
 
         // The selected field header
@@ -1198,10 +1277,10 @@
         if (category === 'extra-ca') sectionClass = 'section-ca';
 
         thead += '<th class="' + sectionClass + '" style="min-width:120px;">' + fieldInfo.label + '<span class="th-sub"><br>/' + fieldInfo.max + '</span></th>';
-        thead += '<th class="section-total-ca">CA Total<span class="th-sub"><br>/30</span></th>';
-        thead += '<th class="section-total-exam">Exam Total<span class="th-sub"><br>/70</span></th>';
-        thead += '<th class="section-total">Grand Total<span class="th-sub"><br>/100</span></th>';
-        thead += '<th class="section-grade">Grade</th>';
+        thead += '<th class="section-total-ca col-total-ca">CA Total<span class="th-sub"><br>/30</span></th>';
+        thead += '<th class="section-total-exam col-total-exam">Exam Total<span class="th-sub"><br>/70</span></th>';
+        thead += '<th class="section-total col-total-grand">Grand Total<span class="th-sub"><br>/100</span></th>';
+        thead += '<th class="section-grade col-grade">Grade</th>';
         thead += '</tr>';
 
         markTableHead.innerHTML = thead;
@@ -1232,20 +1311,20 @@
 
             // CA Total (read-only)
             var caTotal = s.marks.ca_total;
-            html += '<td><div class="me-total-cell ca-total" id="caTotal_' + s.id + '">' + (caTotal !== null ? caTotal : '-') + '</div></td>';
+            html += '<td class="col-total-ca"><div class="me-total-cell ca-total" id="caTotal_' + s.id + '">' + (caTotal !== null ? caTotal : '-') + '</div></td>';
 
             // Exam Total (read-only)
             var examTotal = s.marks.exam_total;
-            html += '<td><div class="me-total-cell exam-total" id="examTotal_' + s.id + '">' + (examTotal !== null ? examTotal : '-') + '</div></td>';
+            html += '<td class="col-total-exam"><div class="me-total-cell exam-total" id="examTotal_' + s.id + '">' + (examTotal !== null ? examTotal : '-') + '</div></td>';
 
             // Grand Total (read-only)
             var grandTotal = s.marks.grand_total;
-            html += '<td><div class="me-total-cell grand-total" id="grandTotal_' + s.id + '">' + (grandTotal !== null ? grandTotal : '-') + '</div></td>';
+            html += '<td class="col-total-grand"><div class="me-total-cell grand-total" id="grandTotal_' + s.id + '">' + (grandTotal !== null ? grandTotal : '-') + '</div></td>';
 
             // Grade (read-only)
             var grade = s.marks.grade || '-';
             var gradeClass = getGradeClass(grade);
-            html += '<td><div class="me-total-cell grade-cell"><span class="me-grade-badge ' + gradeClass + '" id="grade_' + s.id + '">' + grade + '</span></div></td>';
+            html += '<td class="col-grade"><div class="me-total-cell grade-cell"><span class="me-grade-badge ' + gradeClass + '" id="grade_' + s.id + '">' + grade + '</span></div></td>';
 
             html += '</tr>';
         });
