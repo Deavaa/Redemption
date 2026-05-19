@@ -1492,3 +1492,227 @@ html, body {
 .dropdown-header-name { font-weight: 600; color: var(--text-dark); }
 .dropdown-header-email { font-size: 11px; color: var(--text-muted); }
 .dropdown-item { border-radius: 4px; padding: 6px 12px; font-size: 13px; }
+
+/* ===== GLOBAL MOBILE FRIENDLINESS FIXES ===== */
+/* These rules ensure ALL admin pages are mobile-friendly */
+
+/* Prevent iOS zoom on focus */
+@media (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="password"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"],
+    input[type="datetime-local"],
+    select,
+    textarea,
+    .form-control,
+    .form-select,
+    .modern-input {
+        font-size: 16px !important;
+    }
+
+    /* Force all tables to be scrollable not overflow */
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 0;
+    }
+
+    /* Make all modern-cards full width with proper padding */
+    .modern-card {
+        border-radius: 10px !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Page header stack on mobile */
+    .modern-page-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+    .modern-page-header-right {
+        display: flex !important;
+        gap: 6px !important;
+        flex-wrap: wrap;
+    }
+    .modern-page-header-right .btn-modern {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        min-width: 0;
+    }
+
+    /* Form grids to single column */
+    .modern-form-grid,
+    .modern-form-grid-2,
+    .modern-form-grid-3 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Detail grids to single column */
+    .modern-detail-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Filter rows stack vertically */
+    .modern-filter-row {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    /* Stats row to 2 columns */
+    .modern-stats-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    /* Search box full width */
+    .modern-search-box {
+        width: 100% !important;
+    }
+
+    /* Section titles smaller */
+    .modern-section-title {
+        font-size: 13px !important;
+    }
+
+    /* Toolbar labels */
+    .certgen-toolbar {
+        font-size: 10px !important;
+        padding: 5px 10px !important;
+    }
+    .certgen-toolbar-label {
+        font-size: 9px !important;
+    }
+
+    /* Class grid chips */
+    .gen-class-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+        gap: 4px !important;
+    }
+    .gen-class-card {
+        padding: 6px 4px !important;
+        font-size: 10px !important;
+    }
+    .gen-class-card i {
+        font-size: 14px !important;
+    }
+
+    /* Student grid single column */
+    .gen-student-grid,
+    .idgen-student-grid {
+        grid-template-columns: 1fr !important;
+        max-height: 220px !important;
+    }
+
+    /* Breadcrumb compact */
+    .modern-breadcrumb li, .modern-breadcrumb a {
+        font-size: 10px !important;
+    }
+
+    /* Modern table compact */
+    .modern-table {
+        font-size: 11px !important;
+    }
+    .modern-table th {
+        font-size: 9px !important;
+        padding: 6px 8px !important;
+    }
+    .modern-table td {
+        padding: 6px 8px !important;
+    }
+
+    /* Card headers compact */
+    .modern-card-header {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+    .modern-card-body {
+        padding: 10px 12px !important;
+    }
+
+    /* Form sections compact */
+    .modern-form-section {
+        margin-bottom: 12px !important;
+    }
+    .modern-form-section-header {
+        padding: 8px 12px !important;
+        font-size: 11px !important;
+    }
+    .modern-form-group {
+        margin-bottom: 10px !important;
+    }
+
+    /* Ensure page titles don't overflow */
+    h1, .modern-page-title {
+        font-size: 1rem !important;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra compact on very small screens */
+    .modern-card {
+        border-radius: 8px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+    }
+
+    /* Stats to 2 columns max */
+    .modern-stats-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 4px !important;
+    }
+    .modern-stat-card {
+        padding: 8px !important;
+    }
+
+    /* Buttons touch-friendly */
+    .btn-modern {
+        min-height: 38px !important;
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+    }
+
+    /* Page padding ultra compact */
+    .admin-content {
+        padding: 4px !important;
+    }
+
+    /* Forms ultra compact */
+    .modern-form-grid,
+    .modern-form-grid-2,
+    .modern-form-grid-3 {
+        gap: 6px !important;
+    }
+
+    /* Tables ultra compact */
+    .modern-table th, .modern-table td {
+        padding: 4px 6px !important;
+        font-size: 10px !important;
+    }
+
+    /* Search boxes */
+    .gen-search-box {
+        width: 100% !important;
+        margin-top: 4px;
+    }
+
+    /* Student cards compact */
+    .gen-student-card, .idgen-student-row {
+        padding: 5px 8px !important;
+    }
+    .gen-student-name, .idgen-student-name {
+        font-size: 10px !important;
+    }
+
+    /* Preview cards compact */
+    .gen-preview-body {
+        padding: 8px 10px !important;
+    }
+}

@@ -16,83 +16,99 @@
             <h1 style="font-size:0.85rem;font-weight:700;color:var(--text-dark);margin:0;">Attendance Dashboard</h1>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route('admin.attendance.report') }}" class="btn-modern btn-modern-ghost" style="font-size:0.7rem;padding:4px 10px;"><i class="fas fa-chart-bar"></i> Report</a>
-            <a href="{{ route('admin.attendance.create') }}" class="btn-modern btn-modern-primary" style="font-size:0.7rem;padding:4px 12px;">
+            <a href="{{ route('admin.attendance.report') }}" class="btn-modern btn-modern-ghost att-header-btn"><i class="fas fa-chart-bar"></i> Report</a>
+            <a href="{{ route('admin.attendance.create') }}" class="btn-modern btn-modern-primary att-header-btn">
                 <i class="fas fa-plus"></i> Record Attendance
             </a>
         </div>
     </div>
 
     {{-- Stats Cards --}}
-    <div class="att-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
+    <div class="att-stats-grid">
         <div class="modern-card att-stat-card" style="padding:12px 14px;border-left:3px solid #6366f1;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
-                    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Attendance Rate</div>
-                    <div style="font-size:22px;font-weight:800;color:#6366f1;">{{ $attendanceRate }}%</div>
+                    <div class="att-stat-label">Attendance Rate</div>
+                    <div class="att-stat-value" style="color:#6366f1;">{{ $attendanceRate }}%</div>
                 </div>
-                <div style="width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;">
-                    <i class="fas fa-percentage" style="color:#6366f1;font-size:14px;"></i>
+                <div class="att-stat-icon" style="background:rgba(99,102,241,0.1);">
+                    <i class="fas fa-percentage" style="color:#6366f1;"></i>
                 </div>
             </div>
         </div>
         <div class="modern-card att-stat-card" style="padding:12px 14px;border-left:3px solid #10b981;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
-                    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Present</div>
-                    <div style="font-size:22px;font-weight:800;color:#10b981;">{{ $presentCount }}</div>
+                    <div class="att-stat-label">Present</div>
+                    <div class="att-stat-value" style="color:#10b981;">{{ $presentCount }}</div>
                 </div>
-                <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;">
-                    <i class="fas fa-check-circle" style="color:#10b981;font-size:14px;"></i>
+                <div class="att-stat-icon" style="background:rgba(16,185,129,0.1);">
+                    <i class="fas fa-check-circle" style="color:#10b981;"></i>
                 </div>
             </div>
         </div>
         <div class="modern-card att-stat-card" style="padding:12px 14px;border-left:3px solid #ef4444;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
-                    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Absent</div>
-                    <div style="font-size:22px;font-weight:800;color:#ef4444;">{{ $absentCount }}</div>
+                    <div class="att-stat-label">Absent</div>
+                    <div class="att-stat-value" style="color:#ef4444;">{{ $absentCount }}</div>
                 </div>
-                <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;">
-                    <i class="fas fa-times-circle" style="color:#ef4444;font-size:14px;"></i>
+                <div class="att-stat-icon" style="background:rgba(239,68,68,0.1);">
+                    <i class="fas fa-times-circle" style="color:#ef4444;"></i>
                 </div>
             </div>
         </div>
         <div class="modern-card att-stat-card" style="padding:12px 14px;border-left:3px solid #f59e0b;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
-                    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Late</div>
-                    <div style="font-size:22px;font-weight:800;color:#f59e0b;">{{ $lateCount }}</div>
+                    <div class="att-stat-label">Late</div>
+                    <div class="att-stat-value" style="color:#f59e0b;">{{ $lateCount }}</div>
                 </div>
-                <div style="width:36px;height:36px;border-radius:10px;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;">
-                    <i class="fas fa-clock" style="color:#f59e0b;font-size:14px;"></i>
+                <div class="att-stat-icon" style="background:rgba(245,158,11,0.1);">
+                    <i class="fas fa-clock" style="color:#f59e0b;"></i>
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- Compact Filter Summary (shown when filter is active) --}}
+    @if($classId || $date !== now()->format('Y-m-d'))
+    <div class="att-filter-summary visible" id="attFilterSummary">
+        <i class="fas fa-check-circle" style="color:#10b981;"></i>
+        <span id="attFilterSummaryText">
+            @if($classId)
+                <span class="att-filter-chip"><i class="fas fa-chalkboard"></i> {{ $classes->where('id', $classId)->first()?->name ?? 'Class' }}</span>
+            @endif
+            <span class="att-filter-chip"><i class="fas fa-calendar-alt"></i> {{ $date }}</span>
+        </span>
+        <a href="{{ route('admin.attendance.index') }}" class="att-filter-change-btn">
+            <i class="fas fa-times"></i> Clear
+        </a>
+    </div>
+    @endif
+
     {{-- Filter Bar --}}
-    <div class="modern-card" style="margin-bottom:12px;">
+    <div class="modern-card att-filter-card {{ ($classId || $date !== now()->format('Y-m-d')) ? 'att-filter-collapsed' : '' }}" id="attFilterPanel" style="margin-bottom:12px;">
         <div class="certgen-toolbar">
             <span class="certgen-toolbar-label"><i class="fas fa-filter" style="margin-right:4px;"></i> Filter</span>
         </div>
-        <div style="padding:8px 14px;">
-            <form method="GET" action="{{ route('admin.attendance.index') }}" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
-                <div style="display:flex;flex-direction:column;">
-                    <label style="font-size:9px;font-weight:600;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase;">Date</label>
-                    <input type="date" name="date" value="{{ $date }}" class="att-filter-input" style="border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;font-family:var(--font);color:var(--text-dark);background:var(--card-bg);">
+        <div class="att-filter-body" style="padding:8px 14px;">
+            <form method="GET" action="{{ route('admin.attendance.index') }}" class="att-filter-form">
+                <div class="att-filter-group">
+                    <label class="att-filter-label">Date</label>
+                    <input type="date" name="date" value="{{ $date }}" class="att-filter-input">
                 </div>
-                <div style="display:flex;flex-direction:column;">
-                    <label style="font-size:9px;font-weight:600;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase;">Class</label>
-                    <select name="class_id" class="att-filter-input" style="border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;font-family:var(--font);color:var(--text-dark);background:var(--card-bg);min-width:150px;">
+                <div class="att-filter-group">
+                    <label class="att-filter-label">Class</label>
+                    <select name="class_id" class="att-filter-input">
                         <option value="">All Classes</option>
                         @foreach($classes as $c)
                         <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <button type="submit" class="btn-modern btn-modern-primary" style="font-size:0.7rem;padding:5px 12px;"><i class="fas fa-search"></i> Apply</button>
-                <a href="{{ route('admin.attendance.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.7rem;padding:5px 10px;">Clear</a>
+                <button type="submit" class="btn-modern btn-modern-primary att-filter-btn"><i class="fas fa-search"></i> Apply</button>
+                <a href="{{ route('admin.attendance.index') }}" class="btn-modern btn-modern-ghost att-filter-btn">Clear</a>
             </form>
         </div>
     </div>
@@ -104,38 +120,38 @@
         </div>
         <div style="padding:0;">
             <div class="table-responsive">
-                <table class="modern-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+                <table class="modern-table att-table">
                     <thead>
-                        <tr style="background:var(--bg);border-bottom:2px solid var(--border);">
-                            <th style="padding:8px 14px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Class</th>
-                            <th style="padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Total</th>
-                            <th style="padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Present</th>
-                            <th style="padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Absent</th>
-                            <th style="padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Late</th>
-                            <th style="padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Excused</th>
-                            <th style="padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Rate</th>
-                            <th style="padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Actions</th>
+                        <tr>
+                            <th class="att-th att-th-left">Class</th>
+                            <th class="att-th">Total</th>
+                            <th class="att-th">Present</th>
+                            <th class="att-th">Absent</th>
+                            <th class="att-th att-hide-mobile">Late</th>
+                            <th class="att-th att-hide-mobile">Excused</th>
+                            <th class="att-th">Rate</th>
+                            <th class="att-th att-hide-mobile">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($classSummary as $class)
-                        <tr style="border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
-                            <td style="padding:8px 14px;font-weight:600;color:var(--text-dark);">{{ $class->name }}</td>
-                            <td style="padding:8px 10px;text-align:center;font-weight:600;">{{ $class->att_total }}</td>
-                            <td style="padding:8px 10px;text-align:center;"><span style="background:rgba(16,185,129,0.12);color:#10b981;padding:2px 8px;border-radius:6px;font-weight:600;font-size:11px;">{{ $class->att_present }}</span></td>
-                            <td style="padding:8px 10px;text-align:center;"><span style="background:rgba(239,68,68,0.12);color:#ef4444;padding:2px 8px;border-radius:6px;font-weight:600;font-size:11px;">{{ $class->att_absent }}</span></td>
-                            <td style="padding:8px 10px;text-align:center;"><span style="background:rgba(245,158,11,0.12);color:#f59e0b;padding:2px 8px;border-radius:6px;font-weight:600;font-size:11px;">{{ $class->att_late }}</span></td>
-                            <td style="padding:8px 10px;text-align:center;"><span style="background:rgba(59,130,246,0.12);color:#3b82f6;padding:2px 8px;border-radius:6px;font-weight:600;font-size:11px;">{{ $class->att_excused }}</span></td>
-                            <td style="padding:8px 10px;text-align:center;font-weight:700;color:{{ $class->att_rate !== null ? ($class->att_rate >= 80 ? '#10b981' : ($class->att_rate >= 60 ? '#f59e0b' : '#ef4444')) : 'var(--text-muted)' }};">{{ $class->att_rate !== null ? $class->att_rate . '%' : '-' }}</td>
-                            <td style="padding:8px 10px;text-align:center;">
+                        <tr>
+                            <td class="att-td att-td-left att-td-bold">{{ $class->name }}</td>
+                            <td class="att-td">{{ $class->att_total }}</td>
+                            <td class="att-td"><span class="att-badge att-badge-present">{{ $class->att_present }}</span></td>
+                            <td class="att-td"><span class="att-badge att-badge-absent">{{ $class->att_absent }}</span></td>
+                            <td class="att-td att-hide-mobile"><span class="att-badge att-badge-late">{{ $class->att_late }}</span></td>
+                            <td class="att-td att-hide-mobile"><span class="att-badge att-badge-excused">{{ $class->att_excused }}</span></td>
+                            <td class="att-td att-td-bold" style="color:{{ $class->att_rate !== null ? ($class->att_rate >= 80 ? '#10b981' : ($class->att_rate >= 60 ? '#f59e0b' : '#ef4444')) : 'var(--text-muted)' }};">{{ $class->att_rate !== null ? $class->att_rate . '%' : '-' }}</td>
+                            <td class="att-td att-hide-mobile">
                                 <a href="{{ route('admin.attendance.edit', ['date' => $date, 'classId' => $class->id]) }}" class="btn-modern btn-modern-ghost" style="font-size:0.65rem;padding:2px 8px;" title="Edit"><i class="fas fa-edit"></i></a>
                                 <a href="{{ route('admin.attendance.create', ['class_id' => $class->id, 'date' => $date]) }}" class="btn-modern btn-modern-ghost" style="font-size:0.65rem;padding:2px 8px;" title="Record"><i class="fas fa-plus"></i></a>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" style="padding:24px;text-align:center;color:var(--text-muted);font-size:12px;">
-                                <i class="fas fa-clipboard-check" style="font-size:24px;opacity:0.3;display:block;margin-bottom:6px;"></i>
+                            <td colspan="8" class="att-empty-cell">
+                                <i class="fas fa-clipboard-check"></i>
                                 No attendance records for this date.
                             </td>
                         </tr>
@@ -154,32 +170,37 @@
         </div>
         <div style="padding:0;">
             <div class="table-responsive">
-                <table class="modern-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+                <table class="modern-table att-table">
                     <thead>
-                        <tr style="background:var(--bg);border-bottom:2px solid var(--border);">
-                            <th style="padding:8px 14px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Student</th>
-                            <th style="padding:8px 10px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Roll #</th>
-                            <th style="padding:8px 10px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Class</th>
-                            <th style="padding:8px 10px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Section</th>
-                            <th style="padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Status</th>
-                            <th style="padding:8px 10px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);">Remarks</th>
+                        <tr>
+                            <th class="att-th att-th-left">Student</th>
+                            <th class="att-th att-hide-mobile">Roll #</th>
+                            <th class="att-th att-hide-mobile">Class</th>
+                            <th class="att-th att-hide-mobile">Section</th>
+                            <th class="att-th">Status</th>
+                            <th class="att-th att-hide-mobile">Remarks</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($recentRecords as $record)
-                        <tr style="border-bottom:1px solid var(--border);">
-                            <td style="padding:6px 14px;font-weight:600;color:var(--text-dark);">{{ $record->student?->full_name ?? '' }}</td>
-                            <td style="padding:6px 10px;color:var(--text-muted);">{{ $record->student?->roll_number ?? '-' }}</td>
-                            <td style="padding:6px 10px;color:var(--text-muted);">{{ $record->classRoom?->name }}</td>
-                            <td style="padding:6px 10px;color:var(--text-muted);">{{ $record->section?->name ?? '-' }}</td>
-                            <td style="padding:6px 10px;text-align:center;">
+                        <tr>
+                            <td class="att-td att-td-left att-td-bold">
+                                {{ $record->student?->full_name ?? '' }}
+                                <span class="att-mobile-meta">
+                                    @if($record->student?->roll_number) #{{ $record->student->roll_number }}@endif
+                                    {{ $record->classRoom?->name }} {{ $record->section?->name ?? '' }}
+                                </span>
+                            </td>
+                            <td class="att-td att-hide-mobile">{{ $record->student?->roll_number ?? '-' }}</td>
+                            <td class="att-td att-hide-mobile">{{ $record->classRoom?->name }}</td>
+                            <td class="att-td att-hide-mobile">{{ $record->section?->name ?? '-' }}</td>
+                            <td class="att-td">
                                 @php
                                     $statusColors = ['present' => '#10b981', 'absent' => '#ef4444', 'late' => '#f59e0b', 'excused' => '#3b82f6'];
-                                    $statusBgs = ['present' => 'rgba(16,185,129,0.12)', 'absent' => 'rgba(239,68,68,0.12)', 'late' => 'rgba(245,158,11,0.12)', 'excused' => 'rgba(59,130,246,0.12)'];
                                 @endphp
-                                <span style="background:{{ $statusBgs[$record->status] ?? 'var(--bg)' }};color:{{ $statusColors[$record->status] ?? 'var(--text)' }};padding:2px 10px;border-radius:6px;font-weight:600;font-size:11px;text-transform:capitalize;">{{ $record->status }}</span>
+                                <span class="att-badge att-badge-{{ $record->status }}">{{ ucfirst($record->status) }}</span>
                             </td>
-                            <td style="padding:6px 10px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $record->remarks ?? '-' }}</td>
+                            <td class="att-td att-hide-mobile" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $record->remarks ?? '-' }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -192,13 +213,83 @@
 
 @push('styles')
 <style>
+/* ===== Attendance Dashboard Styles ===== */
+.att-stat-label { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px; }
+.att-stat-value { font-size:22px;font-weight:800; }
+.att-stat-icon { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
+.att-stat-icon i { font-size:14px; }
 .att-stat-card { transition: transform 0.2s, box-shadow 0.2s; }
 .att-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
+/* Filter collapse */
+.att-filter-card.att-filter-collapsed .att-filter-body { display: none; }
+.att-filter-card.att-filter-collapsed .certgen-toolbar { border-bottom: none; }
+
+/* Filter summary */
+.att-filter-summary { display:none;align-items:center;gap:0.5rem;padding:0.6rem 1rem;background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:10px;margin-bottom:0.75rem;font-size:0.82rem;font-weight:600;color:#065f46;flex-wrap:wrap; }
+.att-filter-summary.visible { display:flex; }
+.att-filter-chip { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fff;border:1px solid #d1fae5;border-radius:6px;font-size:0.78rem;color:#1a1a2e; }
+.att-filter-chip i { font-size:0.7rem;color:#10b981; }
+.att-filter-change-btn { margin-left:auto;padding:4px 12px;border-radius:6px;border:1px solid #a7f3d0;background:#fff;color:#059669;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;white-space:nowrap; }
+.att-filter-change-btn:hover { background:#ecfdf5;border-color:#10b981; }
+
+/* Filter form */
+.att-filter-form { display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap; }
+.att-filter-group { display:flex;flex-direction:column; }
+.att-filter-label { font-size:9px;font-weight:600;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase; }
+.att-filter-input { border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;font-family:var(--font);color:var(--text-dark);background:var(--card-bg);min-width:150px; }
+.att-filter-btn { font-size:0.7rem;padding:5px 12px; }
+
+/* Table styles */
+.att-table { width:100%;border-collapse:collapse;font-size:12px; }
+.att-th { padding:8px 10px;text-align:center;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);background:var(--bg);border-bottom:2px solid var(--border); }
+.att-th-left { text-align:left;padding-left:14px; }
+.att-td { padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);color:var(--text); }
+.att-td-left { text-align:left;padding-left:14px; }
+.att-td-bold { font-weight:600;color:var(--text-dark); }
+
+/* Badges */
+.att-badge { display:inline-block;padding:2px 8px;border-radius:6px;font-weight:600;font-size:11px; }
+.att-badge-present { background:rgba(16,185,129,0.12);color:#10b981; }
+.att-badge-absent { background:rgba(239,68,68,0.12);color:#ef4444; }
+.att-badge-late { background:rgba(245,158,11,0.12);color:#f59e0b; }
+.att-badge-excused { background:rgba(59,130,246,0.12);color:#3b82f6; }
+
+/* Mobile meta shown only on mobile */
+.att-mobile-meta { display:none;font-size:9px;color:var(--text-muted);display:block; }
+
+/* Empty cell */
+.att-empty-cell { padding:24px;text-align:center;color:var(--text-muted);font-size:12px; }
+.att-empty-cell i { font-size:24px;opacity:0.3;display:block;margin-bottom:6px; }
+
+/* Header buttons */
+.att-header-btn { font-size:0.7rem;padding:4px 10px; }
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .att-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .att-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+    .att-stat-value { font-size: 18px; }
+    .att-stat-icon { width: 30px; height: 30px; }
+    .att-stat-icon i { font-size: 12px; }
+    .att-filter-form { flex-direction: column; gap: 8px; }
+    .att-filter-group { min-width: 100%; }
+    .att-filter-input { min-width: 100%; }
+    .att-filter-btn { width: 100%; text-align: center; }
+    .att-hide-mobile { display: none !important; }
+    .att-mobile-meta { display: block !important; }
+    .att-th, .att-td { padding: 6px 8px; font-size: 10px; }
+    .att-badge { font-size: 9px; padding: 2px 6px; }
+    .att-header-btn { font-size: 0.65rem; padding: 3px 8px; }
 }
 @media (max-width: 480px) {
-    .att-stats-grid { grid-template-columns: 1fr !important; }
+    .att-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 4px !important; }
+    .att-stat-card { padding: 8px 10px !important; }
+    .att-stat-value { font-size: 16px; }
+    .att-stat-label { font-size: 8px; }
+    .att-stat-icon { width: 26px; height: 26px; border-radius: 8px; }
+    .att-stat-icon i { font-size: 10px; }
+    .att-filter-summary { font-size: 0.75rem; gap: 0.35rem; padding: 0.5rem 0.75rem; }
+    .att-filter-chip { font-size: 0.72rem; padding: 2px 7px; }
 }
 </style>
 @endpush
