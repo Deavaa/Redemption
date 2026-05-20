@@ -146,6 +146,57 @@ Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
+// Session diagnostic route (public - no auth required)
+Route::get('/session-test', function () {
+    $results = [];
+    $problems = 0;
+
+    // 1. Config values
+    $results['session_driver'] = config('session.driver');
+    $results['session_secure'] = config('session.secure') ? 'true' : 'false';
+    $results['session_domain'] = config('session.domain') === null ? 'null (correct)' : "'" . config('session.domain') . "'";
+    $results['session_path'] = config('session.path');
+    $results['session_same_site'] = config('session.same_site');
+    $results['db_connection'] = config('database.default');
+
+    // 2. Session directory
+    $sessionDir = storage_path('framework/sessions');
+    $results['session_dir'] = $sessionDir;
+    $results['session_dir_exists'] = is_dir($sessionDir) ? 'YES' : 'NO';
+    $results['session_dir_writable'] = is_writable($sessionDir) ? 'YES' : 'NO';
+
+    // 3. Try writing and reading a session
+    try {
+        session(['_test_key' => 'test_value_' . time()]);
+        $readBack = session('_test_key');
+        $results['session_write_read'] = ($readBack && str_starts_with($readBack, 'test_value_')) ? 'SUCCESS' : 'FAILED (read: ' . $readBack . ')';
+    } catch (\Throwable $e) {
+        $results['session_write_read'] = 'ERROR: ' . $e->getMessage();
+        $problems++;
+    }
+
+    // 4. Cookie settings that will be sent
+    $results['cookie_name'] = config('session.cookie');
+    $results['app_url'] = env('APP_URL', 'not set');
+
+    // 5. Cached config check
+    $cachedConfig = base_path('bootstrap/cache/config.php');
+    $results['cached_config_exists'] = file_exists($cachedConfig) ? 'YES (may have stale values!)' : 'NO (good)';
+
+    // 6. Check for problems
+    if (config('session.driver') !== 'file') { $problems++; $results['_error_driver'] = 'Session driver should be "file" but is "' . config('session.driver') . '"'; }
+    if (config('database.default') !== 'mysql') { $problems++; $results['_error_db'] = 'DB should be "mysql" but is "' . config('database.default') . '"'; }
+    if (config('session.secure')) { $problems++; $results['_error_secure'] = 'Session secure is ON - breaks on self-signed HTTPS'; }
+    if (config('session.domain') !== null) { $problems++; $results['_error_domain'] = 'Session domain is set to "' . config('session.domain') . '" - should be null'; }
+    if (!is_dir($sessionDir)) { $problems++; $results['_error_dir'] = 'Session directory does NOT exist'; }
+    if (!is_writable($sessionDir)) { $problems++; $results['_error_writable'] = 'Session directory is NOT writable'; }
+
+    $results['_problems_count'] = $problems;
+    $results['_status'] = $problems === 0 ? 'ALL GOOD - Sessions should work!' : 'PROBLEMS FOUND - See _error_* keys';
+
+    return response()->json($results, 200, [], JSON_PRETTY_PRINT);
+});
+
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');

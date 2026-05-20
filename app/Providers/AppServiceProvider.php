@@ -14,24 +14,27 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // ──────────────────────────────────────────────────────────────
-        // FORCE correct database and session settings at the EARLIEST
-        // possible point. This prevents SQLite / session errors caused
-        // by wrong .env values or stale cached config.
-        //
+        // ============================================================
+        // FORCE correct database and session configuration.
         // These overrides take effect BEFORE any request processing,
-        // BEFORE middleware runs, and BEFORE the session is started.
-        // ──────────────────────────────────────────────────────────────
+        // BEFORE middleware runs, and OVERRIDE .env, config files,
+        // AND cached config. This prevents the recurring SQLite /
+        // session errors caused by wrong .env values on the user's
+        // local machine (which is gitignored and can't be fixed via git).
+        // ============================================================
 
         // Database: always MySQL/MariaDB (never sqlite)
         config(['database.default' => 'mysql']);
 
-        // Session: always file-based (never database — no sessions table)
+        // Session driver: always file-based (never database)
         config(['session.driver' => 'file']);
 
+        // Session cookie: fixed name, independent of APP_NAME/SESSION_COOKIE
+        config(['session.cookie' => 'redemption_session']);
+
         // Cookie path: '/' is the most permissive — ensures the session
-        // cookie is always sent, even in subdirectory installs like XAMPP.
-        // (e.g., https://localhost/Redemption/public/)
+        // cookie is always sent for ALL paths, including subdirectory
+        // installs like XAMPP (https://localhost/Redemption/public/)
         config(['session.path' => '/']);
 
         // Cookie domain: null = no domain restriction (correct default)
@@ -43,8 +46,26 @@ class AppServiceProvider extends ServiceProvider
         // SameSite: 'lax' allows normal navigation while preventing CSRF
         config(['session.same_site' => 'lax']);
 
-        // Cookie name: force a consistent name so old broken cookies don't interfere
-        config(['session.cookie' => 'school_of_redemption_session']);
+        // Session encryption: MUST be false — encrypting with a wrong
+        // or missing APP_KEY would corrupt all session data and cause
+        // 419 Page Expired (CSRF token mismatch) errors.
+        config(['session.encrypt' => false]);
+
+        // Do NOT expire on close — would cause constant logouts
+        config(['session.expire_on_close' => false]);
+
+        // HTTP-only cookies: true for XSS protection
+        config(['session.http_only' => true]);
+
+        // Partitioned cookies: false — not needed
+        config(['session.partitioned' => false]);
+
+        // Session lifetime: 120 minutes (2 hours)
+        config(['session.lifetime' => 120]);
+
+        // Session connection and store: null (using file driver)
+        config(['session.connection' => null]);
+        config(['session.store' => null]);
     }
 
     /**

@@ -1,6 +1,23 @@
 <?php
 
-use Illuminate\Support\Str;
+/**
+ * ──────────────────────────────────────────────────────────────────
+ * SESSION CONFIGURATION — ALL VALUES HARD-CODED
+ * ──────────────────────────────────────────────────────────────────
+ *
+ * This file contains ZERO env() calls. Every value is hard-coded
+ * to prevent misconfiguration from a broken .env file.
+ *
+ * Previous issues:
+ * - SESSION_DRIVER=database in .env caused SQLite errors
+ * - SESSION_SECURE_COOKIE=true in .env broke cookies on XAMPP
+ * - SESSION_DOMAIN=null (literal string) in .env broke cookies
+ * - SESSION_ENCRYPT=true with wrong APP_KEY corrupted sessions
+ * - APP_URL with wrong path set incorrect cookie path
+ *
+ * If you need to change any session setting, edit this file directly.
+ * ──────────────────────────────────────────────────────────────────
+ */
 
 return [
 
@@ -9,9 +26,8 @@ return [
     | Default Session Driver
     |--------------------------------------------------------------------------
     |
-    | HARD-CODED to 'file' — this app uses file-based sessions.
-    | The .env SESSION_DRIVER value is IGNORED to prevent misconfiguration.
-    | If you need a different driver (e.g., redis), change it here.
+    | HARD-CODED to 'file'. This app uses file-based sessions.
+    | The .env SESSION_DRIVER value is IGNORED.
     |
     */
 
@@ -21,19 +37,36 @@ return [
     |--------------------------------------------------------------------------
     | Session Lifetime
     |--------------------------------------------------------------------------
+    |
+    | Session lifetime in minutes. 120 = 2 hours.
+    |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'lifetime' => 120,
 
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
+    /*
+    |--------------------------------------------------------------------------
+    | Expire on Close
+    |--------------------------------------------------------------------------
+    |
+    | HARD-CODED to false. If true, the session would expire when the
+    | browser window is closed, causing frequent logouts.
+    |
+    */
+
+    'expire_on_close' => false,
 
     /*
     |--------------------------------------------------------------------------
     | Session Encryption
     |--------------------------------------------------------------------------
+    |
+    | HARD-CODED to false. Encrypting sessions with a missing or wrong
+    | APP_KEY would corrupt all session data and cause 419 CSRF errors.
+    |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    'encrypt' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -45,27 +78,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Session Database Connection
+    | Session Database Connection (unused — driver is 'file')
     |--------------------------------------------------------------------------
     */
 
-    'connection' => env('SESSION_CONNECTION'),
+    'connection' => null,
 
     /*
     |--------------------------------------------------------------------------
-    | Session Database Table
+    | Session Database Table (unused — driver is 'file')
     |--------------------------------------------------------------------------
     */
 
-    'table' => env('SESSION_TABLE', 'sessions'),
+    'table' => 'sessions',
 
     /*
     |--------------------------------------------------------------------------
-    | Session Cache Store
+    | Session Cache Store (unused — driver is 'file')
     |--------------------------------------------------------------------------
     */
 
-    'store' => env('SESSION_STORE'),
+    'store' => null,
 
     /*
     |--------------------------------------------------------------------------
@@ -79,31 +112,35 @@ return [
     |--------------------------------------------------------------------------
     | Session Cookie Name
     |--------------------------------------------------------------------------
+    |
+    | HARD-CODED to 'redemption_session'. Using a fixed, known name
+    | ensures consistency regardless of APP_NAME or SESSION_COOKIE
+    | values in .env. The old cookie name (based on APP_NAME) could
+    | conflict with previously set cookies in the browser.
+    |
     */
 
-    'cookie' => env(
-        'SESSION_COOKIE',
-        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
-    ),
+    'cookie' => 'redemption_session',
 
     /*
     |--------------------------------------------------------------------------
     | Session Cookie Path
     |--------------------------------------------------------------------------
     |
-    | HARD-CODED auto-detection from APP_URL.
-    | The .env SESSION_PATH value is IGNORED to prevent misconfiguration.
-    | For subdirectory installs (e.g., XAMPP), this auto-detects the correct
-    | path from APP_URL. For example:
-    |   APP_URL=https://localhost/Redemption/public → path = /Redemption/public
+    | HARD-CODED to '/'. This is the most permissive path and ensures
+    | the session cookie is sent for ALL requests, including:
+    |   - https://localhost/Redemption/public/login
+    |   - https://localhost/Redemption/public/admin/dashboard
+    |   - Any subdirectory or path under the domain
+    |
+    | Previously, this was auto-detected from APP_URL, which could
+    | result in '/Redemption/public' — but if APP_URL was wrong,
+    | the cookie path would be wrong and the browser would never
+    | send the cookie back, causing 419 Page Expired errors.
     |
     */
 
-    'path' => (function () {
-        $url = env('APP_URL', 'http://localhost');
-        $parsed = parse_url($url);
-        return isset($parsed['path']) ? rtrim($parsed['path'], '/') : '/';
-    })(),
+    'path' => '/',
 
     /*
     |--------------------------------------------------------------------------
@@ -111,8 +148,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | HARD-CODED to null (no domain restriction).
-    | The .env SESSION_DOMAIN value is IGNORED to prevent misconfiguration.
-    | Setting SESSION_DOMAIN=null (the string "null") in .env breaks cookies.
+    | Setting SESSION_DOMAIN=null (the literal string "null") in .env
+    | broke cookies — the browser rejected cookies with domain="null".
     |
     */
 
@@ -123,10 +160,11 @@ return [
     | HTTPS Only Cookies
     |--------------------------------------------------------------------------
     |
-    | HARD-CODED to false for XAMPP/local development.
-    | The .env SESSION_SECURE_COOKIE value is IGNORED.
-    | XAMPP uses self-signed HTTPS certificates — the browser won't send
-    | secure cookies because the cert isn't trusted.
+    | HARD-CODED to false.
+    | XAMPP uses self-signed HTTPS certificates. While the browser CAN
+    | accept these, some browsers may not send Secure cookies properly
+    | with untrusted certificates. Setting secure=false ensures the
+    | cookie is always sent, even over plain HTTP.
     |
     */
 
@@ -136,17 +174,22 @@ return [
     |--------------------------------------------------------------------------
     | HTTP Access Only
     |--------------------------------------------------------------------------
+    |
+    | When true, JavaScript cannot access the cookie. This is a security
+    | measure against XSS attacks. Set to true (the safe default).
+    |
     */
 
-    'http_only' => env('SESSION_HTTP_ONLY', true),
+    'http_only' => true,
 
     /*
     |--------------------------------------------------------------------------
     | Same-Site Cookies
     |--------------------------------------------------------------------------
     |
-    | HARD-CODED to 'lax' for XAMPP/local development.
-    | The .env SESSION_SAME_SITE value is IGNORED to prevent misconfiguration.
+    | HARD-CODED to 'lax'. This provides good security while allowing
+    | normal top-level navigation to work. 'strict' would be too
+    | restrictive, and 'none' would require the Secure flag.
     |
     */
 
@@ -156,8 +199,12 @@ return [
     |--------------------------------------------------------------------------
     | Partitioned Cookies
     |--------------------------------------------------------------------------
+    |
+    | HARD-CODED to false. Partitioned cookies are a new CHIPS feature
+    | that should not be enabled unless explicitly needed.
+    |
     */
 
-    'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
+    'partitioned' => false,
 
 ];
