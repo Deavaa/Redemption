@@ -3,6 +3,32 @@
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
+    {{-- Global Session Expiry Detection --}}
+    <script>
+    // Intercept ALL fetch() calls to detect session expiry (302 redirect to login)
+    (function() {
+        var originalFetch = window.fetch;
+        var loginUrl = '{{ route("login") }}';
+        var sessionExpired = false;
+
+        window.fetch = function() {
+            var args = arguments;
+            return originalFetch.apply(this, args).then(function(response) {
+                // If the response was redirected to the login page, the session has expired
+                if (response.redirected && response.url.indexOf('/login') !== -1) {
+                    if (!sessionExpired) {
+                        sessionExpired = true;
+                        alert('Your session has expired. You will be redirected to the login page.');
+                        window.location.href = loginUrl;
+                    }
+                    // Return a rejected promise so the calling code doesn't try to parse HTML as JSON
+                    return Promise.reject(new Error('Session expired'));
+                }
+                return response;
+            });
+        };
+    })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>@yield('title', __('app.dashboard')) - Redemption School</title>
 
