@@ -83,6 +83,53 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
+// ── Session Diagnostic Route (REMOVE IN PRODUCTION) ──────────
+Route::get('/session-test', function () {
+    // Write a value to the session
+    session(['test_key' => 'test_value_' . time()]);
+
+    // Read it back
+    $readBack = session('test_key');
+
+    // Also check raw session data
+    $sessionId = session()->getId();
+    $sessionDriver = config('session.driver');
+    $dbConnection = config('database.default');
+    $sessionPath = config('session.path');
+    $sessionDomain = config('session.domain');
+    $sessionSecure = config('session.secure');
+    $sessionSameSite = config('session.same_site');
+    $sessionDir = storage_path('framework/sessions');
+    $dirExists = is_dir($sessionDir);
+    $dirWritable = is_writable($sessionDir);
+    $sessionFiles = $dirExists ? count(glob($sessionDir . '/*')) : 0;
+    $cookieParams = session_get_cookie_params();
+
+    return response()->json([
+        'status' => $readBack ? 'OK' : 'FAIL',
+        'message' => $readBack ? 'Session is working!' : 'Session write failed!',
+        'wrote' => 'test_value_' . time(),
+        'read_back' => $readBack,
+        'session_id' => $sessionId,
+        'config' => [
+            'driver' => $sessionDriver,
+            'path' => $sessionPath,
+            'domain' => $sessionDomain,
+            'secure' => $sessionSecure,
+            'same_site' => $sessionSameSite,
+            'database_default' => $dbConnection,
+        ],
+        'storage' => [
+            'dir' => $sessionDir,
+            'exists' => $dirExists,
+            'writable' => $dirWritable,
+            'file_count' => $sessionFiles,
+        ],
+        'php_cookie_params' => $cookieParams,
+        'app_url' => config('app.url'),
+    ], 200, [], JSON_PRETTY_PRINT);
+});
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

@@ -14,13 +14,33 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Force correct database and session settings at the earliest possible point.
-        // This prevents SQLite/session errors caused by wrong .env values or cached config.
-        // These overrides take effect BEFORE any request processing.
+        // ──────────────────────────────────────────────────────────────
+        // FORCE correct database and session settings at the EARLIEST
+        // possible point. This prevents SQLite / session errors caused
+        // by wrong .env values or stale cached config.
+        //
+        // These overrides take effect BEFORE any request processing,
+        // BEFORE middleware runs, and BEFORE the session is started.
+        // ──────────────────────────────────────────────────────────────
+
+        // Database: always MySQL/MariaDB (never sqlite)
         config(['database.default' => 'mysql']);
+
+        // Session: always file-based (never database — no sessions table)
         config(['session.driver' => 'file']);
-        config(['session.secure' => false]);
+
+        // Cookie path: '/' is the most permissive — ensures the session
+        // cookie is always sent, even in subdirectory installs like XAMPP.
+        // (e.g., https://localhost/Redemption/public/)
+        config(['session.path' => '/']);
+
+        // Cookie domain: null = no domain restriction (correct default)
         config(['session.domain' => null]);
+
+        // Secure cookies: must be false for XAMPP self-signed HTTPS
+        config(['session.secure' => false]);
+
+        // SameSite: 'lax' allows normal navigation while preventing CSRF
         config(['session.same_site' => 'lax']);
     }
 
@@ -29,6 +49,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Delete stale cached config that may have wrong session/DB settings
+        $cachedConfig = base_path('bootstrap/cache/config.php');
+        if (file_exists($cachedConfig)) {
+            @unlink($cachedConfig);
+        }
+
         // Ensure session storage directory exists and is writable
         try {
             $sessionDir = storage_path('framework/sessions');
@@ -36,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
                 mkdir($sessionDir, 0755, true);
             }
         } catch (\Throwable $e) {
-            // Can't create directory - sessions won't work but don't crash the app
+            // Can't create directory — sessions won't work but don't crash
         }
 
         // Share active announcements with the admin layout so the
