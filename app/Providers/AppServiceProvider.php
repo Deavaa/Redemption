@@ -42,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
 
         // SameSite: 'lax' allows normal navigation while preventing CSRF
         config(['session.same_site' => 'lax']);
+
+        // Cookie name: force a consistent name so old broken cookies don't interfere
+        config(['session.cookie' => 'school_of_redemption_session']);
     }
 
     /**
