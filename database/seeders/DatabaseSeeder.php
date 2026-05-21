@@ -13,17 +13,14 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\DemoAdminSeeder::class,
             \Database\Seeders\SettingsSeeder::class,
 
-            \Database\Seeders\students::class,
-
             // 2. Permissions & roles (must be before users who need roles)
             \Database\Seeders\PermissionSeeder::class,
 
-            // 3. Full school data (branches, AY, terms, teachers, subjects, classes, sections, students, assignments)
+            // 3. Full school data (branches, AY, terms, teachers, subjects, classes, sections, demo students, assignments)
             \Database\Seeders\SchoolDataSeeder::class,
 
-            // 4. Real student data (121 students from school records)
+            // 4. Real student data (121 students from school records — replaces demo students)
             \Database\Seeders\StudentDataSeeder::class,
         ]);
-        $this->call(StudentsTableSeeder::class);
     }
 }
