@@ -22,6 +22,28 @@
             </div>
         </div>
 
+        {{-- Flash Messages --}}
+        @if(session('error'))
+            <div class="modern-alert modern-alert-error" style="margin-bottom:1rem;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ session('error') }}</span>
+                <button type="button" class="modern-alert-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="modern-alert modern-alert-error" style="margin-bottom:1rem;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Please fix the errors below:</span>
+                <ul style="margin:0.5rem 0 0 1rem;font-size:0.85rem;">
+                    @foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="modern-alert-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+        @endif
+
         {{-- Form Card --}}
         <div class="modern-card">
             <form method="POST" action="{{ route('admin.exams.store') }}">
@@ -200,7 +222,7 @@
                                 </label>
                                 <div class="modern-input-wrapper">
                                     <i class="fas fa-clock modern-input-icon"></i>
-                                    <input type="time" name="start_time" id="start_time" class="modern-input"
+                                    <input type="time" name="start_time" id="start_time" class="modern-input" step="1"
                                         value="{{ old('start_time', '08:00') }}">
                                 </div>
                             </div>
@@ -211,7 +233,7 @@
                                 </label>
                                 <div class="modern-input-wrapper">
                                     <i class="fas fa-clock modern-input-icon"></i>
-                                    <input type="time" name="end_time" id="end_time" class="modern-input"
+                                    <input type="time" name="end_time" id="end_time" class="modern-input" step="1"
                                         value="{{ old('end_time', '17:00') }}">
                                 </div>
                             </div>
@@ -264,6 +286,35 @@
 
     @push('styles')
         <style>
+            /* Error Alert */
+            .modern-alert {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.65rem;
+                padding: 0.85rem 1.25rem;
+                border-radius: 10px;
+                font-size: 0.88rem;
+                font-weight: 500;
+                animation: fadeSlideIn 0.3s ease;
+            }
+            .modern-alert-error {
+                background: #fef2f2;
+                color: #dc2626;
+                border: 1px solid #fecaca;
+            }
+            .modern-alert-close {
+                margin-left: auto;
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: inherit;
+                opacity: 0.6;
+                transition: opacity 0.2s;
+                font-size: 1.2rem;
+                line-height: 1;
+            }
+            .modern-alert-close:hover { opacity: 1; }
+
             /* Modern Page Layout */
             .modern-page {
                 animation: fadeSlideIn 0.4s ease-out;
