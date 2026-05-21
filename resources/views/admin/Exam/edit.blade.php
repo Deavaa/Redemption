@@ -213,7 +213,7 @@
                                     name="start_time"
                                     id="start_time"
                                     class="modern-input"
-                                    value="{{ old('start_time', $exam->start_time) }}">
+                                    value="{{ old('start_time', $exam->start_time ? substr($exam->start_time, 0, 5) : '') }}">
                             </div>
                         </div>
 
@@ -227,7 +227,7 @@
                                     name="end_time"
                                     id="end_time"
                                     class="modern-input"
-                                    value="{{ old('end_time', $exam->end_time) }}">
+                                    value="{{ old('end_time', $exam->end_time ? substr($exam->end_time, 0, 5) : '') }}">
                             </div>
                         </div>
                     </div>

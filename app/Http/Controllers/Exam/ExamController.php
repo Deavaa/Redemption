@@ -38,21 +38,25 @@ class ExamController extends Controller
             'term_id' => 'required|exists:terms,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'start_time' => 'nullable|date_format:H:i:s',
-            'end_time' => 'nullable|date_format:H:i:s',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
             'description' => 'nullable|string|max:1000',
         ]);
 
-        Exam::create($r->only([
+        // HTML <input type="time"> sends "HH:MM" but DB expects "HH:MM:SS"
+        $data = $r->only([
             'name', 'type', 'total_marks',
             'academic_year_id', 'term_id',
             'start_date', 'end_date',
-            'start_time', 'end_time',
             'description',
-        ]));
+        ]);
+        $data['start_time'] = $r->filled('start_time') ? $r->start_time . ':00' : null;
+        $data['end_time'] = $r->filled('end_time') ? $r->end_time . ':00' : null;
+
+        Exam::create($data);
 
         return redirect()->route('admin.exams.index')
-            ->with('success', 'Exam scheduled for all subjects and all classes.');
+            ->with('success', 'Exam scheduled successfully.');
     }
 
     public function show(Exam $exam)
@@ -81,18 +85,21 @@ class ExamController extends Controller
             'term_id' => 'required|exists:terms,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'start_time' => 'nullable|date_format:H:i:s',
-            'end_time' => 'nullable|date_format:H:i:s',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
             'description' => 'nullable|string|max:1000',
         ]);
 
-        $exam->update($r->only([
+        $data = $r->only([
             'name', 'type', 'total_marks',
             'academic_year_id', 'term_id',
             'start_date', 'end_date',
-            'start_time', 'end_time',
             'description',
-        ]));
+        ]);
+        $data['start_time'] = $r->filled('start_time') ? $r->start_time . ':00' : null;
+        $data['end_time'] = $r->filled('end_time') ? $r->end_time . ':00' : null;
+
+        $exam->update($data);
 
         return redirect()->route('admin.exams.index')
             ->with('success', 'Exam updated successfully.');
