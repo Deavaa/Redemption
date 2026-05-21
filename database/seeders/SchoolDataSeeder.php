@@ -337,7 +337,7 @@ class SchoolDataSeeder extends Seeder
                 // Also set homeroom on the class for the first one
                 $gradeNum = explode('_', $secKey)[0];
                 if ($secKey === $gradeNum . '_A' && isset($classes[$gradeNum])) {
-                    $classes[$gradeNum]->update(['teacher_id' => $teacher->user_id]);
+                    $classes[$gradeNum]->update(['teacher_id' => $teacher->id]);
                 }
             }
         }
