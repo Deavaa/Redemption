@@ -345,8 +345,22 @@ class SchoolDataSeeder extends Seeder
         $this->command->info('  ✓ Sections (16: 2 per grade)');
 
         // ══════════════════════════════════════════════════════════
-        // 9. STUDENTS
+        // 9. STUDENTS (demo data — will be replaced by StudentDataSeeder)
         // ══════════════════════════════════════════════════════════
+        // Clean up any existing demo students first to prevent
+        // duplicate roll_number / admission_number conflicts.
+        $existingDemoCount = Student::whereNull('user_id')->count();
+        if ($existingDemoCount > 0) {
+            Student::whereNull('user_id')->delete();
+            $this->command->info("  ✓ Cleaned up {$existingDemoCount} existing demo students");
+        }
+        // Also clean students with old-style roll numbers (A-01, B-01 format)
+        $oldRollCount = Student::where('roll_number', 'REGEXP', '^[A-Z]-[0-9]')->count();
+        if ($oldRollCount > 0) {
+            Student::where('roll_number', 'REGEXP', '^[A-Z]-[0-9]')->delete();
+            $this->command->info("  ✓ Cleaned up {$oldRollCount} students with old roll_number format");
+        }
+
         $firstNamesMale = ['Abel', 'Binyam', 'Chalachew', 'Daniel', 'Ermias', 'Fisha', 'Girma', 'Haben', 'Isayas', 'Jemal', 'Kaleb', 'Lij', 'Mikiyas', 'Natnael', 'Olana', 'Petros', 'Rediet', 'Samuel', 'Tariku', 'Wondimu'];
         $firstNamesFemale = ['Aster', 'Bethelhem', 'Chaltu', 'Dinknesh', 'Eleni', 'Fikir', 'Genet', 'Hiwot', 'Ikram', 'Jamila', 'Kidist', 'Lidya', 'Meron', 'Nardos', 'Olga', 'Peniel', 'Rahel', 'Selam', 'Tigist', 'Wubitu'];
         $lastNames = ['Abebe', 'Bekele', 'Chekol', 'Dagne', 'Engida', 'Fikru', 'Gebre', 'Hailu', 'Ibrahim', 'Jemaneh', 'Kassa', 'Lema', 'Mekonnen', 'Nega', 'Oumer', 'Pankhurst', 'Reda', 'Sisay', 'Tadesse', 'Wolde'];
