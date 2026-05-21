@@ -77,6 +77,8 @@ use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Attendance\AttendanceController;
 use App\Http\Controllers\Attendance\AttendanceDelegationController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\LessonPlan\LessonPlanController;
+use App\Http\Controllers\LessonPlan\LessonPlanFollowUpController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -239,6 +241,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('teacher-assignments', TeacherAssignmentController::class)->middleware('permission:subject_assignments.view');
     Route::get('teacher-assignments/api/sections', [TeacherAssignmentController::class, 'apiSections'])->name('teacher-assignments.api.sections');
     Route::get('teacher-assignments/api/subjects', [TeacherAssignmentController::class, 'apiSubjects'])->name('teacher-assignments.api.subjects');
+
+    // ── Lesson Plans ─────────────────────────────────────────
+    Route::resource('lesson-plans', LessonPlanController::class)->middleware('permission:lesson_plans.view');
+    Route::post('lesson-plans/{lessonPlan}/review', [LessonPlanController::class, 'review'])->name('lesson-plans.review')->middleware('permission:lesson_plans.review');
+    Route::post('lesson-plans/{lessonPlan}/follow-ups', [LessonPlanFollowUpController::class, 'store'])->name('lesson-plans.follow-ups.store')->middleware('permission:lesson_plans.follow_up');
+    Route::put('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'update'])->name('lesson-plans.follow-ups.update')->middleware('permission:lesson_plans.follow_up');
+    Route::delete('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'destroy'])->name('lesson-plans.follow-ups.destroy')->middleware('permission:lesson_plans.follow_up');
 
     // ── Documents ─────────────────────────────────────────
     Route::resource('id-cards', IdCardController::class)->middleware('permission:id_cards.generate');

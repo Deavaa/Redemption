@@ -45,6 +45,8 @@ class PermissionMiddleware
                 'students.view',
                 // Teacher assignments
                 'subject_assignments.view',
+                // Lesson Plans
+                'lesson_plans.view', 'lesson_plans.create', 'lesson_plans.edit', 'lesson_plans.follow_up',
                 // Documents
                 'settings.view', // report exchange uses settings.view
                 // Library
@@ -92,6 +94,8 @@ class PermissionMiddleware
                 'mark_sheets.view', 'mark_sheets.generate',
                 // People
                 'students.view', 'teachers.view', 'subject_assignments.view',
+                // Lesson Plans
+                'lesson_plans.view', 'lesson_plans.create', 'lesson_plans.edit', 'lesson_plans.review', 'lesson_plans.follow_up',
                 // Documents
                 'settings.view', 'id_cards.generate', 'certificates.generate',
                 // Website
