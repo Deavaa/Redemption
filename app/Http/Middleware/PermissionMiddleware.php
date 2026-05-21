@@ -94,6 +94,8 @@ class PermissionMiddleware
                 'students.view', 'teachers.view', 'subject_assignments.view',
                 // Documents
                 'settings.view', 'id_cards.generate', 'certificates.generate',
+                // Website
+                'news.manage',
                 // Library
                 'library.view',
                 // Communication

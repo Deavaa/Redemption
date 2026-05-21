@@ -436,6 +436,13 @@
                         <li><a href="{{ route('admin.contact-messages.index') }}" class="{{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}"><i class="fas fa-envelope"></i> Messages</a></li>
                     </ul>
                 </li>
+                @elseif($menuLevel === 'branch_principal')
+                <li class="menu-header">WEBSITE</li>
+                <li class="{{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.news.index') }}" class="{{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
+                        <i class="fas fa-newspaper"></i><span>News</span>
+                    </a>
+                </li>
                 @endif
 
                 {{-- ADMINISTRATION --}}

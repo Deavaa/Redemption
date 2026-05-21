@@ -229,7 +229,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('gallery-videos', GalleryVideoController::class)->middleware('permission:gallery.view');
     Route::resource('branches', BranchController::class)->middleware('permission:branches.view');
     Route::resource('contact-messages', ContactMessageController::class)->middleware('permission:contact_messages.view');
-    Route::resource('news', NewsController::class)->middleware('permission:settings.view');
+    Route::resource('news', NewsController::class)->middleware('permission:news.manage');
 
     // ── Classes & Sections ─────────────────────────────────
     Route::resource('classrooms', ClassroomController::class)->middleware('permission:classrooms.view');
