@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\DemoAdminSeeder::class,
             \Database\Seeders\SettingsSeeder::class,
 
+            \Database\Seeders\students::class,
+
             // 2. Permissions & roles (must be before users who need roles)
             \Database\Seeders\PermissionSeeder::class,
 
@@ -22,5 +24,6 @@ class DatabaseSeeder extends Seeder
             // 4. Real student data (121 students from school records)
             \Database\Seeders\StudentDataSeeder::class,
         ]);
+        $this->call(StudentsTableSeeder::class);
     }
 }
