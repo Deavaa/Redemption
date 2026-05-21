@@ -25,9 +25,15 @@ class PromotionController extends Controller
         $currentAy = AcademicYear::where('is_current', true)->first();
         $terms = $currentAy ? Term::where('academic_year_id', $currentAy->id)->orderBy('id')->get() : collect();
 
-        $selectedAy = $request->filled('academic_year_id') ? AcademicYear::find($request->academic_year_id) : $currentAy;
-        $selectedTerm = $request->filled('term_id') ? Term::find($request->term_id) : null;
-        $selectedClass = $request->filled('class_id') ? Classroom::find($request->class_id) : null;
+        // Store the full model for querying, and the ID for the view
+        $selectedAyModel = $request->filled('academic_year_id') ? AcademicYear::find($request->academic_year_id) : $currentAy;
+        $selectedTermModel = $request->filled('term_id') ? Term::find($request->term_id) : null;
+        $selectedClassModel = $request->filled('class_id') ? Classroom::find($request->class_id) : null;
+
+        // Pass IDs to the view (avoids "Object could not be converted to int" errors)
+        $selectedAy = $selectedAyModel?->id;
+        $selectedTerm = $selectedTermModel?->id;
+        $selectedClass = $selectedClassModel?->id;
 
         // Get classes
         $user = auth()->user();
@@ -37,40 +43,40 @@ class PromotionController extends Controller
             $classes = Classroom::with(['branch', 'sections'])->orderBy('name')->get();
         }
 
-        if ($selectedAy) {
-            $terms = Term::where('academic_year_id', $selectedAy->id)->orderBy('id')->get();
+        if ($selectedAyModel) {
+            $terms = Term::where('academic_year_id', $selectedAyModel->id)->orderBy('id')->get();
         }
 
         // Get promotion results if filters applied
         $results = collect();
         $stats = ['promoted' => 0, 'detained' => 0, 'conditional' => 0, 'pending' => 0];
 
-        if ($selectedAy && $selectedTerm && $selectedClass) {
+        if ($selectedAyModel && $selectedTermModel && $selectedClassModel) {
             $query = PromotionResult::with(['student', 'fromClass', 'toClass', 'academicYear', 'term'])
-                ->where('academic_year_id', $selectedAy->id)
-                ->where('term_id', $selectedTerm->id)
-                ->where('from_class_id', $selectedClass->id);
+                ->where('academic_year_id', $selectedAyModel->id)
+                ->where('term_id', $selectedTermModel->id)
+                ->where('from_class_id', $selectedClassModel->id);
 
             $results = $query->orderBy('status')->orderByDesc('average_score')->paginate(50);
-            $stats['promoted'] = PromotionResult::where('academic_year_id', $selectedAy->id)
-                ->where('term_id', $selectedTerm->id)
-                ->where('from_class_id', $selectedClass->id)
+            $stats['promoted'] = PromotionResult::where('academic_year_id', $selectedAyModel->id)
+                ->where('term_id', $selectedTermModel->id)
+                ->where('from_class_id', $selectedClassModel->id)
                 ->where('status', 'promoted')->count();
-            $stats['detained'] = PromotionResult::where('academic_year_id', $selectedAy->id)
-                ->where('term_id', $selectedTerm->id)
-                ->where('from_class_id', $selectedClass->id)
+            $stats['detained'] = PromotionResult::where('academic_year_id', $selectedAyModel->id)
+                ->where('term_id', $selectedTermModel->id)
+                ->where('from_class_id', $selectedClassModel->id)
                 ->where('status', 'detained')->count();
-            $stats['conditional'] = PromotionResult::where('academic_year_id', $selectedAy->id)
-                ->where('term_id', $selectedTerm->id)
-                ->where('from_class_id', $selectedClass->id)
+            $stats['conditional'] = PromotionResult::where('academic_year_id', $selectedAyModel->id)
+                ->where('term_id', $selectedTermModel->id)
+                ->where('from_class_id', $selectedClassModel->id)
                 ->where('status', 'conditional')->count();
 
             // Count students without results (pending)
-            $studentsWithResults = PromotionResult::where('academic_year_id', $selectedAy->id)
-                ->where('term_id', $selectedTerm->id)
-                ->where('from_class_id', $selectedClass->id)
+            $studentsWithResults = PromotionResult::where('academic_year_id', $selectedAyModel->id)
+                ->where('term_id', $selectedTermModel->id)
+                ->where('from_class_id', $selectedClassModel->id)
                 ->pluck('student_id');
-            $stats['pending'] = Student::where('class_id', $selectedClass->id)
+            $stats['pending'] = Student::where('class_id', $selectedClassModel->id)
                 ->where('status', 'active')
                 ->whereNotIn('id', $studentsWithResults)
                 ->count();
