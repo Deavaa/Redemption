@@ -88,8 +88,14 @@
 .me-student-count { font-size: 0.72rem; font-weight: 700; color: #1a1a2e; display: flex; align-items: center; gap: 4px; }
 .me-student-count i { color: #4361ee; font-size: 0.7rem; }
 
-/* Cards container - tight */
-.me-cards-container { display: flex; flex-direction: column; gap: 4px; padding-bottom: 0.5rem; }
+/* Cards container - carousel wrapper */
+.me-cards-container { overflow: hidden; position: relative; border-radius: 6px; }
+
+/* Card slider - horizontal strip */
+.me-card-slider { display: flex; transition: transform 0.3s ease; will-change: transform; touch-action: pan-y; }
+
+/* Each student card fills the carousel viewport */
+.me-card-slider .me-student-card { min-width: 100%; flex-shrink: 0; }
 
 /* Student Card - compact */
 .me-student-card {
@@ -193,6 +199,56 @@
 .me-card-hint { text-align: center; padding: 3px; font-size: 0.6rem; color: #9ca3af; margin-top: 2px; }
 .me-card-hint kbd { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 2px; padding: 0 3px; font-size: 0.55rem; font-family: inherit; }
 
+/* ===== CAROUSEL NAVIGATION ===== */
+.me-carousel-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 8px; margin-bottom: 4px;
+    background: #fff; border-radius: 6px;
+    border: 1px solid #eee;
+}
+.me-carousel-nav-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 5px;
+    border: 1px solid #ddd; background: #fff;
+    font-size: 0.7rem; font-weight: 600; color: #1a1a2e;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.me-carousel-nav-btn:hover:not(:disabled) { background: #f0f4ff; border-color: #4361ee; color: #4361ee; }
+.me-carousel-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.me-carousel-nav-btn i { font-size: 0.65rem; }
+.me-carousel-counter { font-size: 0.72rem; font-weight: 700; color: #1a1a2e; }
+.me-carousel-counter span { color: #4361ee; }
+
+/* Dot indicators */
+.me-carousel-dots {
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px; padding: 6px 0 2px; flex-wrap: wrap;
+}
+.me-carousel-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #e5e7eb; border: none; padding: 0;
+    cursor: pointer; transition: all 0.2s;
+}
+.me-carousel-dot:hover { background: #9ca3af; }
+.me-carousel-dot.active { background: #4361ee; transform: scale(1.2); }
+
+/* Progress bar alternative for many students */
+.me-carousel-progress {
+    height: 3px; background: #e5e7eb; border-radius: 2px;
+    margin: 4px 8px 0; overflow: hidden;
+}
+.me-carousel-progress-bar {
+    height: 100%; background: #4361ee; border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Swipe hint animation */
+@keyframes meSwipeHint {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-8px); }
+}
+.me-swipe-hint { animation: meSwipeHint 1.5s ease-in-out 2; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .admin-content { padding: 4px !important; }
@@ -205,6 +261,8 @@
     .me-sc-body { padding: 3px 5px; }
     .me-sc-totals { padding: 3px 5px; }
     .me-sc-field-input { font-size: 0.72rem; padding: 2px 1px; }
+    .me-carousel-nav-btn { padding: 6px 10px; font-size: 0.75rem; }
+    .me-carousel-dot { width: 10px; height: 10px; }
 }
 
 @media (max-width: 480px) {
@@ -346,14 +404,35 @@
             </div>
         </div>
 
-        {{-- Cards Container (all student cards rendered here) --}}
+        {{-- Carousel Navigation Bar --}}
+        <div class="me-carousel-nav" id="carouselNav">
+            <button type="button" class="me-carousel-nav-btn" id="btnPrevStudent" disabled>
+                <i class="fas fa-chevron-left"></i> Prev
+            </button>
+            <div class="me-carousel-counter">
+                Student <span id="currentStudentNum">1</span> of <span id="totalStudentNum">0</span>
+            </div>
+            <button type="button" class="me-carousel-nav-btn" id="btnNextStudent" disabled>
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        {{-- Cards Container (carousel wrapper) --}}
         <div class="me-cards-container" id="cardsContainer">
-            {{-- dynamically built --}}
+            <div class="me-card-slider" id="cardSlider">
+                {{-- dynamically built --}}
+            </div>
+        </div>
+
+        {{-- Dot Indicators / Progress Bar --}}
+        <div class="me-carousel-dots" id="carouselDots"></div>
+        <div class="me-carousel-progress" id="carouselProgress">
+            <div class="me-carousel-progress-bar" id="carouselProgressBar" style="width:0%"></div>
         </div>
 
         {{-- Keyboard Hint --}}
         <div class="me-card-hint" id="keyboardHint">
-            <kbd>Tab</kbd> to move between fields &middot; Marks auto-save after 900ms
+            <kbd>&larr;</kbd> <kbd>&rarr;</kbd> to navigate students &middot; <kbd>Tab</kbd> to move between fields &middot; Swipe on mobile
         </div>
     </div>
 </div>
@@ -370,6 +449,14 @@
     var isLocked = false;
     var hasPermission = false;
     var currentMarkField = 'all';
+    var currentStudentIndex = 0;
+
+    // ========== CAROUSEL TOUCH STATE ==========
+    var touchStartX = 0;
+    var touchStartY = 0;
+    var touchCurrentX = 0;
+    var isSwiping = false;
+    var swipeThreshold = 50;
 
     // ========== DOM REFS ==========
     var filterAy = document.getElementById('filterAy');
@@ -393,6 +480,15 @@
     var keyboardHint = document.getElementById('keyboardHint');
     var cardsContainer = document.getElementById('cardsContainer');
     var totalStudentCount = document.getElementById('totalStudentCount');
+
+    // Carousel DOM refs
+    var cardSlider = document.getElementById('cardSlider');
+    var btnPrevStudent = document.getElementById('btnPrevStudent');
+    var btnNextStudent = document.getElementById('btnNextStudent');
+    var currentStudentNum = document.getElementById('currentStudentNum');
+    var totalStudentNum = document.getElementById('totalStudentNum');
+    var carouselDots = document.getElementById('carouselDots');
+    var carouselProgressBar = document.getElementById('carouselProgressBar');
 
     // ========== TEACHER ASSIGNMENTS DATA ==========
     var teacherAssignments = @json($teacherAssignments);
@@ -936,10 +1032,16 @@
             html += '</div>'; // end me-student-card
         });
 
-        cardsContainer.innerHTML = html;
+        cardSlider.innerHTML = html;
 
         // Attach listeners to all inputs
         attachMarkInputListeners();
+
+        // Initialize carousel
+        currentStudentIndex = 0;
+        buildDots();
+        showStudent(0, false);
+        updateCarouselNav();
     }
 
     // ========== MARK INPUT LISTENERS ==========
@@ -1040,20 +1142,16 @@
                 saveMark(studentId, markKey, this.value);
             });
 
-            // FOCUS: Highlight the active card
+            // FOCUS: Highlight the active card & navigate carousel to it
             inp.addEventListener('focus', function() {
-                // Highlight the parent card
                 var card = this.closest('.me-student-card');
                 document.querySelectorAll('.me-student-card.card-active').forEach(function(c) { c.classList.remove('card-active'); });
                 if (card) card.classList.add('card-active');
 
-                // Scroll card into view if needed
-                if (card) {
-                    var rect = card.getBoundingClientRect();
-                    var viewHeight = window.innerHeight || document.documentElement.clientHeight;
-                    if (rect.top < 80 || rect.bottom > viewHeight - 80) {
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+                // Navigate carousel to the focused student's card
+                var idx = parseInt(this.dataset.studentIndex);
+                if (!isNaN(idx) && idx !== currentStudentIndex) {
+                    showStudent(idx);
                 }
             });
         });
@@ -1130,6 +1228,197 @@
         if (g === 'D') return 'me-grade-D';
         return 'me-grade-F';
     }
+
+    // ========== CAROUSEL NAVIGATION ==========
+    function showStudent(index, animate) {
+        if (index < 0) index = 0;
+        if (index >= students.length) index = students.length - 1;
+        if (students.length === 0) return;
+
+        currentStudentIndex = index;
+
+        // Slide the slider
+        var offset = -index * 100;
+        if (animate === false) {
+            cardSlider.style.transition = 'none';
+            cardSlider.style.transform = 'translateX(' + offset + '%)';
+            // Force reflow then restore transition
+            cardSlider.offsetHeight; // eslint-disable-line no-unused-expressions
+            cardSlider.style.transition = '';
+        } else {
+            cardSlider.style.transform = 'translateX(' + offset + '%)';
+        }
+
+        // Update active card highlight
+        document.querySelectorAll('.me-student-card.card-active').forEach(function(c) { c.classList.remove('card-active'); });
+        var activeCard = cardSlider.querySelector('.me-student-card[data-student-index="' + index + '"]');
+        if (activeCard) activeCard.classList.add('card-active');
+
+        updateCarouselNav();
+    }
+
+    function navigatePrev() {
+        if (currentStudentIndex > 0) {
+            flushPendingSaves();
+            showStudent(currentStudentIndex - 1);
+        }
+    }
+
+    function navigateNext() {
+        if (currentStudentIndex < students.length - 1) {
+            flushPendingSaves();
+            showStudent(currentStudentIndex + 1);
+        }
+    }
+
+    function updateCarouselNav() {
+        // Update counter
+        currentStudentNum.textContent = students.length > 0 ? (currentStudentIndex + 1) : 0;
+        totalStudentNum.textContent = students.length;
+
+        // Update button states
+        btnPrevStudent.disabled = (currentStudentIndex <= 0);
+        btnNextStudent.disabled = (currentStudentIndex >= students.length - 1);
+
+        // Update dots
+        var dots = carouselDots.querySelectorAll('.me-carousel-dot');
+        dots.forEach(function(dot, i) {
+            if (i === currentStudentIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+
+        // Update progress bar
+        if (students.length > 0) {
+            var pct = ((currentStudentIndex + 1) / students.length) * 100;
+            carouselProgressBar.style.width = pct + '%';
+        } else {
+            carouselProgressBar.style.width = '0%';
+        }
+
+        // Show/hide dots vs progress: use dots for <= 20 students, progress bar for > 20
+        if (students.length <= 20) {
+            carouselDots.style.display = 'flex';
+            document.getElementById('carouselProgress').style.display = 'none';
+        } else {
+            carouselDots.style.display = 'none';
+            document.getElementById('carouselProgress').style.display = 'block';
+        }
+    }
+
+    function buildDots() {
+        var html = '';
+        var maxDots = Math.min(students.length, 30); // cap at 30 dots for performance
+        for (var i = 0; i < maxDots; i++) {
+            html += '<button type="button" class="me-carousel-dot' + (i === 0 ? ' active' : '') + '" data-dot-index="' + i + '" aria-label="Student ' + (i + 1) + '"></button>';
+        }
+        carouselDots.innerHTML = html;
+    }
+
+    // Click handler for dots (event delegation)
+    carouselDots.addEventListener('click', function(e) {
+        var dot = e.target.closest('.me-carousel-dot');
+        if (dot) {
+            var idx = parseInt(dot.dataset.dotIndex);
+            if (!isNaN(idx)) {
+                flushPendingSaves();
+                showStudent(idx);
+            }
+        }
+    });
+
+    // Prev/Next button handlers
+    btnPrevStudent.addEventListener('click', function() { navigatePrev(); });
+    btnNextStudent.addEventListener('click', function() { navigateNext(); });
+
+    // Flush any pending debounced saves for current student before navigating
+    function flushPendingSaves() {
+        var pendingKeys = Object.keys(saveTimers);
+        pendingKeys.forEach(function(timerKey) {
+            if (saveTimers[timerKey]) {
+                clearTimeout(saveTimers[timerKey]);
+                var parts = timerKey.split('_');
+                var studentId = parts[0];
+                var markKey = parts.slice(1).join('_');
+                // Find the input to get current value
+                var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
+                if (inp) {
+                    enforceMaxValue(inp);
+                    saveMark(studentId, markKey, inp.value);
+                }
+                delete saveTimers[timerKey];
+            }
+        });
+    }
+
+    // ========== TOUCH / SWIPE HANDLERS ==========
+    cardsContainer.addEventListener('touchstart', function(e) {
+        // Don't capture swipe if touching an input
+        if (e.target.closest('.me-sc-field-input')) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchCurrentX = touchStartX;
+        isSwiping = false;
+    }, { passive: true });
+
+    cardsContainer.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.me-sc-field-input')) return;
+        touchCurrentX = e.touches[0].clientX;
+        var diffX = touchCurrentX - touchStartX;
+        var diffY = e.touches[0].clientY - touchStartY;
+
+        // Determine if this is a horizontal swipe
+        if (!isSwiping && Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+            isSwiping = true;
+        }
+
+        if (isSwiping) {
+            // Live drag effect
+            var baseOffset = -currentStudentIndex * 100;
+            var containerWidth = cardsContainer.offsetWidth;
+            var dragPercent = (diffX / containerWidth) * 100;
+            cardSlider.style.transition = 'none';
+            cardSlider.style.transform = 'translateX(' + (baseOffset + dragPercent) + '%)';
+        }
+    }, { passive: true });
+
+    cardsContainer.addEventListener('touchend', function(e) {
+        if (!isSwiping) return;
+        isSwiping = false;
+
+        // Restore transition
+        cardSlider.style.transition = '';
+
+        var diffX = touchCurrentX - touchStartX;
+        if (diffX > swipeThreshold) {
+            navigatePrev();
+        } else if (diffX < -swipeThreshold) {
+            navigateNext();
+        } else {
+            // Snap back to current
+            showStudent(currentStudentIndex);
+        }
+    }, { passive: true });
+
+    // ========== KEYBOARD NAVIGATION ==========
+    document.addEventListener('keydown', function(e) {
+        // Only handle arrow keys when mark entry area is visible
+        if (markEntryArea.classList.contains('d-none')) return;
+
+        // Don't navigate when focus is inside an input (allow typing)
+        var activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT' || activeEl.tagName === 'TEXTAREA')) return;
+
+        if (e.key === 'ArrowLeft' || e.keyCode === 37) {
+            e.preventDefault();
+            navigatePrev();
+        } else if (e.key === 'ArrowRight' || e.keyCode === 39) {
+            e.preventDefault();
+            navigateNext();
+        }
+    });
 
     // ========== SAVE MARK ==========
     function saveMark(studentId, markKey, value) {
