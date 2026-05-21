@@ -374,6 +374,7 @@ class SchoolDataSeeder extends Seeder
                     Student::updateOrCreate(
                         ['admission_number' => $admission],
                         [
+                            'user_id' => null, // Demo student — no user account
                             'full_name' => $fullName,
                             'branch_id' => $mainBranch->id,
                             'class_id' => $class->id,
@@ -415,6 +416,7 @@ class SchoolDataSeeder extends Seeder
                     Student::updateOrCreate(
                         ['admission_number' => $admission],
                         [
+                            'user_id' => null, // Demo student — no user account
                             'full_name' => $fullName,
                             'branch_id' => $mainBranch->id,
                             'class_id' => $class->id,

@@ -63,8 +63,9 @@ use App\Http\Controllers\Telegram\TelegramController;
 use App\Http\Controllers\Term\TermController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Library\LibraryBookController;
-use App\Http\Controllers\DatabaseBackupController;
-use App\Http\Controllers\Backup\DatabaseBackupController as ScheduledBackupController;
+use App\Http\Controllers\Stock\StockController;
+use App\Http\Controllers\Training\TrainingController;
+use App\Http\Controllers\Backup\DatabaseBackupController;
 use App\Http\Controllers\UserAccess\TeacherAccessController;
 use App\Http\Controllers\UserAccess\StudentAccessController;
 use App\Http\Controllers\UserAccess\ParentAccessController;
@@ -83,53 +84,6 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
-// ── Session Diagnostic Route (REMOVE IN PRODUCTION) ──────────
-Route::get('/session-test', function () {
-    // Write a value to the session
-    session(['test_key' => 'test_value_' . time()]);
-
-    // Read it back
-    $readBack = session('test_key');
-
-    // Also check raw session data
-    $sessionId = session()->getId();
-    $sessionDriver = config('session.driver');
-    $dbConnection = config('database.default');
-    $sessionPath = config('session.path');
-    $sessionDomain = config('session.domain');
-    $sessionSecure = config('session.secure');
-    $sessionSameSite = config('session.same_site');
-    $sessionDir = storage_path('framework/sessions');
-    $dirExists = is_dir($sessionDir);
-    $dirWritable = is_writable($sessionDir);
-    $sessionFiles = $dirExists ? count(glob($sessionDir . '/*')) : 0;
-    $cookieParams = session_get_cookie_params();
-
-    return response()->json([
-        'status' => $readBack ? 'OK' : 'FAIL',
-        'message' => $readBack ? 'Session is working!' : 'Session write failed!',
-        'wrote' => 'test_value_' . time(),
-        'read_back' => $readBack,
-        'session_id' => $sessionId,
-        'config' => [
-            'driver' => $sessionDriver,
-            'path' => $sessionPath,
-            'domain' => $sessionDomain,
-            'secure' => $sessionSecure,
-            'same_site' => $sessionSameSite,
-            'database_default' => $dbConnection,
-        ],
-        'storage' => [
-            'dir' => $sessionDir,
-            'exists' => $dirExists,
-            'writable' => $dirWritable,
-            'file_count' => $sessionFiles,
-        ],
-        'php_cookie_params' => $cookieParams,
-        'app_url' => config('app.url'),
-    ], 200, [], JSON_PRETTY_PRINT);
-});
-
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -145,57 +99,6 @@ Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
-
-// Session diagnostic route (public - no auth required)
-Route::get('/session-test', function () {
-    $results = [];
-    $problems = 0;
-
-    // 1. Config values
-    $results['session_driver'] = config('session.driver');
-    $results['session_secure'] = config('session.secure') ? 'true' : 'false';
-    $results['session_domain'] = config('session.domain') === null ? 'null (correct)' : "'" . config('session.domain') . "'";
-    $results['session_path'] = config('session.path');
-    $results['session_same_site'] = config('session.same_site');
-    $results['db_connection'] = config('database.default');
-
-    // 2. Session directory
-    $sessionDir = storage_path('framework/sessions');
-    $results['session_dir'] = $sessionDir;
-    $results['session_dir_exists'] = is_dir($sessionDir) ? 'YES' : 'NO';
-    $results['session_dir_writable'] = is_writable($sessionDir) ? 'YES' : 'NO';
-
-    // 3. Try writing and reading a session
-    try {
-        session(['_test_key' => 'test_value_' . time()]);
-        $readBack = session('_test_key');
-        $results['session_write_read'] = ($readBack && str_starts_with($readBack, 'test_value_')) ? 'SUCCESS' : 'FAILED (read: ' . $readBack . ')';
-    } catch (\Throwable $e) {
-        $results['session_write_read'] = 'ERROR: ' . $e->getMessage();
-        $problems++;
-    }
-
-    // 4. Cookie settings that will be sent
-    $results['cookie_name'] = config('session.cookie');
-    $results['app_url'] = env('APP_URL', 'not set');
-
-    // 5. Cached config check
-    $cachedConfig = base_path('bootstrap/cache/config.php');
-    $results['cached_config_exists'] = file_exists($cachedConfig) ? 'YES (may have stale values!)' : 'NO (good)';
-
-    // 6. Check for problems
-    if (config('session.driver') !== 'file') { $problems++; $results['_error_driver'] = 'Session driver should be "file" but is "' . config('session.driver') . '"'; }
-    if (config('database.default') !== 'mysql') { $problems++; $results['_error_db'] = 'DB should be "mysql" but is "' . config('database.default') . '"'; }
-    if (config('session.secure')) { $problems++; $results['_error_secure'] = 'Session secure is ON - breaks on self-signed HTTPS'; }
-    if (config('session.domain') !== null) { $problems++; $results['_error_domain'] = 'Session domain is set to "' . config('session.domain') . '" - should be null'; }
-    if (!is_dir($sessionDir)) { $problems++; $results['_error_dir'] = 'Session directory does NOT exist'; }
-    if (!is_writable($sessionDir)) { $problems++; $results['_error_writable'] = 'Session directory is NOT writable'; }
-
-    $results['_problems_count'] = $problems;
-    $results['_status'] = $problems === 0 ? 'ALL GOOD - Sessions should work!' : 'PROBLEMS FOUND - See _error_* keys';
-
-    return response()->json($results, 200, [], JSON_PRETTY_PRINT);
-});
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     // Dashboard
@@ -362,6 +265,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('library/{library}/read', [LibraryBookController::class, 'read'])->name('library.read')->middleware('permission:library.view');
     Route::get('library/{library}/serve', [LibraryBookController::class, 'serveBook'])->name('library.serve')->middleware('permission:library.view');
 
+    // ── Stock Management ─────────────────────────────────
+    Route::resource('stock', StockController::class)->middleware('permission:settings.view');
+    Route::get('stock/stock-in', [StockController::class, 'stockIn'])->name('stock.stock-in')->middleware('permission:settings.edit');
+    Route::post('stock/stock-in', [StockController::class, 'storeStockIn'])->name('stock.store-stock-in')->middleware('permission:settings.edit');
+    Route::get('stock/stock-out', [StockController::class, 'stockOut'])->name('stock.stock-out')->middleware('permission:settings.edit');
+    Route::post('stock/stock-out', [StockController::class, 'storeStockOut'])->name('stock.store-stock-out')->middleware('permission:settings.edit');
+    Route::get('stock/transactions', [StockController::class, 'transactions'])->name('stock.transactions')->middleware('permission:settings.view');
+    Route::get('stock/report', [StockController::class, 'report'])->name('stock.report')->middleware('permission:settings.view');
+
+    // ── Training ─────────────────────────────────────────
+    Route::resource('trainings', TrainingController::class)->middleware('permission:settings.view');
+    Route::post('trainings/{training}/participants', [TrainingController::class, 'addParticipant'])->name('trainings.add-participant')->middleware('permission:settings.edit');
+    Route::post('trainings/{training}/participants/bulk', [TrainingController::class, 'addBulkParticipants'])->name('trainings.add-bulk-participants')->middleware('permission:settings.edit');
+    Route::put('trainings/{training}/participants/{participantId}', [TrainingController::class, 'updateParticipant'])->name('trainings.update-participant')->middleware('permission:settings.edit');
+    Route::delete('trainings/{training}/participants/{participantId}', [TrainingController::class, 'removeParticipant'])->name('trainings.remove-participant')->middleware('permission:settings.edit');
+
     // ── Finance ───────────────────────────────────────────
     Route::resource('budgets', BudgetController::class)->middleware('permission:budgets.view');
     Route::resource('income-expenses', IncomeExpenseController::class)->middleware('permission:income_expenses.view');
@@ -422,18 +341,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assign-users')->middleware('permission:roles.edit');
     Route::post('roles/{role}/toggle-permission', [RoleController::class, 'togglePermission'])->name('roles.toggle-permission')->middleware('permission:roles.edit');
 
-    // Database Backup & Export (Legacy)
-    Route::get('database-backup', [DatabaseBackupController::class, 'index'])->name('database-backup.index')->middleware('permission:settings.view');
+    // Database Backup & Export (redirects to unified backup page)
+    Route::get('database-backup', fn() => redirect()->route('admin.backup.index'))->name('database-backup.index');
     Route::post('database-backup/export-send', [DatabaseBackupController::class, 'exportAndSend'])->name('database-backup.export-send')->middleware('permission:settings.edit');
     Route::post('database-backup/quick-export', [DatabaseBackupController::class, 'quickExport'])->name('database-backup.quick-export')->middleware('permission:settings.edit');
-    Route::post('database-backup/download', [DatabaseBackupController::class, 'download'])->name('database-backup.download')->middleware('permission:settings.edit');
+    Route::post('database-backup/download', [DatabaseBackupController::class, 'backupNow'])->name('database-backup.download')->middleware('permission:settings.edit');
 
     // Scheduled Database Backup
-    Route::get('backup', [ScheduledBackupController::class, 'index'])->name('backup.index')->middleware('permission:settings.view');
-    Route::post('backup/now', [ScheduledBackupController::class, 'backupNow'])->name('backup.now')->middleware('permission:settings.edit');
-    Route::get('backup/download/{filename}', [ScheduledBackupController::class, 'download'])->name('backup.download')->middleware('permission:settings.edit')->where('filename', '[^/]+');
-    Route::delete('backup/{filename}', [ScheduledBackupController::class, 'delete'])->name('backup.delete')->middleware('permission:settings.edit')->where('filename', '[^/]+');
-    Route::put('backup/schedule', [ScheduledBackupController::class, 'updateSchedule'])->name('backup.schedule')->middleware('permission:settings.edit');
+    Route::get('backup', [DatabaseBackupController::class, 'index'])->name('backup.index')->middleware('permission:settings.view');
+    Route::post('backup/now', [DatabaseBackupController::class, 'backupNow'])->name('backup.now')->middleware('permission:settings.edit');
+    Route::get('backup/download/{filename}', [DatabaseBackupController::class, 'download'])->name('backup.download')->middleware('permission:settings.edit')->where('filename', '[^/]+');
+    Route::delete('backup/{filename}', [DatabaseBackupController::class, 'delete'])->name('backup.delete')->middleware('permission:settings.edit')->where('filename', '[^/]+');
+    Route::put('backup/schedule', [DatabaseBackupController::class, 'updateSchedule'])->name('backup.schedule')->middleware('permission:settings.edit');
 
     // Branch Budget Comparison
     Route::get('budget-comparison', [BudgetComparisonController::class, 'index'])->name('budget-comparison.index')->middleware('permission:budgets.view');

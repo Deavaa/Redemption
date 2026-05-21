@@ -115,7 +115,7 @@
             $libraryRoutes = ['admin.library.*'];
             $commRoutes = ['admin.calendar.*','admin.announcements.*','admin.telegram.*','admin.chat.*'];
             $websiteRoutes = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*','admin.web-content.*','admin.news.*'];
-            $adminRoutes = ['admin.user-access.*','admin.settings.*','admin.roles.*','admin.database-backup.*','admin.backup.*','admin.audits.*'];
+            $adminRoutes = ['admin.user-access.*','admin.settings.*','admin.roles.*','admin.backup.*','admin.audits.*'];
 
             $isAcademicActive = request()->routeIs([...$academicSetupRoutes, ...$academicMarksRoutes, 'admin.attendance.*', 'admin.attendance-delegation.*']);
             $isPeopleActive = request()->routeIs($peopleRoutes);
@@ -456,8 +456,7 @@
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Configuration</li>
                         @if($menuLevel === 'full')
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Data & Backup</li>
-                        <li><a href="{{ route('admin.database-backup.index') }}" class="{{ request()->routeIs('admin.database-backup.*') ? 'active' : '' }}"><i class="fas fa-database"></i> Database Export</a></li>
-                        <li><a href="{{ route('admin.backup.index') }}" class="{{ request()->routeIs('admin.backup.*') ? 'active' : '' }}"><i class="fas fa-clock"></i> Scheduled Backup</a></li>
+                        <li><a href="{{ route('admin.backup.index') }}" class="{{ request()->routeIs('admin.backup.*') ? 'active' : '' }}"><i class="fas fa-database"></i> Database Backup</a></li>
                         <li><a href="{{ route('admin.audits.index') }}" class="{{ request()->routeIs('admin.audits.*') ? 'active' : '' }}"><i class="fas fa-clipboard-list"></i> Audit Log</a></li>
                         @endif
                     </ul>

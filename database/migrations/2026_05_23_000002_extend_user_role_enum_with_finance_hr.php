@@ -34,12 +34,7 @@ return new class extends Migration
                 'teacher',
                 'staff',
                 'student',
-                'parent',
-                'librarian',
-                'branch_principal',
-                'general_manager',
-                'cashier',
-                'registrar'
+                'parent'
             ) NOT NULL DEFAULT 'staff'");
         }
     }

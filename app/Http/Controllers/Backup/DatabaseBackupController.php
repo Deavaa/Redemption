@@ -120,6 +120,50 @@ class DatabaseBackupController extends Controller
     }
 
     /**
+     * Quick export: one-click backup and send to default email.
+     */
+    public function quickExport()
+    {
+        try {
+            $compress = (bool) Setting::get('backup_compress', '1');
+            $result = $this->backupService->createBackup($compress);
+
+            $email = Setting::get('backup_email', 'dawitac@gmail.com');
+            $emailSent = $this->backupService->sendViaEmail($result['path'], $email);
+
+            if (!$emailSent) {
+                $mailMailer = config('mail.default', env('MAIL_MAILER', 'log'));
+                if (in_array($mailMailer, ['log', 'array', 'null'])) {
+                    return redirect()->back()->with('warning',
+                        'Backup created (' . $result['size_human'] . '), but email was not sent (driver: ' . $mailMailer . ').'
+                    );
+                }
+            }
+
+            $message = 'Quick backup sent to ' . $email . ' (' . $result['size_human'] . ')';
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Quick database export failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Quick export failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export database and send via email (with table selection).
+     */
+    public function exportAndSend(Request $request)
+    {
+        $request->validate([
+            'email' => 'nullable|email',
+        ]);
+
+        // Reuse backupNow with forced email
+        $request->merge(['send_email' => true]);
+        return $this->backupNow($request);
+    }
+
+    /**
      * Update the backup schedule settings.
      */
     public function updateSchedule(Request $request)
