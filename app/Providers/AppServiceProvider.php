@@ -15,6 +15,28 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // ============================================================
+        // SAFETY NET: Auto-generate APP_KEY if missing.
+        // This prevents MissingAppKeyException crashes. The key is
+        // generated once and written to .env so it persists.
+        // ============================================================
+        if (empty(config('app.key'))) {
+            $key = 'base64:' . base64_encode(random_bytes(32));
+            config(['app.key' => $key]);
+
+            // Persist to .env so it survives across requests
+            $envPath = base_path('.env');
+            if (file_exists($envPath)) {
+                $envContent = file_get_contents($envPath);
+                if (preg_match('/^APP_KEY\s*=/m', $envContent)) {
+                    $envContent = preg_replace('/^APP_KEY\s*=.*/m', "APP_KEY={$key}", $envContent);
+                } else {
+                    $envContent .= "\nAPP_KEY={$key}\n";
+                }
+                @file_put_contents($envPath, $envContent);
+            }
+        }
+
+        // ============================================================
         // FORCE correct database and session configuration.
         // These overrides take effect BEFORE any request processing,
         // BEFORE middleware runs, and OVERRIDE .env, config files,

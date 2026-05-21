@@ -10,15 +10,15 @@ use Illuminate\Support\Facades\File;
  *
  * This command performs a comprehensive reset of all session-related
  * configuration to fix 419 Page Expired errors, SQLite session errors,
- * and login/logout issues caused by misconfigured .env files or
- * stale cached config.
+ * MissingAppKeyException, and login/logout issues caused by
+ * misconfigured .env files or stale cached config.
  *
  * Usage: php artisan session:nuclear-fix
  */
 class NuclearSessionFix extends Command
 {
     protected $signature = 'session:nuclear-fix';
-    protected $description = 'Nuclear fix for session/cookie/419 errors — resets everything';
+    protected $description = 'Nuclear fix for session/cookie/419/key errors — resets everything';
 
     public function handle(): int
     {
@@ -27,8 +27,36 @@ class NuclearSessionFix extends Command
         $this->warn('╚══════════════════════════════════════════════════════════╝');
         $this->newLine();
 
+        // ── Step 0: Check APP_KEY ───────────────────────────────────
+        $this->info('[0/7] Checking APP_KEY...');
+        $envPath = base_path('.env');
+        $appKeyMissing = false;
+
+        if (file_exists($envPath)) {
+            $envContent = file_get_contents($envPath);
+            // Check if APP_KEY is empty or just whitespace after the =
+            if (preg_match('/^APP_KEY\s*=\s*$/m', $envContent) || !preg_match('/^APP_KEY\s*=\s*base64:/m', $envContent)) {
+                $appKeyMissing = true;
+                $this->warn('  ✗ APP_KEY is missing or empty in .env file!');
+                $this->info('  → Generating new APP_KEY...');
+                $this->call('key:generate', ['--force' => true]);
+                $this->info('  ✓ APP_KEY generated successfully');
+            } else {
+                $this->line('  ✓ APP_KEY is set in .env');
+            }
+        } else {
+            $this->error('  ✗ No .env file found!');
+            $this->info('  → Creating .env from .env.example...');
+            if (file_exists(base_path('.env.example'))) {
+                copy(base_path('.env.example'), $envPath);
+                $this->line('  ✓ Created .env from .env.example');
+                $this->call('key:generate', ['--force' => true]);
+                $this->info('  ✓ APP_KEY generated');
+            }
+        }
+
         // ── Step 1: Delete cached config ────────────────────────────
-        $this->info('[1/6] Deleting cached config...');
+        $this->info('[1/7] Deleting cached config...');
         $cachedConfig = base_path('bootstrap/cache/config.php');
         if (file_exists($cachedConfig)) {
             @unlink($cachedConfig);
@@ -38,7 +66,7 @@ class NuclearSessionFix extends Command
         }
 
         // ── Step 2: Delete all session files ────────────────────────
-        $this->info('[2/6] Deleting all session files...');
+        $this->info('[2/7] Deleting all session files...');
         $sessionDir = storage_path('framework/sessions');
         if (is_dir($sessionDir)) {
             $files = glob($sessionDir . '/*');
@@ -55,7 +83,7 @@ class NuclearSessionFix extends Command
         }
 
         // ── Step 3: Create session directory ────────────────────────
-        $this->info('[3/6] Ensuring session directory exists...');
+        $this->info('[3/7] Ensuring session directory exists...');
         if (!is_dir($sessionDir)) {
             mkdir($sessionDir, 0755, true);
             $this->line('  ✓ Created storage/framework/sessions/');
@@ -70,8 +98,7 @@ class NuclearSessionFix extends Command
         }
 
         // ── Step 4: Fix .env file ──────────────────────────────────
-        $this->info('[4/6] Fixing .env file...');
-        $envPath = base_path('.env');
+        $this->info('[4/7] Fixing .env file...');
 
         if (file_exists($envPath)) {
             $envContent = file_get_contents($envPath);
@@ -151,18 +178,54 @@ class NuclearSessionFix extends Command
         }
 
         // ── Step 5: Clear Laravel caches ───────────────────────────
-        $this->info('[5/6] Clearing Laravel caches...');
+        $this->info('[5/7] Clearing Laravel caches...');
         $this->call('config:clear');
         $this->call('cache:clear');
         $this->call('view:clear');
         $this->call('route:clear');
         $this->line('  ✓ All caches cleared');
 
-        // ── Step 6: Verify config at runtime ───────────────────────
-        $this->info('[6/6] Verifying runtime config...');
+        // ── Step 6: Fix stale foreign key references ──────────────
+        $this->info('[6/7] Fixing stale teacher references in classes...');
+        try {
+            $staleClasses = \DB::table('classes')
+                ->whereNotNull('teacher_id')
+                ->whereNotIn('teacher_id', \DB::table('teachers')->pluck('id'))
+                ->count();
+            $staleSections = \DB::table('sections')
+                ->whereNotNull('teacher_id')
+                ->whereNotIn('teacher_id', \DB::table('teachers')->pluck('id'))
+                ->count();
+
+            if ($staleClasses > 0) {
+                \DB::table('classes')
+                    ->whereNotNull('teacher_id')
+                    ->whereNotIn('teacher_id', \DB::table('teachers')->pluck('id'))
+                    ->update(['teacher_id' => null]);
+                $this->line("  ✓ Cleaned {$staleClasses} class(es) with non-existent teacher_id");
+            } else {
+                $this->line('  ✓ No stale teacher references in classes');
+            }
+
+            if ($staleSections > 0) {
+                \DB::table('sections')
+                    ->whereNotNull('teacher_id')
+                    ->whereNotIn('teacher_id', \DB::table('teachers')->pluck('id'))
+                    ->update(['teacher_id' => null]);
+                $this->line("  ✓ Cleaned {$staleSections} section(s) with non-existent teacher_id");
+            } else {
+                $this->line('  ✓ No stale teacher references in sections');
+            }
+        } catch (\Throwable $e) {
+            $this->warn('  ⚠ Could not check stale references: ' . $e->getMessage());
+        }
+
+        // ── Step 7: Verify config at runtime ───────────────────────
+        $this->info('[7/7] Verifying runtime config...');
         $this->newLine();
 
         $checks = [
+            ['app.key', 'set', !empty(config('app.key')) ? 'set' : 'EMPTY!'],
             ['session.driver', 'file', config('session.driver')],
             ['session.cookie', 'redemption_session', config('session.cookie')],
             ['session.path', '/', config('session.path')],
