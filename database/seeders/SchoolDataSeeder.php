@@ -31,11 +31,11 @@ class SchoolDataSeeder extends Seeder
         // 1. BRANCHES
         // ══════════════════════════════════════════════════════════
         $mainBranch = Branch::updateOrCreate(
-            ['name' => 'Main Campus'],
+            ['name' => 'Lebu Campus'],
             [
-                'address' => 'Bole Road, Addis Ababa, Ethiopia',
+                'address' => 'Lebu, Addis Ababa, Ethiopia',
                 'phone' => '+251 11 234 5678',
-                'email' => 'main@schoolofredemption.edu',
+                'email' => 'lebu@schoolofredemption.edu',
                 'is_headquarters' => true,
                 'is_active' => true,
                 'order' => 1,
@@ -43,11 +43,11 @@ class SchoolDataSeeder extends Seeder
         );
 
         $branch2 = Branch::updateOrCreate(
-            ['name' => 'CQA Campus'],
+            ['name' => 'Tuludimtu Campus'],
             [
-                'address' => 'CQA Sub City, Addis Ababa, Ethiopia',
+                'address' => 'Tuludimtu, Addis Ababa, Ethiopia',
                 'phone' => '+251 11 345 6789',
-                'email' => 'cqa@schoolofredemption.edu',
+                'email' => 'tuludimtu@schoolofredemption.edu',
                 'is_headquarters' => false,
                 'is_active' => true,
                 'order' => 2,
@@ -278,7 +278,9 @@ class SchoolDataSeeder extends Seeder
         // ══════════════════════════════════════════════════════════
         // 7. CLASSES
         // ══════════════════════════════════════════════════════════
-        $classesData = [
+
+        // Tuludimtu Campus: Grades 1-8 (Primary School)
+        $tuludimtuClassesData = [
             ['name' => 'Grade 1', 'numeric' => 1],
             ['name' => 'Grade 2', 'numeric' => 2],
             ['name' => 'Grade 3', 'numeric' => 3],
@@ -288,47 +290,79 @@ class SchoolDataSeeder extends Seeder
             ['name' => 'Grade 7', 'numeric' => 7],
             ['name' => 'Grade 8', 'numeric' => 8],
         ];
-
-        $classes = [];
-        foreach ($classesData as $cd) {
-            $classes[$cd['numeric']] = ClassRoom::updateOrCreate(
-                ['name' => $cd['name'], 'branch_id' => $mainBranch->id, 'academic_year_id' => $ay->id],
+        $tuludimtuClasses = [];
+        foreach ($tuludimtuClassesData as $cd) {
+            $tuludimtuClasses[$cd['numeric']] = ClassRoom::updateOrCreate(
+                ['name' => $cd['name'], 'branch_id' => $branch2->id, 'academic_year_id' => $ay->id],
                 [
                     'numeric_name' => $cd['numeric'],
-                    'teacher_id' => null, // Will set homeroom below
-                    'capacity' => 40,
+                    'teacher_id' => null,
+                    'capacity' => 50,
                 ]
             );
         }
 
-        $this->command->info('  ✓ Classes (8: Grade 1-8)');
+        // Lebu Campus: Grades 9-12 (Secondary School — real students seeded via StudentDataSeeder)
+        $lebuClassesData = [
+            ['name' => 'Grade 9', 'numeric' => 9],
+            ['name' => 'Grade 10', 'numeric' => 10],
+            ['name' => 'Grade 11', 'numeric' => 11],
+            ['name' => 'Grade 12', 'numeric' => 12],
+        ];
+        $classes = [];
+        foreach ($lebuClassesData as $cd) {
+            $classes[$cd['numeric']] = ClassRoom::updateOrCreate(
+                ['name' => $cd['name'], 'branch_id' => $mainBranch->id, 'academic_year_id' => $ay->id],
+                [
+                    'numeric_name' => $cd['numeric'],
+                    'teacher_id' => null,
+                    'capacity' => 50,
+                ]
+            );
+        }
+
+        $this->command->info('  ✓ Classes (12: Tuludimtu G1-8 + Lebu G9-12)');
 
         // ══════════════════════════════════════════════════════════
         // 8. SECTIONS
         // ══════════════════════════════════════════════════════════
         $sections = [];
         $sectionNames = ['A', 'B'];
+        // Lebu Campus sections (G9-12)
         foreach ($classes as $gradeNum => $class) {
             foreach ($sectionNames as $secName) {
                 $key = $gradeNum . '_' . $secName;
                 $sections[$key] = Section::updateOrCreate(
                     ['class_id' => $class->id, 'name' => 'Section ' . $secName],
                     [
-                        'max_students' => 40,
-                        'teacher_id' => null, // Homeroom teacher set below
+                        'max_students' => 50,
+                        'teacher_id' => null,
                     ]
                 );
             }
         }
 
-        // Assign homeroom teachers (Grade 1A-4A to first 4 teachers)
+        // Tuludimtu Campus sections (G1-8)
+        $tuludimtuSections = [];
+        foreach ($tuludimtuClasses as $gradeNum => $class) {
+            foreach ($sectionNames as $secName) {
+                $key = $gradeNum . '_' . $secName;
+                $tuludimtuSections[$key] = Section::updateOrCreate(
+                    ['class_id' => $class->id, 'name' => 'Section ' . $secName],
+                    [
+                        'max_students' => 50,
+                        'teacher_id' => null,
+                    ]
+                );
+            }
+        }
+
+        // Assign homeroom teachers to Lebu Campus (G9A-12A)
         $homeroomMap = [
-            '1_A' => $teacherRecords[0],
-            '2_A' => $teacherRecords[1],
-            '3_A' => $teacherRecords[2],
-            '4_A' => $teacherRecords[3],
-            '5_A' => $teacherRecords[4],
-            '6_A' => $teacherRecords[5],
+            '9_A' => $teacherRecords[0],
+            '10_A' => $teacherRecords[1],
+            '11_A' => $teacherRecords[2],
+            '12_A' => $teacherRecords[3],
         ];
 
         foreach ($homeroomMap as $secKey => $teacher) {
@@ -342,17 +376,17 @@ class SchoolDataSeeder extends Seeder
             }
         }
 
-        $this->command->info('  ✓ Sections (16: 2 per grade)');
+        $this->command->info('  ✓ Sections (24: Tuludimtu G1-8 + Lebu G9-12, 2 per grade)');
 
         // ══════════════════════════════════════════════════════════
-        // 9. STUDENTS (demo data — will be replaced by StudentDataSeeder)
+        // 9. STUDENTS
         // ══════════════════════════════════════════════════════════
-        // Clean up any existing demo students first to prevent
-        // duplicate roll_number / admission_number conflicts.
+        // Real student data is seeded by StudentDataSeeder.
+        // Clean up any old demo/fake students from previous runs.
         $existingDemoCount = Student::whereNull('user_id')->count();
         if ($existingDemoCount > 0) {
             Student::whereNull('user_id')->delete();
-            $this->command->info("  ✓ Cleaned up {$existingDemoCount} existing demo students");
+            $this->command->info("  ✓ Cleaned up {$existingDemoCount} demo students (no user_id)");
         }
         // Also clean students with old-style roll numbers (A-01, B-01 format)
         $oldRollCount = Student::where('roll_number', 'REGEXP', '^[A-Z]-[0-9]')->count();
@@ -361,121 +395,7 @@ class SchoolDataSeeder extends Seeder
             $this->command->info("  ✓ Cleaned up {$oldRollCount} students with old roll_number format");
         }
 
-        $firstNamesMale = ['Abel', 'Binyam', 'Chalachew', 'Daniel', 'Ermias', 'Fisha', 'Girma', 'Haben', 'Isayas', 'Jemal', 'Kaleb', 'Lij', 'Mikiyas', 'Natnael', 'Olana', 'Petros', 'Rediet', 'Samuel', 'Tariku', 'Wondimu'];
-        $firstNamesFemale = ['Aster', 'Bethelhem', 'Chaltu', 'Dinknesh', 'Eleni', 'Fikir', 'Genet', 'Hiwot', 'Ikram', 'Jamila', 'Kidist', 'Lidya', 'Meron', 'Nardos', 'Olga', 'Peniel', 'Rahel', 'Selam', 'Tigist', 'Wubitu'];
-        $lastNames = ['Abebe', 'Bekele', 'Chekol', 'Dagne', 'Engida', 'Fikru', 'Gebre', 'Hailu', 'Ibrahim', 'Jemaneh', 'Kassa', 'Lema', 'Mekonnen', 'Nega', 'Oumer', 'Pankhurst', 'Reda', 'Sisay', 'Tadesse', 'Wolde'];
-
-        $studentCount = 0;
-        // Start admission numbers from the max existing to avoid collisions
-        $maxAdmission = Student::where('admission_number', 'LIKE', 'SOR/' . date('Y') . '/%')
-            ->selectRaw("CAST(SUBSTRING(admission_number, -4) AS UNSIGNED) as num")
-            ->orderByRaw('num DESC')
-            ->first();
-        $admissionNum = $maxAdmission ? ((int) $maxAdmission->num + 1) : 1001;
-
-        // Build roll number counters from existing data to avoid duplicates
-        $rollCounters = [];
-        foreach (range(1, 12) as $g) {
-            foreach ($sectionNames as $sName) {
-                $prefix = 'G' . $g . $sName;
-                $maxExisting = Student::where('roll_number', 'LIKE', $prefix . '-%')
-                    ->selectRaw("CAST(SUBSTRING(roll_number, -2) AS UNSIGNED) as rn")
-                    ->orderByRaw('rn DESC')
-                    ->first();
-                $rollCounters[$g . '_' . $sName] = $maxExisting ? (int) $maxExisting->rn : 0;
-            }
-        }
-
-        // Populate: ~15 students per section for grades 1-6
-        foreach (range(1, 6) as $gradeNum) {
-            foreach ($sectionNames as $secName) {
-                $secKey = $gradeNum . '_' . $secName;
-                if (!isset($sections[$secKey])) continue;
-
-                $section = $sections[$secKey];
-                $class = $classes[$gradeNum];
-
-                for ($i = 0; $i < 15; $i++) {
-                    $isMale = ($i % 2 === 0);
-                    $firstName = $isMale ? $firstNamesMale[$i] : $firstNamesFemale[$i];
-                    $lastName = $lastNames[($gradeNum * 3 + $i) % count($lastNames)];
-                    $fullName = $firstName . ' ' . $lastName;
-                    $gender = $isMale ? 'male' : 'female';
-                    $admission = 'SOR/' . date('Y') . '/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
-                    $secKey = $gradeNum . '_' . $secName;
-                    $rollCounters[$secKey]++;
-                    $rollNum = 'G' . $gradeNum . $secName . '-' . str_pad($rollCounters[$secKey], 2, '0', STR_PAD_LEFT);
-
-                    Student::updateOrCreate(
-                        ['admission_number' => $admission],
-                        [
-                            'user_id' => null, // Demo student — no user account
-                            'full_name' => $fullName,
-                            'branch_id' => $mainBranch->id,
-                            'class_id' => $class->id,
-                            'section_id' => $section->id,
-                            'academic_year_id' => $ay->id,
-                            'gender' => $gender,
-                            'roll_number' => $rollNum,
-                            'admission_date' => '2025-09-01',
-                            'date_of_birth' => (2017 - $gradeNum) . '-' . str_pad(rand(1, 12), 2, '0', STR_PAD_LEFT) . '-' . str_pad(rand(1, 28), 2, '0', STR_PAD_LEFT),
-                            'guardian_name' => $lastName . ' ' . $lastNames[($i + 5) % count($lastNames)],
-                            'guardian_phone' => '+251 9' . rand(1, 9) . ' ' . rand(100, 999) . ' ' . rand(1000, 9999),
-                            'status' => 'active',
-                        ]
-                    );
-
-                    $admissionNum++;
-                    $studentCount++;
-                }
-            }
-        }
-
-        // Grades 7-8: ~10 students per section
-        foreach (range(7, 8) as $gradeNum) {
-            foreach ($sectionNames as $secName) {
-                $secKey = $gradeNum . '_' . $secName;
-                if (!isset($sections[$secKey])) continue;
-
-                $section = $sections[$secKey];
-                $class = $classes[$gradeNum];
-
-                for ($i = 0; $i < 10; $i++) {
-                    $isMale = ($i % 2 === 0);
-                    $firstName = $isMale ? $firstNamesMale[($i + 5) % 20] : $firstNamesFemale[($i + 5) % 20];
-                    $lastName = $lastNames[($gradeNum * 2 + $i) % count($lastNames)];
-                    $fullName = $firstName . ' ' . $lastName;
-                    $gender = $isMale ? 'male' : 'female';
-                    $admission = 'SOR/' . date('Y') . '/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
-                    $rollCounters[$secKey]++;
-                    $rollNum = 'G' . $gradeNum . $secName . '-' . str_pad($rollCounters[$secKey], 2, '0', STR_PAD_LEFT);
-
-                    Student::updateOrCreate(
-                        ['admission_number' => $admission],
-                        [
-                            'user_id' => null, // Demo student — no user account
-                            'full_name' => $fullName,
-                            'branch_id' => $mainBranch->id,
-                            'class_id' => $class->id,
-                            'section_id' => $section->id,
-                            'academic_year_id' => $ay->id,
-                            'gender' => $gender,
-                            'roll_number' => $rollNum,
-                            'admission_date' => '2025-09-01',
-                            'date_of_birth' => (2017 - $gradeNum) . '-' . str_pad(rand(1, 12), 2, '0', STR_PAD_LEFT) . '-' . str_pad(rand(1, 28), 2, '0', STR_PAD_LEFT),
-                            'guardian_name' => $lastName . ' ' . $lastNames[($i + 3) % count($lastNames)],
-                            'guardian_phone' => '+251 9' . rand(1, 9) . ' ' . rand(100, 999) . ' ' . rand(1000, 9999),
-                            'status' => 'active',
-                        ]
-                    );
-
-                    $admissionNum++;
-                    $studentCount++;
-                }
-            }
-        }
-
-        $this->command->info("  ✓ Students ({$studentCount})");
+        $this->command->info('  ✓ Students (run StudentDataSeeder for real student data)');
 
         // ══════════════════════════════════════════════════════════
         // 10. TEACHER ASSIGNMENTS

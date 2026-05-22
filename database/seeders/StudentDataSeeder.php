@@ -16,32 +16,28 @@ class StudentDataSeeder extends Seeder
     /**
      * Run the student data seeder.
      *
-     * Seeds real students into the system, assigning them to the correct
-     * grade/section based on their date of birth.
+     * Seeds real Lebu High School students into the system.
+     * Lebu is a Secondary School (Grades 9-12).
      *
      * Grade assignment (Academic Year 2025/2026):
-     *   Grade 1  -> born 2018-2019  (age 6-7)
-     *   Grade 2  -> born 2017-2018  (age 7-8)
-     *   Grade 3  -> born 2016-2017  (age 8-9)
-     *   Grade 4  -> born 2015-2016  (age 9-10)
-     *   Grade 5  -> born 2014-2015  (age 10-11)
-     *   Grade 6  -> born 2013-2014  (age 11-12)
-     *   Grade 7  -> born 2012-2013  (age 12-13)
-     *   Grade 8  -> born 2011-2012  (age 13-14)
      *   Grade 9  -> born 2010-2011  (age 14-15)
      *   Grade 10 -> born 2009-2010  (age 15-16)
      *   Grade 11 -> born 2008-2009  (age 16-17)
      *   Grade 12 -> born 2007-2008  (age 17-18)
      *
-     * Students born outside 1995-2020 are skipped (out of school age range).
+     * Students born before 1995 or after 2012 are skipped.
+     * Students placed in Grades 1-8 are skipped (they belong to Tuludimtu Campus).
      */
     public function run(): void
     {
-        $this->command->info('Seeding real student data...');
+        $this->command->info('Seeding Lebu High School student data...');
 
-        // Resolve foreign-key dependencies
-        $branch = Branch::where('is_headquarters', true)->first()
-            ?? Branch::first();
+        // Resolve to Lebu Campus specifically (Secondary School)
+        $branch = Branch::where('name', 'LIKE', '%Lebu%')->first();
+        if (!$branch) {
+            $branch = Branch::where('is_headquarters', true)->first()
+                ?? Branch::first();
+        }
 
         $ay = AcademicYear::where('is_current', true)->first()
             ?? AcademicYear::first();
@@ -54,7 +50,7 @@ class StudentDataSeeder extends Seeder
         $this->command->info("  Using Branch: {$branch->name} (ID: {$branch->id})");
         $this->command->info("  Using AY: {$ay->name} (ID: {$ay->id})");
 
-        // Build grade -> class/section maps (Grades 1-12)
+        // Build grade -> class/section maps (Grades 9-12 for Lebu)
         $allClasses = ClassRoom::where('branch_id', $branch->id)
             ->where('academic_year_id', $ay->id)
             ->get();
@@ -82,8 +78,8 @@ class StudentDataSeeder extends Seeder
             $sectionsByClass[$gradeNum] = $secs;
         }
 
-        // Auto-create missing classes & sections for Grades 1-12
-        for ($g = 1; $g <= 12; $g++) {
+        // Auto-create missing classes & sections for Grades 9-12 (Lebu)
+        for ($g = 9; $g <= 12; $g++) {
             if (!isset($classes[$g])) {
                 $class = ClassRoom::updateOrCreate(
                     [
@@ -133,21 +129,15 @@ class StudentDataSeeder extends Seeder
             return;
         }
 
-        // Delete previous seeder students (demo data or old batch)
+        // Delete previous seeder students
         $demoCount = Student::whereNull('user_id')->count();
         if ($demoCount > 0) {
             Student::whereNull('user_id')->delete();
             $this->command->info("  Deleted {$demoCount} demo students (no user_id)");
         }
-        $demoAdmissions = Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->count();
-        if ($demoAdmissions > 0) {
-            Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->delete();
-            $this->command->info("  Deleted {$demoAdmissions} demo students (admission SOR/2025/1XXX)");
-        }
-        // Also clear previous batch from this seeder (SOR/2025/3XXX range)
+        // Clear previous batch from this seeder (SOR/2025/3XXX range)
         $prevBatch = Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->count();
         if ($prevBatch > 0) {
-            // Delete users linked to these students first
             $prevStudents = Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->get();
             foreach ($prevStudents as $ps) {
                 if ($ps->user_id) {
@@ -156,6 +146,12 @@ class StudentDataSeeder extends Seeder
             }
             Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->delete();
             $this->command->info("  Deleted {$prevBatch} previous batch students (SOR/2025/3XXX)");
+        }
+        // Clear old SOR/2025/1XXX demo students from SchoolDataSeeder
+        $demoAdmissions = Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->count();
+        if ($demoAdmissions > 0) {
+            Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->delete();
+            $this->command->info("  Deleted {$demoAdmissions} demo students (admission SOR/2025/1XXX)");
         }
 
         // ── Student raw data ──────────────────────────────────────────
@@ -210,13 +206,19 @@ class StudentDataSeeder extends Seeder
                 $birthYear = (int) substr($dob, 0, 4);
 
                 // Skip students with unrealistic DOBs
-                if ($birthYear < 1995 || $birthYear > 2020) {
+                if ($birthYear < 1995 || $birthYear > 2012) {
                     $this->command->warn("  Skipping {$fullName}: DOB {$dob} out of school age range");
                     $skipped++;
                     continue;
                 }
 
                 $gradeNum = max(1, min(12, 2026 - $birthYear - 6));
+
+                // Skip students in Grades 1-8 (they belong to Tuludimtu Campus, not Lebu)
+                if ($gradeNum < 9) {
+                    $skipped++;
+                    continue;
+                }
 
                 // Find the class for this grade
                 $class = $classes[$gradeNum] ?? null;
@@ -344,7 +346,7 @@ class StudentDataSeeder extends Seeder
 
         $this->command->newLine();
         $this->command->info('  Student login: email = <idNumber>@redemption.edu, password = DOB (e.g. 20020806)');
-        $this->command->info('Student data seeded successfully!');
+        $this->command->info('Lebu High School student data seeded successfully!');
     }
 
     /**
