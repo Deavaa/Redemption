@@ -99,9 +99,9 @@ class PermissionMiddleware
                 // Documents
                 'settings.view', 'id_cards.generate', 'certificates.generate',
                 // Website
-                'news.manage',
+                'news.manage', 'gallery.view',
                 // Library
-                'library.view',
+                'library.view', 'library.manage',
                 // Communication
                 'calendar.view', 'calendar.manage', 'chat.access', 'notifications.view',
                 'announcements.view',
@@ -157,7 +157,7 @@ class PermissionMiddleware
         // Librarian — only library access
         if ($user->role === 'librarian') {
             $librarianAllowedPermissions = [
-                'dashboard.view', 'library.view', 'chat.access', 'notifications.view', 'calendar.view',
+                'dashboard.view', 'library.view', 'library.manage', 'chat.access', 'notifications.view', 'calendar.view',
             ];
 
             if (!empty($permissions)) {

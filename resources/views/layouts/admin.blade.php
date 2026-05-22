@@ -115,7 +115,7 @@
             $libraryRoutes = ['admin.library.*','admin.video-library.*'];
             $commRoutes = ['admin.calendar.*','admin.announcements.*','admin.telegram.*','admin.chat.*'];
             $websiteRoutes = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*','admin.web-content.*','admin.news.*'];
-            $adminRoutes = ['admin.user-access.*','admin.settings.*','admin.roles.*','admin.backup.*','admin.audits.*'];
+            $adminRoutes = ['admin.user-access.*','admin.settings.*','admin.roles.*','admin.backup.*','admin.audits.*','admin.email-inbox.*','admin.email-inbox-settings*','admin.bank-integration.*','admin.club-follow-up-configs.*','admin.graphical-reports.*','admin.exam-questions.*'];
 
             $isAcademicActive = request()->routeIs([...$academicSetupRoutes, ...$academicMarksRoutes, 'admin.attendance.*', 'admin.attendance-delegation.*']);
             $isPeopleActive = request()->routeIs($peopleRoutes);
@@ -284,6 +284,7 @@
                         <li style="padding:4px 12px 2px;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Fee & Payment</li>
                         <li><a href="{{ route('admin.fees.index') }}" class="{{ request()->routeIs('admin.fees.*') ? 'active' : '' }}"><i class="fas fa-money-bill-wave"></i> Fee Structure</a></li>
                         <li><a href="{{ route('admin.fee-payments.index') }}" class="{{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}"><i class="fas fa-credit-card"></i> Payments</a></li>
+                        <li><a href="{{ route('admin.bank-integration.index') }}" class="{{ request()->routeIs('admin.bank-integration*') ? 'active' : '' }}"><i class="fas fa-university"></i> Bank Integration</a></li>
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Budget & Accounts</li>
                         <li><a href="{{ route('admin.budgets.index') }}" class="{{ request()->routeIs('admin.budgets.*') ? 'active' : '' }}"><i class="fas fa-chart-pie"></i> Budgets</a></li>
                         <li><a href="{{ route('admin.income-expenses.index') }}" class="{{ request()->routeIs('admin.income-expenses.*') ? 'active' : '' }}"><i class="fas fa-exchange-alt"></i> Income / Expense</a></li>
@@ -483,6 +484,13 @@
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Data & Backup</li>
                         <li><a href="{{ route('admin.backup.index') }}" class="{{ request()->routeIs('admin.backup.*') ? 'active' : '' }}"><i class="fas fa-database"></i> Database Backup</a></li>
                         <li><a href="{{ route('admin.audits.index') }}" class="{{ request()->routeIs('admin.audits.*') ? 'active' : '' }}"><i class="fas fa-clipboard-list"></i> Audit Log</a></li>
+                        <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Integrations</li>
+                        <li><a href="{{ route('admin.email-inbox.index') }}" class="{{ request()->routeIs('admin.email-inbox*') ? 'active' : '' }}"><i class="fas fa-envelope-open-text"></i> Email Inbox</a></li>
+                        <li><a href="{{ route('admin.bank-integration.index') }}" class="{{ request()->routeIs('admin.bank-integration*') ? 'active' : '' }}"><i class="fas fa-university"></i> Bank Integration</a></li>
+                        <li><a href="{{ route('admin.club-follow-up-configs.index') }}" class="{{ request()->routeIs('admin.club-follow-up-configs*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Club Follow-up Config</a></li>
+                        <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Reports & Analytics</li>
+                        <li><a href="{{ route('admin.graphical-reports.index') }}" class="{{ request()->routeIs('admin.graphical-reports*') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i> Graphical Reports</a></li>
+                        <li><a href="{{ route('admin.exam-questions.index') }}" class="{{ request()->routeIs('admin.exam-questions*') ? 'active' : '' }}"><i class="fas fa-question-circle"></i> Exam Questions Review</a></li>
                         @endif
                     </ul>
                 </li>

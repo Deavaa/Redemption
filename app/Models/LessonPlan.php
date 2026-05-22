@@ -11,6 +11,11 @@ class LessonPlan extends Model
 
     protected $fillable = [
         'teacher_id',
+        'plan_type',
+        'week_start_date', 'week_end_date', 'daily_breakdown',
+        'yearly_overview', 'term_goals',
+        'department_head_status', 'department_head_comment', 'department_head_id', 'department_head_reviewed_at',
+        'principal_status', 'principal_comment', 'principal_reviewed_id', 'principal_reviewed_at',
         'subject_id',
         'class_id',
         'section_id',
@@ -35,6 +40,12 @@ class LessonPlan extends Model
     protected $casts = [
         'lesson_date' => 'date',
         'reviewed_at' => 'datetime',
+        'week_start_date' => 'date',
+        'week_end_date' => 'date',
+        'daily_breakdown' => 'array',
+        'term_goals' => 'array',
+        'department_head_reviewed_at' => 'datetime',
+        'principal_reviewed_at' => 'datetime',
     ];
 
     /* ── Status helpers ── */
@@ -59,6 +70,62 @@ class LessonPlan extends Model
             'revision'  => 'modern-badge-danger',
             default     => 'modern-badge-light',
         };
+    }
+
+    public static function planTypeOptions(): array
+    {
+        return [
+            'daily'   => 'Daily Lesson Plan',
+            'weekly'  => 'Weekly Lesson Plan',
+            'yearly'  => 'Yearly Lesson Plan',
+        ];
+    }
+
+    public static function planTypeBadgeClass(string $type): string
+    {
+        return match ($type) {
+            'daily'   => 'modern-badge-info',
+            'weekly'  => 'modern-badge-purple',
+            'yearly'  => 'modern-badge-warning',
+            default   => 'modern-badge-light',
+        };
+    }
+
+    public static function departmentHeadStatusOptions(): array
+    {
+        return [
+            'pending'  => 'Pending',
+            'reviewed' => 'Reviewed',
+            'approved' => 'Approved',
+            'revision' => 'Needs Revision',
+        ];
+    }
+
+    public static function principalStatusOptions(): array
+    {
+        return [
+            'pending'  => 'Pending',
+            'reviewed' => 'Reviewed',
+            'approved' => 'Approved',
+            'revision' => 'Needs Revision',
+        ];
+    }
+
+    public function departmentHead()
+    {
+        return $this->belongsTo(User::class, 'department_head_id');
+    }
+
+    public function principalReviewer()
+    {
+        return $this->belongsTo(User::class, 'principal_reviewed_id');
+    }
+
+    public function getApprovalPipelineStep(): int
+    {
+        if ($this->status === 'approved') return 3;
+        if ($this->principal_status === 'pending' && $this->department_head_status === 'approved') return 2;
+        return 1;
     }
 
     /* ── Relationships ── */

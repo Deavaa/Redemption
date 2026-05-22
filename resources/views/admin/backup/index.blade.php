@@ -94,6 +94,48 @@
     </div>
     @endif
 
+    {{-- Mail Configuration Guide --}}
+    <div class="modern-card" style="margin-bottom: 1.25rem;">
+        <div class="modern-form-section">
+            <div class="modern-form-section-header" style="cursor:pointer;" onclick="toggleMailGuide()">
+                <div class="modern-form-section-icon" style="background:#fefce8;color:#d97706;">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <div style="flex:1;">
+                    <h3 class="modern-form-section-title">Mail Configuration Guide</h3>
+                    <p class="modern-form-section-desc">Step-by-step instructions to fix email delivery for backups</p>
+                </div>
+                <i class="fas fa-chevron-down" id="mailGuideChevron" style="color:#9ca3af;transition:transform 0.3s;"></i>
+            </div>
+            <div class="modern-form-section-body" id="mailGuideBody" style="display:none;">
+                <div style="background:#f8fafc;border-radius:12px;padding:1.25rem;border:1px solid #e5e7eb;">
+                    <h4 style="margin:0 0 0.75rem;color:#1a1a2e;font-size:0.95rem;"><i class="fas fa-shield-alt" style="color:#4361ee;margin-right:0.5rem;"></i>Gmail App Password Setup (Required for Backup Emails)</h4>
+                    <ol style="margin:0;padding-left:1.5rem;color:#374151;font-size:0.88rem;line-height:1.8;">
+                        <li>Go to <a href="https://myaccount.google.com/security" target="_blank" style="color:#4361ee;">Google Account Security</a></li>
+                        <li>Enable <strong>2-Step Verification</strong> if not already enabled</li>
+                        <li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:#4361ee;">App Passwords</a></li>
+                        <li>Select "Mail" as the app and "Other" as the device, name it "School ERP"</li>
+                        <li>Click <strong>Generate</strong> - Google will show a 16-character password</li>
+                        <li>Copy that password and paste it in your <code>.env</code> file as <code>MAIL_PASSWORD</code></li>
+                        <li>Set <code>MAIL_USERNAME</code> to your Gmail address</li>
+                        <li>Set <code>MAIL_FROM_ADDRESS</code> to your Gmail address</li>
+                        <li>Run: <code>php artisan config:clear</code> to refresh the configuration</li>
+                        <li>Click <strong>"Test Email"</strong> above to verify the setup</li>
+                    </ol>
+                    <div style="margin-top:1rem;background:#1a1a2e;border-radius:8px;padding:0.85rem 1rem;font-family:monospace;font-size:0.82rem;color:#a5f3fc;">
+                        <div style="color:#9ca3af;margin-bottom:0.35rem;"># Required .env settings for Gmail:</div>
+                        <div>MAIL_MAILER=smtp</div>
+                        <div>MAIL_HOST=smtp.gmail.com</div>
+                        <div>MAIL_PORT=587</div>
+                        <div>MAIL_USERNAME=your-email@gmail.com</div>
+                        <div>MAIL_PASSWORD=xxxx-xxxx-xxxx-xxxx</div>
+                        <div>MAIL_FROM_ADDRESS="your-email@gmail.com"</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Schedule Settings Card --}}
     <div class="modern-card" style="margin-bottom: 1.25rem;">
         <div class="modern-form-section">
@@ -349,6 +391,18 @@ function copyCron() {
         btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
         setTimeout(() => btn.innerHTML = orig, 2000);
     });
+}
+
+function toggleMailGuide() {
+    const body = document.getElementById('mailGuideBody');
+    const chevron = document.getElementById('mailGuideChevron');
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        chevron.style.transform = 'rotate(180deg)';
+    } else {
+        body.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+    }
 }
 
 function testBackup() {

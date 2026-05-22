@@ -94,7 +94,8 @@ class BackupService
         // Check if SMTP credentials are actually set (not placeholder values)
         $mailHost = config('mail.mailers.smtp.host', env('MAIL_HOST'));
         $mailUser = config('mail.mailers.smtp.username', env('MAIL_USERNAME'));
-        if (empty($mailHost) || empty($mailUser) || str_contains($mailUser, 'your-')) {
+        $mailPass = config('mail.mailers.smtp.password', env('MAIL_PASSWORD'));
+        if (empty($mailHost) || empty($mailUser) || empty($mailPass) || str_contains($mailUser, 'your-') || $mailPass === 'CHANGE_ME_TO_YOUR_GMAIL_APP_PASSWORD' || str_contains($mailPass, 'your-')) {
             Log::warning('Database backup email skipped: SMTP credentials appear to be placeholder values. Please configure MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD in .env');
             return false;
         }
@@ -193,7 +194,7 @@ class BackupService
         $mailUser = config('mail.mailers.smtp.username', env('MAIL_USERNAME'));
         $mailPass = config('mail.mailers.smtp.password', env('MAIL_PASSWORD'));
 
-        if (empty($mailHost) || empty($mailUser) || str_contains($mailUser, 'your-')) {
+        if (empty($mailHost) || empty($mailUser) || empty($mailPass) || str_contains($mailUser, 'your-') || $mailPass === 'CHANGE_ME_TO_YOUR_GMAIL_APP_PASSWORD' || str_contains($mailPass, 'your-')) {
             return [
                 'success' => false,
                 'message' => 'SMTP credentials are not configured. Please set MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD in your .env file. For Gmail, use an App Password from https://myaccount.google.com/apppasswords',

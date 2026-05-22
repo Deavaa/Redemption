@@ -80,6 +80,11 @@ use App\Http\Controllers\Attendance\AttendanceDelegationController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\LessonPlan\LessonPlanController;
 use App\Http\Controllers\LessonPlan\LessonPlanFollowUpController;
+use App\Http\Controllers\Report\GraphicalReportController;
+use App\Http\Controllers\Email\EmailInboxController;
+use App\Http\Controllers\Bank\BankIntegrationController;
+use App\Http\Controllers\Club\ClubFollowUpConfigController;
+use App\Http\Controllers\Exam\ExamQuestionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -247,9 +252,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // ── Lesson Plans ─────────────────────────────────────────
     Route::resource('lesson-plans', LessonPlanController::class)->middleware('permission:lesson_plans.view');
     Route::post('lesson-plans/{lessonPlan}/review', [LessonPlanController::class, 'review'])->name('lesson-plans.review')->middleware('permission:lesson_plans.review');
+    Route::post('lesson-plans/{lessonPlan}/department-review', [LessonPlanController::class, 'departmentReview'])->name('lesson-plans.department-review')->middleware('permission:lesson_plans.review');
+    Route::post('lesson-plans/{lessonPlan}/principal-review', [LessonPlanController::class, 'principalReview'])->name('lesson-plans.principal-review')->middleware('permission:lesson_plans.review');
     Route::post('lesson-plans/{lessonPlan}/follow-ups', [LessonPlanFollowUpController::class, 'store'])->name('lesson-plans.follow-ups.store')->middleware('permission:lesson_plans.follow_up');
     Route::put('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'update'])->name('lesson-plans.follow-ups.update')->middleware('permission:lesson_plans.follow_up');
     Route::delete('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'destroy'])->name('lesson-plans.follow-ups.destroy')->middleware('permission:lesson_plans.follow_up');
+
+    // ── Exam Questions (Department → Principal Pipeline) ──────
+    Route::resource('exam-questions', ExamQuestionController::class)->middleware('permission:exams.view');
+    Route::post('exam-questions/{exam_question}/department-review', [ExamQuestionController::class, 'reviewByDepartment'])->name('exam-questions.department-review')->middleware('permission:exams.manage');
+    Route::post('exam-questions/{exam_question}/principal-review', [ExamQuestionController::class, 'reviewByPrincipal'])->name('exam-questions.principal-review')->middleware('permission:exams.manage');
+    Route::post('exam-questions/{exam_question}/request-revision', [ExamQuestionController::class, 'requestRevision'])->name('exam-questions.request-revision')->middleware('permission:exams.manage');
 
     // ── Documents ─────────────────────────────────────────
     Route::resource('id-cards', IdCardController::class)->middleware('permission:id_cards.generate');
@@ -430,6 +443,35 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('user-access/parents', [ParentAccessController::class, 'index'])->name('user-access.parents');
     Route::post('user-access/parents/create', [ParentAccessController::class, 'createAccount'])->name('user-access.parents.create');
     Route::post('user-access/parents/reset-password', [ParentAccessController::class, 'resetPassword'])->name('user-access.parents.reset-password');
+
+    // ── Graphical Reports ──────────────────────────────────
+    Route::get('graphical-reports', [GraphicalReportController::class, 'index'])->name('graphical-reports.index')->middleware('permission:dashboard.view');
+
+    // ── Email Inbox (Gmail IMAP Integration) ────────────────
+    Route::get('email-inbox', [EmailInboxController::class, 'index'])->name('email-inbox.index')->middleware('permission:settings.view');
+    Route::get('email-inbox/{email_message}', [EmailInboxController::class, 'show'])->name('email-inbox.show')->middleware('permission:settings.view');
+    Route::post('email-inbox/{email_message}/category', [EmailInboxController::class, 'updateCategory'])->name('email-inbox.update-category')->middleware('permission:settings.edit');
+    Route::post('email-inbox/{email_message}/star', [EmailInboxController::class, 'toggleStar'])->name('email-inbox.toggle-star')->middleware('permission:settings.edit');
+    Route::post('email-inbox/{email_message}/assign', [EmailInboxController::class, 'assign'])->name('email-inbox.assign')->middleware('permission:settings.edit');
+    Route::get('email-inbox-settings', [EmailInboxController::class, 'settings'])->name('email-inbox.settings')->middleware('permission:settings.view');
+    Route::post('email-inbox-settings', [EmailInboxController::class, 'storeSettings'])->name('email-inbox.settings.store')->middleware('permission:settings.edit');
+    Route::put('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'updateSettings'])->name('email-inbox.settings.update')->middleware('permission:settings.edit');
+    Route::delete('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'destroySettings'])->name('email-inbox.settings.destroy')->middleware('permission:settings.edit');
+    Route::post('email-inbox-sync/{inboxSetting}', [EmailInboxController::class, 'syncInbox'])->name('email-inbox.sync')->middleware('permission:settings.edit');
+
+    // ── Bank Integration (Ethiopian Banks) ───────────────────
+    Route::get('bank-integration', [BankIntegrationController::class, 'index'])->name('bank-integration.index')->middleware('permission:fee_payments.view');
+    Route::get('bank-integration-settings', [BankIntegrationController::class, 'settings'])->name('bank-integration.settings')->middleware('permission:fees.view');
+    Route::post('bank-integration-settings', [BankIntegrationController::class, 'storeSettings'])->name('bank-integration.settings.store')->middleware('permission:fees.manage');
+    Route::delete('bank-integration-settings/{bankIntegration}', [BankIntegrationController::class, 'destroySettings'])->name('bank-integration.settings.destroy')->middleware('permission:fees.manage');
+    Route::post('bank-integration/upload-csv', [BankIntegrationController::class, 'uploadCsv'])->name('bank-integration.upload-csv')->middleware('permission:fee_payments.manage');
+    Route::post('bank-integration/{bankTransaction}/match', [BankIntegrationController::class, 'manualMatch'])->name('bank-integration.match')->middleware('permission:fee_payments.manage');
+    Route::post('bank-integration/{bankTransaction}/reject', [BankIntegrationController::class, 'rejectTransaction'])->name('bank-integration.reject')->middleware('permission:fee_payments.manage');
+    Route::post('bank-integration/{bankTransaction}/unmatched', [BankIntegrationController::class, 'markUnmatched'])->name('bank-integration.unmatched')->middleware('permission:fee_payments.manage');
+    Route::get('bank-integration-search-students', [BankIntegrationController::class, 'searchStudents'])->name('bank-integration.search-students')->middleware('permission:fee_payments.view');
+
+    // ── Club Follow-up Configuration ────────────────────────
+    Route::resource('club-follow-up-configs', ClubFollowUpConfigController::class)->middleware('permission:settings.view');
 });
 
 // ── Student Portal ──────────────────────────────────────────

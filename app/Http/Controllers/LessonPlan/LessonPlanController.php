@@ -139,6 +139,12 @@ class LessonPlanController extends Controller
             'academic_year_id'  => 'required|exists:academic_years,id',
             'term_id'           => 'required|exists:terms,id',
             'title'             => 'required|string|max:255',
+            'plan_type'         => 'nullable|in:daily,weekly,yearly',
+            'week_start_date'   => 'nullable|date',
+            'week_end_date'     => 'nullable|date',
+            'daily_breakdown'   => 'nullable|json',
+            'yearly_overview'   => 'nullable|string',
+            'term_goals'        => 'nullable|json',
             'objectives'        => 'nullable|string',
             'materials'         => 'nullable|string',
             'activities'        => 'nullable|string',
@@ -168,6 +174,13 @@ class LessonPlanController extends Controller
         $data['week_number']      = $data['week_number'] ?? 1;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 45;
         $data['status']           = $data['status'] ?? 'draft';
+        $data['plan_type']        = $data['plan_type'] ?? 'daily';
+        if (isset($data['daily_breakdown']) && is_string($data['daily_breakdown'])) {
+            $data['daily_breakdown'] = json_decode($data['daily_breakdown'], true);
+        }
+        if (isset($data['term_goals']) && is_string($data['term_goals'])) {
+            $data['term_goals'] = json_decode($data['term_goals'], true);
+        }
 
         LessonPlan::create($data);
 
@@ -235,6 +248,12 @@ class LessonPlanController extends Controller
             'academic_year_id'  => 'required|exists:academic_years,id',
             'term_id'           => 'required|exists:terms,id',
             'title'             => 'required|string|max:255',
+            'plan_type'         => 'nullable|in:daily,weekly,yearly',
+            'week_start_date'   => 'nullable|date',
+            'week_end_date'     => 'nullable|date',
+            'daily_breakdown'   => 'nullable|json',
+            'yearly_overview'   => 'nullable|string',
+            'term_goals'        => 'nullable|json',
             'objectives'        => 'nullable|string',
             'materials'         => 'nullable|string',
             'activities'        => 'nullable|string',
@@ -252,6 +271,14 @@ class LessonPlanController extends Controller
         }
 
         $data = $request->validate($rules);
+
+        if (isset($data['daily_breakdown']) && is_string($data['daily_breakdown'])) {
+            $data['daily_breakdown'] = json_decode($data['daily_breakdown'], true);
+        }
+        if (isset($data['term_goals']) && is_string($data['term_goals'])) {
+            $data['term_goals'] = json_decode($data['term_goals'], true);
+        }
+
         $lessonPlan->update($data);
 
         return redirect()->route('admin.lesson-plans.index')
@@ -278,6 +305,60 @@ class LessonPlanController extends Controller
         $statusLabel = LessonPlan::statusOptions()[$request->status] ?? $request->status;
 
         return back()->with('success', "Lesson plan marked as {$statusLabel}.");
+    }
+
+    /**
+     * Department head reviews a lesson plan.
+     */
+    public function departmentReview(Request $request, LessonPlan $lessonPlan)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'admin' && !$user->hasRole('department_head')) {
+            abort(403, 'Only department heads or admins can perform department reviews.');
+        }
+
+        $request->validate([
+            'department_head_status' => 'required|in:reviewed,approved,revision',
+            'department_head_comment' => 'nullable|string|max:2000',
+        ]);
+
+        $lessonPlan->update([
+            'department_head_status' => $request->department_head_status,
+            'department_head_comment' => $request->department_head_comment,
+            'department_head_id' => $user->id,
+            'department_head_reviewed_at' => now(),
+            'status' => $request->department_head_status === 'approved' ? 'reviewed' : $request->department_head_status,
+        ]);
+
+        $label = LessonPlan::departmentHeadStatusOptions()[$request->department_head_status] ?? $request->department_head_status;
+        return back()->with('success', "Department review: {$label}");
+    }
+
+    /**
+     * Principal reviews a lesson plan.
+     */
+    public function principalReview(Request $request, LessonPlan $lessonPlan)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'admin' && !$user->hasRole('branch_principal')) {
+            abort(403, 'Only branch principals or admins can perform principal reviews.');
+        }
+
+        $request->validate([
+            'principal_status' => 'required|in:reviewed,approved,revision',
+            'principal_comment' => 'nullable|string|max:2000',
+        ]);
+
+        $lessonPlan->update([
+            'principal_status' => $request->principal_status,
+            'principal_comment' => $request->principal_comment,
+            'principal_reviewed_id' => $user->id,
+            'principal_reviewed_at' => now(),
+            'status' => $request->principal_status === 'approved' ? 'approved' : $request->principal_status,
+        ]);
+
+        $label = LessonPlan::principalStatusOptions()[$request->principal_status] ?? $request->principal_status;
+        return back()->with('success', "Principal review: {$label}");
     }
 
     public function destroy(LessonPlan $lessonPlan)
