@@ -16,11 +16,9 @@ class DatabaseSeeder extends Seeder
             // 2. Permissions & roles (must be before users who need roles)
             \Database\Seeders\PermissionSeeder::class,
 
-            // 3. Full school data (branches, AY, terms, teachers, subjects, classes, sections, demo students, assignments)
+            // 3. Full school data (branches, AY, terms, teachers, subjects, classes,
+            //    sections, real Lebu students G9-12, assignments, events, grades)
             \Database\Seeders\SchoolDataSeeder::class,
-
-            // 4. Real student data (121 students from school records — replaces demo students)
-            \Database\Seeders\StudentDataSeeder::class,
         ]);
     }
 }
