@@ -16,24 +16,30 @@ class StudentDataSeeder extends Seeder
     /**
      * Run the student data seeder.
      *
-     * Seeds 121 real students into the system, assigning them to the correct
+     * Seeds real students into the system, assigning them to the correct
      * grade/section based on their date of birth.
      *
      * Grade assignment (Academic Year 2025/2026):
-     *   Grade 1 → born 2018-2019  (age 6-7)
-     *   Grade 2 → born 2017-2018  (age 7-8)
-     *   Grade 3 → born 2016-2017  (age 8-9)
-     *   Grade 4 → born 2015-2016  (age 9-10)
-     *   Grade 5 → born 2014-2015  (age 10-11)
-     *   Grade 6 → born 2013-2014  (age 11-12)
-     *   Grade 7 → born 2012-2013  (age 12-13)
-     *   Grade 8 → born ≤2011      (age 13+)
+     *   Grade 1  -> born 2018-2019  (age 6-7)
+     *   Grade 2  -> born 2017-2018  (age 7-8)
+     *   Grade 3  -> born 2016-2017  (age 8-9)
+     *   Grade 4  -> born 2015-2016  (age 9-10)
+     *   Grade 5  -> born 2014-2015  (age 10-11)
+     *   Grade 6  -> born 2013-2014  (age 11-12)
+     *   Grade 7  -> born 2012-2013  (age 12-13)
+     *   Grade 8  -> born 2011-2012  (age 13-14)
+     *   Grade 9  -> born 2010-2011  (age 14-15)
+     *   Grade 10 -> born 2009-2010  (age 15-16)
+     *   Grade 11 -> born 2008-2009  (age 16-17)
+     *   Grade 12 -> born 2007-2008  (age 17-18)
+     *
+     * Students born outside 1995-2020 are skipped (out of school age range).
      */
     public function run(): void
     {
-        $this->command->info('🌱 Seeding real student data (121 students)...');
+        $this->command->info('Seeding real student data...');
 
-        // ── Resolve foreign-key dependencies ──────────────────────────
+        // Resolve foreign-key dependencies
         $branch = Branch::where('is_headquarters', true)->first()
             ?? Branch::first();
 
@@ -41,24 +47,21 @@ class StudentDataSeeder extends Seeder
             ?? AcademicYear::first();
 
         if (!$branch || !$ay) {
-            $this->command->error('  ✗ No branch or academic year found. Run SchoolDataSeeder first.');
+            $this->command->error('  No branch or academic year found. Run SchoolDataSeeder first.');
             return;
         }
 
         $this->command->info("  Using Branch: {$branch->name} (ID: {$branch->id})");
         $this->command->info("  Using AY: {$ay->name} (ID: {$ay->id})");
 
-        // Build grade → class/section maps
+        // Build grade -> class/section maps (Grades 1-12)
         $allClasses = ClassRoom::where('branch_id', $branch->id)
             ->where('academic_year_id', $ay->id)
             ->get();
 
-        $this->command->info("  Found {$allClasses->count()} classes in database:");
-        foreach ($allClasses as $c) {
-            $this->command->info("    - ID:{$c->id} Name:{$c->name} NumericName:{$c->numeric_name}");
-        }
+        $this->command->info("  Found {$allClasses->count()} classes in database");
 
-        // Key by numeric_name (more reliable), fallback to regex from name
+        // Key by numeric_name, fallback to regex from name
         $classes = $allClasses->keyBy(function ($c) {
             if ($c->numeric_name) {
                 return (int) $c->numeric_name;
@@ -69,8 +72,6 @@ class StudentDataSeeder extends Seeder
             return 0;
         })->filter(fn($c, $k) => $k > 0);
 
-        $this->command->info("  Parsed class map (grade → class_id): " . $classes->map(fn($c, $k) => "G{$k}→ID{$c->id}")->implode(', '));
-
         // Build sections per class
         $sectionsByClass = [];
         foreach ($classes as $gradeNum => $class) {
@@ -79,13 +80,10 @@ class StudentDataSeeder extends Seeder
                 ->get()
                 ->values();
             $sectionsByClass[$gradeNum] = $secs;
-            $this->command->info("    Grade {$gradeNum} → Class ID:{$class->id} → {$secs->count()} sections");
         }
 
-        // ── Auto-create missing classes & sections ──────────────────
-        // The user wants ALL students imported. If a grade's class/section
-        // doesn't exist yet, create it on the fly so no student is skipped.
-        for ($g = 1; $g <= 8; $g++) {
+        // Auto-create missing classes & sections for Grades 1-12
+        for ($g = 1; $g <= 12; $g++) {
             if (!isset($classes[$g])) {
                 $class = ClassRoom::updateOrCreate(
                     [
@@ -95,14 +93,13 @@ class StudentDataSeeder extends Seeder
                     ],
                     [
                         'name'     => 'Grade ' . $g,
-                        'capacity' => 40,
+                        'capacity' => 50,
                     ]
                 );
                 $classes[$g] = $class;
-                $this->command->info("    ✓ Auto-created Grade {$g} (Class ID:{$class->id})");
+                $this->command->info("    Auto-created Grade {$g} (Class ID:{$class->id})");
             }
 
-            // Also try to load sections that may have been created after the initial scan
             if (!isset($sectionsByClass[$g]) || $sectionsByClass[$g]->isEmpty()) {
                 $class = $classes[$g];
                 $secs = Section::where('class_id', $class->id)
@@ -111,7 +108,6 @@ class StudentDataSeeder extends Seeder
                     ->values();
 
                 if ($secs->isEmpty()) {
-                    // Create sections matching SchoolDataSeeder format: "Section A", "Section B"
                     $secs = collect();
                     foreach (['A', 'B'] as $letter) {
                         $sec = Section::updateOrCreate(
@@ -120,12 +116,12 @@ class StudentDataSeeder extends Seeder
                                 'name'     => 'Section ' . $letter,
                             ],
                             [
-                                'max_students' => 40,
+                                'max_students' => 50,
                             ]
                         );
                         $secs->push($sec);
                     }
-                    $this->command->info("    ✓ Auto-created sections for Grade {$g}: Section A, Section B");
+                    $this->command->info("    Auto-created sections for Grade {$g}: Section A, Section B");
                 }
 
                 $sectionsByClass[$g] = $secs;
@@ -133,151 +129,41 @@ class StudentDataSeeder extends Seeder
         }
 
         if ($classes->isEmpty()) {
-            $this->command->error('  ✗ No classes found. Run SchoolDataSeeder first.');
+            $this->command->error('  No classes found. Run SchoolDataSeeder first.');
             return;
         }
 
-        // ── Delete demo students from SchoolDataSeeder ────────────────
-        // SchoolDataSeeder creates dummy students without user_id, which
-        // can conflict with our real students. Remove them first.
+        // Delete previous seeder students (demo data or old batch)
         $demoCount = Student::whereNull('user_id')->count();
         if ($demoCount > 0) {
             Student::whereNull('user_id')->delete();
-            $this->command->info("  ✓ Deleted {$demoCount} demo students (no user_id) from SchoolDataSeeder");
+            $this->command->info("  Deleted {$demoCount} demo students (no user_id)");
         }
-
-        // Also delete students with admission numbers starting from SOR/2025/1XXX (SchoolDataSeeder range)
-        // but keep SOR/2025/2XXX+ (our real data range)
         $demoAdmissions = Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->count();
         if ($demoAdmissions > 0) {
             Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->delete();
-            $this->command->info("  ✓ Deleted {$demoAdmissions} demo students (admission SOR/2025/1XXX)");
+            $this->command->info("  Deleted {$demoAdmissions} demo students (admission SOR/2025/1XXX)");
+        }
+        // Also clear previous batch from this seeder (SOR/2025/3XXX range)
+        $prevBatch = Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->count();
+        if ($prevBatch > 0) {
+            // Delete users linked to these students first
+            $prevStudents = Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->get();
+            foreach ($prevStudents as $ps) {
+                if ($ps->user_id) {
+                    User::where('id', $ps->user_id)->delete();
+                }
+            }
+            Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->delete();
+            $this->command->info("  Deleted {$prevBatch} previous batch students (SOR/2025/3XXX)");
         }
 
         // ── Student raw data ──────────────────────────────────────────
-        $students = [
-            ['Helana Tesfaye Gebrekidan', 'Female', '2018-08-06', '0911302896'],
-            ['Yohana Dawit Ayalew', 'Female', '2011-02-23', '0911998833'],
-            ['Eliana Heikki Juhan', 'Female', '2011-02-23', '0912049898'],
-            ['Ananiya Tariku Alemu', 'Male', '2011-06-21', '0913360628'],
-            ['Amnon Getnet Shew', 'Male', '2017-06-18', '0913072510'],
-            ['Yamenada Samson Abera', 'Male', '2019-02-25', '0935006950'],
-            ['Meklit Fantahun Siyum', 'Female', '2019-09-15', '0966960870'],
-            ['Milki Samson Tekalign', 'Male', '2019-09-15', '0910420404'],
-            ['Beka Alazar Abusie', 'Male', '2019-10-12', '0911333386'],
-            ['Shalom Mesay Ashagrachew', 'Male', '2019-12-10', '0963703923'],
-            ['Amnen Gezachew Demeke', 'Female', '2019-01-12', '0944741063'],
-            ['Leul Michael Arayaselasse', 'Male', '2019-01-31', '0913828293'],
-            ['Yeab Mesay Tesfay', 'Male', '2019-12-06', '0922412249'],
-            ['Hezer Hermon Tadesse', 'Male', '2018-06-24', '0976141780'],
-            ['Retina Semere Mezgebe', 'Female', '2019-01-03', '0911260022'],
-            ['Evan Amanuel Hagos', 'Female', '2019-02-07', '0911111111'],
-            ['Mohammod Abdulkedir Hussen', 'Male', '2018-07-31', '0910173332'],
-            ['Meba Demisse Tsige', 'Male', '2018-02-21', '0911560448'],
-            ['Naol Getu Teresa', 'Male', '2019-08-22', '0912477041'],
-            ['Leul Matiyos Beyene', 'Male', '2018-06-11', '0930130570'],
-            ['Hanifa Mohammod Adem', 'Female', '2018-06-17', '0974179999'],
-            ['Maya Addisu Abinet', 'Female', '2018-07-17', '0913912514'],
-            ['Selman Seid Yesuf', 'Male', '2019-03-06', '0920101067'],
-            ['Atinaf Shunke Kebede', 'Female', '2019-06-11', '0920487826'],
-            ['Eldana Fikadu Tamrat', 'Female', '2018-12-13', '0947410742'],
-            ['Rebira Merga Bifa', 'Male', '2018-02-13', '0911879469'],
-            ['Naol Abiy', 'Male', '2018-01-18', '0911223344'],
-            ['Shem Demissie Tsige', 'Male', '2017-07-23', '0911560448'],
-            ['Mekdelawit Michael Getu', 'Female', '2017-12-11', '0910546947'],
-            ['Younis Abdurazak Abdulaziz', 'Male', '2017-11-04', '0911901715'],
-            ['Elshaday Samuel Paulos', 'Female', '2017-12-16', '0917954202'],
-            ['Yotor Zinaw Abdu', 'Male', '2018-07-21', '0910691535'],
-            ['Maranat Surafel Getachew', 'Female', '2017-11-21', '0947976200'],
-            ['Kalkidan Dagim Desalegn', 'Female', '2017-03-02', '0911786353'],
-            ['Eyosias Befikadu Driba', 'Male', '2018-01-09', '0913472453'],
-            ['Zenaida Tadele Kebede', 'Female', '2018-10-23', '0913972376'],
-            ['Kirubel Wubetu Abera', 'Male', '2018-01-31', '0912659836'],
-            ['Surafel Wubetu Abera', 'Female', '2018-01-31', '0912659836'],
-            ['Dagmawit Mulubirhan Zelalem', 'Female', '2017-04-20', '0912487288'],
-            ['Danawit Mulugeta Tegegne', 'Female', '2018-05-24', '0962872529'],
-            ['Hamza Walelign Mesfin', 'Male', '2016-09-18', '0933333333'],
-            ['Markon Haylat Gebre', 'Male', '2017-04-06', '0912878782'],
-            ['Amen Mandefro Beyene', 'Male', '2017-06-06', '0913638856'],
-            ['Yusuf Achemyelew Hussen', 'Male', '2016-06-28', '0911154827'],
-            ['Nahom Solomon Birhanu', 'Male', '2017-02-25', '0916821316'],
-            ['Zetsat Fikir Debebe', 'Male', '2018-01-03', '0911665185'],
-            ['Emnet Azene Azene', 'Female', '2017-05-02', '0911542769'],
-            ['Abigel Gezahagn Guta', 'Female', '2016-11-24', '0931707027'],
-            ['Daniel Mulugeta Tegegne', 'Male', '2016-05-16', '0911670386'],
-            ['Krubel Semere Mezgebu', 'Male', '2018-08-20', '0911212187'],
-            ['Tselote Tsegaye Zeleke', 'Female', '2015-01-27', '091133445555'],
-            ['Niftalem Habte Birhanu', 'Male', '2015-08-14', '0965580481'],
-            ['Absalat Hermen Tadesse', 'Female', '2015-12-19', '0976141780'],
-            ['Natan Mekdem Alemayehu', 'Male', '2015-06-05', '0911400244'],
-            ['Menar Abdulnasir Bedru', 'Female', '2015-08-27', '0966968653'],
-            ['Ruhama Demisse Kebede', 'Female', '2015-01-13', '0910420404'],
-            ['Edidia Yosef Sisay', 'Female', '2016-10-08', '0912229439'],
-            ['Ruth Henok Getachew', 'Female', '2015-03-20', '0910025368'],
-            ['Yerosen Amanuel Asegid', 'Female', '2016-02-03', '0913986639'],
-            ['Natan Wolday Hailegiorgis', 'Male', '2015-11-21', '0964732326'],
-            ['Eldana Wondimu Gezahegn', 'Female', '2015-02-03', '0942058239'],
-            ['Bana Haftamu Zeferu', 'Male', '2015-10-01', '0930362177'],
-            ['Bitaniya Cherenet Tsegaye', 'Female', '2016-03-02', '0911039804'],
-            ['Milki Bikila Kumera', 'Male', '2016-03-15', '0942443368'],
-            ['Musud AbdulKedir Hussen', 'Male', '2015-10-22', '0910173332'],
-            ['Yohana Biniam Solomon', 'Female', '2015-02-19', '0933221144'],
-            ['Christian Azene Azene', 'Male', '2016-04-11', '0992799098'],
-            ['Esrom Asmerom Arefayne', 'Male', '2016-06-22', '0948296497'],
-            ['Aklesiya Dereje Girma', 'Female', '2015-02-26', '0912647392'],
-            ['Amen Girma Abera', 'Male', '2015-03-09', '0945451230'],
-            ['Miracle Amanuel Shonte', 'Female', '2016-11-28', '0919837714'],
-            ['Aser Cherenet Tsegaye', 'Male', '2014-06-13', '0911039804'],
-            ['Nyakaka Ruach Deng', 'Female', '2009-02-09', '0993965241'],
-            ['Bezawit Alemu Desalegn', 'Female', '2014-04-15', '0982765095'],
-            ['Yasir Seid Yesuf', 'Male', '2014-04-28', '0920101067'],
-            ['Gebrel Tian Libo', 'Male', '2012-03-10', '0912652778'],
-            ['Emanda Michael Mesfin', 'Female', '2015-02-12', '0910126272'],
-            ['Paulos Samuel Paulos', 'Male', '2016-08-07', '0917954202'],
-            ['Abem Kitaw Tale', 'Male', '2015-10-30', '0911707482'],
-            ['Yosef Abdurazak Abdulaziz', 'Male', '2012-09-07', '0911901715'],
-            ['Sitiyana Solomon Bahru', 'Female', '2015-02-14', '0916821316'],
-            ['Amen Fikre Debebe', 'Male', '2015-10-07', '0911605185'],
-            ['Feven Kelelew Wondifraw', 'Female', '2014-06-17', '0911102072'],
-            ['Hermela Robel Mekonin', 'Female', '2014-02-15', '0934501319'],
-            ['Eyuel Befikadu Bekele', 'Male', '2014-02-12', '0910726944'],
-            ['Amar Abdulnasir Bedru', 'Male', '2014-02-19', '0966968053'],
-            ['Delina Tesfaye Tsegaye', 'Female', '2012-01-23', '0934273055'],
-            ['Yohannes Tesfaye Tsegaye', 'Male', '2009-11-10', '0934273055'],
-            ['Christian Biniam Solomon', 'Male', '2013-09-26', '0911179471'],
-            ['Afomia Asfaw Mekonnen', 'Female', '2013-09-03', '0920142002'],
-            ['Ermias Semere Mezgebe', 'Female', '2013-12-03', '0911260022'],
-            ['Natanem Tegegn Gashaw', 'Male', '2013-08-31', '0920334283'],
-            ['Ibrahim Mohammod Awol', 'Male', '2014-03-08', '0912483109'],
-            ['Eliham Achamyelew Husen', 'Female', '2013-06-11', '0911154827'],
-            ['Ruth Befikadu Bekele', 'Female', '2014-02-04', '0910726944'],
-            ['Biruk Aklilu Sima', 'Male', '2013-08-31', '0912107085'],
-            ['Mariana Amanuel Haile', 'Female', '2013-10-01', '0911057829'],
-            ['Abenezer Abate Tesfaye', 'Male', '2014-04-04', '0922660646'],
-            ['Samuel Wondiu Gezahegn', 'Male', '2012-01-31', '0942058239'],
-            ['Yafet Henok Getachew', 'Male', '2012-03-01', '0911173474'],
-            ['Bemnet Mamush Tola', 'Male', '2012-08-20', '0911011456'],
-            ['Yusuf Seid Yusuf', 'Male', '2012-04-11', '0920101067'],
-            ['Amanuel Eshetu Leka', 'Male', '2012-10-12', '0911395692'],
-            ['Yegetafiker Abebe Tulu', 'Male', '2013-05-26', '0913654668'],
-            ['Eyosiyas Tewodros Haile', 'Male', '2008-02-11', '0911178544'],
-            ['Samrawit Yidnekew Teka', 'Female', '2013-10-04', '0963181513'],
-            ['Abuzer Abdulqadir Husen', 'Male', '2012-07-04', '0910173332'],
-            ['Sifenan Abebe Tulu', 'Female', '2013-05-27', '0911747065'],
-            ['Absalat Aklilu Tesfaye', 'Female', '2013-03-22', '0911086170'],
-            ['Natnael Mulubrhan Tareke', 'Male', '2008-10-31', '0932162516'],
-            ['Firew Ermiyas Bekele', 'Male', '2009-05-10', '0962010662'],
-            ['Hallelujah Habte Berhanu', 'Male', '2012-12-23', '0911261007'],
-            ['Eden Samuel Paulos', 'Female', '2011-09-28', '0917301191'],
-            ['Amen Habte Birhanu', 'Female', '2012-06-13', '0911261007'],
-            ['Fikir Mandefro Beyene', 'Female', '2008-06-18', '0911645949'],
-            ['Sarem Haylat Gebre', 'Male', '2011-06-17', '0933085608'],
-            ['Gelila Asfaw Mekonnen', 'Female', '2011-06-17', '0911421882'],
-            ['Yohannes Gezahagne Tegegne', 'Male', '2013-11-12', '0920746877'],
-            ['Fikir Abiy', 'Female', '2015-10-13', '0912345678'],
-            ['Nanati Chala Gure', 'Female', '2018-11-22', '0900000000'],
-            ['Dagim Mesfin Beza', 'Male', '2013-02-02', '0946464646'],
-        ];
+        // Format: [full_name, gender, date_of_birth]
+        // Data fixes: 1010->2010, Feb 30->Feb 28, 1999-02-29->1999-02-28, duplicate removal
+        $students = $this->getStudentData();
+
+        $this->command->info("  Processing " . count($students) . " student records...");
 
         // ── Grade assignment logic ────────────────────────────────────
         $gradeCounters = [];
@@ -291,17 +177,28 @@ class StudentDataSeeder extends Seeder
         $studentRole = Role::where('name', 'student')->first();
 
         foreach ($students as $row) {
-            [$fullName, $gender, $dob, $phone] = $row;
+            $fullName = $row[0];
+            $gender = $row[1];
+            $dob = $row[2];
+            $phone = $row[3] ?? null;
 
             try {
-                // Calculate grade from DOB
+                // Calculate grade from DOB (academic year 2025/2026)
                 $birthYear = (int) substr($dob, 0, 4);
-                $gradeNum = max(1, min(8, 2025 - $birthYear - 5));
+
+                // Skip students with unrealistic DOBs
+                if ($birthYear < 1995 || $birthYear > 2020) {
+                    $this->command->warn("  Skipping {$fullName}: DOB {$dob} out of school age range");
+                    $skipped++;
+                    continue;
+                }
+
+                $gradeNum = max(1, min(12, 2026 - $birthYear - 6));
 
                 // Find the class for this grade
                 $class = $classes[$gradeNum] ?? null;
                 if (!$class) {
-                    $this->command->warn("  ⚠ No class found for Grade {$gradeNum} — skipping {$fullName}");
+                    $this->command->warn("  No class found for Grade {$gradeNum} - skipping {$fullName}");
                     $skipped++;
                     continue;
                 }
@@ -320,7 +217,7 @@ class StudentDataSeeder extends Seeder
                 }
 
                 if (!$section) {
-                    $this->command->warn("  ⚠ No section for Grade {$gradeNum} — skipping {$fullName}");
+                    $this->command->warn("  No section for Grade {$gradeNum} - skipping {$fullName}");
                     $skipped++;
                     continue;
                 }
@@ -328,7 +225,6 @@ class StudentDataSeeder extends Seeder
                 $gradeCounters[$gradeNum][$sectionIdx]++;
 
                 $sectionLetter = $sectionIdx === 0 ? 'A' : 'B';
-                // Use G{grade}{section}{counter} format to guarantee uniqueness across grades
                 $rollNumber = 'G' . $gradeNum . $sectionLetter . '-' . str_pad($gradeCounters[$gradeNum][$sectionIdx], 2, '0', STR_PAD_LEFT);
                 $admission = 'SOR/2025/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
                 $admissionNum++;
@@ -341,10 +237,10 @@ class StudentDataSeeder extends Seeder
                 $guardianName = $secondName . ' ' . $lastName;
                 $guardianPhone = $phone;
 
-                // ── Create User account (required by students.user_id FK) ──
+                // ── Create User account ──
                 $idNumber = 'STU-' . date('Y') . '-' . str_pad($userCounter + 1, 4, '0', STR_PAD_LEFT);
                 $email = $idNumber . '@redemption.edu';
-                $defaultPassword = str_replace('-', '', $dob); // e.g. 20180806
+                $defaultPassword = str_replace('-', '', $dob); // e.g. 20020806
 
                 $user = User::updateOrCreate(
                     ['email' => $email],
@@ -359,19 +255,18 @@ class StudentDataSeeder extends Seeder
                         'is_active'  => true,
                     ]
                 );
-                // Set email_verified_at separately (not in $fillable)
                 if (!$user->email_verified_at) {
                     $user->email_verified_at = now();
                     $user->save();
                 }
                 $userCounter++;
 
-                // Assign Spatie 'student' role if not already assigned
+                // Assign Spatie 'student' role
                 if ($studentRole && !$user->roles()->where('role_id', $studentRole->id)->exists()) {
                     $user->roles()->attach($studentRole->id);
                 }
 
-                // ── Create Student record ──────────────────────────────────
+                // ── Create Student record ──
                 Student::updateOrCreate(
                     ['admission_number' => $admission],
                     [
@@ -396,20 +291,18 @@ class StudentDataSeeder extends Seeder
 
             } catch (\Exception $e) {
                 $skipped++;
-                $errMsg = $fullName . ': ' . $e->getMessage();
-                $errors[] = $errMsg;
-                $this->command->warn("  ✗ Error importing {$fullName}: " . $e->getMessage());
-                // Continue with next student instead of stopping
+                $errors[] = $fullName . ': ' . $e->getMessage();
+                $this->command->warn("  Error importing {$fullName}: " . $e->getMessage());
                 continue;
             }
         }
 
-        // ── Summary ───────────────────────────────────────────────────
+        // ── Summary ──
         $this->command->newLine();
-        $this->command->info("  ✓ Students created/updated: {$created}");
-        $this->command->info("  ✓ User accounts created: {$userCounter}");
+        $this->command->info("  Students created/updated: {$created}");
+        $this->command->info("  User accounts created: {$userCounter}");
         if ($skipped) {
-            $this->command->warn("  ⚠ Students skipped/errored: {$skipped}");
+            $this->command->warn("  Students skipped/errored: {$skipped}");
         }
         if (!empty($errors)) {
             $this->command->newLine();
@@ -421,15 +314,104 @@ class StudentDataSeeder extends Seeder
 
         $this->command->newLine();
         $this->command->info('  Grade distribution:');
-        $gradeLabels = [1 => 'Grade 1', 2 => 'Grade 2', 3 => 'Grade 3', 4 => 'Grade 4',
-                        5 => 'Grade 5', 6 => 'Grade 6', 7 => 'Grade 7', 8 => 'Grade 8'];
         foreach ($gradeCounters as $gradeNum => $counts) {
             $total = $counts[0] + $counts[1];
-            $this->command->info("    {$gradeLabels[$gradeNum]}: {$total} students (A:{$counts[0]} B:{$counts[1]})");
+            $this->command->info("    Grade {$gradeNum}: {$total} students (A:{$counts[0]} B:{$counts[1]})");
         }
 
         $this->command->newLine();
-        $this->command->info('  Student login: email = <idNumber>@redemption.edu, password = DOB (e.g. 20180806)');
-        $this->command->info('🎉 Student data seeded successfully!');
+        $this->command->info('  Student login: email = <idNumber>@redemption.edu, password = DOB (e.g. 20020806)');
+        $this->command->info('Student data seeded successfully!');
+    }
+
+    /**
+     * Parse student data from SQL file or return hardcoded array.
+     * Supports reading from database/seeders/data/students.sql
+     * or using the hardcoded array below.
+     *
+     * Data fixes applied:
+     *   - 1010-04-17 -> 2010-04-17 (typo)
+     *   - 2002-02-30 -> 2002-02-28 (Feb 30 doesn't exist)
+     *   - 2002-02-30 -> 2002-02-28 (same fix for second occurrence)
+     *   - 1999-02-29 -> 1999-02-28 (1999 is not a leap year)
+     *   - Duplicate entries removed (same name + DOB)
+     */
+    private function getStudentData(): array
+    {
+        // Try to load from SQL file first (easier to update)
+        $sqlFile = database_path('seeders/data/students.sql');
+        if (file_exists($sqlFile)) {
+            return $this->parseSqlFile($sqlFile);
+        }
+
+        // Fallback: hardcoded data (subset - use SQL file for full list)
+        return [
+            ['Youliyan Kitaw Mulugeta', 'Female', '2002-08-06'],
+            ['Melat Yimneshnesh Girma', 'Female', '2010-01-15'],
+            ['Eldana Misganaw Hone', 'Female', '2003-11-07'],
+            ['Kalid Mohammed Mohammednur', 'Male', '2002-04-14'],
+            ['Edidya Kidmealem Tilahun', 'Female', '2003-03-13'],
+            // ... Add more or use the SQL file for the full list
+        ];
+    }
+
+    /**
+     * Parse INSERT statements from a SQL file into student data array.
+     * Handles: duplicate removal, invalid date fixes.
+     */
+    private function parseSqlFile(string $path): array
+    {
+        $content = file_get_contents($path);
+        $pattern = "/VALUES\\s*\\('([^']+)',\\s*'([^']+)',\\s*'([^']+)'\\)/";
+        preg_match_all($pattern, $content, $matches, PREG_SET_ORDER);
+
+        $students = [];
+        $seen = [];
+
+        foreach ($matches as $match) {
+            $name = trim($match[1]);
+            $gender = trim($match[2]);
+            $dob = trim($match[3]);
+
+            // Fix invalid dates
+            $dob = $this->fixDate($dob);
+
+            // Remove duplicates (same name + DOB, case-insensitive)
+            $key = strtolower($name) . '|' . $dob;
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
+            $students[] = [$name, $gender, $dob];
+        }
+
+        return $students;
+    }
+
+    /**
+     * Fix common date errors in the source data.
+     */
+    private function fixDate(string $dob): string
+    {
+        // Fix year typo: 1010 -> 2010
+        if (str_starts_with($dob, '1010-')) {
+            $dob = '2010-' . substr($dob, 5);
+        }
+
+        // Fix Feb 30 -> Feb 28 (February never has 30 days)
+        if (preg_match('/^(\d{4})-02-30$/', $dob, $m)) {
+            $dob = $m[1] . '-02-28';
+        }
+
+        // Fix Feb 29 in non-leap years
+        if (preg_match('/^(\d{4})-02-29$/', $dob, $m)) {
+            $year = (int) $m[1];
+            if (($year % 4 !== 0) || ($year % 100 === 0 && $year % 400 !== 0)) {
+                $dob = $year . '-02-28';
+            }
+        }
+
+        return $dob;
     }
 }
