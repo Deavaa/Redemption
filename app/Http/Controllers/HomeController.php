@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Slider;
 use App\Models\TeamMember;
 use App\Models\GalleryImage;
+use App\Models\GalleryVideo;
+use App\Models\VideoLibrary;
 use App\Models\Setting;
 
 class HomeController extends Controller
@@ -27,6 +29,24 @@ class HomeController extends Controller
             ->orderBy('sort_order')
             ->limit(6)
             ->get();
+
+        // Get website-visible videos from Video Library (limit to 6 for homepage)
+        $websiteVideos = collect();
+        try {
+            $websiteVideos = VideoLibrary::forWebsite()
+                ->orderBy('created_at', 'desc')
+                ->limit(6)
+                ->get();
+        } catch (\Exception $e) {}
+
+        // Also get GalleryVideo entries for the website
+        $galleryVideos = collect();
+        try {
+            $galleryVideos = GalleryVideo::where('is_active', true)
+                ->orderBy('sort_order')
+                ->limit(6)
+                ->get();
+        } catch (\Exception $e) {}
 
         // Get ALL settings from database - used throughout the website
         $settings = [
@@ -83,6 +103,54 @@ class HomeController extends Controller
             $latestNews = \App\Models\News::visibleOnWebsite()->limit(3)->get();
         } catch (\Exception $e) {}
 
-        return view('welcome', compact('sliders', 'teamMembers', 'galleryImages', 'settings', 'latestNews'));
+        return view('welcome', compact('sliders', 'teamMembers', 'galleryImages', 'websiteVideos', 'galleryVideos', 'settings', 'latestNews'));
+    }
+
+    /**
+     * Show the full gallery page (photos + videos)
+     */
+    public function gallery()
+    {
+        // Get settings
+        $settings = [
+            'school_name' => Setting::get('school_name', 'School of Redemption'),
+            'school_tagline' => Setting::get('school_tagline', 'Excellence in Education'),
+            'school_logo' => Setting::get('school_logo', ''),
+            'primary_color' => Setting::get('primary_color', '#0d0d2b'),
+            'secondary_color' => Setting::get('secondary_color', '#c9a84c'),
+            'school_phone' => Setting::get('school_phone', '+251 11 234 5678'),
+            'school_email' => Setting::get('school_email', 'info@schoolofredemption.edu'),
+            'school_address' => Setting::get('school_address', 'Addis Ababa, Ethiopia'),
+            'facebook_url' => Setting::get('facebook_url', ''),
+            'twitter_url' => Setting::get('twitter_url', ''),
+            'youtube_url' => Setting::get('youtube_url', ''),
+            'telegram_url' => Setting::get('telegram_url', ''),
+            'instagram_url' => Setting::get('instagram_url', ''),
+            'linkedin_url' => Setting::get('linkedin_url', ''),
+            'footer_text' => Setting::get('footer_text', 'School of Redemption. All rights reserved.'),
+        ];
+
+        // Get all active gallery images
+        $galleryImages = GalleryImage::where('is_active', true)
+            ->orderBy('sort_order')
+            ->paginate(12, ['*'], 'photos');
+
+        // Get website-visible videos from Video Library
+        $websiteVideos = collect();
+        try {
+            $websiteVideos = VideoLibrary::forWebsite()
+                ->orderBy('created_at', 'desc')
+                ->paginate(12, ['*'], 'videos');
+        } catch (\Exception $e) {}
+
+        // Also get GalleryVideo entries
+        $galleryVideos = collect();
+        try {
+            $galleryVideos = GalleryVideo::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+        } catch (\Exception $e) {}
+
+        return view('gallery', compact('galleryImages', 'websiteVideos', 'galleryVideos', 'settings'));
     }
 }

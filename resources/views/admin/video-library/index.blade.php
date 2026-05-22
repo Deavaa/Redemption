@@ -171,6 +171,11 @@
                             <span class="video-access modern-badge {{ $video->access_level === 'all' ? 'modern-badge-success' : 'modern-badge-warning' }}" style="font-size:0.6rem;padding:1px 6px;">
                                 {{ $video->access_level === 'all' ? 'Everyone' : ucfirst($video->access_level) }}
                             </span>
+                            @if($video->show_on_website)
+                            <span class="modern-badge modern-badge-info" style="font-size:0.6rem;padding:1px 6px;">
+                                <i class="fas fa-globe"></i> Website
+                            </span>
+                            @endif
                         </div>
                         <div class="video-actions">
                             <a href="{{ route('admin.video-library.show', $video->id) }}" class="btn-watch" title="Watch Video">

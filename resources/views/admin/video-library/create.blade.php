@@ -159,7 +159,7 @@
                         </div>
 
                         {{-- Active Toggle --}}
-                        <div class="form-group mb-4">
+                        <div class="form-group mb-3">
                             <label class="form-label" style="font-weight:600;color:#374151;font-size:0.875rem;">Status</label>
                             <div class="form-check form-switch" style="padding-left:2.5rem;">
                                 <input type="checkbox" name="is_active" value="1" class="form-check-input" style="width:3rem;height:1.5rem;" checked id="isActive" {{ old('is_active') ? 'checked' : '' }}>
@@ -167,6 +167,18 @@
                                     {{ old('is_active', true) ? 'Active' : 'Inactive' }}
                                 </label>
                             </div>
+                        </div>
+
+                        {{-- Show on Website Toggle --}}
+                        <div class="form-group mb-4">
+                            <label class="form-label" style="font-weight:600;color:#374151;font-size:0.875rem;">Website Visibility</label>
+                            <div class="form-check form-switch" style="padding-left:2.5rem;">
+                                <input type="checkbox" name="show_on_website" value="1" class="form-check-input" style="width:3rem;height:1.5rem;" id="showOnWebsite" {{ old('show_on_website') ? 'checked' : '' }}>
+                                <label class="form-check-label ms-2" for="showOnWebsite" style="font-weight:600;color:{{ old('show_on_website') ? '#2563eb' : '#9ca3af' }};" id="websiteLabel">
+                                    {{ old('show_on_website') ? 'Show on Website' : 'Admin Only' }}
+                                </label>
+                            </div>
+                            <small class="text-muted" style="font-size:0.72rem;">When enabled, this video will appear on the public website gallery page. Only "Everyone" access level videos can be shown on the website.</small>
                         </div>
                     </div>
                 </div>
@@ -316,6 +328,14 @@ document.addEventListener('DOMContentLoaded', function() {
     isActive.addEventListener('change', function() {
         activeLabel.textContent = this.checked ? 'Active' : 'Inactive';
         activeLabel.style.color = this.checked ? '#059669' : '#9ca3af';
+    });
+
+    // Show on Website toggle
+    const showOnWebsite = document.getElementById('showOnWebsite');
+    const websiteLabel = document.getElementById('websiteLabel');
+    showOnWebsite.addEventListener('change', function() {
+        websiteLabel.textContent = this.checked ? 'Show on Website' : 'Admin Only';
+        websiteLabel.style.color = this.checked ? '#2563eb' : '#9ca3af';
     });
 });
 </script>

@@ -1232,8 +1232,85 @@
                     </div>
                 @endforelse
             </div>
+            @if($galleryImages->count() > 0)
+            <div class="text-center mt-4">
+                <a href="{{ url('gallery') }}" class="btn btn-outline-light" style="border-radius:50px;padding:10px 30px;border-color:var(--secondary-color);color:var(--secondary-color);">View Full Gallery</a>
+            </div>
+            @endif
         </div>
     </section>
+
+    <!-- Video Highlights Section -->
+    @if($websiteVideos->count() > 0 || $galleryVideos->count() > 0)
+    <section class="py-5" id="videos" style="background:var(--light-bg, #f8f9fa);">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Video Gallery</span>
+                <h2>Video Highlights</h2>
+                <p>Watch our school events, educational content, and student achievements.</p>
+            </div>
+            <div class="row g-4">
+                @foreach($websiteVideos as $video)
+                <div class="col-lg-4 col-md-6">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden;transition:transform 0.3s;">
+                        <div style="position:relative;padding-bottom:56.25%;height:0;background:#0d0d2b;">
+                            @if($video->youtube_video_id)
+                            <iframe src="https://www.youtube.com/embed/{{ $video->youtube_video_id }}"
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
+                                allowfullscreen
+                                loading="lazy"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                            </iframe>
+                            @endif
+                        </div>
+                        <div class="card-body">
+                            <h6 class="mb-1" style="font-weight:700;color:var(--text-dark, #1a1a2e);">{{ $video->title }}</h6>
+                            @if($video->channel_name)
+                            <small class="text-muted"><i class="fab fa-youtube text-danger me-1"></i>{{ $video->channel_name }}</small>
+                            @endif
+                            @if($video->category)
+                            <span class="badge bg-light text-dark mt-1" style="font-size:0.65rem;">{{ $video->category }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+
+                @foreach($galleryVideos as $gv)
+                @php
+                    $gvVideoId = null;
+                    if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/', $gv->video_url, $m)) {
+                        $gvVideoId = $m[1];
+                    }
+                @endphp
+                @if($gvVideoId)
+                <div class="col-lg-4 col-md-6">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden;transition:transform 0.3s;">
+                        <div style="position:relative;padding-bottom:56.25%;height:0;background:#0d0d2b;">
+                            <iframe src="https://www.youtube.com/embed/{{ $gvVideoId }}"
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
+                                allowfullscreen
+                                loading="lazy"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                            </iframe>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="mb-1" style="font-weight:700;color:var(--text-dark, #1a1a2e);">{{ $gv->title }}</h6>
+                            @if($gv->description)
+                            <small class="text-muted">{{ Str::limit($gv->description, 80) }}</small>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+                @endforeach
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url('gallery') }}" class="btn" style="border-radius:50px;padding:10px 30px;background:var(--secondary-color, #c9a84c);color:#fff;border:none;">View All Videos</a>
+            </div>
+        </div>
+    </section>
+    @endif
 
     <!-- Team Section -->
     <section class="team" id="team">

@@ -83,6 +83,7 @@ use App\Http\Controllers\LessonPlan\LessonPlanFollowUpController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
 
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');

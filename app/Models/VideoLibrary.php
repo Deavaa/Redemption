@@ -16,11 +16,12 @@ class VideoLibrary extends Model
         'title', 'description', 'youtube_url', 'youtube_video_id',
         'channel_name', 'channel_url', 'thumbnail', 'category',
         'video_type', 'access_level', 'branch_id', 'uploaded_by',
-        'is_active', 'view_count', 'duration_seconds',
+        'is_active', 'show_on_website', 'view_count', 'duration_seconds',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'show_on_website' => 'boolean',
         'view_count' => 'integer',
         'duration_seconds' => 'integer',
     ];
@@ -143,6 +144,7 @@ class VideoLibrary extends Model
         if ($user->role === 'admin') return true;
         if ($user->hasRole('librarian')) return true;
         if ($user->hasRole('branch_principal')) return true;
+        if ($user->hasRole('general_manager')) return true;
         if ($user->hasRole('teacher')) return true;
         return false;
     }
@@ -157,5 +159,13 @@ class VideoLibrary extends Model
     public function incrementViewCount(): void
     {
         $this->increment('view_count');
+    }
+
+    // Scope for website-visible videos
+    public function scopeForWebsite($query)
+    {
+        return $query->where('is_active', true)
+                     ->where('show_on_website', true)
+                     ->where('access_level', 'all');
     }
 }

@@ -16,7 +16,7 @@ class VideoLibraryController extends Controller
         // Non-admin users only see active videos they can access
         if (auth()->user()->role !== 'admin') {
             $query->where('is_active', true);
-            if (!auth()->user()->hasRole('librarian') && !auth()->user()->hasRole('branch_principal')) {
+            if (!auth()->user()->hasRole('librarian') && !auth()->user()->hasRole('branch_principal') && !auth()->user()->hasRole('general_manager')) {
                 $query->where(function ($q) {
                     $q->where('access_level', 'all')
                       ->orWhere('access_level', auth()->user()->role);
@@ -60,6 +60,7 @@ class VideoLibraryController extends Controller
         $canManage = auth()->user()->role === 'admin'
             || auth()->user()->hasRole('librarian')
             || auth()->user()->hasRole('branch_principal')
+            || auth()->user()->hasRole('general_manager')
             || auth()->user()->hasRole('teacher');
 
         return view('admin.video-library.index', compact(
@@ -78,7 +79,7 @@ class VideoLibraryController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        if ($user->role !== 'admin' && !$user->hasRole('librarian') && !$user->hasRole('branch_principal') && !$user->hasRole('teacher')) {
+        if ($user->role !== 'admin' && !$user->hasRole('librarian') && !$user->hasRole('branch_principal') && !$user->hasRole('general_manager') && !$user->hasRole('teacher')) {
             abort(403, 'You do not have permission to add videos.');
         }
 
@@ -93,6 +94,7 @@ class VideoLibraryController extends Controller
             'branch_id' => 'nullable|exists:branches,id',
             'access_level' => 'required|in:all,teacher,student,staff,admin',
             'is_active' => 'boolean',
+            'show_on_website' => 'boolean',
             'duration_seconds' => 'nullable|integer|min:0',
         ]);
 
@@ -105,6 +107,7 @@ class VideoLibraryController extends Controller
         $validated['youtube_video_id'] = $videoId;
         $validated['uploaded_by'] = $user->id;
         $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['show_on_website'] = $request->boolean('show_on_website', false);
 
         // Auto-fill thumbnail from YouTube
         if ($videoId) {
@@ -132,6 +135,7 @@ class VideoLibraryController extends Controller
         $canManage = auth()->user()->role === 'admin'
             || auth()->user()->hasRole('librarian')
             || auth()->user()->hasRole('branch_principal')
+            || auth()->user()->hasRole('general_manager')
             || ($video_library->uploaded_by === auth()->id());
 
         // Get related videos from same category or channel
@@ -158,7 +162,7 @@ class VideoLibraryController extends Controller
     public function edit(VideoLibrary $video_library)
     {
         $user = auth()->user();
-        if ($user->role !== 'admin' && !$user->hasRole('librarian') && !$user->hasRole('branch_principal') && $video_library->uploaded_by !== $user->id) {
+        if ($user->role !== 'admin' && !$user->hasRole('librarian') && !$user->hasRole('branch_principal') && !$user->hasRole('general_manager') && $video_library->uploaded_by !== $user->id) {
             abort(403, 'You do not have permission to edit videos.');
         }
 
@@ -175,7 +179,7 @@ class VideoLibraryController extends Controller
     public function update(Request $request, VideoLibrary $video_library)
     {
         $user = auth()->user();
-        if ($user->role !== 'admin' && !$user->hasRole('librarian') && !$user->hasRole('branch_principal') && $video_library->uploaded_by !== $user->id) {
+        if ($user->role !== 'admin' && !$user->hasRole('librarian') && !$user->hasRole('branch_principal') && !$user->hasRole('general_manager') && $video_library->uploaded_by !== $user->id) {
             abort(403, 'You do not have permission to edit videos.');
         }
 
@@ -190,6 +194,7 @@ class VideoLibraryController extends Controller
             'branch_id' => 'nullable|exists:branches,id',
             'access_level' => 'required|in:all,teacher,student,staff,admin',
             'is_active' => 'boolean',
+            'show_on_website' => 'boolean',
             'duration_seconds' => 'nullable|integer|min:0',
         ]);
 
@@ -203,6 +208,7 @@ class VideoLibraryController extends Controller
         }
 
         $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['show_on_website'] = $request->boolean('show_on_website', false);
 
         $video_library->update($validated);
 
@@ -212,7 +218,7 @@ class VideoLibraryController extends Controller
     public function destroy(VideoLibrary $video_library)
     {
         $user = auth()->user();
-        if ($user->role !== 'admin' && !$user->hasRole('librarian') && !$user->hasRole('branch_principal') && $video_library->uploaded_by !== $user->id) {
+        if ($user->role !== 'admin' && !$user->hasRole('librarian') && !$user->hasRole('branch_principal') && !$user->hasRole('general_manager') && $video_library->uploaded_by !== $user->id) {
             abort(403, 'You do not have permission to delete videos.');
         }
 
