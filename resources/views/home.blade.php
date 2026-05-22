@@ -36,7 +36,7 @@
 <div class="col-md-3 col-6"><div class="card h-100 text-center p-3"><i class="fas fa-book-reader fa-2x gold-text mb-3"></i><h6>Secondary</h6><p class="small text-muted">Grades 7-10</p></div></div>
 <div class="col-md-3 col-6"><div class="card h-100 text-center p-3"><i class="fas fa-university fa-2x gold-text mb-3"></i><h6>Preparatory</h6><p class="small text-muted">Grades 11-12</p></div></div>
 </div></div></section>
-<section class="section" style="background:linear-gradient(135deg,#0d0d2b,#1a1a5e);color:#fff;text-align:center">
+<section class="section" style="background:linear-gradient(135deg,#1E90FF,#1565C0);color:#fff;text-align:center">
 <div class="container"><div class="row g-4">
 <div class="col-md-3"><h2 class="gold-text">1500+</h2><p>Students Enrolled</p></div>
 <div class="col-md-3"><h2 class="gold-text">120+</h2><p>Qualified Teachers</p></div>

@@ -92,6 +92,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
 
+// Public Contact Form
+Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');
+
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
