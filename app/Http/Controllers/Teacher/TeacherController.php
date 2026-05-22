@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +18,8 @@ class TeacherController extends Controller
 
     public function create()
     {
-        return view('admin.Teacher.create');
+        $departments = Department::active()->orderBy('name')->get();
+        return view('admin.Teacher.create', compact('departments'));
     }
 
     public function store(Request $request)
@@ -34,6 +36,7 @@ class TeacherController extends Controller
             'phone'         => 'nullable|string|max:20',
             'qualification' => 'nullable|string|max:255',
             'department'    => 'nullable|string|max:255',
+            'department_id' => 'nullable|exists:departments,id',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
             'status'        => 'required|in:active,inactive,on_leave',
@@ -87,14 +90,15 @@ class TeacherController extends Controller
 
     public function show($id)
     {
-        $data = Teacher::findOrFail($id);
+        $data = Teacher::with('department')->findOrFail($id);
         return view('admin.Teacher.show', compact('data'));
     }
 
     public function edit($id)
     {
         $data = Teacher::findOrFail($id);
-        return view('admin.Teacher.edit', compact('data'));
+        $departments = Department::active()->orderBy('name')->get();
+        return view('admin.Teacher.edit', compact('data', 'departments'));
     }
 
     public function update(Request $request, $id)
@@ -114,6 +118,7 @@ class TeacherController extends Controller
             'phone'         => 'nullable|string|max:20',
             'qualification' => 'nullable|string|max:255',
             'department'    => 'nullable|string|max:255',
+            'department_id' => 'nullable|exists:departments,id',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
             'status'        => 'required|in:active,inactive,on_leave',

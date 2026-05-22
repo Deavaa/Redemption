@@ -47,6 +47,10 @@ class PermissionMiddleware
                 'subject_assignments.view',
                 // Lesson Plans
                 'lesson_plans.view', 'lesson_plans.create', 'lesson_plans.edit', 'lesson_plans.follow_up',
+                // Exam Questions
+                'exam_questions.view', 'exam_questions.create', 'exam_questions.edit',
+                // Teacher Evaluation
+                'teacher_evaluations.view', 'teacher_evaluations.create', 'teacher_evaluations.edit',
                 // Documents
                 'settings.view', // report exchange uses settings.view
                 // Library
@@ -96,6 +100,10 @@ class PermissionMiddleware
                 'students.view', 'teachers.view', 'subject_assignments.view',
                 // Lesson Plans
                 'lesson_plans.view', 'lesson_plans.create', 'lesson_plans.edit', 'lesson_plans.review', 'lesson_plans.follow_up',
+                // Exam Questions (principal review)
+                'exam_questions.view', 'exam_questions.principal_review',
+                // Teacher Evaluation
+                'teacher_evaluations.view', 'teacher_evaluations.create', 'teacher_evaluations.edit',
                 // Documents
                 'settings.view', 'id_cards.generate', 'certificates.generate',
                 // Website
@@ -105,6 +113,8 @@ class PermissionMiddleware
                 // Communication
                 'calendar.view', 'calendar.manage', 'chat.access', 'notifications.view',
                 'announcements.view',
+                // Departments (view only)
+                'departments.view',
                 // Analysis
                 // Same as mark_sheets.view
             ];
@@ -113,6 +123,56 @@ class PermissionMiddleware
                 $hasAccess = false;
                 foreach ($permissions as $perm) {
                     if (in_array($perm, $branchPrincipalAllowedPermissions)) {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                if (!$hasAccess) {
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'message' => 'You do not have access to this section.',
+                            'required_any' => $permissions,
+                        ], 403);
+                    }
+                    abort(403, 'You do not have permission to access this section.');
+                }
+            }
+
+            return $next($request);
+        }
+
+        // Department Head — reviews exam questions from teachers in their department
+        if ($user->role === 'department_head') {
+            $departmentHeadAllowedPermissions = [
+                'dashboard.view',
+                // Academic
+                'subjects.view', 'subject_assignments.view',
+                'exams.view', 'classrooms.view', 'sections.view',
+                // Marks (view)
+                'mark_entries.view',
+                'mark_sheets.view',
+                // People
+                'students.view', 'teachers.view',
+                // Lesson Plans
+                'lesson_plans.view', 'lesson_plans.review',
+                // Exam Questions (full dept review access)
+                'exam_questions.view', 'exam_questions.create', 'exam_questions.edit', 'exam_questions.dept_review',
+                // Teacher Evaluation
+                'teacher_evaluations.view', 'teacher_evaluations.create', 'teacher_evaluations.edit',
+                // Departments
+                'departments.view',
+                // Documents
+                'settings.view',
+                // Library
+                'library.view',
+                // Communication
+                'calendar.view', 'chat.access', 'notifications.view',
+            ];
+
+            if (!empty($permissions)) {
+                $hasAccess = false;
+                foreach ($permissions as $perm) {
+                    if (in_array($perm, $departmentHeadAllowedPermissions)) {
                         $hasAccess = true;
                         break;
                     }

@@ -11,7 +11,7 @@ class NewsController extends Controller
 {
     public function index()
     {
-        $news = News::orderBy('priority', 'desc')->orderBy('created_at', 'desc')->paginate(20);
+        $news = News::with('creator', 'approver')->orderBy('priority', 'desc')->orderBy('created_at', 'desc')->paginate(20);
         return view('admin.news.index', compact('news'));
     }
 
@@ -35,6 +35,16 @@ class NewsController extends Controller
         $data['created_by'] = Auth::id();
         $data['is_active'] = $request->boolean('is_active', true);
 
+        // If admin/super_admin creates news, auto-approve it
+        if (in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+            $data['is_approved'] = true;
+            $data['approved_by'] = Auth::id();
+            $data['approved_at'] = now();
+        } else {
+            // News from principals/managers needs admin approval
+            $data['is_approved'] = false;
+        }
+
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('news-images', 'public');
             $data['image_path'] = $path;
@@ -42,7 +52,11 @@ class NewsController extends Controller
 
         News::create($data);
 
-        return redirect()->route('admin.news.index')->with('success', 'News item created successfully.');
+        $msg = in_array(Auth::user()->role, ['admin', 'super_admin'])
+            ? 'News item created and published successfully.'
+            : 'News item submitted. It will be visible after admin approval.';
+
+        return redirect()->route('admin.news.index')->with('success', $msg);
     }
 
     public function edit(News $news)
@@ -72,6 +86,38 @@ class NewsController extends Controller
         $news->update($data);
 
         return redirect()->route('admin.news.index')->with('success', 'News item updated successfully.');
+    }
+
+    // Admin: Approve/Reject news posted by principals
+    public function approve(News $news)
+    {
+        if (!in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+            abort(403, 'Only administrators can approve news.');
+        }
+
+        $news->update([
+            'is_approved' => true,
+            'approved_by' => Auth::id(),
+            'approved_at' => now(),
+        ]);
+
+        return redirect()->route('admin.news.index')->with('success', 'News item approved and published.');
+    }
+
+    public function reject(News $news)
+    {
+        if (!in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+            abort(403, 'Only administrators can reject news.');
+        }
+
+        $news->update([
+            'is_approved' => false,
+            'is_active' => false,
+            'approved_by' => Auth::id(),
+            'approved_at' => now(),
+        ]);
+
+        return redirect()->route('admin.news.index')->with('success', 'News item rejected and deactivated.');
     }
 
     public function destroy(News $news)

@@ -131,19 +131,19 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="department">
-                                Department <small>(optional)</small>
+                            <label class="modern-form-label" for="department_id">
+                                Department Assignment <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-building modern-input-icon"></i>
-                                <input type="text"
-                                    name="department"
-                                    id="department"
-                                    class="modern-input {{ $errors->has('department') ? 'is-invalid' : '' }}"
-                                    value="{{ old('department') }}"
-                                    placeholder="e.g. Science">
+                                <select name="department_id" id="department_id" class="modern-input modern-select {{ $errors->has('department_id') ? 'is-invalid' : '' }}">
+                                    <option value="">-- Select Department --</option>
+                                    @foreach($departments as $dept)
+                                    <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }} ({{ $dept->type_label }})</option>
+                                    @endforeach
+                                </select>
                             </div>
-                            @error('department')
+                            @error('department_id')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror
                         </div>

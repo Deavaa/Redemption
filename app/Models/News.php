@@ -14,6 +14,9 @@ class News extends Model
         'content',
         'image_path',
         'is_active',
+        'is_approved',
+        'approved_by',
+        'approved_at',
         'show_until',
         'priority',
         'created_by',
@@ -21,12 +24,19 @@ class News extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
         'show_until' => 'datetime',
     ];
 
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**
@@ -38,6 +48,7 @@ class News extends Model
     public function scopeVisibleOnWebsite($query)
     {
         return $query->where('is_active', true)
+            ->where('is_approved', true)
             ->where(function ($q) {
                 $q->where('created_at', '>=', now()->subDays(2))
                   ->orWhereNull('show_until')
