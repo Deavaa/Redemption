@@ -77,7 +77,7 @@ class StudentController extends Controller
             'section_id' => 'required|exists:sections,id',
             'academic_year_id' => 'required|exists:academic_years,id',
             'admission_number' => 'nullable|string|max:50|unique:students,admission_number',
-            'roll_number' => 'nullable|string|max:50',
+            'roll_number' => 'nullable|string|max:50|unique:students,roll_number',
             'admission_date' => 'nullable|date',
             'status' => 'nullable|in:active,inactive,graduated,transferred',
             'notes' => 'nullable|string',
@@ -99,7 +99,7 @@ class StudentController extends Controller
             $validated['admission_number'] = $this->generateAdmissionNumber();
         }
 
-        // Generate roll_number if not provided
+        // Generate roll_number if not provided (format: G{grade}{section}-{NN})
         if (empty($validated['roll_number'])) {
             $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
         }
@@ -188,7 +188,7 @@ class StudentController extends Controller
             'academic_year_id' => 'required|exists:academic_years,id',
             'section_id' => 'required|exists:sections,id',
             'admission_number' => 'required|string|max:50|unique:students,admission_number,'.$student->id,
-            'roll_number' => 'nullable|string|max:50',
+            'roll_number' => 'nullable|string|max:50|unique:students,roll_number,'.$student->id,
             'admission_date' => 'nullable|date',
             'status' => 'nullable|in:active,inactive,graduated,transferred',
             'notes' => 'nullable|string',
@@ -328,29 +328,67 @@ class StudentController extends Controller
     }
 
     /**
-     * Generate the next admission number using the current academic year.
+     * Generate the next admission number.
+     *
+     * Format: SOR/{year}/{NNNN}  e.g. SOR/2025/1001
+     * This matches the format used by StudentDataSeeder and SchoolDataSeeder.
      */
     private function generateAdmissionNumber(): string
     {
         $year = $this->getAyStartYear($this->getCurrentAcademicYear());
-        $lastAdmission = Student::where('admission_number', 'like', $year.'-%')
+        $prefix = 'SOR/' . $year . '/';
+
+        // Find the max existing admission number with this prefix
+        $lastAdmission = Student::where('admission_number', 'LIKE', $prefix . '%')
             ->selectRaw("CAST(SUBSTRING(admission_number, -4) AS UNSIGNED) as num")
             ->orderByRaw('num DESC')
             ->first();
+
         $nextNum = $lastAdmission ? (((int) $lastAdmission->num) + 1) : 1;
-        return $year.'-'.str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
     }
 
     /**
      * Generate the next roll number for a section.
+     *
+     * Format: G{grade}{section_letter}-{NN}  e.g. G1A-01, G5B-12
+     * This matches the format used by StudentDataSeeder and SchoolDataSeeder.
      */
-    private function generateRollNumber(int $sectionId): int
+    private function generateRollNumber(int $sectionId): string
     {
-        $maxRoll = Student::where('section_id', $sectionId)
-            ->selectRaw("CAST(roll_number AS UNSIGNED) as rn")
+        $section = Section::find($sectionId);
+        if (!$section) {
+            return 'G0A-01';
+        }
+
+        // Determine grade number from the class
+        $class = ClassRoom::find($section->class_id);
+        $gradeNum = 0;
+        if ($class) {
+            if ($class->numeric_name) {
+                $gradeNum = (int) $class->numeric_name;
+            } elseif (preg_match('/(\d+)/', $class->name, $m)) {
+                $gradeNum = (int) $m[1];
+            }
+        }
+
+        // Determine section letter from the section name (e.g. "Section A" → "A")
+        $sectionLetter = 'A';
+        if (preg_match('/([A-Z])$/i', $section->name, $m)) {
+            $sectionLetter = strtoupper($m[1]);
+        }
+
+        $prefix = 'G' . $gradeNum . $sectionLetter;
+
+        // Find the max existing roll number with this prefix
+        $maxRoll = Student::where('roll_number', 'LIKE', $prefix . '-%')
+            ->selectRaw("CAST(SUBSTRING(roll_number, -2) AS UNSIGNED) as rn")
             ->orderByRaw('rn DESC')
             ->first();
-        return $maxRoll ? (((int) $maxRoll->rn) + 1) : 1;
+
+        $nextNum = $maxRoll ? (((int) $maxRoll->rn) + 1) : 1;
+
+        return $prefix . '-' . str_pad($nextNum, 2, '0', STR_PAD_LEFT);
     }
 
     /**

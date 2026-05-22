@@ -366,7 +366,25 @@ class SchoolDataSeeder extends Seeder
         $lastNames = ['Abebe', 'Bekele', 'Chekol', 'Dagne', 'Engida', 'Fikru', 'Gebre', 'Hailu', 'Ibrahim', 'Jemaneh', 'Kassa', 'Lema', 'Mekonnen', 'Nega', 'Oumer', 'Pankhurst', 'Reda', 'Sisay', 'Tadesse', 'Wolde'];
 
         $studentCount = 0;
-        $admissionNum = 1001;
+        // Start admission numbers from the max existing to avoid collisions
+        $maxAdmission = Student::where('admission_number', 'LIKE', 'SOR/' . date('Y') . '/%')
+            ->selectRaw("CAST(SUBSTRING(admission_number, -4) AS UNSIGNED) as num")
+            ->orderByRaw('num DESC')
+            ->first();
+        $admissionNum = $maxAdmission ? ((int) $maxAdmission->num + 1) : 1001;
+
+        // Build roll number counters from existing data to avoid duplicates
+        $rollCounters = [];
+        foreach (range(1, 12) as $g) {
+            foreach ($sectionNames as $sName) {
+                $prefix = 'G' . $g . $sName;
+                $maxExisting = Student::where('roll_number', 'LIKE', $prefix . '-%')
+                    ->selectRaw("CAST(SUBSTRING(roll_number, -2) AS UNSIGNED) as rn")
+                    ->orderByRaw('rn DESC')
+                    ->first();
+                $rollCounters[$g . '_' . $sName] = $maxExisting ? (int) $maxExisting->rn : 0;
+            }
+        }
 
         // Populate: ~15 students per section for grades 1-6
         foreach (range(1, 6) as $gradeNum) {
@@ -384,6 +402,9 @@ class SchoolDataSeeder extends Seeder
                     $fullName = $firstName . ' ' . $lastName;
                     $gender = $isMale ? 'male' : 'female';
                     $admission = 'SOR/' . date('Y') . '/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
+                    $secKey = $gradeNum . '_' . $secName;
+                    $rollCounters[$secKey]++;
+                    $rollNum = 'G' . $gradeNum . $secName . '-' . str_pad($rollCounters[$secKey], 2, '0', STR_PAD_LEFT);
 
                     Student::updateOrCreate(
                         ['admission_number' => $admission],
@@ -395,7 +416,7 @@ class SchoolDataSeeder extends Seeder
                             'section_id' => $section->id,
                             'academic_year_id' => $ay->id,
                             'gender' => $gender,
-                            'roll_number' => 'G' . $gradeNum . $secName . '-' . str_pad($i + 1, 2, '0', STR_PAD_LEFT),
+                            'roll_number' => $rollNum,
                             'admission_date' => '2025-09-01',
                             'date_of_birth' => (2017 - $gradeNum) . '-' . str_pad(rand(1, 12), 2, '0', STR_PAD_LEFT) . '-' . str_pad(rand(1, 28), 2, '0', STR_PAD_LEFT),
                             'guardian_name' => $lastName . ' ' . $lastNames[($i + 5) % count($lastNames)],
@@ -426,6 +447,8 @@ class SchoolDataSeeder extends Seeder
                     $fullName = $firstName . ' ' . $lastName;
                     $gender = $isMale ? 'male' : 'female';
                     $admission = 'SOR/' . date('Y') . '/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
+                    $rollCounters[$secKey]++;
+                    $rollNum = 'G' . $gradeNum . $secName . '-' . str_pad($rollCounters[$secKey], 2, '0', STR_PAD_LEFT);
 
                     Student::updateOrCreate(
                         ['admission_number' => $admission],
@@ -437,7 +460,7 @@ class SchoolDataSeeder extends Seeder
                             'section_id' => $section->id,
                             'academic_year_id' => $ay->id,
                             'gender' => $gender,
-                            'roll_number' => 'G' . $gradeNum . $secName . '-' . str_pad($i + 1, 2, '0', STR_PAD_LEFT),
+                            'roll_number' => $rollNum,
                             'admission_date' => '2025-09-01',
                             'date_of_birth' => (2017 - $gradeNum) . '-' . str_pad(rand(1, 12), 2, '0', STR_PAD_LEFT) . '-' . str_pad(rand(1, 28), 2, '0', STR_PAD_LEFT),
                             'guardian_name' => $lastName . ' ' . $lastNames[($i + 3) % count($lastNames)],

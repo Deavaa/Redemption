@@ -166,8 +166,31 @@ class StudentDataSeeder extends Seeder
         $this->command->info("  Processing " . count($students) . " student records...");
 
         // ── Grade assignment logic ────────────────────────────────────
+        // Initialize counters from existing roll_numbers to avoid duplicates
         $gradeCounters = [];
-        $admissionNum = 3001; // Start at 3001 to avoid conflict with SchoolDataSeeder (1001-2XXX)
+        foreach ($classes as $gradeNum => $class) {
+            $gradeCounters[$gradeNum] = [0, 0];
+            $sections = $sectionsByClass[$gradeNum] ?? collect();
+            foreach ($sections as $sIdx => $sec) {
+                $sectionLetter = $sIdx === 0 ? 'A' : chr(65 + $sIdx);
+                $prefix = 'G' . $gradeNum . $sectionLetter;
+                $maxExisting = Student::where('roll_number', 'LIKE', $prefix . '-%')
+                    ->selectRaw("CAST(SUBSTRING(roll_number, -2) AS UNSIGNED) as rn")
+                    ->orderByRaw('rn DESC')
+                    ->first();
+                if ($maxExisting && (int) $maxExisting->rn > $gradeCounters[$gradeNum][$sIdx]) {
+                    $gradeCounters[$gradeNum][$sIdx] = (int) $maxExisting->rn;
+                }
+            }
+        }
+
+        // Find the max admission number to avoid collisions with existing records
+        $maxAdmission = Student::where('admission_number', 'LIKE', 'SOR/2025/%')
+            ->selectRaw("CAST(SUBSTRING(admission_number, -4) AS UNSIGNED) as num")
+            ->orderByRaw('num DESC')
+            ->first();
+        $admissionNum = $maxAdmission ? ((int) $maxAdmission->num + 1) : 3001;
+
         $userCounter = 0;
         $created = 0;
         $skipped = 0;
