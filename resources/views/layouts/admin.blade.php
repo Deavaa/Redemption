@@ -112,7 +112,7 @@
             $hrRoutes = ['admin.leaves.*','admin.employee-assets.*'];
             $analysisRoutes = ['admin.performance-analysis.*','admin.performance-comparison.*','admin.psychological-analysis.*','admin.performance.*'];
             // documentRoutes moved above to include transcript/leaving-certificate/report-card
-            $libraryRoutes = ['admin.library.*'];
+            $libraryRoutes = ['admin.library.*','admin.video-library.*'];
             $commRoutes = ['admin.calendar.*','admin.announcements.*','admin.telegram.*','admin.chat.*'];
             $websiteRoutes = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*','admin.web-content.*','admin.news.*'];
             $adminRoutes = ['admin.user-access.*','admin.settings.*','admin.roles.*','admin.backup.*','admin.audits.*'];
@@ -400,8 +400,20 @@
                 </li>
                 @endif
                 @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
-                <li class="{{ $isLibraryActive ? 'active' : '' }}">
-                    <a href="{{ route('admin.library.index') }}" class="{{ $isLibraryActive ? 'active' : '' }}"><i class="fas fa-book-open"></i><span>Digital Library</span></a>
+                <li class="{{ $isLibraryActive ? 'has-active-child' : '' }}">
+                    @if(in_array($menuLevel, ['teacher', 'librarian']))
+                    <a href="{{ route('admin.video-library.index') }}" class="{{ request()->routeIs('admin.video-library.*') ? 'active' : '' }}">
+                        <i class="fas fa-book-open"></i><span>Digital Library</span>
+                    </a>
+                    @else
+                    <a href="#librarySubmenu" data-bs-toggle="collapse" class="submenu-toggle {{ $isLibraryActive ? 'active' : '' }}">
+                        <i class="fas fa-book-open"></i><span>Digital Library</span><i class="fas fa-chevron-down sidebar-chevron"></i>
+                    </a>
+                    <ul class="collapse {{ $isLibraryActive ? 'show' : '' }}" id="librarySubmenu">
+                        <li><a href="{{ route('admin.library.index') }}" class="{{ request()->routeIs('admin.library.*') ? 'active' : '' }}"><i class="fas fa-book"></i> Book Library</a></li>
+                        <li><a href="{{ route('admin.video-library.index') }}" class="{{ request()->routeIs('admin.video-library.*') ? 'active' : '' }}"><i class="fab fa-youtube"></i> Video Library</a></li>
+                    </ul>
+                    @endif
                 </li>
                 @endif
 
@@ -1070,7 +1082,7 @@
             <span>Payments</span>
         </a>
         @elseif($menuLevel === 'librarian')
-        <a href="{{ route('admin.library.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.library.*') ? 'active' : '' }}">
+        <a href="{{ route('admin.video-library.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.library.*') || request()->routeIs('admin.video-library.*') ? 'active' : '' }}">
             <i class="fas fa-book-open"></i>
             <span>Library</span>
         </a>
@@ -1204,8 +1216,12 @@
         @endif
         @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
         <a href="{{ route('admin.library.index') }}" class="mobile-menu-link">
-            <i class="fas fa-book-open"></i>
-            <span>Library</span>
+            <i class="fas fa-book"></i>
+            <span>Books</span>
+        </a>
+        <a href="{{ route('admin.video-library.index') }}" class="mobile-menu-link">
+            <i class="fab fa-youtube"></i>
+            <span>Videos</span>
         </a>
         @endif
         <a href="{{ route('admin.calendar.index') }}" class="mobile-menu-link">

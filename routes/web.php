@@ -63,6 +63,7 @@ use App\Http\Controllers\Telegram\TelegramController;
 use App\Http\Controllers\Term\TermController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Library\LibraryBookController;
+use App\Http\Controllers\Library\VideoLibraryController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Training\TrainingController;
 use App\Http\Controllers\Backup\DatabaseBackupController;
@@ -273,6 +274,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('library', LibraryBookController::class)->middleware('permission:library.view');
     Route::get('library/{library}/read', [LibraryBookController::class, 'read'])->name('library.read')->middleware('permission:library.view');
     Route::get('library/{library}/serve', [LibraryBookController::class, 'serveBook'])->name('library.serve')->middleware('permission:library.view');
+
+    // ── Video Library ────────────────────────────────────
+    Route::resource('video-library', VideoLibraryController::class)->middleware('permission:library.view');
+    Route::get('video-library/{video_library}/embed', [VideoLibraryController::class, 'show'])->name('video-library.embed')->middleware('permission:library.view');
 
     // ── Stock Management ─────────────────────────────────
     Route::resource('stock', StockController::class)->middleware('permission:settings.view');
