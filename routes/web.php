@@ -85,6 +85,8 @@ use App\Http\Controllers\Email\EmailInboxController;
 use App\Http\Controllers\Bank\BankIntegrationController;
 use App\Http\Controllers\Club\ClubFollowUpConfigController;
 use App\Http\Controllers\Exam\ExamQuestionController;
+use App\Http\Controllers\Assessment\AssessmentQuestionController;
+use App\Http\Controllers\Assessment\StudentAssessmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -263,6 +265,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('exam-questions/{exam_question}/department-review', [ExamQuestionController::class, 'reviewByDepartment'])->name('exam-questions.department-review')->middleware('permission:exams.manage');
     Route::post('exam-questions/{exam_question}/principal-review', [ExamQuestionController::class, 'reviewByPrincipal'])->name('exam-questions.principal-review')->middleware('permission:exams.manage');
     Route::post('exam-questions/{exam_question}/request-revision', [ExamQuestionController::class, 'requestRevision'])->name('exam-questions.request-revision')->middleware('permission:exams.manage');
+
+    // ── Self-Assessment Questions (Teacher creates, Student answers) ──
+    Route::resource('assessment-questions', AssessmentQuestionController::class)->middleware('permission:lesson_plans.view');
+    Route::post('assessment-questions/{assessment_question}/toggle-active', [AssessmentQuestionController::class, 'toggleActive'])->name('assessment-questions.toggle-active')->middleware('permission:lesson_plans.create');
+    Route::get('assessment-questions/bulk/create', [AssessmentQuestionController::class, 'bulkCreate'])->name('assessment-questions.bulk-create')->middleware('permission:lesson_plans.create');
+    Route::post('assessment-questions/bulk', [AssessmentQuestionController::class, 'bulkStore'])->name('assessment-questions.bulk-store')->middleware('permission:lesson_plans.create');
+    Route::get('assessment-questions/report', [AssessmentQuestionController::class, 'report'])->name('assessment-questions.report')->middleware('permission:lesson_plans.view');
+    Route::get('assessment-questions/api/sections/{classId}', [AssessmentQuestionController::class, 'apiSections'])->name('assessment-questions.api-sections');
 
     // ── Documents ─────────────────────────────────────────
     Route::resource('id-cards', IdCardController::class)->middleware('permission:id_cards.generate');
@@ -489,6 +499,14 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->gro
     Route::post('chat/{id}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
     Route::delete('chat/{id}', [ChatController::class, 'destroyConversation'])->name('chat.destroy');
     Route::get('chat/{id}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+
+    // Self-Assessment
+    Route::get('assessment', [StudentAssessmentController::class, 'index'])->name('assessment.index');
+    Route::get('assessment/subject/{subjectId}', [StudentAssessmentController::class, 'subjectQuestions'])->name('assessment.subject');
+    Route::get('assessment/question/{questionId}', [StudentAssessmentController::class, 'showQuestion'])->name('assessment.show');
+    Route::post('assessment/question/{questionId}', [StudentAssessmentController::class, 'submitAnswer'])->name('assessment.submit');
+    Route::get('assessment/question/{questionId}/retake', [StudentAssessmentController::class, 'retakeQuestion'])->name('assessment.retake');
+    Route::get('assessment/progress', [StudentAssessmentController::class, 'progress'])->name('assessment.progress');
 });
 
 // ── Parent Portal ───────────────────────────────────────────

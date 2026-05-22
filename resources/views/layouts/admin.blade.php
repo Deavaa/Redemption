@@ -153,6 +153,7 @@
                         <li><a href="{{ route('admin.mark-roster.index') }}" class="{{ request()->routeIs('admin.mark-roster.*') ? 'active' : '' }}"><i class="fas fa-list-ol"></i> Mark Roster</a></li>
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Planning</li>
                         <li><a href="{{ route('admin.lesson-plans.index') }}" class="{{ request()->routeIs('admin.lesson-plans.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i> Lesson Plans</a></li>
+                        <li><a href="{{ route('admin.assessment-questions.index') }}" class="{{ request()->routeIs('admin.assessment-questions.*') ? 'active' : '' }}"><i class="fas fa-brain"></i> Self-Assessment</a></li>
                     </ul>
                 </li>
                 @elseif($menuLevel === 'librarian')
@@ -198,6 +199,7 @@
                         <li><a href="{{ route('admin.mark-entry-permissions.index') }}" class="{{ request()->routeIs('admin.mark-entry-permissions.*') ? 'active' : '' }}"><i class="fas fa-key"></i> Mark Edit Permissions</a></li>
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Planning</li>
                         <li><a href="{{ route('admin.lesson-plans.index') }}" class="{{ request()->routeIs('admin.lesson-plans.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i> Lesson Plans</a></li>
+                        <li><a href="{{ route('admin.assessment-questions.index') }}" class="{{ request()->routeIs('admin.assessment-questions.*') ? 'active' : '' }}"><i class="fas fa-brain"></i> Self-Assessment</a></li>
                     </ul>
                 </li>
                 @else
@@ -227,6 +229,7 @@
                         <li><a href="{{ route('admin.mark-entry-permissions.index') }}" class="{{ request()->routeIs('admin.mark-entry-permissions.*') ? 'active' : '' }}"><i class="fas fa-key"></i> Mark Edit Permissions</a></li>
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Planning</li>
                         <li><a href="{{ route('admin.lesson-plans.index') }}" class="{{ request()->routeIs('admin.lesson-plans.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i> Lesson Plans</a></li>
+                        <li><a href="{{ route('admin.assessment-questions.index') }}" class="{{ request()->routeIs('admin.assessment-questions.*') ? 'active' : '' }}"><i class="fas fa-brain"></i> Self-Assessment</a></li>
                     </ul>
                 </li>
                 @endif

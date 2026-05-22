@@ -458,6 +458,13 @@
                     </a>
                 </li>
 
+                <li class="menu-header">SELF-ASSESSMENT</li>
+                <li class="{{ request()->routeIs('student.assessment.*') ? 'active' : '' }}">
+                    <a href="{{ route('student.assessment.index') }}" class="{{ request()->routeIs('student.assessment.*') ? 'active' : '' }}">
+                        <i class="fas fa-brain"></i><span>Self-Assessment</span>
+                    </a>
+                </li>
+
                 <li class="menu-header">COMMUNICATION</li>
                 <li class="{{ request()->routeIs('student.chat.*') ? 'active' : '' }}">
                     <a href="{{ route('student.chat.index') }}" class="{{ request()->routeIs('student.chat.*') ? 'active' : '' }}">
