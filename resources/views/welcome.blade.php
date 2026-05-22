@@ -1850,7 +1850,7 @@
                                     <div class="col-lg-8">
                                         <div class="hero-content hero-text-reveal">
                                             <span class="hero-badge">
-                                                <i class="fas fa-graduation-cap me-2"></i>Admissions Open 2026
+                                                <i class="fas fa-graduation-cap me-2"></i>Excellence in Education
                                             </span>
                                             <h1>Empowering Minds, <span>Shaping Futures</span></h1>
                                             <p>{{ $settings['school_description'] }}</p>
@@ -2424,14 +2424,14 @@
     <!-- ========== CTA Section (Animated Gradient) ========== -->
     <section class="cta section-divider-top" id="cta">
         <div class="container">
-            <h2 class="reveal">{{ $settings['cta_title'] }}</h2>
-            <p class="reveal">{{ $settings['cta_description'] }}</p>
+            <h2 class="reveal">Visit Us in Person</h2>
+            <p class="reveal">Applications are accepted in person only. Visit our campus to enroll and begin your educational journey with us.</p>
             <div class="d-flex justify-content-center gap-3 flex-wrap reveal">
-                <a href="{{ $settings['cta_button_url'] }}" class="btn btn-hero-primary">
-                    <i class="fas fa-user-plus me-2"></i>{{ $settings['cta_button_text'] }}
+                <a href="#contact" class="btn btn-hero-primary">
+                    <i class="fas fa-map-marker-alt me-2"></i>Find Our Campus
                 </a>
                 <a href="tel:{{ preg_replace('/[^0-9+]/', '', $settings['school_phone']) }}" class="btn btn-hero-secondary">
-                    <i class="fas fa-phone me-2"></i>Contact Us
+                    <i class="fas fa-phone me-2"></i>Call Us
                 </a>
             </div>
         </div>

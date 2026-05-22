@@ -14,4 +14,19 @@ class Branch extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    public function classes()
+    {
+        return $this->hasMany(Classroom::class);
+    }
+
+    public function sections()
+    {
+        return $this->hasMany(Section::class);
+    }
 }

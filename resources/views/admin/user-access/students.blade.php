@@ -81,6 +81,7 @@
 
     {{-- Stats --}}
     @php
+        use App\Models\Student;
         $totalStudents = Student::count();
         $withAccount = Student::whereNotNull('user_id')->count();
         $withoutAccount = $totalStudents - $withAccount;

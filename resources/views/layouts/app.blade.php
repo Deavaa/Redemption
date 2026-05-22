@@ -122,7 +122,7 @@
                     <h5 class="text-lg font-semibold text-white">{{ __('app.academics') }}</h5>
                     <ul class="mt-4 space-y-2 text-sm text-slate-300">
                         <li><a href="#" class="hover:text-white">{{ __('app.programs') }}</a></li>
-                        <li><a href="#" class="hover:text-white">{{ __('app.admissions') }}</a></li>
+                        <li><a href="{{ url('contact') }}" class="hover:text-white">{{ __('app.admissions') }}</a></li>
                         <li><a href="#" class="hover:text-white">{{ __('app.calendar') }}</a></li>
                         <li><a href="#" class="hover:text-white">{{ __('app.results') }}</a></li>
                     </ul>
