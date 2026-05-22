@@ -420,7 +420,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Web Content Management
     Route::get('web-content', [WebContentController::class, 'index'])->name('web-content.index')->middleware('permission:settings.view');
-    Route::post('web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
+    Route::match(['post', 'put'], 'web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
     Route::post('web-content/upload', [WebContentController::class, 'upload'])->name('web-content.upload')->middleware('permission:settings.edit');
 
     // Announcements
