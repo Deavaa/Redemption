@@ -912,6 +912,15 @@ class SchoolDataSeeder extends Seeder
         $this->command->info("  Lebu students: {$lebuStudentCount} (G9-12)");
 
         // ======================================================================
+        // 9b. TULUDIMTU STUDENTS - G1-8, Section A only (sample data)
+        //     Replace names/DOBs with real data when available
+        // ======================================================================
+        $tuludimtuStudentCount = $this->createTuludimtuStudents(
+            $tuludimtuBranch, $tuludimtuClasses, $allSections, $ay
+        );
+        $this->command->info("  Tuludimtu students: {$tuludimtuStudentCount} (G1-8)");
+
+        // ======================================================================
         // 10. TEACHER ASSIGNMENTS (Lebu G9-12)
         // ======================================================================
         $assignmentMap = [
@@ -1000,7 +1009,142 @@ class SchoolDataSeeder extends Seeder
     }
 
     // ======================================================================
-    // STUDENT CREATION METHOD
+    // TULUDIMTU STUDENT CREATION METHOD
+    // G1-8, Section A only. Sample data - replace with real data later.
+    // ======================================================================
+    private function createTuludimtuStudents(
+        Branch $branch,
+        array $tuludimtuClasses,
+        array &$allSections,
+        AcademicYear $ay
+    ): int {
+        $this->command->newLine();
+        $this->command->info('  Seeding Tuludimtu students (G1-8, Section A)...');
+
+        // Sample first names and last names for generating students
+        $maleFirst = ['Abel','Abenezer','Amanuel','Aminu','Bereket','Biruk','Dagim','Dawit','Elias','Ermias','Esrom','Eyuel','Fikadu','Gediyon','Henok','Ibrahim','Jemal','Kaleb','Khalid','Leul','Michael','Mikiyas','Nahom','Natnael','Nebil','Oumer','Rahim','Samson','Tadesse','Yonas'];
+        $femaleFirst = ['Abigiya','Arsema','Bezawit','Blen','Daniya','Eden','Efrata','Eldana','Eliana','Hana','Helen','Hilina','Kidist','Liya','Mahlet','Meklit','Meri','Nardos','Rahel','Ruth','Sara','Saron','Selam','Sewsen','Soliyana','Tsion','Wintana','Yanet','Yididiya','Zemariam'];
+        $lastNames = ['Abebe','Alemu','Amare','Asrat','Bekele','Birhanu','Dagne','Debella','Deresse','Eshetu','Fikadu','Gebre','Girma','Haile','Kassa','Kebede','Mekonnen','Mulugeta','Tadesse','Tesfaye','Wolde','Worku','Yared','Zewdie','Hailu','Negash','Teshome','Gashaw','Asfaw','Demissie'];
+
+        $studentRole = Role::where('name', 'student')->first();
+        $admissionNum = 1001;
+        $userCounter = 0;
+        $created = 0;
+        $skipped = 0;
+
+        // Generate ~15 students per grade for G1-8
+        $studentsPerGrade = 15;
+
+        for ($grade = 1; $grade <= 8; $grade++) {
+            $class = $tuludimtuClasses[$grade] ?? null;
+            if (!$class) {
+                $this->command->warn("    Grade {$grade} class not found, skipping");
+                continue;
+            }
+
+            $sectionKey = $grade . '_A';
+            $section = $allSections[$sectionKey] ?? null;
+            if (!$section) {
+                $this->command->warn("    Grade {$grade} Section A not found, skipping");
+                continue;
+            }
+
+            for ($i = 1; $i <= $studentsPerGrade; $i++) {
+                // Alternate gender roughly 50/50
+                $isMale = ($i % 2 === 1);
+                $firstNames = $isMale ? $maleFirst : $femaleFirst;
+                $firstName = $firstNames[array_rand($firstNames)];
+                $lastName1 = $lastNames[array_rand($lastNames)];
+                $lastName2 = $lastNames[array_rand($lastNames)];
+                while ($lastName2 === $lastName1) {
+                    $lastName2 = $lastNames[array_rand($lastNames)];
+                }
+                $fullName = $firstName . ' ' . $lastName1 . ' ' . $lastName2;
+
+                // DOB: approximate based on grade (G1 ≈ age 7 in 2025 → born 2018, G8 ≈ age 14 → born 2011)
+                $birthYear = 2025 - ($grade + 6);
+                $birthMonth = str_pad(random_int(1, 12), 2, '0', STR_PAD_LEFT);
+                $maxDay = ($birthMonth == '02') ? 28 : 30;
+                $birthDay = str_pad(random_int(1, $maxDay), 2, '0', STR_PAD_LEFT);
+                $dob = $birthYear . '-' . $birthMonth . '-' . $birthDay;
+
+                $rollNumber = 'G' . $grade . 'A-' . str_pad($i, 2, '0', STR_PAD_LEFT);
+                $admission = 'SOR/2026/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
+                $admissionNum++;
+                $genderLower = $isMale ? 'male' : 'female';
+
+                try {
+                    // Create user account
+                    $idNumber = 'STU-TUL-' . str_pad($userCounter + 1, 4, '0', STR_PAD_LEFT);
+                    $email = $idNumber . '@redemption.edu';
+                    $defaultPassword = str_replace('-', '', $dob);
+
+                    $user = User::updateOrCreate(
+                        ['email' => $email],
+                        [
+                            'name' => $fullName, 'id_number' => $idNumber,
+                            'password' => bcrypt($defaultPassword), 'role' => 'student',
+                            'gender' => $genderLower,
+                            'branch_id' => $branch->id, 'is_active' => true,
+                        ]
+                    );
+                    if (!$user->email_verified_at) {
+                        $user->email_verified_at = now();
+                        $user->save();
+                    }
+                    $userCounter++;
+
+                    if ($studentRole && !$user->roles()->where('role_id', $studentRole->id)->exists()) {
+                        $user->roles()->attach($studentRole->id);
+                    }
+
+                    // Use updateOrCreate with roll_number for idempotency
+                    // On re-run, if roll_number exists, update it; otherwise create new
+                    $existingStudent = Student::where('roll_number', $rollNumber)->first();
+                    if ($existingStudent) {
+                        // Update existing student
+                        $existingStudent->update([
+                            'user_id' => $user->id, 'full_name' => $fullName,
+                            'branch_id' => $branch->id, 'class_id' => $class->id,
+                            'section_id' => $section->id, 'academic_year_id' => $ay->id,
+                            'gender' => $genderLower,
+                            'admission_number' => $admission, 'admission_date' => '2025-09-01',
+                            'date_of_birth' => $dob, 'guardian_name' => $lastName1 . ' ' . $lastName2,
+                            'guardian_phone' => null, 'status' => 'active',
+                        ]);
+                    } else {
+                        Student::create([
+                            'user_id' => $user->id, 'full_name' => $fullName,
+                            'branch_id' => $branch->id, 'class_id' => $class->id,
+                            'section_id' => $section->id, 'academic_year_id' => $ay->id,
+                            'gender' => $genderLower,
+                            'roll_number' => $rollNumber,
+                            'admission_number' => $admission, 'admission_date' => '2025-09-01',
+                            'date_of_birth' => $dob, 'guardian_name' => $lastName1 . ' ' . $lastName2,
+                            'guardian_phone' => null, 'status' => 'active',
+                        ]);
+                    }
+
+                    $created++;
+                } catch (\Exception $e) {
+                    $skipped++;
+                    continue;
+                }
+            }
+        }
+
+        $this->command->info("    Tuludimtu students created: {$created}");
+        $this->command->info("    User accounts: {$userCounter}");
+        if ($skipped > 0) {
+            $this->command->warn("    Skipped: {$skipped}");
+        }
+        $this->command->info('    Login: email=<idNumber>@redemption.edu, password=DOB');
+
+        return $created;
+    }
+
+    // ======================================================================
+    // LEBU STUDENT CREATION METHOD
     // Distributes students across G9-12 round-robin, balanced A-D sections
     // ======================================================================
     private function createStudents(
@@ -1127,18 +1271,30 @@ class SchoolDataSeeder extends Seeder
                     $user->roles()->attach($studentRole->id);
                 }
 
-                Student::updateOrCreate(
-                    ['admission_number' => $admission],
-                    [
+                // Check by roll_number first (unique constraint) for idempotency
+                $existingStudent = Student::where('roll_number', $rollNumber)->first();
+                if ($existingStudent) {
+                    $existingStudent->update([
                         'user_id' => $user->id, 'full_name' => $fullName,
                         'branch_id' => $branch->id, 'class_id' => $class->id,
                         'section_id' => $section->id, 'academic_year_id' => $ay->id,
                         'gender' => $genderLower,
-                        'roll_number' => $rollNumber, 'admission_date' => '2025-09-01',
+                        'admission_number' => $admission, 'admission_date' => '2025-09-01',
                         'date_of_birth' => $dob, 'guardian_name' => $guardianName,
                         'guardian_phone' => null, 'status' => 'active',
-                    ]
-                );
+                    ]);
+                } else {
+                    Student::create([
+                        'user_id' => $user->id, 'full_name' => $fullName,
+                        'branch_id' => $branch->id, 'class_id' => $class->id,
+                        'section_id' => $section->id, 'academic_year_id' => $ay->id,
+                        'gender' => $genderLower,
+                        'roll_number' => $rollNumber,
+                        'admission_number' => $admission, 'admission_date' => '2025-09-01',
+                        'date_of_birth' => $dob, 'guardian_name' => $guardianName,
+                        'guardian_phone' => null, 'status' => 'active',
+                    ]);
+                }
 
                 $created++;
                 $sectionCounts[$gradeNum][$sectionLetter]++;
