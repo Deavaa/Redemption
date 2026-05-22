@@ -18,7 +18,7 @@
             @foreach($websiteVideos as $video)
             <div class="col-lg-4 col-md-6">
                 <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
-                    <div style="position:relative;padding-bottom:56.25%;height:0;background:#0d0d2b;">
+                    <div style="position:relative;padding-bottom:56.25%;height:0;background:#1E90FF;">
                         @if($video->youtube_video_id)
                         <iframe src="https://www.youtube.com/embed/{{ $video->youtube_video_id }}"
                             style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
@@ -28,7 +28,7 @@
                         @endif
                     </div>
                     <div class="card-body">
-                        <h6 class="mb-1" style="font-weight:700;color:#0d0d2b;">{{ $video->title }}</h6>
+                        <h6 class="mb-1" style="font-weight:700;color:#1E90FF;">{{ $video->title }}</h6>
                         @if($video->channel_name)
                         <small class="text-muted"><i class="fab fa-youtube text-danger me-1"></i>{{ $video->channel_name }}</small>
                         @endif
@@ -48,7 +48,7 @@
             @if($gvVideoId)
             <div class="col-lg-4 col-md-6">
                 <div class="card border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
-                    <div style="position:relative;padding-bottom:56.25%;height:0;background:#0d0d2b;">
+                    <div style="position:relative;padding-bottom:56.25%;height:0;background:#1E90FF;">
                         <iframe src="https://www.youtube.com/embed/{{ $gvVideoId }}"
                             style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
                             allowfullscreen
@@ -56,7 +56,7 @@
                         </iframe>
                     </div>
                     <div class="card-body">
-                        <h6 class="mb-1" style="font-weight:700;color:#0d0d2b;">{{ $gv->title }}</h6>
+                        <h6 class="mb-1" style="font-weight:700;color:#1E90FF;">{{ $gv->title }}</h6>
                         @if($gv->description)
                         <small class="text-muted">{{ Str::limit($gv->description, 80) }}</small>
                         @endif
@@ -82,8 +82,8 @@
                     <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $image->title ?? 'Gallery' }}"
                         style="width:100%;height:200px;object-fit:cover;" loading="lazy">
                     @else
-                    <div style="height:200px;background:linear-gradient(135deg,#0d0d2b,#1a1a5e);display:flex;align-items:center;justify-content:center;">
-                        <i class="fas fa-image" style="font-size:2rem;color:var(--secondary-color, #c9a84c);"></i>
+                    <div style="height:200px;background:linear-gradient(135deg,#1E90FF,#1565C0);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-image" style="font-size:2rem;color:var(--secondary-color, #FF8C00);"></i>
                     </div>
                     @endif
                     @if($image->title)

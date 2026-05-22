@@ -18,8 +18,8 @@
 
     <style>
         :root {
-            --primary-color: {{ $settings['primary_color'] ?? '#0d0d2b' }};
-            --secondary-color: {{ $settings['secondary_color'] ?? '#c9a84c' }};
+            --primary-color: {{ $settings['primary_color'] ?? '#1E90FF' }};
+            --secondary-color: {{ $settings['secondary_color'] ?? '#FF8C00' }};
             --accent-color: #198754;
             --text-dark: #1a1a2e;
             --text-light: #6c757d;
@@ -71,7 +71,7 @@
         .cursor-ring {
             width: 36px;
             height: 36px;
-            border: 2px solid rgba(201,168,76,0.4);
+            border: 2px solid rgba(255, 140, 0, 0.4);
             border-radius: 50%;
             position: fixed;
             top: 0;
@@ -97,7 +97,7 @@
 
         /* ========== Glassmorphism Navbar ========== */
         .navbar {
-            background: rgba(13, 13, 43, 0.65);
+            background: rgba(30, 144, 255, 0.65);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -107,7 +107,7 @@
 
         .navbar.scrolled {
             padding: 0.5rem 0;
-            background: rgba(13, 13, 43, 0.88);
+            background: rgba(30, 144, 255, 0.88);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             box-shadow: 0 4px 30px rgba(0,0,0,0.15);
@@ -124,7 +124,7 @@
             font-weight: 400;
             font-size: 0.7rem;
             display: block;
-            line-height: 1;
+            line-height: 1.1;
         }
 
         .navbar-brand .brand-name {
@@ -171,9 +171,9 @@
         }
 
         .btn-nav-portal:hover {
-            background: #e0c060;
+            background: #FFa520;
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
         }
 
         /* ========== Mobile Drawer ========== */
@@ -269,7 +269,7 @@
         }
 
         .mobile-drawer .mobile-login-btn:hover {
-            background: #e0c060;
+            background: #FFa520;
         }
 
         .hamburger-btn {
@@ -317,7 +317,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(13, 13, 43, 0.88) 0%, rgba(13, 13, 43, 0.6) 100%);
+            background: linear-gradient(135deg, rgba(30, 144, 255, 0.88) 0%, rgba(30, 144, 255, 0.6) 100%);
         }
 
         /* Dot grid overlay */
@@ -327,7 +327,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(201,168,76,0.15) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(255, 140, 0, 0.15) 1px, transparent 1px);
             background-size: 30px 30px;
             z-index: 1;
             pointer-events: none;
@@ -362,7 +362,7 @@
 
         .hero-slider .carousel-control-prev:hover,
         .hero-slider .carousel-control-next:hover {
-            background: rgba(201,168,76,0.3);
+            background: rgba(255, 140, 0, 0.3);
             border-color: var(--secondary-color);
         }
 
@@ -407,8 +407,8 @@
 
         .hero-badge {
             display: inline-block;
-            background: rgba(201, 168, 76, 0.15);
-            border: 1px solid rgba(201,168,76,0.4);
+            background: rgba(255, 140, 0, 0.15);
+            border: 1px solid rgba(255, 140, 0, 0.4);
             color: var(--secondary-color);
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
@@ -476,9 +476,9 @@
         }
 
         .btn-hero-primary:hover {
-            background: #e0c060;
+            background: #FFa520;
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(201, 168, 76, 0.4);
+            box-shadow: 0 10px 30px rgba(255, 140, 0, 0.4);
         }
 
         .btn-hero-secondary {
@@ -537,7 +537,7 @@
 
         .section-badge {
             display: inline-block;
-            background: rgba(201, 168, 76, 0.1);
+            background: rgba(255, 140, 0, 0.1);
             color: var(--secondary-color);
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
@@ -575,7 +575,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(201,168,76,0.08) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(255, 140, 0, 0.08) 1px, transparent 1px);
             background-size: 25px 25px;
         }
 
@@ -588,8 +588,8 @@
         .counter-item .counter-icon {
             width: 70px;
             height: 70px;
-            background: rgba(201,168,76,0.15);
-            border: 1px solid rgba(201,168,76,0.3);
+            background: rgba(255, 140, 0, 0.15);
+            border: 1px solid rgba(255, 140, 0, 0.3);
             border-radius: 20px;
             display: flex;
             align-items: center;
@@ -657,7 +657,7 @@
 
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(13,13,43,0.12);
+            box-shadow: 0 20px 60px rgba(30, 144, 255, 0.12);
             border-color: transparent;
         }
 
@@ -669,7 +669,7 @@
             left: 50%;
             width: 0;
             height: 0;
-            background: radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 140, 0, 0.15) 0%, transparent 70%);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             transition: all 0.5s ease;
@@ -700,7 +700,7 @@
 
         .feature-card:hover .feature-icon {
             transform: scale(1.1) rotate(-5deg);
-            box-shadow: 0 8px 25px rgba(13,13,43,0.3);
+            box-shadow: 0 8px 25px rgba(30, 144, 255, 0.3);
         }
 
         .feature-icon i {
@@ -861,7 +861,7 @@
             left: 0;
             right: 0;
             height: 50%;
-            background: linear-gradient(to top, rgba(13,13,43,0.5), transparent);
+            background: linear-gradient(to top, rgba(30, 144, 255, 0.5), transparent);
         }
 
         .program-content {
@@ -870,7 +870,7 @@
 
         .program-tag {
             display: inline-block;
-            background: rgba(201, 168, 76, 0.1);
+            background: rgba(255, 140, 0, 0.1);
             color: var(--secondary-color);
             padding: 0.25rem 1rem;
             border-radius: 50px;
@@ -974,7 +974,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(13, 13, 43, 0.75) 0%, rgba(201, 168, 76, 0.75) 100%);
+            background: linear-gradient(135deg, rgba(30, 144, 255, 0.75) 0%, rgba(255, 140, 0, 0.75) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1048,14 +1048,14 @@
             transform: translate(-50%, -50%);
             width: 68px;
             height: 68px;
-            background: rgba(201,168,76,0.9);
+            background: rgba(255, 140, 0, 0.9);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(201,168,76,0.4);
+            box-shadow: 0 8px 25px rgba(255, 140, 0, 0.4);
         }
 
         .video-play-btn i {
@@ -1088,7 +1088,7 @@
         }
 
         .video-info .video-meta .video-category {
-            background: rgba(201,168,76,0.1);
+            background: rgba(255, 140, 0, 0.1);
             color: var(--secondary-color);
             padding: 0.15rem 0.6rem;
             border-radius: 50px;
@@ -1175,7 +1175,7 @@
             border-radius: 50%;
             overflow: hidden;
             margin: 0 auto 1.5rem;
-            border: 4px solid rgba(201,168,76,0.2);
+            border: 4px solid rgba(255, 140, 0, 0.2);
             position: relative;
             transition: border-color 0.3s ease;
         }
@@ -1202,7 +1202,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(13,13,43,0.7);
+            background: rgba(30, 144, 255, 0.7);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1272,7 +1272,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 50%);
+            background: radial-gradient(circle, rgba(255, 140, 0, 0.08) 0%, transparent 50%);
             animation: ctaGlow 6s ease-in-out infinite;
         }
 
@@ -1324,7 +1324,7 @@
         .contact-form-wrapper .form-control:focus,
         .contact-form-wrapper .form-select:focus {
             border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+            box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.15);
         }
 
         .contact-info-cards {
@@ -1502,7 +1502,7 @@
         }
 
         .newsletter-form button:hover {
-            background: #e0c060;
+            background: #FFa520;
             transform: translateY(-2px);
         }
 
@@ -1535,7 +1535,7 @@
             visibility: hidden;
             transform: translateY(20px);
             transition: all 0.4s ease;
-            box-shadow: 0 6px 20px rgba(201,168,76,0.4);
+            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1548,7 +1548,7 @@
         }
 
         .back-to-top:hover {
-            background: #e0c060;
+            background: #FFa520;
             transform: translateY(-3px);
         }
 
@@ -1706,12 +1706,14 @@
     <!-- ========== Glassmorphism Navbar ========== -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar" style="top:36px;">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
                 @if($settings['school_logo'] && file_exists(public_path('storage/' . $settings['school_logo'])))
-                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; margin-right: 10px;">
+                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;">
                 @endif
-                <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}<br></span>
-                <span class="brand-name">{{ Str::afterLast($settings['school_name'], ' ') }}</span>
+                <div>
+                    <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}</span>
+                    <span class="brand-name">{{ Str::afterLast($settings['school_name'], ' ') }}</span>
+                </div>
             </a>
             <!-- Desktop nav -->
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -2534,12 +2536,14 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
-                    <div class="footer-brand">
+                    <div class="footer-brand d-flex align-items-center gap-2">
                         @if($settings['school_logo'] && file_exists(public_path('storage/' . $settings['school_logo'])))
-                            <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 40px; margin-bottom: 0.5rem;">
+                            <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 40px; opacity: 0.85;">
                         @endif
-                        <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}</span>
-                        <span class="brand-name"> {{ Str::afterLast($settings['school_name'], ' ') }}</span>
+                        <div>
+                            <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}</span>
+                            <span class="brand-name">{{ Str::afterLast($settings['school_name'], ' ') }}</span>
+                        </div>
                     </div>
                     <p>{{ $settings['about_mission'] }}</p>
                     <div class="social-links">
@@ -2830,13 +2834,13 @@
                 el.addEventListener('mouseenter', function() {
                     ring.style.width = '50px';
                     ring.style.height = '50px';
-                    ring.style.borderColor = 'rgba(201,168,76,0.6)';
+                    ring.style.borderColor = 'rgba(255, 140, 0, 0.6)';
                     dot.style.transform = 'scale(1.5)';
                 });
                 el.addEventListener('mouseleave', function() {
                     ring.style.width = '36px';
                     ring.style.height = '36px';
-                    ring.style.borderColor = 'rgba(201,168,76,0.4)';
+                    ring.style.borderColor = 'rgba(255, 140, 0, 0.4)';
                     dot.style.transform = 'scale(1)';
                 });
             });
