@@ -31,6 +31,14 @@
                     <span>Backup Now</span>
                 </button>
             </form>
+            <form method="POST" action="{{ route('admin.backup.test-email') }}" style="display:inline">
+                @csrf
+                <input type="hidden" name="email" value="{{ $scheduleSettings['backup_email'] }}">
+                <button type="submit" class="btn-modern btn-modern-secondary" onclick="return confirm('Send a test email to {{ $scheduleSettings['backup_email'] }}?')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Test Email</span>
+                </button>
+            </form>
         </div>
     </div>
 

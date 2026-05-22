@@ -82,12 +82,20 @@ class BackupService
      */
     public function sendViaEmail(string $filePath, ?string $email = null): bool
     {
-        $email = $email ?? Setting::get('backup_email', 'dawitac@gmail.com');
+        $email = $email ?? Setting::get('backup_email', config('mail.from.address', 'admin@schoolofredemption.com'));
 
         // Check if mail is actually configured
         $mailMailer = config('mail.default', env('MAIL_MAILER', 'log'));
         if (in_array($mailMailer, ['log', 'array', 'null'])) {
             Log::warning('Database backup email skipped: mail not configured (driver: ' . $mailMailer . ')');
+            return false;
+        }
+
+        // Check if SMTP credentials are actually set (not placeholder values)
+        $mailHost = config('mail.mailers.smtp.host', env('MAIL_HOST'));
+        $mailUser = config('mail.mailers.smtp.username', env('MAIL_USERNAME'));
+        if (empty($mailHost) || empty($mailUser) || str_contains($mailUser, 'your-')) {
+            Log::warning('Database backup email skipped: SMTP credentials appear to be placeholder values. Please configure MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD in .env');
             return false;
         }
 
@@ -101,7 +109,9 @@ class BackupService
             Log::info('Database backup email sent', ['email' => $email, 'file' => basename($filePath)]);
             return true;
         } catch (\Exception $e) {
-            Log::error('Database backup email failed: ' . $e->getMessage());
+            Log::error('Database backup email failed: ' . $e->getMessage(), [
+                'hint' => 'Check that MAIL_USERNAME and MAIL_PASSWORD in .env are valid. For Gmail, use an App Password from https://myaccount.google.com/apppasswords',
+            ]);
             return false;
         }
     }
@@ -160,6 +170,48 @@ class BackupService
         }
 
         return false;
+    }
+
+    /**
+     * Send a test email to verify mail configuration.
+     *
+     * @param string $email
+     * @return array{success: bool, message: string}
+     */
+    public function sendTestEmail(string $email): array
+    {
+        $mailMailer = config('mail.default', env('MAIL_MAILER', 'log'));
+
+        if (in_array($mailMailer, ['log', 'array', 'null'])) {
+            return [
+                'success' => false,
+                'message' => "Mail is not configured. Current driver: '{$mailMailer}'. Please set MAIL_MAILER=smtp in your .env file.",
+            ];
+        }
+
+        $mailHost = config('mail.mailers.smtp.host', env('MAIL_HOST'));
+        $mailUser = config('mail.mailers.smtp.username', env('MAIL_USERNAME'));
+        $mailPass = config('mail.mailers.smtp.password', env('MAIL_PASSWORD'));
+
+        if (empty($mailHost) || empty($mailUser) || str_contains($mailUser, 'your-')) {
+            return [
+                'success' => false,
+                'message' => 'SMTP credentials are not configured. Please set MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD in your .env file. For Gmail, use an App Password from https://myaccount.google.com/apppasswords',
+            ];
+        }
+
+        try {
+            Mail::to($email)->send(new \App\Mail\TestMail());
+            return [
+                'success' => true,
+                'message' => "Test email sent successfully to {$email}. Check your inbox (and spam folder).",
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to send test email: ' . $e->getMessage() . '. For Gmail, make sure you are using an App Password (not your regular password) from https://myaccount.google.com/apppasswords',
+            ];
+        }
     }
 
     /**

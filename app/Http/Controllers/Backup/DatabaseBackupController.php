@@ -29,7 +29,7 @@ class DatabaseBackupController extends Controller
             'backup_enabled' => Setting::get('backup_enabled', '1'),
             'backup_frequency' => Setting::get('backup_frequency', 'daily'),
             'backup_time' => Setting::get('backup_time', '02:00'),
-            'backup_email' => Setting::get('backup_email', 'dawitac@gmail.com'),
+            'backup_email' => Setting::get('backup_email', config('mail.from.address', 'admin@schoolofredemption.com')),
             'backup_compress' => Setting::get('backup_compress', '1'),
             'backup_keep_count' => Setting::get('backup_keep_count', '10'),
         ];
@@ -66,7 +66,7 @@ class DatabaseBackupController extends Controller
             $emailSent = false;
 
             if ($sendEmail) {
-                $email = $request->input('email', Setting::get('backup_email', 'dawitac@gmail.com'));
+                $email = $request->input('email', Setting::get('backup_email', config('mail.from.address', 'admin@schoolofredemption.com')));
                 $emailSent = $this->backupService->sendViaEmail($result['path'], $email);
 
                 if (!$emailSent) {
@@ -82,7 +82,7 @@ class DatabaseBackupController extends Controller
 
             $message = 'Database backup created successfully! File: ' . $result['filename'] . ' (' . $result['size_human'] . ')';
             if ($sendEmail && $emailSent) {
-                $message .= ' — Email sent to ' . ($request->input('email') ?? Setting::get('backup_email', 'dawitac@gmail.com'));
+                $message .= ' — Email sent to ' . ($request->input('email') ?? Setting::get('backup_email', config('mail.from.address', '')));
             }
 
             return redirect()->back()->with('success', $message);
@@ -128,7 +128,7 @@ class DatabaseBackupController extends Controller
             $compress = (bool) Setting::get('backup_compress', '1');
             $result = $this->backupService->createBackup($compress);
 
-            $email = Setting::get('backup_email', 'dawitac@gmail.com');
+            $email = Setting::get('backup_email', config('mail.from.address', 'admin@schoolofredemption.com'));
             $emailSent = $this->backupService->sendViaEmail($result['path'], $email);
 
             if (!$emailSent) {
@@ -161,6 +161,24 @@ class DatabaseBackupController extends Controller
         // Reuse backupNow with forced email
         $request->merge(['send_email' => true]);
         return $this->backupNow($request);
+    }
+
+    /**
+     * Send a test email to verify mail configuration.
+     */
+    public function testEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $result = $this->backupService->sendTestEmail($request->input('email'));
+
+        if ($result['success']) {
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        return redirect()->back()->with('error', $result['message']);
     }
 
     /**

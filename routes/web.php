@@ -365,6 +365,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Scheduled Database Backup
     Route::get('backup', [DatabaseBackupController::class, 'index'])->name('backup.index')->middleware('permission:settings.view');
     Route::post('backup/now', [DatabaseBackupController::class, 'backupNow'])->name('backup.now')->middleware('permission:settings.edit');
+    Route::post('backup/test-email', [DatabaseBackupController::class, 'testEmail'])->name('backup.test-email')->middleware('permission:settings.edit');
     Route::get('backup/download/{filename}', [DatabaseBackupController::class, 'download'])->name('backup.download')->middleware('permission:settings.edit')->where('filename', '[^/]+');
     Route::delete('backup/{filename}', [DatabaseBackupController::class, 'delete'])->name('backup.delete')->middleware('permission:settings.edit')->where('filename', '[^/]+');
     Route::put('backup/schedule', [DatabaseBackupController::class, 'updateSchedule'])->name('backup.schedule')->middleware('permission:settings.edit');
