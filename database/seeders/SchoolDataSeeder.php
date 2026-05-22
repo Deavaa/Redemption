@@ -24,15 +24,16 @@ class SchoolDataSeeder extends Seeder
      * Seeds ALL data in one place: structure + real student data.
      *
      * Campuses:
-     *   - Lebu Campus: Secondary School (Grades 9-12) — real students from SQL file
-     *   - Tuludimtu Campus: Primary School (Grades 1-8) — no student data yet
+     *   - Lebu Campus: Secondary School (Grades 9-12) — 640+ real students from SQL file
+     *     Sections: A, B, C, D per grade (capacity 200/grade)
+     *   - Tuludimtu Campus: Primary School (Grades 1-8) — Section A only per grade
      *
      * Lebu students are distributed across G9-12 using round-robin (sorted by DOB).
      * Update grades later via the admin panel when you have actual grade data.
      */
     public function run(): void
     {
-        $this->command->info('🌱 Seeding School of Redemption data...');
+        $this->command->info('Seeding School of Redemption data...');
 
         // ══════════════════════════════════════════════════════════
         // 1. BRANCHES
@@ -61,7 +62,7 @@ class SchoolDataSeeder extends Seeder
             ]
         );
 
-        $this->command->info('  ✓ Branches (2: Lebu + Tuludimtu)');
+        $this->command->info('  Branches created: Lebu Campus + Tuludimtu Campus');
 
         // ══════════════════════════════════════════════════════════
         // 2. ACADEMIC YEAR
@@ -74,7 +75,7 @@ class SchoolDataSeeder extends Seeder
                 'is_current' => true,
             ]
         );
-        $this->command->info('  ✓ Academic Year (2025/2026)');
+        $this->command->info('  Academic Year: 2025/2026');
 
         // ══════════════════════════════════════════════════════════
         // 3. TERMS
@@ -91,7 +92,7 @@ class SchoolDataSeeder extends Seeder
             ['academic_year_id' => $ay->id, 'name' => 'Term 3'],
             ['start_date' => '2026-04-20', 'end_date' => '2026-07-15', 'term_number' => 3, 'is_active' => false]
         );
-        $this->command->info('  ✓ Terms (3)');
+        $this->command->info('  Terms: 3');
 
         // ══════════════════════════════════════════════════════════
         // 4. USERS
@@ -146,7 +147,7 @@ class SchoolDataSeeder extends Seeder
                 $tu->roles()->attach($teacherRole->id);
             }
         }
-        $this->command->info('  ✓ Users (1 admin + 1 principal + 6 teachers + 2 staff)');
+        $this->command->info('  Users: 1 admin + 1 principal + 6 teachers + 2 staff');
 
         // ══════════════════════════════════════════════════════════
         // 5. TEACHERS
@@ -172,7 +173,7 @@ class SchoolDataSeeder extends Seeder
             );
         }
         $lebuBranch->update(['principal_id' => $principalTeacher->id]);
-        $this->command->info('  ✓ Teachers (7 including principal)');
+        $this->command->info('  Teachers: 7 including principal');
 
         // ══════════════════════════════════════════════════════════
         // 6. SUBJECTS
@@ -198,13 +199,13 @@ class SchoolDataSeeder extends Seeder
                 ['name' => $sd['name'], 'type' => $sd['type'], 'priority' => $sd['priority'], 'is_active' => true]
             );
         }
-        $this->command->info('  ✓ Subjects (12)');
+        $this->command->info('  Subjects: 12');
 
         // ══════════════════════════════════════════════════════════
         // 7. CLASSES — Tuludimtu G1-8 + Lebu G9-12
         // ══════════════════════════════════════════════════════════
 
-        // Tuludimtu Campus: Grades 1-8 (Primary School)
+        // Tuludimtu Campus: Grades 1-8 (Primary School) — only Section A
         $tuludimtuClasses = [];
         for ($g = 1; $g <= 8; $g++) {
             $tuludimtuClasses[$g] = ClassRoom::updateOrCreate(
@@ -213,7 +214,7 @@ class SchoolDataSeeder extends Seeder
             );
         }
 
-        // Lebu Campus: Grades 9-12 (Secondary School)
+        // Lebu Campus: Grades 9-12 (Secondary School) — Sections A, B, C, D
         $lebuClasses = [];
         for ($g = 9; $g <= 12; $g++) {
             $lebuClasses[$g] = ClassRoom::updateOrCreate(
@@ -221,27 +222,28 @@ class SchoolDataSeeder extends Seeder
                 ['numeric_name' => $g, 'teacher_id' => null, 'capacity' => 200]
             );
         }
-        $this->command->info('  ✓ Classes (12: Tuludimtu G1-8 + Lebu G9-12)');
+        $this->command->info('  Classes: 12 (Tuludimtu G1-8 + Lebu G9-12)');
 
         // ══════════════════════════════════════════════════════════
-        // 8. SECTIONS — A and B for every grade (both campuses)
+        // 8. SECTIONS
+        //   Tuludimtu: Only Section A per grade (8 sections total)
+        //   Lebu: Sections A, B, C, D per grade (16 sections total)
         // ══════════════════════════════════════════════════════════
         $allSections = [];  // key = "gradeNum_letter" => Section
 
-        // Tuludimtu sections: A and B for each grade
+        // Tuludimtu sections: ONLY Section A for each grade
         foreach ($tuludimtuClasses as $gradeNum => $class) {
-            foreach (['A', 'B'] as $letter) {
-                $key = $gradeNum . '_' . $letter;
-                $allSections[$key] = Section::updateOrCreate(
-                    ['class_id' => $class->id, 'name' => 'Section ' . $letter],
-                    ['max_students' => 50, 'teacher_id' => null]
-                );
-            }
+            $key = $gradeNum . '_A';
+            $allSections[$key] = Section::updateOrCreate(
+                ['class_id' => $class->id, 'name' => 'Section A'],
+                ['max_students' => 50, 'teacher_id' => null]
+            );
         }
 
-        // Lebu sections: A and B for each grade (more sections auto-created below if needed)
+        // Lebu sections: A, B, C, D for each grade (4 sections × 4 grades = 16 sections)
+        $lebuSectionLetters = ['A', 'B', 'C', 'D'];
         foreach ($lebuClasses as $gradeNum => $class) {
-            foreach (['A', 'B'] as $letter) {
+            foreach ($lebuSectionLetters as $letter) {
                 $key = $gradeNum . '_' . $letter;
                 $allSections[$key] = Section::updateOrCreate(
                     ['class_id' => $class->id, 'name' => 'Section ' . $letter],
@@ -266,39 +268,39 @@ class SchoolDataSeeder extends Seeder
                 $lebuClasses[$gradeNum]->update(['teacher_id' => $teacher->id]);
             }
         }
-        $this->command->info('  ✓ Sections (24: 2 per grade × 12 grades, A + B)');
+        $this->command->info('  Sections: 24 total (Tuludimtu: 8 × A only, Lebu: 16 × A-D)');
 
         // ══════════════════════════════════════════════════════════
         // 9. STUDENTS — Real Lebu High School students (G9-12)
         // ══════════════════════════════════════════════════════════
         $lebuStudentCount = $this->seedLebuStudents($lebuBranch, $lebuClasses, $allSections, $ay);
-        $this->command->info("  ✓ Students: Lebu {$lebuStudentCount} (G9-12), Tuludimtu 0 (G1-8 — add data later)");
+        $this->command->info("  Students: Lebu {$lebuStudentCount} (G9-12), Tuludimtu 0 (G1-8 - add via admin panel)");
 
         // ══════════════════════════════════════════════════════════
-        // 10. TEACHER ASSIGNMENTS (Lebu G9-12)
+        // 10. TEACHER ASSIGNMENTS (Lebu G9-12, all sections A-D)
         // ══════════════════════════════════════════════════════════
         $assignmentMap = [
-            [0, 9, null, 'MATH'],  [0, 10, null, 'MATH'], [0, 11, null, 'MATH'], [0, 12, null, 'MATH'],
-            [1, 9, null, 'PHY'],   [1, 10, null, 'PHY'],  [1, 11, null, 'PHY'],  [1, 12, null, 'PHY'],
-            [1, 9, null, 'CHEM'],  [1, 10, null, 'CHEM'], [1, 11, null, 'CHEM'], [1, 12, null, 'CHEM'],
-            [2, 9, null, 'ENG'],   [2, 10, null, 'ENG'],  [2, 11, null, 'ENG'],  [2, 12, null, 'ENG'],
-            [3, 9, null, 'BIO'],   [3, 10, null, 'BIO'],  [3, 11, null, 'BIO'],  [3, 12, null, 'BIO'],
-            [3, 9, null, 'SOC'],   [3, 10, null, 'SOC'],  [3, 11, null, 'SOC'],  [3, 12, null, 'SOC'],
-            [4, 9, null, 'AMH'],   [4, 10, null, 'AMH'],  [4, 11, null, 'AMH'],  [4, 12, null, 'AMH'],
-            [4, 9, null, 'CIV'],   [4, 10, null, 'CIV'],  [4, 11, null, 'CIV'],  [4, 12, null, 'CIV'],
-            [5, 9, null, 'ICT'],   [5, 10, null, 'ICT'],  [5, 11, null, 'ICT'],  [5, 12, null, 'ICT'],
-            [5, 9, null, 'PE'],    [5, 10, null, 'PE'],   [5, 11, null, 'PE'],   [5, 12, null, 'PE'],
+            [0, 9, 'MATH'],  [0, 10, 'MATH'], [0, 11, 'MATH'], [0, 12, 'MATH'],
+            [1, 9, 'PHY'],   [1, 10, 'PHY'],  [1, 11, 'PHY'],  [1, 12, 'PHY'],
+            [1, 9, 'CHEM'],  [1, 10, 'CHEM'], [1, 11, 'CHEM'], [1, 12, 'CHEM'],
+            [2, 9, 'ENG'],   [2, 10, 'ENG'],  [2, 11, 'ENG'],  [2, 12, 'ENG'],
+            [3, 9, 'BIO'],   [3, 10, 'BIO'],  [3, 11, 'BIO'],  [3, 12, 'BIO'],
+            [3, 9, 'SOC'],   [3, 10, 'SOC'],  [3, 11, 'SOC'],  [3, 12, 'SOC'],
+            [4, 9, 'AMH'],   [4, 10, 'AMH'],  [4, 11, 'AMH'],  [4, 12, 'AMH'],
+            [4, 9, 'CIV'],   [4, 10, 'CIV'],  [4, 11, 'CIV'],  [4, 12, 'CIV'],
+            [5, 9, 'ICT'],   [5, 10, 'ICT'],  [5, 11, 'ICT'],  [5, 12, 'ICT'],
+            [5, 9, 'PE'],    [5, 10, 'PE'],   [5, 11, 'PE'],   [5, 12, 'PE'],
         ];
 
         $assignCount = 0;
         foreach ($assignmentMap as $am) {
             $teacher = $teacherRecords[$am[0]];
             $gradeNum = $am[1];
-            $subject = $subjects[$am[3]];
+            $subject = $subjects[$am[2]];
             if (!isset($lebuClasses[$gradeNum]) || !$subject) continue;
 
-            // Assign to each section (A and B)
-            foreach (['A', 'B'] as $letter) {
+            // Assign to each Lebu section (A, B, C, D)
+            foreach ($lebuSectionLetters as $letter) {
                 $secKey = $gradeNum . '_' . $letter;
                 if (!isset($allSections[$secKey])) continue;
                 TeacherAssignment::updateOrCreate(
@@ -308,14 +310,14 @@ class SchoolDataSeeder extends Seeder
                 $assignCount++;
             }
 
-            // Also add null-section assignment
+            // Also add null-section assignment (grade-level)
             TeacherAssignment::updateOrCreate(
                 ['teacher_id' => $teacher->id, 'class_id' => $lebuClasses[$gradeNum]->id, 'section_id' => null, 'subject_id' => $subject->id, 'academic_year_id' => $ay->id],
                 []
             );
             $assignCount++;
         }
-        $this->command->info("  ✓ Teacher Assignments ({$assignCount})");
+        $this->command->info("  Teacher Assignments: {$assignCount}");
 
         // ══════════════════════════════════════════════════════════
         // 11. CALENDAR EVENTS
@@ -336,19 +338,19 @@ class SchoolDataSeeder extends Seeder
                 ['category' => $ev['category'], 'color' => $ev['color'], 'end_date' => $ev['end'], 'is_all_day' => true, 'is_announcement' => $ev['announcement'], 'academic_year_id' => $ay->id, 'branch_id' => $lebuBranch->id, 'created_by' => $adminUser->id ?? 1]
             );
         }
-        $this->command->info('  ✓ Calendar Events (8)');
+        $this->command->info('  Calendar Events: 8');
 
         // ══════════════════════════════════════════════════════════
         // 12. GRADE SCALES
         // ══════════════════════════════════════════════════════════
         GradeScale::seedDefaults();
-        $this->command->info('  ✓ Grade Scales (11: A+ through F)');
+        $this->command->info('  Grade Scales: 11 (A+ through F)');
 
         // ══════════════════════════════════════════════════════════
         // DONE
         // ══════════════════════════════════════════════════════════
         $this->command->newLine();
-        $this->command->info('🎉 School data seeded successfully!');
+        $this->command->info('School data seeded successfully!');
         $this->command->newLine();
         $this->command->table(['Account', 'Email', 'Password', 'Role'], [
             ['Admin', 'admin@school.com', '123456', 'admin'],
@@ -369,16 +371,15 @@ class SchoolDataSeeder extends Seeder
     // ════════════════════════════════════════════════════════════════
     /**
      * Seed real Lebu High School students from the SQL data file.
-     * Students are distributed across G9-12 (round-robin by DOB).
-     * Each grade has Section A and Section B — students are balanced
-     * across both sections.
+     * Students are distributed across G9-12 using round-robin (sorted by DOB).
+     * Each grade has Sections A, B, C, D — students are balanced across all sections.
      *
      * @return int Number of students created
      */
     private function seedLebuStudents(Branch $branch, array $lebuClasses, array &$allSections, AcademicYear $ay): int
     {
         $this->command->newLine();
-        $this->command->info('  📚 Seeding Lebu High School students (G9-12)...');
+        $this->command->info('  Seeding Lebu High School students (G9-12)...');
 
         // ── Load student data ──
         $students = $this->loadStudentData();
@@ -388,20 +389,20 @@ class SchoolDataSeeder extends Seeder
         }
         $this->command->info("  Loaded " . count($students) . " raw student records");
 
-        // ── Filter out invalid DOBs ──
+        // ── Filter out invalid DOBs (after fixDate has already corrected typos) ──
         $validStudents = [];
         $invalidCount = 0;
         foreach ($students as $row) {
             $birthYear = (int) substr($row[2], 0, 4);
-            if ($birthYear < 1995 || $birthYear > 2012) {
-                $this->command->warn("    Skipping {$row[0]}: DOB {$row[2]} (born {$birthYear}, outside 1995-2012)");
+            if ($birthYear < 1995 || $birthYear > 2015) {
+                $this->command->warn("    Skipping {$row[0]}: DOB {$row[2]} (born {$birthYear}, outside 1995-2015)");
                 $invalidCount++;
                 continue;
             }
             $validStudents[] = $row;
         }
         if ($invalidCount > 0) {
-            $this->command->info("  Filtered out {$invalidCount} students with invalid DOBs");
+            $this->command->info("  Filtered out {$invalidCount} students with invalid DOBs after correction");
         }
 
         // Sort by DOB (youngest first) for round-robin
@@ -411,12 +412,12 @@ class SchoolDataSeeder extends Seeder
 
         // ── Build section maps for Lebu G9-12 ──
         $gradeOrder = [9, 10, 11, 12];
-        $sectionLetters = ['A', 'B']; // Each grade has A and B
-        $lebuSections = []; // gradeNum => [0 => Section A, 1 => Section B]
+        $lebuSectionLetters = ['A', 'B', 'C', 'D'];
+        $lebuSections = []; // gradeNum => [0 => Section A, 1 => Section B, 2 => Section C, 3 => Section D]
 
         foreach ($gradeOrder as $g) {
             $lebuSections[$g] = [];
-            foreach ($sectionLetters as $idx => $letter) {
+            foreach ($lebuSectionLetters as $idx => $letter) {
                 $key = $g . '_' . $letter;
                 if (isset($allSections[$key])) {
                     $lebuSections[$g][$idx] = $allSections[$key];
@@ -459,7 +460,12 @@ class SchoolDataSeeder extends Seeder
         $skipped = 0;
         $gradeIdx = 0;
         $gradeCounts = [9 => 0, 10 => 0, 11 => 0, 12 => 0];
-        $sectionCounts = [9 => ['A' => 0, 'B' => 0], 10 => ['A' => 0, 'B' => 0], 11 => ['A' => 0, 'B' => 0], 12 => ['A' => 0, 'B' => 0]];
+        $sectionCounts = [
+            9 => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0],
+            10 => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0],
+            11 => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0],
+            12 => ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0],
+        ];
 
         // ── Seed students ──
         foreach ($validStudents as $row) {
@@ -480,7 +486,7 @@ class SchoolDataSeeder extends Seeder
                     continue;
                 }
 
-                // Balance across sections A and B — pick the one with fewer students
+                // Balance across sections A, B, C, D — pick the one with fewest students
                 $numSections = count($lebuSections[$gradeNum]);
                 $sectionIdx = 0;
                 $minCount = PHP_INT_MAX;
@@ -498,7 +504,7 @@ class SchoolDataSeeder extends Seeder
                 }
 
                 $gradeCounters[$gradeNum][$sectionIdx]++;
-                $sectionLetter = chr(65 + $sectionIdx); // A or B
+                $sectionLetter = chr(65 + $sectionIdx); // A, B, C, or D
                 $seqNum = $gradeCounters[$gradeNum][$sectionIdx];
                 $rollNumber = 'G' . $gradeNum . $sectionLetter . '-' . str_pad($seqNum, 2, '0', STR_PAD_LEFT);
                 $admission = 'SOR/2025/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
@@ -568,12 +574,16 @@ class SchoolDataSeeder extends Seeder
             $this->command->warn("    Skipped/errored: {$skipped}");
         }
 
-        $this->command->info('    Grade distribution (Section A + B):');
+        $this->command->info('    Grade distribution:');
         foreach ($gradeOrder as $g) {
-            $a = $sectionCounts[$g]['A'];
-            $b = $sectionCounts[$g]['B'];
-            $total = $a + $b;
-            $this->command->info("      Grade {$g}: {$total} students (A:{$a} B:{$b})");
+            $parts = [];
+            $total = 0;
+            foreach ($lebuSectionLetters as $l) {
+                $c = $sectionCounts[$g][$l];
+                $parts[] = "{$l}:{$c}";
+                $total += $c;
+            }
+            $this->command->info("      Grade {$g}: {$total} students (" . implode(' ', $parts) . ")");
         }
 
         $this->command->newLine();
@@ -588,7 +598,7 @@ class SchoolDataSeeder extends Seeder
     // ════════════════════════════════════════════════════════════════
 
     /**
-     * Load student data from SQL file or hardcoded fallback.
+     * Load student data from SQL file.
      * The SQL file is at database/seeders/data/students.sql
      */
     private function loadStudentData(): array
@@ -634,14 +644,27 @@ class SchoolDataSeeder extends Seeder
 
     /**
      * Fix common date errors in the source data.
+     * These are known typos from the original student records.
      */
     private function fixDate(string $dob): string
     {
-        // Fix year typo: 1010 -> 2010
+        // Fix year typo: 1010 -> 2010 (missing leading '2')
         if (str_starts_with($dob, '1010-')) {
             $dob = '2010-' . substr($dob, 5);
         }
-        // Fix Feb 30 -> Feb 28
+        // Fix year typo: 2019 -> 2009 (9 instead of 0)
+        if (str_starts_with($dob, '2019-')) {
+            $dob = '2009-' . substr($dob, 5);
+        }
+        // Fix year typo: 2021 -> 2001 (2 instead of 0)
+        if (str_starts_with($dob, '2021-')) {
+            $dob = '2001-' . substr($dob, 5);
+        }
+        // Fix year typo: 2022 -> 2002 (2 instead of 0)
+        if (str_starts_with($dob, '2022-')) {
+            $dob = '2002-' . substr($dob, 5);
+        }
+        // Fix Feb 30 -> Feb 28 (February never has 30 days)
         if (preg_match('/^(\d{4})-02-30$/', $dob, $m)) {
             $dob = $m[1] . '-02-28';
         }
