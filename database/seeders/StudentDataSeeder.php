@@ -19,20 +19,24 @@ class StudentDataSeeder extends Seeder
      * Seeds real Lebu High School students into the system.
      * Lebu is a Secondary School (Grades 9-12).
      *
-     * Grade assignment (Academic Year 2025/2026):
-     *   Grade 9  -> born 2010-2011  (age 14-15)
-     *   Grade 10 -> born 2009-2010  (age 15-16)
-     *   Grade 11 -> born 2008-2009  (age 16-17)
-     *   Grade 12 -> born 2007-2008  (age 17-18)
+     * Grade assignment strategy:
+     *   Since the source data does not include grade information, students are
+     *   distributed across Grades 9-12 using a round-robin approach (sorted by
+     *   DOB, youngest first). This gives a roughly equal distribution which is
+     *   more realistic than a DOB-based formula that would place 80%+ in one grade.
      *
-     * Students born before 1995 or after 2012 are skipped.
-     * Students placed in Grades 1-8 are skipped (they belong to Tuludimtu Campus).
+     *   You can update grades later via the admin panel or by editing the SQL file.
+     *
+     * Students with obviously invalid DOBs (born before 1995 or after 2012) are
+     * skipped. You can adjust these thresholds below.
      */
     public function run(): void
     {
         $this->command->info('Seeding Lebu High School student data...');
 
-        // Resolve to Lebu Campus specifically (Secondary School)
+        // ══════════════════════════════════════════════════════════
+        // 1. RESOLVE BRANCH & ACADEMIC YEAR
+        // ══════════════════════════════════════════════════════════
         $branch = Branch::where('name', 'LIKE', '%Lebu%')->first();
         if (!$branch) {
             $branch = Branch::where('is_headquarters', true)->first()
@@ -50,142 +54,190 @@ class StudentDataSeeder extends Seeder
         $this->command->info("  Using Branch: {$branch->name} (ID: {$branch->id})");
         $this->command->info("  Using AY: {$ay->name} (ID: {$ay->id})");
 
-        // Build grade -> class/section maps (Grades 9-12 for Lebu)
+        // ══════════════════════════════════════════════════════════
+        // 2. CLEANUP: Remove ALL previous seeder students & users
+        // ══════════════════════════════════════════════════════════
+        // Delete students with user accounts created by this seeder
+        // (identified by admission number pattern SOR/2025/3XXX or
+        // user id_number pattern STU-2026-XXXX)
+        $this->cleanupPreviousRuns();
+
+        // Also clean demo students from old SchoolDataSeeder versions
+        $demoCount = Student::whereNull('user_id')->count();
+        if ($demoCount > 0) {
+            Student::whereNull('user_id')->delete();
+            $this->command->info("  Deleted {$demoCount} demo students (no user_id)");
+        }
+
+        // Clean students with old roll number format (e.g. A-01, B-01)
+        $oldRollCount = Student::where('roll_number', 'REGEXP', '^[A-Z]-[0-9]')->count();
+        if ($oldRollCount > 0) {
+            $oldStudents = Student::where('roll_number', 'REGEXP', '^[A-Z]-[0-9]')->get();
+            foreach ($oldStudents as $os) {
+                if ($os->user_id) User::where('id', $os->user_id)->delete();
+            }
+            Student::where('roll_number', 'REGEXP', '^[A-Z]-[0-9]')->delete();
+            $this->command->info("  Deleted {$oldRollCount} students with old roll_number format");
+        }
+
+        // Clean any remaining SOR/2025/1XXX or SOR/2026/1XXX demo students
+        foreach (['SOR/2025/1%', 'SOR/2026/1%'] as $pattern) {
+            $count = Student::where('admission_number', 'LIKE', $pattern)->count();
+            if ($count > 0) {
+                Student::where('admission_number', 'LIKE', $pattern)->delete();
+                $this->command->info("  Deleted {$count} demo students ({$pattern})");
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // 3. BUILD CLASS & SECTION MAPS (Grades 9-12 for Lebu)
+        // ══════════════════════════════════════════════════════════
         $allClasses = ClassRoom::where('branch_id', $branch->id)
             ->where('academic_year_id', $ay->id)
             ->get();
 
-        $this->command->info("  Found {$allClasses->count()} classes in database");
+        $this->command->info("  Found {$allClasses->count()} existing classes for Lebu branch");
 
-        // Key by numeric_name, fallback to regex from name
+        // Key classes by numeric_name
         $classes = $allClasses->keyBy(function ($c) {
-            if ($c->numeric_name) {
-                return (int) $c->numeric_name;
-            }
-            if (preg_match('/(\d+)/', $c->name, $m)) {
-                return (int) $m[1];
-            }
+            if ($c->numeric_name) return (int) $c->numeric_name;
+            if (preg_match('/(\d+)/', $c->name, $m)) return (int) $m[1];
             return 0;
-        })->filter(fn($c, $k) => $k > 0);
+        })->filter(fn($c, $k) => $k >= 9 && $k <= 12);
 
-        // Build sections per class
+        // Auto-create missing classes for Grades 9-12
+        for ($g = 9; $g <= 12; $g++) {
+            if (!isset($classes[$g])) {
+                $class = ClassRoom::updateOrCreate(
+                    [
+                        'branch_id'        => $branch->id,
+                        'academic_year_id' => $ay->id,
+                        'numeric_name'     => $g,
+                    ],
+                    [
+                        'name'     => 'Grade ' . $g,
+                        'capacity' => 200,
+                    ]
+                );
+                $classes[$g] = $class;
+                $this->command->info("    Auto-created Grade {$g} (Class ID:{$class->id})");
+            }
+        }
+
+        // Build sections per class — create enough sections for ~150+ students per grade
         $sectionsByClass = [];
         foreach ($classes as $gradeNum => $class) {
             $secs = Section::where('class_id', $class->id)
                 ->orderBy('name')
                 ->get()
                 ->values();
-            $sectionsByClass[$gradeNum] = $secs;
-        }
 
-        // Auto-create missing classes & sections for Grades 9-12 (Lebu)
-        for ($g = 9; $g <= 12; $g++) {
-            if (!isset($classes[$g])) {
-                $class = ClassRoom::updateOrCreate(
-                    [
-                        'branch_id'         => $branch->id,
-                        'academic_year_id'  => $ay->id,
-                        'numeric_name'      => $g,
-                    ],
-                    [
-                        'name'     => 'Grade ' . $g,
-                        'capacity' => 50,
-                    ]
-                );
-                $classes[$g] = $class;
-                $this->command->info("    Auto-created Grade {$g} (Class ID:{$class->id})");
-            }
-
-            if (!isset($sectionsByClass[$g]) || $sectionsByClass[$g]->isEmpty()) {
-                $class = $classes[$g];
+            // Need at least 4 sections (A-D) per grade for ~150 students
+            $minSections = 4;
+            $sectionLetters = range('A', 'D'); // A, B, C, D
+            if ($secs->count() < $minSections) {
+                foreach ($sectionLetters as $letter) {
+                    $sec = Section::updateOrCreate(
+                        [
+                            'class_id' => $class->id,
+                            'name'     => 'Section ' . $letter,
+                        ],
+                        [
+                            'max_students' => 50,
+                        ]
+                    );
+                    // Add to collection if not already there
+                    $existing = $secs->firstWhere('name', 'Section ' . $letter);
+                    if (!$existing) {
+                        $secs->push($sec);
+                    }
+                }
                 $secs = Section::where('class_id', $class->id)
                     ->orderBy('name')
                     ->get()
                     ->values();
-
-                if ($secs->isEmpty()) {
-                    $secs = collect();
-                    foreach (['A', 'B'] as $letter) {
-                        $sec = Section::updateOrCreate(
-                            [
-                                'class_id' => $class->id,
-                                'name'     => 'Section ' . $letter,
-                            ],
-                            [
-                                'max_students' => 50,
-                            ]
-                        );
-                        $secs->push($sec);
-                    }
-                    $this->command->info("    Auto-created sections for Grade {$g}: Section A, Section B");
-                }
-
-                $sectionsByClass[$g] = $secs;
             }
+
+            $sectionsByClass[$gradeNum] = $secs;
+            $this->command->info("    Grade {$gradeNum}: " . $secs->count() . " sections");
         }
 
-        if ($classes->isEmpty()) {
-            $this->command->error('  No classes found. Run SchoolDataSeeder first.');
-            return;
-        }
-
-        // Delete previous seeder students
-        $demoCount = Student::whereNull('user_id')->count();
-        if ($demoCount > 0) {
-            Student::whereNull('user_id')->delete();
-            $this->command->info("  Deleted {$demoCount} demo students (no user_id)");
-        }
-        // Clear previous batch from this seeder (SOR/2025/3XXX range)
-        $prevBatch = Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->count();
-        if ($prevBatch > 0) {
-            $prevStudents = Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->get();
-            foreach ($prevStudents as $ps) {
-                if ($ps->user_id) {
-                    User::where('id', $ps->user_id)->delete();
-                }
-            }
-            Student::where('admission_number', 'LIKE', 'SOR/2025/3%')->delete();
-            $this->command->info("  Deleted {$prevBatch} previous batch students (SOR/2025/3XXX)");
-        }
-        // Clear old SOR/2025/1XXX demo students from SchoolDataSeeder
-        $demoAdmissions = Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->count();
-        if ($demoAdmissions > 0) {
-            Student::where('admission_number', 'LIKE', 'SOR/2025/1%')->delete();
-            $this->command->info("  Deleted {$demoAdmissions} demo students (admission SOR/2025/1XXX)");
-        }
-
-        // ── Student raw data ──────────────────────────────────────────
-        // Format: [full_name, gender, date_of_birth]
-        // Data fixes: 1010->2010, Feb 30->Feb 28, 1999-02-29->1999-02-28, duplicate removal
+        // ══════════════════════════════════════════════════════════
+        // 4. LOAD & FILTER STUDENT DATA
+        // ══════════════════════════════════════════════════════════
         $students = $this->getStudentData();
+        $this->command->info("  Loaded " . count($students) . " student records from data file");
 
-        $this->command->info("  Processing " . count($students) . " student records...");
+        // Filter out students with invalid DOBs
+        $validStudents = [];
+        $invalidCount = 0;
+        foreach ($students as $row) {
+            $birthYear = (int) substr($row[2], 0, 4);
+            // Skip students born before 1995 (too old) or after 2012 (too young for secondary)
+            if ($birthYear < 1995 || $birthYear > 2012) {
+                $this->command->warn("  Skipping {$row[0]}: DOB {$row[2]} (born {$birthYear}, outside 1995-2012 range)");
+                $invalidCount++;
+                continue;
+            }
+            $validStudents[] = $row;
+        }
 
-        // ── Grade assignment logic ────────────────────────────────────
-        // Initialize counters from existing roll_numbers to avoid duplicates
+        if ($invalidCount > 0) {
+            $this->command->info("  Filtered out {$invalidCount} students with invalid DOBs");
+        }
+
+        // Sort by DOB (youngest first) for round-robin distribution
+        usort($validStudents, function ($a, $b) {
+            return strcmp($a[2], $b[2]);
+        });
+
+        $totalValid = count($validStudents);
+        $this->command->info("  Processing {$totalValid} valid student records...");
+
+        // ══════════════════════════════════════════════════════════
+        // 5. ROUND-ROBIN GRADE ASSIGNMENT
+        // ══════════════════════════════════════════════════════════
+        // Distribute students across G9-12 in round-robin fashion.
+        // Since we don't have explicit grade data, this gives the most
+        // realistic distribution for a secondary school.
+        $gradeOrder = [9, 10, 11, 12];
         $gradeCounters = [];
-        foreach ($classes as $gradeNum => $class) {
-            $gradeCounters[$gradeNum] = [0, 0];
-            $sections = $sectionsByClass[$gradeNum] ?? collect();
+        foreach ($gradeOrder as $g) {
+            $gradeCounters[$g] = array_fill(0, $sectionsByClass[$g]->count(), 0);
+        }
+
+        // Initialize counters from existing roll_numbers to avoid duplicates
+        foreach ($gradeOrder as $g) {
+            $sections = $sectionsByClass[$g] ?? collect();
             foreach ($sections as $sIdx => $sec) {
-                $sectionLetter = $sIdx === 0 ? 'A' : chr(65 + $sIdx);
-                $prefix = 'G' . $gradeNum . $sectionLetter;
+                $sectionLetter = chr(65 + $sIdx);
+                $prefix = 'G' . $g . $sectionLetter;
                 $maxExisting = Student::where('roll_number', 'LIKE', $prefix . '-%')
-                    ->selectRaw("CAST(SUBSTRING(roll_number, -2) AS UNSIGNED) as rn")
+                    ->selectRaw("CAST(SUBSTRING(roll_number, " . (strlen($prefix) + 2) . ") AS UNSIGNED) as rn")
                     ->orderByRaw('rn DESC')
                     ->first();
-                if ($maxExisting && (int) $maxExisting->rn > $gradeCounters[$gradeNum][$sIdx]) {
-                    $gradeCounters[$gradeNum][$sIdx] = (int) $maxExisting->rn;
+                if ($maxExisting && (int) $maxExisting->rn > $gradeCounters[$g][$sIdx]) {
+                    $gradeCounters[$g][$sIdx] = (int) $maxExisting->rn;
                 }
             }
         }
 
-        // Find the max admission number to avoid collisions with existing records
+        // Find the max admission number to avoid collisions
         $maxAdmission = Student::where('admission_number', 'LIKE', 'SOR/2025/%')
             ->selectRaw("CAST(SUBSTRING(admission_number, -4) AS UNSIGNED) as num")
             ->orderByRaw('num DESC')
             ->first();
         $admissionNum = $maxAdmission ? ((int) $maxAdmission->num + 1) : 3001;
+
+        // Also check SOR/2026/ pattern
+        $maxAdmission2026 = Student::where('admission_number', 'LIKE', 'SOR/2026/%')
+            ->selectRaw("CAST(SUBSTRING(admission_number, -4) AS UNSIGNED) as num")
+            ->orderByRaw('num DESC')
+            ->first();
+        if ($maxAdmission2026) {
+            $num2026 = (int) $maxAdmission2026->num + 1;
+            $admissionNum = max($admissionNum, $num2026);
+        }
 
         $userCounter = 0;
         $created = 0;
@@ -195,30 +247,23 @@ class StudentDataSeeder extends Seeder
         // Pre-cache the student role
         $studentRole = Role::where('name', 'student')->first();
 
-        foreach ($students as $row) {
+        // ══════════════════════════════════════════════════════════
+        // 6. SEED STUDENTS
+        // ══════════════════════════════════════════════════════════
+        $gradeIdx = 0;
+        $gradeCounts = [9 => 0, 10 => 0, 11 => 0, 12 => 0];
+
+        foreach ($validStudents as $row) {
             $fullName = $row[0];
             $gender = $row[1];
             $dob = $row[2];
             $phone = $row[3] ?? null;
 
             try {
-                // Calculate grade from DOB (academic year 2025/2026)
-                $birthYear = (int) substr($dob, 0, 4);
-
-                // Skip students with unrealistic DOBs
-                if ($birthYear < 1995 || $birthYear > 2012) {
-                    $this->command->warn("  Skipping {$fullName}: DOB {$dob} out of school age range");
-                    $skipped++;
-                    continue;
-                }
-
-                $gradeNum = max(1, min(12, 2026 - $birthYear - 6));
-
-                // Skip students in Grades 1-8 (they belong to Tuludimtu Campus, not Lebu)
-                if ($gradeNum < 9) {
-                    $skipped++;
-                    continue;
-                }
+                // Round-robin grade assignment
+                $gradeNum = $gradeOrder[$gradeIdx % count($gradeOrder)];
+                $gradeIdx++;
+                $gradeCounts[$gradeNum]++;
 
                 // Find the class for this grade
                 $class = $classes[$gradeNum] ?? null;
@@ -228,19 +273,18 @@ class StudentDataSeeder extends Seeder
                     continue;
                 }
 
-                // Distribute between sections A/B
-                if (!isset($gradeCounters[$gradeNum])) {
-                    $gradeCounters[$gradeNum] = [0, 0];
+                // Distribute between sections (balance across all sections)
+                $numSections = $sectionsByClass[$gradeNum]->count();
+                $sectionIdx = 0;
+                $minCount = PHP_INT_MAX;
+                for ($si = 0; $si < $numSections; $si++) {
+                    if ($gradeCounters[$gradeNum][$si] < $minCount) {
+                        $minCount = $gradeCounters[$gradeNum][$si];
+                        $sectionIdx = $si;
+                    }
                 }
 
-                $sectionIdx = ($gradeCounters[$gradeNum][0] <= $gradeCounters[$gradeNum][1]) ? 0 : 1;
                 $section = $sectionsByClass[$gradeNum][$sectionIdx] ?? null;
-
-                if (!$section) {
-                    $section = $sectionsByClass[$gradeNum][0] ?? null;
-                    $sectionIdx = 0;
-                }
-
                 if (!$section) {
                     $this->command->warn("  No section for Grade {$gradeNum} - skipping {$fullName}");
                     $skipped++;
@@ -249,8 +293,9 @@ class StudentDataSeeder extends Seeder
 
                 $gradeCounters[$gradeNum][$sectionIdx]++;
 
-                $sectionLetter = $sectionIdx === 0 ? 'A' : 'B';
-                $rollNumber = 'G' . $gradeNum . $sectionLetter . '-' . str_pad($gradeCounters[$gradeNum][$sectionIdx], 2, '0', STR_PAD_LEFT);
+                $sectionLetter = chr(65 + $sectionIdx); // A=0, B=1, C=2, D=3
+                $seqNum = $gradeCounters[$gradeNum][$sectionIdx];
+                $rollNumber = 'G' . $gradeNum . $sectionLetter . '-' . str_pad($seqNum, 2, '0', STR_PAD_LEFT);
                 $admission = 'SOR/2025/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
                 $admissionNum++;
                 $genderLower = strtolower($gender);
@@ -339,14 +384,57 @@ class StudentDataSeeder extends Seeder
 
         $this->command->newLine();
         $this->command->info('  Grade distribution:');
-        foreach ($gradeCounters as $gradeNum => $counts) {
-            $total = $counts[0] + $counts[1];
-            $this->command->info("    Grade {$gradeNum}: {$total} students (A:{$counts[0]} B:{$counts[1]})");
+        foreach ($gradeOrder as $g) {
+            $counts = $gradeCounters[$g];
+            $total = array_sum($counts);
+            $detail = [];
+            for ($i = 0; $i < count($counts); $i++) {
+                $letter = chr(65 + $i);
+                $detail[] = "{$letter}:{$counts[$i]}";
+            }
+            $this->command->info("    Grade {$g}: {$total} students (" . implode(' ', $detail) . ")");
         }
 
         $this->command->newLine();
         $this->command->info('  Student login: email = <idNumber>@redemption.edu, password = DOB (e.g. 20020806)');
+        $this->command->warn('  NOTE: Grades were assigned by round-robin (no grade data in source). Update via admin panel.');
         $this->command->info('Lebu High School student data seeded successfully!');
+    }
+
+    /**
+     * Clean up previous seeder runs: delete students and their user accounts
+     * created by this seeder.
+     */
+    private function cleanupPreviousRuns(): void
+    {
+        // Delete students created by previous runs of this seeder
+        // These are identified by admission numbers SOR/2025/3XXX-9XXX
+        $patterns = ['SOR/2025/3%', 'SOR/2025/4%', 'SOR/2025/5%', 'SOR/2025/6%', 'SOR/2025/7%', 'SOR/2025/8%', 'SOR/2025/9%'];
+        $totalDeleted = 0;
+        foreach ($patterns as $pattern) {
+            $students = Student::where('admission_number', 'LIKE', $pattern)->get();
+            foreach ($students as $s) {
+                if ($s->user_id) {
+                    User::where('id', $s->user_id)->delete();
+                }
+                $s->delete();
+                $totalDeleted++;
+            }
+        }
+        if ($totalDeleted > 0) {
+            $this->command->info("  Deleted {$totalDeleted} previous seeder students + user accounts");
+        }
+
+        // Also delete student user accounts with STU-2026 pattern
+        $stuUsers = User::where('id_number', 'LIKE', 'STU-2026-%')->get();
+        foreach ($stuUsers as $u) {
+            // Delete linked student record first
+            Student::where('user_id', $u->id)->delete();
+            $u->delete();
+        }
+        if ($stuUsers->count() > 0) {
+            $this->command->info("  Deleted {$stuUsers->count()} student user accounts (STU-2026-XXXX)");
+        }
     }
 
     /**
@@ -357,8 +445,10 @@ class StudentDataSeeder extends Seeder
      * Data fixes applied:
      *   - 1010-04-17 -> 2010-04-17 (typo)
      *   - 2002-02-30 -> 2002-02-28 (Feb 30 doesn't exist)
-     *   - 2002-02-30 -> 2002-02-28 (same fix for second occurrence)
      *   - 1999-02-29 -> 1999-02-28 (1999 is not a leap year)
+     *   - 2022-04-18 -> skipped (toddler, not school age)
+     *   - 2019-04-15 -> skipped (toddler, not school age)
+     *   - 2021-04-27 -> skipped (toddler, not school age)
      *   - Duplicate entries removed (same name + DOB)
      */
     private function getStudentData(): array
@@ -376,7 +466,6 @@ class StudentDataSeeder extends Seeder
             ['Eldana Misganaw Hone', 'Female', '2003-11-07'],
             ['Kalid Mohammed Mohammednur', 'Male', '2002-04-14'],
             ['Edidya Kidmealem Tilahun', 'Female', '2003-03-13'],
-            // ... Add more or use the SQL file for the full list
         ];
     }
 
