@@ -185,18 +185,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Mark Roster
     Route::get('mark-roster', [MarkRosterController::class, 'index'])->name('mark-roster.index')->middleware('permission:mark_sheets.view');
-    Route::post('mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate')->middleware('permission:mark_sheets.generate');
+    Route::match(['get', 'post'], 'mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate')->middleware('permission:mark_sheets.generate');
     Route::get('mark-roster/api/sections', [MarkRosterController::class, 'getSections'])->name('mark-roster.sections');
 
     // Report Card
     Route::get('report-card', [ReportCardController::class, 'index'])->name('report-card.index')->middleware('permission:mark_sheets.view');
-    Route::post('report-card/generate', [ReportCardController::class, 'generate'])->name('report-card.generate')->middleware('permission:mark_sheets.generate');
+    Route::match(['get', 'post'], 'report-card/generate', [ReportCardController::class, 'generate'])->name('report-card.generate')->middleware('permission:mark_sheets.generate');
     Route::get('report-card/api/sections', [ReportCardController::class, 'getSections'])->name('report-card.sections');
     Route::get('report-card/api/students', [ReportCardController::class, 'getStudents'])->name('report-card.students');
 
     // Performance Analysis (Legacy - Class-based)
     Route::get('performance-analysis', [PerformanceReportAnalysisController::class, 'index'])->name('performance-analysis.index')->middleware('permission:mark_sheets.view');
-    Route::post('performance-analysis/generate', [PerformanceReportAnalysisController::class, 'generate'])->name('performance-analysis.generate')->middleware('permission:mark_sheets.generate');
+    Route::match(['get', 'post'], 'performance-analysis/generate', [PerformanceReportAnalysisController::class, 'generate'])->name('performance-analysis.generate')->middleware('permission:mark_sheets.generate');
     Route::get('performance-analysis/api/sections', [PerformanceReportAnalysisController::class, 'getSections'])->name('performance-analysis.sections');
 
     // ID Card Generation

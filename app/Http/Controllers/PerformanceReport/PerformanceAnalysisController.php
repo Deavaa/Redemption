@@ -31,6 +31,11 @@ class PerformanceAnalysisController extends Controller
      */
     public function generate(Request $r)
     {
+        // If GET request with no filters, redirect to index
+        if ($r->isMethod('GET') && !$r->filled('academic_year_id')) {
+            return redirect()->route('admin.performance-analysis.index');
+        }
+
         $r->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
             'term_id' => 'required|exists:terms,id',
