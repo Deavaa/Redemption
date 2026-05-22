@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{{ $settings['school_name'] }} - {{ $settings['school_tagline'] }}">
     <title>{{ $settings['school_name'] }} - {{ $settings['school_tagline'] }}</title>
-    
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -15,7 +15,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --primary-color: {{ $settings['primary_color'] ?? '#0d0d2b' }};
@@ -25,45 +25,100 @@
             --text-light: #6c757d;
             --white: #ffffff;
             --light-bg: #f8f9fa;
+            --glass-bg: rgba(255,255,255,0.08);
+            --glass-border: rgba(255,255,255,0.18);
+            --glass-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            --nav-height: 80px;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Montserrat', sans-serif;
             color: var(--text-dark);
             line-height: 1.6;
             overflow-x: hidden;
         }
-        
+
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Playfair Display', serif;
             font-weight: 700;
         }
-        
-        /* Navigation */
-        .navbar {
-            background: rgba(13, 13, 43, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1rem 0;
-            transition: all 0.3s ease;
+
+        /* ========== Custom Cursor ========== */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 99999;
+            transition: transform 0.1s ease;
+            mix-blend-mode: difference;
         }
-        
+
+        .cursor-ring {
+            width: 36px;
+            height: 36px;
+            border: 2px solid rgba(201,168,76,0.4);
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 99998;
+            transition: transform 0.15s ease, width 0.2s, height 0.2s, border-color 0.2s;
+        }
+
+        @media (max-width: 991px) {
+            .cursor-dot, .cursor-ring { display: none !important; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .cursor-dot, .cursor-ring { display: none !important; }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* ========== Glassmorphism Navbar ========== */
+        .navbar {
+            background: rgba(13, 13, 43, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 1rem 0;
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+        }
+
         .navbar.scrolled {
             padding: 0.5rem 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: rgba(13, 13, 43, 0.88);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.15);
         }
-        
+
         .navbar-brand {
             font-family: 'Playfair Display', serif;
             font-weight: 700;
             line-height: 1;
         }
-        
+
         .navbar-brand .brand-pre {
             color: var(--white);
             font-weight: 400;
@@ -71,13 +126,13 @@
             display: block;
             line-height: 1;
         }
-        
+
         .navbar-brand .brand-name {
             color: var(--secondary-color);
             font-weight: 700;
             font-size: 1.3rem;
         }
-        
+
         .nav-link {
             color: rgba(255,255,255,0.85) !important;
             font-weight: 500;
@@ -85,11 +140,11 @@
             position: relative;
             transition: color 0.3s ease;
         }
-        
+
         .nav-link:hover {
             color: var(--secondary-color) !important;
         }
-        
+
         .nav-link::after {
             content: '';
             position: absolute;
@@ -101,11 +156,11 @@
             transition: all 0.3s ease;
             transform: translateX(-50%);
         }
-        
+
         .nav-link:hover::after {
             width: 80%;
         }
-        
+
         .btn-nav-portal {
             background: var(--secondary-color);
             color: var(--primary-color) !important;
@@ -114,26 +169,137 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
-        
+
         .btn-nav-portal:hover {
             background: #e0c060;
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
         }
-        
-        /* Hero Slider Section */
+
+        /* ========== Mobile Drawer ========== */
+        .mobile-drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1049;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-drawer {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            max-width: 85vw;
+            height: 100vh;
+            background: var(--primary-color);
+            z-index: 1050;
+            transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .mobile-drawer.active {
+            right: 0;
+        }
+
+        .mobile-drawer-close {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.5rem;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-drawer .mobile-nav-links {
+            list-style: none;
+            padding: 0;
+            margin-top: 3rem;
+        }
+
+        .mobile-drawer .mobile-nav-links li {
+            margin-bottom: 0.25rem;
+        }
+
+        .mobile-drawer .mobile-nav-links a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            display: block;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-drawer .mobile-nav-links a:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--secondary-color);
+        }
+
+        .mobile-drawer .mobile-login-btn {
+            display: block;
+            margin-top: 1.5rem;
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            text-align: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-drawer .mobile-login-btn:hover {
+            background: #e0c060;
+        }
+
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        @media (max-width: 991px) {
+            .hamburger-btn { display: block; }
+            .navbar-collapse { display: none !important; }
+        }
+
+        /* ========== Hero Slider Section ========== */
         .hero-slider {
             position: relative;
             min-height: 100vh;
         }
-        
+
         .hero-slider .carousel,
         .hero-slider .carousel-inner,
         .hero-slider .carousel-item {
             height: 100vh;
             min-height: 600px;
         }
-        
+
         .hero-slide {
             background-size: cover;
             background-position: center;
@@ -142,85 +308,107 @@
             width: 100%;
             display: flex;
             align-items: center;
+            will-change: transform;
         }
-        
+
         .hero-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(13, 13, 43, 0.85) 0%, rgba(13, 13, 43, 0.65) 100%);
+            background: linear-gradient(135deg, rgba(13, 13, 43, 0.88) 0%, rgba(13, 13, 43, 0.6) 100%);
         }
-        
+
+        /* Dot grid overlay */
+        .hero-dot-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(rgba(201,168,76,0.15) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
         .hero-slider .carousel-item {
             position: relative;
         }
-        
+
         .hero-slider .carousel-item .container {
             position: relative;
             z-index: 2;
         }
-        
+
         .hero-slider .carousel-control-prev,
         .hero-slider .carousel-control-next {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 50%;
             top: 50%;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.4s ease;
         }
-        
+
         .hero-slider:hover .carousel-control-prev,
         .hero-slider:hover .carousel-control-next {
             opacity: 1;
         }
-        
+
+        .hero-slider .carousel-control-prev:hover,
+        .hero-slider .carousel-control-next:hover {
+            background: rgba(201,168,76,0.3);
+            border-color: var(--secondary-color);
+        }
+
         .hero-slider .carousel-control-prev {
             left: 30px;
         }
-        
+
         .hero-slider .carousel-control-next {
             right: 30px;
         }
-        
+
         .hero-slider .carousel-control-prev-icon,
         .hero-slider .carousel-control-next-icon {
             width: 24px;
             height: 24px;
         }
-        
+
         .hero-slider .carousel-indicators {
             bottom: 30px;
         }
-        
+
         .hero-slider .carousel-indicators button {
             width: 12px;
             height: 12px;
             border-radius: 50%;
             margin: 0 6px;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.4);
             border: none;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
-        
+
         .hero-slider .carousel-indicators button.active {
             background: var(--secondary-color);
-            width: 30px;
+            width: 36px;
             border-radius: 6px;
         }
-        
+
         .hero-content {
             color: var(--white);
             padding: 4rem 0;
         }
-        
+
         .hero-badge {
             display: inline-block;
-            background: rgba(201, 168, 76, 0.2);
-            border: 1px solid var(--secondary-color);
+            background: rgba(201, 168, 76, 0.15);
+            border: 1px solid rgba(201,168,76,0.4);
             color: var(--secondary-color);
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
@@ -229,31 +417,53 @@
             margin-bottom: 1.5rem;
             letter-spacing: 1px;
         }
-        
+
+        /* Animated text reveal */
+        .hero-text-reveal {
+            overflow: hidden;
+        }
+
+        .hero-text-reveal > * {
+            transform: translateY(100%);
+            opacity: 0;
+            animation: textReveal 0.8s cubic-bezier(0.4,0,0.2,1) forwards;
+        }
+
+        .hero-text-reveal > *:nth-child(1) { animation-delay: 0.2s; }
+        .hero-text-reveal > *:nth-child(2) { animation-delay: 0.4s; }
+        .hero-text-reveal > *:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes textReveal {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
         .hero h1 {
             font-size: 3.5rem;
             line-height: 1.2;
             margin-bottom: 1.5rem;
             color: var(--white);
         }
-        
+
         .hero h1 span {
             color: var(--secondary-color);
         }
-        
+
         .hero p {
             font-size: 1.2rem;
             color: rgba(255,255,255,0.85);
             margin-bottom: 2rem;
             max-width: 600px;
         }
-        
+
         .hero-buttons {
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
         }
-        
+
         .btn-hero-primary {
             background: var(--secondary-color);
             color: var(--primary-color);
@@ -264,13 +474,13 @@
             transition: all 0.3s ease;
             border: none;
         }
-        
+
         .btn-hero-primary:hover {
             background: #e0c060;
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(201, 168, 76, 0.4);
         }
-        
+
         .btn-hero-secondary {
             background: transparent;
             color: var(--white);
@@ -278,47 +488,53 @@
             border-radius: 50px;
             font-weight: 600;
             font-size: 1rem;
-            border: 2px solid rgba(255,255,255,0.5);
+            border: 2px solid rgba(255,255,255,0.4);
             transition: all 0.3s ease;
         }
-        
+
         .btn-hero-secondary:hover {
             background: rgba(255,255,255,0.1);
             border-color: var(--white);
             color: var(--white);
         }
-        
+
         .hero-stats {
             display: flex;
             gap: 3rem;
             margin-top: 3rem;
             padding-top: 2rem;
-            border-top: 1px solid rgba(255,255,255,0.2);
+            border-top: 1px solid rgba(255,255,255,0.15);
         }
-        
+
         .stat-item h3 {
             font-size: 2.5rem;
             color: var(--secondary-color);
             margin-bottom: 0.25rem;
         }
-        
+
         .stat-item p {
             font-size: 0.9rem;
             color: rgba(255,255,255,0.7);
             margin: 0;
         }
-        
-        /* Features Section */
-        .features {
-            padding: 6rem 0;
-            background: var(--white);
+
+        /* ========== Section Dividers (clip-path) ========== */
+        .section-divider-top {
+            clip-path: polygon(0 0, 100% 40px, 100% 100%, 0 100%);
+            margin-top: -40px;
         }
-        
+
+        .section-divider-bottom {
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 40px), 0 100%);
+            margin-bottom: -40px;
+        }
+
+        /* ========== Section Headers ========== */
         .section-header {
             text-align: center;
             margin-bottom: 4rem;
         }
-        
+
         .section-badge {
             display: inline-block;
             background: rgba(201, 168, 76, 0.1);
@@ -331,107 +547,250 @@
             letter-spacing: 1px;
             text-transform: uppercase;
         }
-        
+
         .section-header h2 {
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 1rem;
         }
-        
+
         .section-header p {
             color: var(--text-light);
             max-width: 600px;
             margin: 0 auto;
         }
-        
+
+        /* ========== Animated Counters Section ========== */
+        .counters-section {
+            padding: 5rem 0;
+            background: var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .counters-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(rgba(201,168,76,0.08) 1px, transparent 1px);
+            background-size: 25px 25px;
+        }
+
+        .counter-item {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .counter-item .counter-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(201,168,76,0.15);
+            border: 1px solid rgba(201,168,76,0.3);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+
+        .counter-item .counter-icon i {
+            font-size: 1.75rem;
+            color: var(--secondary-color);
+        }
+
+        .counter-item h3 {
+            font-size: 3rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.25rem;
+            font-weight: 800;
+        }
+
+        .counter-item p {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* ========== Features Section (Glassmorphic Cards) ========== */
+        .features {
+            padding: 6rem 0;
+            background: var(--white);
+            position: relative;
+        }
+
         .feature-card {
             background: var(--white);
-            border-radius: 20px;
-            padding: 2.5rem;
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
             text-align: center;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
             height: 100%;
+            position: relative;
+            overflow: hidden;
             border: 1px solid #eee;
         }
-        
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color), var(--secondary-color));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(13,13,43,0.12);
             border-color: transparent;
         }
-        
+
+        /* Hover glow effect */
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+            z-index: 0;
+        }
+
+        .feature-card:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .feature-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
         .feature-icon {
             width: 80px;
             height: 80px;
             background: linear-gradient(135deg, var(--primary-color), #1a1a4e);
-            border-radius: 50%;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
+            transition: all 0.3s ease;
         }
-        
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(-5deg);
+            box-shadow: 0 8px 25px rgba(13,13,43,0.3);
+        }
+
         .feature-icon i {
             font-size: 2rem;
             color: var(--secondary-color);
         }
-        
+
         .feature-card h4 {
             font-size: 1.25rem;
             margin-bottom: 1rem;
             color: var(--primary-color);
         }
-        
+
         .feature-card p {
             color: var(--text-light);
             font-size: 0.95rem;
         }
-        
-        /* About Section */
+
+        /* ========== About Section (Split Layout) ========== */
         .about {
             padding: 6rem 0;
             background: var(--light-bg);
         }
-        
-        .about-excellence-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
+
+        .about-image-col {
+            position: relative;
+        }
+
+        .about-image-wrapper {
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+        }
+
+        .about-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            min-height: 400px;
+        }
+
+        .about-image-badge {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
             background: var(--secondary-color);
             color: var(--primary-color);
-            padding: 0.75rem 2rem;
-            border-radius: 50px;
-            margin-bottom: 2rem;
+            padding: 1rem 2rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        
-        .about-excellence-badge h3 {
-            font-size: 2rem;
+
+        .about-image-badge h3 {
+            font-size: 2.5rem;
             margin: 0;
             line-height: 1;
         }
-        
-        .about-excellence-badge p {
+
+        .about-image-badge p {
             margin: 0;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
         }
-        
+
+        .about-text-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
         .about-content h2 {
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 1.5rem;
         }
-        
+
         .about-content p {
             color: var(--text-light);
             margin-bottom: 1.5rem;
         }
-        
+
         .about-features {
             list-style: none;
             padding: 0;
         }
-        
+
         .about-features li {
             display: flex;
             align-items: center;
@@ -439,40 +798,62 @@
             color: var(--text-dark);
             font-weight: 500;
         }
-        
+
         .about-features li i {
             color: var(--secondary-color);
             margin-right: 1rem;
             font-size: 1.2rem;
         }
-        
-        /* Programs Section */
+
+        /* ========== Programs Section (Horizontal Scroll) ========== */
         .programs {
             padding: 6rem 0;
             background: var(--white);
         }
-        
+
+        .programs-scroll-wrapper {
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 1rem;
+        }
+
+        .programs-scroll-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .programs-scroll-track {
+            display: flex;
+            gap: 1.5rem;
+            padding: 0.5rem 0;
+        }
+
         .program-card {
+            min-width: 340px;
+            max-width: 340px;
             background: var(--white);
-            border-radius: 20px;
+            border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            height: 100%;
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            scroll-snap-align: start;
+            flex-shrink: 0;
         }
-        
+
         .program-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
         }
-        
+
         .program-image {
             height: 200px;
             background-size: cover;
             background-position: center;
             position: relative;
         }
-        
+
         .program-image::after {
             content: '';
             position: absolute;
@@ -482,11 +863,11 @@
             height: 50%;
             background: linear-gradient(to top, rgba(13,13,43,0.5), transparent);
         }
-        
+
         .program-content {
             padding: 2rem;
         }
-        
+
         .program-tag {
             display: inline-block;
             background: rgba(201, 168, 76, 0.1);
@@ -497,19 +878,19 @@
             font-weight: 600;
             margin-bottom: 1rem;
         }
-        
+
         .program-content h4 {
             font-size: 1.25rem;
             margin-bottom: 0.75rem;
             color: var(--primary-color);
         }
-        
+
         .program-content p {
             color: var(--text-light);
             font-size: 0.95rem;
             margin-bottom: 1rem;
         }
-        
+
         .program-link {
             color: var(--secondary-color);
             font-weight: 600;
@@ -517,186 +898,515 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            transition: gap 0.3s ease;
         }
-        
+
         .program-link:hover {
+            gap: 0.75rem;
             color: var(--primary-color);
         }
-        
-        /* Gallery Section */
+
+        .programs-scroll-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .programs-scroll-nav button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .programs-scroll-nav button:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        /* ========== Gallery Section (Masonry) ========== */
         .gallery {
             padding: 6rem 0;
             background: var(--light-bg);
         }
-        
+
+        .gallery-masonry {
+            columns: 3;
+            column-gap: 1rem;
+        }
+
         .gallery-item {
             position: relative;
-            border-radius: 15px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             cursor: pointer;
-            aspect-ratio: 4/3;
+            margin-bottom: 1rem;
+            break-inside: avoid;
+            display: inline-block;
+            width: 100%;
         }
-        
+
         .gallery-item img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            display: block;
             transition: transform 0.5s ease;
         }
-        
+
         .gallery-item:hover img {
-            transform: scale(1.1);
+            transform: scale(1.08);
         }
-        
+
         .gallery-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(13, 13, 43, 0.8) 0%, rgba(201, 168, 76, 0.8) 100%);
+            background: linear-gradient(135deg, rgba(13, 13, 43, 0.75) 0%, rgba(201, 168, 76, 0.75) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        
+
         .gallery-item:hover .gallery-overlay {
             opacity: 1;
         }
-        
+
         .gallery-overlay i {
             font-size: 2rem;
             color: var(--white);
         }
-        
-        /* Team Section */
-        .team {
+
+        @media (max-width: 991px) {
+            .gallery-masonry { columns: 2; }
+        }
+
+        @media (max-width: 575px) {
+            .gallery-masonry { columns: 1; }
+        }
+
+        /* ========== Video Section ========== */
+        .video-section {
             padding: 6rem 0;
             background: var(--white);
         }
-        
-        .team-card {
-            background: var(--white);
+
+        .video-card {
             border-radius: 20px;
             overflow: hidden;
+            background: var(--white);
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            height: 100%;
+            cursor: pointer;
         }
-        
-        .team-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+
+        .video-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
         }
-        
-        .team-image {
+
+        .video-thumb {
             position: relative;
+            padding-bottom: 56.25%;
+            background: var(--primary-color);
             overflow: hidden;
-            height: 280px;
         }
-        
-        .team-image img {
+
+        .video-thumb img {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.5s ease;
         }
-        
-        .team-card:hover .team-image img {
+
+        .video-card:hover .video-thumb img {
             transform: scale(1.05);
         }
-        
-        .team-content {
-            padding: 1.5rem;
-            background: var(--white);
-        }
-        
-        .team-content h4 {
-            font-size: 1.1rem;
-            margin-bottom: 0.25rem;
-            color: var(--primary-color);
-        }
-        
-        .team-content p {
-            color: var(--secondary-color);
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-        
-        .team-social {
-            display: flex;
-            justify-content: center;
-            gap: 0.75rem;
-        }
-        
-        .team-social a {
-            width: 35px;
-            height: 35px;
-            background: var(--light-bg);
+
+        .video-play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 68px;
+            height: 68px;
+            background: rgba(201,168,76,0.9);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-light);
+            z-index: 2;
             transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(201,168,76,0.4);
         }
-        
-        .team-social a:hover {
+
+        .video-play-btn i {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-left: 4px;
+        }
+
+        .video-card:hover .video-play-btn {
+            transform: translate(-50%, -50%) scale(1.1);
             background: var(--secondary-color);
+        }
+
+        .video-info {
+            padding: 1.25rem;
+        }
+
+        .video-info h5 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
             color: var(--primary-color);
         }
-        
-        /* CTA Section */
+
+        .video-info .video-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .video-info .video-meta .video-category {
+            background: rgba(201,168,76,0.1);
+            color: var(--secondary-color);
+            padding: 0.15rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* Video Modal */
+        .video-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 2rem;
+        }
+
+        .video-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .video-modal-content {
+            width: 100%;
+            max-width: 900px;
+            position: relative;
+        }
+
+        .video-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.75rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .video-modal-close:hover {
+            transform: rotate(90deg);
+        }
+
+        .video-modal-content .ratio {
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* ========== Team Section (Rounded Avatar) ========== */
+        .team {
+            padding: 6rem 0;
+            background: var(--light-bg);
+        }
+
+        .team-card {
+            background: var(--white);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            text-align: center;
+            padding: 2.5rem 1.5rem 2rem;
+            height: 100%;
+            position: relative;
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+        }
+
+        .team-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 1.5rem;
+            border: 4px solid rgba(201,168,76,0.2);
+            position: relative;
+            transition: border-color 0.3s ease;
+        }
+
+        .team-card:hover .team-avatar {
+            border-color: var(--secondary-color);
+        }
+
+        .team-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .team-card:hover .team-avatar img {
+            transform: scale(1.08);
+        }
+
+        /* Social overlay on hover */
+        .team-social-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13,13,43,0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .team-card:hover .team-social-overlay {
+            opacity: 1;
+        }
+
+        .team-social-overlay a {
+            width: 30px;
+            height: 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .team-social-overlay a:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            transform: scale(1.15);
+        }
+
+        .team-content h4 {
+            font-size: 1.15rem;
+            margin-bottom: 0.25rem;
+            color: var(--primary-color);
+        }
+
+        .team-content p {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* ========== CTA Section (Animated Gradient) ========== */
         .cta {
             padding: 6rem 0;
-            background: linear-gradient(135deg, var(--primary-color) 0%, #1a1a4e 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1a1a4e 50%, var(--primary-color) 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 8s ease infinite;
             color: var(--white);
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 50%);
+            animation: ctaGlow 6s ease-in-out infinite;
+        }
+
+        @keyframes ctaGlow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(5%, 5%); }
+        }
+
         .cta h2 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
             color: var(--white);
+            position: relative;
         }
-        
+
         .cta p {
             font-size: 1.1rem;
             color: rgba(255,255,255,0.8);
             max-width: 600px;
             margin: 0 auto 2rem;
+            position: relative;
         }
-        
-        /* Footer */
+
+        .cta .btn { position: relative; }
+
+        /* ========== Contact Section (Two-Column) ========== */
+        .contact-section {
+            padding: 6rem 0;
+            background: var(--white);
+        }
+
+        .contact-form-wrapper {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            height: 100%;
+        }
+
+        .contact-form-wrapper .form-control,
+        .contact-form-wrapper .form-select {
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .contact-form-wrapper .form-control:focus,
+        .contact-form-wrapper .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+        }
+
+        .contact-info-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            height: 100%;
+            justify-content: center;
+        }
+
+        .contact-info-card {
+            background: var(--light-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .contact-info-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .contact-info-card .info-icon {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            background: linear-gradient(135deg, var(--primary-color), #1a1a4e);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .contact-info-card .info-icon i {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+
+        .contact-info-card h5 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            color: var(--primary-color);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+        }
+
+        .contact-info-card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* ========== Footer (Modern Layout) ========== */
         .footer {
             background: var(--primary-color);
             color: var(--white);
             padding: 4rem 0 2rem;
         }
-        
+
         .footer-brand {
             font-family: 'Playfair Display', serif;
             font-size: 1.5rem;
             margin-bottom: 1rem;
         }
-        
+
         .footer-brand .brand-pre {
             font-weight: 400;
         }
-        
+
         .footer-brand .brand-name {
             color: var(--secondary-color);
             font-weight: 700;
         }
-        
+
         .footer p {
             color: rgba(255,255,255,0.7);
             font-size: 0.9rem;
         }
-        
+
         .footer h5 {
             color: var(--white);
             font-size: 1rem;
@@ -704,89 +1414,246 @@
             font-family: 'Montserrat', sans-serif;
             font-weight: 600;
         }
-        
+
         .footer-links {
             list-style: none;
             padding: 0;
         }
-        
+
         .footer-links li {
             margin-bottom: 0.75rem;
         }
-        
+
         .footer-links a {
             color: rgba(255,255,255,0.7);
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
             font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
         }
-        
+
         .footer-links a:hover {
             color: var(--secondary-color);
+            transform: translateX(4px);
         }
-        
+
         .social-links {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             margin-top: 1rem;
         }
-        
+
         .social-links a {
             width: 40px;
             height: 40px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--white);
             transition: all 0.3s ease;
         }
-        
+
         .social-links a:hover {
             background: var(--secondary-color);
             color: var(--primary-color);
             transform: translateY(-3px);
+            border-color: var(--secondary-color);
         }
-        
+
+        /* Newsletter */
+        .newsletter-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .newsletter-form input {
+            flex: 1;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 0.65rem 1rem;
+            color: var(--white);
+            font-size: 0.9rem;
+        }
+
+        .newsletter-form input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .newsletter-form input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .newsletter-form button {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            padding: 0.65rem 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .newsletter-form button:hover {
+            background: #e0c060;
+            transform: translateY(-2px);
+        }
+
         .footer-bottom {
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.08);
             padding-top: 2rem;
             margin-top: 3rem;
-            text-align: center;
         }
-        
+
         .footer-bottom p {
             margin: 0;
             font-size: 0.85rem;
         }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
+
+        /* ========== Back to Top Button ========== */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 14px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(201,168,76,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-to-top:hover {
+            background: #e0c060;
+            transform: translateY(-3px);
+        }
+
+        /* ========== Scroll Reveal ========== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .reveal-left.revealed {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(40px);
+            transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .reveal-right.revealed {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .reveal-scale.revealed {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 991px) {
             .hero h1 {
                 font-size: 2.5rem;
             }
-            
+
             .hero-stats {
                 flex-direction: column;
                 gap: 1.5rem;
             }
-            
-            .about-badge {
-                position: static;
-                margin-top: 1rem;
-            }
-            
+
             .section-header h2 {
                 font-size: 2rem;
             }
-            
+
             .cta h2 {
                 font-size: 2rem;
             }
+
+            .about-image-wrapper img {
+                min-height: 300px;
+            }
+
+            .counter-item h3 {
+                font-size: 2.25rem;
+            }
         }
-        
-        /* Animations */
+
+        @media (max-width: 575px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .section-header h2 {
+                font-size: 1.75rem;
+            }
+
+            .about-image-badge {
+                bottom: 12px;
+                left: 12px;
+                padding: 0.75rem 1.25rem;
+            }
+
+            .about-image-badge h3 {
+                font-size: 1.75rem;
+            }
+
+            .counter-item h3 {
+                font-size: 2rem;
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+            }
+        }
+
+        /* ========== Animations ========== */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -797,11 +1664,11 @@
                 transform: translateY(0);
             }
         }
-        
+
         .animate-fade-up {
             animation: fadeInUp 0.6s ease forwards;
         }
-        
+
         .delay-1 { animation-delay: 0.1s; }
         .delay-2 { animation-delay: 0.2s; }
         .delay-3 { animation-delay: 0.3s; }
@@ -809,6 +1676,10 @@
     </style>
 </head>
 <body>
+    <!-- Custom Cursor (Desktop only) -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
     <!-- Announcement Ticker Bar -->
     <div id="announcementTicker" style="display:none;background:linear-gradient(135deg,#4361ee 0%,#3a0ca3 100%);color:#fff;overflow:hidden;position:fixed;top:0;left:0;right:0;z-index:9999;">
         <div style="display:flex;align-items:center;height:36px;">
@@ -832,7 +1703,7 @@
     @media(max-width:768px) { .ticker-item { padding:0 14px;font-size:12px; } }
     </style>
 
-    <!-- Navigation -->
+    <!-- ========== Glassmorphism Navbar ========== -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar" style="top:36px;">
         <div class="container">
             <a class="navbar-brand" href="#">
@@ -842,9 +1713,7 @@
                 <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}<br></span>
                 <span class="brand-name">{{ Str::afterLast($settings['school_name'], ' ') }}</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <!-- Desktop nav -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
@@ -854,7 +1723,13 @@
                         <a class="nav-link" href="#about">About</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="#programs">Programs</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#gallery">Gallery</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#videos">Videos</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#team">Our Team</a>
@@ -869,8 +1744,33 @@
                     </li>
                 </ul>
             </div>
+            <!-- Hamburger for mobile -->
+            <button class="hamburger-btn" id="hamburgerBtn" type="button" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </nav>
+
+    <!-- Mobile Drawer Overlay -->
+    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+    <!-- Mobile Drawer -->
+    <div class="mobile-drawer" id="mobileDrawer">
+        <button class="mobile-drawer-close" id="mobileDrawerClose" aria-label="Close menu">
+            <i class="fas fa-times"></i>
+        </button>
+        <ul class="mobile-nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#programs">Programs</a></li>
+            <li><a href="#gallery">Gallery</a></li>
+            <li><a href="#videos">Videos</a></li>
+            <li><a href="#team">Our Team</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+        <a href="{{ route('login') }}" class="mobile-login-btn">
+            <i class="fas fa-sign-in-alt me-2"></i>Login
+        </a>
+    </div>
 
     {{-- Latest News Banner --}}
     @isset($latestNews)
@@ -898,7 +1798,7 @@
     @endif
     @endisset
 
-    <!-- Hero Slider Section -->
+    <!-- ========== Hero Slider Section ========== -->
     <section class="hero-slider" id="home">
         <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-pause="false">
             <div class="carousel-indicators">
@@ -913,12 +1813,13 @@
             <div class="carousel-inner">
                 @forelse($sliders as $index => $slider)
                     <div class="carousel-item @if($index === 0) active @endif" data-bs-interval="6000">
-                        <div class="hero-slide" style="background-image: url('{{ asset('storage/' . $slider->image_path) }}')">
+                        <div class="hero-slide" data-parallax style="background-image: url('{{ asset('storage/' . $slider->image_path) }}')">
                             <div class="hero-overlay"></div>
+                            <div class="hero-dot-grid"></div>
                             <div class="container h-100">
                                 <div class="row h-100 align-items-center">
                                     <div class="col-lg-8">
-                                        <div class="hero-content">
+                                        <div class="hero-content hero-text-reveal">
                                             @if($slider->title)
                                                 <span class="hero-badge">
                                                     <i class="fas fa-graduation-cap me-2"></i>{{ $slider->title }}
@@ -939,12 +1840,13 @@
                 @empty
                     <!-- Default Slide 1 -->
                     <div class="carousel-item active" data-bs-interval="6000">
-                        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
+                        <div class="hero-slide" data-parallax style="background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
                             <div class="hero-overlay"></div>
+                            <div class="hero-dot-grid"></div>
                             <div class="container h-100">
                                 <div class="row h-100 align-items-center">
                                     <div class="col-lg-8">
-                                        <div class="hero-content">
+                                        <div class="hero-content hero-text-reveal">
                                             <span class="hero-badge">
                                                 <i class="fas fa-graduation-cap me-2"></i>Admissions Open 2026
                                             </span>
@@ -958,12 +1860,13 @@
                     </div>
                     <!-- Default Slide 2 -->
                     <div class="carousel-item" data-bs-interval="6000">
-                        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
+                        <div class="hero-slide" data-parallax style="background-image: url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
                             <div class="hero-overlay"></div>
+                            <div class="hero-dot-grid"></div>
                             <div class="container h-100">
                                 <div class="row h-100 align-items-center">
                                     <div class="col-lg-8">
-                                        <div class="hero-content">
+                                        <div class="hero-content hero-text-reveal">
                                             <span class="hero-badge">
                                                 <i class="fas fa-book-reader me-2"></i>Excellence in Education
                                             </span>
@@ -977,12 +1880,13 @@
                     </div>
                     <!-- Default Slide 3 -->
                     <div class="carousel-item" data-bs-interval="6000">
-                        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
+                        <div class="hero-slide" data-parallax style="background-image: url('https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
                             <div class="hero-overlay"></div>
+                            <div class="hero-dot-grid"></div>
                             <div class="container h-100">
                                 <div class="row h-100 align-items-center">
                                     <div class="col-lg-8">
-                                        <div class="hero-content">
+                                        <div class="hero-content hero-text-reveal">
                                             <span class="hero-badge">
                                                 <i class="fas fa-users me-2"></i>Join Our Community
                                             </span>
@@ -990,15 +1894,15 @@
                                             <p>With {{ $settings['total_students'] }} students, {{ $settings['total_teachers'] }} expert teachers, and a {{ $settings['university_acceptance'] }} university acceptance rate, {{ $settings['school_name'] }} is where excellence meets opportunity.</p>
                                             <div class="hero-stats">
                                                 <div class="stat-item">
-                                                    <h3>{{ $settings['total_students'] }}</h3>
+                                                    <h3><span class="counter" data-target="{{ $settings['total_students'] }}">0</span>+</h3>
                                                     <p>Students</p>
                                                 </div>
                                                 <div class="stat-item">
-                                                    <h3>{{ $settings['total_teachers'] }}</h3>
+                                                    <h3><span class="counter" data-target="{{ $settings['total_teachers'] }}">0</span>+</h3>
                                                     <p>Expert Teachers</p>
                                                 </div>
                                                 <div class="stat-item">
-                                                    <h3>{{ $settings['university_acceptance'] }}</h3>
+                                                    <h3><span class="counter" data-target="{{ preg_replace('/[^0-9]/', '', $settings['university_acceptance']) }}">0</span>%</h3>
                                                     <p>University Acceptance</p>
                                                 </div>
                                             </div>
@@ -1019,17 +1923,61 @@
         </div>
     </section>
 
-    <!-- Features Section -->
+    <!-- ========== Animated Counters Section ========== -->
+    <section class="counters-section section-divider-top" id="counters">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6 col-6">
+                    <div class="counter-item reveal">
+                        <div class="counter-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h3><span class="counter" data-target="{{ $settings['total_students'] }}">0</span>+</h3>
+                        <p>Students</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-6">
+                    <div class="counter-item reveal">
+                        <div class="counter-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h3><span class="counter" data-target="{{ $settings['total_teachers'] }}">0</span>+</h3>
+                        <p>Expert Teachers</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-6">
+                    <div class="counter-item reveal">
+                        <div class="counter-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h3><span class="counter" data-target="{{ $settings['years_of_excellence'] }}">0</span>+</h3>
+                        <p>Years of Excellence</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-6">
+                    <div class="counter-item reveal">
+                        <div class="counter-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <h3><span class="counter" data-target="{{ preg_replace('/[^0-9]/', '', $settings['university_acceptance']) }}">0</span>%</h3>
+                        <p>University Acceptance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== Features Section (Glassmorphic Cards) ========== -->
     <section class="features" id="features">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header reveal">
                 <span class="section-badge">Why Choose Us</span>
                 <h2>Excellence in Every Aspect</h2>
                 <p>We provide a comprehensive educational experience that goes beyond academics, focusing on holistic development and character building.</p>
             </div>
             <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
+                    <div class="feature-card reveal">
                         <div class="feature-icon">
                             <i class="fas fa-chalkboard-teacher"></i>
                         </div>
@@ -1038,7 +1986,7 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
+                    <div class="feature-card reveal">
                         <div class="feature-icon">
                             <i class="fas fa-microscope"></i>
                         </div>
@@ -1047,7 +1995,7 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
+                    <div class="feature-card reveal">
                         <div class="feature-icon">
                             <i class="fas fa-users"></i>
                         </div>
@@ -1056,7 +2004,7 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
+                    <div class="feature-card reveal">
                         <div class="feature-icon">
                             <i class="fas fa-palette"></i>
                         </div>
@@ -1065,7 +2013,7 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
+                    <div class="feature-card reveal">
                         <div class="feature-icon">
                             <i class="fas fa-globe"></i>
                         </div>
@@ -1074,7 +2022,7 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
+                    <div class="feature-card reveal">
                         <div class="feature-icon">
                             <i class="fas fa-award"></i>
                         </div>
@@ -1086,21 +2034,26 @@
         </div>
     </section>
 
-    <!-- About Section -->
+    <!-- ========== About Section (Split Layout) ========== -->
     <section class="about" id="about">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="about-content text-center">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6 about-image-col reveal-left">
+                    <div class="about-image-wrapper">
+                        <img src="{{ isset($settings['about_image']) && $settings['about_image'] && file_exists(public_path('storage/' . $settings['about_image'])) ? asset('storage/' . $settings['about_image']) : 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" alt="About {{ $settings['school_name'] }}">
+                        <div class="about-image-badge">
+                            <h3>{{ $settings['years_of_excellence'] }}</h3>
+                            <p>Years of<br>Excellence</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 about-text-col reveal-right">
+                    <div class="about-content">
                         <span class="section-badge">About Our School</span>
                         <h2>A Legacy of Academic Excellence</h2>
-                        <div class="about-excellence-badge">
-                            <h3>{{ $settings['years_of_excellence'] }}</h3>
-                            <p>Years of Excellence</p>
-                        </div>
                         <p>{{ $settings['about_description'] }}</p>
                         <p>{{ $settings['about_mission'] }}</p>
-                        <ul class="about-features d-inline-block text-start">
+                        <ul class="about-features">
                             <li><i class="fas fa-check-circle"></i> Accredited by National Education Board</li>
                             <li><i class="fas fa-check-circle"></i> Award-winning STEM programs</li>
                             <li><i class="fas fa-check-circle"></i> Comprehensive extracurricular activities</li>
@@ -1117,16 +2070,16 @@
         </div>
     </section>
 
-    <!-- Programs Section -->
+    <!-- ========== Programs Section (Horizontal Scroll) ========== -->
     <section class="programs" id="programs">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header reveal">
                 <span class="section-badge">Academic Programs</span>
                 <h2>Pathways to Success</h2>
                 <p>Our comprehensive curriculum is designed to challenge and inspire students at every stage of their educational journey.</p>
             </div>
-            <div class="row g-4">
-                <div class="col-lg-4 col-md-6">
+            <div class="programs-scroll-wrapper reveal" id="programsScrollWrapper">
+                <div class="programs-scroll-track">
                     <div class="program-card">
                         <div class="program-image" style="background-image: url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')"></div>
                         <div class="program-content">
@@ -1136,8 +2089,6 @@
                             <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
                     <div class="program-card">
                         <div class="program-image" style="background-image: url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')"></div>
                         <div class="program-content">
@@ -1147,8 +2098,6 @@
                             <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
                     <div class="program-card">
                         <div class="program-image" style="background-image: url('https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')"></div>
                         <div class="program-content">
@@ -1158,93 +2107,138 @@
                             <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
+                    <div class="program-card">
+                        <div class="program-image" style="background-image: url('https://images.unsplash.com/photo-1571260899304-425eee4c7efc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')"></div>
+                        <div class="program-content">
+                            <span class="program-tag">All Ages</span>
+                            <h4>Extracurricular Programs</h4>
+                            <p>From robotics to debate, music to sports — our diverse extracurricular offerings help students discover their passions.</p>
+                            <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            <div class="programs-scroll-nav">
+                <button id="programsScrollLeft" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+                <button id="programsScrollRight" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
     </section>
 
-    <!-- Gallery Section -->
+    <!-- ========== Gallery Section (Masonry) ========== -->
     <section class="gallery" id="gallery">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header reveal">
                 <span class="section-badge">Photo Gallery</span>
                 <h2>Campus Life & Moments</h2>
                 <p>Explore our vibrant campus through these captured moments of learning, creativity, and achievement.</p>
             </div>
-            <div class="row g-3">
+            <div class="gallery-masonry reveal">
                 @forelse($galleryImages as $image)
-                    <div class="col-lg-4 col-md-6">
-                        <div class="gallery-item">
-                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $image->title ?? 'Gallery Image' }}">
-                            <div class="gallery-overlay">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
+                    <div class="gallery-item">
+                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $image->title ?? 'Gallery Image' }}" loading="lazy">
+                        <div class="gallery-overlay">
+                            <i class="fas fa-search-plus"></i>
                         </div>
                     </div>
                 @empty
-                    <div class="col-lg-4 col-md-6">
-                        <div class="gallery-item">
-                            <img src="https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Students in classroom">
-                            <div class="gallery-overlay">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
+                    <div class="gallery-item">
+                        <img src="https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Students in classroom" loading="lazy">
+                        <div class="gallery-overlay">
+                            <i class="fas fa-search-plus"></i>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="gallery-item">
-                            <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Science laboratory">
-                            <div class="gallery-overlay">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
+                    <div class="gallery-item">
+                        <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Science laboratory" loading="lazy">
+                        <div class="gallery-overlay">
+                            <i class="fas fa-search-plus"></i>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="gallery-item">
-                            <img src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="School library">
-                            <div class="gallery-overlay">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
+                    <div class="gallery-item">
+                        <img src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="School library" loading="lazy">
+                        <div class="gallery-overlay">
+                            <i class="fas fa-search-plus"></i>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="gallery-item">
-                            <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Sports activities">
-                            <div class="gallery-overlay">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
+                    <div class="gallery-item">
+                        <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Sports activities" loading="lazy">
+                        <div class="gallery-overlay">
+                            <i class="fas fa-search-plus"></i>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="gallery-item">
-                            <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Art class">
-                            <div class="gallery-overlay">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
+                    <div class="gallery-item">
+                        <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Art class" loading="lazy">
+                        <div class="gallery-overlay">
+                            <i class="fas fa-search-plus"></i>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="gallery-item">
-                            <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Graduation ceremony">
-                            <div class="gallery-overlay">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
+                    <div class="gallery-item">
+                        <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Graduation ceremony" loading="lazy">
+                        <div class="gallery-overlay">
+                            <i class="fas fa-search-plus"></i>
                         </div>
                     </div>
                 @endforelse
             </div>
             @if($galleryImages->count() > 0)
-            <div class="text-center mt-4">
-                <a href="{{ url('gallery') }}" class="btn btn-outline-light" style="border-radius:50px;padding:10px 30px;border-color:var(--secondary-color);color:var(--secondary-color);">View Full Gallery</a>
+            <div class="text-center mt-4 reveal">
+                <a href="{{ url('gallery') }}" class="btn btn-hero-primary" style="padding:0.75rem 2rem;">View Full Gallery</a>
             </div>
             @endif
         </div>
     </section>
 
-    <!-- Video Highlights Section -->
-    @if($websiteVideos->count() > 0 || $galleryVideos->count() > 0)
-    <section class="py-5" id="videos" style="background:var(--light-bg, #f8f9fa);">
+    <!-- ========== Video Section (NEW) ========== -->
+    @isset($videos)
+    @if($videos->count() > 0)
+    <section class="video-section" id="videos">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header reveal">
+                <span class="section-badge">Video Gallery</span>
+                <h2>Video Highlights</h2>
+                <p>Watch our school events, educational content, and student achievements come to life.</p>
+            </div>
+            <div class="row g-4">
+                @foreach($videos as $video)
+                <div class="col-lg-4 col-md-6">
+                    <div class="video-card reveal" data-video-id="{{ $video->youtube_video_id }}" onclick="openVideoModal('{{ $video->youtube_video_id }}')">
+                        <div class="video-thumb">
+                            @if($video->thumbnail)
+                                <img src="{{ $video->thumbnail }}" alt="{{ $video->title }}" loading="lazy">
+                            @else
+                                <img src="https://img.youtube.com/vi/{{ $video->youtube_video_id }}/hqdefault.jpg" alt="{{ $video->title }}" loading="lazy">
+                            @endif
+                            <div class="video-play-btn">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        <div class="video-info">
+                            <h5>{{ $video->title }}</h5>
+                            <div class="video-meta">
+                                @if($video->channel_name)
+                                    <span><i class="fab fa-youtube me-1" style="color:#ff0000;"></i>{{ $video->channel_name }}</span>
+                                @endif
+                                @if($video->category)
+                                    <span class="video-category">{{ $video->category }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+    @endisset
+
+    {{-- Legacy video section for backward compat --}}
+    @isset($websiteVideos)
+    @if(isset($videos) && $videos->count() > 0)
+    @elseif($websiteVideos->count() > 0 || (isset($galleryVideos) && $galleryVideos->count() > 0))
+    <section class="video-section" id="videos">
+        <div class="container">
+            <div class="section-header reveal">
                 <span class="section-badge">Video Gallery</span>
                 <h2>Video Highlights</h2>
                 <p>Watch our school events, educational content, and student achievements.</p>
@@ -1252,30 +2246,33 @@
             <div class="row g-4">
                 @foreach($websiteVideos as $video)
                 <div class="col-lg-4 col-md-6">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden;transition:transform 0.3s;">
-                        <div style="position:relative;padding-bottom:56.25%;height:0;background:#0d0d2b;">
-                            @if($video->youtube_video_id)
-                            <iframe src="https://www.youtube.com/embed/{{ $video->youtube_video_id }}"
-                                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
-                                allowfullscreen
-                                loading="lazy"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-                            </iframe>
+                    <div class="video-card reveal" onclick="openVideoModal('{{ $video->youtube_video_id }}')">
+                        <div class="video-thumb">
+                            @if($video->thumbnail)
+                                <img src="{{ $video->thumbnail }}" alt="{{ $video->title }}" loading="lazy">
+                            @else
+                                <img src="https://img.youtube.com/vi/{{ $video->youtube_video_id }}/hqdefault.jpg" alt="{{ $video->title }}" loading="lazy">
                             @endif
+                            <div class="video-play-btn">
+                                <i class="fas fa-play"></i>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <h6 class="mb-1" style="font-weight:700;color:var(--text-dark, #1a1a2e);">{{ $video->title }}</h6>
-                            @if($video->channel_name)
-                            <small class="text-muted"><i class="fab fa-youtube text-danger me-1"></i>{{ $video->channel_name }}</small>
-                            @endif
-                            @if($video->category)
-                            <span class="badge bg-light text-dark mt-1" style="font-size:0.65rem;">{{ $video->category }}</span>
-                            @endif
+                        <div class="video-info">
+                            <h5>{{ $video->title }}</h5>
+                            <div class="video-meta">
+                                @if($video->channel_name)
+                                    <span><i class="fab fa-youtube me-1" style="color:#ff0000;"></i>{{ $video->channel_name }}</span>
+                                @endif
+                                @if($video->category)
+                                    <span class="video-category">{{ $video->category }}</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
                 @endforeach
 
+                @isset($galleryVideos)
                 @foreach($galleryVideos as $gv)
                 @php
                     $gvVideoId = null;
@@ -1285,37 +2282,48 @@
                 @endphp
                 @if($gvVideoId)
                 <div class="col-lg-4 col-md-6">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden;transition:transform 0.3s;">
-                        <div style="position:relative;padding-bottom:56.25%;height:0;background:#0d0d2b;">
-                            <iframe src="https://www.youtube.com/embed/{{ $gvVideoId }}"
-                                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
-                                allowfullscreen
-                                loading="lazy"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-                            </iframe>
+                    <div class="video-card reveal" onclick="openVideoModal('{{ $gvVideoId }}')">
+                        <div class="video-thumb">
+                            <img src="https://img.youtube.com/vi/{{ $gvVideoId }}/hqdefault.jpg" alt="{{ $gv->title }}" loading="lazy">
+                            <div class="video-play-btn">
+                                <i class="fas fa-play"></i>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <h6 class="mb-1" style="font-weight:700;color:var(--text-dark, #1a1a2e);">{{ $gv->title }}</h6>
+                        <div class="video-info">
+                            <h5>{{ $gv->title }}</h5>
                             @if($gv->description)
-                            <small class="text-muted">{{ Str::limit($gv->description, 80) }}</small>
+                            <div class="video-meta">
+                                <span>{{ Str::limit($gv->description, 60) }}</span>
+                            </div>
                             @endif
                         </div>
                     </div>
                 </div>
                 @endif
                 @endforeach
-            </div>
-            <div class="text-center mt-4">
-                <a href="{{ url('gallery') }}" class="btn" style="border-radius:50px;padding:10px 30px;background:var(--secondary-color, #c9a84c);color:#fff;border:none;">View All Videos</a>
+                @endisset
             </div>
         </div>
     </section>
     @endif
+    @endisset
 
-    <!-- Team Section -->
+    <!-- Video Modal -->
+    <div class="video-modal-overlay" id="videoModal">
+        <div class="video-modal-content">
+            <button class="video-modal-close" id="videoModalClose" aria-label="Close video">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="ratio ratio-16x9">
+                <iframe id="videoModalIframe" src="" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== Team Section (Rounded Avatar) ========== -->
     <section class="team" id="team">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header reveal">
                 <span class="section-badge">Leadership Team</span>
                 <h2>Meet Our Educators</h2>
                 <p>Our dedicated team of experienced educators and administrators is committed to nurturing each student's potential.</p>
@@ -1323,86 +2331,86 @@
             <div class="row g-4">
                 @forelse($teamMembers as $member)
                     <div class="col-lg-3 col-md-6">
-                        <div class="team-card">
-                            <div class="team-image">
+                        <div class="team-card reveal">
+                            <div class="team-avatar">
                                 <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}">
+                                <div class="team-social-overlay">
+                                    @if($member->email)
+                                        <a href="mailto:{{ $member->email }}" title="Email"><i class="fas fa-envelope"></i></a>
+                                    @endif
+                                    @if($member->phone)
+                                        <a href="tel:{{ $member->phone }}" title="Call"><i class="fas fa-phone"></i></a>
+                                    @endif
+                                </div>
                             </div>
                             <div class="team-content">
                                 <h4>{{ $member->name }}</h4>
                                 <p>{{ $member->designation }}</p>
-                                <div class="team-social">
-                                    @if($member->email)
-                                        <a href="mailto:{{ $member->email }}"><i class="fas fa-envelope"></i></a>
-                                    @endif
-                                    @if($member->phone)
-                                        <a href="tel:{{ $member->phone }}"><i class="fas fa-phone"></i></a>
-                                    @endif
-                                </div>
                             </div>
                         </div>
                     </div>
                 @empty
                     <div class="col-lg-3 col-md-6">
-                        <div class="team-card">
-                            <div class="team-image">
+                        <div class="team-card reveal">
+                            <div class="team-avatar">
                                 <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Dr. Sarah Johnson">
+                                <div class="team-social-overlay">
+                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                                    <a href="#"><i class="fab fa-twitter"></i></a>
+                                    <a href="#"><i class="fas fa-envelope"></i></a>
+                                </div>
                             </div>
                             <div class="team-content">
                                 <h4>Dr. Sarah Johnson</h4>
                                 <p>Principal</p>
-                                <div class="team-social">
-                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                                    <a href="#"><i class="fab fa-twitter"></i></a>
-                                    <a href="#"><i class="fas fa-envelope"></i></a>
-                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="team-card">
-                            <div class="team-image">
+                        <div class="team-card reveal">
+                            <div class="team-avatar">
                                 <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Prof. Michael Chen">
+                                <div class="team-social-overlay">
+                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                                    <a href="#"><i class="fab fa-twitter"></i></a>
+                                    <a href="#"><i class="fas fa-envelope"></i></a>
+                                </div>
                             </div>
                             <div class="team-content">
                                 <h4>Prof. Michael Chen</h4>
                                 <p>Vice Principal - Academics</p>
-                                <div class="team-social">
-                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                                    <a href="#"><i class="fab fa-twitter"></i></a>
-                                    <a href="#"><i class="fas fa-envelope"></i></a>
-                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="team-card">
-                            <div class="team-image">
+                        <div class="team-card reveal">
+                            <div class="team-avatar">
                                 <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Ms. Emily Davis">
+                                <div class="team-social-overlay">
+                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                                    <a href="#"><i class="fab fa-twitter"></i></a>
+                                    <a href="#"><i class="fas fa-envelope"></i></a>
+                                </div>
                             </div>
                             <div class="team-content">
                                 <h4>Ms. Emily Davis</h4>
                                 <p>Head of Student Affairs</p>
-                                <div class="team-social">
-                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                                    <a href="#"><i class="fab fa-twitter"></i></a>
-                                    <a href="#"><i class="fas fa-envelope"></i></a>
-                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="team-card">
-                            <div class="team-image">
+                        <div class="team-card reveal">
+                            <div class="team-avatar">
                                 <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Mr. David Wilson">
-                            </div>
-                            <div class="team-content">
-                                <h4>Mr. David Wilson</h4>
-                                <p>Athletics Director</p>
-                                <div class="team-social">
+                                <div class="team-social-overlay">
                                     <a href="#"><i class="fab fa-linkedin-in"></i></a>
                                     <a href="#"><i class="fab fa-twitter"></i></a>
                                     <a href="#"><i class="fas fa-envelope"></i></a>
                                 </div>
+                            </div>
+                            <div class="team-content">
+                                <h4>Mr. David Wilson</h4>
+                                <p>Athletics Director</p>
                             </div>
                         </div>
                     </div>
@@ -1411,12 +2419,12 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta" id="contact">
+    <!-- ========== CTA Section (Animated Gradient) ========== -->
+    <section class="cta section-divider-top" id="cta">
         <div class="container">
-            <h2>{{ $settings['cta_title'] }}</h2>
-            <p>{{ $settings['cta_description'] }}</p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <h2 class="reveal">{{ $settings['cta_title'] }}</h2>
+            <p class="reveal">{{ $settings['cta_description'] }}</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap reveal">
                 <a href="{{ $settings['cta_button_url'] }}" class="btn btn-hero-primary">
                     <i class="fas fa-user-plus me-2"></i>{{ $settings['cta_button_text'] }}
                 </a>
@@ -1427,7 +2435,101 @@
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ========== Contact Section (Two-Column) ========== -->
+    <section class="contact-section" id="contact">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="section-badge">Get in Touch</span>
+                <h2>Contact Us</h2>
+                <p>We would love to hear from you. Reach out and let us help you on your educational journey.</p>
+            </div>
+            <div class="row g-5">
+                <div class="col-lg-7 reveal-left">
+                    <div class="contact-form-wrapper">
+                        <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;margin-bottom:1.5rem;color:var(--primary-color);">Send Us a Message</h4>
+                        <form action="{{ route('contact.store') }}" method="POST">
+                            @csrf
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Full Name</label>
+                                    <input type="text" name="name" class="form-control" placeholder="Your full name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Email Address</label>
+                                    <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Phone Number</label>
+                                    <input type="tel" name="phone" class="form-control" placeholder="+1 234 567 890">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Subject</label>
+                                    <select name="subject" class="form-select">
+                                        <option value="General Inquiry">General Inquiry</option>
+                                        <option value="Admissions">Admissions</option>
+                                        <option value="Academics">Academics</option>
+                                        <option value="Fee Structure">Fee Structure</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Message</label>
+                                    <textarea name="message" class="form-control" rows="5" placeholder="How can we help you?" required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-hero-primary w-100">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-lg-5 reveal-right">
+                    <div class="contact-info-cards">
+                        <div class="contact-info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h5>Our Location</h5>
+                                <p>{{ $settings['school_address'] }}</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div>
+                                <h5>Call Us</h5>
+                                <p>{{ $settings['school_phone'] }}</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h5>Email Us</h5>
+                                <p>{{ $settings['school_email'] }}</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <h5>Working Hours</h5>
+                                <p>Mon - Fri: 7:30 AM - 4:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== Footer (Modern Layout) ========== -->
     <footer class="footer">
         <div class="container">
             <div class="row g-4">
@@ -1441,12 +2543,12 @@
                     </div>
                     <p>{{ $settings['about_mission'] }}</p>
                     <div class="social-links">
-                        @if($settings['facebook_url'])<a href="{{ $settings['facebook_url'] }}" target="_blank"><i class="fab fa-facebook-f"></i></a>@endif
-                        @if($settings['twitter_url'])<a href="{{ $settings['twitter_url'] }}" target="_blank"><i class="fab fa-twitter"></i></a>@endif
-                        @if($settings['instagram_url'])<a href="{{ $settings['instagram_url'] }}" target="_blank"><i class="fab fa-instagram"></i></a>@endif
-                        @if($settings['linkedin_url'])<a href="{{ $settings['linkedin_url'] }}" target="_blank"><i class="fab fa-linkedin-in"></i></a>@endif
-                        @if($settings['youtube_url'])<a href="{{ $settings['youtube_url'] }}" target="_blank"><i class="fab fa-youtube"></i></a>@endif
-                        @if($settings['telegram_url'])<a href="{{ $settings['telegram_url'] }}" target="_blank"><i class="fab fa-telegram-plane"></i></a>@endif
+                        @if($settings['facebook_url'])<a href="{{ $settings['facebook_url'] }}" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>@endif
+                        @if($settings['twitter_url'])<a href="{{ $settings['twitter_url'] }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>@endif
+                        @if($settings['instagram_url'])<a href="{{ $settings['instagram_url'] }}" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>@endif
+                        @if($settings['linkedin_url'])<a href="{{ $settings['linkedin_url'] }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>@endif
+                        @if($settings['youtube_url'])<a href="{{ $settings['youtube_url'] }}" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>@endif
+                        @if($settings['telegram_url'])<a href="{{ $settings['telegram_url'] }}" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>@endif
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-6">
@@ -1470,142 +2572,344 @@
                     </ul>
                 </div>
                 <div class="col-lg-3 col-md-6">
-                    <h5>Contact Info</h5>
-                    <ul class="footer-links">
-                        <li><i class="fas fa-map-marker-alt me-2"></i>{{ $settings['school_address'] }}</li>
-                        <li><i class="fas fa-phone me-2"></i>{{ $settings['school_phone'] }}</li>
-                        <li><i class="fas fa-envelope me-2"></i>{{ $settings['school_email'] }}</li>
-                        <li><i class="fas fa-clock me-2"></i>Mon - Fri: 7:30 AM - 4:00 PM</li>
-                    </ul>
+                    <h5>Newsletter</h5>
+                    <p style="margin-bottom:1rem;">Subscribe to our newsletter for the latest updates and news.</p>
+                    <form class="newsletter-form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Subscribed!'; setTimeout(()=>this.querySelector('button').textContent='Subscribe',2000);">
+                        <input type="email" placeholder="Your email" required>
+                        <button type="submit">Subscribe</button>
+                    </form>
                 </div>
             </div>
-            <div class="footer-bottom">
+            <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center">
                 <p>&copy; {{ date('Y') }} {{ $settings['footer_text'] }}</p>
+                <p style="margin-top:0.5rem;" class="text-md-end">Designed with <i class="fas fa-heart" style="color:var(--secondary-color);"></i> for Education</p>
             </div>
         </div>
     </footer>
 
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
 
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
+    <script>
+        // ========== Navbar Scroll Shrink ==========
+        (function() {
+            var navbar = document.getElementById('navbar');
+            var backToTop = document.getElementById('backToTop');
+            var tickerEl = document.getElementById('announcementTicker');
+
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+                // Back to top visibility
+                if (window.scrollY > 500) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+            });
+
+            // Back to top click
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        })();
+
+        // ========== Smooth Scrolling for Anchor Links ==========
+        document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+            anchor.addEventListener('click', function(e) {
                 e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
+                var target = document.querySelector(this.getAttribute('href'));
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                    var offset = 80;
+                    var top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                    window.scrollTo({ top: top, behavior: 'smooth' });
                 }
+                // Close mobile drawer if open
+                closeMobileDrawer();
             });
         });
 
-        // Animate elements on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('animate-fade-up');
-                    observer.unobserve(entry.target);
-                }
+        // ========== Scroll Reveal (Intersection Observer) ==========
+        (function() {
+            var revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+            var revealObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
             });
-        }, observerOptions);
 
-        document.querySelectorAll('.feature-card, .program-card, .section-header').forEach(el => {
-            el.style.opacity = '0';
-            observer.observe(el);
-        });
-    </script>
+            revealElements.forEach(function(el) {
+                revealObserver.observe(el);
+            });
+        })();
 
-    <!-- Announcement Ticker Script -->
-    <script>
-    (function() {
-        var tickerEl = document.getElementById('announcementTicker');
-        var trackEl = document.getElementById('tickerTrack');
-        var closeBtn = document.getElementById('tickerClose');
-        var navbar = document.getElementById('navbar');
-        if (!tickerEl || !trackEl) return;
+        // ========== Counter Animation ==========
+        (function() {
+            var counters = document.querySelectorAll('.counter');
+            var counterObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        var el = entry.target;
+                        var target = parseInt(el.getAttribute('data-target'));
+                        var duration = 2000;
+                        var start = 0;
+                        var startTime = null;
 
-        if (sessionStorage.getItem('ticker_dismissed')) {
-            tickerEl.style.display = 'none';
-            if (navbar) navbar.style.top = '0';
-            return;
+                        function animate(currentTime) {
+                            if (!startTime) startTime = currentTime;
+                            var progress = Math.min((currentTime - startTime) / duration, 1);
+                            // Ease out
+                            var ease = 1 - Math.pow(1 - progress, 3);
+                            var current = Math.floor(ease * target);
+                            el.textContent = current;
+                            if (progress < 1) {
+                                requestAnimationFrame(animate);
+                            } else {
+                                el.textContent = target;
+                            }
+                        }
+
+                        requestAnimationFrame(animate);
+                        counterObserver.unobserve(el);
+                    }
+                });
+            }, {
+                threshold: 0.5
+            });
+
+            counters.forEach(function(counter) {
+                counterObserver.observe(counter);
+            });
+        })();
+
+        // ========== Mobile Drawer Menu ==========
+        (function() {
+            var hamburgerBtn = document.getElementById('hamburgerBtn');
+            var mobileDrawer = document.getElementById('mobileDrawer');
+            var mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
+            var mobileDrawerClose = document.getElementById('mobileDrawerClose');
+
+            if (hamburgerBtn && mobileDrawer) {
+                hamburgerBtn.addEventListener('click', function() {
+                    mobileDrawer.classList.add('active');
+                    mobileDrawerOverlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+
+                mobileDrawerClose.addEventListener('click', closeMobileDrawer);
+                mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
+
+                // Close on link click
+                mobileDrawer.querySelectorAll('a').forEach(function(link) {
+                    link.addEventListener('click', closeMobileDrawer);
+                });
+            }
+        })();
+
+        function closeMobileDrawer() {
+            var mobileDrawer = document.getElementById('mobileDrawer');
+            var mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
+            if (mobileDrawer) {
+                mobileDrawer.classList.remove('active');
+                mobileDrawerOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         }
 
-        closeBtn.addEventListener('click', function() {
-            tickerEl.style.display = 'none';
-            if (navbar) navbar.style.top = '0';
-            sessionStorage.setItem('ticker_dismissed', '1');
-        });
+        // ========== Video Modal ==========
+        function openVideoModal(videoId) {
+            var modal = document.getElementById('videoModal');
+            var iframe = document.getElementById('videoModalIframe');
+            iframe.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
 
-        var categoryLabels = {
-            'holiday': 'Holiday', 'exam': 'Exam', 'event': 'Event',
-            'meeting': 'Meeting', 'deadline': 'Deadline', 'other': 'Info'
-        };
+        (function() {
+            var modal = document.getElementById('videoModal');
+            var closeBtn = document.getElementById('videoModalClose');
+            var iframe = document.getElementById('videoModalIframe');
 
-        fetch('/api/public/announcements', {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (!data || data.length === 0) {
+            closeBtn.addEventListener('click', function() {
+                modal.classList.remove('active');
+                iframe.src = '';
+                document.body.style.overflow = '';
+            });
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    iframe.src = '';
+                    document.body.style.overflow = '';
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                    iframe.src = '';
+                    document.body.style.overflow = '';
+                }
+            });
+        })();
+
+        // ========== Programs Horizontal Scroll Nav ==========
+        (function() {
+            var wrapper = document.getElementById('programsScrollWrapper');
+            var leftBtn = document.getElementById('programsScrollLeft');
+            var rightBtn = document.getElementById('programsScrollRight');
+
+            if (wrapper && leftBtn && rightBtn) {
+                leftBtn.addEventListener('click', function() {
+                    wrapper.scrollBy({ left: -360, behavior: 'smooth' });
+                });
+                rightBtn.addEventListener('click', function() {
+                    wrapper.scrollBy({ left: 360, behavior: 'smooth' });
+                });
+            }
+        })();
+
+        // ========== Hero Parallax Effect ==========
+        (function() {
+            var heroSlides = document.querySelectorAll('[data-parallax]');
+            window.addEventListener('scroll', function() {
+                var scrollY = window.pageYOffset;
+                heroSlides.forEach(function(slide) {
+                    var rect = slide.getBoundingClientRect();
+                    if (rect.bottom > 0 && rect.top < window.innerHeight) {
+                        slide.style.backgroundPositionY = (scrollY * 0.3) + 'px';
+                    }
+                });
+            }, { passive: true });
+        })();
+
+        // ========== Custom Cursor (Desktop) ==========
+        (function() {
+            if (window.matchMedia('(max-width: 991px)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            var dot = document.getElementById('cursorDot');
+            var ring = document.getElementById('cursorRing');
+            if (!dot || !ring) return;
+
+            var mouseX = 0, mouseY = 0;
+            var ringX = 0, ringY = 0;
+
+            document.addEventListener('mousemove', function(e) {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                dot.style.left = mouseX - 4 + 'px';
+                dot.style.top = mouseY - 4 + 'px';
+            });
+
+            function animateRing() {
+                ringX += (mouseX - ringX) * 0.15;
+                ringY += (mouseY - ringY) * 0.15;
+                ring.style.left = ringX - 18 + 'px';
+                ring.style.top = ringY - 18 + 'px';
+                requestAnimationFrame(animateRing);
+            }
+            animateRing();
+
+            // Scale on interactive elements
+            var interactives = document.querySelectorAll('a, button, .btn, .feature-card, .program-card, .team-card, .video-card, .gallery-item');
+            interactives.forEach(function(el) {
+                el.addEventListener('mouseenter', function() {
+                    ring.style.width = '50px';
+                    ring.style.height = '50px';
+                    ring.style.borderColor = 'rgba(201,168,76,0.6)';
+                    dot.style.transform = 'scale(1.5)';
+                });
+                el.addEventListener('mouseleave', function() {
+                    ring.style.width = '36px';
+                    ring.style.height = '36px';
+                    ring.style.borderColor = 'rgba(201,168,76,0.4)';
+                    dot.style.transform = 'scale(1)';
+                });
+            });
+        })();
+
+        // ========== Announcement Ticker Script ==========
+        (function() {
+            var tickerEl = document.getElementById('announcementTicker');
+            var trackEl = document.getElementById('tickerTrack');
+            var closeBtn = document.getElementById('tickerClose');
+            var navbar = document.getElementById('navbar');
+            if (!tickerEl || !trackEl) return;
+
+            if (sessionStorage.getItem('ticker_dismissed')) {
                 tickerEl.style.display = 'none';
                 if (navbar) navbar.style.top = '0';
                 return;
             }
 
-            var html = '';
-            data.forEach(function(item) {
-                var dotColor = item.color || '#fff';
-                var cat = categoryLabels[item.category] || item.category || '';
-                html += '<span class="ticker-item">';
-                html += '<span class="ticker-dot" style="background:' + dotColor + '"></span>';
-                html += '<span class="ticker-cat">' + cat + '</span>';
-                html += ' ' + item.title;
-                if (item.start_date) html += ' <span class="ticker-date">(' + item.start_date + ')</span>';
-                html += '</span>';
+            closeBtn.addEventListener('click', function() {
+                tickerEl.style.display = 'none';
+                if (navbar) navbar.style.top = '0';
+                sessionStorage.setItem('ticker_dismissed', '1');
             });
 
-            // Duplicate for seamless loop only if content overflows
-            var contentWidth = trackEl.scrollWidth;
-            var containerWidth = trackEl.parentElement.offsetWidth;
+            var categoryLabels = {
+                'holiday': 'Holiday', 'exam': 'Exam', 'event': 'Event',
+                'meeting': 'Meeting', 'deadline': 'Deadline', 'other': 'Info'
+            };
 
-            if (contentWidth > containerWidth) {
-                // Content overflows — enable slow scrolling
-                trackEl.innerHTML = html + html;
-                trackEl.classList.add('scrolling');
-                // Very slow speed: ~5px per second, minimum 60s
-                var totalWidth = trackEl.scrollWidth / 2;
-                var speed = Math.max(60, totalWidth / 5);
-                trackEl.style.animationDuration = speed + 's';
-            } else {
-                // Content fits — static, no scrolling
-                trackEl.innerHTML = html;
-            }
-            tickerEl.style.display = 'block';
-        })
-        .catch(function() {
-            tickerEl.style.display = 'none';
-            if (navbar) navbar.style.top = '0';
-        });
-    })();
+            fetch('/api/public/announcements', {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data || data.length === 0) {
+                    tickerEl.style.display = 'none';
+                    if (navbar) navbar.style.top = '0';
+                    return;
+                }
+
+                var html = '';
+                data.forEach(function(item) {
+                    var dotColor = item.color || '#fff';
+                    var cat = categoryLabels[item.category] || item.category || '';
+                    html += '<span class="ticker-item">';
+                    html += '<span class="ticker-dot" style="background:' + dotColor + '"></span>';
+                    html += '<span class="ticker-cat">' + cat + '</span>';
+                    html += ' ' + item.title;
+                    if (item.start_date) html += ' <span class="ticker-date">(' + item.start_date + ')</span>';
+                    html += '</span>';
+                });
+
+                var contentWidth = trackEl.scrollWidth;
+                var containerWidth = trackEl.parentElement.offsetWidth;
+
+                if (contentWidth > containerWidth) {
+                    trackEl.innerHTML = html + html;
+                    trackEl.classList.add('scrolling');
+                    var totalWidth = trackEl.scrollWidth / 2;
+                    var speed = Math.max(60, totalWidth / 5);
+                    trackEl.style.animationDuration = speed + 's';
+                } else {
+                    trackEl.innerHTML = html;
+                }
+
+                tickerEl.style.display = 'block';
+            })
+            .catch(function() {
+                tickerEl.style.display = 'none';
+                if (navbar) navbar.style.top = '0';
+            });
+        })();
     </script>
 </body>
 </html>
