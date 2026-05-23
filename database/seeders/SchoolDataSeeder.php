@@ -276,19 +276,29 @@ class SchoolDataSeeder extends Seeder
         $this->command->info('  Cleaning up old student data...');
         $oldStudentCount = Student::count();
         if ($oldStudentCount > 0) {
-            // Delete student role users first (to avoid FK issues)
+            // Collect student user_ids before deleting students
+            $studentUserIds = Student::whereNotNull('user_id')->pluck('user_id')->toArray();
+
+            // Delete all students first (avoids FK issues)
+            Student::query()->delete();
+
+            // Delete student user accounts
+            if (!empty($studentUserIds)) {
+                User::whereIn('id', $studentUserIds)->delete();
+            }
+
+            // Also delete student users via role assignment (covers edge cases)
             $studentRole = Role::where('name', 'student')->first();
             if ($studentRole) {
-                $studentUserIds = DB::table('model_has_roles')
+                $roleStudentUserIds = DB::table('model_has_roles')
                     ->where('role_id', $studentRole->id)
                     ->pluck('model_id')
                     ->toArray();
-                if (!empty($studentUserIds)) {
-                    User::whereIn('id', $studentUserIds)->delete();
+                if (!empty($roleStudentUserIds)) {
+                    User::whereIn('id', $roleStudentUserIds)->delete();
                 }
             }
-            // Now delete all students
-            Student::query()->delete();
+
             $this->command->info("  Deleted {$oldStudentCount} old students");
         }
 
@@ -584,16 +594,18 @@ class SchoolDataSeeder extends Seeder
                     $user->roles()->attach($studentRole->id);
                 }
 
-                Student::create([
-                    'user_id' => $user->id, 'full_name' => $fullName,
-                    'branch_id' => $branch->id, 'class_id' => $class->id,
-                    'section_id' => $section->id, 'academic_year_id' => $ay->id,
-                    'gender' => $genderLower, 'phone' => $phone,
-                    'roll_number' => $rollNumber,
-                    'admission_number' => $admission, 'admission_date' => '2025-09-01',
-                    'date_of_birth' => $dob, 'guardian_name' => $guardianName,
-                    'guardian_phone' => $phone, 'status' => 'active',
-                ]);
+                Student::updateOrCreate(
+                    ['roll_number' => $rollNumber],
+                    [
+                        'user_id' => $user->id, 'full_name' => $fullName,
+                        'branch_id' => $branch->id, 'class_id' => $class->id,
+                        'section_id' => $section->id, 'academic_year_id' => $ay->id,
+                        'gender' => $genderLower, 'phone' => $phone,
+                        'admission_number' => $admission, 'admission_date' => '2025-09-01',
+                        'date_of_birth' => $dob, 'guardian_name' => $guardianName,
+                        'guardian_phone' => $phone, 'status' => 'active',
+                    ]
+                );
 
                 $created++;
             } catch (\Exception $e) {
@@ -682,16 +694,18 @@ class SchoolDataSeeder extends Seeder
                             $user->roles()->attach($studentRole->id);
                         }
 
-                        Student::create([
-                            'user_id' => $user->id, 'full_name' => $fullName,
-                            'branch_id' => $branch->id, 'class_id' => $class->id,
-                            'section_id' => $section->id, 'academic_year_id' => $ay->id,
-                            'gender' => $genderLower,
-                            'roll_number' => $rollNumber,
-                            'admission_number' => $admission, 'admission_date' => '2025-09-01',
-                            'date_of_birth' => $dob, 'guardian_name' => $lastName1 . ' ' . $lastName2,
-                            'guardian_phone' => null, 'status' => 'active',
-                        ]);
+                        Student::updateOrCreate(
+                            ['roll_number' => $rollNumber],
+                            [
+                                'user_id' => $user->id, 'full_name' => $fullName,
+                                'branch_id' => $branch->id, 'class_id' => $class->id,
+                                'section_id' => $section->id, 'academic_year_id' => $ay->id,
+                                'gender' => $genderLower,
+                                'admission_number' => $admission, 'admission_date' => '2025-09-01',
+                                'date_of_birth' => $dob, 'guardian_name' => $lastName1 . ' ' . $lastName2,
+                                'guardian_phone' => null, 'status' => 'active',
+                            ]
+                        );
 
                         $created++;
                     } catch (\Exception $e) {

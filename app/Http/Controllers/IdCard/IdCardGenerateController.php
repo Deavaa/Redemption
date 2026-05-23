@@ -13,7 +13,14 @@ class IdCardGenerateController extends Controller
     public function index()
     {
         $classes = Classroom::orderBy('name')->get();
-        return view('admin.id-card-generate.index', compact('classes'));
+        $preselectedStudentId = request()->query('student_id');
+        $preselectedStudent = null;
+
+        if ($preselectedStudentId) {
+            $preselectedStudent = Student::with(['classroom', 'section'])->find($preselectedStudentId);
+        }
+
+        return view('admin.id-card-generate.index', compact('classes', 'preselectedStudent'));
     }
 
     public function getSections(Request $r)
@@ -29,7 +36,7 @@ class IdCardGenerateController extends Controller
         if ($r->filled('class_id')) $query->where('class_id', $r->class_id);
         if ($r->filled('section_id')) $query->where('section_id', $r->section_id);
         return response()->json(
-            $query->orderBy('full_name')->get(['id', 'full_name', 'roll_number', 'class_id', 'section_id'])
+            $query->orderBy('full_name')->get(['id', 'full_name', 'roll_number', 'class_id', 'section_id', 'photo'])
         );
     }
 

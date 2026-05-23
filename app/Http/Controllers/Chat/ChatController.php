@@ -212,7 +212,74 @@ class ChatController extends Controller
 
         $routePrefix = $this->resolveRoutePrefix();
 
-        return view($this->resolveView('admin.chat.index'), compact('conversations', 'users', 'unreadCount', 'routePrefix'));
+        // Handle ?recipient_id=X&recipient_type=student|teacher|parent
+        $recipientId = request()->query('recipient_id');
+        $recipientType = request()->query('recipient_type');
+        $preselectedRecipientId = null;
+
+        if ($recipientId && $recipientType) {
+            // Resolve the user_id from the recipient type
+            $resolvedUserId = $this->resolveRecipientUserId($recipientId, $recipientType);
+            if ($resolvedUserId) {
+                // Check if a private conversation already exists with this user
+                $existing = ChatConversation::where('type', 'private')
+                    ->whereHas('participants', function ($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    })
+                    ->whereHas('participants', function ($q) use ($resolvedUserId) {
+                        $q->where('user_id', $resolvedUserId);
+                    })
+                    ->first();
+
+                if ($existing) {
+                    // Redirect to the existing conversation
+                    return redirect()->route($routePrefix . '.show', $existing->id);
+                }
+
+                // No existing conversation - pre-select this user in the new conversation modal
+                $preselectedRecipientId = $resolvedUserId;
+            }
+        }
+
+        return view($this->resolveView('admin.chat.index'), compact('conversations', 'users', 'unreadCount', 'routePrefix', 'preselectedRecipientId'));
+    }
+
+    /**
+     * Resolve a recipient_id + recipient_type to a user_id.
+     * For 'student': recipient_id is the student's user_id (from the link)
+     * For 'teacher': recipient_id is the teacher's user_id
+     * For 'parent': recipient_id is the parent's user_id
+     * Also handles when recipient_id is the model's own ID (not user_id).
+     */
+    private function resolveRecipientUserId($recipientId, $recipientType): ?int
+    {
+        // First, check if it's already a valid user ID
+        $user = User::find($recipientId);
+        if ($user) {
+            return $user->id;
+        }
+
+        // If not found as user_id, try looking up by model
+        if ($recipientType === 'student') {
+            // Could be a Student model ID
+            $student = Student::find($recipientId);
+            if ($student && $student->user_id) {
+                return $student->user_id;
+            }
+        } elseif ($recipientType === 'teacher') {
+            // Could be a Teacher model ID
+            $teacher = Teacher::find($recipientId);
+            if ($teacher && $teacher->user_id) {
+                return $teacher->user_id;
+            }
+        } elseif ($recipientType === 'parent') {
+            $parent = ParentModel::find($recipientId);
+            if ($parent && $parent->user_id) {
+                return $parent->user_id;
+            }
+        }
+
+        return null;
     }
 
     public function show($id)

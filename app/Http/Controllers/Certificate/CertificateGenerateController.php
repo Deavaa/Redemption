@@ -12,7 +12,14 @@ class CertificateGenerateController extends Controller
     public function index()
     {
         $classes = Classroom::orderBy('name')->get();
-        return view('admin.certificate-generate.index', compact('classes'));
+        $preselectedStudentId = request()->query('student_id');
+        $preselectedStudent = null;
+
+        if ($preselectedStudentId) {
+            $preselectedStudent = Student::with(['classroom', 'section'])->find($preselectedStudentId);
+        }
+
+        return view('admin.certificate-generate.index', compact('classes', 'preselectedStudent'));
     }
 
     public function getStudents(Request $r)

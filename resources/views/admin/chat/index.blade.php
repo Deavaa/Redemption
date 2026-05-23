@@ -221,6 +221,29 @@ document.getElementById('chatSearch')?.addEventListener('input', function() {
         item.style.display = (name.includes(q) || preview.includes(q)) ? '' : 'none';
     });
 });
+
+// ---- Auto-open new conversation modal with preselected recipient ----
+const preselectedRecipientId = '{{ $preselectedRecipientId ?? "" }}';
+if (preselectedRecipientId) {
+    // Pre-select the recipient in the participant dropdown
+    const participantSelect = document.getElementById('participantSelect');
+    if (participantSelect) {
+        // Set the selected option
+        for (let i = 0; i < participantSelect.options.length; i++) {
+            if (participantSelect.options[i].value == preselectedRecipientId) {
+                participantSelect.options[i].selected = true;
+                break;
+            }
+        }
+    }
+
+    // Auto-open the modal
+    const newChatModal = document.getElementById('newChatModal');
+    if (newChatModal) {
+        const bsModal = new bootstrap.Modal(newChatModal);
+        bsModal.show();
+    }
+}
 </script>
 @endpush
 @endsection

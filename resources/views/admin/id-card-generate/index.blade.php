@@ -341,6 +341,16 @@
     let currentClassId = '';
     let currentSectionId = '';
 
+    // ---- Preselected student from URL param ----
+    const preselectedStudent = {{ $preselectedStudent ? json_encode([
+        'id' => $preselectedStudent->id,
+        'full_name' => $preselectedStudent->full_name,
+        'roll_number' => $preselectedStudent->roll_number,
+        'class_id' => $preselectedStudent->class_id,
+        'section_id' => $preselectedStudent->section_id,
+        'photo' => $preselectedStudent->photo,
+    ]) : 'null' }};
+
     // ---- Class Chips ----
     classChips?.addEventListener('click', function(e) {
         const chip = e.target.closest('.idgen-chip');
@@ -543,6 +553,77 @@
             alert('{{ __("app.id_card_select_alert") ?? "Please select at least one student" }}');
         }
     });
+
+    // ---- Auto-select preselected student from URL param ----
+    if (preselectedStudent) {
+        // Step 1: Select the student's class chip
+        const targetClassId = String(preselectedStudent.class_id);
+        const classChip = classChips?.querySelector(`.idgen-chip[data-class-id="${targetClassId}"]`);
+        if (classChip) {
+            classChips.querySelectorAll('.idgen-chip').forEach(c => c.classList.remove('active'));
+            classChip.classList.add('active');
+            currentClassId = targetClassId;
+            classInput.value = targetClassId;
+        }
+
+        // Step 2: Load sections, then load students, then select the student
+        loadSections();
+
+        // After sections load, we need to also load students and select the preselected one
+        // We'll do this by waiting for the sections to load, then loading students
+        const waitForSectionsAndLoad = () => {
+            // Select the student's section chip if available
+            if (preselectedStudent.section_id) {
+                const targetSectionId = String(preselectedStudent.section_id);
+                // Give time for section chips to render
+                setTimeout(() => {
+                    const sectionChip = sectionChips?.querySelector(`.idgen-chip[data-section-id="${targetSectionId}"]`);
+                    if (sectionChip) {
+                        sectionChips.querySelectorAll('.idgen-chip').forEach(c => c.classList.remove('active'));
+                        sectionChip.classList.add('active');
+                        currentSectionId = targetSectionId;
+                        sectionInput.value = targetSectionId;
+                    }
+                    // Load students with class + section filter, then auto-select
+                    loadStudentsAndSelect();
+                }, 300);
+            } else {
+                loadStudentsAndSelect();
+            }
+        };
+
+        const loadStudentsAndSelect = () => {
+            studentGrid.innerHTML = '<div class="gen-empty-state"><i class="fas fa-spinner fa-spin"></i><p>{{ __("app.loading") ?? "Loading..." }}</p></div>';
+
+            const params = new URLSearchParams();
+            if (currentClassId) params.set('class_id', currentClassId);
+            if (currentSectionId) params.set('section_id', currentSectionId);
+
+            fetch('{{ route("admin.id-card-generate.students") }}?' + params)
+                .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
+                .then(data => {
+                    allStudents = Array.isArray(data) ? data : [];
+                    renderStudents(allStudents);
+
+                    // Auto-select the preselected student
+                    if (preselectedStudent) {
+                        const studentId = String(preselectedStudent.id);
+                        if (allStudents.some(s => String(s.id) === studentId)) {
+                            selectedIds.add(studentId);
+                            const row = studentGrid.querySelector(`[data-student-id="${studentId}"]`);
+                            if (row) row.classList.add('checked');
+                            updateSelection();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading students:', err);
+                    studentGrid.innerHTML = '<div class="gen-empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading students</p></div>';
+                });
+        };
+
+        waitForSectionsAndLoad();
+    }
 })();
 </script>
 @endpush

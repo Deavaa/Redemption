@@ -160,7 +160,7 @@
                                     <a href="{{ route('admin.teachers.edit', $item->id) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                         <i class="fas fa-pen"></i>
                                     </a>
-                                    <a href="{{ route('admin.chat.index') }}?recipient_id={{ $item->user_id ?? '' }}&recipient_type=teacher" class="modern-btn-icon modern-btn-msg" title="Send Message">
+                                    <a href="{{ route('admin.chat.index') }}?recipient_id={{ $item->user_id ?? $item->id }}&recipient_type=teacher" class="modern-btn-icon modern-btn-msg" title="Send Message">
                                         <i class="fas fa-paper-plane"></i>
                                     </a>
                                     <form method="POST" action="{{ route('admin.teachers.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this teacher?')">
