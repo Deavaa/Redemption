@@ -91,6 +91,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
+Route::get('/about', [HomeController::class, 'about'])->name('about');
+Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::get('/team', [HomeController::class, 'team'])->name('team');
 
 // Public Contact Form
 Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');

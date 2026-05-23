@@ -1,292 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ $settings['school_name'] }} - {{ $settings['school_tagline'] }}">
-    <title>{{ $settings['school_name'] }} - {{ $settings['school_tagline'] }}</title>
+@extends('layouts.website')
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
+@push('styles')
     <style>
-        :root {
-            --primary-color: {{ $settings['primary_color'] ?? '#1E90FF' }};
-            --secondary-color: {{ $settings['secondary_color'] ?? '#FF8C00' }};
-            --accent-color: #198754;
-            --text-dark: #1a1a2e;
-            --text-light: #6c757d;
-            --white: #ffffff;
-            --light-bg: #f8f9fa;
-            --glass-bg: rgba(255,255,255,0.08);
-            --glass-border: rgba(255,255,255,0.18);
-            --glass-shadow: 0 8px 32px rgba(0,0,0,0.12);
-            --nav-height: 80px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            color: var(--text-dark);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Playfair Display', serif;
-            font-weight: 700;
-        }
-
-        /* ========== Custom Cursor ========== */
-        .cursor-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--secondary-color);
-            border-radius: 50%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 99999;
-            transition: transform 0.1s ease;
-            mix-blend-mode: difference;
-        }
-
-        .cursor-ring {
-            width: 36px;
-            height: 36px;
-            border: 2px solid rgba(255, 140, 0, 0.4);
-            border-radius: 50%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 99998;
-            transition: transform 0.15s ease, width 0.2s, height 0.2s, border-color 0.2s;
-        }
-
-        @media (max-width: 991px) {
-            .cursor-dot, .cursor-ring { display: none !important; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .cursor-dot, .cursor-ring { display: none !important; }
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-        }
-
-        /* ========== Glassmorphism Navbar ========== */
-        .navbar {
-            background: rgba(30, 144, 255, 0.65);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding: 1rem 0;
-            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-        }
-
-        .navbar.scrolled {
-            padding: 0.5rem 0;
-            background: rgba(30, 144, 255, 0.88);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.15);
-        }
-
-        .navbar-brand {
-            font-family: 'Playfair Display', serif;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .navbar-brand .brand-pre {
-            color: var(--white);
-            font-weight: 400;
-            font-size: 0.7rem;
-            display: block;
-            line-height: 1.1;
-        }
-
-        .navbar-brand .brand-name {
-            color: var(--secondary-color);
-            font-weight: 700;
-            font-size: 1.3rem;
-        }
-
-        .nav-link {
-            color: rgba(255,255,255,0.85) !important;
-            font-weight: 500;
-            margin: 0 0.5rem;
-            position: relative;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: var(--secondary-color) !important;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: var(--secondary-color);
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-        }
-
-        .nav-link:hover::after {
-            width: 80%;
-        }
-
-        .btn-nav-portal {
-            background: var(--secondary-color);
-            color: var(--primary-color) !important;
-            border-radius: 50px;
-            padding: 0.5rem 1.5rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-nav-portal:hover {
-            background: #FFa520;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
-        }
-
-        /* ========== Mobile Drawer ========== */
-        .mobile-drawer-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1049;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .mobile-drawer-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .mobile-drawer {
-            position: fixed;
-            top: 0;
-            right: -320px;
-            width: 300px;
-            max-width: 85vw;
-            height: 100vh;
-            background: var(--primary-color);
-            z-index: 1050;
-            transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
-            padding: 2rem;
-            overflow-y: auto;
-        }
-
-        .mobile-drawer.active {
-            right: 0;
-        }
-
-        .mobile-drawer-close {
-            background: none;
-            border: none;
-            color: var(--white);
-            font-size: 1.5rem;
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .mobile-drawer .mobile-nav-links {
-            list-style: none;
-            padding: 0;
-            margin-top: 3rem;
-        }
-
-        .mobile-drawer .mobile-nav-links li {
-            margin-bottom: 0.25rem;
-        }
-
-        .mobile-drawer .mobile-nav-links a {
-            color: rgba(255,255,255,0.85);
-            text-decoration: none;
-            font-size: 1.1rem;
-            font-weight: 500;
-            padding: 0.75rem 1rem;
-            display: block;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .mobile-drawer .mobile-nav-links a:hover {
-            background: rgba(255,255,255,0.1);
-            color: var(--secondary-color);
-        }
-
-        .mobile-drawer .mobile-login-btn {
-            display: block;
-            margin-top: 1.5rem;
-            background: var(--secondary-color);
-            color: var(--primary-color);
-            text-align: center;
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .mobile-drawer .mobile-login-btn:hover {
-            background: #FFa520;
-        }
-
-        .hamburger-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--white);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-        }
-
-        @media (max-width: 991px) {
-            .hamburger-btn { display: block; }
-            .navbar-collapse { display: none !important; }
-        }
-
         /* ========== Hero Slider Section ========== */
         .hero-slider {
             position: relative;
@@ -1674,12 +1389,11 @@
         .delay-3 { animation-delay: 0.3s; }
         .delay-4 { animation-delay: 0.4s; }
     </style>
-</head>
-<body>
-    <!-- Custom Cursor (Desktop only) -->
-    <div class="cursor-dot" id="cursorDot"></div>
-    <div class="cursor-ring" id="cursorRing"></div>
 
+    </style>
+@endpush
+
+@section('before-nav')
     <!-- Announcement Ticker Bar -->
     <div id="announcementTicker" style="display:none;background:linear-gradient(135deg,#4361ee 0%,#3a0ca3 100%);color:#fff;overflow:hidden;position:fixed;top:0;left:0;right:0;z-index:9999;">
         <div style="display:flex;align-items:center;height:36px;">
@@ -1702,78 +1416,21 @@
     #tickerTrack.scrolling:hover { animation-play-state:paused; }
     @media(max-width:768px) { .ticker-item { padding:0 14px;font-size:12px; } }
     </style>
+    <script>
+    // Adjust navbar top when ticker is visible
+    (function() {
+        var navbar = document.getElementById('navbar');
+        var tickerEl = document.getElementById('announcementTicker');
+        if (navbar && tickerEl) {
+            // Check if ticker will be shown (handled by ticker script below)
+            // Default to offset position
+            navbar.style.top = '36px';
+        }
+    })();
+    </script>
+@endsection
 
-    <!-- ========== Glassmorphism Navbar ========== -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar" style="top:36px;">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-                @if($settings['school_logo'] && file_exists(public_path('storage/' . $settings['school_logo'])))
-                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;">
-                @endif
-                <div>
-                    <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}</span>
-                    <span class="brand-name">{{ Str::afterLast($settings['school_name'], ' ') }}</span>
-                </div>
-            </a>
-            <!-- Desktop nav -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#home">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#programs">Programs</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#gallery">Gallery</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#videos">Videos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#team">Our Team</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
-                    </li>
-                    <li class="nav-item ms-3">
-                        <a class="btn btn-nav-portal" href="{{ route('login') }}">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <!-- Hamburger for mobile -->
-            <button class="hamburger-btn" id="hamburgerBtn" type="button" aria-label="Open menu">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
-    </nav>
-
-    <!-- Mobile Drawer Overlay -->
-    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
-    <!-- Mobile Drawer -->
-    <div class="mobile-drawer" id="mobileDrawer">
-        <button class="mobile-drawer-close" id="mobileDrawerClose" aria-label="Close menu">
-            <i class="fas fa-times"></i>
-        </button>
-        <ul class="mobile-nav-links">
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#programs">Programs</a></li>
-            <li><a href="#gallery">Gallery</a></li>
-            <li><a href="#videos">Videos</a></li>
-            <li><a href="#team">Our Team</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
-        <a href="{{ route('login') }}" class="mobile-login-btn">
-            <i class="fas fa-sign-in-alt me-2"></i>Login
-        </a>
-    </div>
-
+@section('content')
     {{-- Latest News Banner --}}
     @isset($latestNews)
     @if($latestNews->count() > 0)
@@ -2184,7 +1841,7 @@
             </div>
             @if($galleryImages->count() > 0)
             <div class="text-center mt-4 reveal">
-                <a href="{{ url('gallery') }}" class="btn btn-hero-primary" style="padding:0.75rem 2rem;">View Full Gallery</a>
+                <a href="{{ route('gallery') }}" class="btn btn-hero-primary" style="padding:0.75rem 2rem;">View Full Gallery</a>
             </div>
             @endif
         </div>
@@ -2531,101 +2188,10 @@
         </div>
     </section>
 
-    <!-- ========== Footer (Modern Layout) ========== -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4 col-md-6">
-                    <div class="footer-brand d-flex align-items-center gap-2">
-                        @if($settings['school_logo'] && file_exists(public_path('storage/' . $settings['school_logo'])))
-                            <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 40px; opacity: 0.85;">
-                        @endif
-                        <div>
-                            <span class="brand-pre">{{ Str::beforeLast($settings['school_name'], ' ') }}</span>
-                            <span class="brand-name">{{ Str::afterLast($settings['school_name'], ' ') }}</span>
-                        </div>
-                    </div>
-                    <p>{{ $settings['about_mission'] }}</p>
-                    <div class="social-links">
-                        @if($settings['facebook_url'])<a href="{{ $settings['facebook_url'] }}" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>@endif
-                        @if($settings['twitter_url'])<a href="{{ $settings['twitter_url'] }}" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>@endif
-                        @if($settings['instagram_url'])<a href="{{ $settings['instagram_url'] }}" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>@endif
-                        @if($settings['linkedin_url'])<a href="{{ $settings['linkedin_url'] }}" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>@endif
-                        @if($settings['youtube_url'])<a href="{{ $settings['youtube_url'] }}" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>@endif
-                        @if($settings['telegram_url'])<a href="{{ $settings['telegram_url'] }}" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>@endif
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6">
-                    <h5>Quick Links</h5>
-                    <ul class="footer-links">
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#about">About Us</a></li>
-                        <li><a href="#programs">Programs</a></li>
-                        <li><a href="#features">Why Us</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <h5>Programs</h5>
-                    <ul class="footer-links">
-                        <li><a href="#">Early Childhood</a></li>
-                        <li><a href="#">Primary School</a></li>
-                        <li><a href="#">Middle School</a></li>
-                        <li><a href="#">High School</a></li>
-                        <li><a href="#">Extracurricular</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <h5>Newsletter</h5>
-                    <p style="margin-bottom:1rem;">Subscribe to our newsletter for the latest updates and news.</p>
-                    <form class="newsletter-form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Subscribed!'; setTimeout(()=>this.querySelector('button').textContent='Subscribe',2000);">
-                        <input type="email" placeholder="Your email" required>
-                        <button type="submit">Subscribe</button>
-                    </form>
-                </div>
-            </div>
-            <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <p>&copy; {{ date('Y') }} {{ $settings['footer_text'] }}</p>
-                <p style="margin-top:0.5rem;" class="text-md-end">Designed with <i class="fas fa-heart" style="color:var(--secondary-color);"></i> for Education</p>
-            </div>
-        </div>
-    </footer>
+@endsection
 
-    <!-- Back to Top Button -->
-    <button class="back-to-top" id="backToTop" aria-label="Back to top">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+@push('scripts')
     <script>
-        // ========== Navbar Scroll Shrink ==========
-        (function() {
-            var navbar = document.getElementById('navbar');
-            var backToTop = document.getElementById('backToTop');
-            var tickerEl = document.getElementById('announcementTicker');
-
-            window.addEventListener('scroll', function() {
-                if (window.scrollY > 50) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
-                // Back to top visibility
-                if (window.scrollY > 500) {
-                    backToTop.classList.add('visible');
-                } else {
-                    backToTop.classList.remove('visible');
-                }
-            });
-
-            // Back to top click
-            backToTop.addEventListener('click', function() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        })();
-
         // ========== Smooth Scrolling for Anchor Links ==========
         document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
             anchor.addEventListener('click', function(e) {
@@ -2637,29 +2203,15 @@
                     window.scrollTo({ top: top, behavior: 'smooth' });
                 }
                 // Close mobile drawer if open
-                closeMobileDrawer();
+                var mobileDrawer = document.getElementById('mobileDrawer');
+                var mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
+                if (mobileDrawer) {
+                    mobileDrawer.classList.remove('active');
+                    mobileDrawerOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
             });
         });
-
-        // ========== Scroll Reveal (Intersection Observer) ==========
-        (function() {
-            var revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-            var revealObserver = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('revealed');
-                        revealObserver.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            });
-
-            revealElements.forEach(function(el) {
-                revealObserver.observe(el);
-            });
-        })();
 
         // ========== Counter Animation ==========
         (function() {
@@ -2700,40 +2252,6 @@
             });
         })();
 
-        // ========== Mobile Drawer Menu ==========
-        (function() {
-            var hamburgerBtn = document.getElementById('hamburgerBtn');
-            var mobileDrawer = document.getElementById('mobileDrawer');
-            var mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
-            var mobileDrawerClose = document.getElementById('mobileDrawerClose');
-
-            if (hamburgerBtn && mobileDrawer) {
-                hamburgerBtn.addEventListener('click', function() {
-                    mobileDrawer.classList.add('active');
-                    mobileDrawerOverlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                });
-
-                mobileDrawerClose.addEventListener('click', closeMobileDrawer);
-                mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
-
-                // Close on link click
-                mobileDrawer.querySelectorAll('a').forEach(function(link) {
-                    link.addEventListener('click', closeMobileDrawer);
-                });
-            }
-        })();
-
-        function closeMobileDrawer() {
-            var mobileDrawer = document.getElementById('mobileDrawer');
-            var mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
-            if (mobileDrawer) {
-                mobileDrawer.classList.remove('active');
-                mobileDrawerOverlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
         // ========== Video Modal ==========
         function openVideoModal(videoId) {
             var modal = document.getElementById('videoModal');
@@ -2745,6 +2263,7 @@
 
         (function() {
             var modal = document.getElementById('videoModal');
+            if (!modal) return;
             var closeBtn = document.getElementById('videoModalClose');
             var iframe = document.getElementById('videoModalIframe');
 
@@ -2799,51 +2318,6 @@
                     }
                 });
             }, { passive: true });
-        })();
-
-        // ========== Custom Cursor (Desktop) ==========
-        (function() {
-            if (window.matchMedia('(max-width: 991px)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-            var dot = document.getElementById('cursorDot');
-            var ring = document.getElementById('cursorRing');
-            if (!dot || !ring) return;
-
-            var mouseX = 0, mouseY = 0;
-            var ringX = 0, ringY = 0;
-
-            document.addEventListener('mousemove', function(e) {
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-                dot.style.left = mouseX - 4 + 'px';
-                dot.style.top = mouseY - 4 + 'px';
-            });
-
-            function animateRing() {
-                ringX += (mouseX - ringX) * 0.15;
-                ringY += (mouseY - ringY) * 0.15;
-                ring.style.left = ringX - 18 + 'px';
-                ring.style.top = ringY - 18 + 'px';
-                requestAnimationFrame(animateRing);
-            }
-            animateRing();
-
-            // Scale on interactive elements
-            var interactives = document.querySelectorAll('a, button, .btn, .feature-card, .program-card, .team-card, .video-card, .gallery-item');
-            interactives.forEach(function(el) {
-                el.addEventListener('mouseenter', function() {
-                    ring.style.width = '50px';
-                    ring.style.height = '50px';
-                    ring.style.borderColor = 'rgba(255, 140, 0, 0.6)';
-                    dot.style.transform = 'scale(1.5)';
-                });
-                el.addEventListener('mouseleave', function() {
-                    ring.style.width = '36px';
-                    ring.style.height = '36px';
-                    ring.style.borderColor = 'rgba(255, 140, 0, 0.4)';
-                    dot.style.transform = 'scale(1)';
-                });
-            });
         })();
 
         // ========== Announcement Ticker Script ==========
@@ -2915,5 +2389,4 @@
             });
         })();
     </script>
-</body>
-</html>
+@endpush

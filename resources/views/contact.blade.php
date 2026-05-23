@@ -1,34 +1,116 @@
-@extends('layouts.app')
-@section('title','Contact Us - School of Redemption')
+@extends('layouts.website')
+
+@section('title', 'Contact Us - ' . ($settings['school_name'] ?? 'School'))
+
 @section('content')
-<section class="hero" style="padding:80px 0"><div class="container position-relative"><h1>Contact Us</h1><p>We would love to hear from you. Reach out to us anytime.</p></div></section>
-<section class="section"><div class="container"><div class="row g-5">
-<div class="col-lg-5">
-<h4 class="mb-4">Get In Touch</h4>
-<div class="mb-4"><i class="fas fa-map-marker-alt gold-text fa-lg me-3"></i><strong>Main Campus</strong><p class="text-muted mt-1 ms-4">123 Education Street, Addis Ababa, Ethiopia</p></div>
-<div class="mb-4"><i class="fas fa-map-marker-alt gold-text fa-lg me-3"></i><strong>Branch 2</strong><p class="text-muted mt-1 ms-4">456 Knowledge Avenue, Addis Ababa, Ethiopia</p></div>
-<div class="mb-3"><i class="fas fa-phone gold-text me-3"></i>+251-XXX-XXXXXX</div>
-<div class="mb-3"><i class="fas fa-envelope gold-text me-3"></i>info@schoolofredemption.com</div>
-<div class="mb-3"><i class="fas fa-clock gold-text me-3"></i>Mon - Fri: 8:00 AM - 5:00 PM</div>
-<h5 class="mt-4 mb-3">Main Campus Location</h5>
-<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.8!2d38.746!3d9.02!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zOcKwMDEnMTIuMCJOIDM4wrA0NCc0NS42IkU!5e0!3m2!1sen!2set!4v1" width="100%" height="200" style="border:0;border-radius:10px" allowfullscreen></iframe>
-<h5 class="mt-4 mb-3">Branch 2 Location</h5>
-<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.8!2d38.746!3d9.02!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zOcKwMDEnMTIuMCJOIDM4wrA0NCc0NS42IkU!5e0!3m2!1sen!2set!4v1" width="100%" height="200" style="border:0;border-radius:10px" allowfullscreen></iframe>
-</div>
-<div class="col-lg-7">
-<div class="card p-4"><h4 class="mb-4">Send Us a Message</h4>
-@if(session('success'))
-<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>{{session('success')}}</div>
-@endif
-<form method="POST" action="{{url('contact')}}">
-@csrf
-<div class="row g-3">
-<div class="col-md-6"><label class="form-label">Full Name *</label><input type="text" name="name" class="form-control" required></div>
-<div class="col-md-6"><label class="form-label">Email *</label><input type="email" name="email" class="form-control" required></div>
-<div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control"></div>
-<div class="col-md-6"><label class="form-label">Subject *</label><input type="text" name="subject" class="form-control" required></div>
-<div class="col-12"><label class="form-label">Message *</label><textarea name="message" class="form-control" rows="5" required></textarea></div>
-<div class="col-12"><button type="submit" class="btn btn-gold"><i class="fas fa-paper-plane me-2"></i>Send Message</button></div>
-</div></form></div>
-</div></div></div></section>
+    <!-- ========== Contact Hero ========== -->
+    <section class="page-hero">
+        <div class="container">
+            <h1>Contact <span>Us</span></h1>
+            <p>We'd love to hear from you. Reach out anytime.</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('home') }}"><i class="fas fa-home me-1"></i>Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Contact</li>
+                </ol>
+            </nav>
+        </div>
+    </section>
+
+    <!-- ========== Contact Content ========== -->
+    <section style="padding:5rem 0;background:var(--white);">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-5 reveal-left">
+                    <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;margin-bottom:1.5rem;color:var(--primary-color);">Get In Touch</h4>
+
+                    <div class="contact-info-card" style="margin-bottom:1.25rem;">
+                        <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div>
+                            <h5>Address</h5>
+                            <p>{{ $settings['school_address'] ?? 'Addis Ababa, Ethiopia' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-card" style="margin-bottom:1.25rem;">
+                        <div class="info-icon"><i class="fas fa-phone"></i></div>
+                        <div>
+                            <h5>Phone</h5>
+                            <p>{{ $settings['school_phone'] ?? '+251 11 234 5678' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-card" style="margin-bottom:1.25rem;">
+                        <div class="info-icon"><i class="fas fa-envelope"></i></div>
+                        <div>
+                            <h5>Email</h5>
+                            <p>{{ $settings['school_email'] ?? 'info@schoolofredemption.edu' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-card" style="margin-bottom:1.25rem;">
+                        <div class="info-icon"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <h5>Office Hours</h5>
+                            <p>Mon - Fri: 8:00 AM - 5:00 PM</p>
+                        </div>
+                    </div>
+
+                    <div class="social-links" style="margin-top:1.5rem;">
+                        @if($settings['facebook_url'] ?? '')
+                        <a href="{{ $settings['facebook_url'] }}" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a>
+                        @endif
+                        @if($settings['twitter_url'] ?? '')
+                        <a href="{{ $settings['twitter_url'] }}" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a>
+                        @endif
+                        @if($settings['youtube_url'] ?? '')
+                        <a href="{{ $settings['youtube_url'] }}" target="_blank" rel="noopener"><i class="fab fa-youtube"></i></a>
+                        @endif
+                        @if($settings['telegram_url'] ?? '')
+                        <a href="{{ $settings['telegram_url'] }}" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i></a>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="col-lg-7 reveal-right">
+                    <div class="contact-form-wrapper">
+                        <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;margin-bottom:1.5rem;color:var(--primary-color);">Send Us a Message</h4>
+                        @if(session('success'))
+                        <div class="alert alert-success" style="border-radius:12px;"><i class="fas fa-check-circle me-2"></i>{{ session('success') }}</div>
+                        @endif
+                        <form method="POST" action="{{ route('contact.store') }}">
+                            @csrf
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Full Name *</label>
+                                    <input type="text" name="name" class="form-control" placeholder="Your full name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Email *</label>
+                                    <input type="email" name="email" class="form-control" placeholder="Your email" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Phone</label>
+                                    <input type="text" name="phone" class="form-control" placeholder="Your phone number">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Subject *</label>
+                                    <input type="text" name="subject" class="form-control" placeholder="Subject" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Message *</label>
+                                    <textarea name="message" class="form-control" rows="5" placeholder="Your message" required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-hero-primary" style="padding:0.75rem 2rem;">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 @endsection
