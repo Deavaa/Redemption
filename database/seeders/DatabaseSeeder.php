@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\PermissionSeeder::class,
 
             // 3. Full school data (branches, AY, terms, teachers, subjects, classes,
-            //    sections, real Lebu students G9-12, assignments, events, grades)
+            //    sections, Tuludimtu 121 real students, Lebu sample students, assignments, events, grades)
             \Database\Seeders\SchoolDataSeeder::class,
         ]);
     }
