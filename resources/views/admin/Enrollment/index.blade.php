@@ -604,8 +604,10 @@ document.addEventListener('DOMContentLoaded', function() {
         var currentClassId = '{{ $classId }}';
 
         var url = '{{ route("admin.enrollments.api.classes") }}?';
-        if (branchId) url += 'branch_id=' + branchId + '&';
-        if (ayId) url += 'academic_year_id=' + ayId;
+        var params = [];
+        if (branchId) params.push('branch_id=' + branchId);
+        if (ayId) params.push('academic_year_id=' + ayId);
+        url += params.join('&');
 
         fetch(url)
             .then(function(res) { return res.json(); })
@@ -647,8 +649,26 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(function(err) { console.error('Error loading sections:', err); });
     }
 
-    if (branchSelect) branchSelect.addEventListener('change', loadClasses);
-    if (academicYearSelect) academicYearSelect.addEventListener('change', loadClasses);
+    // Auto-submit the filter form when branch or academic year changes
+    // so that the enrollment list refreshes with the correct data
+    if (academicYearSelect) {
+        academicYearSelect.addEventListener('change', function() {
+            // Reset class and section when AY changes
+            if (classSelect) classSelect.value = '';
+            if (sectionSelect) sectionSelect.innerHTML = '<option value="">All Sections</option>';
+            document.getElementById('filterForm').submit();
+        });
+    }
+    if (branchSelect) {
+        branchSelect.addEventListener('change', function() {
+            // Reset class and section when branch changes
+            if (classSelect) classSelect.value = '';
+            if (sectionSelect) sectionSelect.innerHTML = '<option value="">All Sections</option>';
+            document.getElementById('filterForm').submit();
+        });
+    }
+
+    // Dynamic load sections when class changes (no form submit needed)
     if (classSelect) classSelect.addEventListener('change', loadSections);
 });
 </script>

@@ -52,9 +52,15 @@ class Branch extends Model
         return $this->hasMany(Classroom::class);
     }
 
+    public function enrollments()
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+
     public function sections()
     {
-        return $this->hasMany(Section::class);
+        // Sections don't have branch_id directly; they belong to classes which have branch_id
+        return $this->hasManyThrough(Section::class, Classroom::class, 'branch_id', 'class_id');
     }
 
     /**

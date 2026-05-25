@@ -252,7 +252,8 @@
                     </a>
                     <ul class="collapse {{ $isPeopleActive ? 'show' : '' }}" id="peopleSubmenu">
                         <li><a href="{{ route('admin.students.index') }}" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Students</a></li>
-                        <li><a href="{{ route('admin.students.bulk-create') }}" class="{{ request()->routeIs('admin.students.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
+                        <li><a href="{{ route('admin.students.bulk-create') }}" class="{{ request()->routeIs('admin.students.bulk*') ? 'active' : '' }}"><i class="fas fa-user-plus"></i> Bulk Add Students</a></li>
+                        <li><a href="{{ route('admin.enrollments.bulk-enroll') }}" class="{{ request()->routeIs('admin.enrollments.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
                         <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
                         <li><a href="{{ route('admin.parents.index') }}" class="{{ request()->routeIs('admin.parents.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
                         <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a></li>
@@ -268,7 +269,8 @@
                     </a>
                     <ul class="collapse {{ $isPeopleActive ? 'show' : '' }}" id="peopleSubmenu">
                         <li><a href="{{ route('admin.students.index') }}" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Students</a></li>
-                        <li><a href="{{ route('admin.students.bulk-create') }}" class="{{ request()->routeIs('admin.students.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
+                        <li><a href="{{ route('admin.students.bulk-create') }}" class="{{ request()->routeIs('admin.students.bulk*') ? 'active' : '' }}"><i class="fas fa-user-plus"></i> Bulk Add Students</a></li>
+                        <li><a href="{{ route('admin.enrollments.bulk-enroll') }}" class="{{ request()->routeIs('admin.enrollments.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
                         <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
                         <li><a href="{{ route('admin.parents.index') }}" class="{{ request()->routeIs('admin.parents.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
                         <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a></li>

@@ -339,7 +339,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // No filters - still load all classes
         }
 
-        fetch('/admin/enrollments/api/classes?' + params.join('&'))
+        var url = '{{ route("admin.enrollments.api.classes") }}';
+        var sep = url.indexOf('?') > -1 ? '&' : '?';
+        if (params.length > 0) url += sep + params.join('&');
+
+        fetch(url)
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 classSelect.innerHTML = '<option value="">-- Select Class --</option>';
@@ -352,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
             })
-            .catch(function() {});
+            .catch(function(err) { console.error('Error loading classes:', err); });
     }
 
     // Load sections when class changes
@@ -364,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        fetch('/admin/enrollments/api/sections?class_id=' + classId)
+        fetch('{{ route("admin.enrollments.api.sections") }}?class_id=' + classId)
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
@@ -376,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     sectionSelect.appendChild(opt);
                 });
             })
-            .catch(function() {});
+            .catch(function(err) { console.error('Error loading sections:', err); });
     }
 
     // Load unenrolled students when academic year changes
@@ -386,7 +390,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!academicYearId) return;
 
-        fetch('/admin/enrollments/api/unenrolled-students?academic_year_id=' + academicYearId + (branchId ? '&branch_id=' + branchId : ''))
+        var url = '{{ route("admin.enrollments.api.unenrolled-students") }}?academic_year_id=' + academicYearId;
+        if (branchId) url += '&branch_id=' + branchId;
+
+        fetch(url)
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
@@ -398,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     studentSelect.appendChild(opt);
                 });
             })
-            .catch(function() {});
+            .catch(function(err) { console.error('Error loading students:', err); });
     }
 
     branchSelect.addEventListener('change', function() { loadClasses(); loadUnenrolledStudents(); });

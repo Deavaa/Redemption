@@ -92,12 +92,19 @@ class EnrollmentController extends Controller
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $branches = Branch::where('is_active', true)->get();
-        // Classes for filter dropdown: show all classes by default so the dropdown is never empty.
-        // Only filter by academic year when the user explicitly selects one.
-        $classFilterAyId = $explicitAcademicYearId ?: null; // null = show all classes
-        $classes = Classroom::with('sections')
-            ->when($classFilterAyId, fn($q) => $q->where('academic_year_id', $classFilterAyId))
-            ->get();
+
+        // Classes for filter dropdown: always filter by the effective academic year
+        // so the dropdown matches the enrollment data being shown.
+        $effectiveAyId = $academicYearId;
+        $classesQuery = Classroom::with('sections')
+            ->where('academic_year_id', $effectiveAyId);
+
+        // Also filter classes by branch if branch filter is active
+        $effectiveBranchId = $branchScope ?? $branchId;
+        if ($effectiveBranchId) {
+            $classesQuery->where('branch_id', $effectiveBranchId);
+        }
+        $classes = $classesQuery->orderBy('name')->get();
         $sections = $classId ? Section::where('class_id', $classId)->get() : collect();
 
         // For branch principals, auto-limit branches to their own
@@ -134,7 +141,13 @@ class EnrollmentController extends Controller
         if ($branchScope) {
             $branches = Branch::where('id', $branchScope)->get();
         }
-        $classes = Classroom::with('sections')->get();
+
+        // Filter classes by branch scope
+        $classesQuery = Classroom::with('sections');
+        if ($branchScope) {
+            $classesQuery->where('branch_id', $branchScope);
+        }
+        $classes = $classesQuery->orderBy('name')->get();
 
         return view('admin.Enrollment.create', compact('students', 'academicYears', 'branches', 'classes'));
     }
@@ -271,8 +284,14 @@ class EnrollmentController extends Controller
      */
     public function bulkEnroll()
     {
+        $branchScope = request()->attributes->get('branch_scope');
+
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $branches = Branch::where('is_active', true)->get();
+
+        if ($branchScope) {
+            $branches = Branch::where('id', $branchScope)->get();
+        }
 
         return view('admin.Enrollment.bulk-enroll', compact('academicYears', 'branches'));
     }
@@ -297,11 +316,16 @@ class EnrollmentController extends Controller
         $autoPromote = $validated['auto_promote'] ?? false;
         $enrollmentDate = $validated['enrollment_date'] ?? now()->toDateString();
 
+        // Branch scope: principals can only bulk-enroll from their branch
+        $branchScope = $request->attributes->get('branch_scope');
+
         // Get all currently enrolled students from the source academic year
         $sourceEnrollments = StudentEnrollment::where('academic_year_id', $sourceAyId)
             ->where('status', 'enrolled');
 
-        if (!empty($validated['branch_id'])) {
+        if ($branchScope) {
+            $sourceEnrollments->where('branch_id', $branchScope);
+        } elseif (!empty($validated['branch_id'])) {
             $sourceEnrollments->where('branch_id', $validated['branch_id']);
         }
 
@@ -462,15 +486,55 @@ class EnrollmentController extends Controller
     }
 
     /**
+     * Get branches for an academic year (AJAX).
+     * Returns branches that have enrollments in the given academic year.
+     */
+    public function apiBranches(Request $request)
+    {
+        $academicYearId = $request->get('academic_year_id');
+
+        // Branch scope: principals only see their branch
+        $branchScope = $request->attributes->get('branch_scope');
+
+        if ($branchScope) {
+            return response()->json(Branch::where('id', $branchScope)->where('is_active', true)->get());
+        }
+
+        $branches = Branch::where('is_active', true)
+            ->when($academicYearId, function ($q) use ($academicYearId) {
+                $q->whereHas('enrollments', function ($q2) use ($academicYearId) {
+                    $q2->where('academic_year_id', $academicYearId);
+                });
+            })
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($branches);
+    }
+
+    /**
      * Get classes for a branch (AJAX).
      */
     public function apiClasses(Request $request)
     {
         $branchId = $request->get('branch_id');
         $academicYearId = $request->get('academic_year_id');
-        $classes = Classroom::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+
+        // Default to current academic year if none provided
+        if (!$academicYearId) {
+            $currentAy = AcademicYear::where('is_current', true)->first()
+                ?? AcademicYear::orderBy('id', 'desc')->first();
+            $academicYearId = $currentAy?->id;
+        }
+
+        // Branch scope: principals only see their branch classes
+        $branchScope = $request->attributes->get('branch_scope');
+        $effectiveBranchId = $branchScope ?? $branchId;
+
+        $classes = Classroom::when($effectiveBranchId, fn($q) => $q->where('branch_id', $effectiveBranchId))
             ->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))
             ->with('sections')
+            ->orderBy('name')
             ->get();
         return response()->json($classes);
     }
@@ -597,13 +661,22 @@ class EnrollmentController extends Controller
                 ->with('error', 'No academic year found. Please create an academic year first.');
         }
 
+        // Branch scope
+        $branchScope = request()->attributes->get('branch_scope');
+
         // Find students without enrollment in current AY
         $studentsWithoutEnrollment = Student::whereNotExists(function ($q) use ($currentAy) {
             $q->selectRaw(1)
                 ->from('student_enrollments')
                 ->whereColumn('student_enrollments.student_id', 'students.id')
                 ->where('academic_year_id', $currentAy->id);
-        })->where('status', 'active')->get();
+        })->where('status', 'active');
+
+        if ($branchScope) {
+            $studentsWithoutEnrollment->where('branch_id', $branchScope);
+        }
+
+        $studentsWithoutEnrollment = $studentsWithoutEnrollment->get();
 
         if ($studentsWithoutEnrollment->isEmpty()) {
             return redirect()->route('admin.enrollments.index')

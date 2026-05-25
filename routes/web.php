@@ -261,6 +261,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('enrollments/bulk-enroll', [EnrollmentController::class, 'processBulkEnroll'])->name('enrollments.process-bulk-enroll')->middleware('permission:students.manage');
     Route::get('enrollments/api/sections', [EnrollmentController::class, 'apiSections'])->name('enrollments.api.sections');
     Route::get('enrollments/api/classes', [EnrollmentController::class, 'apiClasses'])->name('enrollments.api.classes');
+    Route::get('enrollments/api/branches', [EnrollmentController::class, 'apiBranches'])->name('enrollments.api.branches');
     Route::get('enrollments/api/unenrolled-students', [EnrollmentController::class, 'apiUnenrolledStudents'])->name('enrollments.api.unenrolled-students');
     Route::get('enrollments/api/stats', [EnrollmentController::class, 'apiStats'])->name('enrollments.api.stats');
     Route::post('enrollments/sync', [EnrollmentController::class, 'syncEnrollments'])->name('enrollments.sync')->middleware('permission:students.manage');

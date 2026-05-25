@@ -8,5 +8,14 @@ class Section extends Model
     protected $fillable = ['class_id','name','max_students','teacher_id'];
 
     public function classRoom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
+    public function classroom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
     public function teacher() { return $this->belongsTo(Teacher::class, 'teacher_id'); }
+
+    /**
+     * Get the branch through the classroom relationship.
+     */
+    public function branch()
+    {
+        return $this->hasOneThrough(Branch::class, ClassRoom::class, 'id', 'id', 'class_id', 'branch_id');
+    }
 }
