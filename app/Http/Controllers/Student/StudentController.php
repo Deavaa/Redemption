@@ -10,6 +10,7 @@ use App\Models\ParentModel;
 use App\Models\Section;
 use App\Models\Student;
 use App\Services\PromotionService;
+use App\Models\StudentEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -139,7 +140,24 @@ class StudentController extends Controller
             $validated['admission_date'] = now()->toDateString();
         }
 
-        Student::create($validated);
+        $student = Student::create($validated);
+
+        // Auto-create enrollment record for this student
+        StudentEnrollment::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $validated['academic_year_id'],
+            'branch_id' => $validated['branch_id'],
+            'class_id' => $validated['class_id'],
+            'section_id' => $validated['section_id'],
+            'roll_number' => $validated['roll_number'] ?? $student->roll_number,
+            'enrollment_date' => $validated['admission_date'] ?? now()->toDateString(),
+            'status' => 'enrolled',
+            'enrollment_type' => 'new',
+            'registration_fee' => 0,
+            'registration_fee_paid' => 0,
+            'registration_fee_status' => 'waived',
+            'enrolled_by' => auth()->id(),
+        ]);
 
         return redirect()->route('admin.students.index')->with('success', 'Student enrolled successfully!');
     }

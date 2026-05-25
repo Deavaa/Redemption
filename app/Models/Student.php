@@ -25,6 +25,8 @@ class Student extends Model
     public function promotionResults() { return $this->hasMany(PromotionResult::class); }
     public function previousClassroom() { return $this->belongsTo(Classroom::class, 'previous_class_id'); }
     public function previousSection() { return $this->belongsTo(Section::class, 'previous_section_id'); }
+    public function enrollments() { return $this->hasMany(StudentEnrollment::class); }
+    public function currentEnrollment() { return $this->hasOne(StudentEnrollment::class)->where('academic_year_id', AcademicYear::where('is_current', true)->value('id') ?? AcademicYear::max('id'))->where('status', 'enrolled'); }
 
     /**
      * Full name is now a real column.

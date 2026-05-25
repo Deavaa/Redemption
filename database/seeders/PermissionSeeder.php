@@ -78,6 +78,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'students.edit',             'display_name' => 'Edit Students',             'module' => 'people'],
             ['name' => 'students.delete',           'display_name' => 'Delete Students',           'module' => 'people'],
 
+            ['name' => 'enrollments.view',          'display_name' => 'View Enrollments',          'module' => 'people'],
+            ['name' => 'enrollments.manage',        'display_name' => 'Manage Enrollments',        'module' => 'people'],
+
             ['name' => 'teachers.view',             'display_name' => 'View Teachers',             'module' => 'people'],
             ['name' => 'teachers.create',           'display_name' => 'Create Teachers',           'module' => 'people'],
             ['name' => 'teachers.edit',             'display_name' => 'Edit Teachers',             'module' => 'people'],
@@ -350,6 +353,8 @@ class PermissionSeeder extends Seeder
             'attendance.view', 'attendance.manage',
             // People
             'students.view', 'teachers.view', 'staff.view', 'parents.view',
+            // Enrollment
+            'enrollments.view', 'enrollments.manage',
             // Documents
             'id_cards.generate', 'certificates.generate',
             // Finance (view only)
@@ -371,6 +376,8 @@ class PermissionSeeder extends Seeder
             // People
             'students.view', 'students.create', 'students.edit',
             'parents.view', 'parents.create', 'parents.edit',
+            // Enrollment
+            'enrollments.view', 'enrollments.manage',
             // Finance (view fees)
             'fees.view', 'fee_payments.view', 'fee_payments.create',
             // Documents
@@ -387,6 +394,8 @@ class PermissionSeeder extends Seeder
             'dashboard.view',
             // People (view only)
             'students.view', 'teachers.view', 'staff.view',
+            // Enrollment (view + fee management)
+            'enrollments.view',
             // Finance
             'fees.view', 'fees.create', 'fees.edit',
             'fee_payments.view', 'fee_payments.create', 'fee_payments.edit',
@@ -423,6 +432,8 @@ class PermissionSeeder extends Seeder
             'dashboard.view',
             // People (view only)
             'students.view', 'teachers.view',
+            // Enrollment (view + fee management)
+            'enrollments.view',
             // Finance
             'fees.view', 'fee_payments.view', 'fee_payments.create', 'fee_payments.edit',
             // Communication

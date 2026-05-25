@@ -20,4 +20,5 @@ class AcademicYear extends Model
     public function performanceReports() { return $this->hasMany(PerformanceReport::class); }
     public function audits() { return $this->hasMany(Audit::class); }
     public function financeStatements() { return $this->hasMany(FinanceStatement::class); }
+    public function enrollments() { return $this->hasMany(StudentEnrollment::class); }
 }

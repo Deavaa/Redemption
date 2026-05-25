@@ -16,6 +16,7 @@ use App\Models\TeacherAssignment;
 use App\Models\CalendarEvent;
 use App\Models\GradeScale;
 use App\Models\Role;
+use App\Models\StudentEnrollment;
 use Illuminate\Support\Facades\DB;
 
 class SchoolDataSeeder extends Seeder
@@ -511,6 +512,33 @@ class SchoolDataSeeder extends Seeder
         // ======================================================================
         GradeScale::seedDefaults();
         $this->command->info('  Grade Scales: 11');
+
+        // ======================================================================
+        // 13. STUDENT ENROLLMENTS - Register all students for current AY
+        // ======================================================================
+        $this->command->info('  Creating student enrollments...');
+        $enrollmentCount = 0;
+        $students = Student::where('academic_year_id', $ay->id)->where('status', 'active')->get();
+        foreach ($students as $stu) {
+            StudentEnrollment::updateOrCreate(
+                ['student_id' => $stu->id, 'academic_year_id' => $ay->id],
+                [
+                    'branch_id' => $stu->branch_id,
+                    'class_id' => $stu->class_id,
+                    'section_id' => $stu->section_id,
+                    'roll_number' => $stu->roll_number,
+                    'enrollment_date' => $stu->admission_date ?? '2025-09-01',
+                    'status' => 'enrolled',
+                    'enrollment_type' => 'new',
+                    'registration_fee' => 500.00,
+                    'registration_fee_paid' => 0,
+                    'registration_fee_status' => 'unpaid',
+                    'enrolled_by' => $adminUser->id ?? 1,
+                ]
+            );
+            $enrollmentCount++;
+        }
+        $this->command->info("  Student Enrollments: {$enrollmentCount}");
 
         // ======================================================================
         // DONE

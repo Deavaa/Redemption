@@ -87,6 +87,7 @@ use App\Http\Controllers\Club\ClubFollowUpConfigController;
 use App\Http\Controllers\Exam\ExamQuestionController;
 use App\Http\Controllers\Assessment\AssessmentQuestionController;
 use App\Http\Controllers\Assessment\StudentAssessmentController;
+use App\Http\Controllers\Enrollment\EnrollmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -239,6 +240,26 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('staff', StaffController::class)->middleware('permission:staff.view');
     Route::resource('team-members', TeamMemberController::class)->middleware('permission:team_members.view');
     Route::resource('parents', ParentModelController::class)->middleware('permission:parents.view');
+
+    // ── Enrollment ────────────────────────────────────────
+    Route::get('enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index')->middleware('permission:students.view');
+    Route::get('enrollments/create', [EnrollmentController::class, 'create'])->name('enrollments.create')->middleware('permission:students.manage');
+    Route::post('enrollments', [EnrollmentController::class, 'store'])->name('enrollments.store')->middleware('permission:students.manage');
+    Route::get('enrollments/{enrollment}', [EnrollmentController::class, 'show'])->name('enrollments.show')->middleware('permission:students.view');
+    Route::get('enrollments/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('enrollments.edit')->middleware('permission:students.manage');
+    Route::put('enrollments/{enrollment}', [EnrollmentController::class, 'update'])->name('enrollments.update')->middleware('permission:students.manage');
+    Route::delete('enrollments/{enrollment}', [EnrollmentController::class, 'destroy'])->name('enrollments.destroy')->middleware('permission:students.manage');
+    Route::get('enrollments/bulk-enroll', [EnrollmentController::class, 'bulkEnroll'])->name('enrollments.bulk-enroll')->middleware('permission:students.manage');
+    Route::post('enrollments/bulk-enroll', [EnrollmentController::class, 'processBulkEnroll'])->name('enrollments.process-bulk-enroll')->middleware('permission:students.manage');
+    Route::get('enrollments/{enrollment}/pay-registration-fee', [EnrollmentController::class, 'payRegistrationFee'])->name('enrollments.pay-registration-fee')->middleware('permission:fee_payments.manage');
+    Route::post('enrollments/{enrollment}/pay-registration-fee', [EnrollmentController::class, 'processPayRegistrationFee'])->name('enrollments.process-pay-registration-fee')->middleware('permission:fee_payments.manage');
+    Route::post('enrollments/{enrollment}/waive-registration-fee', [EnrollmentController::class, 'waiveRegistrationFee'])->name('enrollments.waive-registration-fee')->middleware('permission:fee_payments.manage');
+    Route::get('enrollments/{enrollment}/withdraw', [EnrollmentController::class, 'withdraw'])->name('enrollments.withdraw')->middleware('permission:students.manage');
+    Route::post('enrollments/{enrollment}/withdraw', [EnrollmentController::class, 'processWithdraw'])->name('enrollments.process-withdraw')->middleware('permission:students.manage');
+    Route::get('enrollments/api/sections', [EnrollmentController::class, 'apiSections'])->name('enrollments.api.sections');
+    Route::get('enrollments/api/classes', [EnrollmentController::class, 'apiClasses'])->name('enrollments.api.classes');
+    Route::get('enrollments/api/unenrolled-students', [EnrollmentController::class, 'apiUnenrolledStudents'])->name('enrollments.api.unenrolled-students');
+    Route::get('enrollments/api/stats', [EnrollmentController::class, 'apiStats'])->name('enrollments.api.stats');
 
     // ── Website ───────────────────────────────────────────
     Route::resource('sliders', SliderController::class)->middleware('permission:sliders.view');
