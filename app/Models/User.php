@@ -11,7 +11,7 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
 
-    protected $fillable = ['name', 'email', 'id_number', 'password', 'role', 'branch_id', 'phone', 'address', 'profile_photo', 'is_active', 'security_question', 'security_answer', 'gender', 'qualification'];
+    protected $fillable = ['name', 'email', 'id_number', 'employee_id', 'password', 'role', 'branch_id', 'phone', 'address', 'profile_photo', 'is_active', 'security_question', 'security_answer', 'gender', 'qualification'];
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
@@ -25,6 +25,81 @@ class User extends Authenticatable
 
     // ── Branch Relationship ────────────────────────────────
     public function branch() { return $this->belongsTo(Branch::class); }
+
+    /**
+     * Multi-branch assignments (for teachers/employees who teach in multiple branches).
+     */
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class, 'employee_branch')
+            ->withPivot('role_in_branch')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all branch IDs the user belongs to (primary + secondary).
+     */
+    public function getAllBranchIds(): array
+    {
+        $ids = [];
+        if ($this->branch_id) {
+            $ids[] = $this->branch_id;
+        }
+        try {
+            foreach ($this->branches as $b) {
+                if (!in_array($b->id, $ids)) {
+                    $ids[] = $b->id;
+                }
+            }
+        } catch (\Throwable $e) {}
+        return $ids;
+    }
+
+    /**
+     * Check if user is a branch principal (directly or via branch_principals pivot).
+     */
+    public function isBranchPrincipal(): bool
+    {
+        return $this->role === 'branch_principal';
+    }
+
+    /**
+     * Check if user is a general manager.
+     */
+    public function isGeneralManager(): bool
+    {
+        return $this->role === 'general_manager';
+    }
+
+    /**
+     * Check if this user can manage academic year/terms/exams.
+     * Only admin, super_admin, and general_manager can.
+     * Branch principals CANNOT.
+     */
+    public function canManageAcademicSetup(): bool
+    {
+        return in_array($this->role, ['admin', 'super_admin', 'general_manager']);
+    }
+
+    /**
+     * Check if this user can add/edit calendar events.
+     * Teachers CANNOT add events.
+     * Branch principals can add branch-scoped events only.
+     * Admin/GM can add school-wide events.
+     */
+    public function canAddCalendarEvents(): bool
+    {
+        return !in_array($this->role, ['teacher', 'student', 'parent']);
+    }
+
+    /**
+     * Check if this user can approve calendar events.
+     * Only admin and general_manager can approve school-wide events.
+     */
+    public function canApproveCalendarEvents(): bool
+    {
+        return in_array($this->role, ['admin', 'super_admin', 'general_manager']);
+    }
 
     // ── Existing Relationships ──────────────────────────────
     public function student() { return $this->hasOne(Student::class); }

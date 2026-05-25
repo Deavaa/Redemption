@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\EmployeeIdService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -55,9 +56,29 @@ class ProfileController extends Controller
         ]);
 
         $targetUser = User::findOrFail($request->user_id);
-        $defaultPassword = '123456';
+        $defaultPassword = (new EmployeeIdService())->getDefaultPassword();
         $targetUser->update(['password' => Hash::make($defaultPassword)]);
 
         return redirect()->back()->with('success', "Password for {$targetUser->name} has been reset to default: {$defaultPassword}");
+    }
+
+    /**
+     * Generate employee IDs for all existing users who don't have one yet.
+     * This is a one-time migration endpoint for admin use.
+     */
+    public function generateMissingEmployeeIds()
+    {
+        $service = new EmployeeIdService();
+        $users = User::whereNull('employee_id')
+            ->whereNotIn('role', ['student', 'parent'])
+            ->get();
+
+        $count = 0;
+        foreach ($users as $user) {
+            $service->assignToUser($user, $user->branch_id);
+            $count++;
+        }
+
+        return redirect()->back()->with('success', "Generated employee IDs for {$count} staff members.");
     }
 }

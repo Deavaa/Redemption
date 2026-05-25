@@ -12,7 +12,6 @@ use App\Models\TelegramMessage;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 
 class CalendarEventController extends Controller
 {
@@ -21,12 +20,42 @@ class CalendarEventController extends Controller
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $branches = Branch::orderBy('name')->get();
         $categories = CalendarEvent::categoryList();
+        $user = Auth::user();
 
-        return view('admin.CalendarEvent.index', compact('academicYears', 'branches', 'categories'));
+        // Determine if user can add events
+        $canAddEvents = $user->canAddCalendarEvents();
+        $canApproveEvents = $user->canApproveCalendarEvents();
+        $isBranchPrincipal = $user->isBranchPrincipal();
+
+        // For branch principals: only show their branch + school-wide events
+        $branchScope = request()->attributes->get('branch_scope');
+
+        // Get pending approval count for GM/Admin
+        $pendingApprovalCount = 0;
+        if ($canApproveEvents) {
+            $pendingApprovalCount = CalendarEvent::where('is_approved', false)->count();
+        }
+
+        return view('admin.CalendarEvent.index', compact(
+            'academicYears', 'branches', 'categories',
+            'canAddEvents', 'canApproveEvents', 'isBranchPrincipal',
+            'branchScope', 'pendingApprovalCount'
+        ));
     }
 
     public function store(Request $r)
     {
+        $user = Auth::user();
+
+        // Teachers cannot add events
+        if ($user->role === 'teacher') {
+            if ($r->ajax() || $r->wantsJson()) {
+                return response()->json(['error' => 'Teachers cannot add calendar events.'], 403);
+            }
+            return redirect()->route('admin.calendar.index')
+                ->with('error', 'Teachers cannot add calendar events. Only branch principals and managers can add events.');
+        }
+
         $r->validate([
             'title'          => 'required|string|max:255',
             'description'    => 'nullable|string|max:1000',
@@ -47,38 +76,65 @@ class CalendarEventController extends Controller
         ]);
         $isAllDay = $r->input('is_all_day');
         $data['is_all_day'] = in_array($isAllDay, [true, 1, '1', 'on', 'true'], true) ? true : (!$r->filled('start_time'));
-        $data['is_announcement'] = $r->has('is_announcement') ? true : false; // Only announce if checkbox checked
+        $data['is_announcement'] = true;
         $data['created_by'] = Auth::id();
 
         if (empty($data['color'])) {
             $data['color'] = CalendarEvent::categoryColors()[$data['category']] ?? '#4361ee';
         }
 
-        // Every event is automatically posted as an announcement
-        $data['is_announcement'] = true;
+        // Branch principal: events are automatically branch-scoped
+        if ($user->isBranchPrincipal()) {
+            $data['scope'] = 'branch';
+            $data['branch_id'] = $user->branch_id; // Force to their branch
+            // Branch principal events need GM approval for school-wide visibility
+            $data['is_approved'] = false;
+        } else if ($user->canApproveCalendarEvents()) {
+            // Admin/GM: events are school-wide and auto-approved
+            $data['scope'] = $r->input('scope', 'school');
+            $data['is_approved'] = true;
+            $data['approved_by'] = $user->id;
+            $data['approved_at'] = now();
+        } else {
+            // Other staff: school-scoped but need approval
+            $data['scope'] = $r->input('scope', 'school');
+            $data['is_approved'] = false;
+        }
 
         $event = CalendarEvent::create($data);
 
-        // Auto-notify via Telegram for every event (unless explicitly skipped)
+        // Auto-notify via Telegram (only for approved events)
         $telegramSent = false;
-        if (!$r->has('skip_telegram')) {
+        if ($event->is_approved && !$r->has('skip_telegram')) {
             $telegramSent = $this->notifyTelegram($event);
         }
 
-        // Send SMS notification (unless explicitly skipped)
+        // Send SMS notification (only for approved events)
         $smsSent = false;
-        if (!$r->has('skip_sms')) {
+        if ($event->is_approved && !$r->has('skip_sms')) {
             $smsSent = $this->notifySms($event);
         }
 
-        // Also send as notification/message to relevant users
-        $this->notifyUsers($event);
+        // Notify users about approved events
+        if ($event->is_approved) {
+            $this->notifyUsers($event);
+        } else {
+            // Notify GM/Admin about pending approval
+            $this->notifyApprovers($event);
+        }
 
-        $statusParts = ['Event created and posted as announcement.'];
-        if ($telegramSent) $statusParts[] = 'Telegram notification sent.';
-        if ($smsSent) $statusParts[] = 'SMS notification sent.';
+        $statusParts = [];
+        if ($event->is_approved) {
+            $statusParts[] = 'Event created and posted as announcement.';
+            if ($telegramSent) $statusParts[] = 'Telegram notification sent.';
+            if ($smsSent) $statusParts[] = 'SMS notification sent.';
+        } else {
+            $statusParts[] = 'Event created and submitted for approval.';
+            if ($user->isBranchPrincipal()) {
+                $statusParts[] = 'This event will only be visible to your branch.';
+            }
+        }
 
-        // Return JSON for AJAX requests, redirect for normal
         if ($r->ajax() || $r->wantsJson()) {
             return response()->json(['success' => true, 'message' => implode(' ', $statusParts), 'event' => $event]);
         }
@@ -88,6 +144,17 @@ class CalendarEventController extends Controller
 
     public function update(Request $r, CalendarEvent $calendar_event)
     {
+        $user = Auth::user();
+
+        // Teachers cannot modify events
+        if ($user->role === 'teacher') {
+            if ($r->ajax() || $r->wantsJson()) {
+                return response()->json(['error' => 'Teachers cannot modify calendar events.'], 403);
+            }
+            return redirect()->route('admin.calendar.index')
+                ->with('error', 'Teachers cannot modify calendar events.');
+        }
+
         $r->validate([
             'title'          => 'required|string|max:255',
             'description'    => 'nullable|string|max:1000',
@@ -108,27 +175,30 @@ class CalendarEventController extends Controller
         ]);
         $isAllDay = $r->input('is_all_day');
         $data['is_all_day'] = in_array($isAllDay, [true, 1, '1', 'on', 'true'], true) ? true : (!$r->filled('start_time'));
-        // Every event is automatically posted as an announcement
         $data['is_announcement'] = true;
+
+        // Branch principal: force branch-scoped
+        if ($user->isBranchPrincipal()) {
+            $data['scope'] = 'branch';
+            $data['branch_id'] = $user->branch_id;
+        }
 
         $calendar_event->update($data);
 
-        // Auto-notify via Telegram for every event (unless explicitly skipped)
+        // Re-notify if approved
         $telegramSent = false;
-        if (!$r->has('skip_telegram')) {
-            $telegramSent = $this->notifyTelegram($calendar_event);
-        }
-
-        // Send SMS notification (unless explicitly skipped)
         $smsSent = false;
-        if (!$r->has('skip_sms')) {
-            $smsSent = $this->notifySms($calendar_event);
+        if ($calendar_event->is_approved) {
+            if (!$r->has('skip_telegram')) {
+                $telegramSent = $this->notifyTelegram($calendar_event);
+            }
+            if (!$r->has('skip_sms')) {
+                $smsSent = $this->notifySms($calendar_event);
+            }
+            $this->notifyUsers($calendar_event);
         }
 
-        // Also send as notification/message to relevant users
-        $this->notifyUsers($calendar_event);
-
-        $statusParts = ['Event updated and posted as announcement.'];
+        $statusParts = ['Event updated.'];
         if ($telegramSent) $statusParts[] = 'Telegram notification sent.';
         if ($smsSent) $statusParts[] = 'SMS notification sent.';
 
@@ -139,8 +209,73 @@ class CalendarEventController extends Controller
         return redirect()->route('admin.calendar.index')->with('success', implode(' ', $statusParts));
     }
 
+    /**
+     * Approve a calendar event (GM/Admin only).
+     */
+    public function approve(Request $r, CalendarEvent $calendar_event)
+    {
+        $user = Auth::user();
+
+        if (!$user->canApproveCalendarEvents()) {
+            if ($r->ajax() || $r->wantsJson()) {
+                return response()->json(['error' => 'Only General Manager or Admin can approve events.'], 403);
+            }
+            return back()->with('error', 'Only General Manager or Admin can approve events.');
+        }
+
+        $calendar_event->update([
+            'is_approved' => true,
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+        ]);
+
+        // Now send notifications
+        $this->notifyTelegram($calendar_event);
+        $this->notifySms($calendar_event);
+        $this->notifyUsers($calendar_event);
+
+        if ($r->ajax() || $r->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Event approved and notifications sent.']);
+        }
+
+        return back()->with('success', 'Event approved and notifications sent.');
+    }
+
+    /**
+     * Reject a calendar event (GM/Admin only).
+     */
+    public function reject(Request $r, CalendarEvent $calendar_event)
+    {
+        $user = Auth::user();
+
+        if (!$user->canApproveCalendarEvents()) {
+            if ($r->ajax() || $r->wantsJson()) {
+                return response()->json(['error' => 'Only General Manager or Admin can reject events.'], 403);
+            }
+            return back()->with('error', 'Only General Manager or Admin can reject events.');
+        }
+
+        $calendar_event->delete();
+
+        if ($r->ajax() || $r->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Event rejected and removed.']);
+        }
+
+        return back()->with('success', 'Event rejected and removed.');
+    }
+
     public function destroy(CalendarEvent $calendar_event)
     {
+        $user = Auth::user();
+
+        // Only creator, admin, or GM can delete
+        if ($calendar_event->created_by !== $user->id && !$user->canApproveCalendarEvents()) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['error' => 'You can only delete your own events.'], 403);
+            }
+            return back()->with('error', 'You can only delete your own events.');
+        }
+
         $calendar_event->delete();
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Event deleted successfully.']);
@@ -150,11 +285,12 @@ class CalendarEventController extends Controller
 
     /**
      * API endpoint for the announcement ticker bar.
-     * Returns active/upcoming announcements.
+     * Returns approved, active/upcoming announcements.
      */
     public function apiAnnouncements(Request $r)
     {
         $query = CalendarEvent::where('is_announcement', true)
+            ->where('is_approved', true)
             ->where(function ($q) {
                 $q->where('start_date', '>=', now()->toDateString())
                   ->orWhere(function ($q2) {
@@ -163,10 +299,12 @@ class CalendarEventController extends Controller
                   });
             });
 
+        // Branch-scoped filtering
         if ($r->filled('branch_id')) {
             $query->where(function ($q) use ($r) {
                 $q->where('branch_id', $r->branch_id)
-                  ->orWhereNull('branch_id');
+                  ->orWhereNull('branch_id')
+                  ->orWhere('scope', 'school');
             });
         }
 
@@ -180,6 +318,8 @@ class CalendarEventController extends Controller
                 'start_date'  => $e->start_date->format('M d, Y'),
                 'end_date'    => $e->end_date?->format('M d, Y'),
                 'is_all_day'  => $e->is_all_day,
+                'scope'       => $e->scope,
+                'branch_name' => $e->branch?->name,
             ];
         });
 
@@ -188,6 +328,7 @@ class CalendarEventController extends Controller
 
     public function apiEvents(Request $r)
     {
+        $user = Auth::user();
         $query = CalendarEvent::with(['academicYear', 'branch']);
 
         if ($r->filled('start')) {
@@ -210,6 +351,36 @@ class CalendarEventController extends Controller
             $query->where('academic_year_id', $r->academic_year_id);
         }
 
+        // Branch scope filtering
+        $branchScope = request()->attributes->get('branch_scope');
+        if ($branchScope) {
+            $query->where(function ($q) use ($branchScope) {
+                $q->where('scope', 'school')
+                  ->orWhere(function ($q2) use ($branchScope) {
+                      $q2->where('scope', 'branch')->where('branch_id', $branchScope);
+                  });
+            });
+        }
+
+        // Teachers and students only see approved events
+        if (in_array($user->role, ['teacher', 'student', 'parent'])) {
+            $query->where('is_approved', true);
+        }
+
+        // Filter by approval status for GM/Admin
+        if ($r->filled('approval_status')) {
+            if ($r->approval_status === 'pending') {
+                $query->where('is_approved', false);
+            } elseif ($r->approval_status === 'approved') {
+                $query->where('is_approved', true);
+            }
+        }
+
+        // Filter by scope
+        if ($r->filled('scope')) {
+            $query->where('scope', $r->scope);
+        }
+
         $events = $query->get()->map(function ($e) {
             $start = $e->start_date->format('Y-m-d');
             if ($e->start_time && !$e->is_all_day) {
@@ -217,8 +388,6 @@ class CalendarEventController extends Controller
             }
             $end = null;
             if ($e->end_date) {
-                // FullCalendar end date is exclusive, so add 1 day for all-day events
-                // Use copy() to avoid mutating the original Carbon instance
                 $endDate = $e->is_all_day ? $e->end_date->copy()->addDay() : $e->end_date;
                 $end = $endDate->format('Y-m-d');
                 if ($e->end_time && !$e->is_all_day) {
@@ -227,18 +396,20 @@ class CalendarEventController extends Controller
             }
             return [
                 'id'          => $e->id,
-                'title'       => $e->title,
+                'title'       => $e->title . (!$e->is_approved ? ' (Pending)' : ''),
                 'start'       => $start,
                 'end'         => $end,
                 'allDay'      => $e->is_all_day,
-                'backgroundColor' => $e->color,
-                'borderColor' => $e->color,
+                'backgroundColor' => $e->is_approved ? $e->color : '#9ca3af',
+                'borderColor' => $e->is_approved ? $e->color : '#9ca3af',
                 'textColor'   => '#fff',
                 'extendedProps' => [
                     'category'     => $e->category,
                     'description'  => $e->description,
                     'academic_year' => $e->academicYear?->name,
                     'branch'       => $e->branch?->name,
+                    'scope'        => $e->scope,
+                    'is_approved'  => $e->is_approved,
                 ],
             ];
         });
@@ -247,8 +418,31 @@ class CalendarEventController extends Controller
     }
 
     /**
+     * Notify approvers (GM/Admin) about pending events.
+     */
+    private function notifyApprovers(CalendarEvent $event): void
+    {
+        try {
+            $approvers = \App\Models\User::where('is_active', true)
+                ->whereIn('role', ['admin', 'super_admin', 'general_manager'])
+                ->get();
+
+            foreach ($approvers as $approver) {
+                \App\Models\Notification::create([
+                    'user_id' => $approver->id,
+                    'title' => 'Calendar Event Pending Approval',
+                    'message' => "New event '{$event->title}' created by " . $event->creator?->name . " needs approval.",
+                    'type' => 'event_approval',
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Event approver notification failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Send event notification to Telegram groups/channels.
-     * Returns true if at least one message was sent successfully.
      */
     private function notifyTelegram(CalendarEvent $event): bool
     {
@@ -268,26 +462,26 @@ class CalendarEventController extends Controller
             $message .= " - " . $event->end_date->format('M d, Y');
         }
         $message .= "\n\xF0\x9F\x8F\x7D " . ucfirst($event->category);
+        if ($event->scope === 'branch' && $event->branch) {
+            $message .= "\n\xF0\x9F\x8F\xA2 " . $event->branch->name . " Branch Only";
+        }
         if ($event->description) {
             $message .= "\n\n" . $event->description;
         }
 
         $targets = [];
 
-        // Global bot
         $global = TelegramSetting::getSettings();
         if ($global && $global->is_enabled && $global->bot_token && $global->chat_id) {
             $targets[] = ['bot_token' => $global->bot_token, 'chat_id' => $global->chat_id, 'name' => 'Global'];
         }
 
-        // Branch-specific bot
         if ($event->branch_id) {
             $bs = BranchTelegramSetting::getForBranch($event->branch_id);
             if ($bs && $bs->is_enabled && $bs->bot_token && $bs->chat_id) {
                 $targets[] = ['bot_token' => $bs->bot_token, 'chat_id' => $bs->chat_id, 'name' => $event->branch->name ?? 'Branch'];
             }
         } else {
-            // Send to all enabled branches
             $allBranch = BranchTelegramSetting::where('is_enabled', true)
                 ->whereNotNull('bot_token')->whereNotNull('chat_id')->get();
             foreach ($allBranch as $bs) {
@@ -298,7 +492,7 @@ class CalendarEventController extends Controller
         $sent = false;
         foreach ($targets as $target) {
             try {
-                $response = Http::post("https://api.telegram.org/bot{$target['bot_token']}/sendMessage", [
+                $response = \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$target['bot_token']}/sendMessage", [
                     'chat_id' => $target['chat_id'],
                     'text' => $message,
                     'parse_mode' => 'Markdown',
@@ -325,9 +519,8 @@ class CalendarEventController extends Controller
     private function notifyUsers(CalendarEvent $event): void
     {
         try {
-            // Get users who should be notified based on branch
             $query = \App\Models\User::where('is_active', true);
-            if ($event->branch_id) {
+            if ($event->branch_id && $event->scope === 'branch') {
                 $query->where(function ($q) use ($event) {
                     $q->where('branch_id', $event->branch_id)
                       ->orWhereIn('role', ['admin', 'super_admin', 'general_manager']);
@@ -355,15 +548,12 @@ class CalendarEventController extends Controller
     }
 
     /**
-     * Send SMS notification about the event to default recipients and parent phone numbers.
-     * Returns true if at least one SMS was sent successfully.
+     * Send SMS notification about the event.
      */
     private function notifySms(CalendarEvent $event): bool
     {
         try {
             $sms = new SmsService();
-
-            // Build SMS message (keep it short - 160 chars for standard SMS)
             $message = "Redemption School: {$event->title}";
             $message .= " on " . $event->start_date->format('M d, Y');
             if ($event->start_time && !$event->is_all_day) {
@@ -372,71 +562,43 @@ class CalendarEventController extends Controller
             if ($event->category) {
                 $message .= " [" . ucfirst($event->category) . "]";
             }
-
-            // Truncate to 160 chars for standard SMS
             if (strlen($message) > 155) {
                 $message = substr($message, 0, 152) . '...';
             }
 
             $allRecipients = [];
+            $sms->sendToDefaults($message);
 
-            // 1. Send to default configured recipients (admin phones)
-            if ($sms->sendToDefaults($message)['success']) {
-                // Successfully sent to defaults
-            }
-
-            // 2. Collect parent/guardian phone numbers for the relevant branch
             $phoneQuery = \App\Models\ParentModel::whereNotNull('father_phone')
                 ->where('father_phone', '!=', '');
-
             if ($event->branch_id) {
-                // Only parents with students in this branch
                 $phoneQuery->whereHas('students', function ($q) use ($event) {
                     $q->where('branch_id', $event->branch_id);
                 });
             }
-
             $parents = $phoneQuery->get();
             foreach ($parents as $parent) {
-                if ($parent->father_phone) {
-                    $allRecipients[] = $parent->father_phone;
-                }
+                if ($parent->father_phone) $allRecipients[] = $parent->father_phone;
             }
 
-            // 3. Also collect teacher phone numbers
             $teacherQuery = \App\Models\Teacher::whereNotNull('phone')
                 ->where('phone', '!=', '')
                 ->where('status', 'active');
-
             if ($event->branch_id) {
                 $teacherQuery->where('branch_id', $event->branch_id);
             }
-
-            $teachers = $teacherQuery->get();
-            foreach ($teachers as $teacher) {
-                if ($teacher->phone) {
-                    $allRecipients[] = $teacher->phone;
-                }
+            foreach ($teacherQuery->get() as $teacher) {
+                if ($teacher->phone) $allRecipients[] = $teacher->phone;
             }
 
-            // Deduplicate
             $allRecipients = array_unique($allRecipients);
+            if (empty($allRecipients)) return false;
 
-            if (empty($allRecipients)) {
-                return false;
-            }
-
-            // Send in batches of 50 to avoid API limits
-            $batches = array_chunk($allRecipients, 50);
             $anySent = false;
-
-            foreach ($batches as $batch) {
+            foreach (array_chunk($allRecipients, 50) as $batch) {
                 $result = $sms->send($batch, $message);
-                if ($result['success']) {
-                    $anySent = true;
-                }
+                if ($result['success']) $anySent = true;
             }
-
             return $anySent;
         } catch (\Exception $e) {
             \Log::warning('Event SMS notification failed: ' . $e->getMessage());
@@ -446,6 +608,6 @@ class CalendarEventController extends Controller
 
     public function apiEvent(CalendarEvent $calendar_event)
     {
-        return response()->json($calendar_event->load(['academicYear', 'branch']));
+        return response()->json($calendar_event->load(['academicYear', 'branch', 'creator', 'approver']));
     }
 }

@@ -2,7 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class Teacher extends Model {
-protected $fillable = ['user_id','department_id','full_name','email','phone','qualification','department','hire_date','salary','status','address','photo'];
+protected $fillable = ['user_id','department_id','branch_id','full_name','email','phone','qualification','department','hire_date','salary','status','address','photo'];
 
 protected $casts = [
     'hire_date' => 'date',
@@ -43,4 +43,36 @@ public function assignments() { return $this->hasMany(TeacherAssignment::class, 
 public function branchPrincipal() { return $this->hasOne(Branch::class, 'principal_id'); }
 public function department() { return $this->belongsTo(Department::class, 'department_id'); }
 public function examQuestions() { return $this->hasMany(ExamQuestion::class, 'teacher_id'); }
+
+/**
+ * Primary branch assignment.
+ */
+public function branch() { return $this->belongsTo(Branch::class); }
+
+/**
+ * Branches where this teacher is a principal (a teacher may be principal of multiple branches).
+ */
+public function principalBranches()
+{
+    return $this->belongsToMany(Branch::class, 'branch_principals')
+        ->withPivot('is_primary', 'assigned_date')
+        ->withTimestamps();
+}
+
+/**
+ * Check if this teacher is a homeroom teacher for any section/class.
+ */
+public function isHomeroomTeacher(): bool
+{
+    return $this->classRooms()->exists() || $this->sections()->exists();
+}
+
+/**
+ * Get subjects assigned to this teacher.
+ */
+public function assignedSubjects()
+{
+    return $this->hasMany(TeacherAssignment::class, 'teacher_id')
+        ->with('subject');
+}
 }

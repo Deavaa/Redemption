@@ -9,6 +9,7 @@ use App\Models\ReportDocumentRecipient;
 use App\Models\Branch;
 use App\Models\AcademicYear;
 use App\Models\Term;
+use App\Models\User;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,8 @@ class ReportExchangeController extends Controller
     public function index(Request $request)
     {
         $query = ReportDocument::with(['creator', 'fromBranch', 'toBranch', 'academicYear', 'term', 'recipients']);
+
+        $user = Auth::user();
 
         // Filter by tab
         $tab = $request->get('tab', 'all');
@@ -48,33 +51,105 @@ class ReportExchangeController extends Controller
             $query->toBranch($request->to_branch);
         }
 
+        // Report grouping filters
+        if ($request->filled('report_grouping')) {
+            $query->byGrouping($request->report_grouping);
+        }
+        if ($request->filled('report_period')) {
+            $query->byPeriod($request->report_period);
+        }
+
+        // Branch scope filtering for branch principals
+        $branchScope = request()->attributes->get('branch_scope');
+        if ($branchScope) {
+            $query->where(function ($q) use ($branchScope) {
+                $q->where('from_branch_id', $branchScope)
+                  ->orWhere('to_branch_id', $branchScope)
+                  ->orWhereHas('recipients', function ($rq) {
+                      $rq->where('user_id', Auth::id());
+                  });
+            });
+        }
+
         $documents = $query->latest()->paginate(15);
         $branches = Branch::orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
 
+        // Report grouping options
+        $reportGroupings = [
+            'monthly' => 'Monthly',
+            'quarterly' => 'Quarterly',
+            'half_year' => 'Half-Year',
+            'yearly' => 'Yearly',
+        ];
+
+        // Dynamic period options based on selected grouping
+        $periodOptions = [];
+        if ($request->filled('report_grouping')) {
+            $year = date('Y');
+            $periodOptions = ReportDocument::getPeriodOptions($year, $request->report_grouping);
+        }
+
+        // Get recipient candidates based on user role hierarchy
+        $recipientCandidates = $this->getRecipientCandidates($user);
+
         $stats = [
-            'total' => ReportDocument::count(),
+            'total' => ReportDocument::when($branchScope, function ($q) use ($branchScope) {
+                $q->where('from_branch_id', $branchScope)
+                  ->orWhere('to_branch_id', $branchScope);
+            })->count(),
             'draft' => ReportDocument::byStatus('draft')->sentBy(Auth::id())->count(),
-            'submitted' => ReportDocument::byStatus('submitted')->count(),
-            'approved' => ReportDocument::byStatus('approved')->count(),
-            'rejected' => ReportDocument::byStatus('rejected')->count(),
+            'submitted' => ReportDocument::byStatus('submitted')->when($branchScope, function ($q) use ($branchScope) {
+                $q->where('from_branch_id', $branchScope)->orWhere('to_branch_id', $branchScope);
+            })->count(),
+            'approved' => ReportDocument::byStatus('approved')->when($branchScope, function ($q) use ($branchScope) {
+                $q->where('from_branch_id', $branchScope)->orWhere('to_branch_id', $branchScope);
+            })->count(),
+            'rejected' => ReportDocument::byStatus('rejected')->when($branchScope, function ($q) use ($branchScope) {
+                $q->where('from_branch_id', $branchScope)->orWhere('to_branch_id', $branchScope);
+            })->count(),
             'unread' => ReportDocumentRecipient::where('user_id', Auth::id())->where('is_read', false)->count(),
         ];
 
-        return view('admin.report-exchange.index', compact('documents', 'branches', 'academicYears', 'stats', 'tab'));
+        return view('admin.report-exchange.index', compact(
+            'documents', 'branches', 'academicYears', 'stats', 'tab',
+            'reportGroupings', 'periodOptions', 'recipientCandidates'
+        ));
     }
 
     public function create()
     {
+        $user = Auth::user();
         $branches = Branch::orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
-        $users = \App\Models\User::orderBy('name')->get();
 
-        return view('admin.report-exchange.create', compact('branches', 'academicYears', 'users'));
+        // Report grouping options
+        $reportGroupings = [
+            'monthly' => 'Monthly Report',
+            'quarterly' => 'Quarterly Report',
+            'half_year' => 'Half-Year Report',
+            'yearly' => 'Yearly Report',
+        ];
+
+        // Dynamic period options (default: monthly)
+        $periodOptions = ReportDocument::getPeriodOptions(date('Y'), 'monthly');
+
+        // Get recipient candidates based on user role
+        $recipientCandidates = $this->getRecipientCandidates($user);
+
+        // Auto-set from_branch_id for branch principals
+        $defaultFromBranch = $user->branch_id;
+
+        return view('admin.report-exchange.create', compact(
+            'branches', 'academicYears', 'reportGroupings', 'periodOptions',
+            'recipientCandidates', 'defaultFromBranch'
+        ));
     }
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -84,6 +159,8 @@ class ReportExchangeController extends Controller
             'to_branch_id' => 'nullable|exists:branches,id',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'term_id' => 'nullable|exists:terms,id',
+            'report_grouping' => 'required|in:monthly,quarterly,half_year,yearly',
+            'report_period' => 'required|string|max:20',
             'file' => 'nullable|file|max:25600',
             'recipients' => 'nullable|array',
             'recipients.*' => 'exists:users,id',
@@ -95,6 +172,11 @@ class ReportExchangeController extends Controller
             $data = $validated;
             $data['created_by'] = Auth::id();
             $data['status'] = ($request->action === 'submit') ? 'submitted' : 'draft';
+
+            // Auto-set from_branch for branch principals
+            if ($user->isBranchPrincipal() && empty($data['from_branch_id'])) {
+                $data['from_branch_id'] = $user->branch_id;
+            }
 
             // Handle file upload
             if ($request->hasFile('file')) {
@@ -120,6 +202,25 @@ class ReportExchangeController extends Controller
                         'user_id' => $userId,
                         'title' => 'New Report Document',
                         'message' => Auth::user()->name . ' sent you a report: ' . $document->title,
+                        'type' => 'report_exchange',
+                        'link' => route('admin.report-exchange.show', $document->id),
+                    ]);
+                }
+            } else if ($request->action === 'submit' && !$request->filled('recipients')) {
+                // Auto-route reports based on hierarchy:
+                // Teachers → their branch principal
+                // Branch principals → general manager
+                $autoRecipients = $this->getAutoRecipients($user);
+                foreach ($autoRecipients as $recipientId) {
+                    ReportDocumentRecipient::create([
+                        'report_document_id' => $document->id,
+                        'user_id' => $recipientId,
+                    ]);
+
+                    Notification::create([
+                        'user_id' => $recipientId,
+                        'title' => 'New Report Document',
+                        'message' => Auth::user()->name . ' submitted a report: ' . $document->title,
                         'type' => 'report_exchange',
                         'link' => route('admin.report-exchange.show', $document->id),
                     ]);
@@ -157,12 +258,23 @@ class ReportExchangeController extends Controller
             return back()->with('error', 'Only draft or rejected documents can be edited.');
         }
 
+        $user = Auth::user();
         $branches = Branch::orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
-        $users = \App\Models\User::orderBy('name')->get();
+        $reportGroupings = [
+            'monthly' => 'Monthly Report',
+            'quarterly' => 'Quarterly Report',
+            'half_year' => 'Half-Year Report',
+            'yearly' => 'Yearly Report',
+        ];
+        $periodOptions = ReportDocument::getPeriodOptions(date('Y'), $report_exchange->report_grouping ?? 'monthly');
+        $recipientCandidates = $this->getRecipientCandidates($user);
         $selectedRecipients = $report_exchange->recipients->pluck('user_id')->toArray();
 
-        return view('admin.report-exchange.edit', compact('report_exchange', 'branches', 'academicYears', 'users', 'selectedRecipients'));
+        return view('admin.report-exchange.edit', compact(
+            'report_exchange', 'branches', 'academicYears',
+            'reportGroupings', 'periodOptions', 'recipientCandidates', 'selectedRecipients'
+        ));
     }
 
     public function update(Request $request, ReportDocument $report_exchange)
@@ -180,6 +292,8 @@ class ReportExchangeController extends Controller
             'to_branch_id' => 'nullable|exists:branches,id',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'term_id' => 'nullable|exists:terms,id',
+            'report_grouping' => 'required|in:monthly,quarterly,half_year,yearly',
+            'report_period' => 'required|string|max:20',
             'file' => 'nullable|file|max:25600',
             'recipients' => 'nullable|array',
             'recipients.*' => 'exists:users,id',
@@ -308,5 +422,90 @@ class ReportExchangeController extends Controller
     {
         $terms = Term::where('academic_year_id', $request->academic_year_id)->get(['id', 'name']);
         return response()->json($terms);
+    }
+
+    /**
+     * API: Get period options for a given year and grouping.
+     */
+    public function getPeriodOptions(Request $request)
+    {
+        $year = $request->input('year', date('Y'));
+        $grouping = $request->input('grouping', 'monthly');
+        return response()->json(ReportDocument::getPeriodOptions($year, $grouping));
+    }
+
+    /**
+     * Get recipient candidates based on user role hierarchy:
+     * - Teachers → their branch principal(s)
+     * - Branch principals → general managers
+     * - Admin/GM → all users
+     */
+    private function getRecipientCandidates(User $user)
+    {
+        $query = User::where('is_active', true);
+
+        if ($user->role === 'teacher') {
+            // Teachers can only send reports to their branch principal(s)
+            $teacherModel = \App\Models\Teacher::where('user_id', $user->id)->first();
+            if (!$teacherModel) {
+                $teacherModel = \App\Models\Teacher::where('email', $user->email)->first();
+            }
+            $branchId = $teacherModel?->branch_id ?? $user->branch_id;
+
+            if ($branchId) {
+                // Get branch principals for this branch
+                $query->where('role', 'branch_principal')
+                    ->where('branch_id', $branchId);
+            } else {
+                // Fallback: all branch principals
+                $query->where('role', 'branch_principal');
+            }
+        } elseif ($user->isBranchPrincipal()) {
+            // Branch principals send reports to general managers
+            $query->where('role', 'general_manager');
+        } elseif (in_array($user->role, ['admin', 'super_admin'])) {
+            // Admin can send to anyone
+            $query->whereIn('role', ['general_manager', 'branch_principal', 'teacher', 'staff']);
+        } elseif ($user->isGeneralManager()) {
+            // GM can send to admin and branch principals
+            $query->whereIn('role', ['admin', 'super_admin', 'branch_principal']);
+        }
+
+        return $query->orderBy('name')->get();
+    }
+
+    /**
+     * Auto-determine recipients based on hierarchy.
+     */
+    private function getAutoRecipients(User $user): array
+    {
+        $recipientIds = [];
+
+        if ($user->role === 'teacher') {
+            // Auto-route to branch principal
+            $teacherModel = \App\Models\Teacher::where('user_id', $user->id)->first();
+            if (!$teacherModel) {
+                $teacherModel = \App\Models\Teacher::where('email', $user->email)->first();
+            }
+            $branchId = $teacherModel?->branch_id ?? $user->branch_id;
+
+            if ($branchId) {
+                $principals = User::where('role', 'branch_principal')
+                    ->where('branch_id', $branchId)
+                    ->where('is_active', true)
+                    ->pluck('id')
+                    ->toArray();
+                $recipientIds = array_merge($recipientIds, $principals);
+            }
+        } elseif ($user->isBranchPrincipal()) {
+            // Auto-route to general managers
+            $gms = User::where('role', 'general_manager')
+                ->where('is_active', true)
+                ->pluck('id')
+                ->toArray();
+            $recipientIds = array_merge($recipientIds, $gms);
+        }
+
+        return array_unique($recipientIds);
     }
 }

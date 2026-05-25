@@ -126,7 +126,7 @@ body{min-height:100vh;display:flex;align-items:center;justify-content:center;bac
     @csrf
     <div class="form-group">
       <label><i class="bi bi-person"></i> {{ __('app.email_id_phone') }}</label>
-      <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Email / ID / Phone (e.g. 0912345678)">
+      <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Email / Employee ID / Phone (0900000000)">
     </div>
     <div class="form-group">
       <label><i class="bi bi-lock"></i> {{ __('app.password') }}</label>

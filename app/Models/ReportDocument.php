@@ -15,6 +15,7 @@ class ReportDocument extends Model
         'file_path', 'file_name', 'file_size',
         'created_by', 'from_branch_id', 'to_branch_id',
         'academic_year_id', 'term_id',
+        'report_period', 'report_grouping',
     ];
 
     protected $casts = [
@@ -95,6 +96,22 @@ class ReportDocument extends Model
         });
     }
 
+    /**
+     * Scope: filter by report grouping (monthly, quarterly, half_year, yearly).
+     */
+    public function scopeByGrouping($query, $grouping)
+    {
+        return $query->where('report_grouping', $grouping);
+    }
+
+    /**
+     * Scope: filter by report period (e.g., '2026-01', '2026-Q1', '2026-H1', '2026').
+     */
+    public function scopeByPeriod($query, $period)
+    {
+        return $query->where('report_period', $period);
+    }
+
     // Helpers
     public function getStatusBadgeAttribute()
     {
@@ -144,5 +161,86 @@ class ReportDocument extends Model
             $unit++;
         }
         return round($size, 2) . ' ' . $units[$unit];
+    }
+
+    /**
+     * Get the human-readable report grouping label.
+     */
+    public function getGroupingLabelAttribute(): string
+    {
+        $labels = [
+            'monthly' => 'Monthly Report',
+            'quarterly' => 'Quarterly Report',
+            'half_year' => 'Half-Year Report',
+            'yearly' => 'Yearly Report',
+        ];
+        return $labels[$this->report_grouping] ?? 'Monthly Report';
+    }
+
+    /**
+     * Get the display period string.
+     */
+    public function getDisplayPeriodAttribute(): string
+    {
+        if (!$this->report_period) return '-';
+
+        switch ($this->report_grouping) {
+            case 'monthly':
+                // Format: '2026-01' → 'January 2026'
+                $parts = explode('-', $this->report_period);
+                if (count($parts) === 2) {
+                    $months = [1 => 'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+                    $monthNum = (int) $parts[1];
+                    return ($months[$monthNum] ?? $parts[1]) . ' ' . $parts[0];
+                }
+                break;
+            case 'quarterly':
+                // Format: '2026-Q1' → 'Q1 2026'
+                return str_replace('-', ' ', $this->report_period);
+            case 'half_year':
+                // Format: '2026-H1' → 'H1 2026'
+                return str_replace('-', ' ', $this->report_period);
+            case 'yearly':
+                // Format: '2026' → 'Year 2026'
+                return 'Year ' . $this->report_period;
+        }
+
+        return $this->report_period;
+    }
+
+    /**
+     * Generate period options for a given year and grouping type.
+     */
+    public static function getPeriodOptions(string $year = null, string $grouping = 'monthly'): array
+    {
+        $year = $year ?? date('Y');
+        $options = [];
+
+        switch ($grouping) {
+            case 'monthly':
+                $months = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+                foreach ($months as $i => $month) {
+                    $val = $year . '-' . str_pad($i + 1, 2, '0', STR_PAD_LEFT);
+                    $options[$val] = $month . ' ' . $year;
+                }
+                break;
+            case 'quarterly':
+                for ($q = 1; $q <= 4; $q++) {
+                    $val = $year . '-Q' . $q;
+                    $options[$val] = 'Quarter ' . $q . ' (' . $year . ')';
+                }
+                break;
+            case 'half_year':
+                $options[$year . '-H1'] = 'First Half (' . $year . ')';
+                $options[$year . '-H2'] = 'Second Half (' . $year . ')';
+                break;
+            case 'yearly':
+                $options[$year] = 'Year ' . $year;
+                break;
+        }
+
+        return $options;
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\EmployeeIdService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -82,13 +83,21 @@ class StaffController extends Controller
             'phone'        => 'nullable|string|max:20',
             'role'         => 'required|in:' . implode(',', array_keys(self::STAFF_ROLES)),
             'branch_id'    => 'nullable|exists:branches,id',
-            'password'     => 'required|string|min:6|confirmed',
+            'password'     => 'nullable|string|min:6|confirmed',
             'gender'       => 'nullable|string|max:10',
             'qualification'=> 'nullable|string|max:255',
             'address'      => 'nullable|string|max:500',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        // Default password for all new staff members
+        $employeeIdService = new EmployeeIdService();
+        $defaultPassword = $employeeIdService->getDefaultPassword();
+        $validated['password'] = Hash::make($validated['password'] ?? $defaultPassword);
+
+        // Normalize phone number
+        if (!empty($validated['phone'])) {
+            $validated['phone'] = $this->normalizePhone($validated['phone']);
+        }
 
         // Force branch_principal's own branch — they cannot assign other branches
         // This applies to ALL roles when the logged-in user is a branch principal
@@ -107,11 +116,28 @@ class StaffController extends Controller
 
         $user = User::create($validated);
 
+        // Auto-generate employee ID
+        $employeeId = $employeeIdService->assignToUser($user, $validated['branch_id'] ?? null);
+
         // Assign RBAC role if it exists
         $this->syncRbacRole($user, $validated['role']);
 
+        // If role is branch_principal, also add to branch_principals pivot
+        if ($validated['role'] === 'branch_principal' && !empty($validated['branch_id'])) {
+            try {
+                DB::table('branch_principals')->insert([
+                    'branch_id' => $validated['branch_id'],
+                    'teacher_id' => 0, // Will be updated when teacher profile is linked
+                    'is_primary' => true,
+                    'assigned_date' => now()->toDateString(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
         return redirect()->route('admin.staff.index')
-            ->with('success', __('app.staff_member_created', ['name' => $user->name]));
+            ->with('success', __('app.staff_member_created', ['name' => $user->name]) . " Employee ID: {$employeeId}. Default password: {$defaultPassword}");
     }
 
     public function edit(User $user)
@@ -201,6 +227,24 @@ class StaffController extends Controller
 
         return redirect()->route('admin.staff.index')
             ->with('success', 'Staff member removed.');
+    }
+
+    /**
+     * Normalize phone number to 0900000000 format.
+     */
+    private function normalizePhone(string $input): string
+    {
+        $cleaned = preg_replace('/[\s\-().]/', '', $input);
+        if (preg_match('/^(\+251|00251)(\d{9})$/', $cleaned, $m)) {
+            return '0' . $m[2];
+        }
+        if (preg_match('/^251(\d{9})$/', $cleaned, $m)) {
+            return '0' . $m[1];
+        }
+        if (preg_match('/^0\d{9}$/', $cleaned)) {
+            return $cleaned;
+        }
+        return $cleaned;
     }
 
     /**

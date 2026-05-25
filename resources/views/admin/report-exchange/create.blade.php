@@ -68,7 +68,7 @@
                             <select name="from_branch_id" class="form-select">
                                 <option value="">Headquarters</option>
                                 @foreach($branches as $branch)
-                                <option value="{{ $branch->id }}" {{ old('from_branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                <option value="{{ $branch->id }}" {{ (old('from_branch_id') ?? $defaultFromBranch) == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -101,18 +101,43 @@
             </div>
 
             <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Report Period</h6></div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Reports are grouped by time period: monthly, quarterly, half-year, or yearly.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Report Grouping <span class="text-danger">*</span></label>
+                            <select name="report_grouping" class="form-select" id="reportGroupingSelect" required>
+                                @foreach($reportGroupings as $key => $label)
+                                <option value="{{ $key }}" {{ old('report_grouping') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Report Period <span class="text-danger">*</span></label>
+                            <select name="report_period" class="form-select" id="reportPeriodSelect" required>
+                                @foreach($periodOptions as $val => $label)
+                                <option value="{{ $val }}" {{ old('report_period') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
                 <div class="card-header bg-white"><h6 class="mb-0"><i class="fas fa-users me-2"></i>Recipients</h6></div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">Select users who should receive and review this document.</p>
+                    <p class="text-muted small mb-3">Select users who should receive and review this document. @if(auth()->user()->role === 'teacher') Reports are automatically routed to your branch principal. @elseif(auth()->user()->isBranchPrincipal()) Reports are automatically routed to the General Manager. @endif</p>
                     <div class="row g-2">
-                        @foreach($users as $user)
-                        @if($user->id !== auth()->id())
+                        @foreach($recipientCandidates as $rcptUser)
+                        @if($rcptUser->id !== auth()->id())
                         <div class="col-md-4 col-lg-3">
                             <div class="form-check">
-                                <input type="checkbox" name="recipients[]" value="{{ $user->id }}" id="user_{{ $user->id }}" class="form-check-input"
-                                    {{ in_array($user->id, old('recipients', [])) ? 'checked' : '' }}>
-                                <label for="user_{{ $user->id }}" class="form-check-label small">
-                                    {{ $user->name }}<br><span class="text-muted">{{ $user->email }}</span>
+                                <input type="checkbox" name="recipients[]" value="{{ $rcptUser->id }}" id="user_{{ $rcptUser->id }}" class="form-check-input"
+                                    {{ in_array($rcptUser->id, old('recipients', [])) ? 'checked' : '' }}>
+                                <label for="user_{{ $rcptUser->id }}" class="form-check-label small">
+                                    {{ $rcptUser->name }}<br><span class="text-muted">{{ ucfirst($rcptUser->role) }}</span>
                                 </label>
                             </div>
                         </div>
@@ -152,6 +177,23 @@ document.getElementById('academicYearSelect')?.addEventListener('change', functi
             });
         })
         .catch(() => { termSelect.innerHTML = '<option value="">Error loading</option>'; });
+});
+
+// Dynamic period options based on grouping type
+document.getElementById('reportGroupingSelect')?.addEventListener('change', function() {
+    const grouping = this.value;
+    const periodSelect = document.getElementById('reportPeriodSelect');
+    periodSelect.innerHTML = '<option value="">Loading...</option>';
+
+    fetch('{{ route('admin.report-exchange.period-options') }}?grouping=' + grouping)
+        .then(r => r.json())
+        .then(options => {
+            periodSelect.innerHTML = '';
+            Object.entries(options).forEach(([val, label]) => {
+                periodSelect.innerHTML += `<option value="${val}">${label}</option>`;
+            });
+        })
+        .catch(() => { periodSelect.innerHTML = '<option value="">Error loading</option>'; });
 });
 </script>
 @endsection

@@ -20,17 +20,22 @@ class AuthController extends Controller
         // Format: 0900000000 (10 digits starting with 0)
         $normalizedPhone = $this->normalizePhone($login);
         
-        // Try to find user by email, id_number, or phone
+        // Try to find user by email, employee_id, id_number, or phone
         // Check which columns actually exist to avoid QueryException
         try {
             $hasIdNumber = \Schema::hasColumn('users', 'id_number');
             $hasPhone = \Schema::hasColumn('users', 'phone');
+            $hasEmployeeId = \Schema::hasColumn('users', 'employee_id');
         } catch (\Throwable $e) {
             $hasIdNumber = false;
             $hasPhone = false;
+            $hasEmployeeId = false;
         }
         
         $query = User::where('email', $login);
+        if ($hasEmployeeId) {
+            $query->orWhere('employee_id', $login);
+        }
         if ($hasIdNumber) {
             $query->orWhere('id_number', $login);
         }

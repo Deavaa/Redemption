@@ -126,6 +126,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profile/reset-user-password', [ProfileController::class, 'resetUserPassword'])->name('profile.reset-user-password');
+    Route::post('/profile/generate-employee-ids', [ProfileController::class, 'generateMissingEmployeeIds'])->name('profile.generate-employee-ids');
 
     // ── Academic ──────────────────────────────────────────
     Route::resource('academic-years', AcademicYearController::class)->middleware('permission:academic_years.view');
@@ -376,6 +377,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('calendar', [CalendarEventController::class, 'store'])->name('calendar.store')->middleware('permission:calendar.manage');
     Route::put('calendar/{calendar_event}', [CalendarEventController::class, 'update'])->name('calendar.update')->middleware('permission:calendar.manage');
     Route::delete('calendar/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar.destroy')->middleware('permission:calendar.manage');
+    Route::post('calendar/{calendar_event}/approve', [CalendarEventController::class, 'approve'])->name('calendar.approve')->middleware('permission:calendar.manage');
+    Route::post('calendar/{calendar_event}/reject', [CalendarEventController::class, 'reject'])->name('calendar.reject')->middleware('permission:calendar.manage');
     Route::get('api/calendar/events', [CalendarEventController::class, 'apiEvents'])->name('calendar.api.events');
     Route::get('api/calendar/event/{calendar_event}', [CalendarEventController::class, 'apiEvent'])->name('calendar.api.event');
 
@@ -471,6 +474,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('report-exchange/{report_exchange}/download', [ReportExchangeController::class, 'download'])->name('report-exchange.download')->middleware('permission:settings.view');
     Route::post('report-exchange/{report_exchange}/comment', [ReportExchangeController::class, 'addComment'])->name('report-exchange.comment')->middleware('permission:settings.edit');
     Route::get('report-exchange-api/terms', [ReportExchangeController::class, 'getTerms'])->name('report-exchange.terms');
+    Route::get('report-exchange-api/period-options', [ReportExchangeController::class, 'getPeriodOptions'])->name('report-exchange.period-options');
 
     // User Access Management
     Route::get('user-access/teachers', [TeacherAccessController::class, 'index'])->name('user-access.teachers');

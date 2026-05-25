@@ -9,7 +9,8 @@ class CalendarEvent extends Model
     protected $fillable = [
         'title', 'description', 'category', 'color',
         'start_date', 'end_date', 'start_time', 'end_time',
-        'is_all_day', 'is_announcement', 'academic_year_id', 'branch_id', 'created_by',
+        'is_all_day', 'is_announcement', 'is_approved', 'approved_by', 'approved_at',
+        'academic_year_id', 'branch_id', 'scope', 'created_by',
     ];
 
     protected $casts = [
@@ -17,6 +18,8 @@ class CalendarEvent extends Model
         'end_date'   => 'date',
         'is_all_day' => 'boolean',
         'is_announcement' => 'boolean',
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function academicYear()
@@ -32,6 +35,48 @@ class CalendarEvent extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Scope: only approved events (for public/student/parent visibility).
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
+
+    /**
+     * Scope: school-wide events.
+     */
+    public function scopeSchoolWide($query)
+    {
+        return $query->where('scope', 'school');
+    }
+
+    /**
+     * Scope: branch-specific events.
+     */
+    public function scopeBranchScoped($query)
+    {
+        return $query->where('scope', 'branch');
+    }
+
+    /**
+     * Scope: events visible to a specific branch (school-wide + branch-specific).
+     */
+    public function scopeVisibleToBranch($query, $branchId)
+    {
+        return $query->where(function ($q) use ($branchId) {
+            $q->where('scope', 'school')
+              ->orWhere(function ($q2) use ($branchId) {
+                  $q2->where('scope', 'branch')->where('branch_id', $branchId);
+              });
+        });
     }
 
     public static function categoryColors()

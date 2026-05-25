@@ -94,12 +94,15 @@
         {{-- Sidebar --}}
         <div>
             {{-- Quick Add Hint --}}
+            @if($canAddEvents)
             <div class="quick-add-hint">
                 <i class="fas fa-mouse-pointer"></i>
                 <span>Click on any calendar date to quickly add an event!</span>
             </div>
+            @endif
 
             {{-- Add Event Form --}}
+            @if($canAddEvents)
             <div class="cal-card" style="margin-bottom:1.25rem;">
                 <div class="cal-card-header"><i class="fas fa-plus-circle" style="color:#4361ee"></i> Add Event</div>
                 <div class="cal-card-body">
@@ -172,6 +175,15 @@
                     </form>
                 </div>
             </div>
+            @else
+            {{-- Teacher: Cannot add events --}}
+            <div class="cal-card" style="margin-bottom:1.25rem;">
+                <div class="cal-card-body" style="text-align:center;padding:2rem;">
+                    <i class="fas fa-calendar-times" style="font-size:2rem;color:#9ca3af;margin-bottom:0.75rem;display:block;"></i>
+                    <p style="color:#6b7280;font-size:0.9rem;margin:0;">Teachers cannot add calendar events.<br>Only branch principals and managers can add events.</p>
+                </div>
+            </div>
+            @endif
 
             {{-- Category Legend --}}
             <div class="cal-card" style="margin-bottom:1.25rem;">
@@ -195,6 +207,16 @@
                     <p style="color:#9ca3af;font-size:0.85rem;text-align:center;margin:0;">Loading...</p>
                 </div>
             </div>
+
+            {{-- Pending Approval (GM/Admin only) --}}
+            @if($canApproveEvents && $pendingApprovalCount > 0)
+            <div class="cal-card" style="margin-top:1.25rem;border-color:#f59e0b;">
+                <div class="cal-card-header" style="background:#fffbeb;color:#92400e;"><i class="fas fa-hourglass-half" style="color:#f59e0b"></i> Pending Approval ({{ $pendingApprovalCount }})</div>
+                <div class="cal-card-body" id="pendingEvents">
+                    <p style="color:#9ca3af;font-size:0.85rem;text-align:center;margin:0;">Loading...</p>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </div>
@@ -272,6 +294,8 @@
         <div class="cal-modal-body" id="modalBody"></div>
         <div class="cal-modal-footer">
             <button class="btn btn-danger btn-sm" id="modalDeleteBtn" onclick="deleteEvent()"><i class="fas fa-trash me-1"></i> Delete</button>
+            <button class="btn btn-success btn-sm" id="modalApproveBtn" style="display:none;" onclick="approveEvent()"><i class="fas fa-check me-1"></i> Approve</button>
+            <button class="btn btn-warning btn-sm" id="modalRejectBtn" style="display:none;" onclick="rejectEvent()"><i class="fas fa-times me-1"></i> Reject</button>
             <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
         </div>
     </div>
@@ -283,7 +307,9 @@
 <script>
 const categoryColors = @json(\App\Models\CalendarEvent::categoryColors());
 const categoryLabels = @json(\App\Models\CalendarEvent::categoryList());
+const canApproveEvents = {{ $canApproveEvents ? 'true' : 'false' }};
 let currentEventId = null;
+let currentEventApproved = false;
 let activeCategory = null;
 
 // All-day toggle
@@ -450,7 +476,11 @@ document.getElementById('quickAddForm').addEventListener('submit', function(e) {
 function showEventDetail(event) {
     currentEventId = event.id;
     const props = event.extendedProps;
+    currentEventApproved = props.is_approved;
     let html = '';
+    if (!props.is_approved) {
+        html += '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:0.6rem 1rem;margin-bottom:1rem;font-size:0.85rem;color:#92400e;display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-hourglass-half"></i> <strong>Pending Approval</strong> — This event is waiting for manager approval.</div>';
+    }
     html += '<div class="cal-modal-row"><div class="cal-modal-label">Category</div><div class="cal-modal-value"><span style="background:' + (categoryColors[props.category] || '#6b7280') + '15;color:' + (categoryColors[props.category] || '#6b7280') + ';padding:0.15rem 0.6rem;border-radius:50px;font-size:0.78rem;font-weight:600;">' + (categoryLabels[props.category] || props.category) + '</span></div></div>';
     html += '<div class="cal-modal-row"><div class="cal-modal-label">Date</div><div class="cal-modal-value">' + event.start.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '</div></div>';
     if (event.end) {
@@ -466,11 +496,25 @@ function showEventDetail(event) {
         html += '<div class="cal-modal-row"><div class="cal-modal-label">Academic Year</div><div class="cal-modal-value">' + props.academic_year + '</div></div>';
     }
     if (props.branch) {
-        html += '<div class="cal-modal-row"><div class="cal-modal-label">Branch</div><div class="cal-modal-value">' + props.branch + '</div></div>';
+        html += '<div class="cal-modal-row"><div class="cal-modal-label">Branch</div><div class="cal-modal-value">' + props.branch + (props.scope === 'branch' ? ' (Branch Only)' : '') + '</div></div>';
     }
-    document.getElementById('modalTitle').textContent = event.title;
+    if (props.scope) {
+        html += '<div class="cal-modal-row"><div class="cal-modal-label">Scope</div><div class="cal-modal-value">' + (props.scope === 'school' ? 'School-wide' : 'Branch-specific') + '</div></div>';
+    }
+    document.getElementById('modalTitle').textContent = event.title.replace(' (Pending)', '');
     document.getElementById('modalBody').innerHTML = html;
     document.getElementById('eventModal').style.display = 'flex';
+
+    // Show/hide approve/reject buttons
+    const approveBtn = document.getElementById('modalApproveBtn');
+    const rejectBtn = document.getElementById('modalRejectBtn');
+    if (canApproveEvents && !props.is_approved) {
+        approveBtn.style.display = 'inline-block';
+        rejectBtn.style.display = 'inline-block';
+    } else {
+        approveBtn.style.display = 'none';
+        rejectBtn.style.display = 'none';
+    }
 }
 
 function closeModal() {
@@ -490,6 +534,42 @@ function deleteEvent() {
     }).then(() => {
         closeModal();
         calendar.refetchEvents();
+    });
+}
+
+function approveEvent() {
+    if (!currentEventId) return;
+    if (!confirm('Approve this event? It will be visible to all relevant users and notifications will be sent.')) return;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+    fetch('{{ route("admin.calendar.approve", 0) }}'.replace('/0', '/' + currentEventId), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: '_token=' + csrfToken
+    }).then(r => r.json()).then(data => {
+        alert(data.message || 'Event approved successfully.');
+        closeModal();
+        calendar.refetchEvents();
+    }).catch(err => {
+        alert('Error approving event.');
+    });
+}
+
+function rejectEvent() {
+    if (!currentEventId) return;
+    if (!confirm('Reject and delete this event?')) return;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+    fetch('{{ route("admin.calendar.reject", 0) }}'.replace('/0', '/' + currentEventId), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: '_token=' + csrfToken
+    }).then(r => r.json()).then(data => {
+        alert(data.message || 'Event rejected.');
+        closeModal();
+        calendar.refetchEvents();
+    }).catch(err => {
+        alert('Error rejecting event.');
     });
 }
 
