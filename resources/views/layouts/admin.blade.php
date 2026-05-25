@@ -139,8 +139,9 @@
                 {{-- ENROLLMENT --}}
                 @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar', 'finance', 'cashier']))
                 <li class="menu-header">ENROLLMENT</li>
+                @php $enrollmentsRoute = \Illuminate\Support\Facades\Route::has('admin.enrollments.index') ? route('admin.enrollments.index') : url('/admin/enrollments'); @endphp
                 <li class="{{ request()->routeIs('admin.enrollments.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.enrollments.index') }}" class="{{ request()->routeIs('admin.enrollments.*') ? 'active' : '' }}">
+                    <a href="{{ $enrollmentsRoute }}" class="{{ request()->routeIs('admin.enrollments.*') ? 'active' : '' }}">
                         <i class="fas fa-clipboard-list"></i><span>Enrollments</span>
                     </a>
                 </li>

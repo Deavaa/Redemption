@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Enrollment;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Branch;
+use App\Models\ClassRoom;
 use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\Student;
