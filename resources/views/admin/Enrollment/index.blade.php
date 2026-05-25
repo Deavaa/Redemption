@@ -15,6 +15,12 @@
             </nav>
         </div>
         <div class="sl-header-right">
+            <form method="POST" action="{{ route('admin.enrollments.sync') }}" style="display:inline;" onsubmit="return confirm('This will create enrollment records for all active students who do not have them in the current academic year. Continue?')">
+                @csrf
+                <button type="submit" class="sl-btn sl-btn-outline" style="background:#fef3c7;color:#92400e;border-color:#f59e0b;">
+                    <i class="fas fa-sync-alt"></i> Sync Students
+                </button>
+            </form>
             <a href="{{ route('admin.enrollments.bulk-enroll') }}" class="sl-btn sl-btn-outline">
                 <i class="fas fa-users"></i> Bulk Enroll
             </a>
@@ -307,8 +313,17 @@
         <div class="sl-empty">
             <div class="sl-empty-icon"><i class="fas fa-user-graduate"></i></div>
             <h3>No Enrollments Yet</h3>
-            <p>Get started by enrolling your first student.</p>
-            <a href="{{ route('admin.enrollments.create') }}" class="sl-btn sl-btn-primary"><i class="fas fa-plus"></i> Enroll Student</a>
+            <p>Get started by syncing existing students or enrolling your first student.</p>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <form method="POST" action="{{ route('admin.enrollments.sync') }}" style="display:inline;" onsubmit="return confirm('This will create enrollment records for all active students who do not have them. Continue?')">
+                    @csrf
+                    <button type="submit" class="sl-btn sl-btn-outline" style="background:#fef3c7;color:#92400e;border-color:#f59e0b;">
+                        <i class="fas fa-sync-alt"></i> Sync Existing Students
+                    </button>
+                </form>
+                <a href="{{ route('admin.enrollments.create') }}" class="sl-btn sl-btn-primary"><i class="fas fa-plus"></i> Enroll Student</a>
+                <a href="{{ route('admin.enrollments.bulk-enroll') }}" class="sl-btn sl-btn-outline"><i class="fas fa-users"></i> Bulk Enroll</a>
+            </div>
         </div>
         @endif
     </div>
@@ -571,5 +586,71 @@
     .sl-name { max-width: 90px; }
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+// Dynamic class/section filtering on enrollment page
+document.addEventListener('DOMContentLoaded', function() {
+    var branchSelect = document.querySelector('select[name="branch_id"]');
+    var classSelect = document.querySelector('select[name="class_id"]');
+    var sectionSelect = document.querySelector('select[name="section_id"]');
+    var academicYearSelect = document.querySelector('select[name="academic_year_id"]');
+
+    function loadClasses() {
+        if (!classSelect) return;
+        var branchId = branchSelect ? branchSelect.value : '';
+        var ayId = academicYearSelect ? academicYearSelect.value : '';
+        var currentClassId = '{{ $classId }}';
+
+        var url = '{{ route("admin.enrollments.api.classes") }}?';
+        if (branchId) url += 'branch_id=' + branchId + '&';
+        if (ayId) url += 'academic_year_id=' + ayId;
+
+        fetch(url)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                classSelect.innerHTML = '<option value="">All Classes</option>';
+                data.forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    if (c.id == currentClassId) opt.selected = true;
+                    classSelect.appendChild(opt);
+                });
+                loadSections();
+            })
+            .catch(function(err) { console.error('Error loading classes:', err); });
+    }
+
+    function loadSections() {
+        if (!sectionSelect) return;
+        var classId = classSelect ? classSelect.value : '';
+        if (!classId) {
+            sectionSelect.innerHTML = '<option value="">All Sections</option>';
+            return;
+        }
+
+        fetch('{{ route("admin.enrollments.api.sections") }}?class_id=' + classId)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var currentSectionId = '{{ $sectionId }}';
+                sectionSelect.innerHTML = '<option value="">All Sections</option>';
+                data.forEach(function(s) {
+                    var opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    if (s.id == currentSectionId) opt.selected = true;
+                    sectionSelect.appendChild(opt);
+                });
+            })
+            .catch(function(err) { console.error('Error loading sections:', err); });
+    }
+
+    if (branchSelect) branchSelect.addEventListener('change', loadClasses);
+    if (academicYearSelect) academicYearSelect.addEventListener('change', loadClasses);
+    if (classSelect) classSelect.addEventListener('change', loadSections);
+});
+</script>
 @endpush
 @endsection

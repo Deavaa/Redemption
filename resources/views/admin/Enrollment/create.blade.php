@@ -331,13 +331,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const branchId = branchSelect.value;
         const academicYearId = academicYearSelect.value;
 
-        if (!branchId || !academicYearId) {
-            classSelect.innerHTML = '<option value="">-- Select Class --</option>';
-            sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
-            return;
+        var params = [];
+        if (branchId) params.push('branch_id=' + branchId);
+        if (academicYearId) params.push('academic_year_id=' + academicYearId);
+
+        if (params.length === 0) {
+            // No filters - still load all classes
         }
 
-        fetch('/admin/enrollments/api/classes?branch_id=' + branchId + '&academic_year_id=' + academicYearId)
+        fetch('/admin/enrollments/api/classes?' + params.join('&'))
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 classSelect.innerHTML = '<option value="">-- Select Class --</option>';

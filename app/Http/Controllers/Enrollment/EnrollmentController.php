@@ -19,7 +19,8 @@ class EnrollmentController extends Controller
      */
     public function index(Request $request)
     {
-        $academicYearId = $request->get('academic_year_id');
+        $explicitAcademicYearId = $request->get('academic_year_id');
+        $academicYearId = $explicitAcademicYearId;
         $branchId = $request->get('branch_id');
         $classId = $request->get('class_id');
         $sectionId = $request->get('section_id');
@@ -27,7 +28,7 @@ class EnrollmentController extends Controller
         $feeStatus = $request->get('fee_status');
         $search = $request->get('search', '');
 
-        // Default to current academic year
+        // Default to current academic year for enrollment queries
         if (!$academicYearId) {
             $currentAy = AcademicYear::where('is_current', true)->first()
                 ?? AcademicYear::orderBy('id', 'desc')->first();
@@ -91,7 +92,12 @@ class EnrollmentController extends Controller
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $branches = Branch::where('is_active', true)->get();
-        $classes = Classroom::with('sections')->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))->get();
+        // Classes for filter dropdown: show all classes by default so the dropdown is never empty.
+        // Only filter by academic year when the user explicitly selects one.
+        $classFilterAyId = $explicitAcademicYearId ?: null; // null = show all classes
+        $classes = Classroom::with('sections')
+            ->when($classFilterAyId, fn($q) => $q->where('academic_year_id', $classFilterAyId))
+            ->get();
         $sections = $classId ? Section::where('class_id', $classId)->get() : collect();
 
         // For branch principals, auto-limit branches to their own
@@ -113,19 +119,15 @@ class EnrollmentController extends Controller
     {
         $branchScope = request()->attributes->get('branch_scope');
 
-        // Get currently active students
-        $activeStudents = Student::where('status', 'active')->orderBy('full_name');
-
-        // Also include promoted/transferred students who can be re-enrolled
-        $promotedStudents = Student::whereIn('status', ['active', 'transferred', 'graduated'])
+        // Include active, transferred, and graduated students who can be enrolled/re-enrolled
+        $studentsQuery = Student::whereIn('status', ['active', 'transferred', 'graduated'])
             ->orderBy('full_name');
 
         if ($branchScope) {
-            $activeStudents->where('branch_id', $branchScope);
-            $promotedStudents->where('branch_id', $branchScope);
+            $studentsQuery->where('branch_id', $branchScope);
         }
 
-        $students = $promotedStudents->get();
+        $students = $studentsQuery->get();
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $branches = Branch::where('is_active', true)->get();
@@ -580,5 +582,55 @@ class EnrollmentController extends Controller
             'class_id' => $nextClass->id,
             'section_id' => $nextSection?->id,
         ];
+    }
+
+    /**
+     * Sync/backfill: Create enrollment records for students who don't have them.
+     */
+    public function syncEnrollments()
+    {
+        $currentAy = AcademicYear::where('is_current', true)->first()
+            ?? AcademicYear::orderBy('id', 'desc')->first();
+
+        if (!$currentAy) {
+            return redirect()->route('admin.enrollments.index')
+                ->with('error', 'No academic year found. Please create an academic year first.');
+        }
+
+        // Find students without enrollment in current AY
+        $studentsWithoutEnrollment = Student::whereNotExists(function ($q) use ($currentAy) {
+            $q->selectRaw(1)
+                ->from('student_enrollments')
+                ->whereColumn('student_enrollments.student_id', 'students.id')
+                ->where('academic_year_id', $currentAy->id);
+        })->where('status', 'active')->get();
+
+        if ($studentsWithoutEnrollment->isEmpty()) {
+            return redirect()->route('admin.enrollments.index')
+                ->with('success', 'All active students already have enrollment records.');
+        }
+
+        $created = 0;
+        foreach ($studentsWithoutEnrollment as $student) {
+            StudentEnrollment::create([
+                'student_id' => $student->id,
+                'academic_year_id' => $currentAy->id,
+                'branch_id' => $student->branch_id,
+                'class_id' => $student->class_id,
+                'section_id' => $student->section_id,
+                'roll_number' => $student->roll_number,
+                'enrollment_date' => $student->admission_date ?? now()->toDateString(),
+                'status' => 'enrolled',
+                'enrollment_type' => 'new',
+                'registration_fee' => 0,
+                'registration_fee_paid' => 0,
+                'registration_fee_status' => 'waived',
+                'enrolled_by' => auth()->id(),
+            ]);
+            $created++;
+        }
+
+        return redirect()->route('admin.enrollments.index')
+            ->with('success', "Synced {$created} students to academic year {$currentAy->name}.");
     }
 }
