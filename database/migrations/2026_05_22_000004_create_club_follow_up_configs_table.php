@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('club_follow_up_configs')) {
+            return; // Table already exists — skip to avoid duplicate migration error
+        }
         Schema::create('club_follow_up_configs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('club_id')->nullable()->constrained()->nullOnDelete(); // null = applies to all clubs

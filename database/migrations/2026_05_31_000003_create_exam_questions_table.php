@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('exam_questions')) {
+            return; // Table already exists — skip to avoid duplicate migration error
+        }
         Schema::create('exam_questions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('teacher_id')->constrained('teachers')->cascadeOnDelete();

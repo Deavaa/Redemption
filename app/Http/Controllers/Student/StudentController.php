@@ -109,33 +109,13 @@ class StudentController extends Controller
         $rollAttempts = 0;
         while (Student::where('roll_number', $validated['roll_number'])->exists()) {
             $rollAttempts++;
-            if ($rollAttempts > 5) {
-                // Fallback: append a unique suffix
-                $validated['roll_number'] = $validated['roll_number'] . '-' . str_pad(Student::where('roll_number', 'LIKE', $validated['roll_number'] . '%')->count() + 1, 2, '0', STR_PAD_LEFT);
+            if ($rollAttempts > 10) {
+                // Fallback: append a unique random suffix to guarantee uniqueness
+                $validated['roll_number'] = $validated['roll_number'] . '-' . str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
                 break;
             }
-            // Re-generate with next number
-            $section = Section::find($validated['section_id']);
-            $class = ClassRoom::find($section->class_id);
-            $gradeNum = 0;
-            if ($class) {
-                if ($class->numeric_name) {
-                    $gradeNum = (int) $class->numeric_name;
-                } elseif (preg_match('/(\d+)/', $class->name, $m)) {
-                    $gradeNum = (int) $m[1];
-                }
-            }
-            $sectionLetter = 'A';
-            if (preg_match('/([A-Z])$/i', $section->name, $m)) {
-                $sectionLetter = strtoupper($m[1]);
-            }
-            $prefix = 'G' . $gradeNum . $sectionLetter;
-            $maxRoll = Student::where('roll_number', 'LIKE', $prefix . '-%')
-                ->selectRaw("CAST(SUBSTRING(roll_number, -2) AS UNSIGNED) as rn")
-                ->orderByRaw('rn DESC')
-                ->first();
-            $nextNum = $maxRoll ? (((int) $maxRoll->rn) + 1 + $rollAttempts) : 1;
-            $validated['roll_number'] = $prefix . '-' . str_pad($nextNum, 2, '0', STR_PAD_LEFT);
+            // Re-generate using the fixed method
+            $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
         }
 
         // Ensure admission_number is unique
@@ -182,13 +162,32 @@ class StudentController extends Controller
         }
 
         // Use try/catch for the final insert to handle any remaining unique constraint violations
-        try {
-            $student = Student::create($validated);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-            // If roll_number collision, regenerate and retry
-            $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
-            $validated['admission_number'] = $this->generateAdmissionNumber();
-            $student = Student::create($validated);
+        $maxRetries = 3;
+        $retryCount = 0;
+        while (true) {
+            try {
+                $student = Student::create($validated);
+                break; // Success — exit loop
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                $retryCount++;
+                if ($retryCount >= $maxRetries) {
+                    // Last resort: generate a guaranteed-unique roll_number with timestamp
+                    $section = Section::find($validated['section_id']);
+                    $class = $section ? ClassRoom::find($section->class_id) : null;
+                    $gradeNum = 0;
+                    if ($class) {
+                        $gradeNum = $class->numeric_name ? (int) $class->numeric_name : (preg_match('/(\d+)/', $class->name, $m) ? (int) $m[1] : 0);
+                    }
+                    $sectionLetter = $section && preg_match('/([A-Z])$/i', $section->name, $m) ? strtoupper($m[1]) : 'A';
+                    $validated['roll_number'] = 'G' . $gradeNum . $sectionLetter . '-' . str_pad(Student::where('roll_number', 'LIKE', 'G' . $gradeNum . $sectionLetter . '-%')->count() + 1, 2, '0', STR_PAD_LEFT) . '-' . now()->format('His');
+                    $validated['admission_number'] = $this->generateAdmissionNumber();
+                    $student = Student::create($validated);
+                    break;
+                }
+                // If roll_number collision, regenerate and retry
+                $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
+                $validated['admission_number'] = $this->generateAdmissionNumber();
+            }
         }
 
         // Auto-create enrollment record for this student
@@ -420,6 +419,9 @@ class StudentController extends Controller
      *
      * Format: G{grade}{section_letter}-{NN}  e.g. G1A-01, G5B-12
      * This matches the format used by StudentDataSeeder and SchoolDataSeeder.
+     *
+     * Uses a robust method to extract the numeric suffix regardless of digit count,
+     * and keeps retrying until a truly unique roll number is found.
      */
     private function generateRollNumber(int $sectionId): string
     {
@@ -448,8 +450,10 @@ class StudentController extends Controller
         $prefix = 'G' . $gradeNum . $sectionLetter;
 
         // Find the max existing roll number with this prefix
+        // Use LENGTH(prefix)+2 to extract everything after "G{n}{L}-" (handles any digit count)
+        $prefixLen = strlen($prefix) + 1; // +1 for the dash
         $maxRoll = Student::where('roll_number', 'LIKE', $prefix . '-%')
-            ->selectRaw("CAST(SUBSTRING(roll_number, -2) AS UNSIGNED) as rn")
+            ->selectRaw("CAST(SUBSTRING(roll_number, " . ($prefixLen + 1) . ") AS UNSIGNED) as rn")
             ->orderByRaw('rn DESC')
             ->first();
 
