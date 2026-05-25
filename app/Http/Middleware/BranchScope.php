@@ -30,21 +30,66 @@ class BranchScope
      * Routes that branch principals CANNOT access (academic setup managed by admin/GM only).
      */
     protected const PRINCIPAL_RESTRICTED_ROUTES = [
+        // Academic Years — full restriction (no create/edit/delete/update)
+        'admin.academic-years.index',
         'admin.academic-years.create',
         'admin.academic-years.store',
+        'admin.academic-years.show',
         'admin.academic-years.edit',
         'admin.academic-years.update',
         'admin.academic-years.destroy',
+        // Terms — full restriction
+        'admin.terms.index',
         'admin.terms.create',
         'admin.terms.store',
+        'admin.terms.show',
         'admin.terms.edit',
         'admin.terms.update',
         'admin.terms.destroy',
+        // Exams — no create/edit/delete
         'admin.exams.create',
         'admin.exams.store',
         'admin.exams.edit',
         'admin.exams.update',
         'admin.exams.destroy',
+        // Team Members — admin/GM only
+        'admin.team-members.index',
+        'admin.team-members.create',
+        'admin.team-members.store',
+        'admin.team-members.show',
+        'admin.team-members.edit',
+        'admin.team-members.update',
+        'admin.team-members.destroy',
+        // Teacher Assignments — admin/GM only
+        'admin.teacher-assignments.index',
+        'admin.teacher-assignments.create',
+        'admin.teacher-assignments.store',
+        'admin.teacher-assignments.show',
+        'admin.teacher-assignments.edit',
+        'admin.teacher-assignments.update',
+        'admin.teacher-assignments.destroy',
+        // Website — admin/GM only
+        'admin.sliders.index', 'admin.sliders.create', 'admin.sliders.store',
+        'admin.sliders.edit', 'admin.sliders.update', 'admin.sliders.destroy',
+        'admin.gallery-images.index', 'admin.gallery-images.create', 'admin.gallery-images.store',
+        'admin.gallery-images.edit', 'admin.gallery-images.update', 'admin.gallery-images.destroy',
+        'admin.gallery-videos.index', 'admin.gallery-videos.create', 'admin.gallery-videos.store',
+        'admin.gallery-videos.edit', 'admin.gallery-videos.update', 'admin.gallery-videos.destroy',
+        'admin.branches.index', 'admin.branches.create', 'admin.branches.store',
+        'admin.branches.edit', 'admin.branches.update', 'admin.branches.destroy',
+        'admin.contact-messages.index', 'admin.contact-messages.show', 'admin.contact-messages.destroy',
+        'admin.web-content.index', 'admin.web-content.edit', 'admin.web-content.update',
+        'admin.news.index', 'admin.news.create', 'admin.news.store',
+        'admin.news.edit', 'admin.news.update', 'admin.news.destroy',
+        // Roles & Permissions — admin only
+        'admin.roles.index', 'admin.roles.create', 'admin.roles.store',
+        'admin.roles.edit', 'admin.roles.update', 'admin.roles.destroy',
+        // Settings — admin only
+        'admin.settings.index', 'admin.settings.update',
+        // Backup — admin only
+        'admin.backup.index', 'admin.backup.download', 'admin.backup.schedule',
+        // Audits — admin only
+        'admin.audits.index',
     ];
 
     public function handle(Request $request, Closure $next): Response

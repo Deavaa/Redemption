@@ -17,7 +17,7 @@ class SettingsSeeder extends Seeder
             ['key' => 'school_logo', 'value' => '', 'group' => 'appearance', 'type' => 'file', 'description' => 'School logo image (upload via Settings page)'],
 
             // Contact
-            ['key' => 'school_phone', 'value' => '+251 11 234 5678', 'group' => 'contact', 'type' => 'text', 'description' => 'Main phone number'],
+            ['key' => 'school_phone', 'value' => '0112345678', 'group' => 'contact', 'type' => 'text', 'description' => 'Main phone number'],
             ['key' => 'school_email', 'value' => 'info@schoolofredemption.edu', 'group' => 'contact', 'type' => 'text', 'description' => 'Main email address'],
             ['key' => 'school_address', 'value' => 'Addis Ababa, Ethiopia', 'group' => 'contact', 'type' => 'text', 'description' => 'School physical address'],
             ['key' => 'school_website', 'value' => 'https://schoolofredemption.edu', 'group' => 'contact', 'type' => 'text', 'description' => 'School website URL'],

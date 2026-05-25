@@ -41,6 +41,17 @@ class ParentModelController extends Controller
             "guardian_phone"      => "nullable|string|max:20",
         ]);
 
+        // Normalize phone numbers to Ethiopian format 0XXXXXXXXX
+        if (!empty($validated['father_phone'])) {
+            $validated['father_phone'] = $this->normalizePhone($validated['father_phone']);
+        }
+        if (!empty($validated['mother_phone'])) {
+            $validated['mother_phone'] = $this->normalizePhone($validated['mother_phone']);
+        }
+        if (!empty($validated['guardian_phone'])) {
+            $validated['guardian_phone'] = $this->normalizePhone($validated['guardian_phone']);
+        }
+
         // Auto-create a user account for the parent
         $year = date('Y');
         $lastParentUser = User::where('id_number', 'LIKE', "PAR-{$year}-%")
@@ -52,7 +63,7 @@ class ParentModelController extends Controller
         }
         $idNumber = "PAR-{$year}-" . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
         $email = $idNumber . '@redemption.edu';
-        $defaultPassword = str_replace([' ', '+', '-'], '', $validated['father_phone']); // e.g. 0911998833
+        $defaultPassword = '123456'; // Default password for all users
 
         $user = User::create([
             'name'       => $validated['father_name'],
@@ -120,5 +131,23 @@ class ParentModelController extends Controller
         }
         $parent->delete();
         return back()->with("success","Parent deleted");
+    }
+
+    /**
+     * Normalize phone number to Ethiopian local format: 0XXXXXXXXX
+     */
+    private function normalizePhone(string $input): string
+    {
+        $cleaned = preg_replace('/[\s\-().]/', '', $input);
+        if (preg_match('/^(\+251|00251)(\d{9})$/', $cleaned, $m)) {
+            return '0' . $m[2];
+        }
+        if (preg_match('/^251(\d{9})$/', $cleaned, $m)) {
+            return '0' . $m[1];
+        }
+        if (preg_match('/^0\d{9}$/', $cleaned)) {
+            return $cleaned;
+        }
+        return $cleaned;
     }
 }

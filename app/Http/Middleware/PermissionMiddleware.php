@@ -91,21 +91,24 @@ class PermissionMiddleware
         }
 
         // Branch principal — manages staff, students, parents in own branch only
-        // Does NOT control academic years, terms, or exams (those are admin-level)
+        // Does NOT control academic years, terms, exams (those are admin-level)
+        // Does NOT have access to team members, teacher assignments, website
         if ($user->role === 'branch_principal') {
             $branchPrincipalAllowedPermissions = [
                 'dashboard.view',
-                // Academic setup (VIEW ONLY — cannot create/edit academic years, terms, exams)
-                'academic_years.view', 'terms.view', 'subjects.view', 'subject_assignments.view',
+                // NO academic_years or terms access — managed by admin/GM only
+                // Academic setup (view only for subjects, classrooms, exams)
+                'subjects.view', 'subject_assignments.view',
                 'exams.view', 'classrooms.view', 'sections.view',
                 // Marks & Assessment
                 'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
                 'mark_sheets.view', 'mark_sheets.generate',
-                // People (full management within own branch)
+                // People (full management within own branch only)
                 'students.view', 'students.create', 'students.edit', 'students.manage',
                 'teachers.view', 'teachers.create', 'teachers.edit',
-                'subject_assignments.view',
                 'parents.view', 'parents.create', 'parents.edit',
+                // Staff management within branch
+                'staff.view', 'staff.manage',
                 // Attendance
                 'attendance.view', 'attendance.manage',
                 // Lesson Plans
@@ -116,19 +119,19 @@ class PermissionMiddleware
                 'teacher_evaluations.view', 'teacher_evaluations.create', 'teacher_evaluations.edit',
                 // Documents
                 'settings.view', 'id_cards.generate', 'certificates.generate',
-                // Website
-                'news.manage', 'gallery.view',
                 // Library
                 'library.view', 'library.manage',
-                // Communication
+                // Communication (calendar view only, cannot add school-wide events)
                 'calendar.view', 'calendar.manage', 'chat.access', 'notifications.view',
                 'announcements.view',
                 // Departments (view only)
                 'departments.view',
                 // User access management
                 'user_access.view',
-                // Staff management within branch
-                'staff.view', 'staff.manage',
+                // Enrollment
+                'students.manage',
+                // Fees (view only for own branch)
+                'fees.view', 'fee_payments.view',
             ];
 
             if (!empty($permissions)) {

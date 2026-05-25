@@ -40,7 +40,7 @@ class SchoolDataSeeder extends Seeder
             ['name' => 'Lebu Campus'],
             [
                 'address' => 'Lebu, Addis Ababa, Ethiopia',
-                'phone' => '+251 11 234 5678',
+                'phone' => '0112345678',
                 'email' => 'lebu@schoolofredemption.edu',
                 'is_headquarters' => true,
                 'is_active' => true,
@@ -52,7 +52,7 @@ class SchoolDataSeeder extends Seeder
             ['name' => 'Tuludimtu Campus'],
             [
                 'address' => 'Tuludimtu, Addis Ababa, Ethiopia',
-                'phone' => '+251 11 345 6789',
+                'phone' => '0113456789',
                 'email' => 'tuludimtu@schoolofredemption.edu',
                 'is_headquarters' => false,
                 'is_active' => true,
@@ -147,17 +147,17 @@ class SchoolDataSeeder extends Seeder
         // ======================================================================
         $principalTeacher = Teacher::updateOrCreate(
             ['user_id' => $principalUser->id],
-            ['full_name' => 'Abebe Kebede', 'email' => 'principal@school.com', 'phone' => '+251 91 100 0001', 'qualification' => 'MEd', 'department' => 'Administration', 'hire_date' => '2010-09-01', 'salary' => 25000.00, 'status' => 'active']
+            ['full_name' => 'Abebe Kebede', 'email' => 'principal@school.com', 'phone' => '0911000001', 'qualification' => 'MEd', 'department' => 'Administration', 'hire_date' => '2010-09-01', 'salary' => 25000.00, 'status' => 'active']
         );
 
         $teacherRecords = [];
         $teacherMeta = [
-            ['qual' => 'BEd Mathematics', 'dept' => 'Mathematics', 'phone' => '+251 91 200 0001'],
-            ['qual' => 'MSc Physics', 'dept' => 'Science', 'phone' => '+251 91 200 0002'],
-            ['qual' => 'BA English', 'dept' => 'Languages', 'phone' => '+251 91 200 0003'],
-            ['qual' => 'BSc Biology', 'dept' => 'Science', 'phone' => '+251 91 200 0004'],
-            ['qual' => 'MEd Social Studies', 'dept' => 'Social Studies', 'phone' => '+251 91 200 0005'],
-            ['qual' => 'BEd Amharic', 'dept' => 'Languages', 'phone' => '+251 91 200 0006'],
+            ['qual' => 'BEd Mathematics', 'dept' => 'Mathematics', 'phone' => '0912000001'],
+            ['qual' => 'MSc Physics', 'dept' => 'Science', 'phone' => '0912000002'],
+            ['qual' => 'BA English', 'dept' => 'Languages', 'phone' => '0912000003'],
+            ['qual' => 'BSc Biology', 'dept' => 'Science', 'phone' => '0912000004'],
+            ['qual' => 'MEd Social Studies', 'dept' => 'Social Studies', 'phone' => '0912000005'],
+            ['qual' => 'BEd Amharic', 'dept' => 'Languages', 'phone' => '0912000006'],
         ];
         foreach ($teacherUsers as $i => $tu) {
             $teacherRecords[] = Teacher::updateOrCreate(

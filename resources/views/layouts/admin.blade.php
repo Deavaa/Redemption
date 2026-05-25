@@ -190,9 +190,7 @@
                         <i class="fas fa-graduation-cap"></i><span>Academic Management</span><i class="fas fa-chevron-down sidebar-chevron"></i>
                     </a>
                     <ul class="collapse {{ $isAcademicActive ? 'show' : '' }}" id="academicSubmenu">
-                        <li style="padding:4px 12px 2px;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Setup (View Only)</li>
-                        <li><a href="{{ route('admin.academic-years.index') }}" class="{{ request()->routeIs('admin.academic-years.*') ? 'active' : '' }}"><i class="fas fa-calendar"></i> Academic Years <span class="badge bg-info ms-1" style="font-size:.55rem;">VIEW</span></a></li>
-                        <li><a href="{{ route('admin.terms.index') }}" class="{{ request()->routeIs('admin.terms.*') ? 'active' : '' }}"><i class="fas fa-bookmark"></i> Terms <span class="badge bg-info ms-1" style="font-size:.55rem;">VIEW</span></a></li>
+                        <li style="padding:4px 12px 2px;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Setup</li>
                         <li><a href="{{ route('admin.subjects.index') }}" class="{{ request()->routeIs('admin.subjects.*') ? 'active' : '' }}"><i class="fas fa-book"></i> Subjects</a></li>
                         <li><a href="{{ route('admin.subject-assignments.index') }}" class="{{ request()->routeIs('admin.subject-assignments.*') ? 'active' : '' }}"><i class="fas fa-link"></i> Assign Subjects</a></li>
                         <li><a href="{{ route('admin.exams.index') }}" class="{{ request()->routeIs('admin.exams.*') ? 'active' : '' }}"><i class="fas fa-file-alt"></i> Exams <span class="badge bg-info ms-1" style="font-size:.55rem;">VIEW</span></a></li>
@@ -246,7 +244,7 @@
                 @endif
 
                 {{-- PEOPLE MANAGEMENT --}}
-                @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+                @if(in_array($menuLevel, ['full', 'general_manager']))
                 <li class="menu-header">STUDENTS & STAFF</li>
                 <li class="{{ $isPeopleActive ? 'has-active-child' : '' }}">
                     <a href="#peopleSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
@@ -257,8 +255,23 @@
                         <li><a href="{{ route('admin.students.bulk-create') }}" class="{{ request()->routeIs('admin.students.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
                         <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
                         <li><a href="{{ route('admin.parents.index') }}" class="{{ request()->routeIs('admin.parents.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
+                        <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a></li>
                         <li><a href="{{ route('admin.team-members.index') }}" class="{{ request()->routeIs('admin.team-members.*') ? 'active' : '' }}"><i class="fas fa-users-cog"></i> Team Members</a></li>
                         <li><a href="{{ route('admin.teacher-assignments.index') }}" class="{{ request()->routeIs('admin.teacher-assignments.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i> Teacher Assignments</a></li>
+                    </ul>
+                </li>
+                @elseif($menuLevel === 'branch_principal')
+                <li class="menu-header">STUDENTS & STAFF</li>
+                <li class="{{ $isPeopleActive ? 'has-active-child' : '' }}">
+                    <a href="#peopleSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
+                        <i class="fas fa-users"></i><span>People Management</span><i class="fas fa-chevron-down sidebar-chevron"></i>
+                    </a>
+                    <ul class="collapse {{ $isPeopleActive ? 'show' : '' }}" id="peopleSubmenu">
+                        <li><a href="{{ route('admin.students.index') }}" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Students</a></li>
+                        <li><a href="{{ route('admin.students.bulk-create') }}" class="{{ request()->routeIs('admin.students.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
+                        <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
+                        <li><a href="{{ route('admin.parents.index') }}" class="{{ request()->routeIs('admin.parents.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
+                        <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a></li>
                     </ul>
                 </li>
                 @elseif($menuLevel === 'finance')
@@ -471,12 +484,7 @@
                     </ul>
                 </li>
                 @elseif($menuLevel === 'branch_principal')
-                <li class="menu-header">WEBSITE</li>
-                <li class="{{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.news.index') }}" class="{{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
-                        <i class="fas fa-newspaper"></i><span>News</span>
-                    </a>
-                </li>
+                {{-- No Website section for branch principals --}}
                 <li class="menu-header">USER MANAGEMENT</li>
                 <li><a href="{{ route('admin.user-access.teachers') }}" class="{{ request()->routeIs('admin.user-access.teachers*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teacher Access</a></li>
                 <li><a href="{{ route('admin.user-access.students') }}" class="{{ request()->routeIs('admin.user-access.students*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Student Access</a></li>

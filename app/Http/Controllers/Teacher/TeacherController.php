@@ -16,16 +16,20 @@ class TeacherController extends Controller
         
         $query = Teacher::orderBy('full_name');
         
-        // Branch principal: only see teachers assigned to their branch
+        // Branch principal: only see teachers in their branch
         if ($branchScope) {
-            $query->whereHas('assignments', function ($q) use ($branchScope) {
-                $q->whereHas('classroom', function ($cq) use ($branchScope) {
-                    $cq->where('branch_id', $branchScope);
-                });
-            })->orWhereHas('sections', function ($q) use ($branchScope) {
-                $q->whereHas('classroom', function ($cq) use ($branchScope) {
-                    $cq->where('branch_id', $branchScope);
-                });
+            $query->where(function ($q) use ($branchScope) {
+                $q->where('branch_id', $branchScope)
+                  ->orWhereHas('assignments', function ($aq) use ($branchScope) {
+                      $aq->whereHas('classroom', function ($cq) use ($branchScope) {
+                          $cq->where('branch_id', $branchScope);
+                      });
+                  })
+                  ->orWhereHas('sections', function ($sq) use ($branchScope) {
+                      $sq->whereHas('classroom', function ($cq) use ($branchScope) {
+                          $cq->where('branch_id', $branchScope);
+                      });
+                  });
             });
         }
         
