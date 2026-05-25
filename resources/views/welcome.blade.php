@@ -32,17 +32,17 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(30, 144, 255, 0.88) 0%, rgba(30, 144, 255, 0.6) 100%);
+            background: linear-gradient(135deg, rgba(27, 94, 32, 0.88) 0%, rgba(27, 94, 32, 0.6) 100%);
         }
 
-        /* Dot grid overlay */
+        /* Classical pattern overlay */
         .hero-dot-grid {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(255, 140, 0, 0.15) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(212, 160, 23, 0.06) 1px, transparent 1px);
             background-size: 30px 30px;
             z-index: 1;
             pointer-events: none;
@@ -77,7 +77,7 @@
 
         .hero-slider .carousel-control-prev:hover,
         .hero-slider .carousel-control-next:hover {
-            background: rgba(255, 140, 0, 0.3);
+            background: rgba(212, 160, 23, 0.35);
             border-color: var(--secondary-color);
         }
 
@@ -122,8 +122,8 @@
 
         .hero-badge {
             display: inline-block;
-            background: rgba(255, 140, 0, 0.15);
-            border: 1px solid rgba(255, 140, 0, 0.4);
+            background: rgba(212, 160, 23, 0.12);
+            border: 1px solid rgba(212, 160, 23, 0.5);
             color: var(--secondary-color);
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
@@ -131,6 +131,7 @@
             font-weight: 600;
             margin-bottom: 1.5rem;
             letter-spacing: 1px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
         /* Animated text reveal */
@@ -160,6 +161,7 @@
             line-height: 1.2;
             margin-bottom: 1.5rem;
             color: var(--white);
+            text-shadow: 0 2px 12px rgba(0,0,0,0.3);
         }
 
         .hero h1 span {
@@ -191,9 +193,9 @@
         }
 
         .btn-hero-primary:hover {
-            background: #FFa520;
+            background: #E8B82E;
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(255, 140, 0, 0.4);
+            box-shadow: 0 10px 30px rgba(212, 160, 23, 0.5);
         }
 
         .btn-hero-secondary {
@@ -252,7 +254,7 @@
 
         .section-badge {
             display: inline-block;
-            background: rgba(255, 140, 0, 0.1);
+            background: rgba(212, 160, 23, 0.1);
             color: var(--secondary-color);
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
@@ -261,12 +263,23 @@
             margin-bottom: 1rem;
             letter-spacing: 1px;
             text-transform: uppercase;
+            border: 1px solid rgba(212, 160, 23, 0.2);
         }
 
         .section-header h2 {
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .section-header h2::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 2px;
+            background: var(--secondary-color);
+            margin: 0.75rem auto 0;
         }
 
         .section-header p {
@@ -290,7 +303,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(255, 140, 0, 0.08) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(212, 160, 23, 0.04) 1px, transparent 1px);
             background-size: 25px 25px;
         }
 
@@ -303,8 +316,8 @@
         .counter-item .counter-icon {
             width: 70px;
             height: 70px;
-            background: rgba(255, 140, 0, 0.15);
-            border: 1px solid rgba(255, 140, 0, 0.3);
+            background: rgba(212, 160, 23, 0.12);
+            border: 1px solid rgba(212, 160, 23, 0.35);
             border-radius: 20px;
             display: flex;
             align-items: center;
@@ -322,6 +335,7 @@
             color: var(--secondary-color);
             margin-bottom: 0.25rem;
             font-weight: 800;
+            font-family: 'Playfair Display', serif;
         }
 
         .counter-item p {
@@ -372,7 +386,7 @@
 
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(30, 144, 255, 0.12);
+            box-shadow: 0 20px 60px rgba(27, 94, 32, 0.12);
             border-color: transparent;
         }
 
@@ -384,7 +398,7 @@
             left: 50%;
             width: 0;
             height: 0;
-            background: radial-gradient(circle, rgba(255, 140, 0, 0.15) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(212, 160, 23, 0.12) 0%, transparent 70%);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             transition: all 0.5s ease;
@@ -404,18 +418,20 @@
         .feature-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, var(--primary-color), #1a1a4e);
+            background: var(--primary-color);
             border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
             transition: all 0.3s ease;
+            border: 2px solid rgba(212, 160, 23, 0.2);
         }
 
         .feature-card:hover .feature-icon {
             transform: scale(1.1) rotate(-5deg);
-            box-shadow: 0 8px 25px rgba(30, 144, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(27, 94, 32, 0.3);
+            border-color: var(--secondary-color);
         }
 
         .feature-icon i {
@@ -576,7 +592,7 @@
             left: 0;
             right: 0;
             height: 50%;
-            background: linear-gradient(to top, rgba(30, 144, 255, 0.5), transparent);
+            background: linear-gradient(to top, rgba(27, 94, 32, 0.5), transparent);
         }
 
         .program-content {
@@ -585,7 +601,7 @@
 
         .program-tag {
             display: inline-block;
-            background: rgba(255, 140, 0, 0.1);
+            background: rgba(212, 160, 23, 0.1);
             color: var(--secondary-color);
             padding: 0.25rem 1rem;
             border-radius: 50px;
@@ -689,7 +705,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(30, 144, 255, 0.75) 0%, rgba(255, 140, 0, 0.75) 100%);
+            background: linear-gradient(135deg, rgba(27, 94, 32, 0.75) 0%, rgba(212, 160, 23, 0.75) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -763,14 +779,14 @@
             transform: translate(-50%, -50%);
             width: 68px;
             height: 68px;
-            background: rgba(255, 140, 0, 0.9);
+            background: rgba(212, 160, 23, 0.9);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(255, 140, 0, 0.4);
+            box-shadow: 0 8px 25px rgba(212, 160, 23, 0.5);
         }
 
         .video-play-btn i {
@@ -803,7 +819,7 @@
         }
 
         .video-info .video-meta .video-category {
-            background: rgba(255, 140, 0, 0.1);
+            background: rgba(212, 160, 23, 0.1);
             color: var(--secondary-color);
             padding: 0.15rem 0.6rem;
             border-radius: 50px;
@@ -890,7 +906,7 @@
             border-radius: 50%;
             overflow: hidden;
             margin: 0 auto 1.5rem;
-            border: 4px solid rgba(255, 140, 0, 0.2);
+            border: 4px solid rgba(212, 160, 23, 0.25);
             position: relative;
             transition: border-color 0.3s ease;
         }
@@ -917,7 +933,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(30, 144, 255, 0.7);
+            background: rgba(27, 94, 32, 0.7);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -965,13 +981,15 @@
         /* ========== CTA Section (Animated Gradient) ========== */
         .cta {
             padding: 6rem 0;
-            background: linear-gradient(135deg, var(--primary-color) 0%, #1a1a4e 50%, var(--primary-color) 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0D3B12 50%, var(--primary-color) 100%);
             background-size: 200% 200%;
             animation: gradientShift 8s ease infinite;
             color: var(--white);
             text-align: center;
             position: relative;
             overflow: hidden;
+            border-top: 1px solid rgba(212, 160, 23, 0.2);
+            border-bottom: 1px solid rgba(212, 160, 23, 0.2);
         }
 
         @keyframes gradientShift {
@@ -987,7 +1005,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255, 140, 0, 0.08) 0%, transparent 50%);
+            background: radial-gradient(circle, rgba(212, 160, 23, 0.06) 0%, transparent 50%);
             animation: ctaGlow 6s ease-in-out infinite;
         }
 
@@ -1039,7 +1057,7 @@
         .contact-form-wrapper .form-control:focus,
         .contact-form-wrapper .form-select:focus {
             border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.15);
+            box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
         }
 
         .contact-info-cards {
@@ -1069,11 +1087,12 @@
             width: 50px;
             height: 50px;
             min-width: 50px;
-            background: linear-gradient(135deg, var(--primary-color), #1a1a4e);
+            background: var(--primary-color);
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid rgba(212, 160, 23, 0.2);
         }
 
         .contact-info-card .info-icon i {
@@ -1217,7 +1236,7 @@
         }
 
         .newsletter-form button:hover {
-            background: #FFa520;
+            background: #E8B82E;
             transform: translateY(-2px);
         }
 
@@ -1250,7 +1269,7 @@
             visibility: hidden;
             transform: translateY(20px);
             transition: all 0.4s ease;
-            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
+            box-shadow: 0 6px 20px rgba(212, 160, 23, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1263,7 +1282,7 @@
         }
 
         .back-to-top:hover {
-            background: #FFa520;
+            background: #E8B82E;
             transform: translateY(-3px);
         }
 
@@ -1395,7 +1414,7 @@
 
 @section('before-nav')
     <!-- Announcement Ticker Bar -->
-    <div id="announcementTicker" style="display:none;background:linear-gradient(135deg,#4361ee 0%,#3a0ca3 100%);color:#fff;overflow:hidden;position:fixed;top:0;left:0;right:0;z-index:9999;">
+    <div id="announcementTicker" style="display:none;background:linear-gradient(135deg,#1B5E20 0%,#0D3B12 100%);color:#fff;overflow:hidden;position:fixed;top:0;left:0;right:0;z-index:9999;">
         <div style="display:flex;align-items:center;height:36px;">
             <div style="background:rgba(255,255,255,0.18);padding:0 14px;height:100%;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0;border-right:1px solid rgba(255,255,255,0.15);">
                 <i class="fas fa-bullhorn" style="font-size:13px;"></i> <span>Announcements</span>
@@ -1434,7 +1453,7 @@
     {{-- Latest News Banner --}}
     @isset($latestNews)
     @if($latestNews->count() > 0)
-    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#264b73 100%);color:#fff;padding:12px 0;position:relative;z-index:100">
+    <div style="background:linear-gradient(135deg,#0D3B12 0%,#1B5E20 100%);color:#fff;padding:12px 0;position:relative;z-index:100">
         <div class="container">
             <div class="d-flex align-items-center gap-3">
                 <span style="font-weight:700;font-size:.75rem;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:4px;white-space:nowrap;flex-shrink:0"><i class="fas fa-newspaper me-1"></i>NEWS</span>

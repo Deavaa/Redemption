@@ -27,16 +27,31 @@ class GraphicalReportController extends Controller
         $currentYear = AcademicYear::where('is_current', true)->first();
 
         // Student enrollment by branch
-        $studentsByBranch = Branch::withCount('students')->get()->map(fn($b) => [
-            'name' => $b->name,
-            'count' => $b->students_count,
-        ]);
+        try {
+            $studentsByBranch = Branch::withCount('students')->get()->map(fn($b) => [
+                'name' => $b->name,
+                'count' => $b->students_count,
+            ]);
+        } catch (\BadMethodCallException $e) {
+            // Fallback: manual count if relationship is missing
+            $studentsByBranch = Branch::all()->map(fn($b) => [
+                'name' => $b->name,
+                'count' => Student::where('branch_id', $b->id)->count(),
+            ]);
+        }
 
         // Student enrollment by class
-        $studentsByClass = ClassRoom::withCount('students')->orderBy('name')->get()->map(fn($c) => [
-            'name' => $c->name,
-            'count' => $c->students_count,
-        ]);
+        try {
+            $studentsByClass = ClassRoom::withCount('students')->orderBy('name')->get()->map(fn($c) => [
+                'name' => $c->name,
+                'count' => $c->students_count,
+            ]);
+        } catch (\BadMethodCallException $e) {
+            $studentsByClass = ClassRoom::orderBy('name')->get()->map(fn($c) => [
+                'name' => $c->name,
+                'count' => Student::where('class_id', $c->id)->count(),
+            ]);
+        }
 
         // Gender distribution
         $genderDist = Student::select('gender', DB::raw('count(*) as count'))
@@ -139,14 +154,18 @@ class GraphicalReportController extends Controller
             ->values();
 
         // Performance by branch
-        $performanceByBranch = Branch::with(['students.markEntries' => fn($q) => $q->whereNotNull('grand_total')])
-            ->get()
-            ->map(fn($b) => [
-                'branch' => $b->name,
-                'average' => $b->students->flatMap->markEntries->avg('grand_total') ?? 0,
-            ])
-            ->filter(fn($b) => $b['average'] > 0)
-            ->values();
+        try {
+            $performanceByBranch = Branch::with(['students.markEntries' => fn($q) => $q->whereNotNull('grand_total')])
+                ->get()
+                ->map(fn($b) => [
+                    'branch' => $b->name,
+                    'average' => $b->students->flatMap->markEntries->avg('grand_total') ?? 0,
+                ])
+                ->filter(fn($b) => $b['average'] > 0)
+                ->values();
+        } catch (\BadMethodCallException $e) {
+            $performanceByBranch = collect();
+        }
 
         // Lesson plan status distribution
         $lessonPlanStatus = LessonPlan::select('status', DB::raw('count(*) as count'))

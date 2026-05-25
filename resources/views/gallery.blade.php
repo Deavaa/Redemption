@@ -19,7 +19,7 @@
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-image: radial-gradient(rgba(255, 140, 0, 0.12) 1px, transparent 1px);
+        background-image: radial-gradient(rgba(212, 160, 23, 0.06) 1px, transparent 1px);
         background-size: 30px 30px;
         pointer-events: none;
     }
@@ -37,6 +37,7 @@
         font-size: 3.5rem;
         color: var(--white);
         margin-bottom: 0.5rem;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
     .gallery-hero h1 span {
@@ -143,12 +144,13 @@
     }
 
     .video-highlight-info .video-category {
-        background: rgba(255, 140, 0, 0.1);
+        background: rgba(212, 160, 23, 0.1);
         color: var(--secondary-color);
         padding: 0.15rem 0.6rem;
         border-radius: 50px;
         font-size: 0.7rem;
         font-weight: 600;
+        border: 1px solid rgba(212, 160, 23, 0.2);
     }
 
     /* Photo Gallery */
@@ -320,7 +322,7 @@
         background: var(--secondary-color);
         color: var(--primary-color);
         font-weight: 700;
-        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(212, 160, 23, 0.35);
     }
 
     .pagination .page-item.disabled .page-link {
@@ -449,7 +451,7 @@
                     @if($image->image_path && file_exists(public_path('storage/' . $image->image_path)))
                     <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $image->title ?? 'Gallery' }}" loading="lazy">
                     @else
-                    <div style="height:200px;background:linear-gradient(135deg,var(--primary-color),#1a1a4e);display:flex;align-items:center;justify-content:center;">
+                    <div style="height:200px;background:linear-gradient(135deg,var(--primary-color),#0D3B12);display:flex;align-items:center;justify-content:center;">
                         <i class="fas fa-image" style="font-size:2rem;color:var(--secondary-color);"></i>
                     </div>
                     @endif

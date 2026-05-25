@@ -1,5 +1,5 @@
 @php
-    $primaryHex = $settings['primary_color'] ?? '#1E90FF';
+    $primaryHex = $settings['primary_color'] ?? '#1B5E20';
     $primaryR = hexdec(substr($primaryHex, 1, 2));
     $primaryG = hexdec(substr($primaryHex, 3, 2));
     $primaryB = hexdec(substr($primaryHex, 5, 2));
@@ -25,9 +25,9 @@
     <style>
         :root {
             --primary-color: {{ $primaryHex }};
-            --secondary-color: {{ $settings['secondary_color'] ?? '#FF8C00' }};
+            --secondary-color: {{ $settings['secondary_color'] ?? '#D4A017' }};
             --primary-rgb: {{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }};
-            --accent-color: #198754;
+            --accent-color: #2E7D32;
             --text-dark: #1a1a2e;
             --text-light: #6c757d;
             --white: #ffffff;
@@ -60,6 +60,10 @@
             font-weight: 700;
         }
 
+        h1, h2 {
+            letter-spacing: 0.5px;
+        }
+
         /* ========== Custom Cursor ========== */
         .cursor-dot {
             width: 8px;
@@ -78,7 +82,7 @@
         .cursor-ring {
             width: 36px;
             height: 36px;
-            border: 2px solid rgba(255, 140, 0, 0.4);
+            border: 2px solid rgba(212, 160, 23, 0.5);
             border-radius: 50%;
             position: fixed;
             top: 0;
@@ -102,22 +106,23 @@
             }
         }
 
-        /* ========== Glassmorphism Navbar ========== */
+        /* ========== Elegant Dark Green Navbar ========== */
         .navbar {
-            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.65);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 2px solid rgba(212, 160, 23, 0.3);
             padding: 1rem 0;
             transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
         }
 
         .navbar.scrolled {
             padding: 0.5rem 0;
-            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.88);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.15);
+            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.98);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+            border-bottom-color: rgba(212, 160, 23, 0.5);
         }
 
         .navbar-brand {
@@ -127,16 +132,17 @@
         }
 
         .navbar-brand .brand-pre {
-            color: var(--white);
+            color: rgba(255,255,255,0.8);
             font-weight: 400;
             font-size: 0.7rem;
             display: block;
             line-height: 1.1;
+            letter-spacing: 1px;
         }
 
         .navbar-brand .brand-name {
             color: var(--secondary-color);
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1.3rem;
         }
 
@@ -159,7 +165,7 @@
             left: 50%;
             width: 0;
             height: 2px;
-            background: var(--secondary-color);
+            background: linear-gradient(90deg, transparent, var(--secondary-color), transparent);
             transition: all 0.3s ease;
             transform: translateX(-50%);
         }
@@ -186,9 +192,9 @@
         }
 
         .btn-nav-portal:hover {
-            background: #FFa520;
+            background: #E8B82E;
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
+            box-shadow: 0 4px 15px rgba(212, 160, 23, 0.5);
         }
 
         /* ========== Mobile Drawer ========== */
@@ -285,7 +291,7 @@
         }
 
         .mobile-drawer .mobile-login-btn:hover {
-            background: #FFa520;
+            background: #E8B82E;
         }
 
         .hamburger-btn {
@@ -319,8 +325,20 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(255, 140, 0, 0.12) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(212, 160, 23, 0.06) 1px, transparent 1px);
             background-size: 30px 30px;
+            pointer-events: none;
+        }
+
+        .page-hero::after {
+            content: '✦';
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(212, 160, 23, 0.3);
+            font-size: 1.5rem;
+            letter-spacing: 1rem;
             pointer-events: none;
         }
 
@@ -328,6 +346,7 @@
             font-size: 3rem;
             color: var(--white);
             margin-bottom: 0.75rem;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
         .page-hero h1 span {
@@ -372,7 +391,7 @@
 
         .section-badge {
             display: inline-block;
-            background: rgba(255, 140, 0, 0.1);
+            background: rgba(212, 160, 23, 0.1);
             color: var(--secondary-color);
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
@@ -381,12 +400,23 @@
             margin-bottom: 1rem;
             letter-spacing: 1px;
             text-transform: uppercase;
+            border: 1px solid rgba(212, 160, 23, 0.2);
         }
 
         .section-header h2 {
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .section-header h2::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 2px;
+            background: var(--secondary-color);
+            margin: 0.75rem auto 0;
         }
 
         .section-header p {
@@ -395,11 +425,32 @@
             margin: 0 auto;
         }
 
-        /* ========== Footer (Modern Layout) ========== */
+        /* ========== Ornamental Divider ========== */
+        .ornament-divider {
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            letter-spacing: 0.5rem;
+            opacity: 0.6;
+        }
+        .ornament-divider::before,
+        .ornament-divider::after {
+            content: '';
+            display: inline-block;
+            width: 60px;
+            height: 1px;
+            background: var(--secondary-color);
+            vertical-align: middle;
+            margin: 0 1rem;
+        }
+
+        /* ========== Footer (Elegant Layout) ========== */
         .footer {
-            background: var(--primary-color);
+            background: linear-gradient(180deg, var(--primary-color) 0%, #0D3B12 100%);
             color: var(--white);
             padding: 4rem 0 2rem;
+            border-top: 3px solid rgba(212, 160, 23, 0.3);
         }
 
         .footer-brand {
@@ -517,12 +568,12 @@
         }
 
         .newsletter-form button:hover {
-            background: #FFa520;
+            background: #E8B82E;
             transform: translateY(-2px);
         }
 
         .footer-bottom {
-            border-top: 1px solid rgba(255,255,255,0.08);
+            border-top: 1px solid rgba(212, 160, 23, 0.2);
             padding-top: 2rem;
             margin-top: 3rem;
         }
@@ -550,7 +601,7 @@
             visibility: hidden;
             transform: translateY(20px);
             transition: all 0.4s ease;
-            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
+            box-shadow: 0 6px 20px rgba(212, 160, 23, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -563,7 +614,7 @@
         }
 
         .back-to-top:hover {
-            background: #FFa520;
+            background: #E8B82E;
             transform: translateY(-3px);
         }
 
@@ -667,7 +718,7 @@
 
     @yield('before-nav')
 
-    <!-- ========== Glassmorphism Navbar ========== -->
+    <!-- ========== Elegant Dark Green Navbar ========== -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
@@ -938,13 +989,13 @@
                 el.addEventListener('mouseenter', function() {
                     ring.style.width = '50px';
                     ring.style.height = '50px';
-                    ring.style.borderColor = 'rgba(255, 140, 0, 0.6)';
+                    ring.style.borderColor = 'rgba(212, 160, 23, 0.6)';
                     dot.style.transform = 'scale(1.5)';
                 });
                 el.addEventListener('mouseleave', function() {
                     ring.style.width = '36px';
                     ring.style.height = '36px';
-                    ring.style.borderColor = 'rgba(255, 140, 0, 0.4)';
+                    ring.style.borderColor = 'rgba(212, 160, 23, 0.5)';
                     dot.style.transform = 'scale(1)';
                 });
             });

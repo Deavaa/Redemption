@@ -32,8 +32,12 @@ class ExamQuestionController extends Controller
         } elseif ($user->hasRole('branch_principal')) {
             // Branch principals see pending_principal + their own branch questions
             $query->where(function ($q) use ($user) {
-                $q->where('status', 'pending_principal')
-                  ->orWhere('branch_id', $user->branch_id);
+                $q->where('status', 'pending_principal');
+                if ($user->branch_id) {
+                    $q->orWhere('branch_id', $user->branch_id);
+                } else {
+                    $q->orWhereNull('branch_id');
+                }
             });
         } elseif ($user->hasRole('department_head')) {
             // Department heads see pending_department questions for subjects they oversee + their own

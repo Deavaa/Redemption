@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\TelegramSetting;
 use App\Models\BranchTelegramSetting;
 use App\Models\TelegramMessage;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -53,19 +54,36 @@ class CalendarEventController extends Controller
             $data['color'] = CalendarEvent::categoryColors()[$data['category']] ?? '#4361ee';
         }
 
+        // Every event is automatically posted as an announcement
+        $data['is_announcement'] = true;
+
         $event = CalendarEvent::create($data);
 
-        // Auto-notify via Telegram if enabled
-        if ($r->has('notify_telegram')) {
-            $this->notifyTelegram($event);
+        // Auto-notify via Telegram for every event (unless explicitly skipped)
+        $telegramSent = false;
+        if (!$r->has('skip_telegram')) {
+            $telegramSent = $this->notifyTelegram($event);
         }
+
+        // Send SMS notification (unless explicitly skipped)
+        $smsSent = false;
+        if (!$r->has('skip_sms')) {
+            $smsSent = $this->notifySms($event);
+        }
+
+        // Also send as notification/message to relevant users
+        $this->notifyUsers($event);
+
+        $statusParts = ['Event created and posted as announcement.'];
+        if ($telegramSent) $statusParts[] = 'Telegram notification sent.';
+        if ($smsSent) $statusParts[] = 'SMS notification sent.';
 
         // Return JSON for AJAX requests, redirect for normal
         if ($r->ajax() || $r->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Event created successfully.', 'event' => $event]);
+            return response()->json(['success' => true, 'message' => implode(' ', $statusParts), 'event' => $event]);
         }
 
-        return redirect()->route('admin.calendar.index')->with('success', 'Event created successfully.' . ($r->has('notify_telegram') ? ' Telegram notification sent.' : ''));
+        return redirect()->route('admin.calendar.index')->with('success', implode(' ', $statusParts));
     }
 
     public function update(Request $r, CalendarEvent $calendar_event)
@@ -90,24 +108,35 @@ class CalendarEventController extends Controller
         ]);
         $isAllDay = $r->input('is_all_day');
         $data['is_all_day'] = in_array($isAllDay, [true, 1, '1', 'on', 'true'], true) ? true : (!$r->filled('start_time'));
-        $data['is_announcement'] = $r->has('is_announcement') ? true : false; // Only announce if checkbox checked
-
-        if (empty($data['color'])) {
-            $data['color'] = CalendarEvent::categoryColors()[$data['category']] ?? '#4361ee';
-        }
+        // Every event is automatically posted as an announcement
+        $data['is_announcement'] = true;
 
         $calendar_event->update($data);
 
-        // Auto-notify via Telegram if enabled
-        if ($r->has('notify_telegram')) {
-            $this->notifyTelegram($calendar_event);
+        // Auto-notify via Telegram for every event (unless explicitly skipped)
+        $telegramSent = false;
+        if (!$r->has('skip_telegram')) {
+            $telegramSent = $this->notifyTelegram($calendar_event);
         }
+
+        // Send SMS notification (unless explicitly skipped)
+        $smsSent = false;
+        if (!$r->has('skip_sms')) {
+            $smsSent = $this->notifySms($calendar_event);
+        }
+
+        // Also send as notification/message to relevant users
+        $this->notifyUsers($calendar_event);
+
+        $statusParts = ['Event updated and posted as announcement.'];
+        if ($telegramSent) $statusParts[] = 'Telegram notification sent.';
+        if ($smsSent) $statusParts[] = 'SMS notification sent.';
 
         if ($r->ajax() || $r->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Event updated successfully.', 'event' => $calendar_event]);
+            return response()->json(['success' => true, 'message' => implode(' ', $statusParts), 'event' => $calendar_event]);
         }
 
-        return redirect()->route('admin.calendar.index')->with('success', 'Event updated successfully.' . ($r->has('notify_telegram') ? ' Telegram notification sent.' : ''));
+        return redirect()->route('admin.calendar.index')->with('success', implode(' ', $statusParts));
     }
 
     public function destroy(CalendarEvent $calendar_event)
@@ -219,8 +248,9 @@ class CalendarEventController extends Controller
 
     /**
      * Send event notification to Telegram groups/channels.
+     * Returns true if at least one message was sent successfully.
      */
-    private function notifyTelegram(CalendarEvent $event)
+    private function notifyTelegram(CalendarEvent $event): bool
     {
         $categoryEmoji = [
             'holiday' => '\xF0\x9F\x8E\x89', 'exam' => '\xF0\x9F\x93\x9D',
@@ -265,6 +295,7 @@ class CalendarEventController extends Controller
             }
         }
 
+        $sent = false;
         foreach ($targets as $target) {
             try {
                 $response = Http::post("https://api.telegram.org/bot{$target['bot_token']}/sendMessage", [
@@ -273,15 +304,143 @@ class CalendarEventController extends Controller
                     'parse_mode' => 'Markdown',
                 ]);
                 $data = $response->json();
+                $ok = ($data['ok'] ?? false) === true;
                 TelegramMessage::create([
                     'chat_id' => $target['chat_id'],
                     'message' => $message,
                     'direction' => 'outgoing',
-                    'status' => ($data['ok'] ?? false) ? 'sent' : 'failed',
+                    'status' => $ok ? 'sent' : 'failed',
                 ]);
+                if ($ok) $sent = true;
             } catch (\Exception $e) {
                 \Log::warning('Telegram notification failed: ' . $e->getMessage());
             }
+        }
+        return $sent;
+    }
+
+    /**
+     * Send in-app notification to relevant users about the event.
+     */
+    private function notifyUsers(CalendarEvent $event): void
+    {
+        try {
+            // Get users who should be notified based on branch
+            $query = \App\Models\User::where('is_active', true);
+            if ($event->branch_id) {
+                $query->where(function ($q) use ($event) {
+                    $q->where('branch_id', $event->branch_id)
+                      ->orWhereIn('role', ['admin', 'super_admin', 'general_manager']);
+                });
+            }
+
+            $users = $query->get();
+            $notificationMessage = "Event: {$event->title} on " . $event->start_date->format('M d, Y');
+            if ($event->start_time && !$event->is_all_day) {
+                $notificationMessage .= " at " . $event->start_time;
+            }
+
+            foreach ($users as $user) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->id,
+                    'title' => 'New Event: ' . $event->title,
+                    'message' => $notificationMessage,
+                    'type' => 'event',
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Event user notification failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send SMS notification about the event to default recipients and parent phone numbers.
+     * Returns true if at least one SMS was sent successfully.
+     */
+    private function notifySms(CalendarEvent $event): bool
+    {
+        try {
+            $sms = new SmsService();
+
+            // Build SMS message (keep it short - 160 chars for standard SMS)
+            $message = "Redemption School: {$event->title}";
+            $message .= " on " . $event->start_date->format('M d, Y');
+            if ($event->start_time && !$event->is_all_day) {
+                $message .= " at " . $event->start_time;
+            }
+            if ($event->category) {
+                $message .= " [" . ucfirst($event->category) . "]";
+            }
+
+            // Truncate to 160 chars for standard SMS
+            if (strlen($message) > 155) {
+                $message = substr($message, 0, 152) . '...';
+            }
+
+            $allRecipients = [];
+
+            // 1. Send to default configured recipients (admin phones)
+            if ($sms->sendToDefaults($message)['success']) {
+                // Successfully sent to defaults
+            }
+
+            // 2. Collect parent/guardian phone numbers for the relevant branch
+            $phoneQuery = \App\Models\ParentModel::whereNotNull('father_phone')
+                ->where('father_phone', '!=', '');
+
+            if ($event->branch_id) {
+                // Only parents with students in this branch
+                $phoneQuery->whereHas('students', function ($q) use ($event) {
+                    $q->where('branch_id', $event->branch_id);
+                });
+            }
+
+            $parents = $phoneQuery->get();
+            foreach ($parents as $parent) {
+                if ($parent->father_phone) {
+                    $allRecipients[] = $parent->father_phone;
+                }
+            }
+
+            // 3. Also collect teacher phone numbers
+            $teacherQuery = \App\Models\Teacher::whereNotNull('phone')
+                ->where('phone', '!=', '')
+                ->where('status', 'active');
+
+            if ($event->branch_id) {
+                $teacherQuery->where('branch_id', $event->branch_id);
+            }
+
+            $teachers = $teacherQuery->get();
+            foreach ($teachers as $teacher) {
+                if ($teacher->phone) {
+                    $allRecipients[] = $teacher->phone;
+                }
+            }
+
+            // Deduplicate
+            $allRecipients = array_unique($allRecipients);
+
+            if (empty($allRecipients)) {
+                return false;
+            }
+
+            // Send in batches of 50 to avoid API limits
+            $batches = array_chunk($allRecipients, 50);
+            $anySent = false;
+
+            foreach ($batches as $batch) {
+                $result = $sms->send($batch, $message);
+                if ($result['success']) {
+                    $anySent = true;
+                }
+            }
+
+            return $anySent;
+        } catch (\Exception $e) {
+            \Log::warning('Event SMS notification failed: ' . $e->getMessage());
+            return false;
         }
     }
 

@@ -105,6 +105,47 @@ class StudentController extends Controller
             $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
         }
 
+        // Ensure roll_number is unique — if collision, regenerate with offset
+        $rollAttempts = 0;
+        while (Student::where('roll_number', $validated['roll_number'])->exists()) {
+            $rollAttempts++;
+            if ($rollAttempts > 5) {
+                // Fallback: append a unique suffix
+                $validated['roll_number'] = $validated['roll_number'] . '-' . str_pad(Student::where('roll_number', 'LIKE', $validated['roll_number'] . '%')->count() + 1, 2, '0', STR_PAD_LEFT);
+                break;
+            }
+            // Re-generate with next number
+            $section = Section::find($validated['section_id']);
+            $class = ClassRoom::find($section->class_id);
+            $gradeNum = 0;
+            if ($class) {
+                if ($class->numeric_name) {
+                    $gradeNum = (int) $class->numeric_name;
+                } elseif (preg_match('/(\d+)/', $class->name, $m)) {
+                    $gradeNum = (int) $m[1];
+                }
+            }
+            $sectionLetter = 'A';
+            if (preg_match('/([A-Z])$/i', $section->name, $m)) {
+                $sectionLetter = strtoupper($m[1]);
+            }
+            $prefix = 'G' . $gradeNum . $sectionLetter;
+            $maxRoll = Student::where('roll_number', 'LIKE', $prefix . '-%')
+                ->selectRaw("CAST(SUBSTRING(roll_number, -2) AS UNSIGNED) as rn")
+                ->orderByRaw('rn DESC')
+                ->first();
+            $nextNum = $maxRoll ? (((int) $maxRoll->rn) + 1 + $rollAttempts) : 1;
+            $validated['roll_number'] = $prefix . '-' . str_pad($nextNum, 2, '0', STR_PAD_LEFT);
+        }
+
+        // Ensure admission_number is unique
+        $admAttempts = 0;
+        while (Student::where('admission_number', $validated['admission_number'])->exists()) {
+            $admAttempts++;
+            $validated['admission_number'] = $this->generateAdmissionNumber();
+            if ($admAttempts > 5) break;
+        }
+
         // Auto-generate student ID number using the current academic year
         $idNumber = $request->input('id_number');
         if (empty($idNumber)) {
@@ -140,7 +181,15 @@ class StudentController extends Controller
             $validated['admission_date'] = now()->toDateString();
         }
 
-        $student = Student::create($validated);
+        // Use try/catch for the final insert to handle any remaining unique constraint violations
+        try {
+            $student = Student::create($validated);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            // If roll_number collision, regenerate and retry
+            $validated['roll_number'] = $this->generateRollNumber($validated['section_id']);
+            $validated['admission_number'] = $this->generateAdmissionNumber();
+            $student = Student::create($validated);
+        }
 
         // Auto-create enrollment record for this student
         StudentEnrollment::create([

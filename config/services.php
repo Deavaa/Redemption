@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | SMS Service Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Supported drivers: africas_talking, twilio, custom, log
+    | Configure the appropriate driver and credentials in .env
+    |
+    */
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+        'api_key' => env('SMS_API_KEY'),
+        'api_url' => env('SMS_API_URL'),
+        'username' => env('SMS_USERNAME'),
+        'sender_id' => env('SMS_SENDER_ID', 'Redemption'),
+        'recipients' => env('SMS_RECIPIENTS'),
+    ],
+
 ];
