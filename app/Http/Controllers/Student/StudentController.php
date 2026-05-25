@@ -57,7 +57,6 @@ class StudentController extends Controller
 
     public function create()
     {
-        $classrooms = Classroom::with('sections', 'branch')->get();
         $parents = ParentModel::orderBy('father_name')->get(['id', \DB::raw('father_name as name'), \DB::raw('father_phone as phone')]);
         
         $user = auth()->user();
@@ -66,10 +65,12 @@ class StudentController extends Controller
         // Branch principal: only see their branch, auto-select it
         if ($branchScope) {
             $branches = Branch::where('id', $branchScope)->get();
-            $classrooms = Classroom::with('sections', 'branch')->where('branch_id', $branchScope)->get();
         } else {
             $branches = Branch::all();
         }
+
+        // Load classrooms with AY-aware fallback
+        $classrooms = $this->loadClassroomsWithFallback($branchScope);
         
         $academicYears = AcademicYear::all();
         if ($academicYears->isEmpty()) {
@@ -258,7 +259,7 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
-        $classrooms = Classroom::with('sections', 'branch')->get();
+        $classrooms = $this->loadClassroomsWithFallback(null);
         $parents = ParentModel::orderBy('father_name')->get(['id', \DB::raw('father_name as name'), \DB::raw('father_phone as phone')]);
         $branches = Branch::all();
         $academicYears = AcademicYear::all();
@@ -409,6 +410,35 @@ class StudentController extends Controller
     }
 
     /**
+     * Load classrooms with academic year awareness and fallback.
+     * First tries the current academic year, then falls back to all classes for the branch.
+     */
+    private function loadClassroomsWithFallback(?int $branchId)
+    {
+        $currentAy = $this->getCurrentAcademicYear();
+
+        $query = Classroom::with('sections', 'branch');
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+        if ($currentAy) {
+            $query->where('academic_year_id', $currentAy->id);
+        }
+        $classrooms = $query->orderBy('name')->get();
+
+        // Fallback: if no classes for current AY, show all for the branch
+        if ($classrooms->isEmpty()) {
+            $fallbackQuery = Classroom::with('sections', 'branch');
+            if ($branchId) {
+                $fallbackQuery->where('branch_id', $branchId);
+            }
+            $classrooms = $fallbackQuery->orderBy('name')->get();
+        }
+
+        return $classrooms;
+    }
+
+    /**
      * Get the current academic year from the system.
      * Falls back to the latest academic year, then to the calendar year.
      */
@@ -556,7 +586,7 @@ class StudentController extends Controller
         }
 
         $student->load(['classroom', 'section', 'branch']);
-        $classrooms = Classroom::with('sections', 'branch')->get();
+        $classrooms = $this->loadClassroomsWithFallback(null);
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         if ($academicYears->isEmpty()) {
             AcademicYear::create(['name' => '2024-2025']);
@@ -640,7 +670,7 @@ class StudentController extends Controller
     {
         $student->load(['classroom', 'section', 'branch']);
         $branches = Branch::where('id', '!=', $student->branch_id)->where('is_active', true)->get();
-        $classrooms = Classroom::with('sections')->orderBy('name')->get();
+        $classrooms = $this->loadClassroomsWithFallback(null);
 
         return view('admin.Student.transfer', compact('student', 'branches', 'classrooms'));
     }
@@ -831,11 +861,11 @@ class StudentController extends Controller
 
         if ($branchScope) {
             $branches = Branch::where('id', $branchScope)->get();
-            $classrooms = Classroom::with('sections', 'branch')->where('branch_id', $branchScope)->get();
         } else {
             $branches = Branch::all();
-            $classrooms = Classroom::with('sections', 'branch')->get();
         }
+
+        $classrooms = $this->loadClassroomsWithFallback($branchScope);
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         if ($academicYears->isEmpty()) {
