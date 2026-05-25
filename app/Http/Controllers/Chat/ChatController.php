@@ -250,6 +250,7 @@ class ChatController extends Controller
      * For 'teacher': recipient_id is the teacher's user_id
      * For 'parent': recipient_id is the parent's user_id
      * Also handles when recipient_id is the model's own ID (not user_id).
+     * For students without user accounts, falls back to their parent's user account.
      */
     private function resolveRecipientUserId($recipientId, $recipientType): ?int
     {
@@ -265,6 +266,13 @@ class ChatController extends Controller
             $student = Student::find($recipientId);
             if ($student && $student->user_id) {
                 return $student->user_id;
+            }
+            // If student has no user account, try to find their parent's user account
+            if ($student) {
+                $parent = $student->parents()->first();
+                if ($parent && $parent->user_id) {
+                    return $parent->user_id;
+                }
             }
         } elseif ($recipientType === 'teacher') {
             // Could be a Teacher model ID

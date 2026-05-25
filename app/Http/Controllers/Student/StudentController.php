@@ -21,7 +21,7 @@ class StudentController extends Controller
         $search = $request->get('search', '');
         $statusFilter = $request->get('status', '');
 
-        $query = Student::with(['classroom', 'section']);
+        $query = Student::with(['classroom', 'section', 'parents']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {

@@ -130,7 +130,20 @@
                             <div class="sl-actions">
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="sl-act sl-act-view" title="View"><i class="fas fa-eye"></i></a>
                                 <a href="{{ route('admin.students.edit', ['student' => $student->id, 'page' => $students->currentPage()]) }}" class="sl-act sl-act-edit" title="Edit"><i class="fas fa-pen"></i></a>
-                                <a href="{{ route('admin.chat.index') }}?recipient_id={{ $student->user_id ?? $student->id }}&recipient_type=student" class="sl-act sl-act-msg" title="Send Message"><i class="fas fa-paper-plane"></i></a>
+                                @php
+                                    $chatRecipientId = $student->user_id;
+                                    $chatRecipientType = 'student';
+                                    if (!$chatRecipientId) {
+                                        $chatParent = $student->parents()->first();
+                                        if ($chatParent && $chatParent->user_id) {
+                                            $chatRecipientId = $chatParent->user_id;
+                                            $chatRecipientType = 'parent';
+                                        } else {
+                                            $chatRecipientId = $student->id;
+                                        }
+                                    }
+                                @endphp
+                                <a href="{{ route('admin.chat.index') }}?recipient_id={{ $chatRecipientId }}&recipient_type={{ $chatRecipientType }}" class="sl-act sl-act-msg" title="Send Message"><i class="fas fa-paper-plane"></i></a>
                                 <a href="{{ route('admin.id-card-generate.index') }}?student_id={{ $student->id }}" class="sl-act sl-act-id" title="Generate ID Card"><i class="fas fa-id-card"></i></a>
                                 <a href="{{ route('admin.certificate-generate.index') }}?student_id={{ $student->id }}" class="sl-act sl-act-cert" title="Generate Certificate"><i class="fas fa-certificate"></i></a>
                                 <form method="POST" action="{{ route('admin.students.destroy', $student->id) }}" style="display:inline" onsubmit="return confirm('Are you sure?')">

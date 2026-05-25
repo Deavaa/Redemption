@@ -64,6 +64,9 @@
 .stu-action-btn:hover { border-color: #4361ee; color: #4361ee; background: #eef2ff; }
 .stu-action-btn.stu-action-danger:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
 .stu-action-btn.stu-action-green:hover { border-color: #10b981; color: #10b981; background: #ecfdf5; }
+.stu-action-btn.stu-action-msg:hover { border-color: #ea580c; color: #ea580c; background: #fff7ed; }
+.stu-action-btn.stu-action-id:hover { border-color: #7c3aed; color: #7c3aed; background: #f3e8ff; }
+.stu-action-btn.stu-action-cert:hover { border-color: #059669; color: #059669; background: #ecfdf5; }
 
 /* Status Badge - Compact */
 .stu-status { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 5px; font-size: 0.68rem; font-weight: 600; text-transform: capitalize; gap: 3px; }
@@ -225,6 +228,22 @@
                             <div style="display:flex;gap:3px;align-items:center;">
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="stu-action-btn" title="View"><i class="fas fa-eye"></i></a>
                                 <a href="{{ route('admin.students.edit', $student->id) }}" class="stu-action-btn" title="Edit"><i class="fas fa-edit"></i></a>
+                                @php
+                                    $chatRecipientId = $student->user_id;
+                                    $chatRecipientType = 'student';
+                                    if (!$chatRecipientId) {
+                                        $chatParent = $student->parents()->first();
+                                        if ($chatParent && $chatParent->user_id) {
+                                            $chatRecipientId = $chatParent->user_id;
+                                            $chatRecipientType = 'parent';
+                                        } else {
+                                            $chatRecipientId = $student->id;
+                                        }
+                                    }
+                                @endphp
+                                <a href="{{ route('admin.chat.index') }}?recipient_id={{ $chatRecipientId }}&recipient_type={{ $chatRecipientType }}" class="stu-action-btn stu-action-msg" title="Send Message"><i class="fas fa-paper-plane"></i></a>
+                                <a href="{{ route('admin.id-card-generate.index') }}?student_id={{ $student->id }}" class="stu-action-btn stu-action-id" title="Generate ID Card"><i class="fas fa-id-card"></i></a>
+                                <a href="{{ route('admin.certificate-generate.index') }}?student_id={{ $student->id }}" class="stu-action-btn stu-action-cert" title="Generate Certificate"><i class="fas fa-certificate"></i></a>
                                 @if($student->status === 'active')
                                 <button type="button" class="stu-action-btn stu-action-danger" title="Mark as Left" data-id="{{ $student->id }}" data-name="{{ $student->full_name }}" onclick="openLeaveModal(this)"><i class="fas fa-sign-out-alt"></i></button>
                                 @endif
