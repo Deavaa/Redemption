@@ -16,6 +16,10 @@ class AuthController extends Controller
         $login = $r->login;
         $password = $r->password;
         
+        // Normalize phone number: strip country code (+251, 251), remove spaces/dashes
+        // Format: 0900000000 (10 digits starting with 0)
+        $normalizedPhone = $this->normalizePhone($login);
+        
         // Try to find user by email, id_number, or phone
         // Check which columns actually exist to avoid QueryException
         try {
@@ -31,7 +35,11 @@ class AuthController extends Controller
             $query->orWhere('id_number', $login);
         }
         if ($hasPhone) {
+            // Try both raw login and normalized phone
             $query->orWhere('phone', $login);
+            if ($normalizedPhone !== $login) {
+                $query->orWhere('phone', $normalizedPhone);
+            }
         }
         $user = $query->first();
         
@@ -170,8 +178,35 @@ class AuthController extends Controller
     }
 
     /**
-     * Determine the home route based on user role.
+     * Normalize a phone number to Ethiopian local format: 0900000000
+     * - Removes spaces, dashes, parentheses
+     * - Strips country code prefix (+251, 00251, 251) and prepends 0
+     * - Returns the original string if it doesn't look like a phone number
      */
+    private function normalizePhone(string $input): string
+    {
+        // Remove all spaces, dashes, parentheses, dots
+        $cleaned = preg_replace('/[\s\-().]/', '', $input);
+        
+        // If starts with +251 or 00251, replace with 0
+        if (preg_match('/^(\+251|00251)(\d{9})$/', $cleaned, $m)) {
+            return '0' . $m[2];
+        }
+        
+        // If starts with 251 (without + or 00), replace with 0
+        if (preg_match('/^251(\d{9})$/', $cleaned, $m)) {
+            return '0' . $m[1];
+        }
+        
+        // If already in 0XXXXXXXXX format (10 digits starting with 0)
+        if (preg_match('/^0\d{9}$/', $cleaned)) {
+            return $cleaned;
+        }
+        
+        // Return cleaned input as-is (may be email or ID number)
+        return $cleaned;
+    }
+
     private function getHomeRoute(User $user): string
     {
         // Students go to student portal

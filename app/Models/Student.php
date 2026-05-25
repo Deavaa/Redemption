@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class Student extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id','branch_id','class_id','section_id','academic_year_id','full_name','email','phone','address','guardian_name','guardian_phone','roll_number','admission_number','admission_date','date_of_birth','gender','blood_group','religion','nationality','previous_school','ethnicity','place_of_birth','passport_number','medical_conditions','allergies','notes','teacher_comments','admin_comments','photo','status','original_admission_date','readmission_count','previous_class_id','previous_section_id','leave_date','leave_reason','is_readmitted'];
+    protected $fillable = ['user_id','branch_id','class_id','section_id','academic_year_id','full_name','email','phone','address','guardian_name','guardian_phone','roll_number','admission_number','admission_date','date_of_birth','gender','blood_group','religion','nationality','previous_school','ethnicity','place_of_birth','passport_number','medical_conditions','allergies','notes','teacher_comments','admin_comments','photo','status','original_admission_date','readmission_count','previous_branch_id','previous_class_id','previous_section_id','leave_date','leave_reason','is_readmitted'];
     protected $appends = [];
     protected function casts(): array { return ['admission_date'=>'date','date_of_birth'=>'date','original_admission_date'=>'date','leave_date'=>'date','is_readmitted'=>'boolean']; }
     public function user() { return $this->belongsTo(User::class); }

@@ -55,6 +55,8 @@ class PermissionMiddleware
                 'settings.view', // report exchange uses settings.view
                 // Library
                 'library.view',
+                // Attendance
+                'attendance.view', 'attendance.manage',
                 // Communication
                 'calendar.view', 'calendar.manage',
                 'chat.access',
@@ -79,25 +81,33 @@ class PermissionMiddleware
                             'required_any' => $permissions,
                         ], 403);
                     }
-                    abort(403, 'You do not have permission to access this section.');
+                    // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                 }
             }
 
             return $next($request);
         }
 
-        // Branch principal — similar to teacher but with more academic access
+        // Branch principal — manages staff, students, parents in own branch only
+        // Does NOT control academic years, terms, or exams (those are admin-level)
         if ($user->role === 'branch_principal') {
             $branchPrincipalAllowedPermissions = [
                 'dashboard.view',
-                // Academic setup
+                // Academic setup (VIEW ONLY — cannot create/edit academic years, terms, exams)
                 'academic_years.view', 'terms.view', 'subjects.view', 'subject_assignments.view',
                 'exams.view', 'classrooms.view', 'sections.view',
                 // Marks & Assessment
                 'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
                 'mark_sheets.view', 'mark_sheets.generate',
-                // People
-                'students.view', 'teachers.view', 'subject_assignments.view',
+                // People (full management within own branch)
+                'students.view', 'students.create', 'students.edit', 'students.manage',
+                'teachers.view', 'teachers.create', 'teachers.edit',
+                'subject_assignments.view',
+                'parents.view', 'parents.create', 'parents.edit',
+                // Attendance
+                'attendance.view', 'attendance.manage',
                 // Lesson Plans
                 'lesson_plans.view', 'lesson_plans.create', 'lesson_plans.edit', 'lesson_plans.review', 'lesson_plans.follow_up',
                 // Exam Questions (principal review)
@@ -115,8 +125,10 @@ class PermissionMiddleware
                 'announcements.view',
                 // Departments (view only)
                 'departments.view',
-                // Analysis
-                // Same as mark_sheets.view
+                // User access management
+                'user_access.view',
+                // Staff management within branch
+                'staff.view', 'staff.manage',
             ];
 
             if (!empty($permissions)) {
@@ -134,7 +146,9 @@ class PermissionMiddleware
                             'required_any' => $permissions,
                         ], 403);
                     }
-                    abort(403, 'You do not have permission to access this section.');
+                    // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                 }
             }
 
@@ -184,7 +198,9 @@ class PermissionMiddleware
                             'required_any' => $permissions,
                         ], 403);
                     }
-                    abort(403, 'You do not have permission to access this section.');
+                    // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                 }
             }
 
@@ -206,7 +222,9 @@ class PermissionMiddleware
                                 'message' => 'You do not have access to this section.',
                             ], 403);
                         }
-                        abort(403, 'You do not have permission to access this section.');
+                        // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                     }
                 }
             }
@@ -232,7 +250,9 @@ class PermissionMiddleware
                     if ($request->expectsJson()) {
                         return response()->json(['message' => 'Librarians do not have access to this section.'], 403);
                     }
-                    abort(403, 'You do not have permission to access this section.');
+                    // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                 }
             }
 
@@ -258,7 +278,9 @@ class PermissionMiddleware
                     if ($request->expectsJson()) {
                         return response()->json(['message' => 'Cashiers do not have access to this section.'], 403);
                     }
-                    abort(403, 'You do not have permission to access this section.');
+                    // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                 }
             }
 
@@ -288,7 +310,9 @@ class PermissionMiddleware
                     if ($request->expectsJson()) {
                         return response()->json(['message' => 'Registrars do not have access to this section.'], 403);
                     }
-                    abort(403, 'You do not have permission to access this section.');
+                    // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                 }
             }
 
@@ -325,7 +349,9 @@ class PermissionMiddleware
                     if ($request->expectsJson()) {
                         return response()->json(['message' => 'Finance officers do not have access to this section.'], 403);
                     }
-                    abort(403, 'You do not have permission to access this section.');
+                    // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                 }
             }
 
@@ -359,7 +385,9 @@ class PermissionMiddleware
                     if ($request->expectsJson()) {
                         return response()->json(['message' => 'HR officers do not have access to this section.'], 403);
                     }
-                    abort(403, 'You do not have permission to access this section.');
+                    // Redirect to dashboard with error message instead of 403 page
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'You do not have permission to access this section.');
                 }
             }
 
@@ -380,7 +408,8 @@ class PermissionMiddleware
                     'message' => 'Students do not have access to this section.',
                 ], 403);
             }
-            abort(403, 'You do not have permission to access this section.');
+            return redirect()->route('student.dashboard')
+                ->with('error', 'You do not have permission to access this section.');
         }
 
         // Parent role — only access parent portal routes (which don't use this middleware)
@@ -390,7 +419,8 @@ class PermissionMiddleware
                     'message' => 'Parents do not have access to this section.',
                 ], 403);
             }
-            abort(403, 'You do not have permission to access this section.');
+            return redirect()->route('parent.dashboard')
+                ->with('error', 'You do not have permission to access this section.');
         }
 
         // Default: no permissions set, no recognized role — fall through to permission check
@@ -409,7 +439,8 @@ class PermissionMiddleware
                         'required' => $allPerms,
                     ], 403);
                 }
-                abort(403, 'You do not have all required permissions to access this section.');
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'You do not have all required permissions to access this section.');
             }
         } else {
             // ANY match mode (default)
@@ -420,7 +451,8 @@ class PermissionMiddleware
                         'required_any' => $permissions,
                     ], 403);
                 }
-                abort(403, 'You do not have permission to access this section.');
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'You do not have permission to access this section.');
             }
         }
 

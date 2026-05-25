@@ -12,7 +12,24 @@ class TeacherController extends Controller
 {
     public function index()
     {
-        $data = Teacher::orderBy('full_name')->paginate(10)->withQueryString();
+        $branchScope = request()->attributes->get('branch_scope');
+        
+        $query = Teacher::orderBy('full_name');
+        
+        // Branch principal: only see teachers assigned to their branch
+        if ($branchScope) {
+            $query->whereHas('assignments', function ($q) use ($branchScope) {
+                $q->whereHas('classroom', function ($cq) use ($branchScope) {
+                    $cq->where('branch_id', $branchScope);
+                });
+            })->orWhereHas('sections', function ($q) use ($branchScope) {
+                $q->whereHas('classroom', function ($cq) use ($branchScope) {
+                    $cq->where('branch_id', $branchScope);
+                });
+            });
+        }
+        
+        $data = $query->paginate(10)->withQueryString();
         return view('admin.Teacher.index', compact('data'));
     }
 

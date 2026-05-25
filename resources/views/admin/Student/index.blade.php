@@ -146,6 +146,7 @@
                                 <a href="{{ route('admin.chat.index') }}?recipient_id={{ $chatRecipientId }}&recipient_type={{ $chatRecipientType }}" class="sl-act sl-act-msg" title="Send Message"><i class="fas fa-paper-plane"></i></a>
                                 <a href="{{ route('admin.id-card-generate.index') }}?student_id={{ $student->id }}" class="sl-act sl-act-id" title="Generate ID Card"><i class="fas fa-id-card"></i></a>
                                 <a href="{{ route('admin.certificate-generate.index') }}?student_id={{ $student->id }}" class="sl-act sl-act-cert" title="Generate Certificate"><i class="fas fa-certificate"></i></a>
+                                <a href="{{ route('admin.students.transfer', $student->id) }}" class="sl-act" style="color:#f59e0b;" title="Transfer to Branch"><i class="fas fa-exchange-alt"></i></a>
                                 <form method="POST" action="{{ route('admin.students.destroy', $student->id) }}" style="display:inline" onsubmit="return confirm('Are you sure?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="sl-act sl-act-del" title="Delete"><i class="fas fa-trash-alt"></i></button>

@@ -23,6 +23,12 @@ class StudentController extends Controller
 
         $query = Student::with(['classroom', 'section', 'parents']);
 
+        // Branch scoping: branch_principal only sees students in their branch
+        $branchScope = $request->attributes->get('branch_scope');
+        if ($branchScope) {
+            $query->where('branch_id', $branchScope);
+        }
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'LIKE', "%{$search}%")
@@ -38,9 +44,13 @@ class StudentController extends Controller
 
         $students = $query->orderBy('full_name')->paginate(10)->withQueryString();
 
-        $totalStudents = Student::count();
-        $activeStudents = Student::where('status', 'active')->count();
-        $inactiveStudents = Student::where('status', 'inactive')->count();
+        $baseQuery = Student::query();
+        if ($branchScope) {
+            $baseQuery->where('branch_id', $branchScope);
+        }
+        $totalStudents = (clone $baseQuery)->count();
+        $activeStudents = (clone $baseQuery)->where('status', 'active')->count();
+        $inactiveStudents = (clone $baseQuery)->where('status', 'inactive')->count();
 
         return view('admin.Student.index', compact('students', 'totalStudents', 'activeStudents', 'inactiveStudents', 'search', 'statusFilter'));
     }
@@ -49,7 +59,18 @@ class StudentController extends Controller
     {
         $classrooms = Classroom::with('sections', 'branch')->get();
         $parents = ParentModel::orderBy('father_name')->get(['id', \DB::raw('father_name as name'), \DB::raw('father_phone as phone')]);
-        $branches = Branch::all();
+        
+        $user = auth()->user();
+        $branchScope = request()->attributes->get('branch_scope');
+        
+        // Branch principal: only see their branch, auto-select it
+        if ($branchScope) {
+            $branches = Branch::where('id', $branchScope)->get();
+            $classrooms = Classroom::with('sections', 'branch')->where('branch_id', $branchScope)->get();
+        } else {
+            $branches = Branch::all();
+        }
+        
         $academicYears = AcademicYear::all();
         if ($academicYears->isEmpty()) {
             AcademicYear::create(['name' => '2024-2025']);
@@ -89,6 +110,14 @@ class StudentController extends Controller
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('student-photos', 'public');
             $validated['photo'] = $photoPath;
+        }
+
+        // Normalize phone numbers to Ethiopian local format (0XXXXXXXXX)
+        if (!empty($validated['phone'])) {
+            $validated['phone'] = $this->normalizePhone($validated['phone']);
+        }
+        if (!empty($validated['guardian_phone'])) {
+            $validated['guardian_phone'] = $this->normalizePhone($validated['guardian_phone']);
         }
 
         // Get class_id from section_id
@@ -463,6 +492,27 @@ class StudentController extends Controller
     }
 
     /**
+     * Normalize a phone number to Ethiopian local format: 0900000000
+     * - Removes spaces, dashes, parentheses, dots
+     * - Strips country code prefix (+251, 00251, 251) and prepends 0
+     * - Returns the original cleaned string if it doesn't look like a phone number
+     */
+    private function normalizePhone(string $input): string
+    {
+        $cleaned = preg_replace('/[\s\-().]/', '', $input);
+        if (preg_match('/^(\+251|00251)(\d{9})$/', $cleaned, $m)) {
+            return '0' . $m[2];
+        }
+        if (preg_match('/^251(\d{9})$/', $cleaned, $m)) {
+            return '0' . $m[1];
+        }
+        if (preg_match('/^0\d{9}$/', $cleaned)) {
+            return $cleaned;
+        }
+        return $cleaned;
+    }
+
+    /**
      * Show inactive/transferred students who can be readmitted.
      */
     public function inactive(Request $request)
@@ -575,6 +625,134 @@ class StudentController extends Controller
     }
 
     /**
+     * Show the transfer form for a student (move to another branch).
+     */
+    public function transferForm(Student $student)
+    {
+        $student->load(['classroom', 'section', 'branch']);
+        $branches = Branch::where('id', '!=', $student->branch_id)->where('is_active', true)->get();
+        $classrooms = Classroom::with('sections')->orderBy('name')->get();
+
+        return view('admin.Student.transfer', compact('student', 'branches', 'classrooms'));
+    }
+
+    /**
+     * Transfer a student to another branch.
+     */
+    public function transfer(Request $request, Student $student)
+    {
+        $validated = $request->validate([
+            'branch_id' => 'required|exists:branches,id|different:' . $student->branch_id,
+            'section_id' => 'required|exists:sections,id',
+            'transfer_reason' => 'nullable|string|max:500',
+        ]);
+
+        $section = Section::find($validated['section_id']);
+        $newBranchId = $validated['branch_id'];
+        $oldBranch = $student->branch ? $student->branch->name : 'Unknown';
+        $newBranch = Branch::find($newBranchId)->name;
+
+        // Update the student's branch, class, and section
+        $student->update([
+            'branch_id' => $newBranchId,
+            'class_id' => $section->class_id,
+            'section_id' => $validated['section_id'],
+            'status' => 'transferred',
+            'previous_branch_id' => $student->branch_id,
+            'previous_class_id' => $student->class_id,
+            'previous_section_id' => $student->section_id,
+        ]);
+
+        // Create an enrollment record for the transfer
+        $activeAy = AcademicYear::where('is_current', true)->first() ?? AcademicYear::orderBy('id', 'desc')->first();
+        if ($activeAy) {
+            StudentEnrollment::create([
+                'student_id' => $student->id,
+                'academic_year_id' => $activeAy->id,
+                'branch_id' => $newBranchId,
+                'class_id' => $section->class_id,
+                'section_id' => $validated['section_id'],
+                'roll_number' => $student->roll_number,
+                'enrollment_date' => now()->toDateString(),
+                'status' => 'enrolled',
+                'enrollment_type' => 'transfer',
+                'registration_fee' => 0,
+                'registration_fee_paid' => 0,
+                'registration_fee_status' => 'waived',
+                'enrolled_by' => auth()->id(),
+                'notes' => "Transferred from {$oldBranch} to {$newBranch}. Reason: " . ($validated['transfer_reason'] ?? 'Not specified'),
+            ]);
+        }
+
+        // Re-activate the student in the new branch
+        $student->update(['status' => 'active']);
+
+        return redirect()->route('admin.students.index')
+            ->with('success', "Student transferred from {$oldBranch} to {$newBranch} successfully!");
+    }
+
+    /**
+     * Bulk transfer multiple students to another branch.
+     */
+    public function bulkTransfer(Request $request)
+    {
+        $validated = $request->validate([
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'exists:students,id',
+            'branch_id' => 'required|exists:branches,id',
+            'section_id' => 'required|exists:sections,id',
+            'transfer_reason' => 'nullable|string|max:500',
+        ]);
+
+        $section = Section::find($validated['section_id']);
+        $newBranchId = $validated['branch_id'];
+        $newBranch = Branch::find($newBranchId)->name;
+        $activeAy = AcademicYear::where('is_current', true)->first() ?? AcademicYear::orderBy('id', 'desc')->first();
+        $count = 0;
+
+        foreach ($validated['student_ids'] as $studentId) {
+            $student = Student::find($studentId);
+            if (!$student) continue;
+
+            $oldBranch = $student->branch ? $student->branch->name : 'Unknown';
+
+            $student->update([
+                'branch_id' => $newBranchId,
+                'class_id' => $section->class_id,
+                'section_id' => $validated['section_id'],
+                'status' => 'active',
+                'previous_branch_id' => $student->branch_id,
+                'previous_class_id' => $student->class_id,
+                'previous_section_id' => $student->section_id,
+            ]);
+
+            if ($activeAy) {
+                StudentEnrollment::create([
+                    'student_id' => $student->id,
+                    'academic_year_id' => $activeAy->id,
+                    'branch_id' => $newBranchId,
+                    'class_id' => $section->class_id,
+                    'section_id' => $validated['section_id'],
+                    'roll_number' => $student->roll_number,
+                    'enrollment_date' => now()->toDateString(),
+                    'status' => 'enrolled',
+                    'enrollment_type' => 'transfer',
+                    'registration_fee' => 0,
+                    'registration_fee_paid' => 0,
+                    'registration_fee_status' => 'waived',
+                    'enrolled_by' => auth()->id(),
+                    'notes' => "Bulk transferred from {$oldBranch} to {$newBranch}. Reason: " . ($validated['transfer_reason'] ?? 'Not specified'),
+                ]);
+            }
+
+            $count++;
+        }
+
+        return redirect()->route('admin.students.index')
+            ->with('success', "{$count} student(s) transferred to {$newBranch} successfully!");
+    }
+
+    /**
      * API: Preview next admission number.
      */
     public function apiAdmissionPreview()
@@ -593,5 +771,32 @@ class StudentController extends Controller
         return response()->json([
             'roll_number' => $this->generateRollNumber($request->section_id),
         ]);
+    }
+
+    /**
+     * API: Return sections with their class name for a given branch.
+     */
+    public function apiSectionsByBranch(Request $request)
+    {
+        $branchId = $request->input('branch_id');
+        if (!$branchId) {
+            return response()->json([]);
+        }
+
+        $sections = Section::with('classroom')
+            ->whereHas('classroom', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            })
+            ->orderBy('name')
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'class_name' => $s->classroom ? $s->classroom->name : '',
+                ];
+            });
+
+        return response()->json($sections);
     }
 }

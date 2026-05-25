@@ -118,7 +118,7 @@ Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');
 
@@ -232,10 +232,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
     Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
     Route::get('students/api/sections/{classId}', [StudentController::class, 'getSections'])->name('students.api.sections');
+    Route::get('students/api/sections-by-branch', [StudentController::class, 'apiSectionsByBranch'])->name('students.api.sections-by-branch');
     Route::get('students/inactive/list', [StudentController::class, 'inactive'])->name('students.inactive')->middleware('permission:students.view');
     Route::get('students/{student}/readmit', [StudentController::class, 'readmit'])->name('students.readmit')->middleware('permission:students.manage');
     Route::post('students/{student}/readmit', [StudentController::class, 'readmitStore'])->name('students.readmit-store')->middleware('permission:students.manage');
     Route::post('students/{student}/mark-as-left', [StudentController::class, 'markAsLeft'])->name('students.mark-as-left')->middleware('permission:students.manage');
+    Route::get('students/{student}/transfer', [StudentController::class, 'transferForm'])->name('students.transfer')->middleware('permission:students.manage');
+    Route::post('students/{student}/transfer', [StudentController::class, 'transfer'])->name('students.transfer-store')->middleware('permission:students.manage');
+    Route::post('students/bulk-transfer', [StudentController::class, 'bulkTransfer'])->name('students.bulk-transfer')->middleware('permission:students.manage');
     Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');
     Route::resource('staff', StaffController::class)->middleware('permission:staff.view');
     Route::resource('team-members', TeamMemberController::class)->middleware('permission:team_members.view');

@@ -126,6 +126,7 @@
             $isCommActive = request()->routeIs($commRoutes);
             $isWebsiteActive = request()->routeIs($websiteRoutes);
             $isAdminActive = request()->routeIs($adminRoutes);
+            $isUserMgmtActive = request()->routeIs('admin.user-access.*');
         @endphp
         <div class="sidebar-menu-wrap">
             <ul class="sidebar-menu">
@@ -476,6 +477,10 @@
                         <i class="fas fa-newspaper"></i><span>News</span>
                     </a>
                 </li>
+                <li class="menu-header">USER MANAGEMENT</li>
+                <li><a href="{{ route('admin.user-access.teachers') }}" class="{{ request()->routeIs('admin.user-access.teachers*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teacher Access</a></li>
+                <li><a href="{{ route('admin.user-access.students') }}" class="{{ request()->routeIs('admin.user-access.students*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Student Access</a></li>
+                <li><a href="{{ route('admin.user-access.parents') }}" class="{{ request()->routeIs('admin.user-access.parents*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parent Access</a></li>
                 @endif
 
                 {{-- ADMINISTRATION --}}

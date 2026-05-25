@@ -9,8 +9,21 @@ use App\Models\Role;
 class ParentModelController extends Controller
 {
     public function index(){
-        $data = ParentModel::with('students')->latest()->paginate(20);
-        $totalParents = ParentModel::count();
+        $branchScope = request()->attributes->get('branch_scope');
+        
+        $query = ParentModel::with('students')->latest();
+        
+        // Branch principal: only see parents who have students in their branch
+        if ($branchScope) {
+            $query->whereHas('students', function ($q) use ($branchScope) {
+                $q->where('branch_id', $branchScope);
+            });
+        }
+        
+        $data = $query->paginate(20);
+        $totalParents = $branchScope 
+            ? ParentModel::whereHas('students', function ($q) use ($branchScope) { $q->where('branch_id', $branchScope); })->count()
+            : ParentModel::count();
         return view("admin.ParentModel.index", compact("data","totalParents"));
     }
     public function create(){ return view("admin.ParentModel.create"); }

@@ -58,8 +58,15 @@ class MarkSheetController extends Controller
                 }
             }
 
-            // Only show classes where teacher is homeroom teacher
-            $classes = $teacher->classRooms()->orderBy('name')->get();
+            // Show classes from homeroom assignments
+            $homeroomClassIds = $teacher->classRooms()->pluck('id');
+            // Also show classes from subject assignments
+            $assignmentClassIds = \App\Models\TeacherAssignment::where('teacher_id', $teacher->id)->pluck('class_id')->unique();
+            // Also show classes from section homeroom duties
+            $sectionHomeroomClassIds = Section::where('teacher_id', $teacher->id)->pluck('class_id')->unique();
+            $classIds = $homeroomClassIds->merge($assignmentClassIds)->merge($sectionHomeroomClassIds)->unique();
+
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();
         } else {
             $classes = ClassRoom::orderBy('name')->get();
         }
@@ -80,10 +87,19 @@ class MarkSheetController extends Controller
 
         // ── Authorization check for teachers ──
         $teacher = $this->getTeacherForUser();
+        $isTeacher = (bool) $teacher;
         if ($teacher) {
             $isHomeroom = $teacher->classRooms()->where('id', $r->class_id)->exists();
+            // Also check if they are homeroom for a section in this class
             if (!$isHomeroom) {
-                abort(403, 'You are not authorized to generate mark sheets for this class. Only homeroom teachers can access this feature.');
+                $isHomeroom = Section::where('class_id', $r->class_id)
+                    ->where('teacher_id', $teacher->id)
+                    ->exists();
+            }
+            if (!$isHomeroom) {
+                // Redirect back with a friendly message instead of 403
+                return redirect()->route('admin.mark-sheet.index')
+                    ->with('error', 'Only home room teachers have this access. You are not assigned as a homeroom teacher for this class.');
             }
         }
 
@@ -120,8 +136,27 @@ class MarkSheetController extends Controller
         $query = Section::where('class_id', $r->class_id);
 
         if ($teacher) {
-            // Only return sections where teacher is homeroom
-            $query->where('teacher_id', $teacher->id);
+            // Return sections where teacher is homeroom OR has subject assignments
+            $assignmentSectionIds = \App\Models\TeacherAssignment::where('teacher_id', $teacher->id)
+                ->where('class_id', $r->class_id)
+                ->pluck('section_id')
+                ->filter()
+                ->unique();
+            $homeroomSectionIds = Section::where('class_id', $r->class_id)
+                ->where('teacher_id', $teacher->id)
+                ->pluck('id');
+            $allowedIds = $assignmentSectionIds->merge($homeroomSectionIds)->unique();
+
+            // If teacher has assignments with null section_id for this class, they can see all sections
+            $hasNullSectionAssignment = \App\Models\TeacherAssignment::where('teacher_id', $teacher->id)
+                ->where('class_id', $r->class_id)
+                ->whereNull('section_id')
+                ->exists();
+            $isHomeroomClass = $teacher->classRooms()->where('id', $r->class_id)->exists();
+
+            if (!$hasNullSectionAssignment && !$isHomeroomClass) {
+                $query->whereIn('id', $allowedIds);
+            }
         }
 
         $sections = $query->orderBy('name')->get(['id', 'name']);
@@ -133,9 +168,16 @@ class MarkSheetController extends Controller
         $teacher = $this->getTeacherForUser();
 
         if ($teacher) {
-            // Only allow access to students in homeroom classes
+            // Allow access if homeroom teacher OR has assignments in this class
             $isHomeroom = $teacher->classRooms()->where('id', $r->class_id)->exists();
-            if (!$isHomeroom) {
+            $isSectionHomeroom = Section::where('class_id', $r->class_id)
+                ->where('teacher_id', $teacher->id)
+                ->exists();
+            $hasAssignment = \App\Models\TeacherAssignment::where('teacher_id', $teacher->id)
+                ->where('class_id', $r->class_id)
+                ->exists();
+
+            if (!$isHomeroom && !$isSectionHomeroom && !$hasAssignment) {
                 return response()->json([]);
             }
         }

@@ -52,8 +52,13 @@ class MarkSheetFullController extends Controller
                 $academicYears = collect([$activeAy]); // Only show active AY for teachers
             }
 
-            // Only show classes where teacher is homeroom teacher
-            $classes = $teacher->classRooms()->orderBy('name')->get();
+            // Show classes from homeroom assignments
+            $homeroomClassIds = $teacher->classRooms()->pluck('id');
+            // Also show classes from section homeroom duties
+            $sectionHomeroomClassIds = Section::where('teacher_id', $teacher->id)->pluck('class_id')->unique();
+            $classIds = $homeroomClassIds->merge($sectionHomeroomClassIds)->unique();
+
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();
         } else {
             $classes = ClassRoom::orderBy('name')->get();
         }
@@ -84,8 +89,16 @@ class MarkSheetFullController extends Controller
         $isTeacher = (bool) $teacher;
         if ($teacher) {
             $isHomeroom = $teacher->classRooms()->where('id', $r->class_id)->exists();
+            // Also check if they are homeroom for a section in this class
             if (!$isHomeroom) {
-                abort(403, 'You are not authorized to generate full mark sheets for this class. Only homeroom teachers can access this feature.');
+                $isHomeroom = Section::where('class_id', $r->class_id)
+                    ->where('teacher_id', $teacher->id)
+                    ->exists();
+            }
+            if (!$isHomeroom) {
+                // Redirect back with a friendly message instead of 403
+                return redirect()->route('admin.mark-sheet-full.index')
+                    ->with('error', 'Only home room teachers have this access. You are not assigned as a homeroom teacher for this class.');
             }
         }
 

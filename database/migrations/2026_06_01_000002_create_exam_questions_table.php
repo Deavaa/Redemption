@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->text('questions'); // JSON array of questions
-            $table->string('question_type')->default('mixed'); // multiple_choice, essay, short_answer, mixed
+            $table->string('question_type')->default('mixed');
             $table->integer('total_marks')->default(0);
             $table->integer('duration_minutes')->nullable();
             $table->enum('status', ['pending_department','pending_principal','approved','rejected_by_department','rejected_by_principal','revision'])->default('pending_department');

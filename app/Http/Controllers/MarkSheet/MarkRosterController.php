@@ -121,7 +121,8 @@ class MarkRosterController extends Controller
             }
 
             if (!$isHomeroomForClass && !$hasAssignmentsInClass && !$isHomeroomForSection) {
-                abort(403, 'You are not authorized to view the mark roster for this class.');
+                return redirect()->route('admin.mark-roster.index')
+                    ->with('error', 'You are not authorized to view the mark roster for this class. Only teachers with assignments or homeroom duties in this class can access it.');
             }
 
             // If NOT homeroom (class or section), only show their assigned subjects
