@@ -93,18 +93,28 @@ class EnrollmentController extends Controller
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $branches = Branch::where('is_active', true)->get();
 
-        // Classes for filter dropdown: always filter by the effective academic year
-        // so the dropdown matches the enrollment data being shown.
+        // Classes for filter dropdown: try to filter by the effective academic year.
+        // If no classes exist for that academic year, fall back to showing all
+        // classes for the branch so the dropdown is never empty.
         $effectiveAyId = $academicYearId;
+        $effectiveBranchId = $branchScope ?? $branchId;
+
         $classesQuery = Classroom::with('sections')
             ->where('academic_year_id', $effectiveAyId);
-
-        // Also filter classes by branch if branch filter is active
-        $effectiveBranchId = $branchScope ?? $branchId;
         if ($effectiveBranchId) {
             $classesQuery->where('branch_id', $effectiveBranchId);
         }
         $classes = $classesQuery->orderBy('name')->get();
+
+        // Fallback: if no classes found for this AY, show all classes for the branch
+        if ($classes->isEmpty()) {
+            $fallbackQuery = Classroom::with('sections');
+            if ($effectiveBranchId) {
+                $fallbackQuery->where('branch_id', $effectiveBranchId);
+            }
+            $classes = $fallbackQuery->orderBy('name')->get();
+        }
+
         $sections = $classId ? Section::where('class_id', $classId)->get() : collect();
 
         // For branch principals, auto-limit branches to their own
@@ -142,12 +152,27 @@ class EnrollmentController extends Controller
             $branches = Branch::where('id', $branchScope)->get();
         }
 
-        // Filter classes by branch scope
+        // Filter classes by branch scope, with academic year filtering + fallback
+        $currentAy = AcademicYear::where('is_current', true)->first()
+            ?? AcademicYear::orderBy('id', 'desc')->first();
+
         $classesQuery = Classroom::with('sections');
         if ($branchScope) {
             $classesQuery->where('branch_id', $branchScope);
         }
+        if ($currentAy) {
+            $classesQuery->where('academic_year_id', $currentAy->id);
+        }
         $classes = $classesQuery->orderBy('name')->get();
+
+        // Fallback: if no classes for current AY, show all classes for the branch
+        if ($classes->isEmpty()) {
+            $fallbackQuery = Classroom::with('sections');
+            if ($branchScope) {
+                $fallbackQuery->where('branch_id', $branchScope);
+            }
+            $classes = $fallbackQuery->orderBy('name')->get();
+        }
 
         return view('admin.Enrollment.create', compact('students', 'academicYears', 'branches', 'classes'));
     }
@@ -224,7 +249,16 @@ class EnrollmentController extends Controller
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $branches = Branch::where('is_active', true)->get();
-        $classes = Classroom::with('sections')->get();
+
+        // Try to load classes for the enrollment's academic year, with fallback
+        $classesQuery = Classroom::with('sections')
+            ->where('academic_year_id', $enrollment->academic_year_id);
+        $classes = $classesQuery->orderBy('name')->get();
+
+        if ($classes->isEmpty()) {
+            $classes = Classroom::with('sections')->orderBy('name')->get();
+        }
+
         $sections = Section::where('class_id', $enrollment->class_id)->get();
 
         return view('admin.Enrollment.edit', compact('enrollment', 'academicYears', 'branches', 'classes', 'sections'));
@@ -514,6 +548,7 @@ class EnrollmentController extends Controller
 
     /**
      * Get classes for a branch (AJAX).
+     * Falls back to showing all classes for the branch if none match the academic year.
      */
     public function apiClasses(Request $request)
     {
@@ -536,6 +571,15 @@ class EnrollmentController extends Controller
             ->with('sections')
             ->orderBy('name')
             ->get();
+
+        // Fallback: if no classes found for this AY, show all classes for the branch
+        if ($classes->isEmpty() && $academicYearId) {
+            $classes = Classroom::when($effectiveBranchId, fn($q) => $q->where('branch_id', $effectiveBranchId))
+                ->with('sections')
+                ->orderBy('name')
+                ->get();
+        }
+
         return response()->json($classes);
     }
 
@@ -650,6 +694,8 @@ class EnrollmentController extends Controller
 
     /**
      * Sync/backfill: Create enrollment records for students who don't have them.
+     * Also handles students whose class_id doesn't belong to the current AY
+     * by finding the matching class for the current AY or keeping the original.
      */
     public function syncEnrollments()
     {
@@ -684,13 +730,54 @@ class EnrollmentController extends Controller
         }
 
         $created = 0;
+        $skipped = 0;
         foreach ($studentsWithoutEnrollment as $student) {
+            // Determine the class_id for enrollment: try to find a matching class
+            // in the current AY, otherwise use the student's current class_id
+            $classId = $student->class_id;
+            $sectionId = $student->section_id;
+
+            if ($classId) {
+                $existingClass = ClassRoom::find($classId);
+                // If the student's class belongs to a different AY, try to find
+                // the equivalent class in the current AY (same grade + branch)
+                if ($existingClass && $existingClass->academic_year_id != $currentAy->id) {
+                    $matchingClass = ClassRoom::where('branch_id', $existingClass->branch_id)
+                        ->where('academic_year_id', $currentAy->id)
+                        ->where('numeric_name', $existingClass->numeric_name)
+                        ->first();
+
+                    if ($matchingClass) {
+                        $classId = $matchingClass->id;
+                        // Try to find matching section
+                        if ($sectionId) {
+                            $oldSection = Section::find($sectionId);
+                            if ($oldSection) {
+                                $matchingSection = Section::where('class_id', $matchingClass->id)
+                                    ->where('name', $oldSection->name)
+                                    ->first();
+                                $sectionId = $matchingSection?->id ?? Section::where('class_id', $matchingClass->id)->first()?->id;
+                            }
+                        }
+                        if (!$sectionId) {
+                            $sectionId = Section::where('class_id', $matchingClass->id)->first()?->id;
+                        }
+                    }
+                }
+            }
+
+            // Skip students without a valid class or section
+            if (!$classId) {
+                $skipped++;
+                continue;
+            }
+
             StudentEnrollment::create([
                 'student_id' => $student->id,
                 'academic_year_id' => $currentAy->id,
                 'branch_id' => $student->branch_id,
-                'class_id' => $student->class_id,
-                'section_id' => $student->section_id,
+                'class_id' => $classId,
+                'section_id' => $sectionId,
                 'roll_number' => $student->roll_number,
                 'enrollment_date' => $student->admission_date ?? now()->toDateString(),
                 'status' => 'enrolled',
@@ -703,7 +790,12 @@ class EnrollmentController extends Controller
             $created++;
         }
 
+        $message = "Synced {$created} students to academic year {$currentAy->name}.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} students skipped (no class assigned).";
+        }
+
         return redirect()->route('admin.enrollments.index')
-            ->with('success', "Synced {$created} students to academic year {$currentAy->name}.");
+            ->with('success', $message);
     }
 }
