@@ -23,9 +23,9 @@
         </div>
     </div>
 
-    {{-- Stats Cards --}}
+    {{-- Stats Cards (compact) --}}
     <div class="att-stats-grid">
-        <div class="modern-card att-stat-card" style="padding:12px 14px;border-left:3px solid #6366f1;">
+        <div class="att-stat-card" style="padding:4px 8px;border-left:3px solid #6366f1;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
                     <div class="att-stat-label">Attendance Rate</div>
@@ -36,7 +36,7 @@
                 </div>
             </div>
         </div>
-        <div class="modern-card att-stat-card" style="padding:12px 14px;border-left:3px solid #10b981;">
+        <div class="att-stat-card" style="padding:4px 8px;border-left:3px solid #10b981;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
                     <div class="att-stat-label">Present</div>
@@ -47,7 +47,7 @@
                 </div>
             </div>
         </div>
-        <div class="modern-card att-stat-card" style="padding:12px 14px;border-left:3px solid #ef4444;">
+        <div class="att-stat-card" style="padding:4px 8px;border-left:3px solid #ef4444;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
                     <div class="att-stat-label">Absent</div>
@@ -58,7 +58,7 @@
                 </div>
             </div>
         </div>
-        <div class="modern-card att-stat-card" style="padding:12px 14px;border-left:3px solid #f59e0b;">
+        <div class="att-stat-card" style="padding:4px 8px;border-left:3px solid #f59e0b;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
                     <div class="att-stat-label">Late</div>
@@ -214,12 +214,13 @@
 @push('styles')
 <style>
 /* ===== Attendance Dashboard Styles ===== */
-.att-stat-label { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px; }
-.att-stat-value { font-size:22px;font-weight:800; }
-.att-stat-icon { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
-.att-stat-icon i { font-size:14px; }
-.att-stat-card { transition: transform 0.2s, box-shadow 0.2s; }
-.att-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.att-stats-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px; }
+.att-stat-label { font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:1px; }
+.att-stat-value { font-size:14px;font-weight:800;line-height:1.2; }
+.att-stat-icon { width:24px;height:24px;border-radius:8px;display:flex;align-items:center;justify-content:center; }
+.att-stat-icon i { font-size:10px; }
+.att-stat-card { background:var(--card-bg);border-radius:10px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.04);transition: transform 0.15s, box-shadow 0.15s; }
+.att-stat-card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 
 /* Filter collapse */
 .att-filter-card.att-filter-collapsed .att-filter-body { display: none; }
@@ -267,10 +268,11 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .att-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
-    .att-stat-value { font-size: 18px; }
-    .att-stat-icon { width: 30px; height: 30px; }
-    .att-stat-icon i { font-size: 12px; }
+    .att-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 4px !important; }
+    .att-stat-value { font-size: 14px; }
+    .att-stat-icon { width: 24px; height: 24px; }
+    .att-stat-icon i { font-size: 10px; }
+    .att-stat-card { padding: 4px 8px !important; }
     .att-filter-form { flex-direction: column; gap: 8px; }
     .att-filter-group { min-width: 100%; }
     .att-filter-input { min-width: 100%; }
@@ -282,12 +284,12 @@
     .att-header-btn { font-size: 0.65rem; padding: 3px 8px; }
 }
 @media (max-width: 480px) {
-    .att-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 4px !important; }
-    .att-stat-card { padding: 8px 10px !important; }
-    .att-stat-value { font-size: 16px; }
-    .att-stat-label { font-size: 8px; }
-    .att-stat-icon { width: 26px; height: 26px; border-radius: 8px; }
-    .att-stat-icon i { font-size: 10px; }
+    .att-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 3px !important; }
+    .att-stat-card { padding: 3px 6px !important; }
+    .att-stat-value { font-size: 13px; }
+    .att-stat-label { font-size: 7px; }
+    .att-stat-icon { width: 22px; height: 22px; border-radius: 6px; }
+    .att-stat-icon i { font-size: 9px; }
     .att-filter-summary { font-size: 0.75rem; gap: 0.35rem; padding: 0.5rem 0.75rem; }
     .att-filter-chip { font-size: 0.72rem; padding: 2px 7px; }
 }

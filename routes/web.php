@@ -243,6 +243,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('students/{student}/transfer', [StudentController::class, 'transferForm'])->name('students.transfer')->middleware('permission:students.manage');
     Route::post('students/{student}/transfer', [StudentController::class, 'transfer'])->name('students.transfer-store')->middleware('permission:students.manage');
     Route::post('students/bulk-transfer', [StudentController::class, 'bulkTransfer'])->name('students.bulk-transfer')->middleware('permission:students.manage');
+    Route::get('teachers/{teacher}/transfer', [TeacherController::class, 'transferForm'])->name('teachers.transfer')->middleware('permission:teachers.manage');
+    Route::post('teachers/{teacher}/transfer', [TeacherController::class, 'transfer'])->name('teachers.transfer-store')->middleware('permission:teachers.manage');
     Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');
     Route::resource('staff', StaffController::class)->middleware('permission:staff.view');
     Route::resource('team-members', TeamMemberController::class)->middleware('permission:team_members.view');

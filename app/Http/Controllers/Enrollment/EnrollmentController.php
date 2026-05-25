@@ -111,9 +111,27 @@ class EnrollmentController extends Controller
      */
     public function create()
     {
-        $students = Student::where('status', 'active')->orderBy('full_name')->get();
+        $branchScope = request()->attributes->get('branch_scope');
+
+        // Get currently active students
+        $activeStudents = Student::where('status', 'active')->orderBy('full_name');
+
+        // Also include promoted/transferred students who can be re-enrolled
+        $promotedStudents = Student::whereIn('status', ['active', 'transferred', 'graduated'])
+            ->orderBy('full_name');
+
+        if ($branchScope) {
+            $activeStudents->where('branch_id', $branchScope);
+            $promotedStudents->where('branch_id', $branchScope);
+        }
+
+        $students = $promotedStudents->get();
+
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $branches = Branch::where('is_active', true)->get();
+        if ($branchScope) {
+            $branches = Branch::where('id', $branchScope)->get();
+        }
         $classes = Classroom::with('sections')->get();
 
         return view('admin.Enrollment.create', compact('students', 'academicYears', 'branches', 'classes'));
@@ -466,11 +484,11 @@ class EnrollmentController extends Controller
         $enrolledStudentIds = StudentEnrollment::where('academic_year_id', $academicYearId)
             ->pluck('student_id');
 
-        $students = Student::where('status', 'active')
+        $students = Student::whereIn('status', ['active', 'transferred', 'graduated'])
             ->whereNotIn('id', $enrolledStudentIds)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->orderBy('full_name')
-            ->get(['id', 'full_name', 'admission_number', 'branch_id']);
+            ->get(['id', 'full_name', 'admission_number', 'branch_id', 'status']);
 
         return response()->json($students);
     }

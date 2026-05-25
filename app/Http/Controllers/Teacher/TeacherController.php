@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use App\Models\Department;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -185,5 +186,54 @@ class TeacherController extends Controller
     {
         Teacher::destroy($id);
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher deleted successfully.');
+    }
+
+    /**
+     * Show the transfer form for a teacher (move to another branch).
+     */
+    public function transferForm(Teacher $teacher)
+    {
+        $teacher->load(['branch']);
+        $branches = Branch::where('id', '!=', $teacher->branch_id)->where('is_active', true)->get();
+
+        return view('admin.Teacher.transfer', compact('teacher', 'branches'));
+    }
+
+    /**
+     * Transfer a teacher to another branch.
+     */
+    public function transfer(Request $request, Teacher $teacher)
+    {
+        $validated = $request->validate([
+            'branch_id' => 'required|exists:branches,id|different:' . $teacher->branch_id,
+            'transfer_reason' => 'nullable|string|max:500',
+        ]);
+
+        $oldBranch = $teacher->branch ? $teacher->branch->name : 'Unknown';
+        $newBranch = Branch::find($validated['branch_id'])->name;
+
+        $teacher->update([
+            'branch_id' => $validated['branch_id'],
+            'previous_branch_id' => $teacher->branch_id,
+        ]);
+
+        // Update the user's branch_id too if they have a user account
+        if ($teacher->user_id) {
+            \App\Models\User::where('id', $teacher->user_id)->update(['branch_id' => $validated['branch_id']]);
+        }
+
+        // Notify relevant users about the transfer
+        try {
+            \App\Services\AlertService::notifyTeacherTransfer(
+                $teacher->previous_branch_id ?? $validated['branch_id'],
+                $validated['branch_id'],
+                $teacher->full_name
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Teacher transfer notification failed: ' . $e->getMessage());
+        }
+
+        return redirect()->route('admin.teachers.index')
+            ->with('success', "Teacher transferred from {$oldBranch} to {$newBranch} successfully!");
     }
 }

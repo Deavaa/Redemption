@@ -21,27 +21,41 @@
         </div>
     </div>
 
+    {{-- Student/Parent Context Banner --}}
+    @if(isset($studentName) && $studentName)
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;margin-bottom:10px;background:linear-gradient(135deg,#ede9fe,#e0e7ff);border:1px solid #c7d2fe;border-radius:10px;">
+        <i class="fas fa-user-graduate" style="color:#6366f1;font-size:14px;"></i>
+        <span style="font-size:12px;font-weight:700;color:#4338ca;">Your Attendance Summary — {{ $studentName }}</span>
+    </div>
+    @endif
+    @if(isset($childNames) && count($childNames) > 0)
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;margin-bottom:10px;background:linear-gradient(135deg,#fce7f3,#fde2e4);border:1px solid #fbcfe8;border-radius:10px;">
+        <i class="fas fa-users" style="color:#ec4899;font-size:14px;"></i>
+        <span style="font-size:12px;font-weight:700;color:#9d174d;">Your Children's Attendance — {{ implode(', ', $childNames) }}</span>
+    </div>
+    @endif
+
     {{-- Summary Stats --}}
-    <div class="att-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;">
-        <div class="modern-card" style="padding:12px 14px;border-left:3px solid #6366f1;">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Overall Rate</div>
-            <div style="font-size:20px;font-weight:800;color:#6366f1;">{{ $overallRate }}%</div>
+    <div class="att-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px;">
+        <div class="modern-card" style="padding:4px 8px;border-left:3px solid #6366f1;">
+            <div style="font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Overall Rate</div>
+            <div style="font-size:14px;font-weight:800;color:#6366f1;">{{ $overallRate }}%</div>
         </div>
-        <div class="modern-card" style="padding:12px 14px;border-left:3px solid #10b981;">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Present</div>
-            <div style="font-size:20px;font-weight:800;color:#10b981;">{{ $totalPresent }}</div>
+        <div class="modern-card" style="padding:4px 8px;border-left:3px solid #10b981;">
+            <div style="font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Present</div>
+            <div style="font-size:14px;font-weight:800;color:#10b981;">{{ $totalPresent }}</div>
         </div>
-        <div class="modern-card" style="padding:12px 14px;border-left:3px solid #ef4444;">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Absent</div>
-            <div style="font-size:20px;font-weight:800;color:#ef4444;">{{ $totalAbsent }}</div>
+        <div class="modern-card" style="padding:4px 8px;border-left:3px solid #ef4444;">
+            <div style="font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Absent</div>
+            <div style="font-size:14px;font-weight:800;color:#ef4444;">{{ $totalAbsent }}</div>
         </div>
-        <div class="modern-card" style="padding:12px 14px;border-left:3px solid #f59e0b;">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Late</div>
-            <div style="font-size:20px;font-weight:800;color:#f59e0b;">{{ $totalLate }}</div>
+        <div class="modern-card" style="padding:4px 8px;border-left:3px solid #f59e0b;">
+            <div style="font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Late</div>
+            <div style="font-size:14px;font-weight:800;color:#f59e0b;">{{ $totalLate }}</div>
         </div>
-        <div class="modern-card" style="padding:12px 14px;border-left:3px solid #3b82f6;">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Excused</div>
-            <div style="font-size:20px;font-weight:800;color:#3b82f6;">{{ $totalExcused }}</div>
+        <div class="modern-card" style="padding:4px 8px;border-left:3px solid #3b82f6;">
+            <div style="font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:2px;">Excused</div>
+            <div style="font-size:14px;font-weight:800;color:#3b82f6;">{{ $totalExcused }}</div>
         </div>
     </div>
 

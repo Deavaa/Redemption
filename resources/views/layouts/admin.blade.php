@@ -1392,6 +1392,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200);
     }
 
+    // Accordion behavior: collapse other sidebar groups when one expands
+    document.querySelectorAll('.sidebar-menu .collapse').forEach(function(menu) {
+        menu.addEventListener('show.bs.collapse', function() {
+            // Collapse all other sibling menus
+            document.querySelectorAll('.sidebar-menu .collapse.show').forEach(function(other) {
+                if (other !== menu) {
+                    // Use getOrCreateInstance to handle uninitialized collapses
+                    var bsCollapse = bootstrap.Collapse.getOrCreateInstance(other, {toggle: false});
+                    if (bsCollapse) bsCollapse.hide();
+                }
+            });
+        });
+    });
+
     // Auto-dismiss alerts
     document.querySelectorAll('.global-alert').forEach(a => {
         setTimeout(() => {

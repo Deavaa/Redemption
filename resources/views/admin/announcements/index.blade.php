@@ -64,6 +64,12 @@
                         <div style="flex:1;min-width:0;">
                             <div style="font-size:13px;font-weight:600;color:var(--text-dark);">{{ $event->title }}</div>
                             <div style="font-size:11px;color:var(--text-muted);">{{ $event->start_date->format('M d, Y') }} &bull; {{ ucfirst($event->category) }}</div>
+                            @if($event->scope === 'branch' && $event->branch)
+                                <span style="font-size:10px;color:var(--text-muted);">• {{ $event->branch->name }} Branch</span>
+                            @endif
+                            @if(!$event->is_approved)
+                                <span style="font-size:10px;color:#f59e0b;">• Pending Approval</span>
+                            @endif
                         </div>
                         <div class="announcement-pending-actions">
                             <form method="POST" action="{{ route('admin.announcements.send-telegram', $event->id) }}">
@@ -116,6 +122,7 @@
                     <tr style="background:var(--bg-light);border-bottom:1px solid var(--border);">
                         <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--text-muted);">Title</th>
                         <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--text-muted);">Category</th>
+                        <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--text-muted);">Scope</th>
                         <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--text-muted);">Date</th>
                         <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--text-muted);">Actions</th>
                     </tr>
@@ -125,6 +132,7 @@
                     <tr style="border-bottom:1px solid var(--border);">
                         <td style="padding:10px 14px;font-size:13px;font-weight:500;">{{ $announcement->title }}</td>
                         <td style="padding:10px 14px;font-size:12px;"><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:{{ $announcement->color ?? '#eee' }}20;color:{{ $announcement->color ?? '#666' }};">{{ ucfirst($announcement->category) }}</span></td>
+                        <td style="padding:10px 14px;font-size:12px;">{{ $announcement->scope === 'branch' ? ($announcement->branch?->name . ' Branch') : 'School-wide' }}</td>
                         <td style="padding:10px 14px;font-size:12px;color:var(--text-muted);">{{ $announcement->start_date->format('M d, Y') }}</td>
                         <td style="padding:10px 14px;">
                             <form method="POST" action="{{ route('admin.announcements.destroy', $announcement->id) }}" style="display:inline;">

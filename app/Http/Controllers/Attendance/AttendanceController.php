@@ -422,45 +422,109 @@ class AttendanceController extends Controller
             $query->where('section_id', $sectionId);
         }
 
+        // ── Privilege-based filtering ──
+        $user = Auth::user();
+        $isBranchPrincipal = $user->role === 'branch_principal';
+        $isTeacher = $user->role === 'teacher';
+        $isStudent = $user->role === 'student';
+        $isParent = $user->role === 'parent';
+
+        // Branch principal: restrict to their branch
+        if ($isBranchPrincipal && $user->branch_id) {
+            $query->whereHas('student', function($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        }
+
+        // Teacher: restrict to assigned classes
+        if ($isTeacher) {
+            $teacherModel = Teacher::where('user_id', $user->id)
+                ->orWhere('email', $user->email)->first();
+            if ($teacherModel) {
+                $assignableClassIds = AttendanceDelegation::getAssignableClasses($teacherModel->id, $fromDate);
+                $query->whereIn('class_id', $assignableClassIds);
+            }
+        }
+
+        // Student: show only their own attendance
+        if ($isStudent) {
+            $studentModel = Student::where('user_id', $user->id)->first();
+            if ($studentModel) {
+                $query->where('student_id', $studentModel->id);
+            }
+        }
+
+        // Parent: show only their children's attendance
+        if ($isParent) {
+            $parentModel = \App\Models\ParentModel::where('user_id', $user->id)->first();
+            if ($parentModel) {
+                $childIds = $parentModel->students()->pluck('students.id');
+                $query->whereIn('student_id', $childIds);
+            }
+        }
+
         $records = $query->with(['student', 'classRoom', 'section', 'term'])
             ->orderBy('date', 'desc')
             ->orderBy('class_id')
             ->paginate(50)
             ->withQueryString();
 
-        // Summary stats
-        $totalRecords = Attendance::whereBetween('date', [$fromDate, $toDate])
+        // Summary stats (with same privilege filtering)
+        $statsBaseQuery = Attendance::whereBetween('date', [$fromDate, $toDate])
             ->when($classId, fn($q) => $q->where('class_id', $classId))
-            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
-            ->count();
+            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId));
 
-        $totalPresent = Attendance::whereBetween('date', [$fromDate, $toDate])
-            ->where('status', 'present')
-            ->when($classId, fn($q) => $q->where('class_id', $classId))
-            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
-            ->count();
+        // Apply privilege filtering to summary stats
+        if ($isBranchPrincipal && $user->branch_id) {
+            $statsBaseQuery->whereHas('student', function($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        }
+        if ($isTeacher) {
+            $teacherModel = $teacherModel ?? Teacher::where('user_id', $user->id)
+                ->orWhere('email', $user->email)->first();
+            if ($teacherModel) {
+                $assignableClassIds = $assignableClassIds ?? AttendanceDelegation::getAssignableClasses($teacherModel->id, $fromDate);
+                $statsBaseQuery->whereIn('class_id', $assignableClassIds);
+            }
+        }
+        if ($isStudent) {
+            $studentModel = $studentModel ?? Student::where('user_id', $user->id)->first();
+            if ($studentModel) {
+                $statsBaseQuery->where('student_id', $studentModel->id);
+            }
+        }
+        if ($isParent) {
+            $parentModel = $parentModel ?? \App\Models\ParentModel::where('user_id', $user->id)->first();
+            if ($parentModel) {
+                $childIds = $childIds ?? $parentModel->students()->pluck('students.id');
+                $statsBaseQuery->whereIn('student_id', $childIds);
+            }
+        }
 
-        $totalAbsent = Attendance::whereBetween('date', [$fromDate, $toDate])
-            ->where('status', 'absent')
-            ->when($classId, fn($q) => $q->where('class_id', $classId))
-            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
-            ->count();
-
-        $totalLate = Attendance::whereBetween('date', [$fromDate, $toDate])
-            ->where('status', 'late')
-            ->when($classId, fn($q) => $q->where('class_id', $classId))
-            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
-            ->count();
-
-        $totalExcused = Attendance::whereBetween('date', [$fromDate, $toDate])
-            ->where('status', 'excused')
-            ->when($classId, fn($q) => $q->where('class_id', $classId))
-            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
-            ->count();
+        $totalRecords = (clone $statsBaseQuery)->count();
+        $totalPresent = (clone $statsBaseQuery)->where('status', 'present')->count();
+        $totalAbsent  = (clone $statsBaseQuery)->where('status', 'absent')->count();
+        $totalLate    = (clone $statsBaseQuery)->where('status', 'late')->count();
+        $totalExcused = (clone $statsBaseQuery)->where('status', 'excused')->count();
 
         $overallRate = $totalRecords > 0
             ? round(($totalPresent + $totalLate) / $totalRecords * 100, 1)
             : 0;
+
+        // Student/parent context variables
+        $studentName = null;
+        $childNames = [];
+        if ($isStudent) {
+            $studentModel = $studentModel ?? Student::where('user_id', $user->id)->first();
+            $studentName = $studentModel?->full_name;
+        }
+        if ($isParent) {
+            $parentModel = $parentModel ?? \App\Models\ParentModel::where('user_id', $user->id)->first();
+            if ($parentModel) {
+                $childNames = $parentModel->students()->pluck('full_name')->toArray();
+            }
+        }
 
         $classes = ClassRoom::orderBy('name')->get();
         $sections = collect();
@@ -472,7 +536,7 @@ class AttendanceController extends Controller
             'fromDate', 'toDate', 'classId', 'sectionId',
             'records', 'totalRecords', 'totalPresent', 'totalAbsent',
             'totalLate', 'totalExcused', 'overallRate',
-            'classes', 'sections'
+            'classes', 'sections', 'studentName', 'childNames'
         ));
     }
 }

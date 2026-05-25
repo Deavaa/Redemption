@@ -12,12 +12,22 @@ class AnnouncementController extends Controller
 {
     public function index()
     {
-        $announcements = CalendarEvent::where('is_announcement', true)
+        // Show both: explicitly created announcements AND approved upcoming calendar events
+        $announcements = CalendarEvent::where(function($q) {
+                $q->where('is_announcement', true)
+                  ->orWhere('is_approved', true);
+            })
             ->orderBy('start_date', 'desc')
             ->paginate(20);
-        $pendingAnnouncements = CalendarEvent::where('is_announcement', true)
+
+        $pendingAnnouncements = CalendarEvent::where(function($q) {
+                $q->where('is_announcement', true)
+                  ->orWhere('is_approved', true);
+            })
             ->where('start_date', '>=', now())
-            ->orderBy('start_date')->get();
+            ->orderBy('start_date')
+            ->get();
+
         return view('admin.announcements.index', compact('announcements', 'pendingAnnouncements'));
     }
 

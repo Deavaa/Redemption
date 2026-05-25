@@ -163,6 +163,9 @@
                                     <a href="{{ route('admin.chat.index') }}?recipient_id={{ $item->user_id ?? $item->id }}&recipient_type=teacher" class="modern-btn-icon modern-btn-msg" title="Send Message">
                                         <i class="fas fa-paper-plane"></i>
                                     </a>
+                                    <a href="{{ route('admin.teachers.transfer', $item->id) }}" class="modern-btn-icon" style="background:#eef2ff;color:#4361ee;" title="Transfer">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </a>
                                     <form method="POST" action="{{ route('admin.teachers.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this teacher?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">

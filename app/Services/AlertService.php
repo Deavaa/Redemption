@@ -134,6 +134,26 @@ class AlertService
     }
 
     /**
+     * Notify about teacher transfer between branches.
+     * - Principals of both source and destination branches
+     * - General manager
+     */
+    public static function notifyTeacherTransfer(int $fromBranchId, int $toBranchId, string $teacherName): void
+    {
+        $title = 'Teacher Transfer';
+        $message = "Teacher {$teacherName} has been transferred.";
+        $icon = 'fas fa-exchange-alt';
+        $link = route('admin.teachers.index');
+
+        // Notify both branch principals
+        static::notifyBranchPrincipals($fromBranchId, $title, $message, $icon, $link);
+        static::notifyBranchPrincipals($toBranchId, $title, $message, $icon, $link);
+
+        // Notify general manager
+        static::notifyGeneralManagers($title, $message, $icon, $link);
+    }
+
+    /**
      * Notify about exam scheduling.
      * - Teachers assigned to the class/subject
      * - Branch principal
