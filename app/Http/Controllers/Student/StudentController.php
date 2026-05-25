@@ -170,9 +170,8 @@ class StudentController extends Controller
         }
 
         // Create user account for student
-        $defaultPassword = $request->filled('date_of_birth') 
-            ? str_replace('-', '', $request->date_of_birth) 
-            : 'Student@' . rand(1000, 9999);
+        // Default password for all users is '123456'
+        $defaultPassword = '123456';
 
         $user = \App\Models\User::create([
             'name' => $validated['full_name'],
@@ -181,6 +180,7 @@ class StudentController extends Controller
             'password' => bcrypt($defaultPassword),
             'role' => 'student',
             'is_active' => true,
+            'phone' => $validated['phone'] ?? null,
         ]);
 
         $validated['user_id'] = $user->id;
@@ -235,6 +235,17 @@ class StudentController extends Controller
             'registration_fee_status' => 'waived',
             'enrolled_by' => auth()->id(),
         ]);
+
+        // Notify relevant users about the new enrollment
+        try {
+            \App\Services\AlertService::notifyStudentEnrolled(
+                $validated['branch_id'],
+                $validated['full_name'],
+                $validated['academic_year_id'] ?? null
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Enrollment notification failed: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.students.index')->with('success', 'Student enrolled successfully!');
     }
@@ -365,10 +376,8 @@ class StudentController extends Controller
             }
             $idNumber = "STD-{$year}-" . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
             
-            // Default password from DOB or random
-            $defaultPassword = $student->date_of_birth 
-                ? str_replace('-', '', $student->date_of_birth) 
-                : 'Student@' . rand(1000, 9999);
+            // Default password for all users is '123456'
+            $defaultPassword = '123456';
             
             if ($student->user_id) {
                 // Update existing user
@@ -687,6 +696,17 @@ class StudentController extends Controller
         // Re-activate the student in the new branch
         $student->update(['status' => 'active']);
 
+        // Notify relevant users about the transfer
+        try {
+            \App\Services\AlertService::notifyStudentTransfer(
+                $student->previous_branch_id ?? $validated['branch_id'],
+                $newBranchId,
+                $student->full_name
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Transfer notification failed: ' . $e->getMessage());
+        }
+
         return redirect()->route('admin.students.index')
             ->with('success', "Student transferred from {$oldBranch} to {$newBranch} successfully!");
     }
@@ -798,5 +818,184 @@ class StudentController extends Controller
             });
 
         return response()->json($sections);
+    }
+
+    /**
+     * Show the bulk student creation form.
+     * Allows adding multiple students at once with shared branch/class/section/academic year.
+     */
+    public function bulkCreate()
+    {
+        $user = auth()->user();
+        $branchScope = request()->attributes->get('branch_scope');
+
+        if ($branchScope) {
+            $branches = Branch::where('id', $branchScope)->get();
+            $classrooms = Classroom::with('sections', 'branch')->where('branch_id', $branchScope)->get();
+        } else {
+            $branches = Branch::all();
+            $classrooms = Classroom::with('sections', 'branch')->get();
+        }
+
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        if ($academicYears->isEmpty()) {
+            AcademicYear::create(['name' => '2024-2025']);
+            AcademicYear::create(['name' => '2025-2026']);
+            $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        }
+
+        return view('admin.Student.bulk-create', compact('branches', 'classrooms', 'academicYears'));
+    }
+
+    /**
+     * Process bulk student creation.
+     * Creates multiple students with shared enrollment settings.
+     */
+    public function bulkStore(Request $request)
+    {
+        $validated = $request->validate([
+            'branch_id' => 'required|exists:branches,id',
+            'section_id' => 'required|exists:sections,id',
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'admission_date' => 'nullable|date',
+            'students' => 'required|array|min:1',
+            'students.*.full_name' => 'required|string|max:255',
+            'students.*.gender' => 'nullable|in:male,female,other',
+            'students.*.phone' => 'nullable|string|max:20',
+            'students.*.guardian_name' => 'nullable|string|max:255',
+            'students.*.guardian_phone' => 'nullable|string|max:20',
+            'students.*.date_of_birth' => 'nullable|date',
+        ]);
+
+        $section = Section::find($validated['section_id']);
+        $classId = $section->class_id;
+        $admissionDate = $validated['admission_date'] ?? now()->toDateString();
+        $year = $this->getAyStartYear($this->getCurrentAcademicYear());
+
+        $created = 0;
+        $errors = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($validated['students'] as $index => $studentData) {
+                // Skip empty rows
+                if (empty(trim($studentData['full_name'] ?? ''))) {
+                    continue;
+                }
+
+                // Generate admission number
+                $admissionNumber = $this->generateAdmissionNumber();
+
+                // Generate roll number
+                $rollNumber = $this->generateRollNumber($validated['section_id']);
+
+                // Ensure uniqueness
+                $rollAttempts = 0;
+                while (Student::where('roll_number', $rollNumber)->exists()) {
+                    $rollAttempts++;
+                    $rollNumber = $this->generateRollNumber($validated['section_id']);
+                    if ($rollAttempts > 10) {
+                        $rollNumber = $rollNumber . '-' . str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
+                        break;
+                    }
+                }
+
+                // Generate student ID number
+                $lastUser = \App\Models\User::where('id_number', 'LIKE', "STD-{$year}-%")
+                    ->orderBy('id_number', 'desc')->first();
+                $nextNum = 1;
+                if ($lastUser && $lastUser->id_number) {
+                    $parts = explode('-', $lastUser->id_number);
+                    $nextNum = (int)end($parts) + 1;
+                }
+                $idNumber = "STD-{$year}-" . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
+
+                // Normalize phone
+                $phone = !empty($studentData['phone']) ? $this->normalizePhone($studentData['phone']) : null;
+                $guardianPhone = !empty($studentData['guardian_phone']) ? $this->normalizePhone($studentData['guardian_phone']) : null;
+
+                // Create user account
+                $user = \App\Models\User::create([
+                    'name' => $studentData['full_name'],
+                    'email' => $idNumber . '@redemption.edu',
+                    'id_number' => $idNumber,
+                    'password' => bcrypt('123456'),
+                    'role' => 'student',
+                    'is_active' => true,
+                    'phone' => $phone,
+                ]);
+
+                // Create student record
+                try {
+                    $student = Student::create([
+                        'user_id' => $user->id,
+                        'full_name' => $studentData['full_name'],
+                        'gender' => $studentData['gender'] ?? null,
+                        'phone' => $phone,
+                        'guardian_name' => $studentData['guardian_name'] ?? null,
+                        'guardian_phone' => $guardianPhone,
+                        'date_of_birth' => $studentData['date_of_birth'] ?? null,
+                        'branch_id' => $validated['branch_id'],
+                        'class_id' => $classId,
+                        'section_id' => $validated['section_id'],
+                        'academic_year_id' => $validated['academic_year_id'],
+                        'admission_number' => $admissionNumber,
+                        'roll_number' => $rollNumber,
+                        'admission_date' => $admissionDate,
+                        'status' => 'active',
+                    ]);
+
+                    // Create enrollment record
+                    StudentEnrollment::create([
+                        'student_id' => $student->id,
+                        'academic_year_id' => $validated['academic_year_id'],
+                        'branch_id' => $validated['branch_id'],
+                        'class_id' => $classId,
+                        'section_id' => $validated['section_id'],
+                        'roll_number' => $rollNumber,
+                        'enrollment_date' => $admissionDate,
+                        'status' => 'enrolled',
+                        'enrollment_type' => 'new',
+                        'registration_fee' => 0,
+                        'registration_fee_paid' => 0,
+                        'registration_fee_status' => 'waived',
+                        'enrolled_by' => auth()->id(),
+                    ]);
+
+                    $created++;
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                    $errors[] = "Row " . ($index + 1) . " ({$studentData['full_name']}): Duplicate entry - skipped.";
+                    $user->delete(); // Clean up the created user
+                    continue;
+                }
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('admin.students.index')
+                ->with('error', 'Bulk enrollment failed: ' . $e->getMessage());
+        }
+
+        // Notify about bulk enrollment
+        if ($created > 0) {
+            try {
+                \App\Services\AlertService::notifyStudentEnrolled(
+                    $validated['branch_id'],
+                    "{$created} new students",
+                    $validated['academic_year_id']
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Bulk enrollment notification failed: ' . $e->getMessage());
+            }
+        }
+
+        $message = "Successfully enrolled {$created} student(s).";
+        if (!empty($errors)) {
+            $message .= ' Errors: ' . implode('; ', $errors);
+        }
+
+        return redirect()->route('admin.students.index')
+            ->with('success', $message);
     }
 }

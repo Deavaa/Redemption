@@ -228,6 +228,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // ── People ────────────────────────────────────────────
     Route::get('students/generate-ids', [StudentController::class, 'generateIds'])->name('students.generateIds');
+    Route::get('students/bulk-create', [StudentController::class, 'bulkCreate'])->name('students.bulk-create')->middleware('permission:students.manage');
+    Route::post('students/bulk-store', [StudentController::class, 'bulkStore'])->name('students.bulk-store')->middleware('permission:students.manage');
     Route::resource('students', StudentController::class)->middleware('permission:students.view');
     Route::get('students/api/admission-preview', [StudentController::class, 'apiAdmissionPreview'])->name('students.api.admission-preview');
     Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');

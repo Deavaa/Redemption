@@ -30,6 +30,9 @@
             <a href="{{ route('admin.students.create') }}" class="sl-btn sl-btn-primary">
                 <i class="fas fa-plus"></i> Add Student
             </a>
+            <a href="{{ route('admin.students.bulk-create') }}" class="sl-btn sl-btn-primary" style="background:linear-gradient(135deg,#10b981,#059669);">
+                <i class="fas fa-users"></i> Bulk Enrollment
+            </a>
         </div>
     </div>
 
@@ -197,7 +200,10 @@
             <div class="sl-empty-icon"><i class="fas fa-user-graduate"></i></div>
             <h3>No Students Yet</h3>
             <p>Get started by enrolling your first student.</p>
-            <a href="{{ route('admin.students.create') }}" class="sl-btn sl-btn-primary"><i class="fas fa-plus"></i> Add Student</a>
+            <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+                <a href="{{ route('admin.students.create') }}" class="sl-btn sl-btn-primary"><i class="fas fa-plus"></i> Add Student</a>
+                <a href="{{ route('admin.students.bulk-create') }}" class="sl-btn sl-btn-primary" style="background:linear-gradient(135deg,#10b981,#059669);"><i class="fas fa-users"></i> Bulk Enrollment</a>
+            </div>
         </div>
         @endif
     </div>

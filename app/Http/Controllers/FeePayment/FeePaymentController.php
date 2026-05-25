@@ -7,20 +7,69 @@ use App\Models\Fee;
 use App\Models\Student;
 class FeePaymentController extends Controller
 {
-    public function index(){
-        $data = FeePayment::with("fee","student")->latest()->paginate(20);
-        $totalPayments = FeePayment::count();
-        $totalCollected = FeePayment::sum("amount_paid");
+    public function index(Request $request){
+        $branchScope = $request->attributes->get('branch_scope');
+
+        $query = FeePayment::with("fee","student");
+        
+        // Branch scope: principals only see payments from their branch students
+        if ($branchScope) {
+            $query->whereHas('student', function($q) use ($branchScope) {
+                $q->where('branch_id', $branchScope);
+            });
+        }
+
+        $data = $query->latest()->paginate(20);
+
+        // Stats also branch-scoped
+        $baseQuery = FeePayment::query();
+        if ($branchScope) {
+            $baseQuery->whereHas('student', function($q) use ($branchScope) {
+                $q->where('branch_id', $branchScope);
+            });
+        }
+
+        $totalPayments = (clone $baseQuery)->count();
+        $totalCollected = (clone $baseQuery)->sum("amount_paid");
+
         return view("admin.FeePayment.index", compact("data","totalPayments","totalCollected"));
     }
-    public function create(){
-        $fees = Fee::with("classroom","academicYear")->where("is_active",1)->get();
-        $students = Student::orderBy("full_name")->get();
+    public function create(Request $request){
+        $branchScope = $request->attributes->get('branch_scope');
+        
+        $fees = Fee::with("classroom","academicYear")->where("is_active",1)
+            ->when($branchScope, function($q) use ($branchScope) {
+                $q->whereHas('classroom', function($q2) use ($branchScope) {
+                    $q2->where('branch_id', $branchScope);
+                });
+            })
+            ->get();
+        $students = Student::orderBy("full_name")
+            ->when($branchScope, function($q) use ($branchScope) {
+                $q->where('branch_id', $branchScope);
+            })
+            ->get();
         return view("admin.FeePayment.create", compact("fees","students"));
     }
     public function store(Request $r){
         $r->validate(["fee_id"=>"required|exists:fees,id","student_id"=>"required|exists:students,id","amount_paid"=>"required|numeric|min:0","payment_date"=>"required|date","payment_method"=>"required|in:cash,bank,mobile,cheque,online","status"=>"required|in:paid,partial,pending,overdue"]);
-        FeePayment::create($r->only(['fee_id','student_id','amount_paid','payment_date','payment_method','transaction_id','receipt_number','status']));
+        
+        $payment = FeePayment::create($r->only(['fee_id','student_id','amount_paid','payment_date','payment_method','transaction_id','receipt_number','status']));
+
+        // Notify about fee payment
+        try {
+            $student = Student::find($r->student_id);
+            if ($student) {
+                \App\Services\AlertService::notifyFeePayment(
+                    $student->branch_id,
+                    $student->full_name,
+                    (float) $r->amount_paid
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Fee payment notification failed: ' . $e->getMessage());
+        }
+
         return redirect()->route("admin.fee-payments.index")->with("success","Payment recorded");
     }
     public function show(FeePayment $fee_payment){ return view("admin.FeePayment.show", ["item" => $fee_payment]); }

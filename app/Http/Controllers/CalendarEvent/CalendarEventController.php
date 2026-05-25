@@ -234,6 +234,13 @@ class CalendarEventController extends Controller
         $this->notifySms($calendar_event);
         $this->notifyUsers($calendar_event);
 
+        // Send approval-specific alert to relevant users
+        try {
+            \App\Services\AlertService::notifyCalendarEventApproved($calendar_event);
+        } catch (\Exception $e) {
+            \Log::warning('Event approval notification failed: ' . $e->getMessage());
+        }
+
         if ($r->ajax() || $r->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Event approved and notifications sent.']);
         }
@@ -515,33 +522,12 @@ class CalendarEventController extends Controller
 
     /**
      * Send in-app notification to relevant users about the event.
+     * Uses AlertService for role-based notification routing.
      */
     private function notifyUsers(CalendarEvent $event): void
     {
         try {
-            $query = \App\Models\User::where('is_active', true);
-            if ($event->branch_id && $event->scope === 'branch') {
-                $query->where(function ($q) use ($event) {
-                    $q->where('branch_id', $event->branch_id)
-                      ->orWhereIn('role', ['admin', 'super_admin', 'general_manager']);
-                });
-            }
-
-            $users = $query->get();
-            $notificationMessage = "Event: {$event->title} on " . $event->start_date->format('M d, Y');
-            if ($event->start_time && !$event->is_all_day) {
-                $notificationMessage .= " at " . $event->start_time;
-            }
-
-            foreach ($users as $user) {
-                \App\Models\Notification::create([
-                    'user_id' => $user->id,
-                    'title' => 'New Event: ' . $event->title,
-                    'message' => $notificationMessage,
-                    'type' => 'event',
-                    'is_read' => false,
-                ]);
-            }
+            \App\Services\AlertService::notifyCalendarEvent($event);
         } catch (\Exception $e) {
             \Log::warning('Event user notification failed: ' . $e->getMessage());
         }

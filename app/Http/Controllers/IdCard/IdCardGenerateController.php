@@ -111,7 +111,7 @@ class IdCardGenerateController extends Controller
         }
 
         // Refresh students to pick up newly created ID cards
-        $students = Student::with(['classroom', 'section', 'branch', 'academicYear', 'idCards'])->whereIn('id', $r->student_ids)->get();
+        $students = Student::with(['classroom', 'section', 'branch', 'academicYear', 'idCards', 'user'])->whereIn('id', $r->student_ids)->get();
 
         return view('admin.id-card-generate.print', compact('students', 'currentAy'));
     }

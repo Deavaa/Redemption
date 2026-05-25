@@ -36,6 +36,12 @@ class EnrollmentController extends Controller
 
         $query = StudentEnrollment::with(['student', 'academicYear', 'branch', 'classroom', 'section']);
 
+        // Branch scope: principals only see enrollments in their branch
+        $branchScope = $request->attributes->get('branch_scope');
+        if ($branchScope) {
+            $query->where('branch_id', $branchScope);
+        }
+
         if ($academicYearId) {
             $query->where('academic_year_id', $academicYearId);
         }
@@ -64,17 +70,34 @@ class EnrollmentController extends Controller
 
         $enrollments = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
 
-        // Stats
-        $totalEnrolled = StudentEnrollment::where('academic_year_id', $academicYearId)->where('status', 'enrolled')->count();
-        $feePaid = StudentEnrollment::where('academic_year_id', $academicYearId)->where('registration_fee_status', 'paid')->count();
-        $feeUnpaid = StudentEnrollment::where('academic_year_id', $academicYearId)->whereIn('registration_fee_status', ['unpaid', 'partial'])->count();
-        $feeWaived = StudentEnrollment::where('academic_year_id', $academicYearId)->where('registration_fee_status', 'waived')->count();
-        $totalFeeCollected = StudentEnrollment::where('academic_year_id', $academicYearId)->where('registration_fee_status', 'paid')->sum('registration_fee_paid');
+        // Branch scoping for fee stats: principals see their branch only, GM sees all
+        $statsBranchId = $branchScope ?? $branchId;
+
+        $totalEnrolled = StudentEnrollment::where('academic_year_id', $academicYearId)->where('status', 'enrolled')
+            ->when($statsBranchId, fn($q) => $q->where('branch_id', $statsBranchId))
+            ->count();
+        $feePaid = StudentEnrollment::where('academic_year_id', $academicYearId)->where('registration_fee_status', 'paid')
+            ->when($statsBranchId, fn($q) => $q->where('branch_id', $statsBranchId))
+            ->count();
+        $feeUnpaid = StudentEnrollment::where('academic_year_id', $academicYearId)->whereIn('registration_fee_status', ['unpaid', 'partial'])
+            ->when($statsBranchId, fn($q) => $q->where('branch_id', $statsBranchId))
+            ->count();
+        $feeWaived = StudentEnrollment::where('academic_year_id', $academicYearId)->where('registration_fee_status', 'waived')
+            ->when($statsBranchId, fn($q) => $q->where('branch_id', $statsBranchId))
+            ->count();
+        $totalFeeCollected = StudentEnrollment::where('academic_year_id', $academicYearId)->where('registration_fee_status', 'paid')
+            ->when($statsBranchId, fn($q) => $q->where('branch_id', $statsBranchId))
+            ->sum('registration_fee_paid');
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $branches = Branch::where('is_active', true)->get();
         $classes = Classroom::with('sections')->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))->get();
         $sections = $classId ? Section::where('class_id', $classId)->get() : collect();
+
+        // For branch principals, auto-limit branches to their own
+        if ($branchScope) {
+            $branches = Branch::where('id', $branchScope)->get();
+        }
 
         return view('admin.Enrollment.index', compact(
             'enrollments', 'academicYears', 'branches', 'classes', 'sections',

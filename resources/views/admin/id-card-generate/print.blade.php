@@ -377,6 +377,14 @@
                             <span class="id-card-info-value">{{ $student->full_name }}</span>
                         </div>
                         <div class="id-card-info-row">
+                            <span class="id-card-info-label">{{ __('app.student_id') ?? 'Student ID' }}</span>
+                            @php
+                                $displayStudentId = $student->user ? $student->user->id_number : null;
+                                if (empty($displayStudentId)) $displayStudentId = '-';
+                            @endphp
+                            <span class="id-card-info-value" style="color:#c9a84c;font-size:0.72rem;">{{ $displayStudentId }}</span>
+                        </div>
+                        <div class="id-card-info-row">
                             <span class="id-card-info-label">{{ __('app.roll_number') ?? 'Roll No' }}</span>
                             @php
                                 $displayRoll = $student->roll_number ?? '-';
@@ -419,8 +427,8 @@
                 <div class="id-card-footer">
                     <span>{{ __('app.valid') ?? 'Valid' }}: {{ $idCard->issue_date ?? now()->format('Y-m-d') }} — {{ $idCard->valid_until ?? now()->addYear()->format('Y-m-d') }}</span>
                     @php
-                        $barcodeValue = $student->admission_number;
-                        if (empty($barcodeValue) || str_contains(strtolower($barcodeValue), 'auto')) $barcodeValue = $student->id;
+                        $barcodeValue = $student->user ? $student->user->id_number : $student->admission_number;
+                        if (empty($barcodeValue) || str_contains(strtolower($barcodeValue), 'auto')) $barcodeValue = $student->admission_number ?? $student->id;
                     @endphp
                     <span class="id-card-barcode">*{{ $barcodeValue }}*</span>
                 </div>

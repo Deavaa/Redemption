@@ -126,7 +126,8 @@ body{min-height:100vh;display:flex;align-items:center;justify-content:center;bac
     @csrf
     <div class="form-group">
       <label><i class="bi bi-person"></i> {{ __('app.email_id_phone') }}</label>
-      <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Email / Employee ID / Phone (0900000000)">
+      <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Student ID / Employee ID / Email / Phone (0900000000)">
+      <small style="color:#888;font-size:11px;display:block;margin-top:4px;">Students: use your Student ID (e.g. STD-2025-00001) with default password <strong>123456</strong></small>
     </div>
     <div class="form-group">
       <label><i class="bi bi-lock"></i> {{ __('app.password') }}</label>
