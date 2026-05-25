@@ -168,10 +168,40 @@ class PermissionSeeder extends Seeder
             ['name' => 'library.edit',              'display_name' => 'Edit Library Books',        'module' => 'library'],
             ['name' => 'library.delete',            'display_name' => 'Delete Library Books',      'module' => 'library'],
 
+            // ── Lesson Plans Module ────────────────────────────
+            ['name' => 'lesson_plans.view',        'display_name' => 'View Lesson Plans',        'module' => 'academic'],
+            ['name' => 'lesson_plans.create',      'display_name' => 'Create Lesson Plans',      'module' => 'academic'],
+            ['name' => 'lesson_plans.edit',        'display_name' => 'Edit Lesson Plans',        'module' => 'academic'],
+            ['name' => 'lesson_plans.delete',      'display_name' => 'Delete Lesson Plans',      'module' => 'academic'],
+            ['name' => 'lesson_plans.review',      'display_name' => 'Review Lesson Plans',      'module' => 'academic'],
+            ['name' => 'lesson_plans.follow_up',   'display_name' => 'Manage Lesson Plan Follow-ups', 'module' => 'academic'],
+
             // ── Communication Module ─────────────────────────
             ['name' => 'chat.access',               'display_name' => 'Access Chat',               'module' => 'communication'],
             ['name' => 'telegram.manage',           'display_name' => 'Manage Telegram',           'module' => 'communication'],
             ['name' => 'notifications.view',        'display_name' => 'View Notifications',        'module' => 'communication'],
+
+            // ── News Module ───────────────────────────────────
+            ['name' => 'news.manage',              'display_name' => 'Manage News',              'module' => 'website'],
+
+            // ── Aggregate / Delegated Permissions ──────────────
+            ['name' => 'mark_entries.manage',      'display_name' => 'Manage Mark Entries (Lock/Unlock/Promote)', 'module' => 'academic'],
+            ['name' => 'students.manage',          'display_name' => 'Manage Students (Bulk/Transfer/Readmit)',  'module' => 'people'],
+            ['name' => 'teachers.manage',          'display_name' => 'Manage Teachers (Transfer)', 'module' => 'people'],
+            ['name' => 'fee_payments.manage',      'display_name' => 'Manage Fee Payments (Registration/Bank)', 'module' => 'finance'],
+            ['name' => 'exams.manage',             'display_name' => 'Manage Exams (Question Review)', 'module' => 'academic'],
+            ['name' => 'fees.manage',              'display_name' => 'Manage Fees (Bank Integration)', 'module' => 'finance'],
+            ['name' => 'staff.manage',             'display_name' => 'Manage Staff',             'module' => 'people'],
+            ['name' => 'library.manage',           'display_name' => 'Manage Library',           'module' => 'library'],
+            ['name' => 'announcements.view',       'display_name' => 'View Announcements',       'module' => 'communication'],
+            ['name' => 'departments.view',         'display_name' => 'View Departments',         'module' => 'academic'],
+            ['name' => 'user_access.view',         'display_name' => 'View User Access',         'module' => 'system'],
+            ['name' => 'leaves.manage',            'display_name' => 'Manage Leaves',            'module' => 'finance'],
+            ['name' => 'payrolls.manage',          'display_name' => 'Manage Payroll',           'module' => 'finance'],
+            ['name' => 'employee_assets.manage',   'display_name' => 'Manage Employee Assets',   'module' => 'finance'],
+            ['name' => 'income_expenses.manage',   'display_name' => 'Manage Income/Expenses',   'module' => 'finance'],
+            ['name' => 'budgets.manage',           'display_name' => 'Manage Budgets',           'module' => 'finance'],
+            ['name' => 'trainings.manage',         'display_name' => 'Manage Trainings',         'module' => 'system'],
 
             // ── System Module ────────────────────────────────
             ['name' => 'settings.view',             'display_name' => 'View Settings',             'module' => 'system'],
@@ -273,6 +303,7 @@ class PermissionSeeder extends Seeder
             'attendance.view', 'attendance.manage',
             'students.view', 'teachers.view',
             'id_cards.generate', 'certificates.generate',
+            'lesson_plans.view', 'lesson_plans.create', 'lesson_plans.edit', 'lesson_plans.follow_up',
             'calendar.view',
             'chat.access', 'notifications.view',
         ];
@@ -347,20 +378,26 @@ class PermissionSeeder extends Seeder
             'dashboard.view',
             // Academic
             'academic_years.view', 'terms.view', 'subjects.view', 'subject_assignments.view',
-            'exams.view', 'classrooms.view', 'sections.view',
-            'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
+            'exams.view', 'exams.manage', 'classrooms.view', 'sections.view',
+            'mark_entries.view', 'mark_entries.create', 'mark_entries.edit', 'mark_entries.manage',
             'mark_sheets.view', 'mark_sheets.generate',
             'attendance.view', 'attendance.manage',
             // People
-            'students.view', 'teachers.view', 'staff.view', 'parents.view',
+            'students.view', 'students.manage', 'teachers.view', 'staff.view', 'staff.manage', 'parents.view',
             // Enrollment
             'enrollments.view', 'enrollments.manage',
+            // Lesson Plans
+            'lesson_plans.view', 'lesson_plans.create', 'lesson_plans.edit', 'lesson_plans.review', 'lesson_plans.follow_up',
             // Documents
             'id_cards.generate', 'certificates.generate',
             // Finance (view only)
             'fees.view', 'fee_payments.view',
             // Communication
-            'calendar.view', 'calendar.manage', 'chat.access', 'notifications.view',
+            'calendar.view', 'calendar.manage', 'chat.access', 'notifications.view', 'announcements.view',
+            // Departments
+            'departments.view',
+            // User Access
+            'user_access.view',
         ];
         $branchPrincipalRole->syncPermissions(
             Permission::whereIn('name', $bpPerms)->pluck('id')->toArray()
@@ -374,7 +411,7 @@ class PermissionSeeder extends Seeder
             'subjects.view', 'subject_assignments.view', 'exams.view',
             'attendance.view', 'attendance.manage',
             // People
-            'students.view', 'students.create', 'students.edit',
+            'students.view', 'students.create', 'students.edit', 'students.manage',
             'parents.view', 'parents.create', 'parents.edit',
             // Enrollment
             'enrollments.view', 'enrollments.manage',
@@ -397,11 +434,11 @@ class PermissionSeeder extends Seeder
             // Enrollment (view + fee management)
             'enrollments.view',
             // Finance
-            'fees.view', 'fees.create', 'fees.edit',
-            'fee_payments.view', 'fee_payments.create', 'fee_payments.edit',
+            'fees.view', 'fees.create', 'fees.edit', 'fees.manage',
+            'fee_payments.view', 'fee_payments.create', 'fee_payments.edit', 'fee_payments.manage',
             'payrolls.view', 'payrolls.create', 'payrolls.edit',
-            'budgets.view', 'budgets.create', 'budgets.edit',
-            'income_expenses.view', 'income_expenses.create', 'income_expenses.edit',
+            'budgets.view', 'budgets.create', 'budgets.edit', 'budgets.manage',
+            'income_expenses.view', 'income_expenses.create', 'income_expenses.edit', 'income_expenses.manage',
             'finance_statements.view',
             // Communication
             'calendar.view', 'chat.access', 'notifications.view',
@@ -435,7 +472,7 @@ class PermissionSeeder extends Seeder
             // Enrollment (view + fee management)
             'enrollments.view',
             // Finance
-            'fees.view', 'fee_payments.view', 'fee_payments.create', 'fee_payments.edit',
+            'fees.view', 'fee_payments.view', 'fee_payments.create', 'fee_payments.edit', 'fee_payments.manage',
             // Communication
             'calendar.view', 'chat.access', 'notifications.view',
         ];

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Enrollment;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Branch;
-use App\Models\ClassRoom;
 use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\Student;
@@ -739,11 +738,11 @@ class EnrollmentController extends Controller
             $sectionId = $student->section_id;
 
             if ($classId) {
-                $existingClass = ClassRoom::find($classId);
+                $existingClass = Classroom::find($classId);
                 // If the student's class belongs to a different AY, try to find
                 // the equivalent class in the current AY (same grade + branch)
                 if ($existingClass && $existingClass->academic_year_id != $currentAy->id) {
-                    $matchingClass = ClassRoom::where('branch_id', $existingClass->branch_id)
+                    $matchingClass = Classroom::where('branch_id', $existingClass->branch_id)
                         ->where('academic_year_id', $currentAy->id)
                         ->where('numeric_name', $existingClass->numeric_name)
                         ->first();

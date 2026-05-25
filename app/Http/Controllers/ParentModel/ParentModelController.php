@@ -79,7 +79,7 @@ class ParentModelController extends Controller
             $user->save();
         }
 
-        // Assign Spatie 'parent' role
+        // Assign 'parent' role via custom RBAC
         $parentRole = Role::where('name', 'parent')->first();
         if ($parentRole && !$user->roles()->where('role_id', $parentRole->id)->exists()) {
             $user->roles()->attach($parentRole->id);

@@ -291,9 +291,9 @@ class SchoolDataSeeder extends Seeder
             // Also delete student users via role assignment (covers edge cases)
             $studentRole = Role::where('name', 'student')->first();
             if ($studentRole) {
-                $roleStudentUserIds = DB::table('model_has_roles')
+                $roleStudentUserIds = DB::table('role_user')
                     ->where('role_id', $studentRole->id)
-                    ->pluck('model_id')
+                    ->pluck('user_id')
                     ->toArray();
                 if (!empty($roleStudentUserIds)) {
                     User::whereIn('id', $roleStudentUserIds)->delete();
