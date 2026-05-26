@@ -17,6 +17,23 @@ class LeavingCertificateController extends Controller
     public function index()
     {
         $classes = Classroom::orderBy('name')->get();
+
+        // If student_id is provided, directly generate the leaving certificate
+        $preselectedStudentId = request()->query('student_id');
+        if ($preselectedStudentId) {
+            $student = Student::with(['classroom', 'section', 'branch', 'parents'])->find($preselectedStudentId);
+            if ($student) {
+                // Simulate a generate request with default values
+                $request = new Request([
+                    'student_id' => $preselectedStudentId,
+                    'leaving_date' => now()->format('Y-m-d'),
+                    'reason' => 'Transfer',
+                    'conduct' => 'good',
+                ]);
+                return $this->generate($request);
+            }
+        }
+
         return view('admin.certificate-generate.leaving-index', compact('classes'));
     }
 

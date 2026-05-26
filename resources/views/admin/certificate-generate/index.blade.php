@@ -419,18 +419,6 @@
     let selectedClassId = '';
     let selectedStudentId = '';
 
-    // ---- Preselected student from URL param ----
-    const preselectedStudent = {{ $preselectedStudent ? json_encode([
-        'id' => $preselectedStudent->id,
-        'full_name' => $preselectedStudent->full_name,
-        'roll_number' => $preselectedStudent->roll_number,
-        'class_id' => $preselectedStudent->class_id,
-        'section_id' => $preselectedStudent->section_id,
-        'photo' => $preselectedStudent->photo,
-        'classroom' => $preselectedStudent->classroom ? ['name' => $preselectedStudent->classroom->name] : null,
-        'section' => $preselectedStudent->section ? ['name' => $preselectedStudent->section->name] : null,
-    ]) : 'null' }};
-
     // ---- Class Selection ----
     classGrid?.addEventListener('click', function(e) {
         const card = e.target.closest('.gen-class-card');
@@ -563,49 +551,8 @@
     });
 
     // ---- Auto-select preselected student from URL param ----
-    if (preselectedStudent) {
-        // Step 1: Select the student's class card
-        const targetClassId = String(preselectedStudent.class_id);
-        const classCard = classGrid?.querySelector(`.gen-class-card[data-class-id="${targetClassId}"]`);
-        if (classCard) {
-            classGrid.querySelectorAll('.gen-class-card').forEach(c => c.classList.remove('active'));
-            classCard.classList.add('active');
-            selectedClassId = targetClassId;
-            classInput.value = targetClassId;
-        }
-
-        // Step 2: Load students and auto-select (chained to avoid race conditions)
-        studentContainer.innerHTML = '<div class="gen-empty-state"><i class="fas fa-spinner fa-spin"></i><p>{{ __("app.loading") ?? "Loading..." }}</p></div>';
-
-        const params = new URLSearchParams();
-        if (selectedClassId) params.set('class_id', selectedClassId);
-
-        fetch('{{ route("admin.certificate-generate.students") }}?' + params)
-            .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
-            .then(data => {
-                allStudents = Array.isArray(data) ? data : [];
-                renderStudents(allStudents);
-
-                // Auto-select the preselected student
-                const studentId = preselectedStudent.id;
-                const studentData = allStudents.find(s => String(s.id) === String(studentId));
-                if (studentData) {
-                    const card = studentContainer.querySelector(`[data-student-id="${studentId}"]`);
-                    if (card) {
-                        selectStudent(studentData, card);
-
-                        // Auto-submit the form to directly generate the certificate
-                        setTimeout(function() {
-                            document.getElementById('certGenForm').submit();
-                        }, 300);
-                    }
-                }
-            })
-            .catch(err => {
-                console.error('Error loading students:', err);
-                studentContainer.innerHTML = '<div class="gen-empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading students</p></div>';
-            });
-    }
+    // NOTE: When student_id is in URL, the controller now directly generates the certificate.
+    // This page is only shown when no student_id is provided (manual selection mode).
 })();
 </script>
 @endpush

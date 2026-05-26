@@ -18,6 +18,11 @@ class IdCardGenerateController extends Controller
 
         if ($preselectedStudentId) {
             $preselectedStudent = Student::with(['classroom', 'section'])->find($preselectedStudentId);
+
+            // If a student is selected from the student list, directly generate the ID card
+            if ($preselectedStudent) {
+                return $this->generateForStudents([$preselectedStudentId]);
+            }
         }
 
         return view('admin.id-card-generate.index', compact('classes', 'preselectedStudent'));
@@ -59,6 +64,14 @@ class IdCardGenerateController extends Controller
             'student_ids.*' => 'exists:students,id',
         ]);
 
+        return $this->generateForStudents($r->student_ids);
+    }
+
+    /**
+     * Shared generation logic used by both the form submit and the direct student link.
+     */
+    private function generateForStudents(array $studentIds)
+    {
         // Fetch the current academic year from the system
         $currentAy = AcademicYear::where('is_current', true)->first();
 
@@ -67,7 +80,7 @@ class IdCardGenerateController extends Controller
             $currentAy = AcademicYear::orderBy('id', 'desc')->first();
         }
 
-        $students = Student::with(['classroom', 'section', 'branch', 'academicYear'])->whereIn('id', $r->student_ids)->get();
+        $students = Student::with(['classroom', 'section', 'branch', 'academicYear'])->whereIn('id', $studentIds)->get();
 
         // Determine the academic year short code for card numbers
         $ayShort = $currentAy ? $this->getAyShortCode($currentAy) : date('y') . (date('y') + 1);
@@ -111,7 +124,7 @@ class IdCardGenerateController extends Controller
         }
 
         // Refresh students to pick up newly created ID cards
-        $students = Student::with(['classroom', 'section', 'branch', 'academicYear', 'idCards', 'user'])->whereIn('id', $r->student_ids)->get();
+        $students = Student::with(['classroom', 'section', 'branch', 'academicYear', 'idCards', 'user'])->whereIn('id', $studentIds)->get();
 
         return view('admin.id-card-generate.print', compact('students', 'currentAy'));
     }

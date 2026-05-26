@@ -17,6 +17,18 @@ class TranscriptController extends Controller
     public function index()
     {
         $classes = Classroom::orderBy('name')->get();
+
+        // If student_id is provided, directly generate the transcript
+        $preselectedStudentId = request()->query('student_id');
+        if ($preselectedStudentId) {
+            $student = Student::with(['classroom', 'section', 'branch', 'parents'])->find($preselectedStudentId);
+            if ($student) {
+                // Simulate a generate request
+                $request = new Request(['student_id' => $preselectedStudentId]);
+                return $this->generate($request);
+            }
+        }
+
         return view('admin.certificate-generate.transcript-index', compact('classes'));
     }
 

@@ -341,16 +341,6 @@
     let currentClassId = '';
     let currentSectionId = '';
 
-    // ---- Preselected student from URL param ----
-    const preselectedStudent = {{ $preselectedStudent ? json_encode([
-        'id' => $preselectedStudent->id,
-        'full_name' => $preselectedStudent->full_name,
-        'roll_number' => $preselectedStudent->roll_number,
-        'class_id' => $preselectedStudent->class_id,
-        'section_id' => $preselectedStudent->section_id,
-        'photo' => $preselectedStudent->photo,
-    ]) : 'null' }};
-
     // ---- Class Chips ----
     classChips?.addEventListener('click', function(e) {
         const chip = e.target.closest('.idgen-chip');
@@ -555,97 +545,8 @@
     });
 
     // ---- Auto-select preselected student from URL param ----
-    if (preselectedStudent) {
-        // Step 1: Select the student's class chip
-        const targetClassId = String(preselectedStudent.class_id);
-        const classChip = classChips?.querySelector(`.idgen-chip[data-class-id="${targetClassId}"]`);
-        if (classChip) {
-            classChips.querySelectorAll('.idgen-chip').forEach(c => c.classList.remove('active'));
-            classChip.classList.add('active');
-            currentClassId = targetClassId;
-            classInput.value = targetClassId;
-        }
-
-        // Step 2: Load sections, then select section, then load students & auto-select
-        // Use a chained approach to avoid race conditions
-        const preselectedSectionId = preselectedStudent.section_id ? String(preselectedStudent.section_id) : '';
-
-        // Load sections first
-        if (currentClassId) {
-            fetch('{{ route("admin.id-card-generate.sections") }}?class_id=' + encodeURIComponent(currentClassId))
-                .then(r => r.json())
-                .then(data => {
-                    sectionChips.innerHTML = '<button type="button" class="idgen-chip active" data-section-id=""><i class="fas fa-th-large"></i> {{ __("app.all_sections") ?? "All" }}</button>';
-                    if (Array.isArray(data)) {
-                        data.forEach(s => {
-                            const chip = document.createElement('button');
-                            chip.type = 'button';
-                            chip.className = 'idgen-chip';
-                            chip.dataset.sectionId = s.id;
-                            chip.textContent = s.name;
-                            sectionChips.appendChild(chip);
-                        });
-                    }
-
-                    // Select the student's section chip
-                    if (preselectedSectionId) {
-                        const sectionChip = sectionChips?.querySelector(`.idgen-chip[data-section-id="${preselectedSectionId}"]`);
-                        if (sectionChip) {
-                            sectionChips.querySelectorAll('.idgen-chip').forEach(c => c.classList.remove('active'));
-                            sectionChip.classList.add('active');
-                            currentSectionId = preselectedSectionId;
-                            sectionInput.value = preselectedSectionId;
-                        }
-                    } else {
-                        currentSectionId = '';
-                        sectionInput.value = '';
-                    }
-
-                    // Now load students and auto-select the preselected one
-                    loadStudentsAndAutoSelect();
-                });
-        } else {
-            // No class filter - load all students
-            currentSectionId = '';
-            sectionInput.value = '';
-            loadStudentsAndAutoSelect();
-        }
-
-        function loadStudentsAndAutoSelect() {
-            studentGrid.innerHTML = '<div class="gen-empty-state"><i class="fas fa-spinner fa-spin"></i><p>{{ __("app.loading") ?? "Loading..." }}</p></div>';
-
-            const params = new URLSearchParams();
-            if (currentClassId) params.set('class_id', currentClassId);
-            if (currentSectionId) params.set('section_id', currentSectionId);
-
-            fetch('{{ route("admin.id-card-generate.students") }}?' + params)
-                .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
-                .then(data => {
-                    allStudents = Array.isArray(data) ? data : [];
-                    renderStudents(allStudents);
-
-                    // Auto-select the preselected student
-                    if (preselectedStudent) {
-                        const studentId = String(preselectedStudent.id);
-                        if (allStudents.some(s => String(s.id) === studentId)) {
-                            selectedIds.add(studentId);
-                            const row = studentGrid.querySelector(`[data-student-id="${studentId}"]`);
-                            if (row) row.classList.add('checked');
-                            updateSelection();
-
-                            // Auto-submit the form to directly generate the ID card
-                            setTimeout(function() {
-                                document.getElementById('idCardForm').submit();
-                            }, 300);
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.error('Error loading students:', err);
-                    studentGrid.innerHTML = '<div class="gen-empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading students</p></div>';
-                });
-        }
-    }
+    // NOTE: When student_id is in URL, the controller now directly generates the ID card.
+    // This page is only shown when no student_id is provided (manual selection mode).
 })();
 </script>
 @endpush

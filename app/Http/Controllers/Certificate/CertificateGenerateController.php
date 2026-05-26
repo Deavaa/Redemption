@@ -17,6 +17,12 @@ class CertificateGenerateController extends Controller
 
         if ($preselectedStudentId) {
             $preselectedStudent = Student::with(['classroom', 'section'])->find($preselectedStudentId);
+
+            // If a student is selected from the student list, directly generate the certificate
+            if ($preselectedStudent) {
+                $type = request()->query('type', 'academic');
+                return $this->generateForStudent($preselectedStudentId, $type);
+            }
         }
 
         return view('admin.certificate-generate.index', compact('classes', 'preselectedStudent'));
@@ -37,17 +43,25 @@ class CertificateGenerateController extends Controller
             'type' => 'required|in:academic,completion,transfer,character,foldable,transcript,leaving_certificate',
         ]);
 
-        $student = Student::with(['classroom', 'section', 'branch'])->findOrFail($r->student_id);
+        return $this->generateForStudent($r->student_id, $r->type);
+    }
+
+    /**
+     * Shared generation logic used by both the form submit and the direct student link.
+     */
+    private function generateForStudent($studentId, $type)
+    {
+        $student = Student::with(['classroom', 'section', 'branch'])->findOrFail($studentId);
         $marks = MarkEntry::with('subject')
             ->where('student_id', $student->id)
             ->orderBy('subject_id')
             ->get();
 
         // Delete existing certificate of same type for this student (regenerate)
-        Certificate::where('student_id', $student->id)->where('type', $r->type)->delete();
+        Certificate::where('student_id', $student->id)->where('type', $type)->delete();
 
         // Generate unique certificate number using max+1 to avoid duplicate constraint
-        $prefix = strtoupper(substr($r->type, 0, 3));
+        $prefix = strtoupper(substr($type, 0, 3));
         $year = date('Y');
         $lastCert = Certificate::where('certificate_number', 'LIKE', "{$prefix}-{$year}-%")
             ->orderByDesc('id')
@@ -69,25 +83,25 @@ class CertificateGenerateController extends Controller
         // Auto-create certificate record
         $cert = Certificate::create([
             'student_id' => $student->id,
-            'type' => $r->type,
+            'type' => $type,
             'certificate_number' => $certificateNumber,
             'issue_date' => now()->format('Y-m-d'),
-            'content' => $r->type . ' certificate for ' . $student->full_name,
-            'template' => $r->type,
+            'content' => $type . ' certificate for ' . $student->full_name,
+            'template' => $type,
         ]);
 
         // Delegate to dedicated pages for transcript and leaving certificate
         // (these have their own certificate generation logic)
-        if ($r->type === 'transcript') {
+        if ($type === 'transcript') {
             // Delete the certificate we just created — TranscriptController creates its own
             $cert->delete();
-            return redirect()->route('admin.transcript.index');
+            return redirect()->route('admin.transcript.index', ['student_id' => $studentId]);
         }
-        if ($r->type === 'leaving_certificate') {
-            return redirect()->route('admin.leaving-certificate.index');
+        if ($type === 'leaving_certificate') {
+            return redirect()->route('admin.leaving-certificate.index', ['student_id' => $studentId]);
         }
 
-        if ($r->type === 'foldable') {
+        if ($type === 'foldable') {
             return view('admin.certificate-generate.foldable', compact('student', 'marks', 'cert'));
         }
 
