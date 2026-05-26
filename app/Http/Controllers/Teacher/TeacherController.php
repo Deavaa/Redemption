@@ -15,7 +15,7 @@ class TeacherController extends Controller
     {
         $branchScope = request()->attributes->get('branch_scope');
         
-        $query = Teacher::orderBy('full_name');
+        $query = Teacher::with('branch')->orderBy('full_name');
         
         // Branch principal: only see teachers in their branch
         if ($branchScope) {
@@ -60,11 +60,11 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'full_name'     => 'required|string|max:255',
             'email'         => 'nullable|email|max:255|unique:teachers,email',
-            'phone'         => 'nullable|string|max:20',
+            'phone'         => 'required|string|max:20',
             'qualification' => 'nullable|string|max:255',
             'department'    => 'nullable|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
-            'branch_id'     => 'nullable|exists:branches,id',
+            'branch_id'     => 'required|exists:branches,id',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
             'status'        => 'required|in:active,inactive,on_leave',
@@ -123,7 +123,7 @@ class TeacherController extends Controller
 
     public function show($id)
     {
-        $data = Teacher::with('department')->findOrFail($id);
+        $data = Teacher::with('department', 'branch')->findOrFail($id);
         return view('admin.Teacher.show', compact('data'));
     }
 
@@ -153,11 +153,11 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'full_name'     => 'required|string|max:255',
             'email'         => 'nullable|email|max:255|unique:teachers,email,' . $id,
-            'phone'         => 'nullable|string|max:20',
+            'phone'         => 'required|string|max:20',
             'qualification' => 'nullable|string|max:255',
             'department'    => 'nullable|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
-            'branch_id'     => 'nullable|exists:branches,id',
+            'branch_id'     => 'required|exists:branches,id',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
             'status'        => 'required|in:active,inactive,on_leave',

@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
 
             // 2. System settings & web content
             \Database\Seeders\SettingsSeeder::class,
+
+            // 3. Calendar events: sync exams + Ethiopian holidays
+            \Database\Seeders\CalendarEventSeeder::class,
         ]);
     }
 }

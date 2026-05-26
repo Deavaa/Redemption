@@ -87,6 +87,18 @@
                             @endif
                         </div>
                     </div>
+                    <div class="modern-detail-row">
+                        <div class="modern-detail-label">
+                            <i class="fas fa-map-marker-alt"></i> Branch
+                        </div>
+                        <div class="modern-detail-value">
+                            @if($data->branch)
+                                <span style="background:#eff6ff;color:#2563eb;padding:0.15rem 0.6rem;border-radius:50px;font-size:0.78rem;font-weight:600;">{{ $data->branch->name }}</span>
+                            @else
+                                <span class="modern-muted">Not assigned</span>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
 

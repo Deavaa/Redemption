@@ -80,7 +80,7 @@
 
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="phone">
-                                Phone <small>(optional)</small>
+                                Phone <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-phone modern-input-icon"></i>
@@ -89,7 +89,8 @@
                                     id="phone"
                                     class="modern-input {{ $errors->has('phone') ? 'is-invalid' : '' }}"
                                     value="{{ old('phone', $data->phone) }}"
-                                    placeholder="e.g. +251 91 234 5678">
+                                    placeholder="e.g. +251 91 234 5678"
+                                    required>
                             </div>
                             @error('phone')
                                 <span class="modern-form-error">{{ $message }}</span>

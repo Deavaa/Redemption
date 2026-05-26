@@ -99,6 +99,7 @@
                             <th class="th-narrow">#</th>
                             <th>Teacher</th>
                             <th>Phone</th>
+                            <th>Branch</th>
                             <th>Department</th>
                             <th>Qualification</th>
                             <th class="th-center">Status</th>
@@ -129,6 +130,13 @@
                                     <div class="modern-cell-contact">
                                         <i class="fas fa-phone"></i> {{ $item->phone }}
                                     </div>
+                                @else
+                                    <span class="modern-cell-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($item->branch)
+                                    <span class="modern-badge modern-badge-branch">{{ $item->branch->name }}</span>
                                 @else
                                     <span class="modern-cell-muted">-</span>
                                 @endif
@@ -373,6 +381,7 @@
 .modern-badge-danger { background: #fef2f2; color: #dc2626; }
 .modern-badge-warning { background: #fffbeb; color: #d97706; }
 .modern-badge-department { background: #f3e8ff; color: #7c3aed; }
+.modern-badge-branch { background: #eff6ff; color: #2563eb; }
 
 /* Search Box */
 .modern-search-box {
