@@ -9,15 +9,18 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // 1. Core admin user + settings (must be first)
+            // 1. Core admin user (must be first)
             \Database\Seeders\DemoAdminSeeder::class,
+
+            // 2. System settings
             \Database\Seeders\SettingsSeeder::class,
 
-            // 2. Permissions & roles (must be before users who need roles)
+            // 3. Permissions & roles (must be before users who need roles)
             \Database\Seeders\PermissionSeeder::class,
 
-            // 3. Full school data (branches, AY, terms, teachers, subjects, classes,
-            //    sections, Tuludimtu 121 real students, Lebu sample students, assignments, events, grades)
+            // 4. School infrastructure (branches, AY, terms, classes, sections)
+            //    + 121 real Tuludimtu students + enrollments + grade scales
+            //    NO sample/mock data — add teachers, subjects, Lebu students via UI
             \Database\Seeders\SchoolDataSeeder::class,
         ]);
     }

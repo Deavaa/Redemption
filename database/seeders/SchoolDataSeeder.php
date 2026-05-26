@@ -7,13 +7,9 @@ use App\Models\Branch;
 use App\Models\AcademicYear;
 use App\Models\Term;
 use App\Models\User;
-use App\Models\Teacher;
-use App\Models\Subject;
 use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\Student;
-use App\Models\TeacherAssignment;
-use App\Models\CalendarEvent;
 use App\Models\GradeScale;
 use App\Models\Role;
 use App\Models\StudentEnrollment;
@@ -22,12 +18,24 @@ use Illuminate\Support\Facades\DB;
 class SchoolDataSeeder extends Seeder
 {
     /**
-     * ONE unified seeder. ALL student data is in THIS file.
-     * No other student seeders required.
+     * Seeds ONLY the essential school infrastructure and real student data.
+     * NO sample/mock users, teachers, subjects, or fake students.
      *
-     * Campuses:
-     *   - Tuludimtu Campus: Primary School (G1-8) - 121 real students, Sections A & B
-     *   - Lebu Campus: Secondary School (G9-12) - sample students, Sections A-D
+     * What this seeder creates:
+     *   - Branches (Lebu + Tuludimtu)
+     *   - Academic Year 2025/2026 + 3 Terms
+     *   - Classes G1-12 + Sections (Tuludimtu A-B, Lebu A-D)
+     *   - Grade Scales (system defaults)
+     *   - 121 Real Tuludimtu students (G1-8)
+     *   - Student Enrollments
+     *   - Admin role assignment
+     *
+     * What this seeder does NOT create (use the UI to add):
+     *   - Teachers, principal, registrar, finance users
+     *   - Subjects
+     *   - Teacher assignments / homeroom assignments
+     *   - Calendar events
+     *   - Lebu students (G9-12)
      */
     public function run(): void
     {
@@ -89,113 +97,17 @@ class SchoolDataSeeder extends Seeder
         $this->command->info('  Terms: 3');
 
         // ======================================================================
-        // 4. USERS
+        // 4. ADMIN ROLE ASSIGNMENT
         // ======================================================================
-        $principalUser = User::updateOrCreate(
-            ['email' => 'principal@school.com'],
-            [
-                'name' => 'Abebe Kebede', 'password' => bcrypt('123456'),
-                'role' => 'branch_principal', 'branch_id' => $lebuBranch->id,
-                'is_active' => true, 'email_verified_at' => now(),
-            ]
-        );
-
-        $teacherData = [
-            ['name' => 'Dawit Haile', 'email' => 'dawit@school.com'],
-            ['name' => 'Tigist Mengistu', 'email' => 'tigist@school.com'],
-            ['name' => 'Yonas Alemu', 'email' => 'yonas@school.com'],
-            ['name' => 'Sara Tadesse', 'email' => 'sara@school.com'],
-            ['name' => 'Mulugeta Fikre', 'email' => 'mulugeta@school.com'],
-            ['name' => 'Helen Girma', 'email' => 'helen@school.com'],
-        ];
-        $teacherUsers = [];
-        foreach ($teacherData as $td) {
-            $teacherUsers[] = User::updateOrCreate(
-                ['email' => $td['email']],
-                ['name' => $td['name'], 'password' => bcrypt('123456'), 'role' => 'teacher', 'is_active' => true, 'email_verified_at' => now()]
-            );
-        }
-
-        User::updateOrCreate(
-            ['email' => 'registrar@school.com'],
-            ['name' => 'Kidist Worku', 'password' => bcrypt('123456'), 'role' => 'registrar', 'branch_id' => $lebuBranch->id, 'is_active' => true, 'email_verified_at' => now()]
-        );
-        User::updateOrCreate(
-            ['email' => 'finance@school.com'],
-            ['name' => 'Bereket Tadesse', 'password' => bcrypt('123456'), 'role' => 'finance', 'branch_id' => $lebuBranch->id, 'is_active' => true, 'email_verified_at' => now()]
-        );
-
         $adminUser = User::where('email', 'admin@school.com')->first();
         $adminRole = Role::where('name', 'admin')->first();
         if ($adminUser && $adminRole && !$adminUser->roles()->where('role_id', $adminRole->id)->exists()) {
             $adminUser->roles()->attach($adminRole->id);
         }
-        $bpRole = Role::where('name', 'branch_principal')->first();
-        if ($principalUser && $bpRole && !$principalUser->roles()->where('role_id', $bpRole->id)->exists()) {
-            $principalUser->roles()->attach($bpRole->id);
-        }
-        $teacherRole = Role::where('name', 'teacher')->first();
-        foreach ($teacherUsers as $tu) {
-            if ($teacherRole && !$tu->roles()->where('role_id', $teacherRole->id)->exists()) {
-                $tu->roles()->attach($teacherRole->id);
-            }
-        }
-        $this->command->info('  Users: admin + principal + 6 teachers + registrar + finance');
+        $this->command->info('  Admin role assigned');
 
         // ======================================================================
-        // 5. TEACHERS
-        // ======================================================================
-        $principalTeacher = Teacher::updateOrCreate(
-            ['user_id' => $principalUser->id],
-            ['full_name' => 'Abebe Kebede', 'email' => 'principal@school.com', 'phone' => '0911000001', 'qualification' => 'MEd', 'department' => 'Administration', 'hire_date' => '2010-09-01', 'salary' => 25000.00, 'status' => 'active']
-        );
-
-        $teacherRecords = [];
-        $teacherMeta = [
-            ['qual' => 'BEd Mathematics', 'dept' => 'Mathematics', 'phone' => '0912000001'],
-            ['qual' => 'MSc Physics', 'dept' => 'Science', 'phone' => '0912000002'],
-            ['qual' => 'BA English', 'dept' => 'Languages', 'phone' => '0912000003'],
-            ['qual' => 'BSc Biology', 'dept' => 'Science', 'phone' => '0912000004'],
-            ['qual' => 'MEd Social Studies', 'dept' => 'Social Studies', 'phone' => '0912000005'],
-            ['qual' => 'BEd Amharic', 'dept' => 'Languages', 'phone' => '0912000006'],
-        ];
-        foreach ($teacherUsers as $i => $tu) {
-            $teacherRecords[] = Teacher::updateOrCreate(
-                ['user_id' => $tu->id],
-                ['full_name' => $tu->name, 'email' => $tu->email, 'phone' => $teacherMeta[$i]['phone'], 'qualification' => $teacherMeta[$i]['qual'], 'department' => $teacherMeta[$i]['dept'], 'hire_date' => '2018-09-01', 'salary' => 15000.00, 'status' => 'active']
-            );
-        }
-        $lebuBranch->update(['principal_id' => $principalTeacher->id]);
-        $this->command->info('  Teachers: 7');
-
-        // ======================================================================
-        // 6. SUBJECTS
-        // ======================================================================
-        $subjectsData = [
-            ['name' => 'Mathematics', 'code' => 'MATH', 'type' => 'compulsory', 'priority' => 1],
-            ['name' => 'English', 'code' => 'ENG', 'type' => 'compulsory', 'priority' => 2],
-            ['name' => 'Amharic', 'code' => 'AMH', 'type' => 'compulsory', 'priority' => 3],
-            ['name' => 'Physics', 'code' => 'PHY', 'type' => 'compulsory', 'priority' => 4],
-            ['name' => 'Chemistry', 'code' => 'CHEM', 'type' => 'compulsory', 'priority' => 5],
-            ['name' => 'Biology', 'code' => 'BIO', 'type' => 'compulsory', 'priority' => 6],
-            ['name' => 'Social Studies', 'code' => 'SOC', 'type' => 'compulsory', 'priority' => 7],
-            ['name' => 'Civics', 'code' => 'CIV', 'type' => 'compulsory', 'priority' => 8],
-            ['name' => 'ICT', 'code' => 'ICT', 'type' => 'compulsory', 'priority' => 9],
-            ['name' => 'Physical Education', 'code' => 'PE', 'type' => 'elective', 'priority' => 10],
-            ['name' => 'Art', 'code' => 'ART', 'type' => 'elective', 'priority' => 11],
-            ['name' => 'Music', 'code' => 'MUS', 'type' => 'elective', 'priority' => 12],
-        ];
-        $subjects = [];
-        foreach ($subjectsData as $sd) {
-            $subjects[$sd['code']] = Subject::updateOrCreate(
-                ['code' => $sd['code']],
-                ['name' => $sd['name'], 'type' => $sd['type'], 'priority' => $sd['priority'], 'is_active' => true]
-            );
-        }
-        $this->command->info('  Subjects: 12');
-
-        // ======================================================================
-        // 7. CLASSES
+        // 5. CLASSES
         //    Tuludimtu: G1-8 (Sections A & B)
         //    Lebu: G9-12 (Sections A-D)
         // ======================================================================
@@ -217,7 +129,7 @@ class SchoolDataSeeder extends Seeder
         $this->command->info('  Classes: 12 (Tuludimtu G1-8 + Lebu G9-12)');
 
         // ======================================================================
-        // 8. SECTIONS
+        // 6. SECTIONS
         //    Tuludimtu: Sections A & B per grade (16 sections)
         //    Lebu: Sections A-D per grade (16 sections)
         // ======================================================================
@@ -244,36 +156,11 @@ class SchoolDataSeeder extends Seeder
                 );
             }
         }
-
-        $homeroomMap = [
-            '1_A' => $teacherRecords[0],
-            '2_A' => $teacherRecords[1],
-            '3_A' => $teacherRecords[2],
-            '4_A' => $teacherRecords[3],
-            '5_A' => $teacherRecords[4],
-            '6_A' => $teacherRecords[5],
-            '9_A' => $teacherRecords[0],
-            '10_A' => $teacherRecords[1],
-            '11_A' => $teacherRecords[2],
-            '12_A' => $teacherRecords[3],
-        ];
-        foreach ($homeroomMap as $secKey => $teacher) {
-            if (isset($allSections[$secKey])) {
-                $allSections[$secKey]->update(['teacher_id' => $teacher->id]);
-            }
-            $gradeNum = explode('_', $secKey)[0];
-            $classMap = ($gradeNum <= 8) ? $tuludimtuClasses : $lebuClasses;
-            if (isset($classMap[$gradeNum])) {
-                $classMap[$gradeNum]->update(['teacher_id' => $teacher->id]);
-            }
-        }
         $this->command->info('  Sections: 32 (Tuludimtu: 16xA-B, Lebu: 16xA-D)');
 
         // ======================================================================
-        // 9. STUDENTS - Clean up ALL old students first, then create fresh
+        // 7. STUDENTS - Clean up ALL old students first, then create fresh
         // ======================================================================
-        // Delete ALL existing students and their user accounts to prevent
-        // any duplicate roll_number or admission_number conflicts.
         $this->command->info('  Cleaning up old student data...');
         $oldStudentCount = Student::count();
         if ($oldStudentCount > 0) {
@@ -303,7 +190,7 @@ class SchoolDataSeeder extends Seeder
             $this->command->info("  Deleted {$oldStudentCount} old students");
         }
 
-        // --- 9a. TULUDIMTU STUDENTS (121 real students) ---
+        // --- 7a. TULUDIMTU STUDENTS (121 real students) ---
         $tuludimtuStudentData = [
             ['Helana Tesfaye Gebrekidan', 'Female', '2018-08-06', '0911302896'],
             ['Yohana Dawit Ayalew', 'Female', '2011-02-23', '0911998833'],
@@ -433,88 +320,14 @@ class SchoolDataSeeder extends Seeder
         );
         $this->command->info("  Tuludimtu students: {$tuludimtuCount} (G1-8)");
 
-        // --- 9b. LEBU STUDENTS (sample data for G9-12) ---
-        $lebuCount = $this->seedLebuStudents(
-            $lebuBranch, $lebuClasses, $allSections, $ay
-        );
-        $this->command->info("  Lebu students: {$lebuCount} (G9-12, sample)");
-
         // ======================================================================
-        // 10. TEACHER ASSIGNMENTS
-        // ======================================================================
-        $assignmentMap = [
-            [0, 5, 'MATH'], [0, 6, 'MATH'], [0, 7, 'MATH'], [0, 8, 'MATH'],
-            [0, 9, 'MATH'], [0, 10, 'MATH'], [0, 11, 'MATH'], [0, 12, 'MATH'],
-            [1, 7, 'PHY'], [1, 8, 'PHY'], [1, 9, 'PHY'], [1, 10, 'PHY'],
-            [1, 7, 'CHEM'], [1, 8, 'CHEM'], [1, 9, 'CHEM'], [1, 10, 'CHEM'],
-            [2, 5, 'ENG'], [2, 6, 'ENG'], [2, 7, 'ENG'], [2, 8, 'ENG'],
-            [2, 9, 'ENG'], [2, 10, 'ENG'], [2, 11, 'ENG'], [2, 12, 'ENG'],
-            [3, 7, 'BIO'], [3, 8, 'BIO'], [3, 5, 'SOC'], [3, 6, 'SOC'],
-            [3, 11, 'BIO'], [3, 12, 'BIO'],
-            [4, 5, 'AMH'], [4, 6, 'AMH'], [4, 7, 'AMH'], [4, 8, 'AMH'],
-            [4, 5, 'CIV'], [4, 6, 'CIV'],
-            [4, 11, 'CHEM'], [4, 12, 'CHEM'],
-            [5, 5, 'ICT'], [5, 6, 'ICT'], [5, 7, 'ICT'], [5, 8, 'ICT'],
-            [5, 5, 'PE'], [5, 6, 'PE'],
-            [5, 9, 'ICT'], [5, 10, 'ICT'],
-        ];
-
-        $assignCount = 0;
-        $allClasses = $tuludimtuClasses + $lebuClasses;
-        foreach ($assignmentMap as $am) {
-            $teacher = $teacherRecords[$am[0]];
-            $gradeNum = $am[1];
-            $subject = $subjects[$am[2]];
-            if (!isset($allClasses[$gradeNum]) || !$subject) continue;
-
-            $secLetters = ($gradeNum <= 8) ? $tuludimtuSectionLetters : $lebuSectionLetters;
-            foreach ($secLetters as $letter) {
-                $secKey = $gradeNum . '_' . $letter;
-                if (!isset($allSections[$secKey])) continue;
-                TeacherAssignment::updateOrCreate(
-                    ['teacher_id' => $teacher->id, 'class_id' => $allClasses[$gradeNum]->id, 'section_id' => $allSections[$secKey]->id, 'subject_id' => $subject->id, 'academic_year_id' => $ay->id],
-                    []
-                );
-                $assignCount++;
-            }
-
-            TeacherAssignment::updateOrCreate(
-                ['teacher_id' => $teacher->id, 'class_id' => $allClasses[$gradeNum]->id, 'section_id' => null, 'subject_id' => $subject->id, 'academic_year_id' => $ay->id],
-                []
-            );
-            $assignCount++;
-        }
-        $this->command->info("  Teacher Assignments: {$assignCount}");
-
-        // ======================================================================
-        // 11. CALENDAR EVENTS
-        // ======================================================================
-        $events = [
-            ['title' => 'School Reopening', 'category' => 'event', 'start' => '2025-09-01', 'end' => '2025-09-01', 'announcement' => true, 'color' => '#10b981'],
-            ['title' => 'Mid-Term Exam', 'category' => 'exam', 'start' => '2025-11-10', 'end' => '2025-11-21', 'announcement' => true, 'color' => '#ef4444'],
-            ['title' => 'Parent-Teacher Conference', 'category' => 'meeting', 'start' => '2025-12-05', 'end' => '2025-12-05', 'announcement' => true, 'color' => '#f59e0b'],
-            ['title' => 'Term 1 End', 'category' => 'event', 'start' => '2025-12-20', 'end' => '2025-12-20', 'announcement' => false, 'color' => '#6366f1'],
-            ['title' => 'Christmas Break', 'category' => 'holiday', 'start' => '2025-12-21', 'end' => '2026-01-14', 'announcement' => true, 'color' => '#10b981'],
-            ['title' => 'Term 2 Begins', 'category' => 'event', 'start' => '2026-01-15', 'end' => '2026-01-15', 'announcement' => false, 'color' => '#6366f1'],
-            ['title' => 'Science Fair', 'category' => 'event', 'start' => '2026-02-20', 'end' => '2026-02-20', 'announcement' => true, 'color' => '#8b5cf6'],
-            ['title' => 'Sports Day', 'category' => 'event', 'start' => '2026-03-15', 'end' => '2026-03-15', 'announcement' => true, 'color' => '#f59e0b'],
-        ];
-        foreach ($events as $ev) {
-            CalendarEvent::updateOrCreate(
-                ['title' => $ev['title'], 'start_date' => $ev['start']],
-                ['category' => $ev['category'], 'color' => $ev['color'], 'end_date' => $ev['end'], 'is_all_day' => true, 'is_announcement' => $ev['announcement'], 'academic_year_id' => $ay->id, 'branch_id' => $lebuBranch->id, 'created_by' => $adminUser->id ?? 1]
-            );
-        }
-        $this->command->info('  Calendar Events: 8');
-
-        // ======================================================================
-        // 12. GRADE SCALES
+        // 8. GRADE SCALES (system defaults)
         // ======================================================================
         GradeScale::seedDefaults();
-        $this->command->info('  Grade Scales: 11');
+        $this->command->info('  Grade Scales: seeded');
 
         // ======================================================================
-        // 13. STUDENT ENROLLMENTS - Register all students for current AY
+        // 9. STUDENT ENROLLMENTS - Register all students for current AY
         // ======================================================================
         $this->command->info('  Creating student enrollments...');
         $enrollmentCount = 0;
@@ -548,16 +361,10 @@ class SchoolDataSeeder extends Seeder
         $this->command->newLine();
         $this->command->table(['Account', 'Email', 'Password', 'Role'], [
             ['Admin', 'admin@school.com', '123456', 'admin'],
-            ['Principal', 'principal@school.com', '123456', 'branch_principal'],
-            ['Teacher (Dawit)', 'dawit@school.com', '123456', 'teacher'],
-            ['Teacher (Tigist)', 'tigist@school.com', '123456', 'teacher'],
-            ['Teacher (Yonas)', 'yonas@school.com', '123456', 'teacher'],
-            ['Teacher (Sara)', 'sara@school.com', '123456', 'teacher'],
-            ['Teacher (Mulugeta)', 'mulugeta@school.com', '123456', 'teacher'],
-            ['Teacher (Helen)', 'helen@school.com', '123456', 'teacher'],
-            ['Registrar', 'registrar@school.com', '123456', 'registrar'],
-            ['Finance', 'finance@school.com', '123456', 'finance'],
         ]);
+        $this->command->newLine();
+        $this->command->warn('NOTE: No sample teachers, subjects, or Lebu students were seeded.');
+        $this->command->warn('Use the admin UI to add teachers, subjects, and enroll Lebu students.');
     }
 
     // ======================================================================
@@ -639,108 +446,6 @@ class SchoolDataSeeder extends Seeder
             } catch (\Exception $e) {
                 $skipped++;
                 continue;
-            }
-        }
-
-        if ($skipped > 0) { $this->command->warn("    Skipped: {$skipped}"); }
-        return $created;
-    }
-
-    // ======================================================================
-    // LEBU STUDENT SEEDING (sample data, G9-12, Sections A-D)
-    // ======================================================================
-    private function seedLebuStudents(
-        Branch $branch,
-        array $lebuClasses,
-        array &$allSections,
-        AcademicYear $ay
-    ): int {
-        $this->command->info('  Seeding Lebu students (sample G9-12)...');
-        $maleFirst = ['Abel','Abenezer','Amanuel','Bereket','Biruk','Dagim','Dawit','Elias','Ermias','Esrom','Eyuel','Henok','Kaleb','Leul','Michael','Mikiyas','Nahom','Natnael','Samuel','Yonas'];
-        $femaleFirst = ['Abigiya','Arsema','Bezawit','Blen','Daniya','Eden','Efrata','Eldana','Eliana','Hana','Helen','Hilina','Kidist','Liya','Mahlet','Meklit','Nardos','Rahel','Sara','Tsion'];
-        $lastNames = ['Abebe','Alemu','Amare','Asrat','Bekele','Birhanu','Dagne','Debella','Eshetu','Fikadu','Gebre','Girma','Haile','Kassa','Kebede','Mekonnen','Mulugeta','Tadesse','Tesfaye','Worku'];
-
-        $studentRole = Role::where('name', 'student')->first();
-        $admissionNum = 5001;
-        $userCounter = 0;
-        $created = 0;
-        $skipped = 0;
-        $studentsPerSection = 10;
-
-        $gradeOrder = [9, 10, 11, 12];
-        $sectionLetters = ['A', 'B', 'C', 'D'];
-        $sectionCounters = [];
-        foreach ($gradeOrder as $g) {
-            foreach ($sectionLetters as $l) {
-                $sectionCounters[$g][$l] = 0;
-            }
-        }
-
-        foreach ($gradeOrder as $gradeNum) {
-            $class = $lebuClasses[$gradeNum] ?? null;
-            if (!$class) continue;
-
-            foreach ($sectionLetters as $letter) {
-                $sectionKey = $gradeNum . '_' . $letter;
-                $section = $allSections[$sectionKey] ?? null;
-                if (!$section) continue;
-
-                for ($i = 1; $i <= $studentsPerSection; $i++) {
-                    $isMale = ($i % 2 === 1);
-                    $firstNames = $isMale ? $maleFirst : $femaleFirst;
-                    $firstName = $firstNames[array_rand($firstNames)];
-                    $lastName1 = $lastNames[array_rand($lastNames)];
-                    $lastName2 = $lastNames[array_rand($lastNames)];
-                    while ($lastName2 === $lastName1) { $lastName2 = $lastNames[array_rand($lastNames)]; }
-                    $fullName = $firstName . ' ' . $lastName1 . ' ' . $lastName2;
-
-                    $birthYear = 2025 - ($gradeNum + 5);
-                    $birthMonth = str_pad(random_int(1, 12), 2, '0', STR_PAD_LEFT);
-                    $maxDay = ($birthMonth == '02') ? 28 : 30;
-                    $birthDay = str_pad(random_int(1, $maxDay), 2, '0', STR_PAD_LEFT);
-                    $dob = $birthYear . '-' . $birthMonth . '-' . $birthDay;
-
-                    $sectionCounters[$gradeNum][$letter]++;
-                    $rollNumber = 'G' . $gradeNum . $letter . '-' . str_pad($sectionCounters[$gradeNum][$letter], 2, '0', STR_PAD_LEFT);
-                    $admission = 'SOR/2025/' . str_pad($admissionNum, 4, '0', STR_PAD_LEFT);
-                    $admissionNum++;
-                    $genderLower = $isMale ? 'male' : 'female';
-
-                    try {
-                        $idNumber = 'STU-LEB-' . str_pad($userCounter + 1, 4, '0', STR_PAD_LEFT);
-                        $email = $idNumber . '@redemption.edu';
-                        $defaultPassword = str_replace('-', '', $dob);
-
-                        $user = User::updateOrCreate(
-                            ['email' => $email],
-                            ['name' => $fullName, 'id_number' => $idNumber, 'password' => bcrypt($defaultPassword), 'role' => 'student', 'gender' => $genderLower, 'branch_id' => $branch->id, 'is_active' => true]
-                        );
-                        if (!$user->email_verified_at) { $user->email_verified_at = now(); $user->save(); }
-                        $userCounter++;
-
-                        if ($studentRole && !$user->roles()->where('role_id', $studentRole->id)->exists()) {
-                            $user->roles()->attach($studentRole->id);
-                        }
-
-                        Student::updateOrCreate(
-                            ['roll_number' => $rollNumber],
-                            [
-                                'user_id' => $user->id, 'full_name' => $fullName,
-                                'branch_id' => $branch->id, 'class_id' => $class->id,
-                                'section_id' => $section->id, 'academic_year_id' => $ay->id,
-                                'gender' => $genderLower,
-                                'admission_number' => $admission, 'admission_date' => '2025-09-01',
-                                'date_of_birth' => $dob, 'guardian_name' => $lastName1 . ' ' . $lastName2,
-                                'guardian_phone' => null, 'status' => 'active',
-                            ]
-                        );
-
-                        $created++;
-                    } catch (\Exception $e) {
-                        $skipped++;
-                        continue;
-                    }
-                }
             }
         }
 
