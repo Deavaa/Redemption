@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
+use App\Models\User;
 use App\Models\Department;
 use App\Models\Branch;
 use App\Services\TeacherIdService;
+use App\Services\EmployeeIdService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class TeacherController extends Controller
@@ -110,6 +113,47 @@ class TeacherController extends Controller
         }
 
         try {
+            // ── Create corresponding User account with role=teacher ──
+            $employeeIdService = new EmployeeIdService();
+            $defaultPassword = $employeeIdService->getDefaultPassword();
+
+            // Generate a unique email if not provided (required for users table)
+            $teacherEmail = $validated['email'] ?? null;
+            if (empty($teacherEmail)) {
+                // Generate a placeholder email based on name and timestamp
+                $slug = \Illuminate\Support\Str::slug($validated['full_name'], '');
+                $teacherEmail = $slug . '_' . time() . '@school.local';
+            }
+
+            // Generate employee ID for the user account
+            $employeeId = $employeeIdService->generate($validated['branch_id'] ?? null);
+
+            $user = User::create([
+                'name'         => $validated['full_name'],
+                'email'        => $teacherEmail,
+                'password'     => Hash::make($defaultPassword),
+                'role'         => 'teacher',
+                'branch_id'    => $validated['branch_id'] ?? null,
+                'phone'        => $validated['phone'] ?? null,
+                'gender'       => $validated['gender'] ?? null,
+                'qualification'=> $validated['qualification'] ?? null,
+                'address'      => $validated['address'] ?? null,
+                'employee_id'  => $employeeId,
+                'is_active'    => $validated['status'] === 'active',
+            ]);
+
+            // Assign RBAC role if it exists
+            try {
+                $rbacRole = \App\Models\Role::where('name', 'teacher')->first();
+                if ($rbacRole) {
+                    $user->roles()->sync([$rbacRole->id]);
+                }
+            } catch (\Throwable $e) {}
+
+            // Link the user account to the teacher record
+            $validated['user_id'] = $user->id;
+            $validated['email'] = $teacherEmail;
+
             $t = Teacher::create($validated);
 
             // Auto-generate teacher ID number if not set
@@ -122,7 +166,10 @@ class TeacherController extends Controller
             // Debug: log what was actually saved
             Log::info('Teacher STORE - After create', [
                 'id' => $t->id,
+                'user_id' => $user->id,
                 'teacher_id_number' => $t->teacher_id_number,
+                'employee_id' => $employeeId,
+                'default_password' => $defaultPassword,
                 'status_in_validated' => $validated['status'],
                 'status_from_model' => $t->status,
                 'status_from_db' => Teacher::find($t->id)?->status,
@@ -131,7 +178,8 @@ class TeacherController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['id' => $t->id, 'full_name' => $t->full_name, 'email' => $t->email ?? '', 'department' => $t->department ?? '']);
             }
-            return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully.');
+            return redirect()->route('admin.teachers.index')
+                ->with('success', "Teacher created successfully. Employee ID: {$employeeId}. Default password: {$defaultPassword}");
         } catch (\Exception $e) {
             Log::error('Teacher STORE - Exception', ['message' => $e->getMessage()]);
             if ($request->ajax() || $request->wantsJson()) {
@@ -213,6 +261,66 @@ class TeacherController extends Controller
 
         $item->update($validated);
 
+        // ── Sync the linked User account ──
+        if ($item->user_id) {
+            $linkedUser = User::find($item->user_id);
+            if ($linkedUser) {
+                $userData = [
+                    'name'         => $validated['full_name'],
+                    'phone'        => $validated['phone'] ?? null,
+                    'gender'       => $validated['gender'] ?? null,
+                    'qualification'=> $validated['qualification'] ?? null,
+                    'address'      => $validated['address'] ?? null,
+                    'branch_id'    => $validated['branch_id'] ?? null,
+                    'is_active'    => ($validated['status'] ?? 'active') === 'active',
+                ];
+                // Only update email if a real one was provided
+                if (!empty($validated['email']) && !str_ends_with($validated['email'], '@school.local')) {
+                    $userData['email'] = $validated['email'];
+                }
+                $linkedUser->update($userData);
+            }
+        } else {
+            // Teacher has no linked user account — create one now (backfill)
+            try {
+                $employeeIdService = new EmployeeIdService();
+                $defaultPassword = $employeeIdService->getDefaultPassword();
+                $teacherEmail = $validated['email'] ?? null;
+                if (empty($teacherEmail)) {
+                    $slug = \Illuminate\Support\Str::slug($validated['full_name'], '');
+                    $teacherEmail = $slug . '_' . time() . '@school.local';
+                }
+                $employeeId = $employeeIdService->generate($validated['branch_id'] ?? null);
+
+                $newUser = User::create([
+                    'name'         => $validated['full_name'],
+                    'email'        => $teacherEmail,
+                    'password'     => Hash::make($defaultPassword),
+                    'role'         => 'teacher',
+                    'branch_id'    => $validated['branch_id'] ?? null,
+                    'phone'        => $validated['phone'] ?? null,
+                    'gender'       => $validated['gender'] ?? null,
+                    'qualification'=> $validated['qualification'] ?? null,
+                    'address'      => $validated['address'] ?? null,
+                    'employee_id'  => $employeeId,
+                    'is_active'    => ($validated['status'] ?? 'active') === 'active',
+                ]);
+
+                // Assign RBAC role
+                try {
+                    $rbacRole = \App\Models\Role::where('name', 'teacher')->first();
+                    if ($rbacRole) {
+                        $newUser->roles()->sync([$rbacRole->id]);
+                    }
+                } catch (\Throwable $e) {}
+
+                // Link user to teacher
+                $item->update(['user_id' => $newUser->id, 'email' => $teacherEmail]);
+            } catch (\Throwable $e) {
+                Log::warning('Teacher UPDATE - Failed to create linked user', ['message' => $e->getMessage()]);
+            }
+        }
+
         // Debug: log what was actually saved
         Log::info('Teacher UPDATE - After update', [
             'id' => $id,
@@ -227,7 +335,17 @@ class TeacherController extends Controller
 
     public function destroy($id)
     {
-        Teacher::destroy($id);
+        $teacher = Teacher::find($id);
+        if ($teacher) {
+            // Also delete the linked user account (if it was auto-created for this teacher)
+            if ($teacher->user_id) {
+                $user = User::find($teacher->user_id);
+                if ($user && $user->role === 'teacher') {
+                    $user->delete();
+                }
+            }
+            $teacher->delete();
+        }
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher deleted successfully.');
     }
 
