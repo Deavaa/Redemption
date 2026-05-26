@@ -122,12 +122,12 @@
                             <label class="modern-form-label">
                                 Active
                             </label>
-                            <div style="display:flex;align-items:center;gap:.65rem;padding-top:.5rem">
-                                <label style="position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0">
-                                    <input type="checkbox" name="is_active" value="1" checked style="opacity:0;width:0;height:0">
-                                    <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#d1d5db;border-radius:50px;transition:.3s"></span>
+                            <div class="modern-switch-wrapper">
+                                <label class="modern-switch">
+                                    <input type="checkbox" name="is_active" id="isActiveSwitch" value="1" checked>
+                                    <span class="modern-switch-slider"></span>
                                 </label>
-                                <span style="font-size:.85rem;color:#374151">Subject is active and visible</span>
+                                <span class="modern-switch-label" id="statusLabel">Active</span>
                             </div>
                         </div>
 
@@ -394,6 +394,16 @@
     background: #f3f4f6;
 }
 
+/* Custom Switch */
+.modern-switch-wrapper { display: flex; align-items: center; gap: 0.75rem; padding-top: 0.3rem; }
+.modern-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+.modern-switch input { opacity: 0; width: 0; height: 0; }
+.modern-switch-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #d1d5db; border-radius: 26px; transition: 0.3s; }
+.modern-switch-slider::before { position: absolute; content: ''; height: 20px; width: 20px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+.modern-switch input:checked + .modern-switch-slider { background: linear-gradient(135deg, #10b981, #059669); }
+.modern-switch input:checked + .modern-switch-slider::before { transform: translateX(22px); }
+.modern-switch-label { font-size: 0.88rem; font-weight: 600; color: #374151; }
+
 /* Responsive */
 @media (max-width: 768px) {
     .modern-page-header { flex-direction: column; align-items: stretch; }
@@ -403,7 +413,25 @@
     .modern-form-section-header { padding: 1.25rem 1.25rem 0.75rem; }
     .modern-form-actions { padding: 1rem 1.25rem; flex-direction: column; }
     .btn-modern { justify-content: center; width: 100%; }
+    .modern-switch-wrapper { padding-top: 0.5rem; }
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var toggleSwitch = document.getElementById('isActiveSwitch');
+    var statusLabel = document.getElementById('statusLabel');
+    if (toggleSwitch && statusLabel) {
+        function updateLabel() {
+            statusLabel.textContent = toggleSwitch.checked ? 'Active' : 'Inactive';
+            statusLabel.style.color = toggleSwitch.checked ? '#059669' : '#dc2626';
+        }
+        toggleSwitch.addEventListener('change', updateLabel);
+        updateLabel();
+    }
+});
+</script>
 @endpush
 @endsection
