@@ -112,9 +112,15 @@
                             </td>
                             <td>
                                 <div class="modern-cell-text">{{ $item->start_date ? $item->start_date->format('M d, Y') : '-' }}</div>
+                                @if($item->start_date)
+                                    <div class="eth-date-hint">{{ \App\Helpers\EthiopianDate::format($item->start_date->format('Y-m-d')) }}</div>
+                                @endif
                             </td>
                             <td>
                                 <div class="modern-cell-text">{{ $item->end_date ? $item->end_date->format('M d, Y') : '-' }}</div>
+                                @if($item->end_date)
+                                    <div class="eth-date-hint">{{ \App\Helpers\EthiopianDate::format($item->end_date->format('Y-m-d')) }}</div>
+                                @endif
                             </td>
                             <td class="td-center">
                                 @if($item->is_current)
@@ -401,6 +407,13 @@
 
 .modern-cell-text {
     color: #4b5563;
+}
+
+.eth-date-hint {
+    font-size: 0.7rem;
+    color: #b45309;
+    font-weight: 500;
+    margin-top: 2px;
 }
 
 .modern-cell-muted { color: #d1d5db; }

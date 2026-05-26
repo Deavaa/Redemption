@@ -39,6 +39,7 @@
                         @endif
                         @if($item->start_date && $item->end_date)
                             <span class="modern-badge modern-badge-info"><i class="fas fa-calendar"></i> {{ $item->start_date->format('M Y') }} - {{ $item->end_date->format('M Y') }}</span>
+                            <span class="modern-badge" style="background:#fef3c7;color:#92400e;"><i class="fas fa-calendar-alt"></i> {{ \App\Helpers\EthiopianDate::format($item->start_date->format('Y-m-d')) }} - {{ \App\Helpers\EthiopianDate::format($item->end_date->format('Y-m-d')) }}</span>
                         @endif
                     </div>
                 </div>
@@ -54,11 +55,21 @@
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label"><i class="fas fa-play-circle"></i> Start Date</div>
-                    <div class="modern-detail-value">{{ $item->start_date ? $item->start_date->format('M d, Y') : '-' }}</div>
+                    <div class="modern-detail-value">
+                        {{ $item->start_date ? $item->start_date->format('M d, Y') : '-' }}
+                        @if($item->start_date)
+                            <span class="eth-date-inline">{{ \App\Helpers\EthiopianDate::format($item->start_date->format('Y-m-d')) }} EC</span>
+                        @endif
+                    </div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label"><i class="fas fa-stop-circle"></i> End Date</div>
-                    <div class="modern-detail-value">{{ $item->end_date ? $item->end_date->format('M d, Y') : '-' }}</div>
+                    <div class="modern-detail-value">
+                        {{ $item->end_date ? $item->end_date->format('M d, Y') : '-' }}
+                        @if($item->end_date)
+                            <span class="eth-date-inline">{{ \App\Helpers\EthiopianDate::format($item->end_date->format('Y-m-d')) }} EC</span>
+                        @endif
+                    </div>
                 </div>
                 <div class="modern-detail-row">
                     <div class="modern-detail-label"><i class="fas fa-check-circle"></i> Current Status</div>
@@ -142,6 +153,7 @@
 .modern-detail-label { width: 180px; flex-shrink: 0; font-weight: 600; color: #6b7280; font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem; }
 .modern-detail-label i { color: #9ca3af; font-size: 0.82rem; width: 16px; text-align: center; }
 .modern-detail-value { color: #1a1a2e; font-size: 0.9rem; }
+.eth-date-inline { font-size: 0.78rem; color: #b45309; background: #fef3c7; border-radius: 4px; padding: 1px 6px; margin-left: 0.35rem; font-weight: 500; }
 .modern-link { color: #4361ee; text-decoration: none; font-weight: 500; }
 .modern-link:hover { text-decoration: underline; }
 .modern-muted { color: #d1d5db; }
