@@ -34,6 +34,12 @@ class StaffController extends Controller
      */
     protected const BRANCH_ROLES = ['branch_principal', 'finance', 'hr', 'cashier', 'librarian', 'registrar'];
 
+    /**
+     * Roles that branch principals are NOT allowed to assign.
+     * Only admins and general managers can create these users.
+     */
+    protected const PRINCIPAL_RESTRICTED_ROLES = ['admin', 'general_manager', 'finance', 'hr'];
+
     public function index()
     {
         $query = User::whereIn('role', array_keys(self::STAFF_ROLES))
@@ -63,6 +69,11 @@ class StaffController extends Controller
         $isBranchPrincipal = $authUser->role === 'branch_principal';
         $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
 
+        // Branch principals cannot assign restricted roles (admin, general_manager, finance, hr)
+        if ($isBranchPrincipal) {
+            $roles = array_filter($roles, fn($key) => !in_array($key, self::PRINCIPAL_RESTRICTED_ROLES), ARRAY_FILTER_USE_KEY);
+        }
+
         // If branch principal has no branch assigned, try to load from staff/teacher relationship
         if ($isBranchPrincipal && !$authBranchId) {
             $branch = Branch::where('is_headquarters', true)->first();
@@ -76,12 +87,19 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
+        $allowedRoles = self::STAFF_ROLES;
+
+        // Branch principals cannot assign restricted roles
+        if (auth()->user()->role === 'branch_principal') {
+            $allowedRoles = array_filter($allowedRoles, fn($key) => !in_array($key, self::PRINCIPAL_RESTRICTED_ROLES), ARRAY_FILTER_USE_KEY);
+        }
+
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'email'        => 'required|email|unique:users,email',
             'employee_id'  => 'nullable|string|max:50|unique:users,employee_id',
             'phone'        => 'nullable|string|max:20',
-            'role'         => 'required|in:' . implode(',', array_keys(self::STAFF_ROLES)),
+            'role'         => 'required|in:' . implode(',', array_keys($allowedRoles)),
             'branch_id'    => 'nullable|exists:branches,id',
             'password'     => 'nullable|string|min:6|confirmed',
             'gender'       => 'nullable|string|max:10',
@@ -152,6 +170,17 @@ class StaffController extends Controller
         $isBranchPrincipal = $authUser->role === 'branch_principal';
         $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
 
+        // Branch principals cannot edit users with restricted roles
+        if ($isBranchPrincipal && in_array($user->role, self::PRINCIPAL_RESTRICTED_ROLES)) {
+            return redirect()->route('admin.staff.index')
+                ->with('error', 'You do not have permission to edit users with the ' . ucfirst(str_replace('_', ' ', $user->role)) . ' role.');
+        }
+
+        // Branch principals cannot assign restricted roles (admin, general_manager, finance, hr)
+        if ($isBranchPrincipal) {
+            $roles = array_filter($roles, fn($key) => !in_array($key, self::PRINCIPAL_RESTRICTED_ROLES), ARRAY_FILTER_USE_KEY);
+        }
+
         // If branch principal has no branch assigned, try to load from staff/teacher relationship
         if ($isBranchPrincipal && !$authBranchId) {
             $branch = Branch::where('is_headquarters', true)->first();
@@ -166,11 +195,25 @@ class StaffController extends Controller
     public function update(Request $request, User $staff)
     {
         $user = $staff; // Alias for compatibility
+
+        // Branch principals cannot update users with restricted roles
+        if (auth()->user()->role === 'branch_principal' && in_array($user->role, self::PRINCIPAL_RESTRICTED_ROLES)) {
+            return redirect()->route('admin.staff.index')
+                ->with('error', 'You do not have permission to update users with the ' . ucfirst(str_replace('_', ' ', $user->role)) . ' role.');
+        }
+
+        $allowedRoles = self::STAFF_ROLES;
+
+        // Branch principals cannot assign restricted roles
+        if (auth()->user()->role === 'branch_principal') {
+            $allowedRoles = array_filter($allowedRoles, fn($key) => !in_array($key, self::PRINCIPAL_RESTRICTED_ROLES), ARRAY_FILTER_USE_KEY);
+        }
+
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'email'        => 'required|email|unique:users,email,' . $user->id,
             'phone'        => 'nullable|string|max:20',
-            'role'         => 'required|in:' . implode(',', array_keys(self::STAFF_ROLES)),
+            'role'         => 'required|in:' . implode(',', array_keys($allowedRoles)),
             'branch_id'    => 'nullable|exists:branches,id',
             'password'     => 'nullable|string|min:6|confirmed',
             'gender'       => 'nullable|string|max:10',
@@ -215,6 +258,13 @@ class StaffController extends Controller
     public function destroy(User $staff)
     {
         $user = $staff; // Alias for compatibility
+
+        // Branch principals cannot delete users with restricted roles
+        if (auth()->user()->role === 'branch_principal' && in_array($user->role, self::PRINCIPAL_RESTRICTED_ROLES)) {
+            return redirect()->route('admin.staff.index')
+                ->with('error', 'You do not have permission to delete users with the ' . ucfirst(str_replace('_', ' ', $user->role)) . ' role.');
+        }
+
         // Prevent deleting the last admin
         if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
             return redirect()->route('admin.staff.index')

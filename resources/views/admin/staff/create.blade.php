@@ -120,21 +120,31 @@
                                 <i class="fas fa-user-tag modern-input-icon"></i>
                                 <select name="role" id="roleSelect" class="modern-input modern-select {{ $errors->has('role') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Role --</option>
+                                    @if(!$isBranchPrincipal)
                                     <optgroup label="Administration">
                                         @foreach(['admin' => 'Admin', 'general_manager' => 'General Manager'] as $val => $label)
                                         <option value="{{ $val }}" {{ old('role') === $val ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
                                     </optgroup>
+                                    @endif
                                     <optgroup label="Academic">
                                         @foreach(['branch_principal' => 'Branch Principal', 'teacher' => 'Teacher', 'registrar' => 'Registrar'] as $val => $label)
                                         <option value="{{ $val }}" {{ old('role') === $val ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
                                     </optgroup>
+                                    @if(!$isBranchPrincipal)
                                     <optgroup label="Finance & HR">
                                         @foreach(['finance' => 'Finance Officer', 'hr' => 'HR Officer', 'cashier' => 'Cashier'] as $val => $label)
                                         <option value="{{ $val }}" {{ old('role') === $val ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
                                     </optgroup>
+                                    @else
+                                    <optgroup label="Finance">
+                                        @foreach(['cashier' => 'Cashier'] as $val => $label)
+                                        <option value="{{ $val }}" {{ old('role') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                    @endif
                                     <optgroup label="Operations">
                                         @foreach(['librarian' => 'Librarian', 'staff' => 'Staff'] as $val => $label)
                                         <option value="{{ $val }}" {{ old('role') === $val ? 'selected' : '' }}>{{ $label }}</option>
