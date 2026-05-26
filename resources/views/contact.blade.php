@@ -2,6 +2,103 @@
 
 @section('title', 'Contact Us - ' . ($settings['school_name'] ?? 'School'))
 
+@push('styles')
+<style>
+    /* Branch Cards */
+    .branch-card {
+        background: var(--white);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .branch-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    }
+    .branch-map-frame {
+        width: 100%;
+        height: 220px;
+        border: none;
+        border-radius: 20px 20px 0 0;
+    }
+    .branch-map-placeholder {
+        width: 100%;
+        height: 220px;
+        background: linear-gradient(135deg, #e8f5e9, #f3e5f5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        border-radius: 20px 20px 0 0;
+    }
+    .branch-map-placeholder i { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.4; }
+    .branch-map-placeholder span { font-size: 0.85rem; }
+    .branch-info {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    .branch-info h4 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.75rem;
+        font-family: 'Montserrat', sans-serif;
+    }
+    .branch-info .branch-detail {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        margin-bottom: 0.6rem;
+        font-size: 0.9rem;
+        color: var(--text-light);
+    }
+    .branch-info .branch-detail i {
+        color: var(--secondary-color);
+        margin-top: 0.15rem;
+        width: 16px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    .branch-badge {
+        display: inline-block;
+        background: rgba(212, 160, 23, 0.12);
+        color: var(--secondary-color);
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        border: 1px solid rgba(212, 160, 23, 0.25);
+        margin-bottom: 0.75rem;
+    }
+    .branch-directions-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: auto;
+        padding: 0.5rem 1rem;
+        background: var(--primary-color);
+        color: var(--white);
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .branch-directions-btn:hover {
+        background: var(--secondary-color);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+</style>
+@endpush
+
 @section('content')
     <!-- ========== Contact Hero ========== -->
     <section class="page-hero">
@@ -113,4 +210,68 @@
             </div>
         </div>
     </section>
+
+    <!-- ========== Our Campuses / Branch Map Section ========== -->
+    @isset($branches)
+    @if($branches->count() > 0)
+    <section style="padding:5rem 0;background:var(--light-bg);">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="section-badge">Our Campuses</span>
+                <h2>Find Us</h2>
+                <p>Visit any of our campuses. We are here to serve you and your children.</p>
+            </div>
+            <div class="row g-4">
+                @foreach($branches as $branch)
+                <div class="col-lg-{{ $branches->count() === 1 ? '8 offset-lg-2' : ($branches->count() === 2 ? '6' : '4') }} col-md-6">
+                    <div class="branch-card reveal">
+                        {{-- Map embed or GPS-based map --}}
+                        @if($branch->map_embed_url)
+                        <iframe class="branch-map-frame" src="{{ $branch->map_embed_url }}" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        @elseif($branch->gps_lat && $branch->gps_lng)
+                        <iframe class="branch-map-frame" src="https://maps.google.com/maps?q={{ $branch->gps_lat }},{{ $branch->gps_lng }}&z=15&output=embed" allowfullscreen loading="lazy"></iframe>
+                        @else
+                        <div class="branch-map-placeholder">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>Map not available</span>
+                        </div>
+                        @endif
+
+                        <div class="branch-info">
+                            @if($branch->is_headquarters)
+                            <span class="branch-badge"><i class="fas fa-star me-1"></i>Headquarters</span>
+                            @endif
+                            <h4>{{ $branch->name }}</h4>
+                            @if($branch->address)
+                            <div class="branch-detail">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ $branch->address }}</span>
+                            </div>
+                            @endif
+                            @if($branch->phone)
+                            <div class="branch-detail">
+                                <i class="fas fa-phone"></i>
+                                <span>{{ $branch->phone }}</span>
+                            </div>
+                            @endif
+                            @if($branch->email)
+                            <div class="branch-detail">
+                                <i class="fas fa-envelope"></i>
+                                <span>{{ $branch->email }}</span>
+                            </div>
+                            @endif
+                            @if($branch->gps_lat && $branch->gps_lng)
+                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ $branch->gps_lat }},{{ $branch->gps_lng }}" target="_blank" rel="noopener" class="branch-directions-btn">
+                                <i class="fas fa-directions"></i> Get Directions
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+    @endisset
 @endsection

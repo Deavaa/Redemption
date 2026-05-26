@@ -35,7 +35,7 @@
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Show Until</label>
                         <input type="datetime-local" name="show_until" class="form-control" value="{{ old('show_until') }}">
-                        <small class="text-muted">Leave empty to show for 2 days or until newer news is posted</small>
+                        <small class="text-muted">Leave empty to show indefinitely</small>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Priority</label>

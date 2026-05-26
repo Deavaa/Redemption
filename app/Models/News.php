@@ -41,17 +41,14 @@ class News extends Model
 
     /**
      * Scope: Get news that should be shown on the website.
-     * Active news that are either:
-     * - Less than 2 days old, OR
-     * - Have show_until that hasn't expired
+     * Active + approved news. If show_until is set, respect it; otherwise always show.
      */
     public function scopeVisibleOnWebsite($query)
     {
         return $query->where('is_active', true)
             ->where('is_approved', true)
             ->where(function ($q) {
-                $q->where('created_at', '>=', now()->subDays(2))
-                  ->orWhereNull('show_until')
+                $q->whereNull('show_until')
                   ->orWhere('show_until', '>=', now());
             })
             ->orderBy('priority', 'desc')

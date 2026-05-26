@@ -2,6 +2,130 @@
 
 @section('title', 'Our Team - ' . ($settings['school_name'] ?? 'School'))
 
+@push('styles')
+<style>
+    /* ========== Team Page Styles ========== */
+    .team-card {
+        background: var(--white);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+        text-align: center;
+        padding: 2.5rem 1.5rem 2rem;
+        height: 100%;
+        position: relative;
+    }
+
+    .team-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+    }
+
+    .team-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto 1.5rem;
+        border: 4px solid rgba(212, 160, 23, 0.25);
+        position: relative;
+        transition: border-color 0.3s ease;
+        background: linear-gradient(135deg, #dbeafe, #ede9fe);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .team-card:hover .team-avatar {
+        border-color: var(--secondary-color);
+    }
+
+    .team-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .team-card:hover .team-avatar img {
+        transform: scale(1.08);
+    }
+
+    /* Placeholder initial when no photo */
+    .team-avatar-initial {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--primary);
+        font-family: 'Playfair Display', serif;
+    }
+
+    /* Social overlay on hover */
+    .team-social-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .team-card:hover .team-social-overlay {
+        opacity: 1;
+    }
+
+    .team-social-overlay a {
+        width: 32px;
+        height: 32px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+
+    .team-social-overlay a:hover {
+        background: var(--secondary-color);
+        color: var(--primary-color);
+        transform: scale(1.15);
+    }
+
+    .team-content h4 {
+        font-size: 1.15rem;
+        margin-bottom: 0.25rem;
+        color: var(--primary-color);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+    }
+
+    .team-content p {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    @media (max-width: 575px) {
+        .team-card {
+            padding: 2rem 1rem 1.5rem;
+        }
+        .team-avatar {
+            width: 110px;
+            height: 110px;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
     <!-- ========== Team Hero ========== -->
     <section class="page-hero">
@@ -32,7 +156,11 @@
                 <div class="col-lg-3 col-md-6">
                     <div class="team-card reveal">
                         <div class="team-avatar">
+                            @if($member->photo && file_exists(public_path('storage/' . $member->photo)))
                             <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}">
+                            @else
+                            <span class="team-avatar-initial">{{ strtoupper(substr($member->name, 0, 1)) }}</span>
+                            @endif
                             <div class="team-social-overlay">
                                 @if($member->email)
                                 <a href="mailto:{{ $member->email }}" title="Email"><i class="fas fa-envelope"></i></a>

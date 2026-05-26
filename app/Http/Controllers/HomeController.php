@@ -207,7 +207,12 @@ class HomeController extends Controller
     public function contact()
     {
         $settings = $this->getWebsiteSettings();
-        return view('contact', compact('settings'));
+        $branches = \App\Models\Branch::where('is_active', true)
+            ->orderBy('is_headquarters', 'desc')
+            ->orderBy('order')
+            ->orderBy('name')
+            ->get();
+        return view('contact', compact('settings', 'branches'));
     }
 
     /**

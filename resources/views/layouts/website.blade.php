@@ -746,9 +746,6 @@
                         <a class="nav-link @if(request()->routeIs('gallery')) active @endif" href="{{ route('gallery') }}">Gallery</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('home') }}#videos">Videos</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link @if(request()->routeIs('team')) active @endif" href="{{ route('team') }}">Our Team</a>
                     </li>
                     <li class="nav-item">
@@ -780,7 +777,6 @@
             <li><a href="{{ route('about') }}" @if(request()->routeIs('about')) class="active" @endif>About</a></li>
             <li><a href="{{ route('home') }}#programs">Programs</a></li>
             <li><a href="{{ route('gallery') }}" @if(request()->routeIs('gallery')) class="active" @endif>Gallery</a></li>
-            <li><a href="{{ route('home') }}#videos">Videos</a></li>
             <li><a href="{{ route('team') }}" @if(request()->routeIs('team')) class="active" @endif>Our Team</a></li>
             <li><a href="{{ route('contact') }}" @if(request()->routeIs('contact')) class="active" @endif>Contact</a></li>
         </ul>
