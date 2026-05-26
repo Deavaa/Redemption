@@ -183,6 +183,13 @@
             display: block;
             line-height: 1;
         }
+        .eth-day-number {
+            font-size: 6px;
+            font-weight: 500;
+            color: #b45309;
+            display: block;
+            line-height: 1.1;
+        }
         .day-dots {
             display: flex;
             justify-content: center;
@@ -255,10 +262,15 @@
             border-bottom: none;
         }
         .event-date-col {
-            width: 75px;
+            width: 105px;
             flex-shrink: 0;
             color: #555;
             font-weight: 600;
+        }
+        .event-eth-date {
+            font-size: 7px;
+            color: #b45309;
+            font-weight: 500;
         }
         .event-cat-col {
             width: 65px;
@@ -438,6 +450,10 @@
                                             <td class="{{ !$day ? 'empty' : '' }} {{ $isToday ? 'today-cell' : '' }}">
                                                 @if($day)
                                                     <span class="day-number">{{ $day->day }}</span>
+                                                    @php
+                                                        $ethDate = \App\Helpers\EthiopianDate::fromGregorian($day->format('Y-m-d'));
+                                                    @endphp
+                                                    <span class="eth-day-number">{{ $ethDate['day'] }} {{ $ethDate['month_name'] }}</span>
                                                     @if(count($dayEvents) > 0)
                                                         <div class="day-dots">
                                                             @foreach(array_slice($dayEvents, 0, 4) as $evt)
@@ -486,6 +502,16 @@
                                     @endif
                                     @if(!$event->is_all_day && $event->start_time)
                                         <br>{{ $event->start_time }}
+                                    @endif
+                                    @php
+                                        $ethStart = \App\Helpers\EthiopianDate::fromGregorian($event->start_date->format('Y-m-d'));
+                                    @endphp
+                                    <span class="event-eth-date"><br>{{ $ethStart['day'] }} {{ $ethStart['month_name'] }} {{ $ethStart['year'] }}</span>
+                                    @if($event->end_date && $event->end_date->format('Y-m-d') !== $event->start_date->format('Y-m-d'))
+                                        @php
+                                            $ethEnd = \App\Helpers\EthiopianDate::fromGregorian($event->end_date->format('Y-m-d'));
+                                        @endphp
+                                        <span class="event-eth-date"> &ndash; {{ $ethEnd['day'] }} {{ $ethEnd['month_name'] }} {{ $ethEnd['year'] }}</span>
                                     @endif
                                 </div>
                                 <div class="event-cat-col">

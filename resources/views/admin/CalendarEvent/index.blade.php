@@ -22,7 +22,8 @@
 #calendar .fc-button { border-radius: 8px !important; font-weight: 600 !important; font-size: 0.85rem !important; border: none !important; background: #f3f4f6 !important; color: #374151 !important; padding: 0.4rem 0.85rem !important; transition: all 0.2s !important; }
 #calendar .fc-button:hover { background: #e5e7eb !important; }
 #calendar .fc-button-active, #calendar .fc-button-primary:not(:disabled).fc-button-active { background: #4361ee !important; color: #fff !important; box-shadow: 0 2px 6px rgba(67,97,238,0.3) !important; }
-#calendar .fc-daygrid-day-number { font-weight: 600; color: #374151; padding: 0.4rem; }
+#calendar .fc-daygrid-day-number { font-weight: 600; color: #374151; padding: 0.4rem; display: flex; align-items: center; gap: 0.3rem; }
+#calendar .eth-day { font-size: 0.65rem; font-weight: 500; color: #d97706; background: #fef3c7; border-radius: 4px; padding: 1px 4px; line-height: 1; }
 #calendar .fc-day-today { background: #eff6ff !important; }
 #calendar .fc-event { border-radius: 6px !important; padding: 2px 6px !important; font-size: 0.78rem !important; font-weight: 600 !important; border: none !important; cursor: pointer; }
 #calendar .fc-col-header-cell { font-size: 0.82rem; font-weight: 600; color: #6b7280; text-transform: uppercase; }
@@ -68,6 +69,10 @@
 
 /* Quick Add Modal */
 .quick-add-hint { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.82rem; color: #1e40af; display: flex; align-items: center; gap: 0.5rem; }
+
+/* Ethiopian date in modals */
+.eth-date-inline { font-size: 0.78rem; color: #92400e; background: #fef3c7; border-radius: 4px; padding: 1px 6px; margin-left: 0.35rem; font-weight: 500; }
+.eth-date-row { font-size: 0.78rem; color: #d97706; margin-left: 0.25rem; }
 
 @keyframes calModalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
@@ -317,6 +322,72 @@ let currentEventId = null;
 let currentEventApproved = false;
 let activeCategory = null;
 
+// ── Ethiopian Calendar Conversion ──────────────────────────────
+const ethiopianMonths = [
+    'Meskerem', 'Tikimt', 'Hidar', 'Tahsas',
+    'Tir', 'Yekatit', 'Megabit', 'Miyazia',
+    'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'
+];
+
+function gregorianToEthiopian(dateStr) {
+    const date = new Date(dateStr + 'T12:00:00');
+    let gYear = date.getFullYear();
+    let gMonth = date.getMonth() + 1;
+    let gDay = date.getDate();
+
+    let ethYear = gYear - 8;
+    const isGregorianLeapYearEve = ((gYear % 4) === 3);
+    const ethNewYearDay = isGregorianLeapYearEve ? 12 : 11;
+
+    if (gMonth < 9 || (gMonth === 9 && gDay < ethNewYearDay)) {
+        ethYear = ethYear - 1;
+    }
+
+    const isGregorianLeap = (gYear % 4 === 0);
+    const gregorianDaysInMonth = [0, 31, (isGregorianLeap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    let dayOfYear = gDay;
+    for (let m = 1; m < gMonth; m++) {
+        dayOfYear += gregorianDaysInMonth[m];
+    }
+
+    let newYearDayOfYear = ethNewYearDay;
+    for (let m = 1; m < 9; m++) {
+        newYearDayOfYear += gregorianDaysInMonth[m];
+    }
+
+    let daysSinceNewYear = dayOfYear - newYearDayOfYear;
+    if (daysSinceNewYear < 0) {
+        const prevYearDays = isGregorianLeapYearEve ? 366 : 365;
+        daysSinceNewYear = prevYearDays + daysSinceNewYear;
+    }
+
+    let ethMonth = 1;
+    let ethDay = daysSinceNewYear + 1;
+
+    const isEthiopianLeapYear = ((ethYear + 1) % 4) === 0;
+    const daysInPagume = isEthiopianLeapYear ? 6 : 5;
+
+    while (ethMonth <= 12 && ethDay > (ethMonth === 13 ? daysInPagume : 30)) {
+        ethDay -= (ethMonth === 13 ? daysInPagume : 30);
+        ethMonth++;
+    }
+
+    return {
+        year: ethYear,
+        month: ethMonth,
+        day: ethDay,
+        monthName: ethiopianMonths[ethMonth - 1],
+        formatted: ethDay + ' ' + ethiopianMonths[ethMonth - 1] + ', ' + ethYear
+    };
+}
+
+function ethShort(dateStr) {
+    const e = gregorianToEthiopian(dateStr);
+    return e.day + ' ' + e.monthName;
+}
+// ── End Ethiopian Calendar ─────────────────────────────────────
+
 // All-day toggle
 const isAllDay = document.getElementById('isAllDay');
 const timeFields = document.getElementById('timeFields');
@@ -365,6 +436,20 @@ const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), 
             })
             .catch(function(err) { console.error('Calendar fetch error:', err); failureCallback(err); });
     },
+    dayCellContent: function(info) {
+        const dateStr = info.date.toISOString().substring(0, 10);
+        const eth = gregorianToEthiopian(dateStr);
+        const dayNum = document.createElement('span');
+        dayNum.textContent = info.date.getDate();
+        const ethBadge = document.createElement('span');
+        ethBadge.className = 'eth-day';
+        ethBadge.textContent = eth.day + ' ' + eth.monthName.substring(0, 3);
+        const container = document.createElement('span');
+        container.className = 'fc-daygrid-day-number';
+        container.appendChild(dayNum);
+        container.appendChild(ethBadge);
+        return { domNodes: [container] };
+    },
     eventClick: function(info) {
         info.jsEvent.preventDefault();
         showEventDetail(info.event);
@@ -379,10 +464,11 @@ calendar.render();
 function openQuickAdd(dateStr) {
     const dateObj = new Date(dateStr + 'T00:00:00');
     const formatted = dateObj.toLocaleDateString(undefined, {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    const eth = gregorianToEthiopian(dateStr);
 
     document.getElementById('quickAddStartDate').value = dateStr;
     document.getElementById('quickAddEndDate').value = dateStr;
-    document.getElementById('quickAddDateText').textContent = formatted;
+    document.getElementById('quickAddDateText').innerHTML = formatted + ' <span class=\'eth-date-inline\'>' + eth.formatted + '</span>';
     document.getElementById('quickAddTitle').value = '';
     document.getElementById('quickAddModal').style.display = 'flex';
 
@@ -487,9 +573,13 @@ function showEventDetail(event) {
         html += '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:0.6rem 1rem;margin-bottom:1rem;font-size:0.85rem;color:#92400e;display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-hourglass-half"></i> <strong>Pending Approval</strong> — This event is waiting for manager approval.</div>';
     }
     html += '<div class="cal-modal-row"><div class="cal-modal-label">Category</div><div class="cal-modal-value"><span style="background:' + (categoryColors[props.category] || '#6b7280') + '15;color:' + (categoryColors[props.category] || '#6b7280') + ';padding:0.15rem 0.6rem;border-radius:50px;font-size:0.78rem;font-weight:600;">' + (categoryLabels[props.category] || props.category) + '</span></div></div>';
-    html += '<div class="cal-modal-row"><div class="cal-modal-label">Date</div><div class="cal-modal-value">' + event.start.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '</div></div>';
+    var startDateStr = event.startStr.substring(0, 10);
+    var startEth = gregorianToEthiopian(startDateStr);
+    html += '<div class="cal-modal-row"><div class="cal-modal-label">Date</div><div class="cal-modal-value">' + event.start.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '<span class="eth-date-row">(' + startEth.formatted + ' EC)</span></div></div>';
     if (event.end) {
-        html += '<div class="cal-modal-row"><div class="cal-modal-label">End Date</div><div class="cal-modal-value">' + event.end.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '</div></div>';
+        var endDateStr = event.endStr.substring(0, 10);
+        var endEth = gregorianToEthiopian(endDateStr);
+        html += '<div class="cal-modal-row"><div class="cal-modal-label">End Date</div><div class="cal-modal-value">' + event.end.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '<span class="eth-date-row">(' + endEth.formatted + ' EC)</span></div></div>';
     }
     if (!event.allDay && event.start) {
         html += '<div class="cal-modal-row"><div class="cal-modal-label">Time</div><div class="cal-modal-value">' + event.start.toLocaleTimeString(undefined, {hour:'2-digit',minute:'2-digit'}) + '</div></div>';
@@ -596,7 +686,8 @@ function updateUpcoming(events) {
     }
     container.innerHTML = upcoming.map(e => {
         const date = new Date(e.start).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'});
-        return '<div class="cal-upcoming-item"><div class="cal-upcoming-dot" style="background:' + e.backgroundColor + '"></div><div class="cal-upcoming-info"><div class="cal-upcoming-title">' + e.title + '</div><div class="cal-upcoming-date">' + date + '</div><div class="cal-upcoming-cat">' + (categoryLabels[e.extendedProps?.category] || '') + '</div></div></div>';
+        const eth = gregorianToEthiopian(e.start.substring(0, 10));
+        return '<div class="cal-upcoming-item"><div class="cal-upcoming-dot" style="background:' + e.backgroundColor + '"></div><div class="cal-upcoming-info"><div class="cal-upcoming-title">' + e.title + '</div><div class="cal-upcoming-date">' + date + ' <span style="color:#d97706;font-size:0.72rem;">(' + eth.day + ' ' + eth.monthName.substring(0, 3) + ' EC)</span></div><div class="cal-upcoming-cat">' + (categoryLabels[e.extendedProps?.category] || '') + '</div></div></div>';
     }).join('');
 }
 
