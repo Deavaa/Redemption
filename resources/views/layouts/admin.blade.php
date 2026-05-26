@@ -854,9 +854,9 @@
 
         @media (max-width: 768px) {
             /* Mobile: stack badge on line 1, ticker on line 2 */
-            .announcement-banner { max-width: 100vw; overflow: hidden; }
+            .announcement-banner { max-width: 100%; overflow: hidden; box-sizing: border-box; }
             .announcement-banner-inner {
-                max-width: 100vw;
+                max-width: 100%;
                 overflow: hidden;
                 flex-wrap: wrap;
                 height: auto;

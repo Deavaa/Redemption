@@ -5,15 +5,19 @@
 <style>
 /* ===== MARK ENTRY INDEX - MOBILE-FIRST ULTRA-COMPACT ===== */
 /* AGGRESSIVE viewport containment — nothing escapes the screen */
+*, *::before, *::after { box-sizing: border-box !important; }
 .admin-content {
     padding-top: 0 !important; padding-left: 8px !important; padding-right: 8px !important;
     padding-bottom: 8px !important; margin-top: 0 !important;
     overflow-x: hidden !important; max-width: 100vw !important; box-sizing: border-box !important;
-    contain: layout;
+    width: 100% !important;
 }
 .me-page {
-    margin: 0; padding: 0; width: 100%; max-width: 100vw;
-    overflow-x: hidden; box-sizing: border-box; contain: layout;
+    margin: 0; padding: 0; width: 100%; max-width: 100%;
+    overflow-x: hidden; box-sizing: border-box;
+}
+.me-page *, .me-page *::before, .me-page *::after {
+    max-width: 100% !important; box-sizing: border-box !important;
 }
 .me-page > *, .me-page > div,
 .me-page .me-filter-card, .me-page .me-filter-summary,
@@ -168,12 +172,14 @@
 .me-sc-ca-grid {
     display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 3px; margin-bottom: 4px;
+    min-width: 0; width: 100%;
 }
 
 /* Exam Grid — MOBILE-FIRST: 2 columns default */
 .me-sc-exam-grid {
     display: grid; grid-template-columns: repeat(2, 1fr);
     gap: 3px; margin-bottom: 4px;
+    min-width: 0; width: 100%;
 }
 
 /* Card Field Item */
@@ -306,22 +312,24 @@
 
 /* ===== NUCLEAR OPTION: Force containment on mobile ===== */
 @media (max-width: 768px) {
-    .admin-content { padding: 4px !important; overflow-x: hidden !important; max-width: 100vw !important; }
+    html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+    .admin-content { padding: 4px !important; overflow-x: hidden !important; max-width: 100vw !important; width: 100% !important; }
     .me-page, .me-page > *, .me-page > div,
     .me-filter-card, .me-filter-summary, .me-global-status,
     .me-carousel-nav, .me-cards-container, .me-mark-entry-area,
     .me-student-card, .me-sc-header, .me-sc-body, .me-sc-totals,
-    .me-card-slider {
-        max-width: 100vw !important; overflow-x: hidden !important;
-        box-sizing: border-box !important;
+    .me-card-slider, .me-sc-ca-grid, .me-sc-exam-grid,
+    .me-sc-field, .me-filter-grid, .me-filter-group {
+        max-width: 100% !important; overflow-x: hidden !important;
+        box-sizing: border-box !important; width: 100% !important;
     }
     /* Card body can scroll horizontally for input grids */
-    .me-sc-body { overflow-x: auto !important; }
-    .me-cards-container { max-height: calc(100vh - 280px); }
+    .me-sc-body { overflow-x: auto !important; width: 100% !important; }
+    .me-cards-container { max-height: calc(100vh - 280px); overflow-x: hidden !important; }
     .me-sc-header { padding: 3px 5px; gap: 4px; }
     .me-sc-body { padding: 3px 5px; }
     .me-sc-totals { padding: 3px 5px; }
-    .me-sc-field-input { font-size: 0.72rem; padding: 2px 1px; }
+    .me-sc-field-input { font-size: 0.72rem; padding: 2px 1px; max-width: 100% !important; }
     .me-carousel-nav-btn { padding: 6px 10px; font-size: 0.75rem; }
     .me-carousel-dot { width: 10px; height: 10px; }
     .me-save-badge { font-size: 0.65rem; padding: 2px 8px; min-width: 60px; }
@@ -329,7 +337,8 @@
     .me-global-status { padding: 3px 5px; }
 }
 @media (max-width: 480px) {
-    .admin-content { padding: 2px !important; overflow-x: hidden !important; }
+    html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+    .admin-content { padding: 2px !important; overflow-x: hidden !important; width: 100% !important; }
     .me-filter-body { padding: 4px; }
     .me-cards-container { max-height: calc(100vh - 300px); }
     .me-sc-field-input { font-size: 0.68rem; }
@@ -342,7 +351,7 @@
 <div class="me-page">
     {{-- Compact top bar: Lock/Permissions only --}}
     @canany(['mark-entry.lock', 'mark-entry.permissions'])
-    <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0 0 0.5rem;flex-wrap:wrap;">
+    <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0 0 0.5rem;flex-wrap:wrap;max-width:100%;box-sizing:border-box;overflow:hidden;">
         @can('mark-entry.lock')
             <a href="{{ route('admin.mark-entry-locks.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.78rem;padding:0.35rem 0.85rem;">
                 <i class="fas fa-lock"></i> Lock Management
@@ -414,7 +423,7 @@
                 </div>
 
             </div>
-            <div style="margin-top:4px;display:flex;gap:4px;align-items:center;">
+            <div style="margin-top:4px;display:flex;gap:4px;align-items:center;max-width:100%;box-sizing:border-box;overflow:hidden;">
                 <button type="button" class="btn-modern btn-modern-primary" id="btnLoadStudents" style="font-size:0.68rem;padding:3px 10px;" disabled>
                     <i class="fas fa-download"></i> Load
                 </button>

@@ -6,8 +6,11 @@
 /* ===== MARK ENTRY CREATE - MOBILE-FIRST DESIGN ===== */
 /* AGGRESSIVE viewport containment */
 .mc-page {
-    animation: mcFadeIn 0.4s ease-out; width: 100%; max-width: 100vw;
-    overflow-x: hidden; box-sizing: border-box; contain: layout;
+    animation: mcFadeIn 0.4s ease-out; width: 100%; max-width: 100%;
+    overflow-x: hidden; box-sizing: border-box;
+}
+.mc-page *, .mc-page *::before, .mc-page *::after {
+    max-width: 100% !important; box-sizing: border-box !important;
 }
 .mc-page > *, .mc-page > div { max-width: 100% !important; box-sizing: border-box !important; overflow-x: hidden !important; }
 @keyframes mcFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -65,8 +68,8 @@
 .mc-save-badge.error { background: #fee2e2; color: #dc2626; }
 
 /* Mark Card — SINGLE COLUMN on mobile */
-.mc-mark-card { background: #f0f7ff; border-radius: 12px; padding: 1rem; overflow-x: auto; max-width: 100% !important; box-sizing: border-box; -webkit-overflow-scrolling: touch; }
-.mc-marks-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; min-width: 0; }
+.mc-mark-card { background: #f0f7ff; border-radius: 12px; padding: 1rem; overflow-x: hidden; max-width: 100% !important; box-sizing: border-box; width: 100% !important; }
+.mc-marks-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; min-width: 0; width: 100%; }
 
 /* Sections */
 .mc-section { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #fff; min-width: 0; }
@@ -80,8 +83,8 @@
 .mc-section-body { padding: 0.75rem 0.75rem 1rem; }
 
 /* CA Items — MOBILE-FIRST: 3 columns default */
-.mc-ca-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; min-width: 0; }
-.mc-ca-item { display: flex; align-items: center; border: 1.5px solid #e5e7eb; border-radius: 8px; overflow: hidden; transition: border-color 0.2s; min-width: 0; }
+.mc-ca-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; min-width: 0; width: 100%; }
+.mc-ca-item { display: flex; align-items: center; border: 1.5px solid #e5e7eb; border-radius: 8px; overflow: hidden; transition: border-color 0.2s; min-width: 0; max-width: 100%; }
 .mc-ca-item:focus-within { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); }
 .mc-ca-badge { min-width: 1.5rem; display: flex; align-items: center; justify-content: center; background: #4361ee; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.35rem 0; flex-shrink: 0; }
 .mc-ca-input { width: 100%; max-width: 100%; border: none; outline: none; text-align: center; padding: 0.35rem 0.1rem; font-size: 0.82rem; font-weight: 600; color: #1a1a2e; background: transparent; box-sizing: border-box; min-width: 0; }
@@ -93,8 +96,8 @@
 .mc-extra-input:focus { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); }
 
 /* Exam Fields — MOBILE-FIRST: 2 columns default */
-.mc-exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; min-width: 0; }
-.mc-exam-item { display: flex; flex-direction: column; min-width: 0; }
+.mc-exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; min-width: 0; width: 100%; }
+.mc-exam-item { display: flex; flex-direction: column; min-width: 0; max-width: 100%; }
 .mc-exam-label { font-size: 0.78rem; font-weight: 600; color: #374151; margin-bottom: 0.15rem; display: flex; justify-content: space-between; }
 .mc-exam-max { font-weight: 400; color: #9ca3af; font-size: 0.7rem; }
 .mc-exam-input { width: 100%; max-width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.45rem; font-size: 0.88rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; box-sizing: border-box; min-width: 0; }
@@ -141,14 +144,41 @@
 
 /* ===== NUCLEAR: Force containment on mobile ===== */
 @media (max-width: 768px) {
+    html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     .mc-page, .mc-page > *, .mc-page > div,
     .mc-mark-card, .mc-marks-grid, .mc-section, .mc-section-body,
-    .mc-student-header, .mc-filter-card, .mc-filter-body {
-        max-width: 100vw !important; overflow-x: hidden !important;
-        box-sizing: border-box !important;
+    .mc-section-head, .mc-student-header, .mc-filter-card, .mc-filter-body,
+    .mc-filter-grid, .mc-filter-group, .mc-ca-grid, .mc-ca-item,
+    .mc-ca-extra, .mc-extra-item, .mc-exam-grid, .mc-exam-item,
+    .mc-totals, .mc-nav {
+        max-width: 100% !important; overflow-x: hidden !important;
+        box-sizing: border-box !important; width: 100% !important;
     }
-    /* Mark card can scroll horizontally for CA grid */
-    .mc-mark-card { overflow-x: auto !important; }
+    .mc-mark-card { overflow-x: hidden !important; }
+    .mc-ca-badge { min-width: 1.2rem; font-size: 0.6rem; padding: 0.25rem 0; }
+    .mc-ca-input { font-size: 0.72rem; padding: 0.25rem 0.05rem; }
+    .mc-exam-input { font-size: 0.78rem; padding: 0.35rem; }
+    .mc-extra-input { font-size: 0.72rem; padding: 0.25rem; }
+    .mc-section-body { padding: 0.5rem; }
+    .mc-filter-body { padding: 0.5rem; }
+    .mc-student-header { padding: 0.75rem; }
+    .mc-mark-card { padding: 0.5rem; }
+    .mc-totals { padding: 0.5rem; }
+    .mc-title { font-size: 1.1rem; }
+}
+@media (max-width: 480px) {
+    html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+    .mc-ca-grid { grid-template-columns: repeat(3, 1fr); gap: 0.25rem; }
+    .mc-ca-extra { grid-template-columns: repeat(2, 1fr); }
+    .mc-exam-grid { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+    .mc-filter-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .mc-mark-card { padding: 0.4rem; }
+    .mc-section-body { padding: 0.4rem; }
+    .mc-ca-input { font-size: 0.68rem; }
+    .mc-exam-input { font-size: 0.72rem; }
+    .mc-totals { gap: 0.3rem; padding: 0.4rem; }
+    .mc-total-value { font-size: 1rem; }
+    .mc-grade { font-size: 1rem; }
 }
 </style>
 @endpush

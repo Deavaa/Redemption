@@ -840,11 +840,12 @@ html, body {
     html, body {
         overflow-x: hidden !important;
         max-width: 100vw !important;
+        width: 100% !important;
     }
     .admin-wrapper {
-        max-width: 100vw !important;
+        max-width: 100% !important;
         overflow-x: hidden !important;
-        width: 100vw;
+        width: 100% !important;
     }
     .admin-sidebar {
         transform: translateX(-100%);
@@ -857,9 +858,9 @@ html, body {
     }
     .admin-main {
         margin-left: 0 !important;
-        max-width: 100vw !important;
+        max-width: 100% !important;
         overflow-x: hidden !important;
-        width: 100vw;
+        width: 100% !important;
         padding-bottom: 0;
     }
 
@@ -875,8 +876,9 @@ html, body {
     .admin-topbar {
         padding: 0 12px;
         height: 52px;
-        max-width: 100vw !important;
-        width: 100%;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
     .topbar-breadcrumb { display: none; }
     .topbar-left { gap: 8px; min-width: 0; }
@@ -905,15 +907,15 @@ html, body {
     .admin-content {
         padding: 8px;
         padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-        max-width: 100vw !important;
+        max-width: 100% !important;
         overflow-x: hidden !important;
-        width: 100%;
+        width: 100% !important;
         box-sizing: border-box !important;
     }
 
     /* ===== AGGRESSIVE HORIZONTAL SCROLL FIX ===== */
     /* Prevent any element from causing horizontal overflow on mobile */
-    .admin-main > * { max-width: 100vw; overflow-x: hidden; }
+    .admin-main > * { max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
     .modern-page,
     .modern-page > * { max-width: 100%; box-sizing: border-box; }
 
@@ -1105,9 +1107,9 @@ html, body {
     .admin-content {
         padding: 6px;
         padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-        max-width: 100vw !important;
+        max-width: 100% !important;
         overflow-x: hidden !important;
-        width: 100%;
+        width: 100% !important;
         box-sizing: border-box !important;
     }
 
