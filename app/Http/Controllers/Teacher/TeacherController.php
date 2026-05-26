@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use App\Models\Department;
 use App\Models\Branch;
+use App\Services\TeacherIdService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -46,7 +47,11 @@ class TeacherController extends Controller
         $isBranchPrincipal = $authUser->role === 'branch_principal';
         $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
 
-        return view('admin.Teacher.create', compact('departments', 'branches', 'isBranchPrincipal', 'authBranchId'));
+        // Pre-generate the next teacher ID number for preview
+        $teacherIdService = new TeacherIdService();
+        $nextTeacherId = $teacherIdService->generate($isBranchPrincipal ? $authBranchId : null);
+
+        return view('admin.Teacher.create', compact('departments', 'branches', 'isBranchPrincipal', 'authBranchId', 'nextTeacherId'));
     }
 
     public function store(Request $request)
@@ -58,18 +63,20 @@ class TeacherController extends Controller
         ]);
 
         $validated = $request->validate([
-            'full_name'     => 'required|string|max:255',
-            'email'         => 'nullable|email|max:255|unique:teachers,email',
-            'phone'         => 'required|string|max:20',
-            'qualification' => 'nullable|string|max:255',
-            'department'    => 'nullable|string|max:255',
-            'department_id' => 'nullable|exists:departments,id',
-            'branch_id'     => 'required|exists:branches,id',
-            'hire_date'     => 'nullable|date',
-            'salary'        => 'nullable|numeric',
-            'status'        => 'required|in:active,inactive,on_leave',
-            'address'       => 'nullable|string|max:500',
-            'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'full_name'          => 'required|string|max:255',
+            'teacher_id_number'  => 'nullable|string|max:50|unique:teachers,teacher_id_number',
+            'email'              => 'nullable|email|max:255|unique:teachers,email',
+            'phone'              => 'required|string|max:20',
+            'gender'             => 'nullable|in:male,female',
+            'qualification'      => 'nullable|string|max:255',
+            'department'         => 'nullable|string|max:255',
+            'department_id'      => 'nullable|exists:departments,id',
+            'branch_id'          => 'required|exists:branches,id',
+            'hire_date'          => 'nullable|date',
+            'salary'             => 'nullable|numeric',
+            'status'             => 'required|in:active,inactive,on_leave',
+            'address'            => 'nullable|string|max:500',
+            'photo'              => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         // Debug: log validated data
@@ -84,7 +91,12 @@ class TeacherController extends Controller
             $validated['salary'] = 0;
         }
         if (empty($validated['email'])) {
-            $validated['email'] = '';
+            $validated['email'] = null;
+        }
+
+        // Auto-generate teacher_id_number if not provided
+        if (empty($validated['teacher_id_number'])) {
+            unset($validated['teacher_id_number']); // Let the service generate it after creation
         }
 
         // Ensure status is explicitly set (defensive coding)
@@ -100,9 +112,17 @@ class TeacherController extends Controller
         try {
             $t = Teacher::create($validated);
 
+            // Auto-generate teacher ID number if not set
+            if (empty($t->teacher_id_number)) {
+                $teacherIdService = new TeacherIdService();
+                $teacherIdService->assignToTeacher($t, $t->branch_id);
+                $t->refresh();
+            }
+
             // Debug: log what was actually saved
             Log::info('Teacher STORE - After create', [
                 'id' => $t->id,
+                'teacher_id_number' => $t->teacher_id_number,
                 'status_in_validated' => $validated['status'],
                 'status_from_model' => $t->status,
                 'status_from_db' => Teacher::find($t->id)?->status,
@@ -154,6 +174,7 @@ class TeacherController extends Controller
             'full_name'     => 'required|string|max:255',
             'email'         => 'nullable|email|max:255|unique:teachers,email,' . $id,
             'phone'         => 'required|string|max:20',
+            'gender'        => 'nullable|in:male,female',
             'qualification' => 'nullable|string|max:255',
             'department'    => 'nullable|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
@@ -177,7 +198,7 @@ class TeacherController extends Controller
             $validated['salary'] = 0;
         }
         if (empty($validated['email'])) {
-            $validated['email'] = '';
+            $validated['email'] = null;
         }
 
         // Ensure status is explicitly set (defensive coding)

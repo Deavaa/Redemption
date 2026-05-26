@@ -61,6 +61,25 @@
                         </div>
 
                         <div class="modern-form-group">
+                            <label class="modern-form-label" for="gender">
+                                Gender <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-venus-mars modern-input-icon"></i>
+                                <select name="gender"
+                                    id="gender"
+                                    class="modern-input modern-select {{ $errors->has('gender') ? 'is-invalid' : '' }}">
+                                    <option value="">-- Select Gender --</option>
+                                    <option value="male" {{ old('gender', $data->gender) === 'male' ? 'selected' : '' }}>Male</option>
+                                    <option value="female" {{ old('gender', $data->gender) === 'female' ? 'selected' : '' }}>Female</option>
+                                </select>
+                            </div>
+                            @error('gender')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
                             <label class="modern-form-label" for="email">
                                 Email <small>(optional)</small>
                             </label>

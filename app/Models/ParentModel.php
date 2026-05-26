@@ -7,7 +7,7 @@ class ParentModel extends Model
 {
     use HasFactory;
     protected $table = 'parents';
-    protected $fillable = ['user_id','father_name','mother_name','father_occupation','mother_occupation','father_phone','mother_phone','guardian_name','guardian_relation','guardian_phone'];
+    protected $fillable = ['user_id','father_name','mother_name','father_occupation','mother_occupation','father_phone','mother_phone','guardian_name','guardian_relation','guardian_phone','parent_id_number'];
 
     // Accessors for compatibility with views expecting 'name' and 'phone'
     public function getNameAttribute()

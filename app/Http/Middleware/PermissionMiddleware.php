@@ -119,6 +119,8 @@ class PermissionMiddleware
                 'parents.view', 'parents.create', 'parents.edit',
                 // Teacher Assignments — branch principal can assign teachers to subjects/classes/sections
                 'teacher_assignments.view', 'teacher_assignments.create', 'teacher_assignments.edit',
+                // Class Assets — branch principal can manage assets in their branch
+                'class_assets.view',
                 // Staff management — admin only, branch principals cannot access staff management
                 // Attendance
                 'attendance.view', 'attendance.manage',

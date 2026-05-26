@@ -61,6 +61,42 @@
                         </div>
 
                         <div class="modern-form-group">
+                            <label class="modern-form-label" for="teacher_id_number">
+                                Teacher ID <small>(auto-generated)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-id-badge modern-input-icon"></i>
+                                <input type="text"
+                                    name="teacher_id_number"
+                                    id="teacher_id_number"
+                                    class="modern-input"
+                                    value="{{ old('teacher_id_number', $nextTeacherId ?? '') }}"
+                                    placeholder="Auto-generated"
+                                    readonly
+                                    style="background:#f9fafb;color:#6b7280;">
+                            </div>
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="gender">
+                                Gender <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-venus-mars modern-input-icon"></i>
+                                <select name="gender"
+                                    id="gender"
+                                    class="modern-input modern-select {{ $errors->has('gender') ? 'is-invalid' : '' }}">
+                                    <option value="">-- Select Gender --</option>
+                                    <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>Male</option>
+                                    <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>Female</option>
+                                </select>
+                            </div>
+                            @error('gender')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
                             <label class="modern-form-label" for="email">
                                 Email <small>(optional)</small>
                             </label>

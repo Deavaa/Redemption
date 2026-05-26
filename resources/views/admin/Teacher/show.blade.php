@@ -59,9 +59,33 @@
                 <div class="modern-detail-body">
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
+                            <i class="fas fa-id-badge"></i> Teacher ID
+                        </div>
+                        <div class="modern-detail-value">
+                            @if($data->teacher_id_number)
+                                <span style="background:#eef2ff;color:#4361ee;padding:0.15rem 0.6rem;border-radius:50px;font-size:0.78rem;font-weight:600;">{{ $data->teacher_id_number }}</span>
+                            @else
+                                <span class="modern-muted">-</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="modern-detail-row">
+                        <div class="modern-detail-label">
                             <i class="fas fa-id-card"></i> Full Name
                         </div>
                         <div class="modern-detail-value">{{ $data->full_name }}</div>
+                    </div>
+                    <div class="modern-detail-row">
+                        <div class="modern-detail-label">
+                            <i class="fas fa-venus-mars"></i> Gender
+                        </div>
+                        <div class="modern-detail-value">
+                            @if($data->gender)
+                                <span class="modern-badge {{ $data->gender === 'male' ? 'modern-badge-branch' : 'modern-badge-department' }}">{{ ucfirst($data->gender) }}</span>
+                            @else
+                                <span class="modern-muted">-</span>
+                            @endif
+                        </div>
                     </div>
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">

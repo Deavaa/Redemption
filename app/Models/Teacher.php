@@ -2,7 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class Teacher extends Model {
-protected $fillable = ['user_id','department_id','branch_id','previous_branch_id','full_name','email','phone','qualification','department','hire_date','salary','status','address','photo'];
+protected $fillable = ['user_id','department_id','branch_id','previous_branch_id','full_name','gender','teacher_id_number','email','phone','qualification','department','hire_date','salary','status','address','photo'];
 
 protected $casts = [
     'hire_date' => 'date',

@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\ParentModel;
 use App\Models\User;
 use App\Models\Role;
+use App\Services\ParentIdService;
 
 class ParentModelController extends Controller
 {
@@ -86,6 +87,10 @@ class ParentModelController extends Controller
         }
 
         $validated['user_id'] = $user->id;
+
+        // Auto-generate parent_id_number
+        $parentIdService = new ParentIdService();
+        $validated['parent_id_number'] = $parentIdService->generate();
 
         ParentModel::create($validated);
 

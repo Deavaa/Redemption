@@ -98,6 +98,8 @@
                         <tr>
                             <th class="th-narrow">#</th>
                             <th>Teacher</th>
+                            <th>Teacher ID</th>
+                            <th>Gender</th>
                             <th>Phone</th>
                             <th>Branch</th>
                             <th>Department</th>
@@ -124,6 +126,20 @@
                                         @endif
                                     </div>
                                 </div>
+                            </td>
+                            <td>
+                                @if($item->teacher_id_number)
+                                    <span style="background:#eef2ff;color:#4361ee;padding:0.15rem 0.5rem;border-radius:50px;font-size:0.72rem;font-weight:600;white-space:nowrap;">{{ $item->teacher_id_number }}</span>
+                                @else
+                                    <span class="modern-cell-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($item->gender)
+                                    <span class="modern-badge {{ $item->gender === 'male' ? 'modern-badge-branch' : 'modern-badge-department' }}">{{ ucfirst($item->gender) }}</span>
+                                @else
+                                    <span class="modern-cell-muted">-</span>
+                                @endif
                             </td>
                             <td>
                                 @if($item->phone)
