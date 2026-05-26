@@ -18,9 +18,9 @@ class DatabaseSeeder extends Seeder
             // 3. Permissions & roles (must be before users who need roles)
             \Database\Seeders\PermissionSeeder::class,
 
-            // 4. School infrastructure (branches, AY, terms, classes, sections)
-            //    + 121 real Tuludimtu students + enrollments + grade scales
-            //    NO sample/mock data — add teachers, subjects, Lebu students via UI
+            // 4. School infrastructure (Lebu branch, AY, terms, classes, sections)
+            //    + grade scales — NO sample/mock data
+            //    Add Tuludimtu branch/classes, students, teachers, subjects via UI
             \Database\Seeders\SchoolDataSeeder::class,
         ]);
     }

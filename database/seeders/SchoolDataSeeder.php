@@ -19,13 +19,14 @@ class SchoolDataSeeder extends Seeder
      * NO sample/mock students, teachers, subjects, or fake data.
      *
      * What this seeder creates:
-     *   - Branches (Lebu + Tuludimtu)
+     *   - Branch (Lebu HQ)
      *   - Academic Year 2025/2026 + 3 Terms (with exam dates)
-     *   - Classes G1-12 + Sections (Tuludimtu A-B, Lebu A-D)
+     *   - Classes G9-12 + Sections (Lebu A-D)
      *   - Grade Scales (system defaults)
      *   - Admin role assignment
      *
      * What this seeder does NOT create (use the UI to add):
+     *   - Tuludimtu branch, classes, sections (add via the admin UI)
      *   - Students (add via the admin UI)
      *   - Teachers, principal, registrar, finance users
      *   - Subjects
@@ -51,19 +52,7 @@ class SchoolDataSeeder extends Seeder
             ]
         );
 
-        $tuludimtuBranch = Branch::updateOrCreate(
-            ['name' => 'Tuludimtu Campus'],
-            [
-                'address' => 'Tuludimtu, Addis Ababa, Ethiopia',
-                'phone' => '0113456789',
-                'email' => 'tuludimtu@schoolofredemption.edu',
-                'is_headquarters' => false,
-                'is_active' => true,
-                'order' => 2,
-            ]
-        );
-
-        $this->command->info('  Branches: Lebu + Tuludimtu');
+        $this->command->info('  Branch: Lebu Campus (HQ)');
 
         // ======================================================================
         // 2. ACADEMIC YEAR
@@ -115,17 +104,9 @@ class SchoolDataSeeder extends Seeder
 
         // ======================================================================
         // 5. CLASSES
-        //    Tuludimtu: G1-8 (Sections A & B)
         //    Lebu: G9-12 (Sections A-D)
+        //    Tuludimtu classes are NOT seeded — add via admin UI
         // ======================================================================
-        $tuludimtuClasses = [];
-        for ($g = 1; $g <= 8; $g++) {
-            $tuludimtuClasses[$g] = ClassRoom::updateOrCreate(
-                ['name' => 'Grade ' . $g, 'branch_id' => $tuludimtuBranch->id, 'academic_year_id' => $ay->id],
-                ['numeric_name' => $g, 'teacher_id' => null, 'capacity' => 50]
-            );
-        }
-
         $lebuClasses = [];
         for ($g = 9; $g <= 12; $g++) {
             $lebuClasses[$g] = ClassRoom::updateOrCreate(
@@ -133,37 +114,23 @@ class SchoolDataSeeder extends Seeder
                 ['numeric_name' => $g, 'teacher_id' => null, 'capacity' => 200]
             );
         }
-        $this->command->info('  Classes: 12 (Tuludimtu G1-8 + Lebu G9-12)');
+        $this->command->info('  Classes: 4 (Lebu G9-12)');
 
         // ======================================================================
         // 6. SECTIONS
-        //    Tuludimtu: Sections A & B per grade (16 sections)
         //    Lebu: Sections A-D per grade (16 sections)
+        //    Tuludimtu sections are NOT seeded — add via admin UI
         // ======================================================================
-        $allSections = [];
-        $tuludimtuSectionLetters = ['A', 'B'];
-
-        foreach ($tuludimtuClasses as $gradeNum => $class) {
-            foreach ($tuludimtuSectionLetters as $letter) {
-                $key = $gradeNum . '_' . $letter;
-                $allSections[$key] = Section::updateOrCreate(
-                    ['class_id' => $class->id, 'name' => 'Section ' . $letter],
-                    ['max_students' => 40, 'teacher_id' => null]
-                );
-            }
-        }
-
         $lebuSectionLetters = ['A', 'B', 'C', 'D'];
         foreach ($lebuClasses as $gradeNum => $class) {
             foreach ($lebuSectionLetters as $letter) {
-                $key = $gradeNum . '_' . $letter;
-                $allSections[$key] = Section::updateOrCreate(
+                Section::updateOrCreate(
                     ['class_id' => $class->id, 'name' => 'Section ' . $letter],
                     ['max_students' => 50, 'teacher_id' => null]
                 );
             }
         }
-        $this->command->info('  Sections: 32 (Tuludimtu: 16xA-B, Lebu: 16xA-D)');
+        $this->command->info('  Sections: 16 (Lebu: 4 grades x A-D)');
 
         // ======================================================================
         // 7. GRADE SCALES (system defaults)
@@ -181,7 +148,7 @@ class SchoolDataSeeder extends Seeder
             ['Admin', 'admin@school.com', '123456', 'admin'],
         ]);
         $this->command->newLine();
-        $this->command->warn('NOTE: No students, teachers, or subjects were seeded.');
-        $this->command->warn('Use the admin UI to add students, teachers, subjects, and other data.');
+        $this->command->warn('NOTE: No Tuludimtu branch/classes, students, teachers, or subjects were seeded.');
+        $this->command->warn('Use the admin UI to add Tuludimtu campus, students, teachers, subjects, and other data.');
     }
 }
