@@ -236,8 +236,30 @@ class ChatController extends Controller
                     return redirect()->route($routePrefix . '.show', $existing->id);
                 }
 
-                // No existing conversation - pre-select this user in the new conversation modal
-                $preselectedRecipientId = $resolvedUserId;
+                // No existing conversation — auto-create one directly
+                // Verify the user is allowed to message this recipient
+                $availableUserIds = $this->getAvailableUsers()->pluck('id')->toArray();
+                if (in_array($resolvedUserId, $availableUserIds)) {
+                    $conversation = ChatConversation::create([
+                        'type' => 'private',
+                        'title' => null,
+                        'created_by' => $userId,
+                    ]);
+
+                    ChatParticipant::create([
+                        'conversation_id' => $conversation->id,
+                        'user_id' => $userId,
+                        'role' => 'admin',
+                    ]);
+
+                    ChatParticipant::create([
+                        'conversation_id' => $conversation->id,
+                        'user_id' => $resolvedUserId,
+                        'role' => 'member',
+                    ]);
+
+                    return redirect()->route($routePrefix . '.show', $conversation->id);
+                }
             }
         }
 

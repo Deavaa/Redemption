@@ -318,6 +318,31 @@
                         <span>Send Email</span>
                     </a>
                     @endif
+                    @php
+                        $chatRecipientId = $data->user_id;
+                        $chatRecipientType = 'student';
+                        if (!$chatRecipientId) {
+                            $chatParent = $data->parents()->first();
+                            if ($chatParent && $chatParent->user_id) {
+                                $chatRecipientId = $chatParent->user_id;
+                                $chatRecipientType = 'parent';
+                            } else {
+                                $chatRecipientId = $data->id;
+                            }
+                        }
+                    @endphp
+                    <a href="{{ route('admin.chat.index') }}?recipient_id={{ $chatRecipientId }}&recipient_type={{ $chatRecipientType }}" class="modern-quick-action">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Send Message</span>
+                    </a>
+                    <a href="{{ route('admin.id-card-generate.index') }}?student_id={{ $data->id }}" class="modern-quick-action">
+                        <i class="fas fa-id-card"></i>
+                        <span>ID Card</span>
+                    </a>
+                    <a href="{{ route('admin.certificate-generate.index') }}?student_id={{ $data->id }}" class="modern-quick-action">
+                        <i class="fas fa-certificate"></i>
+                        <span>Certificate</span>
+                    </a>
                     <form method="POST" action="{{ route('admin.students.destroy', $data->id) }}" onsubmit="return confirm('Are you sure you want to delete this student? This action cannot be undone.')">
                         @csrf @method('DELETE')
                         <button type="submit" class="modern-quick-action modern-quick-action-danger">
