@@ -57,13 +57,14 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="id_number">ID Number <small>(auto-generated)</small></label>
+                            <label class="modern-form-label" for="employee_id_preview">Employee ID <small>(auto-generated)</small></label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-id-card modern-input-icon"></i>
-                                <input type="text" id="id_number" class="modern-input modern-select-locked" value="" placeholder="Select a branch to preview ID" readonly tabindex="-1" data-lpignore="true" data-form-type="other">
+                                <input type="text" id="employee_id_preview" class="modern-input modern-select-locked" value="" placeholder="Select a branch to preview ID" readonly tabindex="-1" data-lpignore="true" data-form-type="other">
                             </div>
+                            <input type="hidden" name="employee_id" id="employee_id_hidden" value="">
                             <div class="modern-input-hint"><i class="fas fa-magic"></i> Employee ID will be auto-generated based on the selected branch</div>
-                            @error('id_number')<span class="modern-form-error">{{ $message }}</span>@enderror
+                            @error('employee_id')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
 
                         <div class="modern-form-group">
@@ -355,7 +356,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var isBranchPrincipal = @json($isBranchPrincipal);
     var authBranchId = @json($authBranchId);
-    var idNumberField = document.getElementById('id_number');
+    var employeeIdPreview = document.getElementById('employee_id_preview');
+    var employeeIdHidden = document.getElementById('employee_id_hidden');
 
     function toggleBranchField() {
         var selected = roleSelect.value;
@@ -389,27 +391,31 @@ document.addEventListener('DOMContentLoaded', function() {
     // Preview employee ID via AJAX when branch changes
     function previewEmployeeId(branchId) {
         if (!branchId) {
-            idNumberField.value = '';
-            idNumberField.placeholder = 'Select a branch to preview ID';
+            employeeIdPreview.value = '';
+            employeeIdPreview.placeholder = 'Select a branch to preview ID';
+            employeeIdHidden.value = '';
             return;
         }
-        idNumberField.placeholder = 'Loading...';
+        employeeIdPreview.placeholder = 'Loading...';
         fetch('{{ route("admin.staff.api.employee-id-preview") }}?branch_id=' + encodeURIComponent(branchId), {
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.employee_id) {
-                idNumberField.value = data.employee_id;
-                idNumberField.placeholder = data.employee_id;
+                employeeIdPreview.value = data.employee_id;
+                employeeIdPreview.placeholder = data.employee_id;
+                employeeIdHidden.value = data.employee_id;
             } else {
-                idNumberField.value = '';
-                idNumberField.placeholder = 'Could not generate preview';
+                employeeIdPreview.value = '';
+                employeeIdPreview.placeholder = 'Could not generate preview';
+                employeeIdHidden.value = '';
             }
         })
         .catch(function() {
-            idNumberField.value = '';
-            idNumberField.placeholder = 'Preview unavailable';
+            employeeIdPreview.value = '';
+            employeeIdPreview.placeholder = 'Preview unavailable';
+            employeeIdHidden.value = '';
         });
     }
 

@@ -79,7 +79,7 @@ class StaffController extends Controller
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'email'        => 'required|email|unique:users,email',
-            'id_number'    => 'nullable|string|max:50|unique:users,id_number',
+            'employee_id'  => 'nullable|string|max:50|unique:users,employee_id',
             'phone'        => 'nullable|string|max:20',
             'role'         => 'required|in:' . implode(',', array_keys(self::STAFF_ROLES)),
             'branch_id'    => 'nullable|exists:branches,id',
@@ -114,10 +114,12 @@ class StaffController extends Controller
             }
         }
 
-        $user = User::create($validated);
+        // Auto-generate employee ID if not provided from the form preview
+        if (empty($validated['employee_id'])) {
+            $validated['employee_id'] = $employeeIdService->generate($validated['branch_id'] ?? null);
+        }
 
-        // Auto-generate employee ID
-        $employeeId = $employeeIdService->assignToUser($user, $validated['branch_id'] ?? null);
+        $user = User::create($validated);
 
         // Assign RBAC role if it exists
         $this->syncRbacRole($user, $validated['role']);
@@ -137,7 +139,7 @@ class StaffController extends Controller
         }
 
         return redirect()->route('admin.staff.index')
-            ->with('success', __('app.staff_member_created', ['name' => $user->name]) . " Employee ID: {$employeeId}. Default password: {$defaultPassword}");
+            ->with('success', __('app.staff_member_created', ['name' => $user->name]) . " Employee ID: {$validated['employee_id']}. Default password: {$defaultPassword}");
     }
 
     public function edit(User $staff)
@@ -167,7 +169,6 @@ class StaffController extends Controller
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'email'        => 'required|email|unique:users,email,' . $user->id,
-            'id_number'    => 'nullable|string|max:50|unique:users,id_number,' . $user->id,
             'phone'        => 'nullable|string|max:20',
             'role'         => 'required|in:' . implode(',', array_keys(self::STAFF_ROLES)),
             'branch_id'    => 'nullable|exists:branches,id',

@@ -57,12 +57,12 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="id_number">ID Number</label>
+                            <label class="modern-form-label" for="employee_id">Employee ID</label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-id-card modern-input-icon"></i>
-                                <input type="text" name="id_number" id="id_number" class="modern-input {{ $errors->has('id_number') ? 'is-invalid' : '' }}" value="{{ old('id_number', $user->id_number) }}" placeholder="Employee ID" autocomplete="off" data-lpignore="true" data-form-type="other">
+                                <input type="text" id="employee_id" class="modern-input modern-select-locked" value="{{ $user->employee_id ?? 'Not assigned' }}" readonly tabindex="-1" data-lpignore="true" data-form-type="other">
                             </div>
-                            @error('id_number')<span class="modern-form-error">{{ $message }}</span>@enderror
+                            <div class="modern-input-hint"><i class="fas fa-lock"></i> Auto-generated and cannot be changed</div>
                         </div>
 
                         <div class="modern-form-group">

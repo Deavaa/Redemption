@@ -123,6 +123,7 @@
                         <tr>
                             <th class="th-narrow">#</th>
                             <th>Name</th>
+                            <th>Employee ID</th>
                             <th>Email</th>
                             <th>Role</th>
                             <th>Branch</th>
@@ -163,6 +164,9 @@
                                         @endif
                                     </div>
                                 </div>
+                            </td>
+                            <td>
+                                <span class="modern-cell-emp-id">{{ $s->employee_id ?? '-' }}</span>
                             </td>
                             <td>
                                 <div class="modern-cell-contact">
@@ -244,6 +248,10 @@
                         </div>
                     </div>
                     <div class="mobile-card-item-body">
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-field-label">Employee ID</span>
+                            <span class="modern-cell-emp-id">{{ $s->employee_id ?? '-' }}</span>
+                        </div>
                         <div class="mobile-card-field">
                             <span class="mobile-card-field-label">Role</span>
                             <span class="modern-role-chip" style="background:{{ $rc }}15;color:{{ $rc }};border:1px solid {{ $rc }}30;">
@@ -396,6 +404,7 @@
 .modern-cell-sub { font-size: 0.8rem; color: #9ca3af; }
 .modern-cell-contact { display: inline-flex; align-items: center; gap: 0.4rem; color: #4b5563; font-size: 0.88rem; }
 .modern-cell-muted { color: #d1d5db; font-size: 0.85rem; }
+.modern-cell-emp-id { display: inline-block; padding: 2px 8px; border-radius: 5px; background: #eef2ff; color: #4361ee; font-size: 0.78rem; font-weight: 600; font-family: 'Courier New', monospace; letter-spacing: 0.5px; }
 
 /* Action Buttons */
 .modern-action-group { display: inline-flex; gap: 0.35rem; }
