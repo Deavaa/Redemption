@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ChatParticipant extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = ['conversation_id', 'user_id', 'role', 'joined_at', 'last_read_at', 'is_muted'];
 
     protected $casts = [
