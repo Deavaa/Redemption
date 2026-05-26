@@ -574,7 +574,7 @@
             classInput.value = targetClassId;
         }
 
-        // Step 2: Load students and auto-select
+        // Step 2: Load students and auto-select (chained to avoid race conditions)
         studentContainer.innerHTML = '<div class="gen-empty-state"><i class="fas fa-spinner fa-spin"></i><p>{{ __("app.loading") ?? "Loading..." }}</p></div>';
 
         const params = new URLSearchParams();
@@ -588,7 +588,7 @@
 
                 // Auto-select the preselected student
                 const studentId = preselectedStudent.id;
-                const studentData = allStudents.find(s => s.id == studentId);
+                const studentData = allStudents.find(s => String(s.id) === String(studentId));
                 if (studentData) {
                     const card = studentContainer.querySelector(`[data-student-id="${studentId}"]`);
                     if (card) {
