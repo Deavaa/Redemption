@@ -1720,7 +1720,7 @@
                     <div class="about-image-wrapper">
                         <img src="{{ isset($settings['about_image']) && $settings['about_image'] && file_exists(public_path('storage/' . $settings['about_image'])) ? asset('storage/' . $settings['about_image']) : 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" alt="About {{ $settings['school_name'] }}">
                         <div class="about-image-badge">
-                            <h3>{{ $settings['years_of_excellence'] }}</h3>
+                            <h3>{{ $settings['about_years_experience'] }}</h3>
                             <p>Years of<br>Excellence</p>
                         </div>
                     </div>

@@ -26,6 +26,8 @@
                     <i class="fas fa-school" style="color:var(--primary);font-size:16px;"></i>
                 @elseif($groupKey === 'contact')
                     <i class="fas fa-phone" style="color:var(--primary);font-size:16px;"></i>
+                @elseif($groupKey === 'academic')
+                    <i class="fas fa-chart-bar" style="color:var(--primary);font-size:16px;"></i>
                 @elseif($groupKey === 'about')
                     <i class="fas fa-info-circle" style="color:var(--primary);font-size:16px;"></i>
                 @elseif($groupKey === 'website')

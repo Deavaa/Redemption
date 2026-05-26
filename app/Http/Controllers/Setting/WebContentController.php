@@ -12,6 +12,7 @@ class WebContentController extends Controller
         $groups = [
             'general' => Setting::where('group', 'general')->get(),
             'contact' => Setting::where('group', 'contact')->get(),
+            'academic' => Setting::where('group', 'academic')->get(),
             'about' => Setting::where('group', 'about')->get(),
             'why_choose_us' => Setting::where('group', 'why_choose_us')->get(),
             'programs' => Setting::where('group', 'programs')->get(),
@@ -22,6 +23,7 @@ class WebContentController extends Controller
         $groupLabels = [
             'general' => 'General Settings',
             'contact' => 'Contact Information',
+            'academic' => 'Homepage Stats',
             'about' => 'About Page Content',
             'why_choose_us' => 'Why Choose Us Section',
             'programs' => 'Academic Programs Section',
