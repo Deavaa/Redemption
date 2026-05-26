@@ -10,7 +10,7 @@ class CalendarEvent extends Model
         'title', 'description', 'category', 'color',
         'start_date', 'end_date', 'start_time', 'end_time',
         'is_all_day', 'is_announcement', 'is_approved', 'approved_by', 'approved_at',
-        'academic_year_id', 'branch_id', 'scope', 'created_by',
+        'academic_year_id', 'branch_id', 'exam_id', 'source_type', 'scope', 'created_by',
     ];
 
     protected $casts = [
@@ -40,6 +40,14 @@ class CalendarEvent extends Model
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * The exam that generated this calendar event (if any).
+     */
+    public function exam()
+    {
+        return $this->belongsTo(Exam::class);
     }
 
     /**

@@ -596,6 +596,25 @@ function showEventDetail(event) {
     if (props.scope) {
         html += '<div class="cal-modal-row"><div class="cal-modal-label">Scope</div><div class="cal-modal-value">' + (props.scope === 'school' ? 'School-wide' : 'Branch-specific') + '</div></div>';
     }
+    // Show exam details if this is a synced exam event
+    if (props.source_type === 'exam' && props.exam_id) {
+        html += '<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px dashed #e5e7eb;">';
+        html += '<div style="font-size:0.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem;"><i class="fas fa-graduation-cap" style="margin-right:0.3rem;"></i> Exam Details</div>';
+        if (props.exam_type) {
+            var examTypeLabels = {exam:'Exam',quiz:'Quiz',test:'Test',midterm:'Midterm',final:'Final',assignment:'Assignment',project:'Project'};
+            html += '<div class="cal-modal-row"><div class="cal-modal-label">Type</div><div class="cal-modal-value">' + (examTypeLabels[props.exam_type] || props.exam_type) + '</div></div>';
+        }
+        if (props.exam_subject) {
+            html += '<div class="cal-modal-row"><div class="cal-modal-label">Subject</div><div class="cal-modal-value">' + props.exam_subject + '</div></div>';
+        }
+        if (props.exam_class) {
+            html += '<div class="cal-modal-row"><div class="cal-modal-label">Class</div><div class="cal-modal-value">' + props.exam_class + '</div></div>';
+        }
+        if (props.exam_total_marks) {
+            html += '<div class="cal-modal-row"><div class="cal-modal-label">Total Marks</div><div class="cal-modal-value">' + props.exam_total_marks + '</div></div>';
+        }
+        html += '</div>';
+    }
     document.getElementById('modalTitle').textContent = event.title.replace(' (Pending)', '');
     document.getElementById('modalBody').innerHTML = html;
     document.getElementById('eventModal').style.display = 'flex';
@@ -609,6 +628,14 @@ function showEventDetail(event) {
     } else {
         approveBtn.style.display = 'none';
         rejectBtn.style.display = 'none';
+    }
+
+    // Hide delete button for exam-sourced events (managed via Exams page)
+    const deleteBtn = document.getElementById('modalDeleteBtn');
+    if (props.source_type === 'exam' && props.exam_id) {
+        deleteBtn.style.display = 'none';
+    } else {
+        deleteBtn.style.display = 'inline-block';
     }
 }
 

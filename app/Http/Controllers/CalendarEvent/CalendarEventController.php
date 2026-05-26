@@ -477,7 +477,7 @@ class CalendarEventController extends Controller
     public function apiEvents(Request $r)
     {
         $user = Auth::user();
-        $query = CalendarEvent::with(['academicYear', 'branch']);
+        $query = CalendarEvent::with(['academicYear', 'branch', 'exam.subject', 'exam.classRoom']);
 
         if ($r->filled('start')) {
             $query->where(function ($q) use ($r) {
@@ -542,6 +542,26 @@ class CalendarEventController extends Controller
                     $end .= 'T' . $e->end_time;
                 }
             }
+
+            $extendedProps = [
+                'category'     => $e->category,
+                'description'  => $e->description,
+                'academic_year' => $e->academicYear?->name,
+                'branch'       => $e->branch?->name,
+                'scope'        => $e->scope,
+                'is_approved'  => $e->is_approved,
+                'source_type'  => $e->source_type,
+            ];
+
+            // Include exam details if this event is linked to an exam
+            if ($e->exam_id && $e->exam) {
+                $extendedProps['exam_id'] = $e->exam_id;
+                $extendedProps['exam_type'] = $e->exam->type;
+                $extendedProps['exam_total_marks'] = $e->exam->total_marks;
+                $extendedProps['exam_subject'] = $e->exam->subject?->name;
+                $extendedProps['exam_class'] = $e->exam->classRoom?->name;
+            }
+
             return [
                 'id'          => $e->id,
                 'title'       => $e->title . (!$e->is_approved ? ' (Pending)' : ''),
@@ -551,14 +571,7 @@ class CalendarEventController extends Controller
                 'backgroundColor' => $e->is_approved ? $e->color : '#9ca3af',
                 'borderColor' => $e->is_approved ? $e->color : '#9ca3af',
                 'textColor'   => '#fff',
-                'extendedProps' => [
-                    'category'     => $e->category,
-                    'description'  => $e->description,
-                    'academic_year' => $e->academicYear?->name,
-                    'branch'       => $e->branch?->name,
-                    'scope'        => $e->scope,
-                    'is_approved'  => $e->is_approved,
-                ],
+                'extendedProps' => $extendedProps,
             ];
         });
 

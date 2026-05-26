@@ -11,4 +11,5 @@ class Exam extends Model
     public function term() { return $this->belongsTo(Term::class); }
     public function classRoom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
     public function subject() { return $this->belongsTo(Subject::class); }
+    public function calendarEvent() { return $this->hasOne(CalendarEvent::class); }
 }

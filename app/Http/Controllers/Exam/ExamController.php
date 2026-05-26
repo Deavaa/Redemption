@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
+use App\Models\CalendarEvent;
 use App\Models\Exam;
 use App\Models\Term;
 use Illuminate\Http\Request;
@@ -64,8 +65,11 @@ class ExamController extends Controller
 
             Log::info('Exam store: created successfully', ['exam_id' => $exam->id]);
 
+            // Auto-create calendar event for this exam
+            $this->syncCalendarEvent($exam);
+
             return redirect()->route('admin.exams.index')
-                ->with('success', 'Exam scheduled successfully.');
+                ->with('success', 'Exam scheduled successfully and added to academic calendar.');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Exam store: validation failed', ['errors' => $e->errors()]);
@@ -127,8 +131,11 @@ class ExamController extends Controller
 
             $exam->update($data);
 
+            // Sync calendar event with updated exam details
+            $this->syncCalendarEvent($exam);
+
             return redirect()->route('admin.exams.index')
-                ->with('success', 'Exam updated successfully.');
+                ->with('success', 'Exam updated successfully and academic calendar synced.');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
@@ -144,8 +151,77 @@ class ExamController extends Controller
 
     public function destroy(Exam $exam)
     {
+        // Delete the linked calendar event if it exists
+        CalendarEvent::where('exam_id', $exam->id)->delete();
+
         $exam->delete();
 
-        return back()->with('success', 'Exam deleted successfully.');
+        return back()->with('success', 'Exam deleted successfully and removed from academic calendar.');
+    }
+
+    /**
+     * Create or update the calendar event linked to an exam.
+     * Exam calendar events are school-wide, auto-approved, and categorized as 'exam'.
+     */
+    private function syncCalendarEvent(Exam $exam): void
+    {
+        try {
+            $typeLabel = ucfirst($exam->type);
+            $title = "{$typeLabel}: {$exam->name}";
+
+            // Build description with exam details
+            $descriptionParts = [];
+            if ($exam->term) {
+                $descriptionParts[] = "Term: {$exam->term->name}";
+            }
+            if ($exam->total_marks) {
+                $descriptionParts[] = "Total Marks: {$exam->total_marks}";
+            }
+            if ($exam->classRoom) {
+                $descriptionParts[] = "Class: {$exam->classRoom->name}";
+            }
+            if ($exam->subject) {
+                $descriptionParts[] = "Subject: {$exam->subject->name}";
+            }
+            if ($exam->description) {
+                $descriptionParts[] = $exam->description;
+            }
+            $description = implode(' | ', $descriptionParts);
+
+            $data = [
+                'title'             => $title,
+                'description'       => $description,
+                'category'          => 'exam',
+                'color'             => CalendarEvent::categoryColors()['exam'] ?? '#f59e0b',
+                'start_date'        => $exam->start_date,
+                'end_date'          => $exam->end_date,
+                'start_time'        => $exam->start_time ? substr($exam->start_time, 0, 5) : null,
+                'end_time'          => $exam->end_time ? substr($exam->end_time, 0, 5) : null,
+                'is_all_day'        => empty($exam->start_time),
+                'is_announcement'   => true,
+                'is_approved'       => true,
+                'approved_by'       => auth()->id(),
+                'approved_at'       => now(),
+                'academic_year_id'  => $exam->academic_year_id,
+                'scope'             => 'school',
+                'source_type'       => 'exam',
+            ];
+
+            // Find existing calendar event for this exam, or create new
+            $calendarEvent = CalendarEvent::where('exam_id', $exam->id)->first();
+
+            if ($calendarEvent) {
+                $calendarEvent->update($data);
+            } else {
+                $data['exam_id'] = $exam->id;
+                $data['created_by'] = auth()->id();
+                CalendarEvent::create($data);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to sync calendar event for exam', [
+                'exam_id' => $exam->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
