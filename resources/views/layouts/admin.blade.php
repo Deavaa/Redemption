@@ -1296,7 +1296,7 @@
             <span>Settings</span>
         </a>
         @endif
-        <a href="{{ route('admin.staff.edit', auth()->id()) }}" class="mobile-menu-link">
+        <a href="{{ route('admin.staff.edit', ['staff' => auth()->id()]) }}" class="mobile-menu-link">
             <i class="fas fa-user"></i>
             <span>Profile</span>
         </a>

@@ -190,11 +190,11 @@
                             </td>
                             <td class="td-actions">
                                 <div class="modern-action-group">
-                                    <a href="{{ route('admin.staff.edit', $s) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
+                                    <a href="{{ route('admin.staff.edit', ['staff' => $s->id]) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                         <i class="fas fa-pen"></i>
                                     </a>
                                     @if($s->id !== auth()->id())
-                                    <form method="POST" action="{{ route('admin.staff.destroy', $s) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
+                                    <form method="POST" action="{{ route('admin.staff.destroy', ['staff' => $s->id]) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
                                             <i class="fas fa-trash-alt"></i>
@@ -230,11 +230,11 @@
                             <div class="mobile-card-item-sub">{{ $s->email }}</div>
                         </div>
                         <div class="mobile-card-item-actions">
-                            <a href="{{ route('admin.staff.edit', $s) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
+                            <a href="{{ route('admin.staff.edit', ['staff' => $s->id]) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                 <i class="fas fa-pen"></i>
                             </a>
                             @if($s->id !== auth()->id())
-                            <form method="POST" action="{{ route('admin.staff.destroy', $s) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
+                            <form method="POST" action="{{ route('admin.staff.destroy', ['staff' => $s->id]) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
                                     <i class="fas fa-trash-alt"></i>

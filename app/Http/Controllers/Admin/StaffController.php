@@ -140,8 +140,9 @@ class StaffController extends Controller
             ->with('success', __('app.staff_member_created', ['name' => $user->name]) . " Employee ID: {$employeeId}. Default password: {$defaultPassword}");
     }
 
-    public function edit(User $user)
+    public function edit(User $staff)
     {
+        $user = $staff; // Alias for blade template compatibility
         $roles = self::STAFF_ROLES;
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
         $branchRoles = self::BRANCH_ROLES;
@@ -160,8 +161,9 @@ class StaffController extends Controller
         return view('admin.staff.edit', compact('user', 'roles', 'branches', 'branchRoles', 'isBranchPrincipal', 'authBranchId'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $staff)
     {
+        $user = $staff; // Alias for compatibility
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'email'        => 'required|email|unique:users,email,' . $user->id,
@@ -209,8 +211,9 @@ class StaffController extends Controller
             ->with('success', __('app.staff_member_updated', ['name' => $user->name]));
     }
 
-    public function destroy(User $user)
+    public function destroy(User $staff)
     {
+        $user = $staff; // Alias for compatibility
         // Prevent deleting the last admin
         if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
             return redirect()->route('admin.staff.index')

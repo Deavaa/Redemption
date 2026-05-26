@@ -24,7 +24,7 @@
 
     {{-- Form Card --}}
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.staff.update', $user) }}">@csrf @method('PUT')
+        <form method="POST" action="{{ route('admin.staff.update', ['staff' => $user->id]) }}">@csrf @method('PUT')
             {{-- Personal Info Section --}}
             <div class="modern-form-section">
                 <div class="modern-form-section-header">
