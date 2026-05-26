@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Fee;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
+use App\Models\Branch;
 use App\Models\Classroom;
 use App\Models\Fee;
 use App\Models\Setting;
@@ -13,27 +14,35 @@ class FeeController extends Controller
 {
     public function index(Request $r)
     {
-        $q = Fee::with('classroom', 'academicYear');
+        $q = Fee::with('classroom', 'academicYear', 'branch');
         if ($r->filled('search')) {
             $s = $r->search;
-            $q->where('fee_type', 'LIKE', "%$s%")->orWhere('description', 'LIKE', "%$s%");
+            $q->where(function ($query) use ($s) {
+                $query->where('fee_type', 'LIKE', "%$s%")->orWhere('description', 'LIKE', "%$s%");
+            });
         }
         if ($r->filled('academic_year_id')) $q->where('academic_year_id', $r->academic_year_id);
         if ($r->filled('class_id')) $q->where('class_id', $r->class_id);
+        if ($r->filled('enrollment_type')) $q->where('enrollment_type', $r->enrollment_type);
+        if ($r->filled('branch_id')) $q->where('branch_id', $r->branch_id);
         $data = $q->latest()->paginate(20);
         $totalFees = Fee::count();
         $totalAmount = Fee::sum('amount');
         $academicYears = AcademicYear::orderBy('name')->get();
-        return view('admin.Fee.index', compact('data', 'totalFees', 'totalAmount', 'academicYears'));
+        $branches = Branch::orderBy('name')->get();
+        $enrollmentTypes = Fee::enrollmentTypes();
+        return view('admin.Fee.index', compact('data', 'totalFees', 'totalAmount', 'academicYears', 'branches', 'enrollmentTypes'));
     }
 
     public function create()
     {
         $classrooms = Classroom::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
+        $branches = Branch::orderBy('name')->get();
+        $enrollmentTypes = Fee::enrollmentTypes();
         $feeDueDay = Setting::where('key', 'fee_due_day')->value('value') ?? 10;
         $nextDueDate = $this->getNextDueDate();
-        return view('admin.Fee.create', compact('classrooms', 'academicYears', 'feeDueDay', 'nextDueDate'));
+        return view('admin.Fee.create', compact('classrooms', 'academicYears', 'branches', 'enrollmentTypes', 'feeDueDay', 'nextDueDate'));
     }
 
     public function store(Request $r)
@@ -43,12 +52,19 @@ class FeeController extends Controller
             'amount' => 'required|numeric|min:0',
             'class_id' => 'required|exists:classes,id',
             'academic_year_id' => 'required|exists:academic_years,id',
+            'enrollment_type' => 'nullable|string|in:all,new,transfer,readmission',
+            'branch_id' => 'nullable|exists:branches,id',
             'due_date' => 'nullable|date',
             'description' => 'nullable|string|max:500',
             'is_active' => 'nullable|boolean',
         ]);
 
-        $data = $r->only(['fee_type','amount','class_id','academic_year_id','due_date','description','is_active']);
+        $data = $r->only(['fee_type','amount','class_id','academic_year_id','enrollment_type','branch_id','due_date','description','is_active']);
+
+        // Default enrollment_type to 'all' if not provided
+        if (empty($data['enrollment_type'])) {
+            $data['enrollment_type'] = 'all';
+        }
 
         // Auto-set due date if not provided (10th of current Ethiopian month)
         if (empty($data['due_date'])) {
@@ -69,8 +85,10 @@ class FeeController extends Controller
     {
         $classrooms = Classroom::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
+        $branches = Branch::orderBy('name')->get();
+        $enrollmentTypes = Fee::enrollmentTypes();
         $feeDueDay = Setting::where('key', 'fee_due_day')->value('value') ?? 10;
-        return view('admin.Fee.edit', ['item' => $fee, 'classrooms' => $classrooms, 'academicYears' => $academicYears, 'feeDueDay' => $feeDueDay]);
+        return view('admin.Fee.edit', ['item' => $fee, 'classrooms' => $classrooms, 'academicYears' => $academicYears, 'branches' => $branches, 'enrollmentTypes' => $enrollmentTypes, 'feeDueDay' => $feeDueDay]);
     }
 
     public function update(Request $r, Fee $fee)
@@ -80,12 +98,18 @@ class FeeController extends Controller
             'amount' => 'required|numeric|min:0',
             'class_id' => 'required|exists:classes,id',
             'academic_year_id' => 'required|exists:academic_years,id',
+            'enrollment_type' => 'nullable|string|in:all,new,transfer,readmission',
+            'branch_id' => 'nullable|exists:branches,id',
             'due_date' => 'nullable|date',
             'description' => 'nullable|string|max:500',
             'is_active' => 'nullable|boolean',
         ]);
 
-        $data = $r->only(['fee_type','amount','class_id','academic_year_id','due_date','description','is_active']);
+        $data = $r->only(['fee_type','amount','class_id','academic_year_id','enrollment_type','branch_id','due_date','description','is_active']);
+
+        if (empty($data['enrollment_type'])) {
+            $data['enrollment_type'] = 'all';
+        }
 
         if (empty($data['due_date'])) {
             $data['due_date'] = $this->getNextDueDate();

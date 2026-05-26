@@ -86,6 +86,8 @@
                             <th class="th-narrow">#</th>
                             <th>Fee Type</th>
                             <th>Class</th>
+                            <th>Enrollment</th>
+                            <th>Branch</th>
                             <th>Academic Year</th>
                             <th class="th-center">Amount</th>
                             <th class="th-center">Due Date</th>
@@ -107,6 +109,14 @@
                             </td>
                             <td>
                                 <div class="modern-cell-text">{{ $item->classroom->name ?? '-' }}</div>
+                            </td>
+                            <td>
+                                <span class="modern-badge {{ $item->enrollment_type === 'all' ? 'modern-badge-light' : 'modern-badge-gold' }}">
+                                    {{ $item->enrollment_type_label ?? 'All' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="modern-cell-text">{{ $item->branch->name ?? 'All Branches' }}</div>
                             </td>
                             <td>
                                 <div class="modern-cell-text">{{ $item->academicYear->name ?? '-' }}</div>

@@ -30,6 +30,105 @@
         </div>
     </div>
 
+    {{-- Excel Download/Upload Section --}}
+    <div class="sl-card" style="margin-top:0.75rem;">
+        <div class="sl-form-section">
+            <div class="sl-form-section-head">
+                <div class="sl-form-section-icon sl-form-icon-purple"><i class="fas fa-file-csv"></i></div>
+                <div>
+                    <h3 class="sl-form-section-title">File Upload</h3>
+                    <p class="sl-form-section-desc">Download the template, fill in student data, and upload the completed file (CSV or XLSX)</p>
+                </div>
+            </div>
+            <div class="sl-form-section-body">
+                <div class="sl-excel-upload-area">
+                    {{-- Step 1: Download Template --}}
+                    <div class="sl-excel-step">
+                        <div class="sl-excel-step-num">1</div>
+                        <div class="sl-excel-step-content">
+                            <h4 class="sl-excel-step-title">Download Template</h4>
+                            <p class="sl-excel-step-desc">Get the template with the correct column headers (CSV format by default; XLSX if PhpSpreadsheet is available)</p>
+                            <a href="{{ route('admin.students.download-template') }}" class="sl-btn sl-btn-outline sl-btn-green">
+                                <i class="fas fa-download"></i> Download Template
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Step 2: Upload Filled File --}}
+                    <div class="sl-excel-step">
+                        <div class="sl-excel-step-num">2</div>
+                        <div class="sl-excel-step-content">
+                            <h4 class="sl-excel-step-title">Upload Filled File</h4>
+                            <p class="sl-excel-step-desc">Select the enrollment settings and upload your completed CSV or XLSX file</p>
+                            <form method="POST" action="{{ route('admin.students.upload-students') }}" enctype="multipart/form-data" id="uploadForm" style="margin-top:0.5rem;">
+                                @csrf
+                                {{-- Shared enrollment settings for upload --}}
+                                <div class="sl-upload-settings">
+                                    <div class="sl-form-grid" style="margin-bottom:0.75rem;">
+                                        <div class="sl-form-group">
+                                            <label class="sl-form-label" for="upload_branch_id">Branch <span class="sl-required">*</span></label>
+                                            <div class="sl-input-wrap">
+                                                <i class="fas fa-building sl-input-icon"></i>
+                                                <select name="branch_id" id="upload_branch_id" class="sl-input sl-select" required>
+                                                    <option value="">-- Select Branch --</option>
+                                                    @foreach($branches as $branch)
+                                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="sl-form-group">
+                                            <label class="sl-form-label" for="upload_academic_year_id">Academic Year <span class="sl-required">*</span></label>
+                                            <div class="sl-input-wrap">
+                                                <i class="fas fa-calendar sl-input-icon"></i>
+                                                <select name="academic_year_id" id="upload_academic_year_id" class="sl-input sl-select" required>
+                                                    <option value="">-- Select Academic Year --</option>
+                                                    @foreach($academicYears as $ay)
+                                                        <option value="{{ $ay->id }}">{{ $ay->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="sl-form-group">
+                                            <label class="sl-form-label" for="upload_section_id">Section / Class <span class="sl-required">*</span></label>
+                                            <div class="sl-input-wrap">
+                                                <i class="fas fa-chalkboard sl-input-icon"></i>
+                                                <select name="section_id" id="upload_section_id" class="sl-input sl-select" required>
+                                                    <option value="">-- Select Branch First --</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="sl-form-group">
+                                            <label class="sl-form-label" for="upload_admission_date">Admission Date</label>
+                                            <div class="sl-input-wrap">
+                                                <i class="fas fa-calendar-check sl-input-icon"></i>
+                                                <input type="date" name="admission_date" id="upload_admission_date"
+                                                    class="sl-input" value="{{ date('Y-m-d') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="sl-file-upload-row">
+                                        <div class="sl-file-input-wrap">
+                                            <input type="file" name="file" id="excel_file"
+                                                class="sl-file-input" accept=".csv,.txt,.xlsx,.xls" required>
+                                            <label for="excel_file" class="sl-file-label">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <span id="file_label_text">Choose file (.csv, .xlsx)</span>
+                                            </label>
+                                        </div>
+                                        <button type="submit" class="sl-btn sl-btn-primary" onclick="return confirm('Are you sure you want to upload and enroll students from this file?')">
+                                            <i class="fas fa-upload"></i> Upload & Enroll
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Form Card --}}
     <div class="sl-card" style="margin-top:0.75rem;">
         <form method="POST" action="{{ route('admin.students.bulk-store') }}" id="bulkEnrollForm">
@@ -229,6 +328,8 @@
 .sl-btn-outline:hover { background: #4361ee; color: #fff; }
 .sl-btn-ghost { background: transparent; color: #6b7280; }
 .sl-btn-ghost:hover { color: #1a1a2e; background: #f3f4f6; }
+.sl-btn-green { background: #fff; color: #10b981; border-color: #10b981; }
+.sl-btn-green:hover { background: #10b981; color: #fff; }
 
 .sl-btn-remove {
     background: #fee2e2; color: #ef4444; border: none; border-radius: 4px;
@@ -265,6 +366,7 @@
 }
 .sl-form-icon-blue { background: #eef2ff; color: #4361ee; }
 .sl-form-icon-green { background: #ecfdf5; color: #10b981; }
+.sl-form-icon-purple { background: #f5f3ff; color: #7c3aed; }
 .sl-form-section-title { font-size: 0.9rem; font-weight: 700; color: #1a1a2e; margin: 0; }
 .sl-form-section-desc { font-size: 0.72rem; color: #9ca3af; margin: 0.1rem 0 0; }
 .sl-form-section-body { padding: 0.75rem 1.25rem 1.25rem; }
@@ -339,7 +441,52 @@
     .sl-form-actions { padding: 0.75rem; flex-direction: column; }
     .sl-btn { justify-content: center; width: 100%; }
     .sl-table { font-size: 0.7rem; }
+    .sl-excel-step { flex-direction: column; text-align: center; }
+    .sl-file-upload-row { flex-direction: column; }
 }
+
+/* Excel upload section styles */
+.sl-excel-upload-area {
+    display: flex; flex-direction: column; gap: 1.25rem;
+}
+.sl-excel-step {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px;
+    background: #fafbfc;
+}
+.sl-excel-step-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #4361ee);
+    color: #fff; font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.sl-excel-step-content { flex: 1; }
+.sl-excel-step-title {
+    font-size: 0.85rem; font-weight: 700; color: #1a1a2e; margin: 0 0 0.25rem;
+}
+.sl-excel-step-desc {
+    font-size: 0.72rem; color: #6b7280; margin: 0 0 0.5rem;
+}
+.sl-file-upload-row {
+    display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+}
+.sl-file-input-wrap {
+    flex: 1; min-width: 200px;
+}
+.sl-file-input {
+    display: none;
+}
+.sl-file-label {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; border: 2px dashed #d1d5db;
+    border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    font-size: 0.8rem; color: #6b7280; background: #fff;
+}
+.sl-file-label:hover {
+    border-color: #4361ee; color: #4361ee; background: #eef2ff;
+}
+.sl-file-label i { font-size: 1.1rem; }
 </style>
 @endpush
 
@@ -424,6 +571,45 @@ document.getElementById('branch_id').addEventListener('change', function() {
             sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
             console.error(err);
         });
+});
+
+// Upload form: Load sections when branch changes
+document.getElementById('upload_branch_id').addEventListener('change', function() {
+    const branchId = this.value;
+    const sectionSelect = document.getElementById('upload_section_id');
+
+    if (!branchId) {
+        sectionSelect.innerHTML = '<option value="">-- Select Branch First --</option>';
+        return;
+    }
+
+    sectionSelect.innerHTML = '<option value="">Loading...</option>';
+
+    fetch('{{ route("admin.students.api.sections-by-branch") }}?branch_id=' + branchId)
+        .then(res => res.json())
+        .then(data => {
+            sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+            data.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.class_name + ' - ' + s.name;
+                sectionSelect.appendChild(opt);
+            });
+        })
+        .catch(err => {
+            sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
+            console.error(err);
+        });
+});
+
+// Update file label text when a file is selected
+document.getElementById('excel_file').addEventListener('change', function() {
+    const label = document.getElementById('file_label_text');
+    if (this.files && this.files.length > 0) {
+        label.textContent = this.files[0].name;
+    } else {
+        label.textContent = 'Choose file (.csv, .xlsx)';
+    }
 });
 </script>
 @endpush

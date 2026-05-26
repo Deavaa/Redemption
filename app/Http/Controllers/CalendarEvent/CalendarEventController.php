@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use App\Models\AcademicYear;
 use App\Models\Branch;
+use App\Models\Setting;
 use App\Models\TelegramSetting;
 use App\Models\BranchTelegramSetting;
 use App\Models\TelegramMessage;
@@ -41,6 +42,146 @@ class CalendarEventController extends Controller
             'canAddEvents', 'canApproveEvents', 'isBranchPrincipal',
             'branchScope', 'pendingApprovalCount'
         ));
+    }
+
+    /**
+     * Display a printable academic year calendar report.
+     */
+    public function printCalendar(Request $request)
+    {
+        $academicYears = AcademicYear::orderByDesc('id')->get();
+        $academicYearId = $request->query('academic_year_id');
+        $branchId = $request->query('branch_id');
+
+        // Default to current academic year if none selected
+        if (!$academicYearId) {
+            $currentAy = AcademicYear::where('is_current', true)->first();
+            $academicYearId = $currentAy?->id;
+        }
+
+        $academicYear = $academicYearId ? AcademicYear::find($academicYearId) : null;
+        $branch = $branchId ? Branch::find($branchId) : null;
+        $branches = Branch::orderBy('name')->get();
+
+        // Load approved calendar events for the academic year
+        $query = CalendarEvent::with(['academicYear', 'branch'])
+            ->where('is_approved', true);
+
+        if ($academicYearId) {
+            $query->where('academic_year_id', $academicYearId);
+        }
+
+        // Apply branch scope filtering
+        if ($branchId) {
+            $query->where(function ($q) use ($branchId) {
+                $q->where('scope', 'school')
+                  ->orWhere(function ($q2) use ($branchId) {
+                      $q2->where('scope', 'branch')->where('branch_id', $branchId);
+                  });
+            });
+        }
+
+        $events = $query->orderBy('start_date')->get();
+
+        // Group events by month (key: "Y-m", value: collection of events)
+        $eventsByMonth = $events->groupBy(function ($event) {
+            return $event->start_date->format('Y-m');
+        })->sortKeys();
+
+        // Build a date-to-events map for the calendar grid
+        $eventsByDate = [];
+        foreach ($events as $event) {
+            $start = $event->start_date->copy();
+            $end = $event->end_date ? $event->end_date->copy() : $start->copy();
+            while ($start->lte($end)) {
+                $dateKey = $start->format('Y-m-d');
+                if (!isset($eventsByDate[$dateKey])) {
+                    $eventsByDate[$dateKey] = [];
+                }
+                $eventsByDate[$dateKey][] = $event;
+                $start->addDay();
+            }
+        }
+
+        // Build month grid data for the academic year
+        $monthGrids = [];
+        if ($academicYear) {
+            $start = $academicYear->start_date->copy()->startOfMonth();
+            $end = $academicYear->end_date->copy();
+
+            while ($start->lte($end)) {
+                $monthKey = $start->format('Y-m');
+                $monthGrids[$monthKey] = $this->buildMonthGrid($start->year, $start->month);
+                $start->addMonth()->startOfMonth();
+            }
+        } elseif ($eventsByMonth->count() > 0) {
+            // Fallback: use event date range
+            $firstEvent = $events->first();
+            $lastEvent = $events->last();
+            $start = $firstEvent->start_date->copy()->startOfMonth();
+            $end = $lastEvent->start_date->copy();
+
+            while ($start->lte($end)) {
+                $monthKey = $start->format('Y-m');
+                $monthGrids[$monthKey] = $this->buildMonthGrid($start->year, $start->month);
+                $start->addMonth()->startOfMonth();
+            }
+        }
+
+        // School info from settings
+        $schoolName = Setting::get('school_name', 'Redemption School');
+        $schoolPhone = Setting::get('phone', '');
+        $schoolEmail = Setting::get('email', '');
+        $schoolAddress = Setting::get('address', '');
+        $schoolLogo = Setting::getLogoUrl();
+
+        $categoryColors = CalendarEvent::categoryColors();
+        $categoryList = CalendarEvent::categoryList();
+
+        return view('admin.CalendarEvent.print', compact(
+            'academicYear', 'academicYears', 'branch', 'branches',
+            'events', 'eventsByMonth', 'eventsByDate', 'monthGrids',
+            'schoolName', 'schoolPhone', 'schoolEmail', 'schoolAddress', 'schoolLogo',
+            'categoryColors', 'categoryList', 'academicYearId', 'branchId'
+        ));
+    }
+
+    /**
+     * Build a month grid array for the calendar view.
+     * Returns an array with month info and weeks (each week is 7 days, Mon-Sun).
+     */
+    private function buildMonthGrid(int $year, int $month): array
+    {
+        $firstDay = \Carbon\Carbon::create($year, $month, 1);
+        $daysInMonth = $firstDay->daysInMonth;
+        $startDayOfWeek = $firstDay->dayOfWeekIso; // 1=Mon, 7=Sun
+
+        $monthName = $firstDay->format('F Y');
+
+        $days = [];
+        // Fill leading blanks (Mon=1, so if startDayOfWeek is 1, no blanks)
+        for ($i = 1; $i < $startDayOfWeek; $i++) {
+            $days[] = null;
+        }
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $days[] = \Carbon\Carbon::create($year, $month, $d);
+        }
+        // Fill trailing blanks to complete the last week
+        $remainder = count($days) % 7;
+        if ($remainder > 0) {
+            for ($i = 0; $i < (7 - $remainder); $i++) {
+                $days[] = null;
+            }
+        }
+
+        $weeks = array_chunk($days, 7);
+
+        return [
+            'name' => $monthName,
+            'year' => $year,
+            'month' => $month,
+            'weeks' => $weeks,
+        ];
     }
 
     public function store(Request $r)

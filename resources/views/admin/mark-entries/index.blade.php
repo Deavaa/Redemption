@@ -27,12 +27,18 @@
 .me-lock-banner.unlocked { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
 .me-lock-banner.unlocked i { color: #059669; }
 
-/* Save badge */
-.me-save-badge { font-size: 0.6rem; padding: 1px 5px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
-.me-save-badge.saving { background: #fef3c7; color: #d97706; }
-.me-save-badge.saved { background: #d1fae5; color: #059669; }
-.me-save-badge.error { background: #fee2e2; color: #dc2626; }
-.me-save-badge.idle { background: #f3f4f6; color: #9ca3af; }
+/* Save badge - prominent persistent indicator */
+.me-save-badge {
+    font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 700;
+    white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;
+    transition: all 0.2s ease; min-width: 80px; justify-content: center;
+}
+.me-save-badge.saving { background: #fef3c7; color: #d97706; border: 1px solid #fcd34d; animation: meBadgePulse 1s ease-in-out infinite; }
+.me-save-badge.saved { background: #d1fae5; color: #059669; border: 1px solid #6ee7b7; }
+.me-save-badge.error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+.me-save-badge.idle { background: #f3f4f6; color: #9ca3af; border: 1px solid #e5e7eb; }
+.me-save-badge.editing { background: #eff6ff; color: #2563eb; border: 1px solid #93c5fd; }
+@keyframes meBadgePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
 
 /* Empty State - compact */
 .me-empty { text-align: center; padding: 1.5rem 1rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #eee; }
@@ -88,8 +94,15 @@
 .me-student-count { font-size: 0.72rem; font-weight: 700; color: #1a1a2e; display: flex; align-items: center; gap: 4px; }
 .me-student-count i { color: #4361ee; font-size: 0.7rem; }
 
-/* Cards container - carousel wrapper */
-.me-cards-container { overflow: hidden; position: relative; border-radius: 6px; }
+/* Mark entry area - constrained to viewport */
+.me-mark-entry-area { display: flex; flex-direction: column; }
+
+/* Cards container - carousel wrapper with viewport constraint */
+.me-cards-container {
+    overflow: hidden; position: relative; border-radius: 6px;
+    max-height: calc(100vh - 260px);
+    min-height: 200px;
+}
 
 /* Card slider - horizontal strip */
 .me-card-slider { display: flex; transition: transform 0.3s ease; will-change: transform; touch-action: pan-y; }
@@ -255,6 +268,7 @@
     .me-filter-grid { grid-template-columns: 1fr 1fr; }
     .me-filter-summary { font-size: 0.6rem; gap: 2px; padding: 2px 5px; }
     .me-global-status { padding: 3px 5px; }
+    .me-cards-container { max-height: calc(100vh - 280px); }
     .me-sc-ca-grid { grid-template-columns: repeat(4, 1fr); }
     .me-sc-exam-grid { grid-template-columns: repeat(2, 1fr); }
     .me-sc-header { padding: 3px 5px; gap: 4px; }
@@ -263,15 +277,18 @@
     .me-sc-field-input { font-size: 0.72rem; padding: 2px 1px; }
     .me-carousel-nav-btn { padding: 6px 10px; font-size: 0.75rem; }
     .me-carousel-dot { width: 10px; height: 10px; }
+    .me-save-badge { font-size: 0.65rem; padding: 2px 8px; min-width: 70px; }
 }
 
 @media (max-width: 480px) {
     .admin-content { padding: 2px !important; }
     .me-filter-grid { grid-template-columns: 1fr; }
     .me-filter-body { padding: 4px; }
+    .me-cards-container { max-height: calc(100vh - 300px); }
     .me-sc-ca-grid { grid-template-columns: repeat(3, 1fr); }
     .me-sc-exam-grid { grid-template-columns: repeat(2, 1fr); }
     .me-sc-field-input { font-size: 0.68rem; }
+    .me-save-badge { font-size: 0.6rem; padding: 2px 6px; min-width: 60px; }
 }
 </style>
 @endpush
@@ -400,7 +417,7 @@
                 </span>
             </div>
             <div class="me-global-status-right">
-                <span class="me-save-badge idle" id="globalSaveStatus">Ready</span>
+                <span class="me-save-badge idle" id="globalSaveStatus"><i class="fas fa-check-circle"></i> Ready</span>
             </div>
         </div>
 
@@ -1142,6 +1159,9 @@
                     recalcStudent(idx);
                 }
 
+                // Show editing status immediately when user types
+                setGlobalSaveStatus('editing', 'Editing...');
+
                 // Debounced auto-save
                 var timerKey = studentId + '_' + markKey;
                 if (saveTimers[timerKey]) clearTimeout(saveTimers[timerKey]);
@@ -1474,7 +1494,7 @@
         })
         .then(function(res) {
             if (res.success) {
-                setGlobalSaveStatus('saved', 'Saved');
+                setGlobalSaveStatus('saved', 'Saved ✓');
 
                 // Flash the input green
                 var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
@@ -1504,9 +1524,9 @@
                     }
                 }
 
-                setTimeout(function() { setGlobalSaveStatus('idle', 'Ready'); }, 2000);
+                // Stay as 'Saved' persistently - will change when user edits again
             } else {
-                setGlobalSaveStatus('error', res.error || 'Failed');
+                setGlobalSaveStatus('error', 'Not Saved');
                 var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
                 if (inp) {
                     inp.classList.add('input-error');
@@ -1515,7 +1535,7 @@
             }
         })
         .catch(function(err) {
-            setGlobalSaveStatus('error', err.message || 'Error');
+            setGlobalSaveStatus('error', 'Not Saved');
             var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
             if (inp) {
                 inp.classList.add('input-error');
@@ -1525,9 +1545,17 @@
         });
     }
 
+    var saveIconMap = {
+        saving: '<i class="fas fa-spinner fa-spin"></i>',
+        saved: '<i class="fas fa-check-circle"></i>',
+        error: '<i class="fas fa-exclamation-circle"></i>',
+        idle: '<i class="fas fa-check-circle"></i>',
+        editing: '<i class="fas fa-pen"></i>'
+    };
+
     function setGlobalSaveStatus(state, text) {
         globalSaveStatus.className = 'me-save-badge ' + state;
-        globalSaveStatus.textContent = text;
+        globalSaveStatus.innerHTML = (saveIconMap[state] || '') + ' ' + text;
     }
 
     // ========== UI STATE HELPERS ==========

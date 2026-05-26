@@ -13,6 +13,8 @@ class WebContentController extends Controller
             'general' => Setting::where('group', 'general')->get(),
             'contact' => Setting::where('group', 'contact')->get(),
             'about' => Setting::where('group', 'about')->get(),
+            'why_choose_us' => Setting::where('group', 'why_choose_us')->get(),
+            'programs' => Setting::where('group', 'programs')->get(),
             'website' => Setting::where('group', 'website')->get(),
             'social' => Setting::where('group', 'social')->get(),
             'appearance' => Setting::where('group', 'appearance')->get(),
@@ -21,6 +23,8 @@ class WebContentController extends Controller
             'general' => 'General Settings',
             'contact' => 'Contact Information',
             'about' => 'About Page Content',
+            'why_choose_us' => 'Why Choose Us Section',
+            'programs' => 'Academic Programs Section',
             'website' => 'Website Content',
             'social' => 'Social Media Links',
             'appearance' => 'Appearance & Branding',
@@ -58,8 +62,12 @@ class WebContentController extends Controller
             if (file_exists($oldPublicPath)) unlink($oldPublicPath);
         }
 
+        // Determine the correct group from the existing setting, default to 'appearance'
+        $existingSetting = Setting::where('key', $key)->first();
+        $group = $existingSetting ? $existingSetting->group : 'appearance';
+
         $path = $request->file('file')->store('settings', 'public');
-        Setting::updateOrCreate(['key' => $key], ['value' => $path, 'group' => 'appearance']);
+        Setting::updateOrCreate(['key' => $key], ['value' => $path, 'group' => $group]);
 
         // Copy to public/storage fallback
         try {

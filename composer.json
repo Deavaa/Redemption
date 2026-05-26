@@ -11,6 +11,9 @@
         "laravel/tinker": "^2.10.1",
         "orangehill/iseed": "^3.8"
     },
+    "suggest": {
+        "phpoffice/phpspreadsheet": "Required for XLSX file support in student upload/download (^2.0). Requires ext-gd. Without it, CSV format is used instead."
+    },
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",

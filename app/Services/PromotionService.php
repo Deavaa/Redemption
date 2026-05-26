@@ -463,6 +463,136 @@ class PromotionService
         return $failures;
     }
 
+    /**
+     * Bulk-process promotion for a class with flexible modes.
+     *
+     * Modes:
+     *   - 'all':              Process all students; apply the calculated result (current behaviour).
+     *                          If $forcePromote is true, override all students to 'promoted'.
+     *   - 'specific_result':  Only process students whose CALCULATED result matches $specificResult.
+     *                          Students whose calculated result doesn't match are left unchanged.
+     *   - 'satisfy_criteria': Process all students, but only those who satisfy the promotion
+     *                          criteria (as defined in PromotionSetting) get promoted; others keep
+     *                          their calculated status (detained / conditional).
+     *
+     * @param  int       $classId
+     * @param  int       $academicYearId
+     * @param  int       $termId
+     * @param  int       $processedByUserId
+     * @param  string    $promotionMode    One of: 'all', 'specific_result', 'satisfy_criteria'
+     * @param  string|null $specificResult  When mode is 'specific_result': 'promoted'|'detained'|'conditional'
+     * @param  bool      $forcePromote     When true with 'all' mode, override all to promoted
+     * @return array{processed: int, promoted: int, detained: int, conditional: int, skipped: int, errors: array}
+     */
+    public function processBulkPromotion(
+        int $classId,
+        int $academicYearId,
+        int $termId,
+        int $processedByUserId,
+        string $promotionMode = 'all',
+        ?string $specificResult = null,
+        bool $forcePromote = false,
+    ): array {
+        $students = Student::where('class_id', $classId)
+            ->where('status', 'active')
+            ->get();
+
+        $results = [
+            'processed'   => 0,
+            'promoted'    => 0,
+            'detained'    => 0,
+            'conditional' => 0,
+            'skipped'     => 0,
+            'errors'      => [],
+        ];
+
+        $nextClass = $this->getNextClass($classId);
+        $toClassId = $nextClass?->id ?? $classId;
+        $setting   = PromotionSetting::getActive();
+
+        foreach ($students as $student) {
+            try {
+                // Always calculate performance first
+                $performance = $this->calculateStudentPerformance(
+                    $student->id,
+                    $academicYearId,
+                    $termId,
+                );
+
+                // Determine the calculated status (without override)
+                [$calculatedStatus, $calculatedReasons] = $this->determinePromotionStatus($performance, $setting);
+
+                switch ($promotionMode) {
+                    case 'all':
+                        // If force_promote, override to promoted; otherwise use calculated status
+                        $effectiveStatus = $forcePromote ? 'promoted' : $calculatedStatus;
+                        $overrideStatus  = $forcePromote ? 'promoted' : null;
+                        break;
+
+                    case 'specific_result':
+                        // Only process students whose calculated result matches the specific_result
+                        if ($calculatedStatus !== $specificResult) {
+                            $results['skipped']++;
+                            continue 2; // skip to next student in the foreach
+                        }
+                        $effectiveStatus = $calculatedStatus;
+                        $overrideStatus  = null;
+                        break;
+
+                    case 'satisfy_criteria':
+                        // Process all students, but only those who satisfy criteria get promoted;
+                        // others keep their calculated status (detained/conditional).
+                        // "Satisfy criteria" means the calculated status IS promoted.
+                        $effectiveStatus = $calculatedStatus;
+                        $overrideStatus  = null;
+                        break;
+
+                    default:
+                        $effectiveStatus = $calculatedStatus;
+                        $overrideStatus  = null;
+                }
+
+                // Process the student with the determined status
+                $promotionResult = $this->processStudentPromotion(
+                    $student->id,
+                    $academicYearId,
+                    $termId,
+                    $toClassId,
+                    $processedByUserId,
+                    null, // remarks
+                    $overrideStatus,
+                );
+
+                $results['processed']++;
+
+                if ($promotionResult->status === 'promoted') {
+                    $results['promoted']++;
+                } elseif ($promotionResult->status === 'detained') {
+                    $results['detained']++;
+                } elseif ($promotionResult->status === 'conditional') {
+                    $results['conditional']++;
+                }
+            } catch (\Throwable $e) {
+                $results['errors'][] = [
+                    'student_id' => $student->id,
+                    'student'    => $student->full_name,
+                    'error'      => $e->getMessage(),
+                ];
+                Log::error('Bulk promotion processing failed for student', [
+                    'student_id'    => $student->id,
+                    'class_id'      => $classId,
+                    'promotion_mode' => $promotionMode,
+                    'error'         => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Compute class ranks for all processed results in this class/term
+        $this->computeClassRanks($classId, $academicYearId, $termId);
+
+        return $results;
+    }
+
     // ── Protected helpers ───────────────────────────────────────────────────────
 
     /**

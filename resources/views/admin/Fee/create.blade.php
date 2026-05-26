@@ -105,6 +105,47 @@
                         </div>
 
                         <div class="modern-form-group">
+                            <label class="modern-form-label" for="enrollment_type">
+                                Enrollment Type <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-user-plus modern-input-icon"></i>
+                                <select name="enrollment_type" id="enrollment_type" class="modern-input modern-select {{ $errors->has('enrollment_type') ? 'is-invalid' : '' }}">
+                                    @foreach($enrollmentTypes as $value => $label)
+                                        <option value="{{ $value }}" {{ old('enrollment_type', 'all') == $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <span class="modern-form-hint">Filter fee by student enrollment type</span>
+                            @error('enrollment_type')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="branch_id">
+                                Branch <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-building modern-input-icon"></i>
+                                <select name="branch_id" id="branch_id" class="modern-input modern-select {{ $errors->has('branch_id') ? 'is-invalid' : '' }}">
+                                    <option value="">-- All Branches --</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <span class="modern-form-hint">Leave empty to apply to all branches</span>
+                            @error('branch_id')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
                             <label class="modern-form-label" for="academic_year_id">
                                 Academic Year <span class="modern-required">*</span>
                             </label>
@@ -306,6 +347,13 @@
 }
 
 .modern-required { color: #ef4444; font-weight: 700; }
+
+.modern-form-hint {
+    display: block;
+    font-size: 0.78rem;
+    color: #9ca3af;
+    margin-top: 0.3rem;
+}
 
 /* Input */
 .modern-input-wrapper { position: relative; }

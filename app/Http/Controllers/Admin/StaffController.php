@@ -230,6 +230,27 @@ class StaffController extends Controller
     }
 
     /**
+     * Preview the next auto-generated employee ID for a given branch.
+     * Used by the staff create form via AJAX.
+     */
+    public function apiEmployeeIdPreview(Request $request)
+    {
+        $branchId = $request->query('branch_id');
+
+        if ($branchId) {
+            $branch = Branch::find($branchId);
+            if (!$branch) {
+                return response()->json(['error' => 'Invalid branch'], 400);
+            }
+        }
+
+        $employeeIdService = new EmployeeIdService();
+        $employeeId = $employeeIdService->generate($branchId ? (int) $branchId : null);
+
+        return response()->json(['employee_id' => $employeeId]);
+    }
+
+    /**
      * Normalize phone number to 0900000000 format.
      */
     private function normalizePhone(string $input): string

@@ -32,7 +32,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(27, 94, 32, 0.88) 0%, rgba(27, 94, 32, 0.6) 100%);
+            background: transparent;
         }
 
         /* Classical pattern overlay */
@@ -42,7 +42,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(212, 160, 23, 0.06) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
             background-size: 30px 30px;
             z-index: 1;
             pointer-events: none;
@@ -386,7 +386,7 @@
 
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(27, 94, 32, 0.12);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
             border-color: transparent;
         }
 
@@ -430,7 +430,7 @@
 
         .feature-card:hover .feature-icon {
             transform: scale(1.1) rotate(-5deg);
-            box-shadow: 0 8px 25px rgba(27, 94, 32, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             border-color: var(--secondary-color);
         }
 
@@ -592,7 +592,7 @@
             left: 0;
             right: 0;
             height: 50%;
-            background: linear-gradient(to top, rgba(27, 94, 32, 0.5), transparent);
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
         }
 
         .program-content {
@@ -705,7 +705,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(27, 94, 32, 0.75) 0%, rgba(212, 160, 23, 0.75) 100%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.45) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -933,7 +933,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(27, 94, 32, 0.7);
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -981,7 +981,7 @@
         /* ========== CTA Section (Animated Gradient) ========== */
         .cta {
             padding: 6rem 0;
-            background: linear-gradient(135deg, var(--primary-color) 0%, #0D3B12 50%, var(--primary-color) 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1a1a2e 50%, var(--primary-color) 100%);
             background-size: 200% 200%;
             animation: gradientShift 8s ease infinite;
             color: var(--white);
@@ -1650,62 +1650,62 @@
         <div class="container">
             <div class="section-header reveal">
                 <span class="section-badge">Why Choose Us</span>
-                <h2>Excellence in Every Aspect</h2>
-                <p>We provide a comprehensive educational experience that goes beyond academics, focusing on holistic development and character building.</p>
+                <h2>{{ $settings['wcu_section_title'] }}</h2>
+                <p>{{ $settings['wcu_section_subtitle'] }}</p>
             </div>
             <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card reveal">
                         <div class="feature-icon">
-                            <i class="fas fa-chalkboard-teacher"></i>
+                            <i class="{{ $settings['wcu_1_icon'] }}"></i>
                         </div>
-                        <h4>Expert Faculty</h4>
-                        <p>Our teachers are highly qualified professionals with years of experience, dedicated to nurturing each student's unique potential.</p>
+                        <h4>{{ $settings['wcu_1_title'] }}</h4>
+                        <p>{{ $settings['wcu_1_description'] }}</p>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card reveal">
                         <div class="feature-icon">
-                            <i class="fas fa-microscope"></i>
+                            <i class="{{ $settings['wcu_2_icon'] }}"></i>
                         </div>
-                        <h4>Modern Facilities</h4>
-                        <p>State-of-the-art laboratories, libraries, sports facilities, and technology-enabled classrooms provide the perfect learning environment.</p>
+                        <h4>{{ $settings['wcu_2_title'] }}</h4>
+                        <p>{{ $settings['wcu_2_description'] }}</p>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card reveal">
                         <div class="feature-icon">
-                            <i class="fas fa-users"></i>
+                            <i class="{{ $settings['wcu_3_icon'] }}"></i>
                         </div>
-                        <h4>Small Class Sizes</h4>
-                        <p>Limited student-teacher ratio ensures personalized attention and customized learning approaches for every student.</p>
+                        <h4>{{ $settings['wcu_3_title'] }}</h4>
+                        <p>{{ $settings['wcu_3_description'] }}</p>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card reveal">
                         <div class="feature-icon">
-                            <i class="fas fa-palette"></i>
+                            <i class="{{ $settings['wcu_4_icon'] }}"></i>
                         </div>
-                        <h4>Holistic Development</h4>
-                        <p>Beyond academics, we focus on arts, sports, leadership, and character development to create well-rounded individuals.</p>
+                        <h4>{{ $settings['wcu_4_title'] }}</h4>
+                        <p>{{ $settings['wcu_4_description'] }}</p>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card reveal">
                         <div class="feature-icon">
-                            <i class="fas fa-globe"></i>
+                            <i class="{{ $settings['wcu_5_icon'] }}"></i>
                         </div>
-                        <h4>Global Perspective</h4>
-                        <p>International curriculum standards and exchange programs prepare students for success in a globalized world.</p>
+                        <h4>{{ $settings['wcu_5_title'] }}</h4>
+                        <p>{{ $settings['wcu_5_description'] }}</p>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card reveal">
                         <div class="feature-icon">
-                            <i class="fas fa-award"></i>
+                            <i class="{{ $settings['wcu_6_icon'] }}"></i>
                         </div>
-                        <h4>Proven Track Record</h4>
-                        <p>Our students consistently achieve top scores in national examinations and gain admission to prestigious universities.</p>
+                        <h4>{{ $settings['wcu_6_title'] }}</h4>
+                        <p>{{ $settings['wcu_6_description'] }}</p>
                     </div>
                 </div>
             </div>
@@ -1753,47 +1753,29 @@
         <div class="container">
             <div class="section-header reveal">
                 <span class="section-badge">Academic Programs</span>
-                <h2>Pathways to Success</h2>
-                <p>Our comprehensive curriculum is designed to challenge and inspire students at every stage of their educational journey.</p>
+                <h2>{{ $settings['programs_section_title'] }}</h2>
+                <p>{{ $settings['programs_section_subtitle'] }}</p>
             </div>
             <div class="programs-scroll-wrapper reveal" id="programsScrollWrapper">
                 <div class="programs-scroll-track">
-                    <div class="program-card">
-                        <div class="program-image" style="background-image: url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')"></div>
-                        <div class="program-content">
-                            <span class="program-tag">Ages 3-5</span>
-                            <h4>Early Childhood Education</h4>
-                            <p>A nurturing environment where young learners develop foundational skills through play-based learning and creative exploration.</p>
-                            <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                    @for ($i = 1; $i <= 4; $i++)
+                        @php
+                            $pImage = $settings["program_{$i}_image"] ?? '';
+                            $pTag = $settings["program_{$i}_tag"] ?? '';
+                            $pTitle = $settings["program_{$i}_title"] ?? '';
+                            $pDesc = $settings["program_{$i}_description"] ?? '';
+                            $hasImage = !empty($pImage) && file_exists(public_path('storage/' . $pImage));
+                        @endphp
+                        <div class="program-card">
+                            <div class="program-image" style="background-image: url('{{ $hasImage ? asset('storage/' . $pImage) : 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}')"></div>
+                            <div class="program-content">
+                                <span class="program-tag">{{ $pTag }}</span>
+                                <h4>{{ $pTitle }}</h4>
+                                <p>{{ $pDesc }}</p>
+                                <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                            </div>
                         </div>
-                    </div>
-                    <div class="program-card">
-                        <div class="program-image" style="background-image: url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')"></div>
-                        <div class="program-content">
-                            <span class="program-tag">Grades 1-8</span>
-                            <h4>Primary & Middle School</h4>
-                            <p>Building strong academic foundations while fostering curiosity, critical thinking, and social-emotional development.</p>
-                            <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                    <div class="program-card">
-                        <div class="program-image" style="background-image: url('https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')"></div>
-                        <div class="program-content">
-                            <span class="program-tag">Grades 9-12</span>
-                            <h4>High School</h4>
-                            <p>Rigorous college-preparatory curriculum with advanced placement courses and specialized tracks in sciences, arts, and humanities.</p>
-                            <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                    <div class="program-card">
-                        <div class="program-image" style="background-image: url('https://images.unsplash.com/photo-1571260899304-425eee4c7efc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')"></div>
-                        <div class="program-content">
-                            <span class="program-tag">All Ages</span>
-                            <h4>Extracurricular Programs</h4>
-                            <p>From robotics to debate, music to sports — our diverse extracurricular offerings help students discover their passions.</p>
-                            <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
+                    @endfor
                 </div>
             </div>
             <div class="programs-scroll-nav">

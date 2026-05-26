@@ -83,6 +83,11 @@
             <h1 class="cal-title">Academic Calendar</h1>
             <p class="cal-subtitle">Manage school events, holidays, exams, and important dates &mdash; click any date to add an event</p>
         </div>
+        <div style="display:flex;gap:0.5rem;align-items:flex-start;">
+            <a href="{{ route('admin.calendar.print') }}" target="_blank" class="btn btn-success btn-sm" style="display:inline-flex;align-items:center;gap:0.35rem;border-radius:8px;font-weight:600;font-size:0.82rem;padding:0.45rem 0.85rem;">
+                <i class="fas fa-print"></i> Print Calendar
+            </a>
+        </div>
     </div>
 
     <div class="cal-layout">

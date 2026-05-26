@@ -67,6 +67,31 @@
 /* Action Buttons Row */
 .promo-actions-bar { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center; }
 
+/* Bulk Promotion Panel */
+.promo-bulk-card { background: var(--card-bg, #fff); border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--border, #f0f0f0); overflow: hidden; margin-bottom: 1.25rem; }
+.promo-bulk-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border, #f0f0f0); background: var(--bg, #fafbfc); }
+.promo-bulk-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; background: #eef2ff; color: #4361ee; }
+.promo-bulk-title { font-size: 1rem; font-weight: 700; color: var(--text-dark, #1a1a2e); margin: 0; }
+.promo-bulk-desc { font-size: 0.82rem; color: var(--text-muted, #9ca3af); margin: 0.1rem 0 0; }
+.promo-bulk-body { padding: 1.25rem 1.5rem; }
+.promo-bulk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; align-items: end; }
+.promo-bulk-group { display: flex; flex-direction: column; }
+.promo-bulk-label { font-weight: 600; color: #374151; margin-bottom: 0.4rem; font-size: 0.85rem; }
+.promo-bulk-select { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 0.6rem 2.2rem 0.6rem 0.8rem; font-size: 0.88rem; color: #1a1a2e; background: #fff; appearance: none; cursor: pointer; transition: all 0.2s; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.6rem center; background-repeat: no-repeat; background-size: 1.15rem; }
+.promo-bulk-select:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(67,97,238,0.1); }
+.promo-bulk-checkbox-group { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0; }
+.promo-bulk-checkbox { width: 18px; height: 18px; accent-color: #4361ee; cursor: pointer; }
+.promo-bulk-checkbox-label { font-size: 0.88rem; color: #374151; font-weight: 500; cursor: pointer; }
+.promo-bulk-actions { display: flex; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border, #f0f0f0); align-items: center; flex-wrap: wrap; }
+.promo-bulk-warning { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #f59e0b; font-weight: 500; }
+
+@media (max-width: 992px) {
+    .promo-bulk-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .promo-bulk-grid { grid-template-columns: 1fr; }
+}
+
 /* Table Enhancements */
 .promo-table-wrapper { overflow-x: auto; }
 .promo-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
@@ -225,7 +250,7 @@
             <input type="hidden" name="term_id" value="{{ $selectedTerm }}">
             <input type="hidden" name="class_id" value="{{ $selectedClass }}">
             <button type="submit" class="btn-modern btn-modern-primary" style="font-size:0.82rem;padding:0.5rem 1.1rem;" onclick="return confirm('Are you sure you want to process promotion for the selected class? This action will finalize promotion results.')">
-                <i class="fas fa-play-circle"></i> Process Class Promotion
+                <i class="fas fa-play-circle"></i> Quick Process (All Students)
             </button>
         </form>
         @if($promotionSetting)
@@ -233,6 +258,65 @@
                 <i class="fas fa-cog"></i> Using: {{ $promotionSetting->name }}
             </a>
         @endif
+    </div>
+
+    {{-- Bulk Promotion Panel --}}
+    <div class="promo-bulk-card" id="bulkPromoPanel">
+        <div class="promo-bulk-header">
+            <div class="promo-bulk-icon"><i class="fas fa-layer-group"></i></div>
+            <div>
+                <h3 class="promo-bulk-title">Bulk Promotion Options</h3>
+                <p class="promo-bulk-desc">Choose how you want to process student promotions for the selected class</p>
+            </div>
+        </div>
+        <div class="promo-bulk-body">
+            <form method="POST" action="{{ route('admin.promotion.process-bulk') }}" id="bulkPromoForm">
+                @csrf
+                <input type="hidden" name="academic_year_id" value="{{ $selectedAy }}">
+                <input type="hidden" name="term_id" value="{{ $selectedTerm }}">
+                <input type="hidden" name="class_id" value="{{ $selectedClass }}">
+
+                <div class="promo-bulk-grid">
+                    <div class="promo-bulk-group">
+                        <label class="promo-bulk-label" for="promotionMode">Promotion Mode</label>
+                        <select name="promotion_mode" id="promotionMode" class="promo-bulk-select">
+                            <option value="all">Promote All Students</option>
+                            <option value="specific_result">Promote by Specific Result</option>
+                            <option value="satisfy_criteria">Promote Those Who Satisfy Criteria</option>
+                        </select>
+                    </div>
+
+                    <div class="promo-bulk-group" id="specificResultGroup" style="display:none;">
+                        <label class="promo-bulk-label" for="specificResult">Result Type</label>
+                        <select name="specific_result" id="specificResult" class="promo-bulk-select">
+                            <option value="promoted">Promoted Only</option>
+                            <option value="conditional">Conditional Only</option>
+                            <option value="detained">Detained Only</option>
+                        </select>
+                    </div>
+
+                    <div class="promo-bulk-group" id="forcePromoteGroup">
+                        <div class="promo-bulk-checkbox-group" style="margin-top:0.3rem;">
+                            <input type="checkbox" name="force_promote" id="forcePromote" value="1" class="promo-bulk-checkbox">
+                            <label for="forcePromote" class="promo-bulk-checkbox-label">
+                                Force Promote All
+                                <span style="display:block;font-size:0.75rem;color:#9ca3af;font-weight:400;">Override all students to promoted status</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="promo-bulk-actions">
+                    <button type="submit" class="btn-modern btn-modern-primary" style="font-size:0.82rem;padding:0.5rem 1.3rem;" onclick="return confirmBulkPromotion()">
+                        <i class="fas fa-bolt"></i> Process Bulk Promotion
+                    </button>
+                    <div id="bulkModeDescription" class="promo-bulk-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <span>All students will be processed with their calculated promotion result.</span>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- Results Table --}}
@@ -449,6 +533,81 @@ function openOverrideModal(btn) {
     document.getElementById('overrideStatus').value = btn.dataset.status;
     const modal = new bootstrap.Modal(document.getElementById('overrideModal'));
     modal.show();
+}
+
+// Bulk Promotion Mode Toggle
+const promotionModeSelect = document.getElementById('promotionMode');
+const specificResultGroup = document.getElementById('specificResultGroup');
+const forcePromoteGroup = document.getElementById('forcePromoteGroup');
+const bulkModeDescription = document.getElementById('bulkModeDescription');
+const forcePromoteCheckbox = document.getElementById('forcePromote');
+
+function updateBulkPromoUI() {
+    const mode = promotionModeSelect.value;
+
+    // Toggle specific result dropdown
+    specificResultGroup.style.display = mode === 'specific_result' ? 'flex' : 'none';
+
+    // Toggle force promote checkbox - only visible for 'all' mode
+    forcePromoteGroup.style.display = mode === 'all' ? 'flex' : 'none';
+
+    // Uncheck force promote when not in 'all' mode
+    if (mode !== 'all') {
+        forcePromoteCheckbox.checked = false;
+    }
+
+    // Update description text
+    const descSpan = bulkModeDescription.querySelector('span');
+    switch (mode) {
+        case 'all':
+            if (forcePromoteCheckbox.checked) {
+                descSpan.textContent = 'All students will be forced to PROMOTED status, regardless of their calculated result.';
+                bulkModeDescription.style.color = '#ef4444';
+            } else {
+                descSpan.textContent = 'All students will be processed with their calculated promotion result.';
+                bulkModeDescription.style.color = '#f59e0b';
+            }
+            break;
+        case 'specific_result':
+            const resultType = document.getElementById('specificResult').value;
+            descSpan.textContent = 'Only students whose calculated result is "' + resultType.toUpperCase() + '" will be processed. Others will be skipped.';
+            bulkModeDescription.style.color = '#f59e0b';
+            break;
+        case 'satisfy_criteria':
+            descSpan.textContent = 'All students will be processed. Only those who satisfy the promotion criteria will be promoted; others will retain their calculated status (detained/conditional).';
+            bulkModeDescription.style.color = '#10b981';
+            break;
+    }
+}
+
+promotionModeSelect.addEventListener('change', updateBulkPromoUI);
+forcePromoteCheckbox.addEventListener('change', updateBulkPromoUI);
+document.getElementById('specificResult').addEventListener('change', updateBulkPromoUI);
+
+// Confirm bulk promotion
+function confirmBulkPromotion() {
+    const mode = promotionModeSelect.value;
+    let message = 'Are you sure you want to process bulk promotion?\n\n';
+
+    switch (mode) {
+        case 'all':
+            if (forcePromoteCheckbox.checked) {
+                message += 'Mode: FORCE PROMOTE ALL\nAll students will be promoted regardless of their results.';
+            } else {
+                message += 'Mode: ALL STUDENTS\nEach student will receive their calculated promotion result.';
+            }
+            break;
+        case 'specific_result':
+            const resultType = document.getElementById('specificResult').value;
+            message += 'Mode: SPECIFIC RESULT (' + resultType.toUpperCase() + ')\nOnly students with calculated result "' + resultType + '" will be processed.';
+            break;
+        case 'satisfy_criteria':
+            message += 'Mode: SATISFY CRITERIA\nStudents who meet promotion criteria will be promoted; others retain their calculated status.';
+            break;
+    }
+
+    message += '\n\nThis action will finalize promotion results. Continue?';
+    return confirm(message);
 }
 </script>
 @endpush

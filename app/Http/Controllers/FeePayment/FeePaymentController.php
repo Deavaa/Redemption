@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\FeePayment;
 use App\Models\Fee;
 use App\Models\Student;
+use App\Models\StudentEnrollment;
 class FeePaymentController extends Controller
 {
     public function index(Request $request){
@@ -37,7 +38,7 @@ class FeePaymentController extends Controller
     public function create(Request $request){
         $branchScope = $request->attributes->get('branch_scope');
         
-        $fees = Fee::with("classroom","academicYear")->where("is_active",1)
+        $fees = Fee::with("classroom","academicYear","branch")->where("is_active",1)
             ->when($branchScope, function($q) use ($branchScope) {
                 $q->whereHas('classroom', function($q2) use ($branchScope) {
                     $q2->where('branch_id', $branchScope);
@@ -51,6 +52,62 @@ class FeePaymentController extends Controller
             ->get();
         return view("admin.FeePayment.create", compact("fees","students"));
     }
+
+    /**
+     * Get applicable fees for a specific student based on their enrollment.
+     * Filters fees by enrollment_type and branch_id matching the student's enrollment.
+     */
+    public function getApplicableFees(Request $request, $studentId)
+    {
+        $student = Student::findOrFail($studentId);
+        $academicYearId = $request->input('academic_year_id');
+
+        // Find the student's enrollment for the given academic year
+        $enrollment = StudentEnrollment::where('student_id', $studentId)
+            ->when($academicYearId, function($q) use ($academicYearId) {
+                $q->where('academic_year_id', $academicYearId);
+            })
+            ->latest()
+            ->first();
+
+        $enrollmentType = $enrollment?->enrollment_type ?? 'new';
+        $branchId = $student->branch_id;
+
+        // Get fees that match the student's enrollment type OR have enrollment_type = 'all'
+        // AND match the student's branch OR have no branch specified
+        $fees = Fee::with('classroom', 'academicYear', 'branch')
+            ->where('is_active', 1)
+            ->where(function ($q) use ($enrollmentType) {
+                $q->where('enrollment_type', 'all')
+                  ->orWhere('enrollment_type', $enrollmentType);
+            })
+            ->where(function ($q) use ($branchId) {
+                $q->whereNull('branch_id')
+                  ->orWhere('branch_id', $branchId);
+            })
+            ->when($academicYearId, function($q) use ($academicYearId) {
+                $q->where('academic_year_id', $academicYearId);
+            })
+            ->get();
+
+        return response()->json([
+            'enrollment_type' => $enrollmentType,
+            'enrollment' => $enrollment,
+            'fees' => $fees->map(function ($fee) {
+                return [
+                    'id' => $fee->id,
+                    'fee_type' => $fee->fee_type,
+                    'amount' => $fee->amount,
+                    'due_date' => $fee->due_date?->format('Y-m-d'),
+                    'class_name' => $fee->classroom?->name,
+                    'academic_year' => $fee->academicYear?->name,
+                    'enrollment_type_label' => $fee->enrollment_type_label,
+                    'branch_name' => $fee->branch?->name ?? 'All Branches',
+                ];
+            }),
+        ]);
+    }
+
     public function store(Request $r){
         $r->validate(["fee_id"=>"required|exists:fees,id","student_id"=>"required|exists:students,id","amount_paid"=>"required|numeric|min:0","payment_date"=>"required|date","payment_method"=>"required|in:cash,bank,mobile,cheque,online","status"=>"required|in:paid,partial,pending,overdue"]);
         
@@ -74,7 +131,7 @@ class FeePaymentController extends Controller
     }
     public function show(FeePayment $fee_payment){ return view("admin.FeePayment.show", ["item" => $fee_payment]); }
     public function edit(FeePayment $fee_payment){
-        $fees = Fee::with("classroom","academicYear")->where("is_active",1)->get();
+        $fees = Fee::with("classroom","academicYear","branch")->where("is_active",1)->get();
         $students = Student::orderBy("full_name")->get();
         return view("admin.FeePayment.edit", ['item' => $fee_payment, 'fees' => $fees, 'students' => $students]);
     }

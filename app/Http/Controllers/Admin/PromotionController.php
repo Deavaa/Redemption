@@ -123,6 +123,53 @@ class PromotionController extends Controller
     }
 
     /**
+     * Process bulk promotion with flexible mode selection.
+     */
+    public function processBulkPromotion(Request $request)
+    {
+        $validated = $request->validate([
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'term_id' => 'required|exists:terms,id',
+            'class_id' => 'required|exists:classes,id',
+            'promotion_mode' => 'required|in:all,specific_result,satisfy_criteria',
+            'specific_result' => 'nullable|required_if:promotion_mode,specific_result|in:promoted,detained,conditional',
+            'force_promote' => 'nullable|boolean',
+        ]);
+
+        try {
+            $service = new PromotionService();
+            $result = $service->processBulkPromotion(
+                $validated['class_id'],
+                $validated['academic_year_id'],
+                $validated['term_id'],
+                auth()->id(),
+                $validated['promotion_mode'],
+                $validated['specific_result'] ?? null,
+                $request->boolean('force_promote'),
+            );
+
+            $modeLabel = match ($validated['promotion_mode']) {
+                'all' => 'All Students' . ($request->boolean('force_promote') ? ' (Force Promoted)' : ''),
+                'specific_result' => 'Specific Result (' . ucfirst($validated['specific_result'] ?? '') . ')',
+                'satisfy_criteria' => 'Satisfy Promotion Criteria',
+                default => ucfirst($validated['promotion_mode']),
+            };
+
+            $msg = "Bulk promotion processed [{$modeLabel}]: {$result['processed']} processed ({$result['promoted']} promoted, {$result['detained']} detained, {$result['conditional']} conditional)";
+            if ($result['skipped'] > 0) {
+                $msg .= ", {$result['skipped']} skipped";
+            }
+            if (!empty($result['errors'])) {
+                $msg .= '. Errors: ' . collect($result['errors'])->pluck('error')->implode(', ');
+            }
+
+            return redirect()->back()->with('success', $msg);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Bulk promotion processing failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Process promotion for a single student.
      */
     public function processStudent(Request $request)

@@ -169,6 +169,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('promotion', [PromotionController::class, 'index'])->name('promotion.index')->middleware('permission:mark_entries.view');
     Route::get('promotion/preview', [PromotionController::class, 'preview'])->name('promotion.preview')->middleware('permission:mark_entries.view');
     Route::post('promotion/process', [PromotionController::class, 'processClass'])->name('promotion.process')->middleware('permission:mark_entries.manage');
+    Route::post('promotion/process-bulk', [PromotionController::class, 'processBulkPromotion'])->name('promotion.process-bulk')->middleware('permission:mark_entries.manage');
     Route::post('promotion/process-student', [PromotionController::class, 'processStudent'])->name('promotion.process-student')->middleware('permission:mark_entries.manage');
     Route::patch('promotion/override', [PromotionController::class, 'processStudent'])->name('promotion.override')->middleware('permission:mark_entries.manage');
     Route::get('promotion/{id}', [PromotionController::class, 'show'])->name('promotion.detail')->middleware('permission:mark_entries.view');
@@ -232,6 +233,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     // NOTE: Static sub-routes MUST come BEFORE Route::resource to avoid {student} parameter matching
     Route::get('students/generate-ids', [StudentController::class, 'generateIds'])->name('students.generateIds');
     Route::get('students/bulk-create', [StudentController::class, 'bulkCreate'])->name('students.bulk-create')->middleware('permission:students.manage');
+    Route::get('students/download-template', [StudentController::class, 'downloadTemplate'])->name('students.download-template')->middleware('permission:students.manage');
+    Route::post('students/upload-students', [StudentController::class, 'uploadStudents'])->name('students.upload-students')->middleware('permission:students.manage');
     Route::post('students/bulk-store', [StudentController::class, 'bulkStore'])->name('students.bulk-store')->middleware('permission:students.manage');
     Route::post('students/bulk-transfer', [StudentController::class, 'bulkTransfer'])->name('students.bulk-transfer')->middleware('permission:students.manage');
     Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
@@ -261,6 +264,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('teachers/{teacher}/transfer', [TeacherController::class, 'transferForm'])->name('teachers.transfer')->middleware('permission:teachers.manage');
     Route::post('teachers/{teacher}/transfer', [TeacherController::class, 'transfer'])->name('teachers.transfer-store')->middleware('permission:teachers.manage');
     Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');
+    Route::get('staff/api/employee-id-preview', [StaffController::class, 'apiEmployeeIdPreview'])->name('staff.api.employee-id-preview')->middleware('permission:staff.view');
     Route::resource('staff', StaffController::class)->middleware('permission:staff.view');
     Route::resource('team-members', TeamMemberController::class)->middleware('permission:team_members.view');
     Route::resource('parents', ParentModelController::class)->middleware('permission:parents.view');
@@ -380,6 +384,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::resource('finance-statements', FinanceStatementController::class)->middleware('permission:finance_statements.view');
     Route::resource('fees', FeeController::class)->middleware('permission:fees.view');
     Route::resource('fee-payments', FeePaymentController::class)->middleware('permission:fee_payments.view');
+    Route::get('fee-payments/student/{studentId}/applicable-fees', [FeePaymentController::class, 'getApplicableFees'])->name('fee-payments.applicable-fees')->middleware('permission:fee_payments.view');
     Route::resource('payrolls', PayrollController::class)->middleware('permission:payrolls.view');
     Route::resource('leaves', LeaveController::class)->middleware('permission:leaves.view');
     Route::resource('employee-assets', EmployeeAssetController::class)->middleware('permission:employee_assets.view');
@@ -398,6 +403,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     // Academic Calendar
     Route::get('calendar', [CalendarEventController::class, 'index'])->name('calendar.index')->middleware('permission:calendar.view');
     Route::post('calendar', [CalendarEventController::class, 'store'])->name('calendar.store')->middleware('permission:calendar.manage');
+    Route::get('calendar/print', [CalendarEventController::class, 'printCalendar'])->name('calendar.print')->middleware('permission:calendar.view');
     Route::put('calendar/{calendar_event}', [CalendarEventController::class, 'update'])->name('calendar.update')->middleware('permission:calendar.manage');
     Route::delete('calendar/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar.destroy')->middleware('permission:calendar.manage');
     Route::post('calendar/{calendar_event}/approve', [CalendarEventController::class, 'approve'])->name('calendar.approve')->middleware('permission:calendar.manage');

@@ -32,6 +32,10 @@
                     <i class="fas fa-globe" style="color:var(--primary);font-size:16px;"></i>
                 @elseif($groupKey === 'social')
                     <i class="fas fa-share-alt" style="color:var(--primary);font-size:16px;"></i>
+                @elseif($groupKey === 'why_choose_us')
+                    <i class="fas fa-star" style="color:var(--primary);font-size:16px;"></i>
+                @elseif($groupKey === 'programs')
+                    <i class="fas fa-graduation-cap" style="color:var(--primary);font-size:16px;"></i>
                 @elseif($groupKey === 'appearance')
                     <i class="fas fa-palette" style="color:var(--primary);font-size:16px;"></i>
                 @endif

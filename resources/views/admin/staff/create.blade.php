@@ -57,11 +57,12 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="id_number">ID Number</label>
+                            <label class="modern-form-label" for="id_number">ID Number <small>(auto-generated)</small></label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-id-card modern-input-icon"></i>
-                                <input type="text" name="id_number" id="id_number" class="modern-input {{ $errors->has('id_number') ? 'is-invalid' : '' }}" value="{{ old('id_number') }}" placeholder="Employee ID" autocomplete="off" data-lpignore="true" data-form-type="other">
+                                <input type="text" id="id_number" class="modern-input modern-select-locked" value="" placeholder="Select a branch to preview ID" readonly tabindex="-1" data-lpignore="true" data-form-type="other">
                             </div>
+                            <div class="modern-input-hint"><i class="fas fa-magic"></i> Employee ID will be auto-generated based on the selected branch</div>
                             @error('id_number')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
 
@@ -354,6 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var isBranchPrincipal = @json($isBranchPrincipal);
     var authBranchId = @json($authBranchId);
+    var idNumberField = document.getElementById('id_number');
 
     function toggleBranchField() {
         var selected = roleSelect.value;
@@ -365,6 +367,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (hiddenInput) {
                 hiddenInput.value = authBranchId;
             }
+            // Preview employee ID for the locked branch
+            previewEmployeeId(authBranchId);
             return;
         }
         // Show branch field for branch-scoped roles
@@ -380,6 +384,46 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             roleHint.style.display = 'none';
         }
+    }
+
+    // Preview employee ID via AJAX when branch changes
+    function previewEmployeeId(branchId) {
+        if (!branchId) {
+            idNumberField.value = '';
+            idNumberField.placeholder = 'Select a branch to preview ID';
+            return;
+        }
+        idNumberField.placeholder = 'Loading...';
+        fetch('{{ route("admin.staff.api.employee-id-preview") }}?branch_id=' + encodeURIComponent(branchId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.employee_id) {
+                idNumberField.value = data.employee_id;
+                idNumberField.placeholder = data.employee_id;
+            } else {
+                idNumberField.value = '';
+                idNumberField.placeholder = 'Could not generate preview';
+            }
+        })
+        .catch(function() {
+            idNumberField.value = '';
+            idNumberField.placeholder = 'Preview unavailable';
+        });
+    }
+
+    // Listen for branch selection changes
+    var branchSelect = document.getElementById('branchSelect');
+    if (branchSelect && !branchSelect.disabled) {
+        branchSelect.addEventListener('change', function() {
+            previewEmployeeId(this.value);
+        });
+    }
+
+    // If branch principal, preview immediately
+    if (isBranchPrincipal && authBranchId) {
+        previewEmployeeId(authBranchId);
     }
 
     roleSelect.addEventListener('change', toggleBranchField);

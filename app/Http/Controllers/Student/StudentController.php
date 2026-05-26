@@ -13,6 +13,17 @@ use App\Services\PromotionService;
 use App\Models\StudentEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+// PhpSpreadsheet is optional — used for XLSX support when available.
+// Without it (e.g. when ext-gd is missing on XAMPP), CSV format is used instead.
+// To enable XLSX support:
+//   1. Open C:\xampp\php\php.ini
+//   2. Uncomment ;extension=gd  →  extension=gd
+//   3. Restart Apache
+//   4. Run: composer require phpoffice/phpspreadsheet:^2.0
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 
 class StudentController extends Controller
 {
@@ -1027,5 +1038,403 @@ class StudentController extends Controller
 
         return redirect()->route('admin.students.index')
             ->with('success', $message);
+    }
+
+    /**
+     * Download an empty Excel template for bulk student upload.
+     * Includes column headers, data validation for Gender, and an example row.
+     */
+    public function downloadTemplate()
+    {
+        // Check if PhpSpreadsheet is available (requires ext-gd for v2+)
+        // If not available, fall back to CSV format which needs no special extensions.
+        if (class_exists(\PhpOffice\PhpSpreadsheet\Spreadsheet::class)) {
+            return $this->downloadTemplateXlsx();
+        }
+
+        return $this->downloadTemplateCsv();
+    }
+
+    /**
+     * Download a CSV template (always works — no special PHP extensions required).
+     * Used as fallback when PhpSpreadsheet/ext-gd is not available.
+     */
+    private function downloadTemplateCsv()
+    {
+        $headers = ['Full Name (required)', 'Gender (Male/Female)', 'Phone', 'Guardian Name', 'Guardian Phone', 'Date of Birth (YYYY-MM-DD)'];
+        $exampleData = ['John Doe', 'Male', '0901234567', 'Jane Doe', '0907654321', '2010-05-15'];
+
+        // Build CSV content
+        $csv = '';
+        $csv .= $this->csvLine($headers);
+        $csv .= $this->csvLine($exampleData);
+
+        $filename = 'student_upload_template.csv';
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    /**
+     * Download an XLSX template (requires PhpSpreadsheet + ext-gd).
+     * Provides rich formatting: styled headers, data validation dropdowns, column widths.
+     */
+    private function downloadTemplateXlsx()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Student Upload Template');
+
+        // Column headers
+        $headers = [
+            'Full Name (required)',
+            'Gender (Male/Female)',
+            'Phone',
+            'Guardian Name',
+            'Guardian Phone',
+            'Date of Birth (YYYY-MM-DD)',
+        ];
+
+        // Style for headers
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '4361EE']],
+            'alignment' => ['horizontal' => 'center', 'wrapText' => true],
+            'borders' => [
+                'allBorders' => ['borderStyle' => 'thin', 'color' => ['rgb' => 'CCCCCC']],
+            ],
+        ];
+
+        // Write headers
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $sheet->getStyle($col . '1')->applyFromArray($headerStyle);
+            $col++;
+        }
+
+        // Set column widths
+        $sheet->getColumnDimension('A')->setWidth(30);
+        $sheet->getColumnDimension('B')->setWidth(18);
+        $sheet->getColumnDimension('C')->setWidth(16);
+        $sheet->getColumnDimension('D')->setWidth(25);
+        $sheet->getColumnDimension('E')->setWidth(16);
+        $sheet->getColumnDimension('F')->setWidth(22);
+
+        // Add example data row
+        $exampleData = ['John Doe', 'Male', '0901234567', 'Jane Doe', '0907654321', '2010-05-15'];
+        $col = 'A';
+        foreach ($exampleData as $value) {
+            $sheet->setCellValue($col . '2', $value);
+            $col++;
+        }
+
+        // Style the example row with a light background to indicate it's sample data
+        $exampleStyle = [
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FFF3CD']],
+            'font' => ['italic' => true, 'color' => ['rgb' => '856404']],
+        ];
+        $sheet->getStyle('A2:F2')->applyFromArray($exampleStyle);
+
+        // Add data validation (dropdown) for Gender column (B2:B1000)
+        $validation = new DataValidation();
+        $validation->setType(DataValidation::TYPE_LIST);
+        $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+        $validation->setAllowBlank(true);
+        $validation->setShowInputMessage(true);
+        $validation->setShowErrorMessage(true);
+        $validation->setShowDropDown(true);
+        $validation->setErrorTitle('Invalid Gender');
+        $validation->setError('Please select Male or Female.');
+        $validation->setPromptTitle('Gender');
+        $validation->setPrompt('Select Male or Female');
+        $validation->setFormula1('"Male,Female"');
+        $sheet->setDataValidation('B2:B1000', $validation);
+
+        // Add a note in the sheet about format
+        $sheet->getComment('A1')->getText()->createTextRun('Student full name is required. All other fields are optional.');
+        $sheet->getComment('F1')->getText()->createTextRun('Date format must be YYYY-MM-DD (e.g. 2010-05-15)');
+
+        // Set row height for header
+        $sheet->getRowDimension('1')->setRowHeight(30);
+
+        // Write and download
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'student_upload_template.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    /**
+     * Format an array as a CSV line (handles values containing commas/quotes).
+     */
+    private function csvLine(array $fields): string
+    {
+        $line = '';
+        foreach ($fields as $i => $field) {
+            if ($i > 0) {
+                $line .= ',';
+            }
+            // Enclose in quotes if value contains comma, quote, or newline
+            if (preg_match('/[,"\r\n]/', $field)) {
+                $line .= '"' . str_replace('"', '""', $field) . '"';
+            } else {
+                $line .= $field;
+            }
+        }
+        $line .= "\n";
+        return $line;
+    }
+
+    /**
+     * Upload a CSV/XLSX file with student data and create students in bulk.
+     * Uses CSV parsing (fgetcsv) natively — no special PHP extensions required.
+     * Falls back to PhpSpreadsheet for XLSX files if the library is available.
+     * Uses the same logic as bulkStore for consistency.
+     */
+    public function uploadStudents(Request $request)
+    {
+        $validated = $request->validate([
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:5120',
+            'branch_id' => 'required|exists:branches,id',
+            'section_id' => 'required|exists:sections,id',
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'admission_date' => 'nullable|date',
+        ]);
+
+        $file = $request->file('file');
+        $filePath = $file->getRealPath();
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        // Parse the uploaded file into rows
+        $rows = [];
+        try {
+            if ($extension === 'csv' || $extension === 'txt') {
+                // CSV parsing — always works, no special extensions needed
+                $rows = $this->parseCsvFile($filePath);
+            } elseif (class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class)) {
+                // XLSX parsing via PhpSpreadsheet (requires ext-gd)
+                $spreadsheet = IOFactory::load($filePath);
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray(null, true, true, true);
+                // Convert associative keys (A, B, C...) to numeric (0, 1, 2...)
+                $rows = array_map(function ($row) {
+                    return array_values($row);
+                }, $rows);
+            } else {
+                return back()->with('error', 'XLSX files require the PhpSpreadsheet library and the GD extension. Please upload a CSV file instead, or enable the GD extension in your XAMPP php.ini (uncomment ;extension=gd, then restart Apache) and run: composer require phpoffice/phpspreadsheet:^2.0');
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', 'Could not read the uploaded file. Please ensure it is a valid file. Error: ' . $e->getMessage());
+        }
+
+        if (count($rows) < 2) {
+            return back()->with('error', 'The uploaded file appears to be empty or has no data rows.');
+        }
+
+        // Remove header row
+        array_shift($rows);
+
+        $section = Section::find($validated['section_id']);
+        $classId = $section->class_id;
+        $admissionDate = $validated['admission_date'] ?? now()->toDateString();
+        $year = $this->getAyStartYear($this->getCurrentAcademicYear());
+
+        $created = 0;
+        $skipped = 0;
+        $errors = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($rows as $rowIndex => $row) {
+                $excelRow = $rowIndex + 2; // +2 because row index starts at 0 and we removed the header
+
+                // Extract values from numeric-indexed array (columns 0–5)
+                $fullName = trim($row[0] ?? '');
+                $gender = trim($row[1] ?? '');
+                $phone = trim($row[2] ?? '');
+                $guardianName = trim($row[3] ?? '');
+                $guardianPhone = trim($row[4] ?? '');
+                $dateOfBirth = trim($row[5] ?? '');
+
+                // Skip rows with empty Full Name
+                if (empty($fullName)) {
+                    $skipped++;
+                    continue;
+                }
+
+                // Validate gender value
+                $genderLower = strtolower($gender);
+                if (!empty($gender) && !in_array($genderLower, ['male', 'female'])) {
+                    $errors[] = "Row {$excelRow} ({$fullName}): Invalid gender '{$gender}'. Use Male or Female. Skipped.";
+                    continue;
+                }
+                $genderValue = !empty($gender) ? $genderLower : null;
+
+                // Validate date of birth format
+                if (!empty($dateOfBirth)) {
+                    try {
+                        $dob = \Carbon\Carbon::parse($dateOfBirth);
+                        $dateOfBirth = $dob->toDateString();
+                    } catch (\Exception $e) {
+                        $errors[] = "Row {$excelRow} ({$fullName}): Invalid date of birth '{$dateOfBirth}'. Use YYYY-MM-DD format. Skipped.";
+                        continue;
+                    }
+                } else {
+                    $dateOfBirth = null;
+                }
+
+                // Generate admission number
+                $admissionNumber = $this->generateAdmissionNumber();
+
+                // Generate roll number
+                $rollNumber = $this->generateRollNumber($validated['section_id']);
+
+                // Ensure uniqueness
+                $rollAttempts = 0;
+                while (Student::where('roll_number', $rollNumber)->exists()) {
+                    $rollAttempts++;
+                    $rollNumber = $this->generateRollNumber($validated['section_id']);
+                    if ($rollAttempts > 10) {
+                        $rollNumber = $rollNumber . '-' . str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
+                        break;
+                    }
+                }
+
+                // Generate student ID number
+                $lastUser = \App\Models\User::where('id_number', 'LIKE', "STD-{$year}-%")
+                    ->orderBy('id_number', 'desc')->first();
+                $nextNum = 1;
+                if ($lastUser && $lastUser->id_number) {
+                    $parts = explode('-', $lastUser->id_number);
+                    $nextNum = (int)end($parts) + 1;
+                }
+                $idNumber = "STD-{$year}-" . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
+
+                // Normalize phone numbers
+                $phoneNormalized = !empty($phone) ? $this->normalizePhone($phone) : null;
+                $guardianPhoneNormalized = !empty($guardianPhone) ? $this->normalizePhone($guardianPhone) : null;
+
+                // Create user account
+                $user = \App\Models\User::create([
+                    'name' => $fullName,
+                    'email' => $idNumber . '@redemption.edu',
+                    'id_number' => $idNumber,
+                    'password' => bcrypt('123456'),
+                    'role' => 'student',
+                    'is_active' => true,
+                    'phone' => $phoneNormalized,
+                ]);
+
+                // Create student record
+                try {
+                    $student = Student::create([
+                        'user_id' => $user->id,
+                        'full_name' => $fullName,
+                        'gender' => $genderValue,
+                        'phone' => $phoneNormalized,
+                        'guardian_name' => !empty($guardianName) ? $guardianName : null,
+                        'guardian_phone' => $guardianPhoneNormalized,
+                        'date_of_birth' => $dateOfBirth,
+                        'branch_id' => $validated['branch_id'],
+                        'class_id' => $classId,
+                        'section_id' => $validated['section_id'],
+                        'academic_year_id' => $validated['academic_year_id'],
+                        'admission_number' => $admissionNumber,
+                        'roll_number' => $rollNumber,
+                        'admission_date' => $admissionDate,
+                        'status' => 'active',
+                    ]);
+
+                    // Create enrollment record
+                    StudentEnrollment::create([
+                        'student_id' => $student->id,
+                        'academic_year_id' => $validated['academic_year_id'],
+                        'branch_id' => $validated['branch_id'],
+                        'class_id' => $classId,
+                        'section_id' => $validated['section_id'],
+                        'roll_number' => $rollNumber,
+                        'enrollment_date' => $admissionDate,
+                        'status' => 'enrolled',
+                        'enrollment_type' => 'new',
+                        'registration_fee' => 0,
+                        'registration_fee_paid' => 0,
+                        'registration_fee_status' => 'waived',
+                        'enrolled_by' => auth()->id(),
+                    ]);
+
+                    $created++;
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                    $errors[] = "Row {$excelRow} ({$fullName}): Duplicate entry - skipped.";
+                    $user->delete(); // Clean up the created user
+                    continue;
+                }
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('admin.students.bulk-create')
+                ->with('error', 'Upload failed: ' . $e->getMessage());
+        }
+
+        // Notify about bulk enrollment
+        if ($created > 0) {
+            try {
+                \App\Services\AlertService::notifyStudentEnrolled(
+                    $validated['branch_id'],
+                    "{$created} new students (uploaded)",
+                    $validated['academic_year_id']
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Upload enrollment notification failed: ' . $e->getMessage());
+            }
+        }
+
+        $message = "Successfully enrolled {$created} student(s) from file.";
+        if ($skipped > 0) {
+            $message .= " Skipped {$skipped} empty row(s).";
+        }
+        if (!empty($errors)) {
+            $message .= ' Errors: ' . implode('; ', $errors);
+        }
+
+        return redirect()->route('admin.students.bulk-create')
+            ->with('success', $message);
+    }
+
+    /**
+     * Parse a CSV file into an array of rows (each row is a numeric-indexed array).
+     * Uses PHP's built-in fgetcsv() — no special extensions required.
+     */
+    private function parseCsvFile(string $filePath): array
+    {
+        $rows = [];
+        $handle = fopen($filePath, 'r');
+        if (!$handle) {
+            throw new \RuntimeException('Cannot open CSV file for reading.');
+        }
+
+        // Detect BOM for UTF-8 and skip it
+        $bom = fread($handle, 3);
+        if ($bom !== "\xEF\xBB\xBF") {
+            // Not a BOM — rewind to start
+            rewind($handle);
+        }
+
+        while (($data = fgetcsv($handle, 0, ',')) !== false) {
+            $rows[] = $data;
+        }
+        fclose($handle);
+
+        return $rows;
     }
 }
