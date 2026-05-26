@@ -632,6 +632,11 @@
                             const row = studentGrid.querySelector(`[data-student-id="${studentId}"]`);
                             if (row) row.classList.add('checked');
                             updateSelection();
+
+                            // Auto-submit the form to directly generate the ID card
+                            setTimeout(function() {
+                                document.getElementById('idCardForm').submit();
+                            }, 300);
                         }
                     }
                 })

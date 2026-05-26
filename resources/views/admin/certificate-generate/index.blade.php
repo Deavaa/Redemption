@@ -593,6 +593,11 @@
                     const card = studentContainer.querySelector(`[data-student-id="${studentId}"]`);
                     if (card) {
                         selectStudent(studentData, card);
+
+                        // Auto-submit the form to directly generate the certificate
+                        setTimeout(function() {
+                            document.getElementById('certGenForm').submit();
+                        }, 300);
                     }
                 }
             })
