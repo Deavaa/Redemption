@@ -124,6 +124,11 @@ class StudentController extends Controller
             $validated['photo'] = $photoPath;
         }
 
+        // Auto-assign branch for branch principal
+        if (auth()->user()->role === 'branch_principal' && auth()->user()->branch_id) {
+            $validated['branch_id'] = auth()->user()->branch_id;
+        }
+
         // Normalize phone numbers to Ethiopian local format (0XXXXXXXXX)
         if (!empty($validated['phone'])) {
             $validated['phone'] = $this->normalizePhone($validated['phone']);
@@ -908,6 +913,11 @@ class StudentController extends Controller
             'students.*.date_of_birth' => 'nullable|date',
         ]);
 
+        // Auto-assign branch for branch principal
+        if (auth()->user()->role === 'branch_principal' && auth()->user()->branch_id) {
+            $validated['branch_id'] = auth()->user()->branch_id;
+        }
+
         $section = Section::find($validated['section_id']);
         $classId = $section->class_id;
         $admissionDate = $validated['admission_date'] ?? now()->toDateString();
@@ -1209,6 +1219,11 @@ class StudentController extends Controller
             'academic_year_id' => 'required|exists:academic_years,id',
             'admission_date' => 'nullable|date',
         ]);
+
+        // Auto-assign branch for branch principal
+        if (auth()->user()->role === 'branch_principal' && auth()->user()->branch_id) {
+            $validated['branch_id'] = auth()->user()->branch_id;
+        }
 
         $file = $request->file('file');
         $filePath = $file->getRealPath();
