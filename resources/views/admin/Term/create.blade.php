@@ -126,6 +126,52 @@
                             @enderror
                         </div>
 
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="exam_start_date">
+                                Examination Start Date
+                                <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-file-alt modern-input-icon"></i>
+                                <input type="date"
+                                    name="exam_start_date"
+                                    id="exam_start_date"
+                                    class="modern-input {{ $errors->has('exam_start_date') ? 'is-invalid' : '' }}"
+                                    value="{{ old('exam_start_date') }}"
+                                    onchange="updateEthiopianDate('exam_start')">
+                            </div>
+                            <div id="ethiopian_exam_start_date" class="modern-eth-hint" style="display:none;">
+                                <i class="fas fa-calendar-alt"></i>
+                                Ethiopian: <strong id="ethiopian_exam_start_text"></strong>
+                            </div>
+                            @error('exam_start_date')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="exam_end_date">
+                                Examination End Date
+                                <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-file-alt modern-input-icon"></i>
+                                <input type="date"
+                                    name="exam_end_date"
+                                    id="exam_end_date"
+                                    class="modern-input {{ $errors->has('exam_end_date') ? 'is-invalid' : '' }}"
+                                    value="{{ old('exam_end_date') }}"
+                                    onchange="updateEthiopianDate('exam_end')">
+                            </div>
+                            <div id="ethiopian_exam_end_date" class="modern-eth-hint" style="display:none;">
+                                <i class="fas fa-calendar-alt"></i>
+                                Ethiopian: <strong id="ethiopian_exam_end_text"></strong>
+                            </div>
+                            @error('exam_end_date')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <div class="modern-form-group modern-form-span-2">
                             <div class="modern-toggle-wrapper">
                                 <label class="modern-toggle">

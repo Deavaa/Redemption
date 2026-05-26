@@ -29,14 +29,15 @@ class TermController extends Controller
             'term_number' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            
+            'exam_start_date' => 'nullable|date|after_or_equal:start_date|before_or_equal:end_date',
+            'exam_end_date' => 'nullable|date|after_or_equal:exam_start_date|before_or_equal:end_date',
         ]);
 
         if ($r->boolean('is_active')) {
             Term::where('is_active', true)->update(['is_active' => false]);
         }
 
-        Term::create($r->only(['name', 'academic_year_id', 'term_number', 'start_date', 'end_date', 'is_active']));
+        Term::create($r->only(['name', 'academic_year_id', 'term_number', 'start_date', 'end_date', 'exam_start_date', 'exam_end_date', 'is_active']));
         return redirect()->route('admin.terms.index')->with('success', 'Term created.');
     }
 
@@ -60,14 +61,15 @@ class TermController extends Controller
             'term_number' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            
+            'exam_start_date' => 'nullable|date|after_or_equal:start_date|before_or_equal:end_date',
+            'exam_end_date' => 'nullable|date|after_or_equal:exam_start_date|before_or_equal:end_date',
         ]);
 
         if ($r->boolean('is_active')) {
             Term::where('is_active', true)->where('id', '!=', $term->id)->update(['is_active' => false]);
         }
 
-        $term->update($r->only(['name', 'academic_year_id', 'term_number', 'start_date', 'end_date', 'is_active']));
+        $term->update($r->only(['name', 'academic_year_id', 'term_number', 'start_date', 'end_date', 'exam_start_date', 'exam_end_date', 'is_active']));
         return redirect()->route('admin.terms.index')->with('success', 'Term updated.');
     }
 

@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 class Term extends Model
 {
     use HasFactory;
-    protected $fillable = ['academic_year_id','name','start_date','end_date','term_number','is_active'];
-    protected $casts = ['start_date'=>'date','end_date'=>'date','is_active'=>'boolean'];
+    protected $fillable = ['academic_year_id','name','start_date','end_date','exam_start_date','exam_end_date','term_number','is_active'];
+    protected $casts = ['start_date'=>'date','end_date'=>'date','exam_start_date'=>'date','exam_end_date'=>'date','is_active'=>'boolean'];
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
 }
