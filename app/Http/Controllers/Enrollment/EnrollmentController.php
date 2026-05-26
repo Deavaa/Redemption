@@ -188,6 +188,9 @@ class EnrollmentController extends Controller
             'branch_id' => 'required|exists:branches,id',
             'section_id' => 'required|exists:sections,id',
             'registration_fee' => 'required|numeric|min:0',
+            'fee_discount' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|in:percentage,fixed',
+            'discount_reason' => 'nullable|string|max:255',
             'enrollment_type' => 'nullable|in:new,returning,transferred_in',
             'enrollment_date' => 'nullable|date',
             'notes' => 'nullable|string',
@@ -214,8 +217,18 @@ class EnrollmentController extends Controller
         $validated['enrolled_by'] = auth()->id();
 
         // Registration fee defaults
+        $validated['fee_discount'] = $validated['fee_discount'] ?? 0;
+        $validated['discount_type'] = $validated['discount_type'] ?? 'fixed';
         $validated['registration_fee_paid'] = 0;
-        $validated['registration_fee_status'] = $validated['registration_fee'] > 0 ? 'unpaid' : 'waived';
+
+        // Calculate effective fee after discount
+        $effectiveFee = $validated['registration_fee'];
+        if ($validated['discount_type'] === 'percentage' && $validated['fee_discount'] > 0) {
+            $effectiveFee = max(0, $validated['registration_fee'] - ($validated['registration_fee'] * $validated['fee_discount'] / 100));
+        } else {
+            $effectiveFee = max(0, $validated['registration_fee'] - $validated['fee_discount']);
+        }
+        $validated['registration_fee_status'] = $effectiveFee > 0 ? 'unpaid' : 'waived';
 
         StudentEnrollment::create($validated);
 
@@ -274,6 +287,9 @@ class EnrollmentController extends Controller
             'section_id' => 'required|exists:sections,id',
             'status' => 'required|in:enrolled,pending,withdrawn,graduated,transferred',
             'registration_fee' => 'required|numeric|min:0',
+            'fee_discount' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|in:percentage,fixed',
+            'discount_reason' => 'nullable|string|max:255',
             'registration_fee_paid' => 'required|numeric|min:0',
             'registration_fee_status' => 'required|in:unpaid,partial,paid,waived',
             'registration_fee_payment_method' => 'nullable|in:cash,bank,mobile,cheque,online',

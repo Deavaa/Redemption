@@ -114,9 +114,54 @@
                                     step="0.01" min="0"
                                     class="sl-input {{ $errors->has('registration_fee') ? 'is-invalid' : '' }}"
                                     value="{{ old('registration_fee', 500) }}"
-                                    placeholder="e.g. 500.00">
+                                    placeholder="e.g. 500.00"
+                                    onchange="updateEffectiveFee()" oninput="updateEffectiveFee()">
                             </div>
                             @error('registration_fee')<span class="sl-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="sl-form-group">
+                            <label class="sl-form-label" for="fee_discount">Fee Discount <small>(optional)</small></label>
+                            <div class="sl-input-wrap">
+                                <i class="fas fa-tag sl-input-icon"></i>
+                                <input type="number" name="fee_discount" id="fee_discount"
+                                    step="0.01" min="0"
+                                    class="sl-input {{ $errors->has('fee_discount') ? 'is-invalid' : '' }}"
+                                    value="{{ old('fee_discount', 0) }}"
+                                    placeholder="e.g. 50 or 10%"
+                                    onchange="updateEffectiveFee()" oninput="updateEffectiveFee()">
+                            </div>
+                            @error('fee_discount')<span class="sl-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="sl-form-group">
+                            <label class="sl-form-label" for="discount_type">Discount Type</label>
+                            <div class="sl-input-wrap">
+                                <i class="fas fa-percent sl-input-icon"></i>
+                                <select name="discount_type" id="discount_type" class="sl-input sl-select" onchange="updateEffectiveFee()">
+                                    <option value="fixed" {{ old('discount_type', 'fixed') === 'fixed' ? 'selected' : '' }}>Fixed Amount (ETB)</option>
+                                    <option value="percentage" {{ old('discount_type') === 'percentage' ? 'selected' : '' }}>Percentage (%)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="sl-form-group">
+                            <label class="sl-form-label" for="discount_reason">Discount Reason <small>(optional)</small></label>
+                            <div class="sl-input-wrap">
+                                <i class="fas fa-comment-alt sl-input-icon"></i>
+                                <input type="text" name="discount_reason" id="discount_reason"
+                                    class="sl-input {{ $errors->has('discount_reason') ? 'is-invalid' : '' }}"
+                                    value="{{ old('discount_reason') }}"
+                                    placeholder="e.g. Sibling discount, scholarship">
+                            </div>
+                            @error('discount_reason')<span class="sl-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="sl-form-group" id="effectiveFeeGroup" style="display:none;">
+                            <label class="sl-form-label">Effective Fee (After Discount)</label>
+                            <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:7px;padding:0.55rem 0.75rem;font-size:0.88rem;font-weight:700;color:#059669;">
+                                <span id="effectiveFeeDisplay">500.00</span> ETB
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -411,6 +456,32 @@ document.addEventListener('DOMContentLoaded', function() {
     branchSelect.addEventListener('change', function() { loadClasses(); loadUnenrolledStudents(); });
     academicYearSelect.addEventListener('change', function() { loadClasses(); loadUnenrolledStudents(); });
     classSelect.addEventListener('change', loadSections);
+
+    // ── Fee Discount Calculator ──────────────────────────────────
+    function updateEffectiveFee() {
+        const feeEl = document.getElementById('registration_fee');
+        const discountEl = document.getElementById('fee_discount');
+        const typeEl = document.getElementById('discount_type');
+        const displayEl = document.getElementById('effectiveFeeDisplay');
+        const groupEl = document.getElementById('effectiveFeeGroup');
+
+        const fee = parseFloat(feeEl.value) || 0;
+        const discount = parseFloat(discountEl.value) || 0;
+        const type = typeEl.value;
+
+        let effective = fee;
+        if (type === 'percentage' && discount > 0) {
+            effective = fee - (fee * discount / 100);
+        } else {
+            effective = fee - discount;
+        }
+        effective = Math.max(0, effective);
+
+        displayEl.textContent = effective.toFixed(2);
+        groupEl.style.display = discount > 0 ? 'block' : 'none';
+    }
+    // Initialize on load
+    updateEffectiveFee();
 });
 </script>
 @endpush

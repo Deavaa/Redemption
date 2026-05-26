@@ -134,13 +134,32 @@
                     <span class="sl-detail-lbl">Fee Amount</span>
                     <span class="sl-detail-val sl-detail-amount">{{ number_format($enrollment->registration_fee ?? 0, 2) }} ETB</span>
                 </div>
+                @if($enrollment->fee_discount > 0)
+                <div class="sl-detail-row">
+                    <span class="sl-detail-lbl">Discount</span>
+                    <span class="sl-detail-val" style="color:#d97706;">
+                        @if($enrollment->discount_type === 'percentage')
+                            {{ $enrollment->fee_discount }}%
+                        @else
+                            {{ number_format($enrollment->fee_discount, 2) }} ETB
+                        @endif
+                        @if($enrollment->discount_reason)
+                            <small style="color:#92400e;">({{ $enrollment->discount_reason }})</small>
+                        @endif
+                    </span>
+                </div>
+                <div class="sl-detail-row">
+                    <span class="sl-detail-lbl">Effective Fee</span>
+                    <span class="sl-detail-val sl-detail-amount">{{ number_format($enrollment->effective_fee, 2) }} ETB</span>
+                </div>
+                @endif
                 <div class="sl-detail-row">
                     <span class="sl-detail-lbl">Paid Amount</span>
                     <span class="sl-detail-val" style="color:#059669;">{{ number_format($enrollment->registration_fee_paid ?? 0, 2) }} ETB</span>
                 </div>
                 <div class="sl-detail-row">
                     <span class="sl-detail-lbl">Balance</span>
-                    @php $balance = ($enrollment->registration_fee ?? 0) - ($enrollment->registration_fee_paid ?? 0); @endphp
+                    @php $balance = $enrollment->registration_fee_balance; @endphp
                     <span class="sl-detail-val" style="{{ $balance > 0 ? 'color:#dc2626;' : 'color:#059669;' }}">{{ number_format($balance, 2) }} ETB</span>
                 </div>
                 <div class="sl-detail-row">

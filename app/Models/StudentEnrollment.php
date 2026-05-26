@@ -20,6 +20,9 @@ class StudentEnrollment extends Model
         'status',
         'enrollment_type',
         'registration_fee',
+        'fee_discount',
+        'discount_type',
+        'discount_reason',
         'registration_fee_paid',
         'registration_fee_date',
         'registration_fee_status',
@@ -38,6 +41,7 @@ class StudentEnrollment extends Model
         return [
             'enrollment_date' => 'date',
             'registration_fee' => 'decimal:2',
+            'fee_discount' => 'decimal:2',
             'registration_fee_paid' => 'decimal:2',
             'registration_fee_date' => 'date',
             'withdrawal_date' => 'date',
@@ -124,11 +128,23 @@ class StudentEnrollment extends Model
     }
 
     /**
+     * Get the effective registration fee after discount.
+     */
+    public function getEffectiveFeeAttribute(): float
+    {
+        if ($this->discount_type === 'percentage' && $this->fee_discount > 0) {
+            $discountAmount = $this->registration_fee * ($this->fee_discount / 100);
+            return max(0, $this->registration_fee - $discountAmount);
+        }
+        return max(0, $this->registration_fee - $this->fee_discount);
+    }
+
+    /**
      * Get the remaining registration fee balance.
      */
     public function getRegistrationFeeBalanceAttribute(): float
     {
-        return max(0, $this->registration_fee - $this->registration_fee_paid);
+        return max(0, $this->effective_fee - $this->registration_fee_paid);
     }
 
     /**
@@ -147,7 +163,7 @@ class StudentEnrollment extends Model
             $this->registration_fee_notes = $notes;
         }
 
-        if ($this->registration_fee_paid >= $this->registration_fee) {
+        if ($this->registration_fee_paid >= $this->effective_fee) {
             $this->registration_fee_status = 'paid';
         } elseif ($this->registration_fee_paid > 0) {
             $this->registration_fee_status = 'partial';
