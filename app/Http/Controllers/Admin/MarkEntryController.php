@@ -141,16 +141,27 @@ class MarkEntryController extends Controller
                 }
             }
         } else {
-            // Admin: load ALL classes for dropdown
-            $classes = ClassRoom::orderBy('name','asc')->get(['id','name']);
+            // Admin: load classes for the current academic year (with fallback)
+            $classes = ClassRoom::where('academic_year_id', $currentAy?->id)->orderBy('name','asc')->get(['id','name']);
+            if ($classes->isEmpty()) {
+                $classes = ClassRoom::orderBy('name','asc')->get(['id','name']);
+            }
             $sections = Section::with('classRoom')->orderBy('class_id','asc')->orderBy('name','asc')->get();
         }
 
         return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'classes', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments'));
     }
 
-    public function apiClasses() {
+    public function apiClasses(Request $request) {
+        $ayId = $request->query('academic_year_id');
         $teacher = $this->getTeacherForUser();
+
+        // Default to current academic year if none provided
+        if (!$ayId) {
+            $currentAy = AcademicYear::where('is_current', true)->first()
+                ?? AcademicYear::orderBy('id', 'desc')->first();
+            $ayId = $currentAy?->id;
+        }
 
         if ($teacher) {
             // Only return classes from teacher's assignments + homeroom classes
@@ -158,12 +169,32 @@ class MarkEntryController extends Controller
             $homeroomClassIds = $teacher->classRooms()->pluck('id');
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
 
-            return response()->json(
-                ClassRoom::whereIn('id', $classIds)->orderBy('name','asc')->get(['id','name'])
-            );
+            $query = ClassRoom::whereIn('id', $classIds);
+            if ($ayId) {
+                $query->where('academic_year_id', $ayId);
+            }
+            $classes = $query->orderBy('name','asc')->get(['id','name','branch_id']);
+
+            // Fallback: if no classes found for this AY, show all teacher classes
+            if ($classes->isEmpty()) {
+                $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name','asc')->get(['id','name','branch_id']);
+            }
+
+            return response()->json($classes);
         }
 
-        return response()->json(ClassRoom::orderBy('name','asc')->get(['id','name']));
+        $query = ClassRoom::query();
+        if ($ayId) {
+            $query->where('academic_year_id', $ayId);
+        }
+        $classes = $query->orderBy('name','asc')->get(['id','name','branch_id']);
+
+        // Fallback: if no classes for this AY, show all classes
+        if ($classes->isEmpty() && $ayId) {
+            $classes = ClassRoom::orderBy('name','asc')->get(['id','name','branch_id']);
+        }
+
+        return response()->json($classes);
     }
 
     public function apiTerms(Request $request) {
@@ -261,14 +292,37 @@ class MarkEntryController extends Controller
     }
 
     public function apiStudents(Request $request) {
-        $query = Student::where('status', 'active');
+        $classId = $request->get('class_id');
+        $sectionId = $request->get('section_id');
+        $ayId = $request->get('academic_year_id');
 
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
+        // Try enrollment-based lookup first
+        if ($classId && $sectionId) {
+            $ayId = $ayId ?: (AcademicYear::where('is_current', true)->value('id') ?? AcademicYear::max('id'));
+
+            $enrolledStudentIds = \App\Models\StudentEnrollment::where('academic_year_id', $ayId)
+                ->where('class_id', $classId)
+                ->where('section_id', $sectionId)
+                ->where('status', 'enrolled')
+                ->pluck('student_id');
+
+            if ($enrolledStudentIds->isNotEmpty()) {
+                $query = Student::whereIn('id', $enrolledStudentIds)->where('status', 'active');
+            } else {
+                // Fallback: direct student table lookup
+                $query = Student::where('class_id', $classId)->where('section_id', $sectionId)->where('status', 'active');
+            }
+        } else {
+            $query = Student::where('status', 'active');
+
+            if ($request->filled('class_id')) {
+                $query->where('class_id', $request->class_id);
+            }
+            if ($request->filled('section_id')) {
+                $query->where('section_id', $request->section_id);
+            }
         }
-        if ($request->filled('section_id')) {
-            $query->where('section_id', $request->section_id);
-        }
+
         if ($request->filled('class_grade')) {
             $query->where('class_grade', $request->class_grade);
         }
@@ -321,10 +375,29 @@ class MarkEntryController extends Controller
         $ayId=$request->query('academic_year_id'); $termId=$request->query('term_id');
         $classId=$request->query('class_id'); $sectionId=$request->query('section_id'); $subjectId=$request->query('subject_id');
         if (!$ayId||!$termId||!$classId||!$sectionId||!$subjectId) return response()->json(['error'=>'All filters required'],400);
-        $students = DB::table('students')
-            ->where('students.class_id',$classId)->where('students.section_id',$sectionId)->where('students.academic_year_id',$ayId)
-            ->orderBy('students.full_name','asc')
-            ->select('students.id as student_id','students.full_name as student_name','students.roll_number','students.gender')->get();
+
+        // First try: find students via enrollment records (enrollment-based lookup)
+        $enrolledStudentIds = \App\Models\StudentEnrollment::where('academic_year_id', $ayId)
+            ->where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->where('status', 'enrolled')
+            ->pluck('student_id');
+
+        if ($enrolledStudentIds->isNotEmpty()) {
+            $students = Student::whereIn('id', $enrolledStudentIds)
+                ->where('status', 'active')
+                ->orderBy('full_name', 'asc')
+                ->select('id as student_id', 'full_name as student_name', 'roll_number', 'gender')
+                ->get();
+        } else {
+            // Fallback: direct student table lookup (for legacy data without enrollment records)
+            $students = Student::where('class_id', $classId)
+                ->where('section_id', $sectionId)
+                ->where('status', 'active')
+                ->orderBy('full_name', 'asc')
+                ->select('id as student_id', 'full_name as student_name', 'roll_number', 'gender')
+                ->get();
+        }
         $existingMarks = MarkEntry::where('academic_year_id',$ayId)->where('term_id',$termId)
             ->where('class_id',$classId)->where('section_id',$sectionId)->where('subject_id',$subjectId)->get()->keyBy('student_id');
         $markFields = MarkEntry::getMarkFields();

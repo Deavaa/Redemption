@@ -637,6 +637,8 @@
 
         if (teacherAssignments && teacherAssignments.length > 0) {
             populateTeacherClasses();
+        } else {
+            loadClasses();
         }
 
         updateLoadButton();
@@ -657,6 +659,13 @@
         hideMarkEntry();
 
         if (termId) checkLockStatus();
+
+        // Reload classes for the current academic year when term changes
+        if (teacherAssignments && teacherAssignments.length > 0) {
+            populateTeacherClasses();
+        } else {
+            loadClasses();
+        }
 
         updateLoadButton();
     });
@@ -772,7 +781,12 @@
 
     // ========== LOAD CLASSES (API fallback) ==========
     function loadClasses() {
-        fetch(API_CLASSES, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        var ayId = filterAy.value;
+        var url = API_CLASSES;
+        if (ayId) {
+            url += '?academic_year_id=' + ayId;
+        }
+        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
@@ -785,6 +799,8 @@
                     opt.textContent = c.name;
                     filterClass.appendChild(opt);
                 });
+                filterSection.innerHTML = '<option value="">-- Select Section --</option>';
+                filterSection.disabled = true;
             })
             .catch(function(err) {
                 console.error('Failed to load classes:', err);
