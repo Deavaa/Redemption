@@ -26,7 +26,8 @@
     @php
         $roleCounts = [];
         $allRoles = ['admin'=>'Admin','teacher'=>'Teacher','general_manager'=>'General Manager','branch_principal'=>'Branch Principal','registrar'=>'Registrar','finance'=>'Finance','hr'=>'HR','cashier'=>'Cashier','librarian'=>'Librarian','staff'=>'Staff'];
-        $restrictedRoles = ['admin', 'general_manager', 'finance', 'hr'];
+        $adminOnlyRoles = ['admin', 'general_manager', 'branch_principal', 'finance', 'hr'];
+        $isAdmin = auth()->user()->role === 'admin';
         $isBranchPrincipal = auth()->user()->role === 'branch_principal';
         foreach($allRoles as $key => $label) {
             $roleCounts[$key] = $staff->where('role', $key)->count();
@@ -196,12 +197,12 @@
                             </td>
                             <td class="td-actions">
                                 <div class="modern-action-group">
-                                    @if(!$isBranchPrincipal || !in_array($s->role, $restrictedRoles))
+                                    @if($isAdmin || !in_array($s->role, $adminOnlyRoles))
                                     <a href="{{ route('admin.staff.edit', ['staff' => $s->id]) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                         <i class="fas fa-pen"></i>
                                     </a>
                                     @endif
-                                    @if($s->id !== auth()->id() && (!$isBranchPrincipal || !in_array($s->role, $restrictedRoles)))
+                                    @if($s->id !== auth()->id() && ($isAdmin || !in_array($s->role, $adminOnlyRoles)))
                                     <form method="POST" action="{{ route('admin.staff.destroy', ['staff' => $s->id]) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
@@ -238,12 +239,12 @@
                             <div class="mobile-card-item-sub">{{ $s->email }}</div>
                         </div>
                         <div class="mobile-card-item-actions">
-                            @if(!$isBranchPrincipal || !in_array($s->role, $restrictedRoles))
+                            @if($isAdmin || !in_array($s->role, $adminOnlyRoles))
                             <a href="{{ route('admin.staff.edit', ['staff' => $s->id]) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                 <i class="fas fa-pen"></i>
                             </a>
                             @endif
-                            @if($s->id !== auth()->id() && (!$isBranchPrincipal || !in_array($s->role, $restrictedRoles)))
+                            @if($s->id !== auth()->id() && ($isAdmin || !in_array($s->role, $adminOnlyRoles)))
                             <form method="POST" action="{{ route('admin.staff.destroy', ['staff' => $s->id]) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
