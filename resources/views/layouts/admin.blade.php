@@ -276,6 +276,7 @@
                         <li><a href="{{ route('admin.enrollments.bulk-enroll') }}" class="{{ request()->routeIs('admin.enrollments.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
                         <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
                         <li><a href="{{ route('admin.parents.index') }}" class="{{ request()->routeIs('admin.parents.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
+                        <li><a href="{{ route('admin.teacher-assignments.index') }}" class="{{ request()->routeIs('admin.teacher-assignments.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i> Teacher Assignments</a></li>
                     </ul>
                 </li>
                 @elseif($menuLevel === 'finance')
@@ -487,10 +488,6 @@
                 </li>
                 @elseif($menuLevel === 'branch_principal')
                 {{-- No Website section for branch principals --}}
-                <li class="menu-header">USER MANAGEMENT</li>
-                <li><a href="{{ route('admin.user-access.teachers') }}" class="{{ request()->routeIs('admin.user-access.teachers*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teacher Access</a></li>
-                <li><a href="{{ route('admin.user-access.students') }}" class="{{ request()->routeIs('admin.user-access.students*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Student Access</a></li>
-                <li><a href="{{ route('admin.user-access.parents') }}" class="{{ request()->routeIs('admin.user-access.parents*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parent Access</a></li>
                 <li class="menu-header">TRANSFERS</li>
                 <li><a href="{{ route('admin.students.index') }}?filter=transfer" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}"><i class="fas fa-exchange-alt"></i> Student Transfer</a></li>
                 @endif

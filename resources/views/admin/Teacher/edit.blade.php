@@ -113,6 +113,28 @@
                 <div class="modern-form-section-body">
                     <div class="modern-form-grid">
                         <div class="modern-form-group">
+                            <label class="modern-form-label" for="branch_id">
+                                Branch <span class="modern-required">*</span>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-building modern-input-icon"></i>
+                                <select name="branch_id" id="branch_id" class="modern-input modern-select {{ $errors->has('branch_id') ? 'is-invalid' : '' }}" required
+                                    @if($isBranchPrincipal) readonly disabled @endif>
+                                    <option value="">-- Select Branch --</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ ($isBranchPrincipal && $authBranchId == $branch->id) || old('branch_id', $data->branch_id) == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                                @if($isBranchPrincipal)
+                                    <input type="hidden" name="branch_id" value="{{ $authBranchId }}">
+                                @endif
+                            </div>
+                            @error('branch_id')
+                                <span class="modern-form-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="modern-form-group">
                             <label class="modern-form-label" for="qualification">
                                 Qualification <small>(optional)</small>
                             </label>

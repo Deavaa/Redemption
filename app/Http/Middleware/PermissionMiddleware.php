@@ -102,7 +102,7 @@ class PermissionMiddleware
 
         // Branch principal — manages staff, students, parents in own branch only
         // Does NOT control academic years, terms, exams (those are admin-level)
-        // Does NOT have access to team members, teacher assignments, website
+        // Does NOT have access to team members, website, user access management
         if ($user->role === 'branch_principal') {
             $branchPrincipalAllowedPermissions = [
                 'dashboard.view',
@@ -117,6 +117,8 @@ class PermissionMiddleware
                 'students.view', 'students.create', 'students.edit', 'students.manage',
                 'teachers.view', 'teachers.create', 'teachers.edit',
                 'parents.view', 'parents.create', 'parents.edit',
+                // Teacher Assignments — branch principal can assign teachers to subjects/classes/sections
+                'teacher_assignments.view', 'teacher_assignments.create', 'teacher_assignments.edit',
                 // Staff management — admin only, branch principals cannot access staff management
                 // Attendance
                 'attendance.view', 'attendance.manage',
@@ -135,8 +137,6 @@ class PermissionMiddleware
                 'announcements.view',
                 // Departments (view only)
                 'departments.view',
-                // User access management
-                'user_access.view',
                 // Enrollment
                 'students.manage',
                 // Fees (view only for own branch)

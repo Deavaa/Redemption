@@ -69,12 +69,16 @@
                                             <label class="sl-form-label" for="upload_branch_id">Branch <span class="sl-required">*</span></label>
                                             <div class="sl-input-wrap">
                                                 <i class="fas fa-building sl-input-icon"></i>
-                                                <select name="branch_id" id="upload_branch_id" class="sl-input sl-select" required>
+                                                <select name="branch_id" id="upload_branch_id" class="sl-input sl-select" required
+                                                    @if(count($branches) === 1) readonly disabled @endif>
                                                     <option value="">-- Select Branch --</option>
                                                     @foreach($branches as $branch)
-                                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                        <option value="{{ $branch->id }}" {{ count($branches) === 1 ? 'selected' : '' }}>{{ $branch->name }}</option>
                                                     @endforeach
                                                 </select>
+                                                @if(count($branches) === 1)
+                                                    <input type="hidden" name="branch_id" value="{{ $branches->first()->id }}">
+                                                @endif
                                             </div>
                                         </div>
                                         <div class="sl-form-group">
@@ -149,12 +153,16 @@
                             <label class="sl-form-label" for="branch_id">Branch <span class="sl-required">*</span></label>
                             <div class="sl-input-wrap">
                                 <i class="fas fa-building sl-input-icon"></i>
-                                <select name="branch_id" id="branch_id" class="sl-input sl-select {{ $errors->has('branch_id') ? 'is-invalid' : '' }}" required>
+                                <select name="branch_id" id="branch_id" class="sl-input sl-select {{ $errors->has('branch_id') ? 'is-invalid' : '' }}" required
+                                    @if(count($branches) === 1) readonly disabled @endif>
                                     <option value="">-- Select Branch --</option>
                                     @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                        <option value="{{ $branch->id }}" {{ count($branches) === 1 || old('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
                                     @endforeach
                                 </select>
+                                @if(count($branches) === 1)
+                                    <input type="hidden" name="branch_id" value="{{ $branches->first()->id }}">
+                                @endif
                             </div>
                             @error('branch_id')<span class="sl-form-error">{{ $message }}</span>@enderror
                         </div>
@@ -600,6 +608,17 @@ document.getElementById('upload_branch_id').addEventListener('change', function(
             sectionSelect.innerHTML = '<option value="">Error loading sections</option>';
             console.error(err);
         });
+});
+
+// Auto-load sections if branch is already pre-selected (e.g. for branch principal)
+document.addEventListener('DOMContentLoaded', function() {
+    ['branch_id', 'upload_branch_id'].forEach(function(selectId) {
+        const branchSelect = document.getElementById(selectId);
+        if (branchSelect && branchSelect.value) {
+            // Trigger change event to load sections for the already-selected branch
+            branchSelect.dispatchEvent(new Event('change'));
+        }
+    });
 });
 
 // Update file label text when a file is selected

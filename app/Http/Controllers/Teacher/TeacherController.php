@@ -41,7 +41,12 @@ class TeacherController extends Controller
     public function create()
     {
         $departments = Department::active()->orderBy('name')->get();
-        return view('admin.Teacher.create', compact('departments'));
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+        $authUser = auth()->user();
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+        $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
+
+        return view('admin.Teacher.create', compact('departments', 'branches', 'isBranchPrincipal', 'authBranchId'));
     }
 
     public function store(Request $request)
@@ -59,6 +64,7 @@ class TeacherController extends Controller
             'qualification' => 'nullable|string|max:255',
             'department'    => 'nullable|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
+            'branch_id'     => 'nullable|exists:branches,id',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
             'status'        => 'required|in:active,inactive,on_leave',
@@ -84,6 +90,11 @@ class TeacherController extends Controller
         // Ensure status is explicitly set (defensive coding)
         if (!isset($validated['status']) || !in_array($validated['status'], ['active', 'inactive', 'on_leave'])) {
             $validated['status'] = 'active';
+        }
+
+        // Auto-assign branch for branch principal
+        if (auth()->user()->role === 'branch_principal') {
+            $validated['branch_id'] = auth()->user()->branch_id;
         }
 
         try {
@@ -120,7 +131,12 @@ class TeacherController extends Controller
     {
         $data = Teacher::findOrFail($id);
         $departments = Department::active()->orderBy('name')->get();
-        return view('admin.Teacher.edit', compact('data', 'departments'));
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+        $authUser = auth()->user();
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+        $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
+
+        return view('admin.Teacher.edit', compact('data', 'departments', 'branches', 'isBranchPrincipal', 'authBranchId'));
     }
 
     public function update(Request $request, $id)
@@ -141,6 +157,7 @@ class TeacherController extends Controller
             'qualification' => 'nullable|string|max:255',
             'department'    => 'nullable|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
+            'branch_id'     => 'nullable|exists:branches,id',
             'hire_date'     => 'nullable|date',
             'salary'        => 'nullable|numeric',
             'status'        => 'required|in:active,inactive,on_leave',
@@ -166,6 +183,11 @@ class TeacherController extends Controller
         // Ensure status is explicitly set (defensive coding)
         if (!isset($validated['status']) || !in_array($validated['status'], ['active', 'inactive', 'on_leave'])) {
             $validated['status'] = 'active';
+        }
+
+        // Auto-assign branch for branch principal (prevent changing away from own branch)
+        if (auth()->user()->role === 'branch_principal') {
+            $validated['branch_id'] = auth()->user()->branch_id;
         }
 
         $item->update($validated);
