@@ -6,7 +6,7 @@ class Classroom extends Model
 {
     use HasFactory;
     protected $table = 'classes';
-    protected $fillable = ['branch_id','academic_year_id','name','numeric_name','teacher_id','capacity'];
+    protected $fillable = ['branch_id','academic_year_id','name','numeric_name','capacity'];
 
     /**
      * Calculated capacity = sum of all sections' max_students.
@@ -34,5 +34,4 @@ class Classroom extends Model
     public function students() { return $this->hasMany(Student::class, 'class_id'); }
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
     public function branch() { return $this->belongsTo(Branch::class); }
-    public function teacher() { return $this->belongsTo(Teacher::class, 'teacher_id'); }
 }

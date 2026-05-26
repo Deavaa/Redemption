@@ -108,12 +108,6 @@
                             </td>
                             <td>
                                 <div class="modern-cell-title">{{ $item->name ?? '-' }}</div>
-                                @if($item->teacher)
-                                    <div class="modern-cell-sub">
-                                        <i class="fas fa-user-tie" style="font-size:0.7rem;margin-right:3px;color:#4361ee;"></i>
-                                        {{ $item->teacher->full_name ?? '' }}
-                                    </div>
-                                @endif
                             </td>
                             <td>
                                 <div class="modern-cell-text">{{ $item->academicYear->name ?? '-' }}</div>

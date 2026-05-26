@@ -97,21 +97,6 @@
                         </div>
 
                         <div class="modern-form-group">
-                            <label class="modern-form-label" for="teacher_id">
-                                Class Teacher <small>(optional)</small>
-                            </label>
-                            <div class="modern-input-wrapper">
-                                <i class="fas fa-user-tie modern-input-icon"></i>
-                                <select name="teacher_id" id="teacher_id" class="modern-input modern-select">
-                                    <option value="">-- Select Teacher --</option>
-                                    @foreach($teachers as $t)
-                                        <option value="{{ $t->id }}" {{ old('teacher_id', $data->teacher_id) == $t->id ? 'selected' : '' }}>{{ $t->full_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="modern-form-group">
                             <label class="modern-form-label">
                                 Class Capacity <small>(auto-calculated)</small>
                             </label>
