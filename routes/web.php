@@ -53,6 +53,8 @@ use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\WebContentController;
 use App\Http\Controllers\Slider\SliderController;
 use App\Http\Controllers\Student\StudentController;
+use App\Http\Controllers\Student\StudentCommentController;
+use App\Http\Controllers\Student\ParentController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Parent\ParentDashboardController;
 use App\Http\Controllers\Subject\SubjectController;
@@ -244,6 +246,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('students/{student}/mark-as-left', [StudentController::class, 'markAsLeft'])->name('students.mark-as-left')->middleware('permission:students.manage');
     Route::get('students/{student}/transfer', [StudentController::class, 'transferForm'])->name('students.transfer')->middleware('permission:students.manage');
     Route::post('students/{student}/transfer', [StudentController::class, 'transfer'])->name('students.transfer-store')->middleware('permission:students.manage');
+
+    // ── Student Comments ──────────────────────────────────
+    Route::get('students/{student}/comments', [StudentCommentController::class, 'index'])->name('students.comments.index');
+    Route::post('students/{student}/comments', [StudentCommentController::class, 'store'])->name('students.comments.store');
+    Route::put('students/{student}/comments/{comment}', [StudentCommentController::class, 'update'])->name('students.comments.update');
+    Route::delete('students/{student}/comments/{comment}', [StudentCommentController::class, 'destroy'])->name('students.comments.destroy');
+    Route::get('students/{student}/report-comments', [StudentCommentController::class, 'reportComments'])->name('students.comments.report');
+
+    // ── Parent Search & Add ───────────────────────────────
+    Route::get('parents/search', [ParentController::class, 'search'])->name('parents.search');
+    Route::post('parents/add', [ParentController::class, 'store'])->name('parents.add');
+    Route::post('parents/link-student', [ParentController::class, 'linkToStudent'])->name('parents.link-student');
     Route::get('teachers/{teacher}/transfer', [TeacherController::class, 'transferForm'])->name('teachers.transfer')->middleware('permission:teachers.manage');
     Route::post('teachers/{teacher}/transfer', [TeacherController::class, 'transfer'])->name('teachers.transfer-store')->middleware('permission:teachers.manage');
     Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');

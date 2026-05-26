@@ -363,56 +363,77 @@
                         </div>
                         <div>
                             <h3 class="modern-form-section-title">Guardian Information</h3>
-                            <p class="modern-form-section-desc">Update parent or guardian contact details</p>
+                            <p class="modern-form-section-desc">Search existing parents or add a new one</p>
                         </div>
                     </div>
                     <div class="modern-form-section-body">
                         <div class="modern-form-grid">
-                            <div class="modern-form-group">
-                                <label class="modern-form-label" for="guardian_select">
-                                    Guardian Name
+                            {{-- Search existing parent --}}
+                            <div class="modern-form-group modern-form-span-2">
+                                <label class="modern-form-label" for="parentSearch">
+                                    <i class="fas fa-search"></i> Search Existing Parent
                                 </label>
                                 <div class="modern-input-wrapper modern-input-wrapper-with-btn">
-                                    <i class="fas fa-user-shield modern-input-icon"></i>
-                                    <select id="guardian_select"
-                                        class="modern-input modern-select {{ $errors->has('guardian_name') ? 'is-invalid' : '' }}">
-                                        <option value="">Search or select existing parent</option>
-                                        @foreach ($parents as $parent)
-                                            <option value="{{ $parent->id }}" data-phone="{{ $parent->phone }}"
-                                                {{ old('guardian_id', $data->parents->first()?->id ?? '') == $parent->id ? 'selected' : '' }}>
-                                                {{ $parent->name }} ({{ $parent->phone }})</option>
-                                        @endforeach
-                                        <option value="new">+ Add New Parent</option>
-                                    </select>
-                                    <button type="button" class="modern-input-btn" id="addParentBtn"
-                                        data-bs-toggle="modal" data-bs-target="#addParentModal">
-                                        <i class="fas fa-plus"></i>
+                                    <i class="fas fa-search modern-input-icon"></i>
+                                    <input type="text" id="parentSearch" class="modern-input"
+                                        placeholder="Search by name or phone number..." autocomplete="off">
+                                    <button type="button" class="modern-input-btn" id="searchParentBtn" onclick="searchParents()">
+                                        <i class="fas fa-search"></i>
                                     </button>
                                 </div>
-                                <input type="hidden" name="guardian_name" id="guardian_name"
-                                    value="{{ old('guardian_name', $data->parents->first()?->name ?? '') }}">
-                                <input type="hidden" name="guardian_id" id="guardian_id"
-                                    value="{{ old('guardian_id', $data->parents->first()?->id ?? '') }}">
-                                <div class="modern-input-hint">Select an existing parent or add a new one</div>
+                                <div id="parentSearchResults" class="modern-search-results" style="display:none;"></div>
+                            </div>
+
+                            {{-- Selected parent display --}}
+                            <div class="modern-form-group" id="selectedParentDisplay" style="display:none;">
+                                <label class="modern-form-label">Selected Parent</label>
+                                <div class="modern-selected-parent" id="selectedParentInfo">
+                                    <i class="fas fa-check-circle"></i> <span id="selectedParentName"></span>
+                                    <button type="button" class="modern-remove-parent" onclick="clearSelectedParent()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <input type="hidden" name="guardian_id" id="guardian_id" value="">
+                            </div>
+
+                            {{-- Manual guardian fields (fallback) --}}
+                            <div class="modern-form-group" id="manualGuardianFields">
+                                <label class="modern-form-label" for="guardian_name">
+                                    Guardian Name <small>(if not in system)</small>
+                                </label>
+                                <div class="modern-input-wrapper">
+                                    <i class="fas fa-user-shield modern-input-icon"></i>
+                                    <input type="text" name="guardian_name" id="guardian_name"
+                                        class="modern-input {{ $errors->has('guardian_name') ? 'is-invalid' : '' }}"
+                                        value="{{ old('guardian_name', $data->guardian_name) }}"
+                                        placeholder="e.g. Kebede Abebe">
+                                </div>
                                 @error('guardian_name')
                                     <span class="modern-form-error">{{ $message }}</span>
                                 @enderror
                             </div>
 
-                            <div class="modern-form-group">
+                            <div class="modern-form-group" id="manualGuardianPhoneField">
                                 <label class="modern-form-label" for="guardian_phone">
-                                    Guardian Phone
+                                    Guardian Phone <small>(if not in system)</small>
                                 </label>
                                 <div class="modern-input-wrapper">
                                     <i class="fas fa-phone modern-input-icon"></i>
                                     <input type="tel" name="guardian_phone" id="guardian_phone"
                                         class="modern-input {{ $errors->has('guardian_phone') ? 'is-invalid' : '' }}"
-                                        value="{{ old('guardian_phone', $data->parents->first()?->phone ?? '') }}"
+                                        value="{{ old('guardian_phone', $data->guardian_phone) }}"
                                         placeholder="e.g. +251 91 234 5678">
                                 </div>
                                 @error('guardian_phone')
                                     <span class="modern-form-error">{{ $message }}</span>
                                 @enderror
+                            </div>
+
+                            {{-- Add New Parent button --}}
+                            <div class="modern-form-group modern-form-span-2">
+                                <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#addParentModal">
+                                    <i class="fas fa-plus"></i> Add New Parent/Guardian
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -428,39 +449,16 @@
                         </div>
                         <div>
                             <h3 class="modern-form-section-title">Comments</h3>
-                            <p class="modern-form-section-desc">Teacher and admin staff comments</p>
+                            <p class="modern-form-section-desc">Teacher and principal comments on this student</p>
                         </div>
                     </div>
                     <div class="modern-form-section-body">
-                        <div class="modern-form-grid">
-                            <div class="modern-form-group">
-                                <label class="modern-form-label">Teacher Comments <small>(read only)</small></label>
-                                <div class="modern-input-wrapper">
-                                    <i class="fas fa-chalkboard-teacher modern-input-icon"></i>
-                                    <textarea class="modern-input modern-textarea" rows="3" readonly>{{ $data->teacher_comments ?? 'No comments' }}</textarea>
-                                </div>
-                            </div>
-
-                            <div class="modern-form-group">
-                                <label class="modern-form-label">Admin Staff Comments <small>(read only)</small></label>
-                                <div class="modern-input-wrapper">
-                                    <i class="fas fa-user-cog modern-input-icon"></i>
-                                    <textarea class="modern-input modern-textarea" rows="3" readonly>{{ $data->admin_comments ?? 'No comments' }}</textarea>
-                                </div>
-                            </div>
-
-                            <div class="modern-form-group modern-form-span-2">
-                                <label class="modern-form-label" for="new_comment">
-                                    Add New Comment <small>(optional)</small>
-                                </label>
-                                <div class="modern-input-wrapper">
-                                    <i class="fas fa-pen modern-input-icon"></i>
-                                    <textarea name="new_comment" id="new_comment"
-                                        class="modern-input modern-textarea"
-                                        rows="3"
-                                        placeholder="Add a new comment...">{{ old('new_comment') }}</textarea>
-                                </div>
-                            </div>
+                        <div style="padding:1.5rem;text-align:center;">
+                            <i class="fas fa-comment-alt" style="font-size:2rem;color:#d1d5db;margin-bottom:1rem;display:block;"></i>
+                            <p style="color:#6b7280;margin-bottom:1rem;">Comments are now managed on the student detail page with full tracking of author, type, and visibility.</p>
+                            <a href="{{ route('admin.students.show', $data->id) }}" class="btn-modern btn-modern-primary">
+                                <i class="fas fa-external-link-alt"></i> Go to Student Details to Add Comment
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -1203,6 +1201,175 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+</script>
+@endpush
+@push('styles')
+<style>
+.modern-search-results {
+    margin-top: 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    background: #fff;
+}
+.modern-search-result-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modern-search-result-item:last-child { border-bottom: none; }
+.modern-search-result-item:hover { background: #f8f9ff; }
+.modern-search-result-name { font-weight: 600; color: #1a1a2e; font-size: 0.88rem; }
+.modern-search-result-phone { color: #6b7280; font-size: 0.82rem; }
+.modern-search-result-students { color: #9ca3af; font-size: 0.78rem; }
+.modern-selected-parent {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    background: #ecfdf5;
+    color: #059669;
+    font-weight: 600;
+    font-size: 0.88rem;
+    border: 1px solid #a7f3d0;
+}
+.modern-remove-parent {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 0.85rem;
+    padding: 0.15rem;
+    margin-left: 0.5rem;
+}
+.modern-remove-parent:hover { color: #dc2626; }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+const STUDENT_ID = {{ $data->id }};
+let searchTimeout = null;
+
+// Parent search on input
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('parentSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(searchParents, 400);
+        });
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); searchParents(); }
+        });
+    }
+
+    // Pre-populate guardian_id if student already has a linked parent
+    @if($data->parents->count() > 0)
+        @php $firstParent = $data->parents->first(); @endphp
+        document.getElementById('guardian_id').value = '{{ $firstParent->id }}';
+        document.getElementById('selectedParentDisplay').style.display = 'flex';
+        document.getElementById('selectedParentName').textContent = '{{ $firstParent->father_name ?? $firstParent->guardian_name ?? $firstParent->mother_name ?? "Parent" }}';
+        document.getElementById('manualGuardianFields').style.display = 'none';
+        document.getElementById('manualGuardianPhoneField').style.display = 'none';
+    @endif
+});
+
+function searchParents() {
+    const query = document.getElementById('parentSearch').value.trim();
+    if (query.length < 2) {
+        document.getElementById('parentSearchResults').style.display = 'none';
+        return;
+    }
+
+    fetch(`/admin/parents/search?q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => {
+            const container = document.getElementById('parentSearchResults');
+            if (data.parents && data.parents.length > 0) {
+                container.style.display = 'block';
+                container.innerHTML = data.parents.map(p => `
+                    <div class="modern-search-result-item" onclick="selectParent(${p.id}, '${escapeHtml(p.display_name)}', '${escapeHtml(p.display_phone || '')}')">
+                        <div>
+                            <div class="modern-search-result-name">${escapeHtml(p.display_name)}</div>
+                            <div class="modern-search-result-phone">${escapeHtml(p.display_phone || 'No phone')}</div>
+                        </div>
+                        <div class="modern-search-result-students">${p.students_count} student(s)</div>
+                    </div>
+                `).join('');
+            } else {
+                container.style.display = 'block';
+                container.innerHTML = '<div class="modern-search-result-item" style="color:#9ca3af;cursor:default;">No parents found. Click "Add New Parent/Guardian" to create one.</div>';
+            }
+        })
+        .catch(() => {
+            document.getElementById('parentSearchResults').style.display = 'none';
+        });
+}
+
+function selectParent(id, name, phone) {
+    document.getElementById('guardian_id').value = id;
+    document.getElementById('selectedParentDisplay').style.display = 'flex';
+    document.getElementById('selectedParentName').textContent = name + (phone ? ' (' + phone + ')' : '');
+    document.getElementById('parentSearchResults').style.display = 'none';
+    document.getElementById('parentSearch').value = '';
+
+    // Hide manual fields since parent is selected from system
+    document.getElementById('manualGuardianFields').style.display = 'none';
+    document.getElementById('manualGuardianPhoneField').style.display = 'none';
+}
+
+function clearSelectedParent() {
+    document.getElementById('guardian_id').value = '';
+    document.getElementById('selectedParentDisplay').style.display = 'none';
+    document.getElementById('manualGuardianFields').style.display = 'flex';
+    document.getElementById('manualGuardianPhoneField').style.display = 'flex';
+}
+
+// Save new parent via modal
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('saveParentBtn')?.addEventListener('click', function() {
+        const name = document.getElementById('new_parent_name').value.trim();
+        const phone = document.getElementById('new_parent_phone').value.trim();
+        if (!name || !phone) { alert('Name and phone are required.'); return; }
+
+        const data = {
+            father_name: name,
+            father_phone: phone,
+            student_id: STUDENT_ID,
+            relation: 'guardian',
+        };
+
+        fetch('/admin/parents/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                selectParent(res.parent.id, res.parent.display_name, res.parent.display_phone);
+                bootstrap.Modal.getInstance(document.getElementById('addParentModal'))?.hide();
+                document.getElementById('newParentForm').reset();
+            } else {
+                alert(res.message || 'Failed to add parent.');
+            }
+        })
+        .catch(() => alert('Error adding parent.'));
+    });
+});
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
 @endpush
 @endsection

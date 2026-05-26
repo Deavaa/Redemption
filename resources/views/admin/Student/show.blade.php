@@ -26,6 +26,14 @@
         </div>
     </div>
 
+    @php
+        $enrollment = $data->currentEnrollment;
+        $enrollmentBranch = $enrollment?->branch ?? $data->branch;
+        $enrollmentClass = $enrollment?->classroom ?? $data->classroom;
+        $enrollmentSection = $enrollment?->section ?? $data->section;
+        $enrollmentAY = $enrollment?->academicYear ?? $data->academicYear;
+    @endphp
+
     <div class="modern-detail-grid">
         {{-- Main Info Card --}}
         <div class="modern-card modern-detail-main">
@@ -60,6 +68,9 @@
                         <span class="modern-badge {{ $statusBadge }}"><i class="fas {{ $statusIcon }}"></i> {{ ucfirst($data->status ?? 'N/A') }}</span>
                         @if($data->admission_number)
                             <span class="modern-badge modern-badge-light"><i class="fas fa-id-badge"></i> {{ $data->admission_number }}</span>
+                        @endif
+                        @if($enrollment)
+                            <span class="modern-badge modern-badge-info"><i class="fas fa-clipboard-check"></i> Enrolled</span>
                         @endif
                     </div>
                 </div>
@@ -122,41 +133,44 @@
                 </div>
             </div>
 
-            {{-- Academic Information --}}
+            {{-- Academic Information (from Enrollment) --}}
             <div class="modern-detail-section">
                 <div class="modern-detail-section-header">
                     <i class="fas fa-graduation-cap"></i> Academic Information
+                    @if($enrollment)
+                        <span class="modern-badge modern-badge-info" style="font-size:0.7rem;margin-left:0.5rem;">From Enrollment</span>
+                    @endif
                 </div>
                 <div class="modern-detail-body">
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
                             <i class="fas fa-building"></i> Branch
                         </div>
-                        <div class="modern-detail-value">{{ $data->branch?->name ?? '-' }}</div>
+                        <div class="modern-detail-value">{{ $enrollmentBranch?->name ?? '-' }}</div>
                     </div>
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
                             <i class="fas fa-chalkboard"></i> Class
                         </div>
-                        <div class="modern-detail-value">{{ $data->classroom?->name ?? '-' }}</div>
+                        <div class="modern-detail-value">{{ $enrollmentClass?->name ?? '-' }}</div>
                     </div>
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
                             <i class="fas fa-layer-group"></i> Section
                         </div>
-                        <div class="modern-detail-value">{{ $data->section?->name ?? '-' }}</div>
+                        <div class="modern-detail-value">{{ $enrollmentSection?->name ?? '-' }}</div>
                     </div>
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
                             <i class="fas fa-calendar-alt"></i> Academic Year
                         </div>
-                        <div class="modern-detail-value">{{ $data->academicYear?->name ?? '-' }}</div>
+                        <div class="modern-detail-value">{{ $enrollmentAY?->name ?? '-' }}</div>
                     </div>
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
                             <i class="fas fa-hashtag"></i> Roll Number
                         </div>
-                        <div class="modern-detail-value">{{ $data->roll_number ?? '-' }}</div>
+                        <div class="modern-detail-value">{{ $enrollment?->roll_number ?? $data->roll_number ?? '-' }}</div>
                     </div>
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
@@ -170,40 +184,107 @@
                         </div>
                         <div class="modern-detail-value">{{ $data->admission_date ? \Carbon\Carbon::parse($data->admission_date)->format('M d, Y') : '-' }}</div>
                     </div>
+                    @if($enrollment)
+                    <div class="modern-detail-row">
+                        <div class="modern-detail-label">
+                            <i class="fas fa-calendar-plus"></i> Enrollment Date
+                        </div>
+                        <div class="modern-detail-value">{{ $enrollment->enrollment_date ? \Carbon\Carbon::parse($enrollment->enrollment_date)->format('M d, Y') : '-' }}</div>
+                    </div>
+                    <div class="modern-detail-row">
+                        <div class="modern-detail-label">
+                            <i class="fas fa-tag"></i> Enrollment Type
+                        </div>
+                        <div class="modern-detail-value">{{ ucfirst($enrollment->enrollment_type ?? '-') }}</div>
+                    </div>
+                    @endif
                     <div class="modern-detail-row">
                         <div class="modern-detail-label">
                             <i class="fas fa-info-circle"></i> Status
                         </div>
                         <div class="modern-detail-value">
                             <span class="modern-badge {{ $statusBadge }}">{{ ucfirst($data->status ?? 'N/A') }}</span>
+                            @if($enrollment)
+                                <span class="modern-badge modern-badge-light" style="margin-left:0.25rem;">{{ ucfirst($enrollment->status) }}</span>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Guardian Information --}}
+            {{-- Guardian Information (from Parent Relationship) --}}
             <div class="modern-detail-section">
                 <div class="modern-detail-section-header">
                     <i class="fas fa-shield-alt"></i> Guardian Information
                 </div>
                 <div class="modern-detail-body">
-                    <div class="modern-detail-row">
-                        <div class="modern-detail-label">
-                            <i class="fas fa-user-shield"></i> Guardian Name
+                    @if($data->parents->count() > 0)
+                        @foreach($data->parents as $parent)
+                            <div class="modern-guardian-card">
+                                <div class="modern-detail-row">
+                                    <div class="modern-detail-label">
+                                        <i class="fas fa-user-shield"></i> {{ ucfirst($parent->pivot->relation ?? 'Guardian') }}
+                                    </div>
+                                    <div class="modern-detail-value">
+                                        {{ $parent->father_name ?? $parent->guardian_name ?? $parent->mother_name ?? '-' }}
+                                    </div>
+                                </div>
+                                @if($parent->father_phone || $parent->guardian_phone || $parent->mother_phone)
+                                <div class="modern-detail-row">
+                                    <div class="modern-detail-label">
+                                        <i class="fas fa-phone"></i> Phone
+                                    </div>
+                                    <div class="modern-detail-value">
+                                        <a href="tel:{{ $parent->father_phone ?? $parent->guardian_phone ?? $parent->mother_phone }}" class="modern-link">
+                                            {{ $parent->father_phone ?? $parent->guardian_phone ?? $parent->mother_phone }}
+                                        </a>
+                                    </div>
+                                </div>
+                                @endif
+                                @if($parent->father_occupation)
+                                <div class="modern-detail-row">
+                                    <div class="modern-detail-label">
+                                        <i class="fas fa-briefcase"></i> Occupation
+                                    </div>
+                                    <div class="modern-detail-value">{{ $parent->father_occupation }}</div>
+                                </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="modern-detail-row">
+                            <div class="modern-detail-label">
+                                <i class="fas fa-user-shield"></i> Guardian Name
+                            </div>
+                            <div class="modern-detail-value">{{ $data->guardian_name ?? '-' }}</div>
                         </div>
-                        <div class="modern-detail-value">{{ $data->guardian_name ?? '-' }}</div>
-                    </div>
-                    <div class="modern-detail-row">
-                        <div class="modern-detail-label">
-                            <i class="fas fa-phone"></i> Guardian Phone
+                        <div class="modern-detail-row">
+                            <div class="modern-detail-label">
+                                <i class="fas fa-phone"></i> Guardian Phone
+                            </div>
+                            <div class="modern-detail-value">
+                                @if($data->guardian_phone)
+                                    <a href="tel:{{ $data->guardian_phone }}" class="modern-link">{{ $data->guardian_phone }}</a>
+                                @else
+                                    <span class="modern-muted">-</span>
+                                @endif
+                            </div>
                         </div>
-                        <div class="modern-detail-value">
-                            @if($data->guardian_phone)
-                                <a href="tel:{{ $data->guardian_phone }}" class="modern-link">{{ $data->guardian_phone }}</a>
-                            @else
-                                <span class="modern-muted">-</span>
-                            @endif
-                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Comments Section --}}
+            <div class="modern-detail-section">
+                <div class="modern-detail-section-header">
+                    <i class="fas fa-comment-alt"></i> Comments & Notes
+                    <button type="button" class="btn-modern btn-modern-sm btn-modern-primary" onclick="openAddCommentModal()" style="margin-left:auto;">
+                        <i class="fas fa-plus"></i> Add Comment
+                    </button>
+                </div>
+                <div class="modern-detail-body" id="commentsContainer">
+                    <div class="modern-comments-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading comments...
                     </div>
                 </div>
             </div>
@@ -220,6 +301,10 @@
                     <a href="{{ route('admin.students.edit', $data->id) }}" class="modern-quick-action">
                         <i class="fas fa-pen"></i>
                         <span>Edit Student</span>
+                    </a>
+                    <a href="#" class="modern-quick-action" onclick="openAddCommentModal(); return false;">
+                        <i class="fas fa-comment"></i>
+                        <span>Add Comment</span>
                     </a>
                     @if($data->phone)
                     <a href="tel:{{ $data->phone }}" class="modern-quick-action">
@@ -240,6 +325,15 @@
                             <span>Delete Student</span>
                         </button>
                     </form>
+                </div>
+            </div>
+
+            {{-- Report Comments Summary Card --}}
+            <div class="modern-card" id="reportCommentsCard" style="display:none;">
+                <div class="modern-card-header-simple">
+                    <i class="fas fa-file-alt"></i> Report Card Comments
+                </div>
+                <div class="modern-report-comments-body" id="reportCommentsBody">
                 </div>
             </div>
 
@@ -270,6 +364,61 @@
                         <span class="modern-timestamp-value">{{ $data->updated_at->format('M d, Y H:i') }}</span>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Add Comment Modal --}}
+<div class="modal fade" id="addCommentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modern-modal-content">
+            <div class="modern-modal-header">
+                <h5 class="modern-modal-title"><i class="fas fa-comment-alt"></i> Add Comment for {{ $data->full_name }}</h5>
+                <button type="button" class="modern-modal-close" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modern-modal-body">
+                <form id="addCommentForm">
+                    @csrf
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Comment Type <span class="modern-required">*</span></label>
+                        <select name="comment_type" class="modern-input modern-select" id="commentType" required>
+                            <option value="general">General Comment</option>
+                            <option value="academic">Academic</option>
+                            <option value="behavior">Behavior</option>
+                            <option value="attendance">Attendance</option>
+                            <option value="progress">Progress</option>
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Visibility <span class="modern-required">*</span></label>
+                        <select name="visibility" class="modern-input modern-select" id="commentVisibility" required>
+                            <option value="staff">Staff Only</option>
+                            <option value="private">Private (only you)</option>
+                            <option value="public">Public (visible to parents)</option>
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">
+                            <input type="checkbox" name="is_report_comment" id="isReportComment" value="1">
+                            Show on Report Card
+                        </label>
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Comment <span class="modern-required">*</span></label>
+                        <textarea name="comment" id="commentText" class="modern-input modern-textarea" rows="4"
+                            placeholder="Write your comment here..." required maxlength="2000"></textarea>
+                        <div class="modern-input-hint"><span id="charCount">0</span>/2000 characters</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modern-modal-footer">
+                <button type="button" class="btn-modern btn-modern-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-modern btn-modern-primary" id="submitCommentBtn">
+                    <i class="fas fa-check"></i> Save Comment
+                </button>
             </div>
         </div>
     </div>
@@ -602,6 +751,189 @@
     .modern-detail-label { width: auto; }
     .modern-detail-section-header { padding: 0.75rem 1.25rem; }
 }
+
+/* Comments */
+.btn-modern-sm { padding: 0.4rem 0.85rem; font-size: 0.8rem; }
+.modern-comments-loading { padding: 2rem; text-align: center; color: #9ca3af; }
+.modern-comment-item { padding: 1rem 2rem; border-bottom: 1px solid #f3f4f6; transition: background 0.15s; }
+.modern-comment-item:hover { background: #fafbfc; }
+.modern-comment-item:last-child { border-bottom: none; }
+.modern-comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
+.modern-comment-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.modern-comment-author { font-weight: 600; color: #1a1a2e; font-size: 0.88rem; }
+.modern-comment-date { font-size: 0.78rem; color: #9ca3af; }
+.modern-comment-badges { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.modern-comment-text { color: #374151; font-size: 0.88rem; line-height: 1.6; margin-top: 0.25rem; }
+.modern-comment-actions { display: flex; gap: 0.5rem; }
+.modern-comment-actions button { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 0.82rem; padding: 0.2rem 0.4rem; border-radius: 4px; transition: all 0.15s; }
+.modern-comment-actions button:hover { color: #dc2626; background: #fef2f2; }
+.modern-no-comments { padding: 2rem; text-align: center; color: #9ca3af; font-size: 0.88rem; }
+.modern-badge-general { background: #f3f4f6; color: #6b7280; }
+.modern-badge-academic { background: #eff6ff; color: #2563eb; }
+.modern-badge-behavior { background: #fefce8; color: #b45309; }
+.modern-badge-attendance { background: #fef2f2; color: #dc2626; }
+.modern-badge-progress { background: #ecfdf5; color: #059669; }
+.modern-badge-report { background: #faf5ff; color: #7c3aed; }
+.modern-guardian-card { padding: 0; }
+.modern-guardian-card + .modern-guardian-card { border-top: 1px dashed #e5e7eb; padding-top: 0.5rem; }
+.modern-report-comments-body { padding: 0.75rem 1.25rem; }
+.modern-report-comment-item { padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6; font-size: 0.82rem; }
+.modern-report-comment-item:last-child { border-bottom: none; }
+.modern-report-comment-type { font-weight: 600; color: #4361ee; font-size: 0.75rem; }
+.modern-report-comment-text { color: #374151; margin-top: 0.15rem; }
+.modern-modal-content { background: #fff; border-radius: 14px; overflow: hidden; }
+.modern-modal-header { padding: 1.25rem 1.5rem; background: #fafbfc; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+.modern-modal-title { font-weight: 700; font-size: 1.05rem; color: #1a1a2e; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+.modern-modal-close { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 1rem; padding: 0.25rem; }
+.modern-modal-close:hover { color: #dc2626; }
+.modern-modal-body { padding: 1.5rem; }
+.modern-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 0.75rem; }
+.btn-modern-ghost { background: transparent; color: #6b7280; border: 1px solid #e5e7eb; }
+.btn-modern-ghost:hover { background: #f9fafb; border-color: #d1d5db; }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+const STUDENT_ID = {{ $data->id }};
+
+// Load comments on page load
+document.addEventListener('DOMContentLoaded', loadComments);
+
+function loadComments() {
+    const container = document.getElementById('commentsContainer');
+    fetch(`/admin/students/${STUDENT_ID}/comments`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.comments && data.comments.length > 0) {
+                container.innerHTML = data.comments.map(c => renderComment(c)).join('');
+            } else {
+                container.innerHTML = '<div class="modern-no-comments"><i class="fas fa-comment-slash" style="font-size:1.5rem;margin-bottom:0.5rem;display:block;"></i>No comments yet. Click "Add Comment" to write one.</div>';
+            }
+            // Load report comments in sidebar
+            loadReportComments();
+        })
+        .catch(err => {
+            container.innerHTML = '<div class="modern-no-comments" style="color:#dc2626;">Failed to load comments.</div>';
+        });
+}
+
+function loadReportComments() {
+    fetch(`/admin/students/${STUDENT_ID}/report-comments`)
+        .then(r => r.json())
+        .then(data => {
+            const card = document.getElementById('reportCommentsCard');
+            const body = document.getElementById('reportCommentsBody');
+            if (data.comments && data.comments.length > 0) {
+                card.style.display = 'block';
+                body.innerHTML = data.comments.map(c =>
+                    `<div class="modern-report-comment-item">
+                        <div class="modern-report-comment-type">${c.comment_type_label}</div>
+                        <div class="modern-report-comment-text">${escapeHtml(c.comment)}</div>
+                    </div>`
+                ).join('');
+            }
+        })
+        .catch(() => {});
+}
+
+function renderComment(c) {
+    const typeBadge = `modern-badge modern-badge-${c.comment_type}`;
+    const reportBadge = c.is_report_comment ? '<span class="modern-badge modern-badge-report"><i class="fas fa-file-alt"></i> Report</span>' : '';
+    const visIcon = c.visibility === 'private' ? '<i class="fas fa-lock" title="Private"></i>' : (c.visibility === 'public' ? '<i class="fas fa-globe" title="Public"></i>' : '');
+    const deleteBtn = c.can_delete ? `<button onclick="deleteComment(${c.id})" title="Delete"><i class="fas fa-trash-alt"></i></button>` : '';
+
+    return `<div class="modern-comment-item" id="comment-${c.id}">
+        <div class="modern-comment-header">
+            <div class="modern-comment-meta">
+                <span class="modern-comment-author">${escapeHtml(c.author_name)}</span>
+                <span class="modern-comment-date">${c.created_at}</span>
+                ${visIcon}
+            </div>
+            <div class="modern-comment-badges">
+                <span class="${typeBadge}">${c.comment_type_label}</span>
+                ${reportBadge}
+                <div class="modern-comment-actions">${deleteBtn}</div>
+            </div>
+        </div>
+        <div class="modern-comment-text">${escapeHtml(c.comment)}</div>
+    </div>`;
+}
+
+function openAddCommentModal() {
+    document.getElementById('addCommentForm').reset();
+    document.getElementById('charCount').textContent = '0';
+    new bootstrap.Modal(document.getElementById('addCommentModal')).show();
+}
+
+// Submit comment
+document.addEventListener('DOMContentLoaded', () => {
+    const commentText = document.getElementById('commentText');
+    if (commentText) {
+        commentText.addEventListener('input', () => {
+            document.getElementById('charCount').textContent = commentText.value.length;
+        });
+    }
+
+    document.getElementById('submitCommentBtn')?.addEventListener('click', submitComment);
+});
+
+function submitComment() {
+    const form = document.getElementById('addCommentForm');
+    const data = {
+        comment_type: document.getElementById('commentType').value,
+        visibility: document.getElementById('commentVisibility').value,
+        is_report_comment: document.getElementById('isReportComment').checked,
+        comment: document.getElementById('commentText').value,
+    };
+
+    if (!data.comment.trim()) { alert('Please enter a comment.'); return; }
+
+    fetch(`/admin/students/${STUDENT_ID}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            bootstrap.Modal.getInstance(document.getElementById('addCommentModal'))?.hide();
+            loadComments();
+        } else {
+            alert(res.message || 'Failed to add comment.');
+        }
+    })
+    .catch(err => alert('Error adding comment.'));
+}
+
+function deleteComment(id) {
+    if (!confirm('Delete this comment?')) return;
+
+    fetch(`/admin/students/${STUDENT_ID}/comments/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value }
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            const el = document.getElementById('comment-' + id);
+            if (el) el.remove();
+            loadReportComments();
+            // If no comments left, show placeholder
+            const container = document.getElementById('commentsContainer');
+            if (!container.querySelector('.modern-comment-item')) {
+                container.innerHTML = '<div class="modern-no-comments"><i class="fas fa-comment-slash" style="font-size:1.5rem;margin-bottom:0.5rem;display:block;"></i>No comments yet. Click "Add Comment" to write one.</div>';
+            }
+        }
+    })
+    .catch(() => alert('Error deleting comment.'));
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
 @endpush
 @endsection

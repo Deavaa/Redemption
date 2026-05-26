@@ -253,7 +253,7 @@ class StudentController extends Controller
 
     public function show(Student $student)
     {
-        $student->load(['classroom', 'section', 'branch', 'academicYear', 'parents']);
+        $student->load(['classroom', 'section', 'branch', 'academicYear', 'parents', 'currentEnrollment.branch', 'currentEnrollment.classroom', 'currentEnrollment.section', 'currentEnrollment.academicYear']);
         return view('admin.Student.show', ['data' => $student]);
     }
 
