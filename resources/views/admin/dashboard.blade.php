@@ -45,6 +45,7 @@
                 <div class="dash-stat-value">{{ $totalTeachers }}</div>
                 <div class="dash-stat-label">Teachers</div>
             </a>
+            @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
             <a href="{{ route('admin.staff.index') }}" class="dash-stat-card dash-stat-purple">
                 <div class="dash-stat-top">
                     <div class="dash-stat-icon"><i class="fas fa-id-badge"></i></div>
@@ -53,6 +54,7 @@
                 <div class="dash-stat-value">{{ $totalStaff }}</div>
                 <div class="dash-stat-label">Staff</div>
             </a>
+            @endif
             <a href="{{ route('admin.classrooms.index') }}" class="dash-stat-card dash-stat-teal">
                 <div class="dash-stat-top">
                     <div class="dash-stat-icon"><i class="fas fa-chalkboard"></i></div>

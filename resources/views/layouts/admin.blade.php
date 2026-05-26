@@ -257,7 +257,9 @@
                         <li><a href="{{ route('admin.enrollments.bulk-enroll') }}" class="{{ request()->routeIs('admin.enrollments.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
                         <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
                         <li><a href="{{ route('admin.parents.index') }}" class="{{ request()->routeIs('admin.parents.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
+                        @if($isAdmin)
                         <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a></li>
+                        @endif
                         <li><a href="{{ route('admin.team-members.index') }}" class="{{ request()->routeIs('admin.team-members.*') ? 'active' : '' }}"><i class="fas fa-users-cog"></i> Team Members</a></li>
                         <li><a href="{{ route('admin.teacher-assignments.index') }}" class="{{ request()->routeIs('admin.teacher-assignments.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i> Teacher Assignments</a></li>
                     </ul>
@@ -274,7 +276,6 @@
                         <li><a href="{{ route('admin.enrollments.bulk-enroll') }}" class="{{ request()->routeIs('admin.enrollments.bulk*') ? 'active' : '' }}"><i class="fas fa-users"></i> Bulk Enrollment</a></li>
                         <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
                         <li><a href="{{ route('admin.parents.index') }}" class="{{ request()->routeIs('admin.parents.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
-                        <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a></li>
                     </ul>
                 </li>
                 @elseif($menuLevel === 'finance')
@@ -288,7 +289,6 @@
                 <li>
                     <a href="{{ route('admin.students.index') }}" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Students</a>
                     <a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a>
-                    <a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a>
                 </li>
                 @elseif($menuLevel === 'registrar')
                 <li class="menu-header">STUDENTS & STAFF</li>
@@ -350,7 +350,6 @@
                     </a>
                     <ul class="collapse {{ $isFinanceActive ? 'show' : '' }}" id="financeSubmenu">
                         <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
-                        <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-id-badge"></i> Staff</a></li>
                         <li><a href="{{ route('admin.leaves.index') }}" class="{{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}"><i class="fas fa-calendar-minus"></i> Leaves</a></li>
                         <li><a href="{{ route('admin.payrolls.index') }}" class="{{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i> Payroll</a></li>
                         <li><a href="{{ route('admin.employee-assets.index') }}" class="{{ request()->routeIs('admin.employee-assets.*') ? 'active' : '' }}"><i class="fas fa-boxes"></i> Employee Assets</a></li>
@@ -1127,10 +1126,6 @@
             <span>Library</span>
         </a>
         @elseif($menuLevel === 'hr')
-        <a href="{{ route('admin.staff.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-            <i class="fas fa-id-badge"></i>
-            <span>Staff</span>
-        </a>
         @endif
         {{-- More — always last --}}
         <div class="mobile-nav-item mobile-nav-more" id="mobileNavMore" onclick="toggleMobileMenu()">
@@ -1164,7 +1159,7 @@
             <span>Subjects</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'hr']))
+        @if($isAdmin)
         <a href="{{ route('admin.staff.index') }}" class="mobile-menu-link">
             <i class="fas fa-id-badge"></i>
             <span>Staff</span>

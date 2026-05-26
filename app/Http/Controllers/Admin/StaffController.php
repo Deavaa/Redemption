@@ -43,13 +43,14 @@ class StaffController extends Controller
 
     public function index()
     {
+        // Only admin can access staff management
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+        }
+
         $query = User::whereIn('role', array_keys(self::STAFF_ROLES))
             ->with('branch');
-
-        // Branch principals can only see staff from their own branch
-        if (auth()->user()->role === 'branch_principal') {
-            $query->where('branch_id', auth()->user()->branch_id);
-        }
 
         // Apply role filter if provided
         if (request()->filled('role') && in_array(request('role'), array_keys(self::STAFF_ROLES))) {
@@ -63,6 +64,12 @@ class StaffController extends Controller
 
     public function create()
     {
+        // Only admin can access staff management
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+        }
+
         $roles = self::STAFF_ROLES;
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
         $branchRoles = self::BRANCH_ROLES;
@@ -89,6 +96,12 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
+        // Only admin can access staff management
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+        }
+
         $allowedRoles = self::STAFF_ROLES;
         $isAdmin = auth()->user()->role === 'admin';
 
@@ -165,6 +178,12 @@ class StaffController extends Controller
 
     public function edit(User $staff)
     {
+        // Only admin can access staff management (but users can edit their own profile)
+        if (auth()->user()->role !== 'admin' && $staff->id !== auth()->id()) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+        }
+
         $user = $staff; // Alias for blade template compatibility
         $roles = self::STAFF_ROLES;
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
@@ -198,6 +217,12 @@ class StaffController extends Controller
 
     public function update(Request $request, User $staff)
     {
+        // Only admin can update staff (but users can update their own profile)
+        if (auth()->user()->role !== 'admin' && $staff->id !== auth()->id()) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+        }
+
         $user = $staff; // Alias for compatibility
         $isAdmin = auth()->user()->role === 'admin';
 
@@ -262,6 +287,12 @@ class StaffController extends Controller
 
     public function destroy(User $staff)
     {
+        // Only admin can access staff management
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+        }
+
         $user = $staff; // Alias for compatibility
         $isAdmin = auth()->user()->role === 'admin';
 
@@ -295,6 +326,11 @@ class StaffController extends Controller
      */
     public function apiEmployeeIdPreview(Request $request)
     {
+        // Only admin can access staff management
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['error' => 'Only admins can access Staff Management.'], 403);
+        }
+
         $branchId = $request->query('branch_id');
 
         if ($branchId) {

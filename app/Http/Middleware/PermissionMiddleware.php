@@ -30,6 +30,16 @@ class PermissionMiddleware
             return $next($request);
         }
 
+        // Allow users to access their own staff profile (edit/update) even if they
+        // don't have staff.view permission. Staff management is admin-only, but
+        // every user should be able to view and edit their own profile.
+        if (!empty($permissions) && in_array('staff.view', $permissions)) {
+            $staffId = $request->route('staff');
+            if ($staffId && ($staffId instanceof \App\Models\User ? $staffId->id : $staffId) == $user->id) {
+                return $next($request);
+            }
+        }
+
         // ── Role-based route restrictions ──────────────────────
         // Teachers only have access to certain sections.
         // If the route has a permission middleware, check if this role
@@ -107,8 +117,7 @@ class PermissionMiddleware
                 'students.view', 'students.create', 'students.edit', 'students.manage',
                 'teachers.view', 'teachers.create', 'teachers.edit',
                 'parents.view', 'parents.create', 'parents.edit',
-                // Staff management within branch
-                'staff.view', 'staff.manage',
+                // Staff management — admin only, branch principals cannot access staff management
                 // Attendance
                 'attendance.view', 'attendance.manage',
                 // Lesson Plans
@@ -210,11 +219,12 @@ class PermissionMiddleware
             return $next($request);
         }
 
-        // General manager — broad access except system admin
+        // General manager — broad access except system admin and staff management
         if ($user->role === 'general_manager') {
             $gmBlockedPermissions = [
                 'settings.edit', 'roles.view', 'roles.edit',
                 'database_backup', 'backup', 'audits.view',
+                'staff.view', 'staff.manage',
             ];
 
             if (!empty($permissions)) {
@@ -366,7 +376,7 @@ class PermissionMiddleware
             $hrAllowedPermissions = [
                 'dashboard.view',
                 // People
-                'students.view', 'teachers.view', 'staff.view',
+                'students.view', 'teachers.view',
                 // HR
                 'leaves.view', 'leaves.manage',
                 'payrolls.view', 'payrolls.manage',
