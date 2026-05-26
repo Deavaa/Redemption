@@ -4,14 +4,15 @@
 @push('styles')
 <style>
 /* ===== MARK ENTRY INDEX - ULTRA-COMPACT LAYOUT ===== */
-.admin-content { padding-top: 0 !important; padding-left: 8px !important; padding-right: 8px !important; padding-bottom: 8px !important; margin-top: 0 !important; }
-.me-page { margin: 0; padding: 0; }
+.admin-content { padding-top: 0 !important; padding-left: 8px !important; padding-right: 8px !important; padding-bottom: 8px !important; margin-top: 0 !important; overflow-x: hidden !important; max-width: 100% !important; box-sizing: border-box !important; }
+.me-page { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; width: 100%; }
+.me-page > * { max-width: 100%; box-sizing: border-box; overflow-x: hidden; }
 
 /* Filter Panel - compact */
 .me-filter-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #eee; margin-bottom: 6px; }
 .me-filter-header { display: none; }
 .me-filter-body { padding: 6px 8px; }
-.me-filter-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.me-filter-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; min-width: 0; }
 .me-filter-group { display: flex; flex-direction: column; }
 .me-filter-label { font-weight: 600; color: #555; margin-bottom: 2px; font-size: 0.65rem; }
 .me-filter-label .me-required { color: #ef4444; margin-left: 1px; }
@@ -95,17 +96,18 @@
 .me-student-count i { color: #4361ee; font-size: 0.7rem; }
 
 /* Mark entry area - constrained to viewport */
-.me-mark-entry-area { display: flex; flex-direction: column; }
+.me-mark-entry-area { display: flex; flex-direction: column; max-width: 100%; overflow-x: hidden; }
 
 /* Cards container - carousel wrapper with viewport constraint */
 .me-cards-container {
     overflow: hidden; position: relative; border-radius: 6px;
     max-height: calc(100vh - 260px);
     min-height: 200px;
+    max-width: 100%; box-sizing: border-box;
 }
 
 /* Card slider - horizontal strip */
-.me-card-slider { display: flex; transition: transform 0.3s ease; will-change: transform; touch-action: pan-y; }
+.me-card-slider { display: flex; transition: transform 0.3s ease; will-change: transform; touch-action: pan-y; max-width: 100%; }
 
 /* Each student card fills the carousel viewport */
 .me-card-slider .me-student-card { min-width: 100%; flex-shrink: 0; }
@@ -116,6 +118,7 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     border: 1px solid #eee; overflow: hidden;
     transition: box-shadow 0.15s, border-color 0.15s;
+    max-width: 100%; box-sizing: border-box;
 }
 .me-student-card:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-color: #ddd; }
 .me-student-card.card-active { border-color: #4361ee; box-shadow: 0 2px 8px rgba(67,97,238,0.1); }
@@ -137,8 +140,8 @@
 .me-sc-roll { font-size: 0.6rem; color: #9ca3af; font-weight: 500; }
 .me-sc-number { font-size: 0.58rem; font-weight: 700; color: #6b7280; background: #f3f4f6; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
 
-/* Card Body - tight */
-.me-sc-body { padding: 4px 8px; }
+/* Card Body - tight, allow horizontal scroll for grids if needed */
+.me-sc-body { padding: 4px 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* Section Label - minimal */
 .me-sc-section-label {
@@ -149,16 +152,16 @@
 .me-sc-section-label.ca-label { color: #1d4ed8; border-bottom-color: #bfdbfe; }
 .me-sc-section-label.exam-label { color: #059669; border-bottom-color: #a7f3d0; }
 
-/* CA Grid — fit all 13 fields in rows of 7+6 */
+/* CA Grid — fit all 13 fields in rows of 5+5+3 (more responsive) */
 .me-sc-ca-grid {
-    display: grid; grid-template-columns: repeat(7, 1fr);
-    gap: 3px; margin-bottom: 4px;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 3px; margin-bottom: 4px; min-width: 0;
 }
 
-/* Exam Grid — 4 columns */
+/* Exam Grid — 2 columns for better fit */
 .me-sc-exam-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 3px; margin-bottom: 4px;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 3px; margin-bottom: 4px; min-width: 0;
 }
 
 /* Card Field Item - tiny */
@@ -166,6 +169,7 @@
     display: flex; flex-direction: column; align-items: center;
     background: #f9fafb; border-radius: 4px; padding: 2px 1px;
     border: 1px solid #f0f0f0; transition: all 0.15s;
+    min-width: 0; overflow: hidden; max-width: 100%;
 }
 .me-sc-field:hover { border-color: #ddd; background: #fff; }
 .me-sc-field.field-exam { background: #f0fdf4; border-color: #d1fae5; }
@@ -176,9 +180,10 @@
 }
 .me-sc-field.field-exam .me-sc-field-label { color: #059669; }
 .me-sc-field-input {
-    width: 100%; border: 1px solid #ddd; border-radius: 3px;
+    width: 100%; max-width: 100%; border: 1px solid #ddd; border-radius: 3px;
     text-align: center; padding: 3px 1px; font-size: 0.78rem; font-weight: 700;
     color: #1a1a2e; background: #fff; outline: none; transition: all 0.15s;
+    box-sizing: border-box; min-width: 0;
 }
 .me-sc-field-input:focus { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); background: #f8f9ff; }
 .me-sc-field.field-exam .me-sc-field-input:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.08); background: #f0fdf4; }
@@ -189,7 +194,7 @@
 
 /* Card Totals Footer - inline compact */
 .me-sc-totals {
-    display: grid; grid-template-columns: repeat(4, 1fr);
+    display: grid; grid-template-columns: repeat(2, 1fr);
     gap: 3px; padding: 3px 8px; background: #fafbfc;
     border-top: 1px solid #eee;
 }
@@ -263,8 +268,20 @@
 .me-swipe-hint { animation: meSwipeHint 1.5s ease-in-out 2; }
 
 /* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .me-sc-ca-grid { grid-template-columns: repeat(5, 1fr); }
+    .me-sc-exam-grid { grid-template-columns: repeat(2, 1fr); }
+    .me-sc-totals { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 992px) {
+    .me-sc-ca-grid { grid-template-columns: repeat(4, 1fr); }
+    .me-sc-exam-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 768px) {
-    .admin-content { padding: 4px !important; }
+    .admin-content { padding: 4px !important; overflow-x: hidden !important; }
+    .me-page { overflow-x: hidden; }
     .me-filter-grid { grid-template-columns: 1fr 1fr; }
     .me-filter-summary { font-size: 0.6rem; gap: 2px; padding: 2px 5px; }
     .me-global-status { padding: 3px 5px; }
@@ -273,7 +290,7 @@
     .me-sc-exam-grid { grid-template-columns: repeat(2, 1fr); }
     .me-sc-header { padding: 3px 5px; gap: 4px; }
     .me-sc-body { padding: 3px 5px; }
-    .me-sc-totals { padding: 3px 5px; }
+    .me-sc-totals { padding: 3px 5px; grid-template-columns: repeat(2, 1fr); }
     .me-sc-field-input { font-size: 0.72rem; padding: 2px 1px; }
     .me-carousel-nav-btn { padding: 6px 10px; font-size: 0.75rem; }
     .me-carousel-dot { width: 10px; height: 10px; }
@@ -281,12 +298,13 @@
 }
 
 @media (max-width: 480px) {
-    .admin-content { padding: 2px !important; }
+    .admin-content { padding: 2px !important; overflow-x: hidden !important; }
     .me-filter-grid { grid-template-columns: 1fr; }
     .me-filter-body { padding: 4px; }
     .me-cards-container { max-height: calc(100vh - 300px); }
     .me-sc-ca-grid { grid-template-columns: repeat(3, 1fr); }
-    .me-sc-exam-grid { grid-template-columns: repeat(2, 1fr); }
+    .me-sc-exam-grid { grid-template-columns: 1fr 1fr; }
+    .me-sc-totals { grid-template-columns: 1fr 1fr; }
     .me-sc-field-input { font-size: 0.68rem; }
     .me-save-badge { font-size: 0.6rem; padding: 2px 6px; min-width: 60px; }
 }

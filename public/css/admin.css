@@ -314,6 +314,8 @@ a { text-decoration: none; color: inherit; }
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
+    max-width: calc(100vw - var(--sidebar-w));
 }
 
 /* ===== TOPBAR ===== */
@@ -403,6 +405,9 @@ a { text-decoration: none; color: inherit; }
 .admin-content {
     flex: 1;
     padding: 20px;
+    overflow-x: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Global alert */

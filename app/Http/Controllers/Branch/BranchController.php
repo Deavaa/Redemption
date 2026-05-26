@@ -22,6 +22,9 @@ class BranchController extends Controller
 
     public function store(Request $r)
     {
+        // Extract plain URL from iframe embed code if needed
+        $r->merge(['map_embed_url' => $this->extractMapEmbedUrl($r->map_embed_url)]);
+
         $validated = $r->validate([
             'name'           => 'required|string|max:255',
             'address'        => 'required|string',
@@ -56,6 +59,9 @@ class BranchController extends Controller
 
     public function update(Request $r, Branch $branch)
     {
+        // Extract plain URL from iframe embed code if needed
+        $r->merge(['map_embed_url' => $this->extractMapEmbedUrl($r->map_embed_url)]);
+
         $validated = $r->validate([
             'name'           => 'required|string|max:255',
             'address'        => 'required|string',
@@ -80,5 +86,24 @@ class BranchController extends Controller
     {
         $branch->delete();
         return back()->with('success', 'Branch deleted successfully.');
+    }
+
+    /**
+     * Extract the src URL from an <iframe> embed code,
+     * or return the value as-is if it's already a plain URL.
+     * This allows users to paste either format in the map embed field.
+     */
+    private function extractMapEmbedUrl(?string $value): ?string
+    {
+        if (!$value || !trim($value)) {
+            return null;
+        }
+        $value = trim($value);
+        // If it looks like an iframe tag, extract the src attribute
+        if (preg_match('/<iframe[^>]+src=["\'](https?:\/\/[^"\']+)["\']/i', $value, $matches)) {
+            return $matches[1];
+        }
+        // Already a plain URL
+        return $value;
     }
 }

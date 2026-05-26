@@ -167,16 +167,31 @@
 
                         <div class="modern-form-group modern-form-span-2">
                             <label class="modern-form-label" for="map_embed_url">
-                                Google Map Embed URL <small>(optional)</small>
+                                Google Map Embed <small>(optional — paste URL or iframe code)</small>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-link modern-input-icon"></i>
-                                <input type="url"
+                                <input type="text"
                                     name="map_embed_url"
                                     id="map_embed_url"
                                     class="modern-input"
                                     value="{{ old('map_embed_url', $item->map_embed_url) }}"
-                                    placeholder="Paste Google Maps embed URL here">
+                                    placeholder="Paste Google Maps embed URL or full iframe code here"
+                                    oninput="updateMapPreview()">
+                            </div>
+                            <small class="modern-form-hint" style="margin-top:0.3rem;display:flex;align-items:center;gap:0.35rem;color:#9ca3af;font-size:0.78rem;">
+                                <i class="fas fa-info-circle"></i>
+                                On Google Maps: click Share → Embed a map → copy the iframe code or just the src URL
+                            </small>
+                        </div>
+
+                        {{-- Live Map Preview --}}
+                        <div class="modern-form-group modern-form-span-2" id="mapPreviewContainer" style="display:none">
+                            <label class="modern-form-label">
+                                <i class="fas fa-eye" style="color:#4361ee;margin-right:0.3rem;"></i> Map Preview
+                            </label>
+                            <div style="border-radius:12px;overflow:hidden;border:1.5px solid #e5e7eb;">
+                                <iframe id="mapPreview" src="" width="100%" height="250" style="border:0;display:block;" allowfullscreen loading="lazy"></iframe>
                             </div>
                         </div>
 
@@ -543,5 +558,59 @@
     .btn-modern { justify-content: center; width: 100%; }
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+/**
+ * Extract the src URL from an <iframe> embed code,
+ * or return the value as-is if it is already a plain URL.
+ */
+function extractIframeSrc(value) {
+    if (!value || !value.trim()) return '';
+    value = value.trim();
+    var match = value.match(/<iframe[^>]+src=["'](https?:\/\/[^"']+)["']/i);
+    if (match) return match[1];
+    return value;
+}
+
+/**
+ * Update the live map preview when the user types or pastes
+ * an embed URL or full iframe code.
+ */
+function updateMapPreview() {
+    var raw = document.getElementById('map_embed_url').value;
+    var url = extractIframeSrc(raw);
+    var lat = document.getElementById('gps_lat').value.trim();
+    var lng = document.getElementById('gps_lng').value.trim();
+    var container = document.getElementById('mapPreviewContainer');
+    var iframe = document.getElementById('mapPreview');
+
+    if (url) {
+        document.getElementById('map_embed_url').value = url;
+        iframe.src = url;
+        container.style.display = '';
+    } else if (lat && lng) {
+        iframe.src = 'https://maps.google.com/maps?q=' + lat + ',' + lng + '&z=15&output=embed';
+        container.style.display = '';
+    } else {
+        iframe.src = '';
+        container.style.display = 'none';
+    }
+}
+
+// Show preview on page load if there's already a value
+document.addEventListener('DOMContentLoaded', function() {
+    var existingUrl = document.getElementById('map_embed_url').value;
+    if (existingUrl && existingUrl.trim()) {
+        updateMapPreview();
+    }
+});
+
+// Also handle paste events
+document.getElementById('map_embed_url').addEventListener('paste', function() {
+    setTimeout(updateMapPreview, 50);
+});
+</script>
 @endpush
 @endsection

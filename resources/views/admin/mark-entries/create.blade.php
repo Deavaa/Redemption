@@ -4,7 +4,8 @@
 @push('styles')
 <style>
 /* ===== MARK ENTRY CREATE - MODERN DESIGN ===== */
-.mc-page { animation: mcFadeIn 0.4s ease-out; }
+.mc-page { animation: mcFadeIn 0.4s ease-out; max-width: 100%; overflow-x: hidden; box-sizing: border-box; width: 100%; }
+.mc-page > * { max-width: 100%; box-sizing: border-box; overflow-x: hidden; }
 @keyframes mcFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Page Header */
@@ -29,7 +30,7 @@
 .mc-filter-desc { font-size: 0.82rem; color: #9ca3af; margin: 0.1rem 0 0; }
 .mc-filter-body { padding: 1.25rem 1.5rem; }
 .mc-filter-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
-.mc-filter-group { display: flex; flex-direction: column; }
+.mc-filter-group { display: flex; flex-direction: column; min-width: 0; }
 .mc-filter-label { font-weight: 600; color: #374151; margin-bottom: 0.35rem; font-size: 0.82rem; }
 .mc-filter-select { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 0.55rem 2rem 0.55rem 0.75rem; font-size: 0.85rem; color: #1a1a2e; background: #fff; appearance: none; cursor: pointer; transition: all 0.2s; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.1rem; }
 .mc-filter-select:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(67,97,238,0.1); }
@@ -60,11 +61,13 @@
 .mc-save-badge.error { background: #fee2e2; color: #dc2626; }
 
 /* Mark Card */
-.mc-mark-card { background: #f0f7ff; border-radius: 12px; padding: 1.25rem; }
-.mc-marks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.mc-mark-card { background: #f0f7ff; border-radius: 12px; padding: 1.25rem; overflow-x: auto; max-width: 100%; box-sizing: border-box; }
+.mc-marks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; min-width: 0; }
+
+@media (max-width: 1100px) { .mc-marks-grid { grid-template-columns: 1fr; } }
 
 /* Sections */
-.mc-section { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #fff; }
+.mc-section { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #fff; min-width: 0; }
 .mc-section-head { display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 1rem; }
 .mc-section-head.ca { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-bottom: 1px solid #bfdbfe; }
 .mc-section-head.exam { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-bottom: 1px solid #a7f3d0; }
@@ -75,24 +78,24 @@
 .mc-section-body { padding: 0.75rem 1rem 1rem; }
 
 /* CA Items */
-.mc-ca-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
-.mc-ca-item { display: flex; align-items: center; border: 1.5px solid #e5e7eb; border-radius: 8px; overflow: hidden; transition: border-color 0.2s; }
+.mc-ca-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; min-width: 0; }
+.mc-ca-item { display: flex; align-items: center; border: 1.5px solid #e5e7eb; border-radius: 8px; overflow: hidden; transition: border-color 0.2s; min-width: 0; }
 .mc-ca-item:focus-within { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); }
 .mc-ca-badge { min-width: 1.5rem; display: flex; align-items: center; justify-content: center; background: #4361ee; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.35rem 0; flex-shrink: 0; }
-.mc-ca-input { width: 100%; border: none; outline: none; text-align: center; padding: 0.35rem 0.1rem; font-size: 0.82rem; font-weight: 600; color: #1a1a2e; background: transparent; }
+.mc-ca-input { width: 100%; max-width: 100%; border: none; outline: none; text-align: center; padding: 0.35rem 0.1rem; font-size: 0.82rem; font-weight: 600; color: #1a1a2e; background: transparent; box-sizing: border-box; min-width: 0; }
 
-.mc-ca-extra { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.6rem; }
+.mc-ca-extra { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.6rem; min-width: 0; }
 .mc-extra-item { display: flex; flex-direction: column; }
 .mc-extra-label { font-size: 0.7rem; font-weight: 600; color: #6b7280; margin-bottom: 0.15rem; text-align: center; }
-.mc-extra-input { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.35rem; font-size: 0.82rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; }
+.mc-extra-input { width: 100%; max-width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.35rem; font-size: 0.82rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; box-sizing: border-box; min-width: 0; }
 .mc-extra-input:focus { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.08); }
 
 /* Exam Fields */
-.mc-exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.mc-exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; min-width: 0; }
 .mc-exam-item { display: flex; flex-direction: column; }
 .mc-exam-label { font-size: 0.78rem; font-weight: 600; color: #374151; margin-bottom: 0.15rem; display: flex; justify-content: space-between; }
 .mc-exam-max { font-weight: 400; color: #9ca3af; font-size: 0.7rem; }
-.mc-exam-input { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.45rem; font-size: 0.88rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; }
+.mc-exam-input { width: 100%; max-width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; outline: none; text-align: center; padding: 0.45rem; font-size: 0.88rem; font-weight: 600; color: #1a1a2e; transition: all 0.2s; box-sizing: border-box; min-width: 0; }
 .mc-exam-input:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.08); }
 
 /* Totals Bar */
@@ -110,14 +113,20 @@
 .mc-grade-F { background: rgba(248,113,113,0.25); color: #fca5a5; }
 
 /* Responsive */
-@media (max-width: 992px) { .mc-marks-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1200px) { .mc-marks-grid { grid-template-columns: 1fr; } }
+@media (max-width: 992px) { .mc-marks-grid { grid-template-columns: 1fr; } .mc-ca-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 768px) {
     .mc-filter-grid { grid-template-columns: 1fr 1fr; }
     .mc-student-header { flex-direction: column; gap: 0.75rem; }
+    .mc-ca-grid { grid-template-columns: repeat(3, 1fr); }
+    .mc-ca-extra { grid-template-columns: 1fr 1fr; }
+    .mc-totals { justify-content: center; }
 }
 @media (max-width: 480px) {
     .mc-filter-grid { grid-template-columns: 1fr; }
     .mc-ca-grid { grid-template-columns: repeat(3, 1fr); }
+    .mc-ca-extra { grid-template-columns: 1fr; }
+    .mc-exam-grid { grid-template-columns: 1fr; }
 }
 </style>
 @endpush

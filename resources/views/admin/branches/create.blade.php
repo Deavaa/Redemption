@@ -84,10 +84,10 @@
 <input type="text" name="gps_lng" class="form-control" id="lngInput" placeholder="e.g. 38.7469" value="{{old('gps_lng')}}" oninput="updateMapPreview()"></div>
 </div>
 <div class="col-12">
-<label class="form-label fw-semibold">Google Maps Embed URL</label>
+<label class="form-label fw-semibold">Google Maps Embed URL or Iframe Code</label>
 <div class="input-group"><span class="input-group-text"><i class="fab fa-google"></i></span>
-<input type="url" name="map_embed_url" class="form-control" id="mapUrl" placeholder="https://www.google.com/maps/embed?..." value="{{old('map_embed_url')}}" oninput="updateMapPreview()"></div>
-<small class="text-muted">Search on Google Maps, click Share then Embed a map, copy the src URL</small>
+<input type="text" name="map_embed_url" class="form-control" id="mapUrl" placeholder="Paste embed URL or full iframe code" value="{{old('map_embed_url')}}" oninput="updateMapPreview()"></div>
+<small class="text-muted">On Google Maps: click Share → Embed a map → copy the iframe code or just the src URL</small>
 </div>
 <div class="col-12" id="mapPreviewContainer" style="display:none">
 <label class="form-label fw-semibold">Map Preview</label>
@@ -170,8 +170,25 @@
 </div>
 @section('scripts')
 <script>
+/**
+ * Extract the src URL from an <iframe> embed code,
+ * or return the value as-is if it is already a plain URL.
+ */
+function extractIframeSrc(value) {
+    if (!value || !value.trim()) return '';
+    value = value.trim();
+    var match = value.match(/<iframe[^>]+src=["'](https?:\/\/[^"']+)["']/i);
+    if (match) return match[1];
+    return value;
+}
+
 function updateMapPreview(){
-    var url=document.getElementById('mapUrl').value.trim();
+    var raw=document.getElementById('mapUrl').value;
+    var url=extractIframeSrc(raw);
+    // Auto-replace field with extracted URL
+    if (url !== raw.trim() && url) {
+        document.getElementById('mapUrl').value = url;
+    }
     var lat=document.getElementById('latInput').value.trim();
     var lng=document.getElementById('lngInput').value.trim();
     var c=document.getElementById('mapPreviewContainer');
@@ -180,6 +197,12 @@ function updateMapPreview(){
     else if(lat&&lng){f.src='https://maps.google.com/maps?q='+lat+','+lng+'&z=15&output=embed';c.style.display='block';}
     else{c.style.display='none';}
 }
+
+// Auto-extract on paste
+document.getElementById('mapUrl').addEventListener('paste', function() {
+    setTimeout(updateMapPreview, 50);
+});
+
  $('#addTeacherForm').on('submit',function(e){
     e.preventDefault();
     var btn=$(this).find('button[type=submit]').prop('disabled',true).html('<i class="fas fa-spinner fa-spin me-1"></i>Saving...');
