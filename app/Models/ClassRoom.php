@@ -1,19 +1,38 @@
 <?php
-
 namespace App\Models;
-
-/**
- * ClassRoom – backward-compatible alias for the Classroom model.
- *
- * The canonical model is App\Models\Classroom (file: Classroom.php),
- * but the codebase widely references ClassRoom (capital R).
- * On Windows (case-insensitive autoloader) both resolve to the same file,
- * but on Linux they would not.  This alias ensures ClassRoom works
- * everywhere without changing hundreds of references.
- *
- * Do NOT add additional logic here – put it in Classroom instead.
- */
-class ClassRoom extends Classroom
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+class Classroom extends Model
 {
-    // Intentionally empty. All logic lives in Classroom.
+    use HasFactory;
+    protected $table = 'classes';
+    protected $fillable = ['branch_id','academic_year_id','name','numeric_name','teacher_id','capacity'];
+
+    /**
+     * Calculated capacity = sum of all sections' max_students.
+     * Falls back to the stored capacity column if no sections exist.
+     */
+    public function getCalculatedCapacityAttribute()
+    {
+        if ($this->relationLoaded('sections') || $this->sections()->exists()) {
+            $sum = $this->sections->sum('max_students');
+            if ($sum > 0) return $sum;
+        }
+        return $this->capacity;
+    }
+
+    /**
+     * Recalculate and save capacity from sections.
+     */
+    public function recalculateCapacity(): void
+    {
+        $this->capacity = $this->sections()->sum('max_students') ?: null;
+        $this->saveQuietly();
+    }
+
+    public function sections() { return $this->hasMany(Section::class, 'class_id'); }
+    public function students() { return $this->hasMany(Student::class, 'class_id'); }
+    public function academicYear() { return $this->belongsTo(AcademicYear::class); }
+    public function branch() { return $this->belongsTo(Branch::class); }
+    public function teacher() { return $this->belongsTo(Teacher::class, 'teacher_id'); }
 }
