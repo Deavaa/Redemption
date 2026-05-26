@@ -1404,13 +1404,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Auto-dismiss alerts
+    // Auto-dismiss alerts — but keep error/warning visible longer when there are bulk error details
     document.querySelectorAll('.global-alert').forEach(a => {
+        var hasBulkErrors = document.querySelector('.sl-bulk-error-panel');
+        var delay = 4000;
+        if (hasBulkErrors && (a.classList.contains('alert-danger') || a.classList.contains('alert-warning'))) {
+            delay = 15000; // 15 seconds for errors when bulk error details are shown
+        }
         setTimeout(() => {
             a.style.transition = 'opacity 0.3s';
             a.style.opacity = '0';
             setTimeout(() => a.remove(), 300);
-        }, 4000);
+        }, delay);
     });
 })();
 

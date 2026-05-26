@@ -388,10 +388,13 @@ class EnrollmentController extends Controller
         $enrolled = 0;
         $skipped = 0;
         $errors = [];
+        $systemErrors = [];
 
         DB::beginTransaction();
         try {
             foreach ($sourceEnrollments as $sourceEnrollment) {
+                $studentName = $sourceEnrollment->student?->full_name ?? "Student #{$sourceEnrollment->student_id}";
+
                 // Check if already enrolled in target year
                 $exists = StudentEnrollment::where('student_id', $sourceEnrollment->student_id)
                     ->where('academic_year_id', $targetAyId)
@@ -420,29 +423,58 @@ class EnrollmentController extends Controller
                     }
                 }
 
-                StudentEnrollment::create([
-                    'student_id' => $sourceEnrollment->student_id,
-                    'academic_year_id' => $targetAyId,
-                    'branch_id' => $sourceEnrollment->branch_id,
-                    'class_id' => $newClassId,
-                    'section_id' => $newSectionId,
-                    'roll_number' => $sourceEnrollment->roll_number,
-                    'enrollment_date' => $enrollmentDate,
-                    'status' => 'enrolled',
-                    'enrollment_type' => $enrollmentType,
-                    'registration_fee' => $registrationFee,
-                    'registration_fee_paid' => 0,
-                    'registration_fee_status' => $registrationFee > 0 ? 'unpaid' : 'waived',
-                    'enrolled_by' => auth()->id(),
-                ]);
+                try {
+                    StudentEnrollment::create([
+                        'student_id' => $sourceEnrollment->student_id,
+                        'academic_year_id' => $targetAyId,
+                        'branch_id' => $sourceEnrollment->branch_id,
+                        'class_id' => $newClassId,
+                        'section_id' => $newSectionId,
+                        'roll_number' => $sourceEnrollment->roll_number,
+                        'enrollment_date' => $enrollmentDate,
+                        'status' => 'enrolled',
+                        'enrollment_type' => $enrollmentType,
+                        'registration_fee' => $registrationFee,
+                        'registration_fee_paid' => 0,
+                        'registration_fee_status' => $registrationFee > 0 ? 'unpaid' : 'waived',
+                        'enrolled_by' => auth()->id(),
+                    ]);
 
-                $enrolled++;
+                    $enrolled++;
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                    $errors[] = "{$studentName}: Already has an enrollment record in the target year. Skipped.";
+                    continue;
+                } catch (\Exception $e) {
+                    $systemErrors[] = "{$studentName}: Failed to create enrollment - " . $e->getMessage();
+                    continue;
+                }
             }
 
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Bulk enrollment failed: ' . $e->getMessage());
+            return back()->with('error', 'Bulk enrollment failed completely: ' . $e->getMessage());
+        }
+
+        // Build categorized error details for display
+        $errorDetails = [];
+        $totalFailed = count($errors) + count($systemErrors);
+
+        if (!empty($errors)) {
+            $errorDetails[] = ['type' => 'duplicate', 'label' => 'Already Enrolled (' . count($errors) . ')', 'items' => $errors];
+        }
+        if (!empty($systemErrors)) {
+            $errorDetails[] = ['type' => 'system', 'label' => 'System Errors (' . count($systemErrors) . ')', 'items' => $systemErrors];
+        }
+
+        if ($enrolled === 0 && $totalFailed > 0) {
+            return redirect()->route('admin.enrollments.bulk-enroll')
+                ->with('error', "No students were enrolled. {$totalFailed} student(s) had problems.")
+                ->with('bulk_error_details', $errorDetails);
+        } elseif ($totalFailed > 0) {
+            return redirect()->route('admin.enrollments.index', ['academic_year_id' => $targetAyId])
+                ->with('warning', "Partially completed: {$enrolled} student(s) enrolled, {$skipped} skipped (already enrolled), {$totalFailed} had problems.")
+                ->with('bulk_error_details', $errorDetails);
         }
 
         $message = "Bulk enrollment completed: {$enrolled} students enrolled";

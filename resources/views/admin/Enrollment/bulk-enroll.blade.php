@@ -30,6 +30,41 @@
         </div>
     </div>
 
+    {{-- Bulk Enrollment Error Details --}}
+    @if(session('bulk_error_details'))
+        <div class="sl-card" style="margin-top:0.75rem;">
+            <div class="sl-bulk-error-panel">
+                <div class="sl-bulk-error-header">
+                    <div class="sl-bulk-error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div>
+                        <h4 class="sl-bulk-error-title">Enrollment Problems Detected</h4>
+                        <p class="sl-bulk-error-desc">Some students could not be enrolled. Review the details below.</p>
+                    </div>
+                </div>
+                @foreach(session('bulk_error_details') as $category)
+                    <div class="sl-bulk-error-category sl-bulk-error-{{ $category['type'] }}">
+                        <div class="sl-bulk-error-cat-header" onclick="this.nextElementSibling.classList.toggle('sl-bulk-collapsed')">
+                            <span class="sl-bulk-error-cat-label">
+                                @if($category['type'] === 'duplicate')
+                                    <i class="fas fa-copy"></i>
+                                @else
+                                    <i class="fas fa-cog"></i>
+                                @endif
+                                {{ $category['label'] }}
+                            </span>
+                            <i class="fas fa-chevron-down sl-bulk-toggle-icon"></i>
+                        </div>
+                        <ul class="sl-bulk-error-list">
+                            @foreach($category['items'] as $item)
+                                <li>{{ $item }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- Form Card --}}
     <div class="sl-card" style="margin-top:0.75rem;">
         <form method="POST" action="{{ route('admin.enrollments.process-bulk-enroll') }}">
@@ -215,6 +250,52 @@
 }
 .sl-warn-icon { color: #d97706; font-size: 1rem; flex-shrink: 0; margin-top: 0.1rem; }
 .sl-warn-box p { font-size: 0.75rem; color: #92400e; margin: 0; line-height: 1.5; }
+
+/* Bulk error panel styles */
+.sl-bulk-error-panel {
+    padding: 1rem 1.25rem;
+}
+.sl-bulk-error-header {
+    display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem;
+}
+.sl-bulk-error-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; flex-shrink: 0;
+    background: #fef3c7; color: #d97706;
+}
+.sl-bulk-error-title {
+    font-size: 0.95rem; font-weight: 700; color: #92400e; margin: 0 0 0.15rem;
+}
+.sl-bulk-error-desc {
+    font-size: 0.75rem; color: #b45309; margin: 0;
+}
+.sl-bulk-error-category {
+    margin-bottom: 0.75rem; border: 1px solid #e5e7eb; border-radius: 8px;
+    overflow: hidden;
+}
+.sl-bulk-error-duplicate { border-left: 4px solid #8b5cf6; }
+.sl-bulk-error-system { border-left: 4px solid #ef4444; }
+.sl-bulk-error-cat-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.5rem 0.75rem; background: #f9fafb; cursor: pointer;
+    user-select: none;
+}
+.sl-bulk-error-cat-header:hover { background: #f3f4f6; }
+.sl-bulk-error-cat-label {
+    font-size: 0.8rem; font-weight: 600; color: #374151;
+    display: flex; align-items: center; gap: 0.4rem;
+}
+.sl-bulk-toggle-icon {
+    font-size: 0.65rem; color: #9ca3af; transition: transform 0.2s;
+}
+.sl-bulk-collapsed + .sl-bulk-toggle-icon { transform: rotate(-90deg); }
+.sl-bulk-error-list {
+    margin: 0; padding: 0.5rem 0.75rem 0.5rem 1.75rem;
+    font-size: 0.78rem; color: #4b5563; line-height: 1.6;
+    list-style: disc; border-top: 1px solid #f0f0f0;
+}
+.sl-bulk-error-list li { padding: 0.15rem 0; }
 
 .sl-card {
     background: #fff; border-radius: 10px;

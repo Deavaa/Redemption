@@ -924,13 +924,31 @@ class StudentController extends Controller
         $year = $this->getAyStartYear($this->getCurrentAcademicYear());
 
         $created = 0;
-        $errors = [];
+        $skipped = 0;
+        $errors = [];       // Validation errors
+        $duplicates = [];   // Duplicate entry errors
+        $systemErrors = []; // Unexpected system errors
 
         DB::beginTransaction();
         try {
             foreach ($validated['students'] as $index => $studentData) {
+                $rowLabel = "Row " . ($index + 1);
+
                 // Skip empty rows
                 if (empty(trim($studentData['full_name'] ?? ''))) {
+                    $skipped++;
+                    continue;
+                }
+
+                // Validate phone format
+                if (!empty($studentData['phone']) && !preg_match('/^[\d\s\+\-\(\)]{7,20}$/', $studentData['phone'])) {
+                    $errors[] = "{$rowLabel} ({$studentData['full_name']}): Invalid phone number '{$studentData['phone']}'. Use digits, spaces, +, -. Skipped.";
+                    continue;
+                }
+
+                // Validate guardian phone format
+                if (!empty($studentData['guardian_phone']) && !preg_match('/^[\d\s\+\-\(\)]{7,20}$/', $studentData['guardian_phone'])) {
+                    $errors[] = "{$rowLabel} ({$studentData['full_name']}): Invalid guardian phone '{$studentData['guardian_phone']}'. Use digits, spaces, +, -. Skipped.";
                     continue;
                 }
 
@@ -966,15 +984,23 @@ class StudentController extends Controller
                 $guardianPhone = !empty($studentData['guardian_phone']) ? $this->normalizePhone($studentData['guardian_phone']) : null;
 
                 // Create user account
-                $user = \App\Models\User::create([
-                    'name' => $studentData['full_name'],
-                    'email' => $idNumber . '@redemption.edu',
-                    'id_number' => $idNumber,
-                    'password' => bcrypt('123456'),
-                    'role' => 'student',
-                    'is_active' => true,
-                    'phone' => $phone,
-                ]);
+                try {
+                    $user = \App\Models\User::create([
+                        'name' => $studentData['full_name'],
+                        'email' => $idNumber . '@redemption.edu',
+                        'id_number' => $idNumber,
+                        'password' => bcrypt('123456'),
+                        'role' => 'student',
+                        'is_active' => true,
+                        'phone' => $phone,
+                    ]);
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                    $duplicates[] = "{$rowLabel} ({$studentData['full_name']}): A student with this generated ID already exists. Skipped.";
+                    continue;
+                } catch (\Exception $e) {
+                    $systemErrors[] = "{$rowLabel} ({$studentData['full_name']}): Failed to create user account - " . $e->getMessage();
+                    continue;
+                }
 
                 // Create student record
                 try {
@@ -1015,8 +1041,13 @@ class StudentController extends Controller
 
                     $created++;
                 } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                    $errors[] = "Row " . ($index + 1) . " ({$studentData['full_name']}): Duplicate entry - skipped.";
+                    $duplicates[] = "{$rowLabel} ({$studentData['full_name']}): Duplicate admission/roll number - skipped.";
                     $user->delete(); // Clean up the created user
+                    continue;
+                } catch (\Exception $e) {
+                    $systemErrors[] = "{$rowLabel} ({$studentData['full_name']}): Failed to create student record - " . $e->getMessage();
+                    // Clean up the created user to avoid orphans
+                    try { $user->delete(); } catch (\Exception $_) {}
                     continue;
                 }
             }
@@ -1024,8 +1055,8 @@ class StudentController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('admin.students.index')
-                ->with('error', 'Bulk enrollment failed: ' . $e->getMessage());
+            return redirect()->route('admin.students.bulk-create')
+                ->with('error', 'Bulk enrollment failed completely. Error: ' . $e->getMessage());
         }
 
         // Notify about bulk enrollment
@@ -1041,13 +1072,42 @@ class StudentController extends Controller
             }
         }
 
-        $message = "Successfully enrolled {$created} student(s).";
+        // Build categorized error details for display
+        $errorDetails = [];
+        $totalFailed = count($errors) + count($duplicates) + count($systemErrors);
+
         if (!empty($errors)) {
-            $message .= ' Errors: ' . implode('; ', $errors);
+            $errorDetails[] = ['type' => 'validation', 'label' => 'Validation Errors (' . count($errors) . ')', 'items' => $errors];
+        }
+        if (!empty($duplicates)) {
+            $errorDetails[] = ['type' => 'duplicate', 'label' => 'Duplicate Entries (' . count($duplicates) . ')', 'items' => $duplicates];
+        }
+        if (!empty($systemErrors)) {
+            $errorDetails[] = ['type' => 'system', 'label' => 'System Errors (' . count($systemErrors) . ')', 'items' => $systemErrors];
         }
 
-        return redirect()->route('admin.students.index')
-            ->with('success', $message);
+        // Determine the appropriate flash message type
+        if ($created === 0 && $totalFailed > 0) {
+            // Complete failure — no students were created
+            $redirect = redirect()->route('admin.students.bulk-create')
+                ->with('error', "No students were enrolled. {$totalFailed} row(s) had problems. Please fix the errors and try again.")
+                ->with('bulk_error_details', $errorDetails);
+        } elseif ($totalFailed > 0) {
+            // Partial success — some created, some failed
+            $redirect = redirect()->route('admin.students.bulk-create')
+                ->with('warning', "Partially completed: {$created} student(s) enrolled successfully, but {$totalFailed} row(s) had problems.")
+                ->with('bulk_error_details', $errorDetails);
+        } else {
+            // Complete success
+            $message = "Successfully enrolled {$created} student(s).";
+            if ($skipped > 0) {
+                $message .= " Skipped {$skipped} empty row(s).";
+            }
+            $redirect = redirect()->route('admin.students.index')
+                ->with('success', $message);
+        }
+
+        return $redirect;
     }
 
     /**
@@ -1265,7 +1325,9 @@ class StudentController extends Controller
 
         $created = 0;
         $skipped = 0;
-        $errors = [];
+        $errors = [];       // Validation errors (user can fix and re-upload)
+        $duplicates = [];   // Duplicate entry errors
+        $systemErrors = []; // Unexpected system errors
 
         DB::beginTransaction();
         try {
@@ -1286,6 +1348,12 @@ class StudentController extends Controller
                     continue;
                 }
 
+                // Validate full name length
+                if (strlen($fullName) > 255) {
+                    $errors[] = "Row {$excelRow}: Name is too long (max 255 characters). Skipped.";
+                    continue;
+                }
+
                 // Validate gender value
                 $genderLower = strtolower($gender);
                 if (!empty($gender) && !in_array($genderLower, ['male', 'female'])) {
@@ -1293,6 +1361,18 @@ class StudentController extends Controller
                     continue;
                 }
                 $genderValue = !empty($gender) ? $genderLower : null;
+
+                // Validate phone format
+                if (!empty($phone) && !preg_match('/^[\d\s\+\-\(\)]{7,20}$/', $phone)) {
+                    $errors[] = "Row {$excelRow} ({$fullName}): Invalid phone number '{$phone}'. Use digits, spaces, +, -. Skipped.";
+                    continue;
+                }
+
+                // Validate guardian phone format
+                if (!empty($guardianPhone) && !preg_match('/^[\d\s\+\-\(\)]{7,20}$/', $guardianPhone)) {
+                    $errors[] = "Row {$excelRow} ({$fullName}): Invalid guardian phone '{$guardianPhone}'. Use digits, spaces, +, -. Skipped.";
+                    continue;
+                }
 
                 // Validate date of birth format
                 if (!empty($dateOfBirth)) {
@@ -1339,15 +1419,23 @@ class StudentController extends Controller
                 $guardianPhoneNormalized = !empty($guardianPhone) ? $this->normalizePhone($guardianPhone) : null;
 
                 // Create user account
-                $user = \App\Models\User::create([
-                    'name' => $fullName,
-                    'email' => $idNumber . '@redemption.edu',
-                    'id_number' => $idNumber,
-                    'password' => bcrypt('123456'),
-                    'role' => 'student',
-                    'is_active' => true,
-                    'phone' => $phoneNormalized,
-                ]);
+                try {
+                    $user = \App\Models\User::create([
+                        'name' => $fullName,
+                        'email' => $idNumber . '@redemption.edu',
+                        'id_number' => $idNumber,
+                        'password' => bcrypt('123456'),
+                        'role' => 'student',
+                        'is_active' => true,
+                        'phone' => $phoneNormalized,
+                    ]);
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                    $duplicates[] = "Row {$excelRow} ({$fullName}): A student with this generated ID already exists. Skipped.";
+                    continue;
+                } catch (\Exception $e) {
+                    $systemErrors[] = "Row {$excelRow} ({$fullName}): Failed to create user account - " . $e->getMessage();
+                    continue;
+                }
 
                 // Create student record
                 try {
@@ -1388,8 +1476,13 @@ class StudentController extends Controller
 
                     $created++;
                 } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                    $errors[] = "Row {$excelRow} ({$fullName}): Duplicate entry - skipped.";
+                    $duplicates[] = "Row {$excelRow} ({$fullName}): Duplicate admission/roll number - skipped.";
                     $user->delete(); // Clean up the created user
+                    continue;
+                } catch (\Exception $e) {
+                    $systemErrors[] = "Row {$excelRow} ({$fullName}): Failed to create student record - " . $e->getMessage();
+                    // Clean up the created user to avoid orphans
+                    try { $user->delete(); } catch (\Exception $_) {}
                     continue;
                 }
             }
@@ -1398,7 +1491,7 @@ class StudentController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->route('admin.students.bulk-create')
-                ->with('error', 'Upload failed: ' . $e->getMessage());
+                ->with('error', 'Upload failed completely. The file could not be processed. Error: ' . $e->getMessage());
         }
 
         // Notify about bulk enrollment
@@ -1414,16 +1507,42 @@ class StudentController extends Controller
             }
         }
 
-        $message = "Successfully enrolled {$created} student(s) from file.";
-        if ($skipped > 0) {
-            $message .= " Skipped {$skipped} empty row(s).";
-        }
+        // Build categorized error details for display
+        $errorDetails = [];
+        $totalFailed = count($errors) + count($duplicates) + count($systemErrors);
+
         if (!empty($errors)) {
-            $message .= ' Errors: ' . implode('; ', $errors);
+            $errorDetails[] = ['type' => 'validation', 'label' => 'Validation Errors (' . count($errors) . ')', 'items' => $errors];
+        }
+        if (!empty($duplicates)) {
+            $errorDetails[] = ['type' => 'duplicate', 'label' => 'Duplicate Entries (' . count($duplicates) . ')', 'items' => $duplicates];
+        }
+        if (!empty($systemErrors)) {
+            $errorDetails[] = ['type' => 'system', 'label' => 'System Errors (' . count($systemErrors) . ')', 'items' => $systemErrors];
         }
 
-        return redirect()->route('admin.students.bulk-create')
-            ->with('success', $message);
+        // Determine the appropriate flash message type
+        if ($created === 0 && $totalFailed > 0) {
+            // Complete failure — no students were created
+            $redirect = redirect()->route('admin.students.bulk-create')
+                ->with('error', "No students were enrolled. {$totalFailed} row(s) had problems. Please fix the errors and try again.")
+                ->with('bulk_error_details', $errorDetails);
+        } elseif ($totalFailed > 0) {
+            // Partial success — some created, some failed
+            $redirect = redirect()->route('admin.students.bulk-create')
+                ->with('warning', "Partially completed: {$created} student(s) enrolled successfully, but {$totalFailed} row(s) had problems.")
+                ->with('bulk_error_details', $errorDetails);
+        } else {
+            // Complete success
+            $message = "Successfully enrolled {$created} student(s) from file.";
+            if ($skipped > 0) {
+                $message .= " Skipped {$skipped} empty row(s).";
+            }
+            $redirect = redirect()->route('admin.students.bulk-create')
+                ->with('success', $message);
+        }
+
+        return $redirect;
     }
 
     /**
