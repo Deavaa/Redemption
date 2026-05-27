@@ -47,25 +47,55 @@
         .badge-approved { background: #d1fae5; color: #065f46; }
         .badge-revision { background: #fee2e2; color: #991b1b; }
 
+        /* Daily breakdown table */
+        .daily-breakdown { margin-top: 10px; }
+        .daily-breakdown-title { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+        .daily-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 4px; }
+        .daily-table th { background: #eef2ff; padding: 4px 8px; text-align: left; font-weight: 600; color: #3730a3; border: 1px solid #c7d2fe; font-size: 8px; text-transform: uppercase; }
+        .daily-table td { padding: 4px 8px; border: 1px solid #e5e7eb; vertical-align: top; color: #374151; }
+        .daily-table tr:nth-child(even) td { background: #f8fafc; }
+        .day-label { font-weight: 600; color: #4361ee; }
+
+        /* Weekly schedule grid */
+        .weekly-grid { margin-top: 10px; }
+        .weekly-grid-title { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+        .schedule-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+        .schedule-table th { background: #4361ee; color: #fff; padding: 6px 8px; text-align: center; font-weight: 600; border: 1px solid #3b5bdb; }
+        .schedule-table td { padding: 6px 8px; border: 1px solid #e5e7eb; vertical-align: top; min-height: 40px; }
+        .schedule-day-header { background: #eef2ff; font-weight: 600; color: #3730a3; text-align: center; width: 80px; }
+
         .follow-up-section { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e5e7eb; }
         .fu-item { padding: 6px 0; border-bottom: 1px solid #f3f4f6; font-size: 9px; }
         .fu-item:last-child { border-bottom: none; }
         .fu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
         .fu-date { font-weight: 600; color: #374151; }
-        .fu-status { }
         .fu-details { color: #6b7280; line-height: 1.4; }
+
+        .signature-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; page-break-inside: avoid; }
+        .signature-box { text-align: center; }
+        .signature-line { border-top: 1px solid #374151; margin-top: 40px; padding-top: 4px; font-size: 9px; color: #6b7280; }
 
         .empty-state { text-align: center; padding: 40px 20px; color: #9ca3af; }
         .empty-state i { font-size: 2rem; margin-bottom: 8px; display: block; opacity: 0.3; }
 
         .footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #d1d5db; display: flex; justify-content: space-between; font-size: 9px; color: #9ca3af; }
 
-        .no-print { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+        /* Filter bar (hidden when printing) */
+        .filter-bar { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+        .filter-bar-title { font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; align-items: end; }
+        .filter-group label { display: block; font-size: 9px; font-weight: 600; color: #6b7280; margin-bottom: 3px; text-transform: uppercase; }
+        .filter-group select, .filter-group input { width: 100%; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 10px; background: #fff; }
+        .filter-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+        .no-print { margin-bottom: 10px; }
         .btn-print { padding: 6px 16px; border: none; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
         .btn-blue { background: #4361ee; color: #fff; }
         .btn-blue:hover { background: #3b5bdb; }
         .btn-outline { background: #fff; color: #4361ee; border: 1px solid #4361ee; }
         .btn-outline:hover { background: #eef2ff; }
+        .btn-green { background: #1b5e20; color: #fff; }
+        .btn-green:hover { background: #2e7d32; }
 
         .week-nav { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-left: auto; }
         .week-nav select { padding: 4px 8px; border: 1px solid #c7d2fe; border-radius: 4px; font-size: 11px; }
@@ -78,18 +108,85 @@
 </head>
 <body>
 <div class="page">
-    {{-- Print Controls (hidden when printing) --}}
+    {{-- Controls (hidden when printing) --}}
     <div class="no-print">
-        <button class="btn-print btn-blue" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
-        <a href="{{ route('admin.lesson-plans.index') }}" class="btn-print btn-outline"><i class="fas fa-arrow-left"></i> Back to Lesson Plans</a>
-        <div class="week-nav">
-            <label for="weekSelect"><i class="fas fa-calendar-week"></i> Week:</label>
-            <select id="weekSelect" onchange="changeWeek(this.value)">
-                <option value="">All Weeks</option>
-                @foreach($weeksQuery as $w)
-                <option value="{{ $w }}" {{ $weekNumber == $w ? 'selected' : '' }}>Week {{ $w }}</option>
-                @endforeach
-            </select>
+        {{-- Filter Bar --}}
+        <div class="filter-bar">
+            <div class="filter-bar-title"><i class="fas fa-filter"></i> Select Filters for Weekly Print</div>
+            <form method="GET" action="{{ route('admin.lesson-plans.print-weekly') }}" id="weeklyFilterForm">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Academic Year</label>
+                        <select name="academic_year_id">
+                            <option value="">All Years</option>
+                            @foreach(\App\Models\AcademicYear::orderBy('name')->get() as $ay)
+                            <option value="{{ $ay->id }}" {{ request('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Term</label>
+                        <select name="term_id">
+                            <option value="">All Terms</option>
+                            @foreach(\App\Models\Term::orderBy('name')->get() as $t)
+                            <option value="{{ $t->id }}" {{ request('term_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @unless($isTeacher)
+                    <div class="filter-group">
+                        <label>Teacher</label>
+                        <select name="teacher_id">
+                            <option value="">All Teachers</option>
+                            @foreach(\App\Models\Teacher::orderBy('full_name')->get() as $t)
+                            <option value="{{ $t->id }}" {{ request('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->full_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endunless
+                    <div class="filter-group">
+                        <label>Subject</label>
+                        <select name="subject_id">
+                            <option value="">All Subjects</option>
+                            @foreach(\App\Models\Subject::active()->ordered()->get() as $s)
+                            <option value="{{ $s->id }}" {{ request('subject_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Class</label>
+                        <select name="class_id">
+                            <option value="">All Classes</option>
+                            @foreach(\App\Models\ClassRoom::orderBy('name')->get() as $c)
+                            <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Section</label>
+                        <select name="section_id">
+                            <option value="">All Sections</option>
+                            @foreach(\App\Models\Section::orderBy('name')->get() as $sec)
+                            <option value="{{ $sec->id }}" {{ request('section_id') == $sec->id ? 'selected' : '' }}>{{ $sec->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Week</label>
+                        <select name="week_number">
+                            <option value="">All Weeks</option>
+                            @foreach($weeksQuery as $w)
+                            <option value="{{ $w }}" {{ $weekNumber == $w ? 'selected' : '' }}>Week {{ $w }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-print btn-blue"><i class="fas fa-search"></i> Apply Filters</button>
+                    <button type="button" class="btn-print btn-green" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+                    <a href="{{ route('admin.lesson-plans.index') }}" class="btn-print btn-outline"><i class="fas fa-arrow-left"></i> Back to Lesson Plans</a>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -117,6 +214,51 @@
         <div class="info-item"><span class="info-label">Plans:</span> <span class="info-value">{{ $lessonPlans->count() }}</span></div>
         <div class="info-item"><span class="info-label">Printed:</span> <span class="info-value">{{ now()->format('M d, Y H:i') }}</span></div>
     </div>
+
+    {{-- Weekly Schedule Grid (if multiple plans for different days) --}}
+    @if($lessonPlans->count() > 1 && $weekNumber)
+    <div class="weekly-grid">
+        <div class="weekly-grid-title"><i class="fas fa-table" style="color:#4361ee"></i> Weekly Schedule Overview</div>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th style="width:80px">Day</th>
+                    <th>Subject / Title</th>
+                    <th style="width:100px">Objectives</th>
+                    <th style="width:80px">Activities</th>
+                    <th style="width:60px">Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as $dayName)
+                @php
+                    $dayPlans = $lessonPlans->filter(function($p) use ($dayName) {
+                        if ($p->lesson_date) {
+                            return $p->lesson_date->format('l') === $dayName;
+                        }
+                        return false;
+                    });
+                @endphp
+                <tr>
+                    <td class="schedule-day-header">{{ $dayName }}</td>
+                    @if($dayPlans->count() > 0)
+                        <td>
+                            @foreach($dayPlans as $dp)
+                            <div style="margin-bottom:3px"><strong>{{ $dp->subject?->name ?? '' }}</strong>: {{ $dp->title }}</div>
+                            @endforeach
+                        </td>
+                        <td>{{ Str::limit($dayPlans->first()->objectives, 80) }}</td>
+                        <td>{{ Str::limit($dayPlans->first()->activities, 60) }}</td>
+                        <td style="text-align:center">{{ $dayPlans->first()->duration_minutes }} min</td>
+                    @else
+                        <td style="color:#d1d5db;text-align:center" colspan="4">—</td>
+                    @endif
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
 
     {{-- Weekly Detail Cards --}}
     @if($lessonPlans->count() > 0)
@@ -153,6 +295,12 @@
                         <div class="plan-info-label">Week</div>
                         <div class="plan-info-value">Week {{ $plan->week_number }}</div>
                     </div>
+                    @if($plan->plan_type)
+                    <div class="plan-info-item">
+                        <div class="plan-info-label">Plan Type</div>
+                        <div class="plan-info-value">{{ ucfirst($plan->plan_type) }}</div>
+                    </div>
+                    @endif
                     <div class="plan-info-item">
                         <div class="plan-info-label">Status</div>
                         <div class="plan-info-value"><span class="badge badge-{{ $plan->status }}">{{ ucfirst($plan->status) }}</span></div>
@@ -189,6 +337,47 @@
                     @endif
                 </div>
 
+                {{-- Daily Breakdown (for weekly plan type) --}}
+                @if($plan->plan_type === 'weekly' && is_array($plan->daily_breakdown) && count($plan->daily_breakdown) > 0)
+                <div class="daily-breakdown">
+                    <div class="daily-breakdown-title"><i class="fas fa-calendar-day" style="color:#8b5cf6"></i> Daily Breakdown</div>
+                    <table class="daily-table">
+                        <thead>
+                            <tr>
+                                <th style="width:80px">Day</th>
+                                <th>Topic / Activity</th>
+                                <th style="width:120px">Teaching Method</th>
+                                <th style="width:120px">Resources</th>
+                                <th style="width:80px">Assessment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($plan->daily_breakdown as $day)
+                            <tr>
+                                <td class="day-label">{{ $day['day'] ?? $day['date'] ?? 'Day ' . $loop->iteration }}</td>
+                                <td>{{ $day['topic'] ?? $day['activity'] ?? '-' }}</td>
+                                <td>{{ $day['method'] ?? '-' }}</td>
+                                <td>{{ $day['resources'] ?? $day['materials'] ?? '-' }}</td>
+                                <td>{{ $day['assessment'] ?? '-' }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @endif
+
+                {{-- Term Goals (for yearly plan type) --}}
+                @if($plan->plan_type === 'yearly' && is_array($plan->term_goals) && count($plan->term_goals) > 0)
+                <div class="daily-breakdown">
+                    <div class="daily-breakdown-title"><i class="fas fa-flag" style="color:#10b981"></i> Term Goals</div>
+                    <ul style="padding-left:18px; font-size:10px; color:#374151; line-height:1.6;">
+                        @foreach($plan->term_goals as $goal)
+                        <li>{{ is_string($goal) ? $goal : (is_array($goal) ? ($goal['goal'] ?? $goal['title'] ?? json_encode($goal)) : $goal) }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
                 {{-- Follow-ups --}}
                 @if($plan->followUps->count() > 0)
                 <div class="follow-up-section">
@@ -209,11 +398,24 @@
             </div>
         </div>
         @endforeach
+
+        {{-- Signature Section --}}
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line">Prepared by (Teacher)</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">Checked by (Dept. Head)</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">Approved by (Principal)</div>
+            </div>
+        </div>
     @else
         <div class="empty-state">
             <i class="fas fa-file-alt"></i>
             <h3>No lesson plans found</h3>
-            <p>Adjust the filters or select a different week.</p>
+            <p>Select filters above or choose a different week.</p>
         </div>
     @endif
 
@@ -225,16 +427,5 @@
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<script>
-function changeWeek(week) {
-    const url = new URL(window.location.href);
-    if (week) {
-        url.searchParams.set('week_number', week);
-    } else {
-        url.searchParams.delete('week_number');
-    }
-    window.location.href = url.toString();
-}
-</script>
 </body>
 </html>

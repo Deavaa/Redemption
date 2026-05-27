@@ -15,10 +15,10 @@
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.lesson-plans.print-yearly', request()->query()) }}" class="btn-modern btn-modern-outline" target="_blank" title="Print yearly overview">
-                <i class="fas fa-print"></i> Yearly
+                <i class="fas fa-calendar-alt"></i> Print Yearly
             </a>
             <a href="{{ route('admin.lesson-plans.print-weekly', request()->query()) }}" class="btn-modern btn-modern-outline" target="_blank" title="Print weekly detail">
-                <i class="fas fa-calendar-week"></i> Weekly
+                <i class="fas fa-calendar-week"></i> Print Weekly
             </a>
             <a href="{{ route('admin.lesson-plans.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-plus"></i> New Plan
