@@ -43,11 +43,17 @@
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Class <span class="modern-required">*</span></label>
-                        <select name="class_id" class="modern-input modern-select" style="padding-left:0.75rem" required>
+                        <select name="class_id" id="classSelect" class="modern-input modern-select" style="padding-left:0.75rem" required>
                             <option value="">Select Class</option>
                             @foreach($classes as $class)
                             <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Section</label>
+                        <select name="section_id" id="sectionSelect" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="">All Sections</option>
                         </select>
                     </div>
                     <div class="modern-form-group">
@@ -151,6 +157,33 @@ $(function() {
 
     $(document).on('click', '.remove-question-btn', function() {
         $(this).closest('.question-block').remove();
+    });
+
+    // Load sections when class changes
+    $('#classSelect').on('change', function() {
+        var classId = $(this).val();
+        if (!classId) {
+            $('#sectionSelect').html('<option value="">All Sections</option>');
+            return;
+        }
+        $.ajax({
+            url: '{{ route("admin.assessment-questions.api-sections", 0) }}'.replace('/0', '/' + classId),
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                var html = '<option value="">All Sections</option>';
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(function(s) {
+                        html += '<option value="' + s.id + '">' + s.name + '</option>';
+                    });
+                }
+                $('#sectionSelect').html(html);
+            },
+            error: function(xhr) {
+                console.error('Failed to load sections:', xhr.status, xhr.statusText);
+                $('#sectionSelect').html('<option value="">All Sections</option>');
+            }
+        });
     });
 });
 </script>

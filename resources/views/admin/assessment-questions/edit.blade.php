@@ -235,11 +235,26 @@ $(function() {
         if ($(this).is(':checked')) $('.is-correct-check').not(this).prop('checked', false);
     });
     $('#classSelect').on('change', function() {
-        var c = $(this).val(); if(!c) return;
-        $.get('{{ route("admin.assessment-questions.api-sections", 0) }}'.replace('/0','/'+c), function(d) {
-            var h = '<option value="">All Sections</option>';
-            d.forEach(function(s) { h += '<option value="'+s.id+'">'+s.name+'</option>'; });
-            $('#sectionSelect').html(h);
+        var c = $(this).val();
+        if (!c) {
+            $('#sectionSelect').html('<option value="">All Sections</option>');
+            return;
+        }
+        $.ajax({
+            url: '{{ route("admin.assessment-questions.api-sections", 0) }}'.replace('/0','/'+c),
+            method: 'GET',
+            dataType: 'json',
+            success: function(d) {
+                var h = '<option value="">All Sections</option>';
+                if (Array.isArray(d) && d.length > 0) {
+                    d.forEach(function(s) { h += '<option value="'+s.id+'">'+s.name+'</option>'; });
+                }
+                $('#sectionSelect').html(h);
+            },
+            error: function(xhr) {
+                console.error('Failed to load sections:', xhr.status, xhr.statusText);
+                $('#sectionSelect').html('<option value="">All Sections</option>');
+            }
         });
     });
 });

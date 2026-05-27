@@ -275,13 +275,27 @@ $(function() {
 
     $('#classSelect').on('change', function() {
         var classId = $(this).val();
-        if (!classId) return;
-        $.get('{{ route("admin.assessment-questions.api-sections", 0) }}'.replace('/0', '/' + classId), function(data) {
-            var html = '<option value="">All Sections</option>';
-            data.forEach(function(s) {
-                html += '<option value="' + s.id + '">' + s.name + '</option>';
-            });
-            $('#sectionSelect').html(html);
+        if (!classId) {
+            $('#sectionSelect').html('<option value="">All Sections</option>');
+            return;
+        }
+        $.ajax({
+            url: '{{ route("admin.assessment-questions.api-sections", 0) }}'.replace('/0', '/' + classId),
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                var html = '<option value="">All Sections</option>';
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(function(s) {
+                        html += '<option value="' + s.id + '">' + s.name + '</option>';
+                    });
+                }
+                $('#sectionSelect').html(html);
+            },
+            error: function(xhr) {
+                console.error('Failed to load sections:', xhr.status, xhr.statusText);
+                $('#sectionSelect').html('<option value="">All Sections</option>');
+            }
         });
     });
 });

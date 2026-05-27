@@ -397,7 +397,10 @@ class AssessmentQuestionController extends Controller
 
     public function apiSections($classId)
     {
-        $sections = Section::where('class_id', $classId)->orderBy('name')->get(['id', 'name']);
+        $sections = Section::where('class_id', $classId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return response()->json($sections);
     }
 
@@ -449,10 +452,30 @@ class AssessmentQuestionController extends Controller
             return Subject::orderBy('name')->get();
         }
 
+        // Primary lookup: teacher_id references teachers.id
         $subjectIds = TeacherAssignment::where('teacher_id', $teacher->id)
             ->where('academic_year_id', $activeAy->id)
             ->pluck('subject_id')
             ->unique();
+
+        // Fallback: if no assignments found via teacher->id, try via user_id
+        if ($subjectIds->isEmpty() && $teacher->user_id) {
+            $subjectIds = TeacherAssignment::where('teacher_id', $teacher->user_id)
+                ->where('academic_year_id', $activeAy->id)
+                ->pluck('subject_id')
+                ->unique();
+        }
+
+        // Final fallback: try matching by email through users table
+        if ($subjectIds->isEmpty() && $teacher->email) {
+            $user = \App\Models\User::where('email', $teacher->email)->first();
+            if ($user) {
+                $subjectIds = TeacherAssignment::where('teacher_id', $user->id)
+                    ->where('academic_year_id', $activeAy->id)
+                    ->pluck('subject_id')
+                    ->unique();
+            }
+        }
 
         return Subject::whereIn('id', $subjectIds)->orderBy('name')->get();
     }
@@ -463,10 +486,32 @@ class AssessmentQuestionController extends Controller
             return ClassRoom::orderBy('name')->get();
         }
 
+        // Primary lookup: teacher_id references teachers.id
         $classIds = TeacherAssignment::where('teacher_id', $teacher->id)
             ->where('academic_year_id', $activeAy->id)
             ->pluck('class_id')
             ->unique();
+
+        // Fallback: if no assignments found via teacher->id, try via user_id
+        // This handles the case where teacher_assignments.teacher_id still
+        // stores users.id values (before the data-fix migration runs).
+        if ($classIds->isEmpty() && $teacher->user_id) {
+            $classIds = TeacherAssignment::where('teacher_id', $teacher->user_id)
+                ->where('academic_year_id', $activeAy->id)
+                ->pluck('class_id')
+                ->unique();
+        }
+
+        // Final fallback: if still empty, try matching by email through users table
+        if ($classIds->isEmpty() && $teacher->email) {
+            $user = \App\Models\User::where('email', $teacher->email)->first();
+            if ($user) {
+                $classIds = TeacherAssignment::where('teacher_id', $user->id)
+                    ->where('academic_year_id', $activeAy->id)
+                    ->pluck('class_id')
+                    ->unique();
+            }
+        }
 
         return ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();
     }
