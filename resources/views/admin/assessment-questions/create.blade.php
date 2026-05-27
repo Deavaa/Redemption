@@ -280,7 +280,7 @@ $(function() {
             return;
         }
         $.ajax({
-            url: '{{ route("admin.assessment-questions.api-sections", 0) }}'.replace('/0', '/' + classId),
+            url: '{{ route("admin.assessment-questions.api-sections") }}?class_id=' + classId,
             method: 'GET',
             dataType: 'json',
             success: function(data) {

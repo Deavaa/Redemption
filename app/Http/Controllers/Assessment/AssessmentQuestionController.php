@@ -395,13 +395,345 @@ class AssessmentQuestionController extends Controller
 
     // ── API: Get sections for a class ──────────────────────
 
-    public function apiSections($classId)
+    public function apiSections(Request $request)
     {
+        $classId = $request->query('class_id');
+        if (!$classId) {
+            return response()->json([]);
+        }
+
         $sections = Section::where('class_id', $classId)
             ->orderBy('name')
             ->get(['id', 'name']);
 
         return response()->json($sections);
+    }
+
+    // ── Download Excel template for bulk import ──────────────
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="assessment_questions_template.csv"',
+        ];
+
+        $callback = function () {
+            $file = fopen('php://output', 'w');
+
+            // Header row
+            fputcsv($file, [
+                'question_text',
+                'question_type',
+                'subject_name',
+                'class_name',
+                'section_name',
+                'difficulty',
+                'marks',
+                'topic',
+                'title',
+                'hint',
+                'option_A',
+                'option_B',
+                'option_C',
+                'option_D',
+                'correct_option',
+                'explanation',
+                'worked_out_solution',
+            ]);
+
+            // Example rows
+            fputcsv($file, [
+                'What is the capital of France?',
+                'multiple_choice',
+                'Geography',
+                'Grade 7',
+                'Section A',
+                'easy',
+                '1',
+                'Chapter 1 - Europe',
+                'European Capitals',
+                'Think about major European cities',
+                'London',
+                'Paris',
+                'Berlin',
+                'Madrid',
+                'B',
+                'Paris is the capital and most populous city of France, located in the north-central part of the country.',
+                'Step 1: Identify the country (France)\nStep 2: Recall that the capital of France is Paris\nTherefore, the answer is Paris (Option B)',
+            ]);
+
+            fputcsv($file, [
+                'Water boils at 100 degrees Celsius.',
+                'true_false',
+                'Physics',
+                'Grade 8',
+                '',
+                'easy',
+                '1',
+                'Chapter 2 - Heat',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'true',
+                'At standard atmospheric pressure (1 atm), water boils at 100 degrees Celsius or 212 degrees Fahrenheit.',
+                'At 1 atm pressure, the boiling point of water is exactly 100°C. This is a standard reference point on the Celsius scale.',
+            ]);
+
+            fputcsv($file, [
+                'Explain photosynthesis in one sentence.',
+                'short_answer',
+                'Biology',
+                'Grade 9',
+                'Section B',
+                'medium',
+                '2',
+                'Chapter 4 - Plant Biology',
+                '',
+                'Focus on the conversion process',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Photosynthesis is the process by which green plants convert sunlight, water, and carbon dioxide into glucose and oxygen.',
+                'Sunlight (energy) + CO2 + H2O → C6H12O6 (glucose) + O2 (oxygen)\nThis process occurs in chloroplasts, primarily in the leaves.',
+            ]);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // ── Import questions from CSV upload ─────────────────────
+
+    public function bulkImport(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:csv,txt,xlsx,xls|max:5120',
+        ]);
+
+        $user = Auth::user();
+        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+
+        if (!$teacher && !in_array($user->role, ['admin', 'super_admin'])) {
+            return back()->with('error', 'Teacher profile not found.')->withInput();
+        }
+
+        $activeAy = AcademicYear::where('is_current', true)->first();
+        $file = $request->file('import_file');
+        $path = $file->getRealPath();
+
+        $imported = 0;
+        $skipped = 0;
+        $errors = [];
+
+        try {
+            // Handle CSV files
+            if ($file->getClientOriginalExtension() === 'csv' || $file->getClientOriginalExtension() === 'txt') {
+                $handle = fopen($path, 'r');
+                $header = fgetcsv($handle); // Skip header row
+
+                $rowNum = 1;
+                while (($row = fgetcsv($handle)) !== false) {
+                    $rowNum++;
+                    try {
+                        $result = $this->importQuestionRow($row, $teacher, $activeAy, $user, $rowNum);
+                        if ($result === true) {
+                            $imported++;
+                        } else {
+                            $skipped++;
+                            $errors[] = $result;
+                        }
+                    } catch (\Exception $e) {
+                        $skipped++;
+                        $errors[] = "Row {$rowNum}: " . $e->getMessage();
+                    }
+                }
+                fclose($handle);
+            } else {
+                // Handle Excel files using PhpSpreadsheet
+                if (!class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
+                    return back()->with('error', 'Excel file support requires PhpSpreadsheet. Please upload a CSV file instead.')->withInput();
+                }
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+                $worksheet = $spreadsheet->getActiveSheet();
+                $rows = $worksheet->toArray();
+
+                // Skip header row
+                for ($i = 1; $i < count($rows); $i++) {
+                    $rowNum = $i + 1;
+                    $row = $rows[$i];
+                    try {
+                        $result = $this->importQuestionRow($row, $teacher, $activeAy, $user, $rowNum);
+                        if ($result === true) {
+                            $imported++;
+                        } else {
+                            $skipped++;
+                            $errors[] = $result;
+                        }
+                    } catch (\Exception $e) {
+                        $skipped++;
+                        $errors[] = "Row {$rowNum}: " . $e->getMessage();
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to read file: ' . $e->getMessage())->withInput();
+        }
+
+        $message = "{$imported} questions imported successfully.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} rows skipped.";
+        }
+
+        return redirect()->route('admin.assessment-questions.index')
+            ->with('success', $message)
+            ->with('import_errors', $errors);
+    }
+
+    /**
+     * Import a single question row from CSV/Excel.
+     * Returns true on success, or an error message string on failure.
+     */
+    private function importQuestionRow($row, $teacher, $activeAy, $user, $rowNum)
+    {
+        $questionText = trim($row[0] ?? '');
+        $questionType = trim($row[1] ?? 'multiple_choice');
+        $subjectName  = trim($row[2] ?? '');
+        $className    = trim($row[3] ?? '');
+        $sectionName  = trim($row[4] ?? '');
+        $difficulty   = trim($row[5] ?? 'medium');
+        $marks        = intval($row[6] ?? 1);
+        $topic        = trim($row[7] ?? '');
+        $title        = trim($row[8] ?? '');
+        $hint         = trim($row[9] ?? '');
+        $optionA      = trim($row[10] ?? '');
+        $optionB      = trim($row[11] ?? '');
+        $optionC      = trim($row[12] ?? '');
+        $optionD      = trim($row[13] ?? '');
+        $correctOption = strtoupper(trim($row[14] ?? ''));
+        $explanation  = trim($row[15] ?? '');
+        $workedOutSolution = trim($row[16] ?? '');
+
+        // Validate required fields
+        if (empty($questionText)) {
+            return "Row {$rowNum}: Question text is empty.";
+        }
+
+        if (!in_array($questionType, ['multiple_choice', 'true_false', 'short_answer'])) {
+            return "Row {$rowNum}: Invalid question type '{$questionType}'. Use: multiple_choice, true_false, or short_answer.";
+        }
+
+        if (!in_array($difficulty, ['easy', 'medium', 'hard'])) {
+            $difficulty = 'medium';
+        }
+
+        // Resolve subject
+        $subject = null;
+        if (!empty($subjectName)) {
+            $subject = Subject::where('name', $subjectName)->first();
+            if (!$subject) {
+                return "Row {$rowNum}: Subject '{$subjectName}' not found.";
+            }
+        } else {
+            // Try first subject from teacher's assignments
+            $subjects = $this->getTeacherSubjects($teacher, $activeAy);
+            $subject = $subjects->first();
+            if (!$subject) {
+                return "Row {$rowNum}: No subject specified and no teacher assignments found.";
+            }
+        }
+
+        // Resolve class
+        $class = null;
+        if (!empty($className)) {
+            $class = ClassRoom::where('name', $className)->first();
+            if (!$class) {
+                return "Row {$rowNum}: Class '{$className}' not found.";
+            }
+        } else {
+            $classes = $this->getTeacherClasses($teacher, $activeAy);
+            $class = $classes->first();
+            if (!$class) {
+                return "Row {$rowNum}: No class specified and no teacher assignments found.";
+            }
+        }
+
+        // Resolve section (optional)
+        $sectionId = null;
+        if (!empty($sectionName)) {
+            $section = Section::where('class_id', $class->id)->where('name', $sectionName)->first();
+            if ($section) {
+                $sectionId = $section->id;
+            }
+        }
+
+        // Create the question
+        $question = AssessmentQuestion::create([
+            'teacher_id' => $teacher?->id,
+            'subject_id' => $subject->id,
+            'class_id' => $class->id,
+            'section_id' => $sectionId,
+            'academic_year_id' => $activeAy?->id,
+            'branch_id' => $teacher?->user?->branch_id ?? $user->branch_id,
+            'title' => $title ?: null,
+            'question_text' => $questionText,
+            'question_type' => $questionType,
+            'hint' => $hint ?: null,
+            'explanation' => $explanation ?: null,
+            'worked_out_solution' => $workedOutSolution ?: null,
+            'difficulty' => $difficulty,
+            'topic' => $topic ?: null,
+            'marks' => max(1, min(100, $marks)),
+            'is_active' => true,
+        ]);
+
+        // Create options based on question type
+        if ($questionType === 'multiple_choice') {
+            $options = [];
+            if (!empty($optionA)) $options[] = ['text' => $optionA, 'label' => 'A'];
+            if (!empty($optionB)) $options[] = ['text' => $optionB, 'label' => 'B'];
+            if (!empty($optionC)) $options[] = ['text' => $optionC, 'label' => 'C'];
+            if (!empty($optionD)) $options[] = ['text' => $optionD, 'label' => 'D'];
+
+            if (count($options) < 2) {
+                $question->delete();
+                return "Row {$rowNum}: Multiple choice needs at least 2 options (A and B).";
+            }
+
+            foreach ($options as $idx => $opt) {
+                AssessmentOption::create([
+                    'assessment_question_id' => $question->id,
+                    'option_text' => $opt['text'],
+                    'option_label' => $opt['label'],
+                    'is_correct' => $opt['label'] === $correctOption,
+                    'sort_order' => $idx,
+                ]);
+            }
+        } elseif ($questionType === 'true_false') {
+            $isTrue = in_array(strtolower($correctOption), ['true', 'a', 'yes', '1']);
+            AssessmentOption::create([
+                'assessment_question_id' => $question->id,
+                'option_text' => 'True',
+                'option_label' => 'A',
+                'is_correct' => $isTrue,
+                'sort_order' => 0,
+            ]);
+            AssessmentOption::create([
+                'assessment_question_id' => $question->id,
+                'option_text' => 'False',
+                'option_label' => 'B',
+                'is_correct' => !$isTrue,
+                'sort_order' => 1,
+            ]);
+        }
+
+        return true;
     }
 
     // ── Report: Student performance ─────────────────────────

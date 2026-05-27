@@ -329,10 +329,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('exam-questions/{exam_question}/request-revision', [ExamQuestionController::class, 'requestRevision'])->name('exam-questions.request-revision')->middleware('permission:exams.manage');
 
     // ── Self-Assessment Questions (Teacher creates, Student answers) ──
-    // API routes MUST be before resource to avoid {assessment_question} matching "api"
-    Route::get('assessment-questions/api/sections/{classId}', [AssessmentQuestionController::class, 'apiSections'])->name('assessment-questions.api-sections');
+    // API & custom routes MUST be before resource to avoid {assessment_question} conflicts
+    Route::get('assessment-questions/api/sections', [AssessmentQuestionController::class, 'apiSections'])->name('assessment-questions.api-sections');
     Route::get('assessment-questions/bulk/create', [AssessmentQuestionController::class, 'bulkCreate'])->name('assessment-questions.bulk-create')->middleware('permission:lesson_plans.create');
     Route::post('assessment-questions/bulk', [AssessmentQuestionController::class, 'bulkStore'])->name('assessment-questions.bulk-store')->middleware('permission:lesson_plans.create');
+    Route::post('assessment-questions/bulk/import', [AssessmentQuestionController::class, 'bulkImport'])->name('assessment-questions.bulk-import')->middleware('permission:lesson_plans.create');
+    Route::get('assessment-questions/bulk/template', [AssessmentQuestionController::class, 'downloadTemplate'])->name('assessment-questions.download-template')->middleware('permission:lesson_plans.create');
     Route::get('assessment-questions/report', [AssessmentQuestionController::class, 'report'])->name('assessment-questions.report')->middleware('permission:lesson_plans.view');
     Route::resource('assessment-questions', AssessmentQuestionController::class)->middleware('permission:lesson_plans.view');
     Route::post('assessment-questions/{assessment_question}/toggle-active', [AssessmentQuestionController::class, 'toggleActive'])->name('assessment-questions.toggle-active')->middleware('permission:lesson_plans.create');

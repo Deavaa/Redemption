@@ -12,13 +12,80 @@
                 <li class="active">Bulk Add</li>
             </ol></nav>
             <h1 class="modern-page-title">Bulk Add Questions</h1>
-            <p class="modern-page-subtitle">Add multiple questions at once for the same subject and class</p>
+            <p class="modern-page-subtitle">Add multiple questions at once via file import or manual entry</p>
         </div>
         <div class="modern-page-header-right">
             <a href="{{ route('admin.assessment-questions.index') }}" class="btn-modern btn-modern-ghost"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
     </div>
 
+    @if(session('error'))
+    <div class="modern-alert modern-alert-danger">
+        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    @endif
+
+    {{-- ── Import from File ──────────────────────────────────── --}}
+    <div class="modern-card" style="margin-bottom:1.25rem">
+        <div class="modern-card-header" style="background:linear-gradient(135deg,#10b981,#059669)">
+            <div class="modern-card-header-left">
+                <i class="fas fa-file-upload" style="color:#fff"></i>
+                <span class="modern-card-title" style="color:#fff">Import from File</span>
+            </div>
+            <div class="modern-card-header-right">
+                <a href="{{ route('admin.assessment-questions.download-template') }}" class="btn-modern" style="background:#fff;color:#059669;font-size:0.82rem;padding:6px 14px;border-radius:8px">
+                    <i class="fas fa-download"></i> Download Template
+                </a>
+            </div>
+        </div>
+        <div style="padding:1.5rem">
+            <form method="POST" action="{{ route('admin.assessment-questions.bulk-import') }}" enctype="multipart/form-data" id="importForm">
+                @csrf
+                <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
+                    <div class="modern-form-group" style="flex:1;min-width:250px">
+                        <label class="modern-form-label">Upload CSV / Excel File</label>
+                        <input type="file" name="import_file" id="importFile" accept=".csv,.txt,.xlsx,.xls" class="modern-input" style="padding:0.5rem" required>
+                        <div style="font-size:0.75rem;color:#9ca3af;margin-top:4px">
+                            Accepted formats: .csv, .xlsx, .xls &nbsp;|&nbsp; Max size: 5MB
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-modern btn-modern-primary" id="importBtn" style="height:42px">
+                        <i class="fas fa-upload"></i> Import Questions
+                    </button>
+                </div>
+            </form>
+
+            {{-- Template Instructions --}}
+            <div style="margin-top:1.25rem;padding:1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px">
+                <h4 style="font-size:0.85rem;font-weight:600;color:#166534;margin-bottom:0.5rem">
+                    <i class="fas fa-info-circle"></i> Template Instructions
+                </h4>
+                <ul style="font-size:0.8rem;color:#374151;margin:0;padding-left:1.25rem;line-height:1.7">
+                    <li><strong>question_text</strong> (required) — The question to ask students</li>
+                    <li><strong>question_type</strong> — <code>multiple_choice</code>, <code>true_false</code>, or <code>short_answer</code></li>
+                    <li><strong>subject_name</strong> — Must match an existing subject name in the system</li>
+                    <li><strong>class_name</strong> — Must match an existing class name (e.g., "Grade 7")</li>
+                    <li><strong>section_name</strong> — Optional. Leave blank for "All Sections"</li>
+                    <li><strong>difficulty</strong> — <code>easy</code>, <code>medium</code>, or <code>hard</code></li>
+                    <li><strong>marks</strong> — Number (1-100), defaults to 1</li>
+                    <li><strong>option_A</strong> to <strong>option_D</strong> — For multiple choice, at least A and B are required</li>
+                    <li><strong>correct_option</strong> — Letter (A/B/C/D) for MCQ, or <code>true</code>/<code>false</code> for T/F</li>
+                    <li><strong>explanation</strong> — Why the answer is correct (shown after answering)</li>
+                    <li><strong>worked_out_solution</strong> — Step-by-step solution</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Manual Entry Divider ────────────────────────────────── --}}
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem">
+        <div style="flex:1;height:1px;background:#e5e7eb"></div>
+        <span style="font-size:0.82rem;color:#9ca3af;font-weight:500">OR ENTER MANUALLY</span>
+        <div style="flex:1;height:1px;background:#e5e7eb"></div>
+    </div>
+
+    {{-- ── Manual Entry Form ────────────────────────────────────── --}}
     <form method="POST" action="{{ route('admin.assessment-questions.bulk-store') }}" id="bulkForm">
         @csrf
 
@@ -133,6 +200,24 @@
     </form>
 </div>
 
+@push('styles')
+<style>
+    #importFile::file-selector-button {
+        background: #4361ee;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-right: 12px;
+        font-size: 0.82rem;
+    }
+    #importFile::file-selector-button:hover {
+        background: #3a56d4;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
 $(function() {
@@ -167,7 +252,7 @@ $(function() {
             return;
         }
         $.ajax({
-            url: '{{ route("admin.assessment-questions.api-sections", 0) }}'.replace('/0', '/' + classId),
+            url: '{{ route("admin.assessment-questions.api-sections") }}?class_id=' + classId,
             method: 'GET',
             dataType: 'json',
             success: function(data) {
@@ -184,6 +269,16 @@ $(function() {
                 $('#sectionSelect').html('<option value="">All Sections</option>');
             }
         });
+    });
+
+    // Import form validation
+    $('#importForm').on('submit', function() {
+        var file = $('#importFile').val();
+        if (!file) {
+            alert('Please select a file to import.');
+            return false;
+        }
+        $('#importBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Importing...');
     });
 });
 </script>

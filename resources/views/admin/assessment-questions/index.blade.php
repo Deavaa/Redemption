@@ -36,6 +36,26 @@
     </div>
     @endif
 
+    @if(session('error'))
+    <div class="modern-alert modern-alert-danger">
+        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    @endif
+
+    @if(session('import_errors') && count(session('import_errors')) > 0)
+    <div class="modern-alert modern-alert-danger" style="max-height:200px;overflow-y:auto">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Import Warnings:</strong>
+        <ul style="margin:0.5rem 0 0 1rem;padding:0;font-size:0.82rem">
+            @foreach(session('import_errors') as $err)
+            <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    @endif
+
     {{-- Filters --}}
     <div class="modern-card" style="margin-bottom:1.25rem">
         <div class="modern-card-header" style="padding:0.85rem 1.25rem">

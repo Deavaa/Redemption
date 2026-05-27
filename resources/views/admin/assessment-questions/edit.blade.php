@@ -241,7 +241,7 @@ $(function() {
             return;
         }
         $.ajax({
-            url: '{{ route("admin.assessment-questions.api-sections", 0) }}'.replace('/0','/'+c),
+            url: '{{ route("admin.assessment-questions.api-sections") }}?class_id=' + c,
             method: 'GET',
             dataType: 'json',
             success: function(d) {
