@@ -224,6 +224,31 @@
 @push('scripts')
 <script>
 $(function() {
+    // ── Pre-loaded sections data (no AJAX needed) ──────────
+    var allSections = @json($allSections ?? []);
+    var selectedSectionId = '{{ old("section_id") }}';
+
+    function updateSectionDropdown(classId) {
+        var html = '<option value="">All Sections</option>';
+        if (classId) {
+            var filtered = allSections.filter(function(s) { return s.class_id == classId; });
+            filtered.forEach(function(s) {
+                html += '<option value="' + s.id + '"' + (s.id == selectedSectionId ? ' selected' : '') + '>' + s.name + '</option>';
+            });
+        }
+        $('#sectionSelect').html(html);
+    }
+
+    // Initialize section dropdown on page load
+    updateSectionDropdown($('#classSelect').val());
+
+    // Update section dropdown when class changes
+    $('#classSelect').on('change', function() {
+        selectedSectionId = ''; // Reset selection when class changes
+        updateSectionDropdown($(this).val());
+    });
+
+    // ── Question type toggle ────────────────────────────────
     function toggleQuestionType() {
         var type = $('#questionType').val();
         if (type === 'multiple_choice') {
@@ -240,6 +265,7 @@ $(function() {
     $('#questionType').on('change', toggleQuestionType);
     toggleQuestionType();
 
+    // ── MCQ Options management ──────────────────────────────
     $('#addOptionBtn').on('click', function() {
         var idx = $('#optionsContainer .option-row').length;
         if (idx >= 6) return;
@@ -272,32 +298,6 @@ $(function() {
             $(this).find('input[name*="option_text"]').attr('placeholder', 'Option ' + String.fromCharCode(65 + idx));
         });
     }
-
-    $('#classSelect').on('change', function() {
-        var classId = $(this).val();
-        if (!classId) {
-            $('#sectionSelect').html('<option value="">All Sections</option>');
-            return;
-        }
-        $.ajax({
-            url: '{{ route("admin.assessment-questions.api-sections") }}?class_id=' + classId,
-            method: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                var html = '<option value="">All Sections</option>';
-                if (Array.isArray(data) && data.length > 0) {
-                    data.forEach(function(s) {
-                        html += '<option value="' + s.id + '">' + s.name + '</option>';
-                    });
-                }
-                $('#sectionSelect').html(html);
-            },
-            error: function(xhr) {
-                console.error('Failed to load sections:', xhr.status, xhr.statusText);
-                $('#sectionSelect').html('<option value="">All Sections</option>');
-            }
-        });
-    });
 });
 </script>
 @endpush

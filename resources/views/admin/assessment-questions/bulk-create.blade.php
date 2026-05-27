@@ -221,6 +221,29 @@
 @push('scripts')
 <script>
 $(function() {
+    // ── Pre-loaded sections data (no AJAX needed) ──────────
+    var allSections = @json($allSections ?? []);
+
+    function updateSectionDropdown(classId) {
+        var html = '<option value="">All Sections</option>';
+        if (classId) {
+            var filtered = allSections.filter(function(s) { return s.class_id == classId; });
+            filtered.forEach(function(s) {
+                html += '<option value="' + s.id + '">' + s.name + '</option>';
+            });
+        }
+        $('#sectionSelect').html(html);
+    }
+
+    // Initialize section dropdown on page load
+    updateSectionDropdown($('#classSelect').val());
+
+    // Update section dropdown when class changes
+    $('#classSelect').on('change', function() {
+        updateSectionDropdown($(this).val());
+    });
+
+    // ── Manual question blocks ──────────────────────────────
     var qIdx = 1;
     $('#addQuestionBtn').on('click', function() {
         var html = '<div class="modern-card mb-3 question-block" data-index="' + qIdx + '">' +
@@ -242,33 +265,6 @@ $(function() {
 
     $(document).on('click', '.remove-question-btn', function() {
         $(this).closest('.question-block').remove();
-    });
-
-    // Load sections when class changes
-    $('#classSelect').on('change', function() {
-        var classId = $(this).val();
-        if (!classId) {
-            $('#sectionSelect').html('<option value="">All Sections</option>');
-            return;
-        }
-        $.ajax({
-            url: '{{ route("admin.assessment-questions.api-sections") }}?class_id=' + classId,
-            method: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                var html = '<option value="">All Sections</option>';
-                if (Array.isArray(data) && data.length > 0) {
-                    data.forEach(function(s) {
-                        html += '<option value="' + s.id + '">' + s.name + '</option>';
-                    });
-                }
-                $('#sectionSelect').html(html);
-            },
-            error: function(xhr) {
-                console.error('Failed to load sections:', xhr.status, xhr.statusText);
-                $('#sectionSelect').html('<option value="">All Sections</option>');
-            }
-        });
     });
 
     // Import form validation

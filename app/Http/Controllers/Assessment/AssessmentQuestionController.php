@@ -82,7 +82,11 @@ class AssessmentQuestionController extends Controller
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
 
-        return view('admin.assessment-questions.create', compact('subjects', 'classes', 'teacher', 'activeAy'));
+        // Pre-load ALL sections for the teacher's classes (for client-side dropdown)
+        $classIds = $classes->pluck('id');
+        $allSections = Section::whereIn('class_id', $classIds)->orderBy('name')->get(['id', 'class_id', 'name']);
+
+        return view('admin.assessment-questions.create', compact('subjects', 'classes', 'teacher', 'activeAy', 'allSections'));
     }
 
     // ── Teacher: Store Question ─────────────────────────────
@@ -218,8 +222,12 @@ class AssessmentQuestionController extends Controller
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
 
+        // Pre-load ALL sections for the teacher's classes (for client-side dropdown)
+        $classIds = $classes->pluck('id');
+        $allSections = Section::whereIn('class_id', $classIds)->orderBy('name')->get(['id', 'class_id', 'name']);
+
         return view('admin.assessment-questions.edit', compact(
-            'assessment_question', 'subjects', 'classes', 'teacher', 'activeAy'
+            'assessment_question', 'subjects', 'classes', 'teacher', 'activeAy', 'allSections'
         ));
     }
 
@@ -342,7 +350,11 @@ class AssessmentQuestionController extends Controller
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
 
-        return view('admin.assessment-questions.bulk-create', compact('subjects', 'classes', 'teacher', 'activeAy'));
+        // Pre-load ALL sections for the teacher's classes (for client-side dropdown)
+        $classIds = $classes->pluck('id');
+        $allSections = Section::whereIn('class_id', $classIds)->orderBy('name')->get(['id', 'class_id', 'name']);
+
+        return view('admin.assessment-questions.bulk-create', compact('subjects', 'classes', 'teacher', 'activeAy', 'allSections'));
     }
 
     public function bulkStore(Request $request)
