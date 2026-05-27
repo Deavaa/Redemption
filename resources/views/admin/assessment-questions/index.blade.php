@@ -3,89 +3,105 @@
 @section('title', 'Self-Assessment Questions')
 
 @section('content')
-<div class="page-header">
-    <div class="row align-items-center">
-        <div class="col">
-            <h3 class="page-title">Self-Assessment Questions</h3>
-            <p class="page-subtitle">Create and manage questions for student self-assessment</p>
+<div class="modern-page">
+    {{-- Header --}}
+    <div class="modern-page-header">
+        <div class="modern-page-header-left">
+            <nav class="modern-breadcrumb"><ol>
+                <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
+                <li><a href="#">Academic</a></li>
+                <li class="active">Self-Assessment</li>
+            </ol></nav>
+            <h1 class="modern-page-title">Self-Assessment Questions</h1>
+            <p class="modern-page-subtitle">Create and manage questions for student self-assessment</p>
         </div>
-        <div class="col-auto">
-            <a href="{{ route('admin.assessment-questions.create') }}" class="btn btn-primary me-2">
-                <i class="fas fa-plus me-1"></i> Add Question
+        <div class="modern-page-header-right">
+            <a href="{{ route('admin.assessment-questions.create') }}" class="btn-modern btn-modern-primary">
+                <i class="fas fa-plus"></i> Add Question
             </a>
-            <a href="{{ route('admin.assessment-questions.bulk-create') }}" class="btn btn-outline-primary me-2">
-                <i class="fas fa-list-ol me-1"></i> Bulk Add
+            <a href="{{ route('admin.assessment-questions.bulk-create') }}" class="btn-modern btn-modern-outline">
+                <i class="fas fa-list-ol"></i> Bulk Add
             </a>
-            <a href="{{ route('admin.assessment-questions.report') }}" class="btn btn-outline-info">
-                <i class="fas fa-chart-bar me-1"></i> Report
+            <a href="{{ route('admin.assessment-questions.report') }}" class="btn-modern btn-modern-ghost">
+                <i class="fas fa-chart-bar"></i> Report
             </a>
         </div>
     </div>
-</div>
 
-{{-- Filters --}}
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ route('admin.assessment-questions.index') }}" class="row g-3">
-            <div class="col-md-2">
-                <label class="form-label">Subject</label>
-                <select name="subject_id" class="form-select form-select-sm">
-                    <option value="">All Subjects</option>
-                    @foreach($subjects as $subject)
-                    <option value="{{ $subject->id }}" {{ request('subject_id') == $subject->id ? 'selected' : '' }}>
-                        {{ $subject->name }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Class</label>
-                <select name="class_id" class="form-select form-select-sm">
-                    <option value="">All Classes</option>
-                    @foreach($classes as $class)
-                    <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>
-                        {{ $class->name }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Difficulty</label>
-                <select name="difficulty" class="form-select form-select-sm">
-                    <option value="">All</option>
-                    <option value="easy" {{ request('difficulty') === 'easy' ? 'selected' : '' }}>Easy</option>
-                    <option value="medium" {{ request('difficulty') === 'medium' ? 'selected' : '' }}>Medium</option>
-                    <option value="hard" {{ request('difficulty') === 'hard' ? 'selected' : '' }}>Hard</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Type</label>
-                <select name="question_type" class="form-select form-select-sm">
-                    <option value="">All</option>
-                    <option value="multiple_choice" {{ request('question_type') === 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
-                    <option value="true_false" {{ request('question_type') === 'true_false' ? 'selected' : '' }}>True / False</option>
-                    <option value="short_answer" {{ request('question_type') === 'short_answer' ? 'selected' : '' }}>Short Answer</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search questions..." value="{{ request('search') }}">
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-search"></i></button>
-            </div>
-        </form>
+    {{-- Flash --}}
+    @if(session('success'))
+    <div class="modern-alert modern-alert-success">
+        <i class="fas fa-check-circle"></i> {{ session('success') }}
+        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
     </div>
-</div>
+    @endif
 
-{{-- Questions List --}}
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+    {{-- Filters --}}
+    <div class="modern-card" style="margin-bottom:1.25rem">
+        <div class="modern-card-header" style="padding:0.85rem 1.25rem">
+            <div class="modern-card-header-left">
+                <i class="fas fa-filter" style="color:var(--primary)"></i>
+                <span class="modern-card-title" style="font-size:0.95rem">Filters</span>
+            </div>
+        </div>
+        <div style="padding:1rem 1.25rem">
+            <form method="GET" action="{{ route('admin.assessment-questions.index') }}" id="filterForm">
+                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0.75rem">
+                    <div class="modern-form-group">
+                        <select name="subject_id" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="">All Subjects</option>
+                            @foreach($subjects as $subject)
+                            <option value="{{ $subject->id }}" {{ request('subject_id') == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <select name="class_id" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="">All Classes</option>
+                            @foreach($classes as $class)
+                            <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <select name="difficulty" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="">All Difficulty</option>
+                            <option value="easy" {{ request('difficulty') === 'easy' ? 'selected' : '' }}>Easy</option>
+                            <option value="medium" {{ request('difficulty') === 'medium' ? 'selected' : '' }}>Medium</option>
+                            <option value="hard" {{ request('difficulty') === 'hard' ? 'selected' : '' }}>Hard</option>
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <select name="question_type" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="">All Types</option>
+                            <option value="multiple_choice" {{ request('question_type') === 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
+                            <option value="true_false" {{ request('question_type') === 'true_false' ? 'selected' : '' }}>True / False</option>
+                            <option value="short_answer" {{ request('question_type') === 'short_answer' ? 'selected' : '' }}>Short Answer</option>
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <input type="text" name="search" class="modern-input" style="padding-left:0.75rem" placeholder="Search questions..." value="{{ request('search') }}">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Table --}}
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div class="modern-card-header-left">
+                <span class="modern-card-title">All Questions</span>
+                <span class="modern-badge modern-badge-light">{{ $questions->total() }}</span>
+            </div>
+        </div>
+
+        @if($questions->count() > 0)
+        <div class="modern-table-wrapper">
+            <table class="modern-table">
+                <thead>
                     <tr>
-                        <th style="width:40px">#</th>
+                        <th class="th-narrow">#</th>
                         <th>Question</th>
                         <th>Subject</th>
                         <th>Class</th>
@@ -93,95 +109,99 @@
                         <th>Difficulty</th>
                         <th>Attempts</th>
                         <th>Accuracy</th>
-                        <th>Status</th>
-                        <th style="width:120px">Actions</th>
+                        <th class="th-center">Status</th>
+                        <th class="th-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($questions as $idx => $q)
+                    @foreach($questions as $idx => $q)
                     <tr>
-                        <td>{{ $questions->firstItem() + $idx }}</td>
+                        <td class="td-narrow"><span class="modern-row-number">{{ $questions->firstItem() + $idx }}</span></td>
                         <td>
-                            <a href="{{ route('admin.assessment-questions.show', $q->id) }}" class="text-decoration-none">
+                            <a href="{{ route('admin.assessment-questions.show', $q->id) }}" class="text-decoration-none" style="color:inherit">
                                 @if($q->title)
-                                    <strong>{{ Str::limit($q->title, 40) }}</strong><br>
+                                <div class="modern-cell-title">{{ Str::limit($q->title, 40) }}</div>
                                 @endif
-                                <span class="text-muted small">{{ Str::limit(strip_tags($q->question_text), 60) }}</span>
+                                <div class="modern-cell-sub">{{ Str::limit(strip_tags($q->question_text), 60) }}</div>
+                                @if($q->topic)
+                                <span class="modern-badge modern-badge-light" style="font-size:0.65rem;margin-top:2px">{{ $q->topic }}</span>
+                                @endif
                             </a>
-                            @if($q->topic)
-                                <br><span class="badge bg-light text-dark">{{ $q->topic }}</span>
-                            @endif
                         </td>
                         <td>{{ $q->subject->name ?? '-' }}</td>
                         <td>{{ $q->classroom->name ?? '-' }}</td>
-                        <td>
+                        <td class="td-center">
                             @if($q->question_type === 'multiple_choice')
-                                <span class="badge bg-primary">MCQ</span>
+                            <span class="modern-badge modern-badge-info">MCQ</span>
                             @elseif($q->question_type === 'true_false')
-                                <span class="badge bg-info">T/F</span>
+                            <span class="modern-badge modern-badge-info" style="background:#e0e7ff;color:#3730a3">T/F</span>
                             @else
-                                <span class="badge bg-secondary">Short</span>
+                            <span class="modern-badge modern-badge-light">Short</span>
                             @endif
                         </td>
-                        <td>
+                        <td class="td-center">
                             @if($q->difficulty === 'easy')
-                                <span class="badge bg-success">Easy</span>
+                            <span class="modern-badge modern-badge-success">Easy</span>
                             @elseif($q->difficulty === 'medium')
-                                <span class="badge bg-warning text-dark">Medium</span>
+                            <span class="modern-badge modern-badge-warning">Medium</span>
                             @else
-                                <span class="badge bg-danger">Hard</span>
+                            <span class="modern-badge modern-badge-danger">Hard</span>
                             @endif
                         </td>
-                        <td>{{ $q->answers()->count() }}</td>
-                        <td>
+                        <td class="td-center">{{ $q->answers()->count() }}</td>
+                        <td class="td-center">
                             @php $stats = $q->getStudentAnswerStats(); @endphp
-                            <span class="{{ $stats['accuracy_rate'] >= 70 ? 'text-success' : ($stats['accuracy_rate'] >= 40 ? 'text-warning' : 'text-danger') }}">
+                            <span style="color:{{ $stats['accuracy_rate'] >= 70 ? '#10b981' : ($stats['accuracy_rate'] >= 40 ? '#f59e0b' : '#ef4444') }}">
                                 {{ $stats['accuracy_rate'] }}%
                             </span>
                         </td>
-                        <td>
+                        <td class="td-center">
                             @if($q->is_active)
-                                <span class="badge bg-success">Active</span>
+                            <span class="modern-badge modern-badge-success">Active</span>
                             @else
-                                <span class="badge bg-secondary">Inactive</span>
+                            <span class="modern-badge modern-badge-light">Inactive</span>
                             @endif
                         </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('admin.assessment-questions.show', $q->id) }}" class="btn btn-outline-info" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('admin.assessment-questions.edit', $q->id) }}" class="btn btn-outline-primary" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form method="POST" action="{{ route('admin.assessment-questions.toggle-active', $q->id) }}" class="d-inline">
+                        <td class="td-actions">
+                            <div class="modern-action-group">
+                                <a href="{{ route('admin.assessment-questions.show', $q->id) }}" class="modern-btn-icon modern-btn-view" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{{ route('admin.assessment-questions.edit', $q->id) }}" class="modern-btn-icon modern-btn-edit" title="Edit"><i class="fas fa-edit"></i></a>
+                                <form method="POST" action="{{ route('admin.assessment-questions.toggle-active', $q->id) }}" style="display:inline">
                                     @csrf @method('PATCH')
-                                    <button type="submit" class="btn btn-outline-{{ $q->is_active ? 'warning' : 'success' }}" title="{{ $q->is_active ? 'Deactivate' : 'Activate' }}">
+                                    <button type="submit" class="modern-btn-icon" style="background:{{ $q->is_active ? '#fef3c7' : '#d1fae5' }};color:{{ $q->is_active ? '#92400e' : '#065f46' }}" title="{{ $q->is_active ? 'Deactivate' : 'Activate' }}">
                                         <i class="fas fa-{{ $q->is_active ? 'pause' : 'play' }}"></i>
                                     </button>
                                 </form>
-                                <form method="POST" action="{{ route('admin.assessment-questions.destroy', $q->id) }}" class="d-inline" onsubmit="return confirm('Delete this question?')">
+                                <form method="POST" action="{{ route('admin.assessment-questions.destroy', $q->id) }}" style="display:inline" onsubmit="return confirm('Delete this question?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete"><i class="fas fa-trash"></i></button>
                                 </form>
                             </div>
                         </td>
                     </tr>
-                    @empty
-                    <tr>
-                        <td colspan="10" class="text-center py-4 text-muted">
-                            No questions found. <a href="{{ route('admin.assessment-questions.create') }}">Create your first question</a>
-                        </td>
-                    </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
-    </div>
-    <div class="card-footer">
-        {{ $questions->withQueryString()->links() }}
+        <div class="modern-pagination-wrapper">
+            {{ $questions->withQueryString()->links() }}
+        </div>
+        @else
+        <div class="modern-empty-state">
+            <div class="modern-empty-icon"><i class="fas fa-brain"></i></div>
+            <h3>No questions found</h3>
+            <p>Start by creating your first self-assessment question.</p>
+            <a href="{{ route('admin.assessment-questions.create') }}" class="btn-modern btn-modern-primary"><i class="fas fa-plus"></i> Create Question</a>
+        </div>
+        @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.querySelectorAll('#filterForm select, #filterForm input').forEach(el => {
+        el.addEventListener('change', () => document.getElementById('filterForm').submit());
+    });
+</script>
+@endpush
 @endsection

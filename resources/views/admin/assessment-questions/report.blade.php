@@ -3,81 +3,92 @@
 @section('title', 'Assessment Reports')
 
 @section('content')
-<div class="page-header">
-    <div class="row align-items-center">
-        <div class="col">
-            <h3 class="page-title">Assessment Reports</h3>
-            <p class="page-subtitle">Student performance on self-assessment questions</p>
+<div class="modern-page">
+    <div class="modern-page-header">
+        <div class="modern-page-header-left">
+            <nav class="modern-breadcrumb"><ol>
+                <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
+                <li><a href="{{ route('admin.assessment-questions.index') }}">Self-Assessment</a></li>
+                <li class="active">Report</li>
+            </ol></nav>
+            <h1 class="modern-page-title">Assessment Reports</h1>
+            <p class="modern-page-subtitle">Student performance on self-assessment questions</p>
         </div>
-        <div class="col-auto">
-            <a href="{{ route('admin.assessment-questions.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Back to Questions
-            </a>
+        <div class="modern-page-header-right">
+            <a href="{{ route('admin.assessment-questions.index') }}" class="btn-modern btn-modern-ghost"><i class="fas fa-arrow-left"></i> Back to Questions</a>
         </div>
     </div>
-</div>
 
-{{-- Summary Stats --}}
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h2 class="text-primary">{{ $totalQuestions }}</h2>
-                <div class="text-muted">Total Questions</div>
+    {{-- Summary Stats --}}
+    <div class="modern-stats-row">
+        <div class="modern-stat-card">
+            <div class="modern-stat-icon modern-stat-icon-blue"><i class="fas fa-question-circle"></i></div>
+            <div class="modern-stat-info">
+                <span class="modern-stat-value">{{ $totalQuestions }}</span>
+                <span class="modern-stat-label">Total Questions</span>
+            </div>
+        </div>
+        <div class="modern-stat-card">
+            <div class="modern-stat-icon modern-stat-icon-purple"><i class="fas fa-pen"></i></div>
+            <div class="modern-stat-info">
+                <span class="modern-stat-value">{{ $totalAnswers }}</span>
+                <span class="modern-stat-label">Total Attempts</span>
+            </div>
+        </div>
+        <div class="modern-stat-card">
+            <div class="modern-stat-icon modern-stat-icon-green"><i class="fas fa-check-circle"></i></div>
+            <div class="modern-stat-info">
+                <span class="modern-stat-value">{{ $totalAnswers > 0 ? round(($correctAnswers / $totalAnswers) * 100, 1) : 0 }}%</span>
+                <span class="modern-stat-label">Overall Accuracy</span>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h2 class="text-info">{{ $totalAnswers }}</h2>
-                <div class="text-muted">Total Attempts</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h2 class="text-success">{{ $totalAnswers > 0 ? round(($correctAnswers / $totalAnswers) * 100, 1) : 0 }}%</h2>
-                <div class="text-muted">Overall Accuracy</div>
-            </div>
-        </div>
-    </div>
-</div>
 
-{{-- Filters --}}
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3">
-            <div class="col-md-4">
-                <select name="subject_id" class="form-select form-select-sm">
-                    <option value="">All Subjects</option>
-                    @foreach($subjects as $subject)
-                    <option value="{{ $subject->id }}" {{ request('subject_id') == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
-                    @endforeach
-                </select>
+    {{-- Filters --}}
+    <div class="modern-card" style="margin-bottom:1.25rem">
+        <div class="modern-card-header" style="padding:0.85rem 1.25rem">
+            <div class="modern-card-header-left">
+                <i class="fas fa-filter" style="color:var(--primary)"></i>
+                <span class="modern-card-title" style="font-size:0.95rem">Filters</span>
             </div>
-            <div class="col-md-4">
-                <select name="class_id" class="form-select form-select-sm">
-                    <option value="">All Classes</option>
-                    @foreach($classes as $class)
-                    <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-filter me-1"></i> Filter</button>
-            </div>
-        </form>
+        </div>
+        <div style="padding:1rem 1.25rem">
+            <form method="GET" id="filterForm">
+                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem">
+                    <div class="modern-form-group">
+                        <select name="subject_id" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="">All Subjects</option>
+                            @foreach($subjects as $subject)
+                            <option value="{{ $subject->id }}" {{ request('subject_id') == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <select name="class_id" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="">All Classes</option>
+                            @foreach($classes as $class)
+                            <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-{{-- Answers Table --}}
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+    {{-- Answers Table --}}
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <div class="modern-card-header-left">
+                <span class="modern-card-title">Student Answers</span>
+                <span class="modern-badge modern-badge-light">{{ $answers->total() }}</span>
+            </div>
+        </div>
+
+        @if($answers->count() > 0)
+        <div class="modern-table-wrapper">
+            <table class="modern-table">
+                <thead>
                     <tr>
                         <th>Student</th>
                         <th>Class</th>
@@ -91,49 +102,64 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($answers as $answer)
-                    <tr class="{{ $answer->is_correct ? '' : 'table-danger' }}">
+                    @foreach($answers as $answer)
+                    <tr style="{{ !$answer->is_correct ? 'background:#fef2f2' : '' }}">
                         <td>{{ $answer->student->full_name ?? '-' }}</td>
                         <td>{{ $answer->student->classroom->name ?? '-' }}</td>
                         <td>
-                            <a href="{{ route('admin.assessment-questions.show', $answer->assessment_question_id) }}" class="text-decoration-none">
+                            <a href="{{ route('admin.assessment-questions.show', $answer->assessment_question_id) }}" style="color:inherit;text-decoration:none">
                                 {{ Str::limit(strip_tags($answer->question->question_text ?? ''), 50) }}
                             </a>
                         </td>
                         <td>{{ $answer->question->subject->name ?? '-' }}</td>
-                        <td>
+                        <td class="td-center">
                             @if(($answer->question->difficulty ?? '') === 'easy')
-                                <span class="badge bg-success">Easy</span>
+                            <span class="modern-badge modern-badge-success">Easy</span>
                             @elseif(($answer->question->difficulty ?? '') === 'hard')
-                                <span class="badge bg-danger">Hard</span>
+                            <span class="modern-badge modern-badge-danger">Hard</span>
                             @else
-                                <span class="badge bg-warning text-dark">Medium</span>
+                            <span class="modern-badge modern-badge-warning">Medium</span>
                             @endif
                         </td>
                         <td>
                             @if($answer->option)
-                                <span class="badge bg-light text-dark">{{ $answer->option->option_label }}</span> {{ Str::limit($answer->option->option_text, 30) }}
+                            <span class="modern-badge modern-badge-light">{{ $answer->option->option_label }}</span> {{ Str::limit($answer->option->option_text, 30) }}
                             @else
-                                {{ Str::limit($answer->student_answer, 40) }}
+                            {{ Str::limit($answer->student_answer, 40) }}
                             @endif
                         </td>
-                        <td>
+                        <td class="td-center">
                             @if($answer->is_correct)
-                                <span class="badge bg-success"><i class="fas fa-check"></i> Correct</span>
+                            <span class="modern-badge modern-badge-success"><i class="fas fa-check"></i> Correct</span>
                             @else
-                                <span class="badge bg-danger"><i class="fas fa-times"></i> Wrong</span>
+                            <span class="modern-badge modern-badge-danger"><i class="fas fa-times"></i> Wrong</span>
                             @endif
                         </td>
-                        <td>{{ $answer->attempt_number }}</td>
+                        <td class="td-center">{{ $answer->attempt_number }}</td>
                         <td>{{ $answer->answered_at ? $answer->answered_at->format('M d, Y H:i') : '-' }}</td>
                     </tr>
-                    @empty
-                    <tr><td colspan="9" class="text-center py-4 text-muted">No answers recorded yet.</td></tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
+        <div class="modern-pagination-wrapper">
+            {{ $answers->withQueryString()->links() }}
+        </div>
+        @else
+        <div class="modern-empty-state">
+            <div class="modern-empty-icon"><i class="fas fa-chart-bar"></i></div>
+            <h3>No answers recorded yet</h3>
+            <p>Students need to answer assessment questions first.</p>
+        </div>
+        @endif
     </div>
-    <div class="card-footer">{{ $answers->withQueryString()->links() }}</div>
 </div>
+
+@push('scripts')
+<script>
+    document.querySelectorAll('#filterForm select').forEach(el => {
+        el.addEventListener('change', () => document.getElementById('filterForm').submit());
+    });
+</script>
+@endpush
 @endsection
