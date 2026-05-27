@@ -14,6 +14,12 @@
             <p class="modern-page-subtitle">Manage lesson plans &amp; follow-ups</p>
         </div>
         <div class="modern-page-header-right">
+            <a href="{{ route('admin.lesson-plans.print-yearly', request()->query()) }}" class="btn-modern btn-modern-outline" target="_blank" title="Print yearly overview">
+                <i class="fas fa-print"></i> Yearly
+            </a>
+            <a href="{{ route('admin.lesson-plans.print-weekly', request()->query()) }}" class="btn-modern btn-modern-outline" target="_blank" title="Print weekly detail">
+                <i class="fas fa-calendar-week"></i> Weekly
+            </a>
             <a href="{{ route('admin.lesson-plans.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-plus"></i> New Plan
             </a>

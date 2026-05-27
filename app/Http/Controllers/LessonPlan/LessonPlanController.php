@@ -7,6 +7,7 @@ use App\Models\AcademicYear;
 use App\Models\ClassRoom;
 use App\Models\LessonPlan;
 use App\Models\Section;
+use App\Models\Setting;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
@@ -379,5 +380,130 @@ class LessonPlanController extends Controller
 
         $lessonPlan->delete();
         return back()->with('success', 'Lesson plan deleted.');
+    }
+
+    /**
+     * Print yearly lesson plan overview — shows all weeks for a teacher/subject/class/term.
+     */
+    public function printYearly(Request $request)
+    {
+        $user = Auth::user();
+        $isTeacher = $user->role === 'teacher';
+
+        $teacherModel = null;
+        if ($isTeacher) {
+            $teacherModel = Teacher::where('user_id', $user->id)
+                ->orWhere('email', $user->email)->first();
+        }
+
+        // Required filters for yearly view
+        $academicYearId = $request->input('academic_year_id');
+        $termId = $request->input('term_id');
+        $teacherId = $isTeacher ? $teacherModel?->id : $request->input('teacher_id');
+        $subjectId = $request->input('subject_id');
+        $classId = $request->input('class_id');
+        $sectionId = $request->input('section_id');
+
+        // Query lesson plans grouped by week
+        $query = LessonPlan::with(['subject', 'classRoom', 'section', 'academicYear', 'term', 'teacher', 'followUps'])
+            ->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))
+            ->when($termId, fn($q) => $q->where('term_id', $termId))
+            ->when($teacherId, fn($q) => $q->where('teacher_id', $teacherId))
+            ->when($subjectId, fn($q) => $q->where('subject_id', $subjectId))
+            ->when($classId, fn($q) => $q->where('class_id', $classId))
+            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
+            ->orderBy('week_number')
+            ->orderBy('lesson_date');
+
+        $lessonPlans = $query->get();
+
+        // Group by week number
+        $groupedPlans = $lessonPlans->groupBy('week_number')->sortKeys();
+
+        // School info
+        $schoolName = Setting::get('school_name', 'Redemption School');
+        $schoolLogo = Setting::get('school_logo');
+
+        // Get filter labels
+        $academicYear = $academicYearId ? AcademicYear::find($academicYearId) : null;
+        $term = $termId ? Term::find($termId) : null;
+        $teacher = $teacherId ? Teacher::find($teacherId) : null;
+        $subject = $subjectId ? Subject::find($subjectId) : null;
+        $classRoom = $classId ? ClassRoom::find($classId) : null;
+        $section = $sectionId ? Section::find($sectionId) : null;
+
+        return view('admin.lesson-plans.print-yearly', compact(
+            'lessonPlans', 'groupedPlans',
+            'schoolName', 'schoolLogo',
+            'academicYear', 'term', 'teacher', 'subject', 'classRoom', 'section',
+            'isTeacher'
+        ));
+    }
+
+    /**
+     * Print weekly lesson plan detail — shows a specific week's plan with full content.
+     */
+    public function printWeekly(Request $request)
+    {
+        $user = Auth::user();
+        $isTeacher = $user->role === 'teacher';
+
+        $teacherModel = null;
+        if ($isTeacher) {
+            $teacherModel = Teacher::where('user_id', $user->id)
+                ->orWhere('email', $user->email)->first();
+        }
+
+        $academicYearId = $request->input('academic_year_id');
+        $termId = $request->input('term_id');
+        $teacherId = $isTeacher ? $teacherModel?->id : $request->input('teacher_id');
+        $subjectId = $request->input('subject_id');
+        $classId = $request->input('class_id');
+        $sectionId = $request->input('section_id');
+        $weekNumber = $request->input('week_number');
+
+        // Query lesson plans for the specific week
+        $query = LessonPlan::with(['subject', 'classRoom', 'section', 'academicYear', 'term', 'teacher', 'followUps.followedUpBy'])
+            ->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))
+            ->when($termId, fn($q) => $q->where('term_id', $termId))
+            ->when($teacherId, fn($q) => $q->where('teacher_id', $teacherId))
+            ->when($subjectId, fn($q) => $q->where('subject_id', $subjectId))
+            ->when($classId, fn($q) => $q->where('class_id', $classId))
+            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
+            ->when($weekNumber, fn($q) => $q->where('week_number', $weekNumber))
+            ->orderBy('lesson_date');
+
+        $lessonPlans = $query->get();
+
+        // Get available weeks for the dropdown
+        $weeksQuery = LessonPlan::select('week_number')
+            ->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))
+            ->when($termId, fn($q) => $q->where('term_id', $termId))
+            ->when($teacherId, fn($q) => $q->where('teacher_id', $teacherId))
+            ->when($subjectId, fn($q) => $q->where('subject_id', $subjectId))
+            ->when($classId, fn($q) => $q->where('class_id', $classId))
+            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
+            ->distinct()
+            ->orderBy('week_number')
+            ->pluck('week_number');
+
+        // School info
+        $schoolName = Setting::get('school_name', 'Redemption School');
+        $schoolLogo = Setting::get('school_logo');
+
+        // Get filter labels
+        $academicYear = $academicYearId ? AcademicYear::find($academicYearId) : null;
+        $term = $termId ? Term::find($termId) : null;
+        $teacher = $teacherId ? Teacher::find($teacherId) : null;
+        $subject = $subjectId ? Subject::find($subjectId) : null;
+        $classRoom = $classId ? ClassRoom::find($classId) : null;
+        $section = $sectionId ? Section::find($sectionId) : null;
+
+        return view('admin.lesson-plans.print-weekly', compact(
+            'lessonPlans', 'weeksQuery', 'weekNumber',
+            'schoolName', 'schoolLogo',
+            'academicYear', 'term', 'teacher', 'subject', 'classRoom', 'section',
+            'isTeacher'
+        ));
     }
 }
