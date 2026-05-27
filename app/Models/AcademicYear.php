@@ -8,6 +8,16 @@ class AcademicYear extends Model
     use HasFactory;
     protected $fillable = ['name','start_date','end_date','is_current'];
     protected function casts(): array { return ['start_date'=>'date','end_date'=>'date','is_current'=>'boolean']; }
+
+    /**
+     * Get the currently active academic year.
+     * Uses the 'is_current' column (not 'is_active').
+     */
+    public static function getActive(): ?self
+    {
+        return static::where('is_current', true)->first();
+    }
+
     public function terms() { return $this->hasMany(Term::class); }
     public function classes() { return $this->hasMany(Classroom::class); }
     public function students() { return $this->hasMany(Student::class); }

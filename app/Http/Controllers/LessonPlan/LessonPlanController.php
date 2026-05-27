@@ -53,6 +53,9 @@ class LessonPlanController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
+        if ($request->filled('plan_type')) {
+            $query->where('plan_type', $request->plan_type);
+        }
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {

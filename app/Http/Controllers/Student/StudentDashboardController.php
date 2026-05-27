@@ -31,7 +31,7 @@ class StudentDashboardController extends Controller
         $student->load(['classroom', 'section', 'academicYear']);
 
         // Get active academic year and term
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
         $activeTerm = $activeAy ? Term::where('academic_year_id', $activeAy->id)->where('is_active', true)->first() : null;
 
         // Get latest marks for active term
@@ -69,7 +69,7 @@ class StudentDashboardController extends Controller
         $student = $this->getStudent();
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
         $selectedAy = $request->filled('academic_year_id') ? AcademicYear::find($request->academic_year_id) : $activeAy;
 
         $terms = $selectedAy ? Term::where('academic_year_id', $selectedAy->id)->orderBy('id')->get() : collect();
@@ -94,7 +94,7 @@ class StudentDashboardController extends Controller
         $student->load(['classroom', 'section']);
 
         // Get all terms with marks for trend analysis
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
         $terms = $activeAy ? Term::where('academic_year_id', $activeAy->id)->orderBy('id')->get() : collect();
 
         $termAverages = [];

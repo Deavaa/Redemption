@@ -60,7 +60,7 @@ class AssessmentQuestionController extends Controller
         $questions = $query->latest()->paginate(20);
 
         // Get subjects the teacher is assigned to
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
         $topics = AssessmentQuestion::when($teacher, fn($q) => $q->where('teacher_id', $teacher->id))
@@ -77,7 +77,7 @@ class AssessmentQuestionController extends Controller
     {
         $user = Auth::user();
         $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
 
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
@@ -119,7 +119,7 @@ class AssessmentQuestionController extends Controller
             'correct_tf' => 'required_if:question_type,true_false|in:true,false',
         ]);
 
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
 
         $question = AssessmentQuestion::create([
             'teacher_id' => $teacher?->id,
@@ -214,7 +214,7 @@ class AssessmentQuestionController extends Controller
         }
 
         $assessment_question->load('options');
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
 
@@ -338,7 +338,7 @@ class AssessmentQuestionController extends Controller
     {
         $user = Auth::user();
         $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
 
@@ -365,7 +365,7 @@ class AssessmentQuestionController extends Controller
             'questions.*.marks' => 'nullable|integer|min:1|max:100',
         ]);
 
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
         $count = 0;
 
         foreach ($validated['questions'] as $qData) {
@@ -407,7 +407,7 @@ class AssessmentQuestionController extends Controller
     {
         $user = Auth::user();
         $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
 
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);

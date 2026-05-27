@@ -41,7 +41,7 @@
 
 {{-- Subject Performance Breakdown for Active Term --}}
 @php
-    $activeAy = \App\Models\AcademicYear::where('is_active', true)->first();
+    $activeAy = \App\Models\AcademicYear::where('is_current', true)->first();
     $activeTerm = $activeAy ? \App\Models\Term::where('academic_year_id', $activeAy->id)->where('is_active', true)->first() : null;
     $currentMarks = collect();
     if ($activeAy && $activeTerm) {

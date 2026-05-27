@@ -36,7 +36,7 @@ class StudentAssessmentController extends Controller
             return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
         }
 
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
 
         // Get subjects assigned to student's class+section
         $subjectIds = TeacherAssignment::where('class_id', $student->class_id)
@@ -278,7 +278,7 @@ class StudentAssessmentController extends Controller
         $overallStats = AssessmentAnswer::getStudentStats($student->id);
 
         // Per-subject stats
-        $activeAy = AcademicYear::where('is_active', true)->first();
+        $activeAy = AcademicYear::where('is_current', true)->first();
         $subjectIds = TeacherAssignment::where('class_id', $student->class_id)
             ->where('academic_year_id', $activeAy?->id)
             ->pluck('subject_id')

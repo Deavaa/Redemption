@@ -117,6 +117,14 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="modern-form-group">
+                        <select name="plan_type" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="">All Plan Types</option>
+                            <option value="daily" {{ request('plan_type') === 'daily' ? 'selected' : '' }}>Daily</option>
+                            <option value="weekly" {{ request('plan_type') === 'weekly' ? 'selected' : '' }}>Weekly</option>
+                            <option value="yearly" {{ request('plan_type') === 'yearly' ? 'selected' : '' }}>Yearly</option>
+                        </select>
+                    </div>
                 </div>
             </form>
         </div>
@@ -141,6 +149,7 @@
                         @unless($isTeacher)<th>Teacher</th>@endunless
                         <th>Subject</th>
                         <th>Class</th>
+                        <th>Type</th>
                         <th>Week</th>
                         <th>Date</th>
                         <th class="th-center">Status</th>
@@ -163,6 +172,11 @@
                         @endunless
                         <td>{{ $plan->subject?->name ?? '-' }}</td>
                         <td>{{ $plan->classRoom?->name ?? '-' }}{{ $plan->section ? ' / '.$plan->section->name : '' }}</td>
+                        <td class="td-center">
+                            <span class="modern-badge {{ $plan->plan_type === 'yearly' ? 'modern-badge-success' : ($plan->plan_type === 'weekly' ? 'modern-badge-info' : 'modern-badge-light') }}">
+                                {{ ucfirst($plan->plan_type ?? 'daily') }}
+                            </span>
+                        </td>
                         <td class="td-center">W{{ $plan->week_number }}</td>
                         <td>{{ $plan->lesson_date?->format('M d') ?? '-' }}</td>
                         <td class="td-center">
@@ -186,6 +200,15 @@
                                 @if(!$isTeacher && in_array($plan->status, ['submitted','reviewed']))
                                 <a href="{{ route('admin.lesson-plans.show', $plan->id) }}#review" class="modern-btn-icon" style="background:#fef3c7;color:#92400e" title="Review"><i class="fas fa-clipboard-check"></i></a>
                                 @endif
+                                <a href="{{ route('admin.lesson-plans.print-weekly', [
+                                    'academic_year_id' => $plan->academic_year_id,
+                                    'term_id' => $plan->term_id,
+                                    'teacher_id' => $plan->teacher_id,
+                                    'subject_id' => $plan->subject_id,
+                                    'class_id' => $plan->class_id,
+                                    'section_id' => $plan->section_id,
+                                    'week_number' => $plan->week_number,
+                                ]) }}" class="modern-btn-icon" style="background:#eef2ff;color:#4361ee" title="Print Weekly" target="_blank"><i class="fas fa-print"></i></a>
                             </div>
                         </td>
                     </tr>

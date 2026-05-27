@@ -20,6 +20,38 @@
             @if(auth()->user()->role !== 'teacher' || in_array($lessonPlan->status, ['draft','revision']))
             <a href="{{ route('admin.lesson-plans.edit', $lessonPlan->id) }}" class="btn-modern btn-modern-outline"><i class="fas fa-edit"></i> Edit</a>
             @endif
+            <div class="dropdown" style="display:inline-block">
+                <button class="btn-modern btn-modern-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('admin.lesson-plans.print-yearly', [
+                            'academic_year_id' => $lessonPlan->academic_year_id,
+                            'term_id' => $lessonPlan->term_id,
+                            'teacher_id' => $lessonPlan->teacher_id,
+                            'subject_id' => $lessonPlan->subject_id,
+                            'class_id' => $lessonPlan->class_id,
+                            'section_id' => $lessonPlan->section_id,
+                        ]) }}" target="_blank">
+                            <i class="fas fa-calendar-alt me-1" style="color:#1b5e20"></i> Print Yearly Overview
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('admin.lesson-plans.print-weekly', [
+                            'academic_year_id' => $lessonPlan->academic_year_id,
+                            'term_id' => $lessonPlan->term_id,
+                            'teacher_id' => $lessonPlan->teacher_id,
+                            'subject_id' => $lessonPlan->subject_id,
+                            'class_id' => $lessonPlan->class_id,
+                            'section_id' => $lessonPlan->section_id,
+                            'week_number' => $lessonPlan->week_number,
+                        ]) }}" target="_blank">
+                            <i class="fas fa-calendar-week me-1" style="color:#4361ee"></i> Print Weekly Detail
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <a href="{{ route('admin.lesson-plans.index') }}" class="btn-modern btn-modern-ghost"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
     </div>

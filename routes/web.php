@@ -311,9 +311,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('teacher-assignments/api/subjects', [TeacherAssignmentController::class, 'apiSubjects'])->name('teacher-assignments.api.subjects');
 
     // ── Lesson Plans ─────────────────────────────────────────
-    Route::resource('lesson-plans', LessonPlanController::class)->middleware('permission:lesson_plans.view');
+    // Print routes MUST be before resource to avoid {lesson_plan} matching "print"
     Route::get('lesson-plans/print/yearly', [LessonPlanController::class, 'printYearly'])->name('lesson-plans.print-yearly')->middleware('permission:lesson_plans.view');
     Route::get('lesson-plans/print/weekly', [LessonPlanController::class, 'printWeekly'])->name('lesson-plans.print-weekly')->middleware('permission:lesson_plans.view');
+    Route::resource('lesson-plans', LessonPlanController::class)->middleware('permission:lesson_plans.view');
     Route::post('lesson-plans/{lessonPlan}/review', [LessonPlanController::class, 'review'])->name('lesson-plans.review')->middleware('permission:lesson_plans.review');
     Route::post('lesson-plans/{lessonPlan}/department-review', [LessonPlanController::class, 'departmentReview'])->name('lesson-plans.department-review')->middleware('permission:lesson_plans.review');
     Route::post('lesson-plans/{lessonPlan}/principal-review', [LessonPlanController::class, 'principalReview'])->name('lesson-plans.principal-review')->middleware('permission:lesson_plans.review');
