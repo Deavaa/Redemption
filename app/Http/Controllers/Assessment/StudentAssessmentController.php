@@ -38,13 +38,9 @@ class StudentAssessmentController extends Controller
 
         $activeAy = AcademicYear::where('is_current', true)->first();
 
-        // Get subjects assigned to student's class+section
+        // Questions are class-level (null section_id = applies to all sections)
         $subjectIds = TeacherAssignment::where('class_id', $student->class_id)
             ->where('academic_year_id', $activeAy?->id)
-            ->when($student->section_id, fn($q) => $q->where(function ($query) use ($student) {
-                $query->where('section_id', $student->section_id)
-                      ->orWhereNull('section_id');
-            }))
             ->pluck('subject_id')
             ->unique();
 
@@ -53,13 +49,10 @@ class StudentAssessmentController extends Controller
         // Question counts per subject
         $subjectStats = [];
         foreach ($subjects as $subject) {
+            // Questions are class-level — all students in the class see them
             $totalQuestions = AssessmentQuestion::active()
                 ->where('subject_id', $subject->id)
                 ->where('class_id', $student->class_id)
-                ->where(function ($q) use ($student) {
-                    $q->whereNull('section_id')
-                      ->orWhere('section_id', $student->section_id);
-                })
                 ->count();
 
             $answeredQuestions = AssessmentAnswer::where('student_id', $student->id)
@@ -110,11 +103,7 @@ class StudentAssessmentController extends Controller
         $query = AssessmentQuestion::active()
             ->with(['options', 'teacher'])
             ->where('subject_id', $subjectId)
-            ->where('class_id', $student->class_id)
-            ->where(function ($q) use ($student) {
-                $q->whereNull('section_id')
-                  ->orWhere('section_id', $student->section_id);
-            });
+            ->where('class_id', $student->class_id);
 
         // Filter by difficulty
         if ($request->filled('difficulty')) {

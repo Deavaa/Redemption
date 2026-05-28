@@ -10,10 +10,13 @@ class AssessmentQuestion extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'teacher_id', 'subject_id', 'class_id', 'section_id',
-        'academic_year_id', 'branch_id', 'title', 'question_text',
+        'teacher_id', 'subject_id', 'class_id',
+        'academic_year_id', 'title', 'question_text',
         'question_type', 'hint', 'explanation', 'worked_out_solution',
         'difficulty', 'topic', 'marks', 'is_active',
+        // section_id and branch_id are kept in DB for schema compat but always NULL
+        // Questions are class-level — apply to ALL branches and ALL sections
+        'section_id', 'branch_id',
     ];
 
     protected $casts = [
@@ -71,13 +74,8 @@ class AssessmentQuestion extends Model
 
     public function scopeForClass($query, $classId, $sectionId = null)
     {
+        // Questions are class-level: section_id is always null (applies to all sections)
         $query->where('class_id', $classId);
-        if ($sectionId) {
-            $query->where(function ($q) use ($sectionId) {
-                $q->where('section_id', $sectionId)
-                  ->orWhereNull('section_id');
-            });
-        }
         return $query;
     }
 

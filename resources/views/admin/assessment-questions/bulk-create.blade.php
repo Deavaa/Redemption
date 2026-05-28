@@ -66,7 +66,6 @@
                     <li><strong>question_type</strong> — <code>multiple_choice</code>, <code>true_false</code>, or <code>short_answer</code></li>
                     <li><strong>subject_name</strong> — Must match an existing subject name in the system</li>
                     <li><strong>class_name</strong> — Must match an existing class name (e.g., "Grade 7")</li>
-                    <li><strong>section_name</strong> — Optional. Leave blank for "All Sections"</li>
                     <li><strong>difficulty</strong> — <code>easy</code>, <code>medium</code>, or <code>hard</code></li>
                     <li><strong>marks</strong> — Number (1-100), defaults to 1</li>
                     <li><strong>option_A</strong> to <strong>option_D</strong> — For multiple choice, at least A and B are required</li>
@@ -118,10 +117,11 @@
                         </select>
                     </div>
                     <div class="modern-form-group">
-                        <label class="modern-form-label">Section</label>
-                        <select name="section_id" id="sectionSelect" class="modern-input modern-select" style="padding-left:0.75rem">
-                            <option value="">All Sections</option>
-                        </select>
+                        <label class="modern-form-label">Applies To</label>
+                        <div class="modern-input" style="padding-left:0.75rem;display:flex;align-items:center;gap:6px;color:#059669;font-weight:500;background:#ecfdf5;border:1px solid #a7f3d0">
+                            <i class="fas fa-globe"></i> All Branches &amp; Sections
+                        </div>
+                        <div style="font-size:0.72rem;color:#6b7280;margin-top:3px">Questions apply to all students in this class</div>
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Difficulty</label>
@@ -221,28 +221,6 @@
 @push('scripts')
 <script>
 $(function() {
-    // ── Pre-loaded sections data (no AJAX needed) ──────────
-    var allSections = @json($allSections ?? []);
-
-    function updateSectionDropdown(classId) {
-        var html = '<option value="">All Sections</option>';
-        if (classId) {
-            var filtered = allSections.filter(function(s) { return s.class_id == classId; });
-            filtered.forEach(function(s) {
-                html += '<option value="' + s.id + '">' + s.name + '</option>';
-            });
-        }
-        $('#sectionSelect').html(html);
-    }
-
-    // Initialize section dropdown on page load
-    updateSectionDropdown($('#classSelect').val());
-
-    // Update section dropdown when class changes
-    $('#classSelect').on('change', function() {
-        updateSectionDropdown($(this).val());
-    });
-
     // ── Manual question blocks ──────────────────────────────
     var qIdx = 1;
     $('#addQuestionBtn').on('click', function() {

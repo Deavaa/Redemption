@@ -329,8 +329,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('exam-questions/{exam_question}/request-revision', [ExamQuestionController::class, 'requestRevision'])->name('exam-questions.request-revision')->middleware('permission:exams.manage');
 
     // ── Self-Assessment Questions (Teacher creates, Student answers) ──
-    // API & custom routes MUST be before resource to avoid {assessment_question} conflicts
-    Route::get('assessment-questions/api/sections', [AssessmentQuestionController::class, 'apiSections'])->name('assessment-questions.api-sections');
+    // Questions are class-level: apply to ALL branches and ALL sections within the class
+    // Custom routes MUST be before resource to avoid {assessment_question} conflicts
     Route::get('assessment-questions/bulk/create', [AssessmentQuestionController::class, 'bulkCreate'])->name('assessment-questions.bulk-create')->middleware('permission:lesson_plans.create');
     Route::post('assessment-questions/bulk', [AssessmentQuestionController::class, 'bulkStore'])->name('assessment-questions.bulk-store')->middleware('permission:lesson_plans.create');
     Route::post('assessment-questions/bulk/import', [AssessmentQuestionController::class, 'bulkImport'])->name('assessment-questions.bulk-import')->middleware('permission:lesson_plans.create');

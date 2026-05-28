@@ -8,7 +8,6 @@ use App\Models\AssessmentOption;
 use App\Models\AssessmentAnswer;
 use App\Models\Subject;
 use App\Models\ClassRoom;
-use App\Models\Section;
 use App\Models\TeacherAssignment;
 use App\Models\AcademicYear;
 use Illuminate\Http\Request;
@@ -23,7 +22,7 @@ class AssessmentQuestionController extends Controller
         $user = Auth::user();
         $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
 
-        $query = AssessmentQuestion::with(['subject', 'classroom', 'section', 'options', 'answers']);
+        $query = AssessmentQuestion::with(['subject', 'classroom', 'options', 'answers']);
 
         // Non-admin: only see own questions
         if (!in_array($user->role, ['admin', 'super_admin', 'branch_principal', 'general_manager'])) {
@@ -82,11 +81,7 @@ class AssessmentQuestionController extends Controller
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
 
-        // Pre-load ALL sections for the teacher's classes (for client-side dropdown)
-        $classIds = $classes->pluck('id');
-        $allSections = Section::whereIn('class_id', $classIds)->orderBy('name')->get(['id', 'class_id', 'name']);
-
-        return view('admin.assessment-questions.create', compact('subjects', 'classes', 'teacher', 'activeAy', 'allSections'));
+        return view('admin.assessment-questions.create', compact('subjects', 'classes', 'teacher', 'activeAy'));
     }
 
     // ── Teacher: Store Question ─────────────────────────────
@@ -106,7 +101,6 @@ class AssessmentQuestionController extends Controller
             'question_type' => 'required|in:multiple_choice,true_false,short_answer',
             'subject_id' => 'required|exists:subjects,id',
             'class_id' => 'required|exists:classes,id',
-            'section_id' => 'nullable|exists:sections,id',
             'difficulty' => 'required|in:easy,medium,hard',
             'topic' => 'nullable|string|max:255',
             'marks' => 'integer|min:1|max:100',
@@ -125,13 +119,14 @@ class AssessmentQuestionController extends Controller
 
         $activeAy = AcademicYear::where('is_current', true)->first();
 
+        // Questions are class-level — apply to ALL branches and ALL sections
         $question = AssessmentQuestion::create([
             'teacher_id' => $teacher?->id,
             'subject_id' => $validated['subject_id'],
             'class_id' => $validated['class_id'],
-            'section_id' => $validated['section_id'] ?? null,
+            'section_id' => null, // null = applies to all sections
             'academic_year_id' => $activeAy?->id,
-            'branch_id' => $teacher?->user?->branch_id ?? $user->branch_id,
+            'branch_id' => null, // null = applies to all branches
             'title' => $validated['title'] ?? null,
             'question_text' => $validated['question_text'],
             'question_type' => $validated['question_type'],
@@ -180,7 +175,7 @@ class AssessmentQuestionController extends Controller
 
     public function show(AssessmentQuestion $assessment_question)
     {
-        $assessment_question->load(['subject', 'classroom', 'section', 'options', 'teacher', 'answers.student']);
+        $assessment_question->load(['subject', 'classroom', 'options', 'teacher', 'answers.student']);
 
         $answerStats = $assessment_question->getStudentAnswerStats();
 
@@ -222,12 +217,8 @@ class AssessmentQuestionController extends Controller
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
 
-        // Pre-load ALL sections for the teacher's classes (for client-side dropdown)
-        $classIds = $classes->pluck('id');
-        $allSections = Section::whereIn('class_id', $classIds)->orderBy('name')->get(['id', 'class_id', 'name']);
-
         return view('admin.assessment-questions.edit', compact(
-            'assessment_question', 'subjects', 'classes', 'teacher', 'activeAy', 'allSections'
+            'assessment_question', 'subjects', 'classes', 'teacher', 'activeAy'
         ));
     }
 
@@ -248,7 +239,6 @@ class AssessmentQuestionController extends Controller
             'question_type' => 'required|in:multiple_choice,true_false,short_answer',
             'subject_id' => 'required|exists:subjects,id',
             'class_id' => 'required|exists:classes,id',
-            'section_id' => 'nullable|exists:sections,id',
             'difficulty' => 'required|in:easy,medium,hard',
             'topic' => 'nullable|string|max:255',
             'marks' => 'integer|min:1|max:100',
@@ -270,7 +260,8 @@ class AssessmentQuestionController extends Controller
             'question_type' => $validated['question_type'],
             'subject_id' => $validated['subject_id'],
             'class_id' => $validated['class_id'],
-            'section_id' => $validated['section_id'] ?? null,
+            'section_id' => null, // null = applies to all sections
+            'branch_id' => null, // null = applies to all branches
             'difficulty' => $validated['difficulty'],
             'topic' => $validated['topic'] ?? null,
             'marks' => $validated['marks'] ?? 1,
@@ -350,11 +341,7 @@ class AssessmentQuestionController extends Controller
         $subjects = $this->getTeacherSubjects($teacher, $activeAy);
         $classes = $this->getTeacherClasses($teacher, $activeAy);
 
-        // Pre-load ALL sections for the teacher's classes (for client-side dropdown)
-        $classIds = $classes->pluck('id');
-        $allSections = Section::whereIn('class_id', $classIds)->orderBy('name')->get(['id', 'class_id', 'name']);
-
-        return view('admin.assessment-questions.bulk-create', compact('subjects', 'classes', 'teacher', 'activeAy', 'allSections'));
+        return view('admin.assessment-questions.bulk-create', compact('subjects', 'classes', 'teacher', 'activeAy'));
     }
 
     public function bulkStore(Request $request)
@@ -365,7 +352,6 @@ class AssessmentQuestionController extends Controller
         $validated = $request->validate([
             'subject_id' => 'required|exists:subjects,id',
             'class_id' => 'required|exists:classes,id',
-            'section_id' => 'nullable|exists:sections,id',
             'difficulty' => 'required|in:easy,medium,hard',
             'topic' => 'nullable|string|max:255',
             'questions' => 'required|array|min:1',
@@ -385,9 +371,9 @@ class AssessmentQuestionController extends Controller
                 'teacher_id' => $teacher?->id,
                 'subject_id' => $validated['subject_id'],
                 'class_id' => $validated['class_id'],
-                'section_id' => $validated['section_id'] ?? null,
+                'section_id' => null, // null = applies to all sections
                 'academic_year_id' => $activeAy?->id,
-                'branch_id' => $teacher?->user?->branch_id ?? $user->branch_id,
+                'branch_id' => null, // null = applies to all branches
                 'question_text' => $qData['question_text'],
                 'question_type' => $qData['question_type'],
                 'hint' => $qData['hint'] ?? null,
@@ -405,22 +391,6 @@ class AssessmentQuestionController extends Controller
             ->with('success', "{$count} questions created successfully.");
     }
 
-    // ── API: Get sections for a class ──────────────────────
-
-    public function apiSections(Request $request)
-    {
-        $classId = $request->query('class_id');
-        if (!$classId) {
-            return response()->json([]);
-        }
-
-        $sections = Section::where('class_id', $classId)
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        return response()->json($sections);
-    }
-
     // ── Download Excel template for bulk import ──────────────
 
     public function downloadTemplate()
@@ -433,13 +403,12 @@ class AssessmentQuestionController extends Controller
         $callback = function () {
             $file = fopen('php://output', 'w');
 
-            // Header row
+            // Header row (questions are class-level: apply to all branches & sections)
             fputcsv($file, [
                 'question_text',
                 'question_type',
                 'subject_name',
                 'class_name',
-                'section_name',
                 'difficulty',
                 'marks',
                 'topic',
@@ -460,7 +429,6 @@ class AssessmentQuestionController extends Controller
                 'multiple_choice',
                 'Geography',
                 'Grade 7',
-                'Section A',
                 'easy',
                 '1',
                 'Chapter 1 - Europe',
@@ -480,7 +448,6 @@ class AssessmentQuestionController extends Controller
                 'true_false',
                 'Physics',
                 'Grade 8',
-                '',
                 'easy',
                 '1',
                 'Chapter 2 - Heat',
@@ -500,7 +467,6 @@ class AssessmentQuestionController extends Controller
                 'short_answer',
                 'Biology',
                 'Grade 9',
-                'Section B',
                 'medium',
                 '2',
                 'Chapter 4 - Plant Biology',
@@ -618,19 +584,34 @@ class AssessmentQuestionController extends Controller
         $questionType = trim($row[1] ?? 'multiple_choice');
         $subjectName  = trim($row[2] ?? '');
         $className    = trim($row[3] ?? '');
-        $sectionName  = trim($row[4] ?? '');
-        $difficulty   = trim($row[5] ?? 'medium');
-        $marks        = intval($row[6] ?? 1);
-        $topic        = trim($row[7] ?? '');
-        $title        = trim($row[8] ?? '');
-        $hint         = trim($row[9] ?? '');
-        $optionA      = trim($row[10] ?? '');
-        $optionB      = trim($row[11] ?? '');
-        $optionC      = trim($row[12] ?? '');
-        $optionD      = trim($row[13] ?? '');
-        $correctOption = strtoupper(trim($row[14] ?? ''));
-        $explanation  = trim($row[15] ?? '');
-        $workedOutSolution = trim($row[16] ?? '');
+        // Column 4 (section_name) is no longer used — questions are class-level
+        $difficulty   = trim($row[4] ?? 'medium');
+        if (empty($difficulty) || !in_array($difficulty, ['easy', 'medium', 'hard'])) {
+            // If column 4 looks like a difficulty value, it was an old-format row
+            // where section_name was column 4 and difficulty was column 5
+            // Try reading from column 5 instead
+            $possibleDifficulty = trim($row[5] ?? '');
+            if (in_array($possibleDifficulty, ['easy', 'medium', 'hard'])) {
+                $difficulty = $possibleDifficulty;
+                $colOffset = 1; // old format has extra column
+            } else {
+                $difficulty = 'medium';
+                $colOffset = 0;
+            }
+        } else {
+            $colOffset = 0; // new format (no section_name column)
+        }
+        $marks        = intval($row[5 + $colOffset] ?? 1);
+        $topic        = trim($row[6 + $colOffset] ?? '');
+        $title        = trim($row[7 + $colOffset] ?? '');
+        $hint         = trim($row[8 + $colOffset] ?? '');
+        $optionA      = trim($row[9 + $colOffset] ?? '');
+        $optionB      = trim($row[10 + $colOffset] ?? '');
+        $optionC      = trim($row[11 + $colOffset] ?? '');
+        $optionD      = trim($row[12 + $colOffset] ?? '');
+        $correctOption = strtoupper(trim($row[13 + $colOffset] ?? ''));
+        $explanation  = trim($row[14 + $colOffset] ?? '');
+        $workedOutSolution = trim($row[15 + $colOffset] ?? '');
 
         // Validate required fields
         if (empty($questionText)) {
@@ -676,23 +657,15 @@ class AssessmentQuestionController extends Controller
             }
         }
 
-        // Resolve section (optional)
-        $sectionId = null;
-        if (!empty($sectionName)) {
-            $section = Section::where('class_id', $class->id)->where('name', $sectionName)->first();
-            if ($section) {
-                $sectionId = $section->id;
-            }
-        }
-
+        // Questions are class-level — apply to ALL branches and ALL sections
         // Create the question
         $question = AssessmentQuestion::create([
             'teacher_id' => $teacher?->id,
             'subject_id' => $subject->id,
             'class_id' => $class->id,
-            'section_id' => $sectionId,
+            'section_id' => null, // null = applies to all sections
             'academic_year_id' => $activeAy?->id,
-            'branch_id' => $teacher?->user?->branch_id ?? $user->branch_id,
+            'branch_id' => null, // null = applies to all branches
             'title' => $title ?: null,
             'question_text' => $questionText,
             'question_type' => $questionType,
@@ -792,33 +765,50 @@ class AssessmentQuestionController extends Controller
 
     private function getTeacherSubjects($teacher, $activeAy)
     {
-        if (!$teacher || !$activeAy) {
+        // Admin/super_admin always sees all subjects
+        $user = Auth::user();
+        if ($user && in_array($user->role, ['admin', 'super_admin', 'branch_principal', 'general_manager'])) {
             return Subject::orderBy('name')->get();
         }
 
-        // Primary lookup: teacher_id references teachers.id
-        $subjectIds = TeacherAssignment::where('teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeAy->id)
-            ->pluck('subject_id')
-            ->unique();
-
-        // Fallback: if no assignments found via teacher->id, try via user_id
-        if ($subjectIds->isEmpty() && $teacher->user_id) {
-            $subjectIds = TeacherAssignment::where('teacher_id', $teacher->user_id)
-                ->where('academic_year_id', $activeAy->id)
-                ->pluck('subject_id')
-                ->unique();
+        if (!$teacher) {
+            return Subject::orderBy('name')->get();
         }
 
-        // Final fallback: try matching by email through users table
+        // Try every possible way to find teacher assignments
+        $subjectIds = collect();
+
+        // 1. Try teacher->id (teachers.id)
+        if ($activeAy) {
+            $subjectIds = TeacherAssignment::where('teacher_id', $teacher->id)
+                ->where('academic_year_id', $activeAy->id)
+                ->pluck('subject_id')->unique();
+        }
+
+        // 2. Try teacher->id without academic year filter
+        if ($subjectIds->isEmpty()) {
+            $subjectIds = TeacherAssignment::where('teacher_id', $teacher->id)
+                ->pluck('subject_id')->unique();
+        }
+
+        // 3. Try user_id on teachers table
+        if ($subjectIds->isEmpty() && $teacher->user_id) {
+            $subjectIds = TeacherAssignment::where('teacher_id', $teacher->user_id)
+                ->pluck('subject_id')->unique();
+        }
+
+        // 4. Try matching by email through users table
         if ($subjectIds->isEmpty() && $teacher->email) {
-            $user = \App\Models\User::where('email', $teacher->email)->first();
-            if ($user) {
-                $subjectIds = TeacherAssignment::where('teacher_id', $user->id)
-                    ->where('academic_year_id', $activeAy->id)
-                    ->pluck('subject_id')
-                    ->unique();
+            $userByEmail = \App\Models\User::where('email', $teacher->email)->first();
+            if ($userByEmail) {
+                $subjectIds = TeacherAssignment::where('teacher_id', $userByEmail->id)
+                    ->pluck('subject_id')->unique();
             }
+        }
+
+        // If still nothing found, show all subjects so the form is usable
+        if ($subjectIds->isEmpty()) {
+            return Subject::orderBy('name')->get();
         }
 
         return Subject::whereIn('id', $subjectIds)->orderBy('name')->get();
@@ -826,35 +816,50 @@ class AssessmentQuestionController extends Controller
 
     private function getTeacherClasses($teacher, $activeAy)
     {
-        if (!$teacher || !$activeAy) {
+        // Admin/super_admin always sees all classes
+        $user = Auth::user();
+        if ($user && in_array($user->role, ['admin', 'super_admin', 'branch_principal', 'general_manager'])) {
             return ClassRoom::orderBy('name')->get();
         }
 
-        // Primary lookup: teacher_id references teachers.id
-        $classIds = TeacherAssignment::where('teacher_id', $teacher->id)
-            ->where('academic_year_id', $activeAy->id)
-            ->pluck('class_id')
-            ->unique();
-
-        // Fallback: if no assignments found via teacher->id, try via user_id
-        // This handles the case where teacher_assignments.teacher_id still
-        // stores users.id values (before the data-fix migration runs).
-        if ($classIds->isEmpty() && $teacher->user_id) {
-            $classIds = TeacherAssignment::where('teacher_id', $teacher->user_id)
-                ->where('academic_year_id', $activeAy->id)
-                ->pluck('class_id')
-                ->unique();
+        if (!$teacher) {
+            return ClassRoom::orderBy('name')->get();
         }
 
-        // Final fallback: if still empty, try matching by email through users table
+        // Try every possible way to find teacher assignments
+        $classIds = collect();
+
+        // 1. Try teacher->id (teachers.id)
+        if ($activeAy) {
+            $classIds = TeacherAssignment::where('teacher_id', $teacher->id)
+                ->where('academic_year_id', $activeAy->id)
+                ->pluck('class_id')->unique();
+        }
+
+        // 2. Try teacher->id without academic year filter
+        if ($classIds->isEmpty()) {
+            $classIds = TeacherAssignment::where('teacher_id', $teacher->id)
+                ->pluck('class_id')->unique();
+        }
+
+        // 3. Try user_id on teachers table
+        if ($classIds->isEmpty() && $teacher->user_id) {
+            $classIds = TeacherAssignment::where('teacher_id', $teacher->user_id)
+                ->pluck('class_id')->unique();
+        }
+
+        // 4. Try matching by email through users table
         if ($classIds->isEmpty() && $teacher->email) {
-            $user = \App\Models\User::where('email', $teacher->email)->first();
-            if ($user) {
-                $classIds = TeacherAssignment::where('teacher_id', $user->id)
-                    ->where('academic_year_id', $activeAy->id)
-                    ->pluck('class_id')
-                    ->unique();
+            $userByEmail = \App\Models\User::where('email', $teacher->email)->first();
+            if ($userByEmail) {
+                $classIds = TeacherAssignment::where('teacher_id', $userByEmail->id)
+                    ->pluck('class_id')->unique();
             }
+        }
+
+        // If still nothing found, show all classes so the form is usable
+        if ($classIds->isEmpty()) {
+            return ClassRoom::orderBy('name')->get();
         }
 
         return ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();

@@ -50,13 +50,11 @@
                         </select>
                     </div>
                     <div class="modern-form-group">
-                        <label class="modern-form-label">Section</label>
-                        <select name="section_id" id="sectionSelect" class="modern-input modern-select" style="padding-left:0.75rem">
-                            <option value="">All Sections</option>
-                            @foreach($assessment_question->classroom->sections ?? [] as $sec)
-                            <option value="{{ $sec->id }}" {{ old('section_id', $assessment_question->section_id) == $sec->id ? 'selected' : '' }}>{{ $sec->name }}</option>
-                            @endforeach
-                        </select>
+                        <label class="modern-form-label">Applies To</label>
+                        <div class="modern-input" style="padding-left:0.75rem;display:flex;align-items:center;gap:6px;color:#059669;font-weight:500;background:#ecfdf5;border:1px solid #a7f3d0">
+                            <i class="fas fa-globe"></i> All Branches &amp; Sections
+                        </div>
+                        <div style="font-size:0.72rem;color:#6b7280;margin-top:3px">Questions are class-level and visible to all students in this class</div>
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Question Type <span class="modern-required">*</span></label>
@@ -207,30 +205,6 @@
 @push('scripts')
 <script>
 $(function() {
-    // ── Pre-loaded sections data (no AJAX needed) ──────────
-    var allSections = @json($allSections ?? []);
-    var selectedSectionId = '{{ old("section_id", $assessment_question->section_id) }}';
-
-    function updateSectionDropdown(classId) {
-        var html = '<option value="">All Sections</option>';
-        if (classId) {
-            var filtered = allSections.filter(function(s) { return s.class_id == classId; });
-            filtered.forEach(function(s) {
-                html += '<option value="' + s.id + '"' + (s.id == selectedSectionId ? ' selected' : '') + '>' + s.name + '</option>';
-            });
-        }
-        $('#sectionSelect').html(html);
-    }
-
-    // Initialize section dropdown on page load
-    updateSectionDropdown($('#classSelect').val());
-
-    // Update section dropdown when class changes
-    $('#classSelect').on('change', function() {
-        selectedSectionId = ''; // Reset selection when class changes
-        updateSectionDropdown($(this).val());
-    });
-
     // ── Question type toggle ────────────────────────────────
     function toggleType() {
         var t = $('#questionType').val();

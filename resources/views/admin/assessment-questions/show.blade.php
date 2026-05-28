@@ -119,8 +119,8 @@
                         <div class="modern-detail-value">{{ $question->classroom->name ?? '-' }}</div>
                     </div>
                     <div class="modern-detail-item">
-                        <div class="modern-detail-label">Section</div>
-                        <div class="modern-detail-value">{{ $question->section->name ?? 'All' }}</div>
+                        <div class="modern-detail-label">Applies To</div>
+                        <div class="modern-detail-value" style="color:#059669;font-weight:500"><i class="fas fa-globe"></i> All Branches &amp; Sections</div>
                     </div>
                     <div class="modern-detail-item">
                         <div class="modern-detail-label">Topic</div>
