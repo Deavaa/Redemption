@@ -88,6 +88,7 @@ use App\Http\Controllers\Bank\BankIntegrationController;
 use App\Http\Controllers\Club\ClubFollowUpConfigController;
 use App\Http\Controllers\Exam\ExamQuestionController;
 use App\Http\Controllers\Assessment\AssessmentQuestionController;
+use App\Http\Controllers\ContentNote\SubjectContentNoteController;
 use App\Http\Controllers\Assessment\StudentAssessmentController;
 use App\Http\Controllers\Enrollment\EnrollmentController;
 use Illuminate\Support\Facades\Route;
@@ -321,6 +322,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('lesson-plans/{lessonPlan}/follow-ups', [LessonPlanFollowUpController::class, 'store'])->name('lesson-plans.follow-ups.store')->middleware('permission:lesson_plans.follow_up');
     Route::put('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'update'])->name('lesson-plans.follow-ups.update')->middleware('permission:lesson_plans.follow_up');
     Route::delete('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'destroy'])->name('lesson-plans.follow-ups.destroy')->middleware('permission:lesson_plans.follow_up');
+
+    // ── Subject Content Note Bank ──────────────────────────────
+    // Reusable teaching notes linked to lesson plans — shared across sections
+    Route::get('content-notes/api/sections', [SubjectContentNoteController::class, 'apiSections'])->name('content-notes.api-sections')->middleware('permission:lesson_plans.view');
+    Route::patch('content-notes/{content_note}/toggle-active', [SubjectContentNoteController::class, 'toggleActive'])->name('content-notes.toggle-active')->middleware('permission:lesson_plans.create');
+    Route::patch('content-notes/{content_note}/toggle-shared', [SubjectContentNoteController::class, 'toggleShared'])->name('content-notes.toggle-shared')->middleware('permission:lesson_plans.create');
+    Route::resource('content-notes', SubjectContentNoteController::class)->middleware('permission:lesson_plans.view');
 
     // ── Exam Questions (Department → Principal Pipeline) ──────
     Route::resource('exam-questions', ExamQuestionController::class)->middleware('permission:exams.view');

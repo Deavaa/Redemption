@@ -169,6 +169,11 @@ class LessonPlan extends Model
         return $this->hasMany(LessonPlanFollowUp::class);
     }
 
+    public function contentNotes()
+    {
+        return $this->hasMany(SubjectContentNote::class, 'lesson_plan_id');
+    }
+
     /* ── Scopes ── */
     public function scopeForTeacher($query, int $teacherId)
     {

@@ -237,6 +237,21 @@
             </div>
         </div>
 
+        {{-- Linked Content Notes --}}
+        @php $linkedNotes = $lessonPlan->contentNotes()->limit(10)->get(); @endphp
+        @if($linkedNotes->count() > 0)
+        <div style="padding:0 1.5rem;padding-top:1rem;border-bottom:1px solid #f0f0f0">
+            <div style="font-size:0.82rem;font-weight:600;color:#4361ee;margin-bottom:0.5rem"><i class="fas fa-sticky-note"></i> Linked Content Notes</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.75rem">
+                @foreach($linkedNotes as $cn)
+                <a href="{{ route('admin.content-notes.show', $cn->id) }}" class="modern-badge" style="background:#eef2ff;color:#4361ee;text-decoration:none;padding:5px 12px;border-radius:8px;font-size:0.78rem;border:1px solid #c7d2fe">
+                    {{ $cn->title }}
+                </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         {{-- Add Follow-up Form (hidden by default) --}}
         <div id="followUpForm" class="d-none" style="padding:1.5rem;border-bottom:1px solid #f0f0f0;background:#fafbfc">
             <form method="POST" action="{{ route('admin.lesson-plans.follow-ups.store', $lessonPlan->id) }}">
