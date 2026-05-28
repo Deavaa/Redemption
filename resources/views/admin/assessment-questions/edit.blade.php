@@ -208,8 +208,21 @@ $(function() {
     // ── Question type toggle ────────────────────────────────
     function toggleType() {
         var t = $('#questionType').val();
-        $('#optionsCard').toggle(t === 'multiple_choice');
-        $('#tfCard').toggle(t === 'true_false');
+        if (t === 'multiple_choice') {
+            $('#optionsCard').show();
+            $('#optionsContainer input').prop('disabled', false);
+            $('#tfCard').hide();
+            $('input[name="correct_tf"]').prop('checked', false);
+        } else if (t === 'true_false') {
+            $('#optionsCard').hide();
+            $('#optionsContainer input').prop('disabled', true);
+            $('#tfCard').show();
+        } else {
+            $('#optionsCard').hide();
+            $('#optionsContainer input').prop('disabled', true);
+            $('#tfCard').hide();
+            $('input[name="correct_tf"]').prop('checked', false);
+        }
     }
     $('#questionType').on('change', toggleType);
     toggleType();

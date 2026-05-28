@@ -92,10 +92,13 @@ class AssessmentQuestionController extends Controller
         $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
 
         if (!$teacher && !in_array($user->role, ['admin', 'super_admin'])) {
-            return back()->with('error', 'Teacher profile not found.')->withInput();
+            return back()->with('error', 'Teacher profile not found. Please contact the administrator.')->withInput();
         }
 
-        $validated = $request->validate([
+        $questionType = $request->input('question_type', 'multiple_choice');
+
+        // Build validation rules based on question type
+        $rules = [
             'title' => 'nullable|string|max:255',
             'question_text' => 'required|string|max:5000',
             'question_type' => 'required|in:multiple_choice,true_false,short_answer',
@@ -103,68 +106,113 @@ class AssessmentQuestionController extends Controller
             'class_id' => 'required|exists:classes,id',
             'difficulty' => 'required|in:easy,medium,hard',
             'topic' => 'nullable|string|max:255',
-            'marks' => 'integer|min:1|max:100',
+            'marks' => 'nullable|integer|min:1|max:100',
             'hint' => 'nullable|string|max:2000',
             'explanation' => 'nullable|string|max:10000',
             'worked_out_solution' => 'nullable|string|max:20000',
-            'is_active' => 'boolean',
-            // Options for multiple choice
-            'options' => 'required_if:question_type,multiple_choice|array|min:2|max:6',
-            'options.*.option_text' => 'required_with:options|string|max:1000',
-            'options.*.option_label' => 'required_with:options|string|max:1',
-            'options.*.is_correct' => 'boolean',
-            // True/False
-            'correct_tf' => 'required_if:question_type,true_false|in:true,false',
-        ]);
+            'is_active' => 'nullable',
+        ];
+
+        // Only validate options for MCQ
+        if ($questionType === 'multiple_choice') {
+            $rules['options'] = 'required|array|min:2|max:6';
+            $rules['options.*.option_text'] = 'required|string|max:1000';
+            $rules['options.*.option_label'] = 'required|string|max:1';
+            $rules['options.*.is_correct'] = 'nullable';
+        }
+
+        // Only validate correct_tf for true/false
+        if ($questionType === 'true_false') {
+            $rules['correct_tf'] = 'required|in:true,false';
+        }
+
+        $validated = $request->validate($rules);
 
         $activeAy = AcademicYear::where('is_current', true)->first();
 
-        // Questions are class-level — apply to ALL branches and ALL sections
-        $question = AssessmentQuestion::create([
-            'teacher_id' => $teacher?->id,
-            'subject_id' => $validated['subject_id'],
-            'class_id' => $validated['class_id'],
-            'section_id' => null, // null = applies to all sections
-            'academic_year_id' => $activeAy?->id,
-            'branch_id' => null, // null = applies to all branches
-            'title' => $validated['title'] ?? null,
-            'question_text' => $validated['question_text'],
-            'question_type' => $validated['question_type'],
-            'hint' => $validated['hint'] ?? null,
-            'explanation' => $validated['explanation'] ?? null,
-            'worked_out_solution' => $validated['worked_out_solution'] ?? null,
-            'difficulty' => $validated['difficulty'],
-            'topic' => $validated['topic'] ?? null,
-            'marks' => $validated['marks'] ?? 1,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        // If no active academic year, try to get any academic year
+        if (!$activeAy) {
+            $activeAy = AcademicYear::orderBy('id', 'desc')->first();
+        }
 
-        // Create options based on question type
-        if ($validated['question_type'] === 'multiple_choice' && !empty($validated['options'])) {
-            foreach ($validated['options'] as $idx => $opt) {
+        try {
+            // Filter out empty MCQ options (only keep ones with non-empty text)
+            $mcqOptions = [];
+            if ($questionType === 'multiple_choice' && !empty($validated['options'])) {
+                foreach ($validated['options'] as $idx => $opt) {
+                    if (!empty(trim($opt['option_text'] ?? ''))) {
+                        $mcqOptions[] = $opt;
+                    }
+                }
+                if (count($mcqOptions) < 2) {
+                    return back()->with('error', 'Multiple choice questions need at least 2 options with text.')->withInput();
+                }
+            }
+
+            // Questions are class-level — apply to ALL branches and ALL sections
+            $questionData = [
+                'subject_id' => $validated['subject_id'],
+                'class_id' => $validated['class_id'],
+                'section_id' => null,
+                'branch_id' => null,
+                'title' => $validated['title'] ?? null,
+                'question_text' => $validated['question_text'],
+                'question_type' => $validated['question_type'],
+                'hint' => $validated['hint'] ?? null,
+                'explanation' => $validated['explanation'] ?? null,
+                'worked_out_solution' => $validated['worked_out_solution'] ?? null,
+                'difficulty' => $validated['difficulty'],
+                'topic' => $validated['topic'] ?? null,
+                'marks' => $validated['marks'] ?? 1,
+                'is_active' => $request->has('is_active'),
+            ];
+
+            // Set teacher_id — only if the column allows null OR we have a teacher
+            if ($teacher) {
+                $questionData['teacher_id'] = $teacher->id;
+            }
+
+            // Set academic_year_id — only if we have one
+            if ($activeAy) {
+                $questionData['academic_year_id'] = $activeAy->id;
+            }
+
+            $question = AssessmentQuestion::create($questionData);
+
+            // Create options based on question type
+            if ($questionType === 'multiple_choice' && !empty($mcqOptions)) {
+                foreach ($mcqOptions as $idx => $opt) {
+                    AssessmentOption::create([
+                        'assessment_question_id' => $question->id,
+                        'option_text' => $opt['option_text'],
+                        'option_label' => $opt['option_label'] ?? chr(65 + $idx),
+                        'is_correct' => isset($opt['is_correct']) && $opt['is_correct'],
+                        'sort_order' => $idx,
+                    ]);
+                }
+            } elseif ($questionType === 'true_false') {
                 AssessmentOption::create([
                     'assessment_question_id' => $question->id,
-                    'option_text' => $opt['option_text'],
-                    'option_label' => $opt['option_label'] ?? chr(65 + $idx), // A, B, C...
-                    'is_correct' => isset($opt['is_correct']) && $opt['is_correct'],
-                    'sort_order' => $idx,
+                    'option_text' => 'True',
+                    'option_label' => 'A',
+                    'is_correct' => $validated['correct_tf'] === 'true',
+                    'sort_order' => 0,
+                ]);
+                AssessmentOption::create([
+                    'assessment_question_id' => $question->id,
+                    'option_text' => 'False',
+                    'option_label' => 'B',
+                    'is_correct' => $validated['correct_tf'] === 'false',
+                    'sort_order' => 1,
                 ]);
             }
-        } elseif ($validated['question_type'] === 'true_false') {
-            AssessmentOption::create([
-                'assessment_question_id' => $question->id,
-                'option_text' => 'True',
-                'option_label' => 'A',
-                'is_correct' => $validated['correct_tf'] === 'true',
-                'sort_order' => 0,
-            ]);
-            AssessmentOption::create([
-                'assessment_question_id' => $question->id,
-                'option_text' => 'False',
-                'option_label' => 'B',
-                'is_correct' => $validated['correct_tf'] === 'false',
-                'sort_order' => 1,
-            ]);
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Assessment question save failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to save question. Database error: ' . $e->getMessage())->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Assessment question save failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to save question: ' . $e->getMessage())->withInput();
         }
 
         return redirect()->route('admin.assessment-questions.index')
@@ -233,7 +281,10 @@ class AssessmentQuestionController extends Controller
             abort(403, 'You can only edit your own questions.');
         }
 
-        $validated = $request->validate([
+        $questionType = $request->input('question_type', $assessment_question->question_type);
+
+        // Build validation rules based on question type
+        $rules = [
             'title' => 'nullable|string|max:255',
             'question_text' => 'required|string|max:5000',
             'question_type' => 'required|in:multiple_choice,true_false,short_answer',
@@ -241,66 +292,95 @@ class AssessmentQuestionController extends Controller
             'class_id' => 'required|exists:classes,id',
             'difficulty' => 'required|in:easy,medium,hard',
             'topic' => 'nullable|string|max:255',
-            'marks' => 'integer|min:1|max:100',
+            'marks' => 'nullable|integer|min:1|max:100',
             'hint' => 'nullable|string|max:2000',
             'explanation' => 'nullable|string|max:10000',
             'worked_out_solution' => 'nullable|string|max:20000',
-            'is_active' => 'boolean',
-            'options' => 'required_if:question_type,multiple_choice|array|min:2|max:6',
-            'options.*.id' => 'nullable|exists:assessment_options,id',
-            'options.*.option_text' => 'required_with:options|string|max:1000',
-            'options.*.option_label' => 'required_with:options|string|max:1',
-            'options.*.is_correct' => 'boolean',
-            'correct_tf' => 'required_if:question_type,true_false|in:true,false',
-        ]);
+            'is_active' => 'nullable',
+        ];
 
-        $assessment_question->update([
-            'title' => $validated['title'] ?? null,
-            'question_text' => $validated['question_text'],
-            'question_type' => $validated['question_type'],
-            'subject_id' => $validated['subject_id'],
-            'class_id' => $validated['class_id'],
-            'section_id' => null, // null = applies to all sections
-            'branch_id' => null, // null = applies to all branches
-            'difficulty' => $validated['difficulty'],
-            'topic' => $validated['topic'] ?? null,
-            'marks' => $validated['marks'] ?? 1,
-            'hint' => $validated['hint'] ?? null,
-            'explanation' => $validated['explanation'] ?? null,
-            'worked_out_solution' => $validated['worked_out_solution'] ?? null,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        if ($questionType === 'multiple_choice') {
+            $rules['options'] = 'required|array|min:2|max:6';
+            $rules['options.*.option_text'] = 'required|string|max:1000';
+            $rules['options.*.option_label'] = 'required|string|max:1';
+            $rules['options.*.is_correct'] = 'nullable';
+        }
 
-        // Sync options
-        // Delete old options and recreate
-        $assessment_question->options()->delete();
+        if ($questionType === 'true_false') {
+            $rules['correct_tf'] = 'required|in:true,false';
+        }
 
-        if ($validated['question_type'] === 'multiple_choice' && !empty($validated['options'])) {
-            foreach ($validated['options'] as $idx => $opt) {
-                if (empty($opt['option_text'])) continue;
+        $validated = $request->validate($rules);
+
+        try {
+            // Filter out empty MCQ options
+            $mcqOptions = [];
+            if ($questionType === 'multiple_choice' && !empty($validated['options'])) {
+                foreach ($validated['options'] as $idx => $opt) {
+                    if (!empty(trim($opt['option_text'] ?? ''))) {
+                        $mcqOptions[] = $opt;
+                    }
+                }
+                if (count($mcqOptions) < 2) {
+                    return back()->with('error', 'Multiple choice questions need at least 2 options with text.')->withInput();
+                }
+            }
+
+            $updateData = [
+                'title' => $validated['title'] ?? null,
+                'question_text' => $validated['question_text'],
+                'question_type' => $validated['question_type'],
+                'subject_id' => $validated['subject_id'],
+                'class_id' => $validated['class_id'],
+                'section_id' => null,
+                'branch_id' => null,
+                'difficulty' => $validated['difficulty'],
+                'topic' => $validated['topic'] ?? null,
+                'marks' => $validated['marks'] ?? 1,
+                'hint' => $validated['hint'] ?? null,
+                'explanation' => $validated['explanation'] ?? null,
+                'worked_out_solution' => $validated['worked_out_solution'] ?? null,
+                'is_active' => $request->has('is_active'),
+            ];
+
+            $assessment_question->update($updateData);
+
+            // Delete old options and recreate
+            $assessment_question->options()->delete();
+
+            if ($questionType === 'multiple_choice' && !empty($mcqOptions)) {
+                foreach ($mcqOptions as $idx => $opt) {
+                    AssessmentOption::create([
+                        'assessment_question_id' => $assessment_question->id,
+                        'option_text' => $opt['option_text'],
+                        'option_label' => $opt['option_label'] ?? chr(65 + $idx),
+                        'is_correct' => isset($opt['is_correct']) && $opt['is_correct'],
+                        'sort_order' => $idx,
+                    ]);
+                }
+            } elseif ($questionType === 'true_false') {
                 AssessmentOption::create([
                     'assessment_question_id' => $assessment_question->id,
-                    'option_text' => $opt['option_text'],
-                    'option_label' => $opt['option_label'] ?? chr(65 + $idx),
-                    'is_correct' => isset($opt['is_correct']) && $opt['is_correct'],
-                    'sort_order' => $idx,
+                    'option_text' => 'True',
+                    'option_label' => 'A',
+                    'is_correct' => $validated['correct_tf'] === 'true',
+                    'sort_order' => 0,
+                ]);
+                AssessmentOption::create([
+                    'assessment_question_id' => $assessment_question->id,
+                    'option_text' => 'False',
+                    'option_label' => 'B',
+                    'is_correct' => $validated['correct_tf'] === 'false',
+                    'sort_order' => 1,
                 ]);
             }
-        } elseif ($validated['question_type'] === 'true_false') {
-            AssessmentOption::create([
-                'assessment_question_id' => $assessment_question->id,
-                'option_text' => 'True',
-                'option_label' => 'A',
-                'is_correct' => $validated['correct_tf'] === 'true',
-                'sort_order' => 0,
-            ]);
-            AssessmentOption::create([
-                'assessment_question_id' => $assessment_question->id,
-                'option_text' => 'False',
-                'option_label' => 'B',
-                'is_correct' => $validated['correct_tf'] === 'false',
-                'sort_order' => 1,
-            ]);
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Assessment question update failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update question. Database error: ' . $e->getMessage())->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Assessment question update failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update question: ' . $e->getMessage())->withInput();
         }
 
         return redirect()->route('admin.assessment-questions.index')
@@ -364,27 +444,43 @@ class AssessmentQuestionController extends Controller
         ]);
 
         $activeAy = AcademicYear::where('is_current', true)->first();
+        if (!$activeAy) {
+            $activeAy = AcademicYear::orderBy('id', 'desc')->first();
+        }
+
         $count = 0;
 
-        foreach ($validated['questions'] as $qData) {
-            $question = AssessmentQuestion::create([
-                'teacher_id' => $teacher?->id,
-                'subject_id' => $validated['subject_id'],
-                'class_id' => $validated['class_id'],
-                'section_id' => null, // null = applies to all sections
-                'academic_year_id' => $activeAy?->id,
-                'branch_id' => null, // null = applies to all branches
-                'question_text' => $qData['question_text'],
-                'question_type' => $qData['question_type'],
-                'hint' => $qData['hint'] ?? null,
-                'explanation' => $qData['explanation'] ?? null,
-                'worked_out_solution' => $qData['worked_out_solution'] ?? null,
-                'difficulty' => $validated['difficulty'],
-                'topic' => $validated['topic'] ?? null,
-                'marks' => $qData['marks'] ?? 1,
-                'is_active' => true,
-            ]);
-            $count++;
+        try {
+            foreach ($validated['questions'] as $qData) {
+                $questionData = [
+                    'subject_id' => $validated['subject_id'],
+                    'class_id' => $validated['class_id'],
+                    'section_id' => null,
+                    'branch_id' => null,
+                    'question_text' => $qData['question_text'],
+                    'question_type' => $qData['question_type'],
+                    'hint' => $qData['hint'] ?? null,
+                    'explanation' => $qData['explanation'] ?? null,
+                    'worked_out_solution' => $qData['worked_out_solution'] ?? null,
+                    'difficulty' => $validated['difficulty'],
+                    'topic' => $validated['topic'] ?? null,
+                    'marks' => $qData['marks'] ?? 1,
+                    'is_active' => true,
+                ];
+
+                if ($teacher) {
+                    $questionData['teacher_id'] = $teacher->id;
+                }
+                if ($activeAy) {
+                    $questionData['academic_year_id'] = $activeAy->id;
+                }
+
+                AssessmentQuestion::create($questionData);
+                $count++;
+            }
+        } catch (\Exception $e) {
+            \Log::error('Bulk assessment questions save failed: ' . $e->getMessage());
+            return back()->with('error', "Saved {$count} questions before error: " . $e->getMessage())->withInput();
         }
 
         return redirect()->route('admin.assessment-questions.index')

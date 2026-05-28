@@ -230,13 +230,22 @@ $(function() {
         var type = $('#questionType').val();
         if (type === 'multiple_choice') {
             $('#optionsCard').show();
+            // Re-enable option inputs
+            $('#optionsContainer input').prop('disabled', false);
             $('#tfCard').hide();
+            // Clear T/F selection
+            $('input[name="correct_tf"]').prop('checked', false);
         } else if (type === 'true_false') {
             $('#optionsCard').hide();
+            // Disable option inputs so they don't submit
+            $('#optionsContainer input').prop('disabled', true);
             $('#tfCard').show();
         } else {
+            // Short answer — hide both, disable option inputs
             $('#optionsCard').hide();
+            $('#optionsContainer input').prop('disabled', true);
             $('#tfCard').hide();
+            $('input[name="correct_tf"]').prop('checked', false);
         }
     }
     $('#questionType').on('change', toggleQuestionType);
