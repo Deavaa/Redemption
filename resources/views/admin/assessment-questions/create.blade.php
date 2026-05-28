@@ -19,9 +19,28 @@
         </div>
     </div>
 
+    {{-- Session error messages --}}
     @if(session('error'))
-    <div class="modern-alert modern-alert-danger">
+    <div class="modern-alert modern-alert-danger" style="margin-bottom:1rem">
         <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    @endif
+
+    {{-- Validation error summary --}}
+    @if($errors->any())
+    <div class="modern-alert modern-alert-danger" style="margin-bottom:1rem">
+        <div style="display:flex;align-items:flex-start;gap:0.75rem">
+            <i class="fas fa-exclamation-triangle" style="margin-top:2px;font-size:1.1rem"></i>
+            <div>
+                <strong>Please fix the following errors:</strong>
+                <ul style="margin:0.5rem 0 0 1.25rem;font-size:0.85rem">
+                    @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
         <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
     </div>
     @endif
@@ -41,7 +60,7 @@
                 <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
                     <div class="modern-form-group">
                         <label class="modern-form-label">Subject <span class="modern-required">*</span></label>
-                        <select name="subject_id" class="modern-input modern-select" style="padding-left:0.75rem" required>
+                        <select name="subject_id" class="modern-input modern-select @error('subject_id') is-invalid @enderror" style="padding-left:0.75rem" required>
                             <option value="">Select Subject</option>
                             @foreach($subjects as $subject)
                             <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
@@ -51,7 +70,7 @@
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Class <span class="modern-required">*</span></label>
-                        <select name="class_id" id="classSelect" class="modern-input modern-select" style="padding-left:0.75rem" required>
+                        <select name="class_id" id="classSelect" class="modern-input modern-select @error('class_id') is-invalid @enderror" style="padding-left:0.75rem" required>
                             <option value="">Select Class</option>
                             @foreach($classes as $class)
                             <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
@@ -108,7 +127,7 @@
             </div>
             <div style="padding:1.5rem">
                 <div class="modern-form-group">
-                    <textarea name="question_text" class="modern-input modern-textarea" rows="4" required placeholder="Enter your question here...">{{ old('question_text') }}</textarea>
+                    <textarea name="question_text" class="modern-input modern-textarea @error('question_text') is-invalid @enderror" rows="4" required placeholder="Enter your question here...">{{ old('question_text') }}</textarea>
                     @error('question_text')<span class="modern-form-error">{{ $message }}</span>@enderror
                 </div>
                 <div class="modern-form-group" style="margin-top:1rem">
@@ -130,7 +149,7 @@
                 </div>
             </div>
             <div style="padding:1.5rem" id="optionsContainer">
-                <p style="font-size:0.82rem;color:#6b7280;margin-bottom:0.75rem">Mark the correct answer by checking the "Correct" checkbox.</p>
+                <p style="font-size:0.82rem;color:#6b7280;margin-bottom:0.75rem">Fill in at least 2 options. Leave extra options blank — they will be ignored. Mark the correct answer by checking the "Correct" checkbox.</p>
                 @php
                     $oldOptions = old('options', [
                         ['option_text' => '', 'option_label' => 'A', 'is_correct' => false],
@@ -142,7 +161,7 @@
                 @foreach($oldOptions as $idx => $opt)
                 <div class="option-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
                     <input type="text" name="options[{{ $idx }}][option_label]" class="modern-input" style="width:45px;text-align:center;padding-left:4px" value="{{ $opt['option_label'] ?? chr(65 + $idx) }}" readonly>
-                    <input type="text" name="options[{{ $idx }}][option_text]" class="modern-input" style="flex:1;padding-left:0.75rem" value="{{ $opt['option_text'] ?? '' }}" placeholder="Option {{ $opt['option_label'] ?? chr(65 + $idx) }}">
+                    <input type="text" name="options[{{ $idx }}][option_text]" class="modern-input" style="flex:1;padding-left:0.75rem" value="{{ $opt['option_text'] ?? '' }}" placeholder="Option {{ $opt['option_label'] ?? chr(65 + $idx) }} (leave blank to skip)">
                     <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;white-space:nowrap;cursor:pointer">
                         <input type="checkbox" name="options[{{ $idx }}][is_correct]" class="is-correct-check" value="1" {{ !empty($opt['is_correct']) ? 'checked' : '' }}>
                         Correct
@@ -166,7 +185,7 @@
                 <label class="modern-form-label">Correct Answer <span class="modern-required">*</span></label>
                 <div style="display:flex;gap:1rem;margin-top:0.5rem">
                     <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border:2px solid #e5e7eb;border-radius:10px;transition:all 0.2s" class="tf-option">
-                        <input type="radio" name="correct_tf" id="tfTrue" value="true" class="tf-radio" {{ old('correct_tf') === 'true' ? 'checked' : '' }} required>
+                        <input type="radio" name="correct_tf" id="tfTrue" value="true" class="tf-radio" {{ old('correct_tf') === 'true' ? 'checked' : '' }}>
                         <i class="fas fa-check" style="color:#10b981"></i> True
                     </label>
                     <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border:2px solid #e5e7eb;border-radius:10px;transition:all 0.2s" class="tf-option">
@@ -209,7 +228,7 @@
                 </label>
                 <div style="display:flex;gap:0.5rem">
                     <a href="{{ route('admin.assessment-questions.index') }}" class="btn-modern btn-modern-ghost">Cancel</a>
-                    <button type="submit" class="btn-modern btn-modern-primary"><i class="fas fa-save"></i> Save Question</button>
+                    <button type="submit" id="saveBtn" class="btn-modern btn-modern-primary"><i class="fas fa-save"></i> Save Question</button>
                 </div>
             </div>
         </div>
@@ -219,6 +238,8 @@
 @push('styles')
 <style>
     .tf-option:has(input:checked) { border-color: #4361ee; background: #f0f4ff; }
+    .is-invalid { border-color: #ef4444 !important; }
+    #saveBtn.saving { opacity: 0.7; pointer-events: none; }
 </style>
 @endpush
 
@@ -234,18 +255,19 @@ $(function() {
             $('#optionsContainer input').prop('disabled', false);
             $('#tfCard').hide();
             // Clear T/F selection
-            $('input[name="correct_tf"]').prop('checked', false);
+            $('input[name="correct_tf"]').prop('checked', false).prop('disabled', true);
         } else if (type === 'true_false') {
             $('#optionsCard').hide();
             // Disable option inputs so they don't submit
             $('#optionsContainer input').prop('disabled', true);
             $('#tfCard').show();
+            $('input[name="correct_tf"]').prop('disabled', false);
         } else {
             // Short answer — hide both, disable option inputs
             $('#optionsCard').hide();
             $('#optionsContainer input').prop('disabled', true);
             $('#tfCard').hide();
-            $('input[name="correct_tf"]').prop('checked', false);
+            $('input[name="correct_tf"]').prop('checked', false).prop('disabled', true);
         }
     }
     $('#questionType').on('change', toggleQuestionType);
@@ -258,7 +280,7 @@ $(function() {
         var label = String.fromCharCode(65 + idx);
         var html = '<div class="option-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem">' +
             '<input type="text" name="options[' + idx + '][option_label]" class="modern-input" style="width:45px;text-align:center;padding-left:4px" value="' + label + '" readonly>' +
-            '<input type="text" name="options[' + idx + '][option_text]" class="modern-input" style="flex:1;padding-left:0.75rem" placeholder="Option ' + label + '">' +
+            '<input type="text" name="options[' + idx + '][option_text]" class="modern-input" style="flex:1;padding-left:0.75rem" placeholder="Option ' + label + ' (leave blank to skip)">' +
             '<label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;white-space:nowrap;cursor:pointer"><input type="checkbox" name="options[' + idx + '][is_correct]" class="is-correct-check" value="1"> Correct</label>' +
             '<button type="button" class="modern-btn-icon modern-btn-delete remove-option-btn" title="Remove" style="width:32px;height:32px"><i class="fas fa-times"></i></button>' +
             '</div>';
@@ -281,9 +303,41 @@ $(function() {
     function reindexOptions() {
         $('#optionsContainer .option-row').each(function(idx) {
             $(this).find('input[name*="option_label"]').val(String.fromCharCode(65 + idx));
-            $(this).find('input[name*="option_text"]').attr('placeholder', 'Option ' + String.fromCharCode(65 + idx));
+            $(this).find('input[name*="option_text"]').attr('placeholder', 'Option ' + String.fromCharCode(65 + idx) + ' (leave blank to skip)');
         });
     }
+
+    // ── Form submit feedback ────────────────────────────────
+    $('#questionForm').on('submit', function() {
+        var type = $('#questionType').val();
+
+        // For MCQ: validate at least 2 options have text
+        if (type === 'multiple_choice') {
+            var filledCount = 0;
+            $('#optionsContainer .option-row').each(function() {
+                var txt = $(this).find('input[name*="option_text"]').val();
+                if (txt && txt.trim() !== '') filledCount++;
+            });
+            if (filledCount < 2) {
+                alert('Multiple choice questions need at least 2 options with text. You have ' + filledCount + ' filled option(s).');
+                return false;
+            }
+        }
+
+        // For T/F: validate correct_tf is selected
+        if (type === 'true_false') {
+            if (!$('input[name="correct_tf"]:checked').length) {
+                alert('Please select True or False as the correct answer.');
+                return false;
+            }
+        }
+
+        // Show loading state
+        var btn = $('#saveBtn');
+        btn.addClass('saving');
+        btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        return true;
+    });
 });
 </script>
 @endpush

@@ -113,11 +113,11 @@ class AssessmentQuestionController extends Controller
             'is_active' => 'nullable',
         ];
 
-        // Only validate options for MCQ
+        // Only validate options for MCQ — use nullable so empty rows don't fail validation
         if ($questionType === 'multiple_choice') {
-            $rules['options'] = 'required|array|min:2|max:6';
-            $rules['options.*.option_text'] = 'required|string|max:1000';
-            $rules['options.*.option_label'] = 'required|string|max:1';
+            $rules['options'] = 'required|array|min:1|max:6';
+            $rules['options.*.option_text'] = 'nullable|string|max:1000';
+            $rules['options.*.option_label'] = 'nullable|string|max:1';
             $rules['options.*.is_correct'] = 'nullable';
         }
 
@@ -145,7 +145,7 @@ class AssessmentQuestionController extends Controller
                     }
                 }
                 if (count($mcqOptions) < 2) {
-                    return back()->with('error', 'Multiple choice questions need at least 2 options with text.')->withInput();
+                    return back()->with('error', 'Multiple choice questions need at least 2 options with text. Only ' . count($mcqOptions) . ' option(s) have text.')->withInput();
                 }
             }
 
@@ -300,9 +300,9 @@ class AssessmentQuestionController extends Controller
         ];
 
         if ($questionType === 'multiple_choice') {
-            $rules['options'] = 'required|array|min:2|max:6';
-            $rules['options.*.option_text'] = 'required|string|max:1000';
-            $rules['options.*.option_label'] = 'required|string|max:1';
+            $rules['options'] = 'required|array|min:1|max:6';
+            $rules['options.*.option_text'] = 'nullable|string|max:1000';
+            $rules['options.*.option_label'] = 'nullable|string|max:1';
             $rules['options.*.is_correct'] = 'nullable';
         }
 
@@ -322,7 +322,7 @@ class AssessmentQuestionController extends Controller
                     }
                 }
                 if (count($mcqOptions) < 2) {
-                    return back()->with('error', 'Multiple choice questions need at least 2 options with text.')->withInput();
+                    return back()->with('error', 'Multiple choice questions need at least 2 options with text. Only ' . count($mcqOptions) . ' option(s) have text.')->withInput();
                 }
             }
 

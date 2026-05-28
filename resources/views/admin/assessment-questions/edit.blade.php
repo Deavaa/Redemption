@@ -18,7 +18,33 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.assessment-questions.update', $assessment_question->id) }}">
+    {{-- Session error messages --}}
+    @if(session('error'))
+    <div class="modern-alert modern-alert-danger" style="margin-bottom:1rem">
+        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    @endif
+
+    {{-- Validation error summary --}}
+    @if($errors->any())
+    <div class="modern-alert modern-alert-danger" style="margin-bottom:1rem">
+        <div style="display:flex;align-items:flex-start;gap:0.75rem">
+            <i class="fas fa-exclamation-triangle" style="margin-top:2px;font-size:1.1rem"></i>
+            <div>
+                <strong>Please fix the following errors:</strong>
+                <ul style="margin:0.5rem 0 0 1.25rem;font-size:0.85rem">
+                    @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    @endif
+
+    <form method="POST" action="{{ route('admin.assessment-questions.update', $assessment_question->id) }}" id="questionForm">
         @csrf @method('PUT')
 
         {{-- Question Details --}}
@@ -33,21 +59,23 @@
                 <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
                     <div class="modern-form-group">
                         <label class="modern-form-label">Subject <span class="modern-required">*</span></label>
-                        <select name="subject_id" class="modern-input modern-select" style="padding-left:0.75rem" required>
+                        <select name="subject_id" class="modern-input modern-select @error('subject_id') is-invalid @enderror" style="padding-left:0.75rem" required>
                             <option value="">Select Subject</option>
                             @foreach($subjects as $subject)
                             <option value="{{ $subject->id }}" {{ old('subject_id', $assessment_question->subject_id) == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
                             @endforeach
                         </select>
+                        @error('subject_id')<span class="modern-form-error">{{ $message }}</span>@enderror
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Class <span class="modern-required">*</span></label>
-                        <select name="class_id" id="classSelect" class="modern-input modern-select" style="padding-left:0.75rem" required>
+                        <select name="class_id" id="classSelect" class="modern-input modern-select @error('class_id') is-invalid @enderror" style="padding-left:0.75rem" required>
                             <option value="">Select Class</option>
                             @foreach($classes as $class)
                             <option value="{{ $class->id }}" {{ old('class_id', $assessment_question->class_id) == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
                             @endforeach
                         </select>
+                        @error('class_id')<span class="modern-form-error">{{ $message }}</span>@enderror
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Applies To</label>
@@ -63,6 +91,7 @@
                             <option value="true_false" {{ old('question_type', $assessment_question->question_type) === 'true_false' ? 'selected' : '' }}>True / False</option>
                             <option value="short_answer" {{ old('question_type', $assessment_question->question_type) === 'short_answer' ? 'selected' : '' }}>Short Answer</option>
                         </select>
+                        @error('question_type')<span class="modern-form-error">{{ $message }}</span>@enderror
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Difficulty</label>
@@ -71,10 +100,12 @@
                             <option value="medium" {{ old('difficulty', $assessment_question->difficulty) === 'medium' ? 'selected' : '' }}>Medium</option>
                             <option value="hard" {{ old('difficulty', $assessment_question->difficulty) === 'hard' ? 'selected' : '' }}>Hard</option>
                         </select>
+                        @error('difficulty')<span class="modern-form-error">{{ $message }}</span>@enderror
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Marks</label>
-                        <input type="number" name="marks" class="modern-input" style="padding-left:0.75rem" value="{{ old('marks', $assessment_question->marks) }}" min="1" max="100">
+                        <input type="number" name="marks" class="modern-input @error('marks') is-invalid @enderror" style="padding-left:0.75rem" value="{{ old('marks', $assessment_question->marks) }}" min="1" max="100">
+                        @error('marks')<span class="modern-form-error">{{ $message }}</span>@enderror
                     </div>
                     <div class="modern-form-group">
                         <label class="modern-form-label">Title</label>
@@ -98,7 +129,8 @@
             </div>
             <div style="padding:1.5rem">
                 <div class="modern-form-group">
-                    <textarea name="question_text" class="modern-input modern-textarea" rows="4" required>{{ old('question_text', $assessment_question->question_text) }}</textarea>
+                    <textarea name="question_text" class="modern-input modern-textarea @error('question_text') is-invalid @enderror" rows="4" required>{{ old('question_text', $assessment_question->question_text) }}</textarea>
+                    @error('question_text')<span class="modern-form-error">{{ $message }}</span>@enderror
                 </div>
                 <div class="modern-form-group" style="margin-top:1rem">
                     <label class="modern-form-label">Hint</label>
@@ -119,6 +151,7 @@
                 </div>
             </div>
             <div style="padding:1.5rem" id="optionsContainer">
+                <p style="font-size:0.82rem;color:#6b7280;margin-bottom:0.75rem">Fill in at least 2 options. Leave extra options blank — they will be ignored.</p>
                 @php
                     $existingOptions = old('options', $assessment_question->options->map(fn($o) => [
                         'option_text' => $o->option_text,
@@ -137,6 +170,7 @@
                     <button type="button" class="modern-btn-icon modern-btn-delete remove-option-btn" title="Remove" style="width:32px;height:32px"><i class="fas fa-times"></i></button>
                 </div>
                 @endforeach
+                @error('options')<span class="modern-form-error">{{ $message }}</span>@enderror
             </div>
         </div>
 
@@ -160,6 +194,7 @@
                         <i class="fas fa-times" style="color:#ef4444"></i> False
                     </label>
                 </div>
+                @error('correct_tf')<span class="modern-form-error">{{ $message }}</span>@enderror
             </div>
         </div>
 
@@ -190,7 +225,10 @@
                     <input type="checkbox" name="is_active" value="1" id="isActive" {{ old('is_active', $assessment_question->is_active) ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#4361ee">
                     <span style="font-size:0.9rem;font-weight:500">Active</span>
                 </label>
-                <button type="submit" class="btn-modern btn-modern-primary"><i class="fas fa-save"></i> Update Question</button>
+                <div style="display:flex;gap:0.5rem">
+                    <a href="{{ route('admin.assessment-questions.index') }}" class="btn-modern btn-modern-ghost">Cancel</a>
+                    <button type="submit" id="saveBtn" class="btn-modern btn-modern-primary"><i class="fas fa-save"></i> Update Question</button>
+                </div>
             </div>
         </div>
     </form>
@@ -199,6 +237,8 @@
 @push('styles')
 <style>
     .tf-option:has(input:checked) { border-color: #4361ee; background: #f0f4ff; }
+    .is-invalid { border-color: #ef4444 !important; }
+    #saveBtn.saving { opacity: 0.7; pointer-events: none; }
 </style>
 @endpush
 
@@ -212,16 +252,17 @@ $(function() {
             $('#optionsCard').show();
             $('#optionsContainer input').prop('disabled', false);
             $('#tfCard').hide();
-            $('input[name="correct_tf"]').prop('checked', false);
+            $('input[name="correct_tf"]').prop('checked', false).prop('disabled', true);
         } else if (t === 'true_false') {
             $('#optionsCard').hide();
             $('#optionsContainer input').prop('disabled', true);
             $('#tfCard').show();
+            $('input[name="correct_tf"]').prop('disabled', false);
         } else {
             $('#optionsCard').hide();
             $('#optionsContainer input').prop('disabled', true);
             $('#tfCard').hide();
-            $('input[name="correct_tf"]').prop('checked', false);
+            $('input[name="correct_tf"]').prop('checked', false).prop('disabled', true);
         }
     }
     $('#questionType').on('change', toggleType);
@@ -235,7 +276,7 @@ $(function() {
         $('#optionsContainer').append(
             '<div class="option-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem">' +
             '<input type="text" name="options['+i+'][option_label]" class="modern-input" style="width:45px;text-align:center;padding-left:4px" value="'+l+'" readonly>' +
-            '<input type="text" name="options['+i+'][option_text]" class="modern-input" style="flex:1;padding-left:0.75rem">' +
+            '<input type="text" name="options['+i+'][option_text]" class="modern-input" style="flex:1;padding-left:0.75rem" placeholder="Option '+l+' (leave blank to skip)">' +
             '<label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;white-space:nowrap;cursor:pointer"><input type="checkbox" name="options['+i+'][is_correct]" class="is-correct-check" value="1"> Correct</label>' +
             '<button type="button" class="modern-btn-icon modern-btn-delete remove-option-btn" title="Remove" style="width:32px;height:32px"><i class="fas fa-times"></i></button>' +
             '</div>'
@@ -246,6 +287,38 @@ $(function() {
     });
     $(document).on('change', '.is-correct-check', function() {
         if ($(this).is(':checked')) $('.is-correct-check').not(this).prop('checked', false);
+    });
+
+    // ── Form submit feedback ────────────────────────────────
+    $('#questionForm').on('submit', function() {
+        var type = $('#questionType').val();
+
+        // For MCQ: validate at least 2 options have text
+        if (type === 'multiple_choice') {
+            var filledCount = 0;
+            $('#optionsContainer .option-row').each(function() {
+                var txt = $(this).find('input[name*="option_text"]').val();
+                if (txt && txt.trim() !== '') filledCount++;
+            });
+            if (filledCount < 2) {
+                alert('Multiple choice questions need at least 2 options with text. You have ' + filledCount + ' filled option(s).');
+                return false;
+            }
+        }
+
+        // For T/F: validate correct_tf is selected
+        if (type === 'true_false') {
+            if (!$('input[name="correct_tf"]:checked').length) {
+                alert('Please select True or False as the correct answer.');
+                return false;
+            }
+        }
+
+        // Show loading state
+        var btn = $('#saveBtn');
+        btn.addClass('saving');
+        btn.html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+        return true;
     });
 });
 </script>

@@ -20,8 +20,26 @@
     </div>
 
     @if(session('error'))
-    <div class="modern-alert modern-alert-danger">
+    <div class="modern-alert modern-alert-danger" style="margin-bottom:1rem">
         <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    @endif
+
+    {{-- Validation error summary --}}
+    @if($errors->any())
+    <div class="modern-alert modern-alert-danger" style="margin-bottom:1rem">
+        <div style="display:flex;align-items:flex-start;gap:0.75rem">
+            <i class="fas fa-exclamation-triangle" style="margin-top:2px;font-size:1.1rem"></i>
+            <div>
+                <strong>Please fix the following errors:</strong>
+                <ul style="margin:0.5rem 0 0 1.25rem;font-size:0.85rem">
+                    @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
         <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
     </div>
     @endif
