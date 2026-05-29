@@ -38,11 +38,12 @@ return [
     | Session Lifetime
     |--------------------------------------------------------------------------
     |
-    | Session lifetime in minutes. 120 = 2 hours.
+    | Session lifetime in minutes. 480 = 8 hours.
+    | Extended from 120 (2h) because mark entry sessions can be long.
     |
     */
 
-    'lifetime' => 120,
+    'lifetime' => 480,
 
     /*
     |--------------------------------------------------------------------------

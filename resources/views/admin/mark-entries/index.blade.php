@@ -575,6 +575,7 @@
     var API_LOAD_STUDENTS = '{{ route("admin.mark-entries.api.load-students") }}';
     var API_SAVE = '{{ route("admin.mark-entries.api.save") }}';
     var API_CHECK_LOCK = '{{ route("admin.mark-entries.api.check-lock") }}';
+    var API_KEEPALIVE = '{{ route("admin.keepalive") }}';
     var CSRF = '{{ csrf_token() }}';
 
     // ========== MARK FIELDS DEFINITION ==========
@@ -614,6 +615,131 @@
         return 'ca';
     }
 
+    // ========== CSRF TOKEN REFRESH ==========
+    // Fetches a fresh CSRF token from the server and updates the global variable.
+    // This is critical when a 419 (CSRF token mismatch / session expired) is detected.
+    var csrfRefreshInProgress = false;
+
+    function refreshCSRFToken() {
+        if (csrfRefreshInProgress) return Promise.resolve(CSRF);
+        csrfRefreshInProgress = true;
+
+        return fetch(API_KEEPALIVE, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(r) {
+            if (!r.ok) {
+                if (r.status === 401 || r.status === 302 || r.redirected) {
+                    // Session truly expired - redirect to login
+                    alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up to local storage and will be available after you log back in.');
+                    backupMarksToLocalStorage();
+                    window.location.href = '{{ route("login") }}';
+                    throw new Error('Session expired');
+                }
+                throw new Error('Keepalive failed: HTTP ' + r.status);
+            }
+            return r.json();
+        })
+        .then(function(data) {
+            if (data.csrf_token) {
+                CSRF = data.csrf_token;
+                // Also update the meta tag so other components have the fresh token
+                var metaTag = document.querySelector('meta[name="csrf-token"]');
+                if (metaTag) metaTag.setAttribute('content', CSRF);
+                console.log('[MarkEntry] CSRF token refreshed successfully');
+            }
+            csrfRefreshInProgress = false;
+            return CSRF;
+        })
+        .catch(function(err) {
+            csrfRefreshInProgress = false;
+            console.error('[MarkEntry] CSRF refresh failed:', err);
+            throw err;
+        });
+    }
+
+    // ========== SESSION KEEPALIVE ==========
+    // Ping the server every 5 minutes to keep the session alive during long mark entry sessions.
+    // Also refreshes the CSRF token proactively so it never becomes stale.
+    var KEEPALIVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+    function startKeepalive() {
+        setInterval(function() {
+            refreshCSRFToken().catch(function(err) {
+                console.warn('[MarkEntry] Keepalive ping failed (will retry next interval):', err.message);
+            });
+        }, KEEPALIVE_INTERVAL_MS);
+        console.log('[MarkEntry] Session keepalive started (every 5 minutes)');
+    }
+
+    // ========== LOCAL STORAGE BACKUP ==========
+    // Backup unsaved marks to localStorage so they survive page reloads / session expiry.
+    var LS_KEY = 'markEntryBackup_' + window.location.pathname;
+
+    function backupMarksToLocalStorage() {
+        try {
+            if (students.length === 0) return;
+            var backup = {
+                timestamp: new Date().toISOString(),
+                ayId: filterAy.value,
+                termId: filterTerm.value,
+                classId: filterClass.value,
+                sectionId: filterSection.value,
+                subjectId: filterSubject.value,
+                students: students.map(function(s) {
+                    return { id: s.id, marks: JSON.parse(JSON.stringify(s.marks)) };
+                })
+            };
+            localStorage.setItem(LS_KEY, JSON.stringify(backup));
+            console.log('[MarkEntry] Marks backed up to localStorage (' + students.length + ' students)');
+        } catch (e) {
+            console.warn('[MarkEntry] localStorage backup failed:', e);
+        }
+    }
+
+    function restoreMarksFromLocalStorage() {
+        try {
+            var raw = localStorage.getItem(LS_KEY);
+            if (!raw) return null;
+            var backup = JSON.parse(raw);
+
+            // Check if the backup matches the current filters
+            if (backup.ayId !== filterAy.value || backup.termId !== filterTerm.value ||
+                backup.classId !== filterClass.value || backup.sectionId !== filterSection.value ||
+                backup.subjectId !== filterSubject.value) {
+                return null; // Different context, don't restore
+            }
+
+            // Check if backup is recent enough (within 8 hours)
+            var age = Date.now() - new Date(backup.timestamp).getTime();
+            if (age > 8 * 60 * 60 * 1000) {
+                localStorage.removeItem(LS_KEY);
+                return null;
+            }
+
+            return backup;
+        } catch (e) {
+            console.warn('[MarkEntry] localStorage restore failed:', e);
+            return null;
+        }
+    }
+
+    function clearLocalStorageBackup() {
+        try {
+            localStorage.removeItem(LS_KEY);
+        } catch (e) { /* ignore */ }
+    }
+
+    // Auto-backup every 2 minutes while there are students loaded
+    function startAutoBackup() {
+        setInterval(function() {
+            if (students.length > 0) {
+                backupMarksToLocalStorage();
+            }
+        }, 2 * 60 * 1000);
+    }
+
     // ========== INIT ==========
     function init() {
         console.log('[MarkEntry] Initializing... isTeacher={{ $isTeacher ? "true" : "false" }}, classes={{ $classes->count() }}');
@@ -635,6 +761,10 @@
         }
 
         updateLoadButton();
+
+        // Start session keepalive and auto-backup to prevent session expiry during mark entry
+        startKeepalive();
+        startAutoBackup();
     }
 
     // ========== TEACHER CLASS POPULATION ==========
@@ -1513,7 +1643,7 @@
     });
 
     // ========== SAVE MARK ==========
-    function saveMark(studentId, markKey, value) {
+    function saveMark(studentId, markKey, value, isRetry) {
         var ayId = filterAy.value;
         var termId = filterTerm.value;
         var classId = filterClass.value;
@@ -1542,15 +1672,43 @@
             })
         })
         .then(function(r) {
+            // ── Handle 419 CSRF Token Mismatch ──
+            if (r.status === 419) {
+                if (isRetry) {
+                    // Already retried once — give up and alert the user
+                    setGlobalSaveStatus('error', 'Session Expired');
+                    backupMarksToLocalStorage();
+                    alert('Your session has expired and marks could not be saved.\n\nYour marks have been backed up to local storage. Please refresh the page and try again.');
+                    throw new Error('Session expired (419 after retry)');
+                }
+                // First 419 — refresh CSRF token and retry the save
+                console.log('[MarkEntry] 419 detected, refreshing CSRF token and retrying...');
+                return refreshCSRFToken().then(function(newToken) {
+                    return saveMark(studentId, markKey, value, true);
+                });
+            }
+
             if (!r.ok) {
-                return r.json().then(function(e) { throw new Error(e.error || 'Server error ' + r.status); })
-                    .catch(function(err) { throw (err.message ? err : new Error('Server error ' + r.status)); });
+                // Try to parse as JSON for error message, fall back to status code
+                return r.text().then(function(text) {
+                    var errMsg = 'Server error ' + r.status;
+                    try {
+                        var jsonErr = JSON.parse(text);
+                        errMsg = jsonErr.error || jsonErr.message || errMsg;
+                    } catch(e) {
+                        // Response is HTML (e.g. login redirect page) — check for redirect
+                        if (r.status === 401 || text.indexOf('login') !== -1) {
+                            errMsg = 'Session expired';
+                        }
+                    }
+                    throw new Error(errMsg);
+                });
             }
             return r.json();
         })
         .then(function(res) {
-            if (res.success) {
-                setGlobalSaveStatus('saved', 'Saved ✓');
+            if (res && res.success) {
+                setGlobalSaveStatus('saved', 'Saved \u2713');
 
                 // Flash the input green
                 var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
@@ -1580,7 +1738,9 @@
                     }
                 }
 
-                // Stay as 'Saved' persistently - will change when user edits again
+                // Save succeeded — clear localStorage backup after a short delay
+                // (keep it briefly in case the next save fails)
+                setTimeout(clearLocalStorageBackup, 5000);
             } else {
                 setGlobalSaveStatus('error', 'Not Saved');
                 var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
@@ -1699,6 +1859,13 @@
 
     // ========== START ==========
     init();
+
+    // Backup marks before the page is unloaded (navigation, close, refresh)
+    window.addEventListener('beforeunload', function() {
+        if (students.length > 0) {
+            backupMarksToLocalStorage();
+        }
+    });
 })();
 </script>
 @endpush

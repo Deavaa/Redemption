@@ -122,6 +122,14 @@ Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
+    // Session Keepalive & CSRF Refresh — prevents session expiry during long mark entry sessions
+    Route::get('/keepalive', function () {
+        return response()->json([
+            'csrf_token' => csrf_token(),
+            'timestamp' => time(),
+        ]);
+    })->name('keepalive');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');
 
