@@ -819,9 +819,11 @@
     function loadSubjects() {
         var classId = filterClass.value;
         var sectionId = filterSection.value;
+        var ayId = filterAy.value;
         if (!classId) return;
 
-        fetch(API_SUBJECTS + '?class_id=' + classId + (sectionId ? '&section_id=' + sectionId : ''), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        var params = 'class_id=' + classId + (sectionId ? '&section_id=' + sectionId : '') + (ayId ? '&academic_year_id=' + ayId : '');
+        fetch(API_SUBJECTS + '?' + params, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();

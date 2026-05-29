@@ -257,23 +257,32 @@ class MarkEntryController extends Controller
         $classId = $request->query('class_id');
         $sectionId = $request->query('section_id');
         $ayId = $request->query('academic_year_id');
-        if (!$classId || !$sectionId) return response()->json([]);
+        if (!$classId) return response()->json([]);
 
         $teacher = $this->getTeacherForUser();
 
-        $query = TeacherAssignment::with('subject')->where('class_id',$classId)
-            ->where(function($q) use ($sectionId) { $q->where('section_id',$sectionId)->orWhereNull('section_id'); });
+        $query = TeacherAssignment::with('subject')->where('class_id', $classId);
+
+        // Filter by section: show section-specific + class-wide (null section) assignments
+        if ($sectionId) {
+            $query->where(function($q) use ($sectionId) {
+                $q->where('section_id', $sectionId)->orWhereNull('section_id');
+            });
+        }
+        // If no section_id provided, show all subjects for the class
+
+        // Filter by academic year: show AY-specific + no-AY assignments
         if ($ayId) {
             $query->where(function($q) use ($ayId) {
-                $q->whereNull('academic_year_id')->orWhere('academic_year_id',$ayId);
+                $q->whereNull('academic_year_id')->orWhere('academic_year_id', $ayId);
             });
         }
 
         if ($teacher) {
             // Only return subjects assigned to this teacher for the class+section
             // OR if teacher is homeroom for this class/section, show all subjects
-            $isHomeroomClass = $teacher->classRooms()->where('id', $classId)->exists();
-            $isHomeroomSection = $teacher->sections()->where('id', $sectionId)->exists();
+            $isHomeroomClass = $classId ? $teacher->classRooms()->where('id', $classId)->exists() : false;
+            $isHomeroomSection = $sectionId ? $teacher->sections()->where('id', $sectionId)->exists() : false;
 
             if (!$isHomeroomClass && !$isHomeroomSection) {
                 // Not homeroom — only show their own assigned subjects
