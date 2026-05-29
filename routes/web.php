@@ -565,6 +565,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('email-inbox-sync/{inboxSetting}', [EmailInboxController::class, 'syncInbox'])->name('email-inbox.sync')->middleware('permission:settings.edit');
     Route::post('email-inbox-test/{inboxSetting}', [EmailInboxController::class, 'testConnection'])->name('email-inbox.test')->middleware('permission:settings.edit');
 
+    // ── Teacher Reviews (by Students) ────────────────────────
+    Route::get('teacher-reviews', [Admin\TeacherReviewController::class, 'index'])->name('teacher-reviews.index')->middleware('permission:teachers.view');
+    Route::get('teacher-reviews/summary', [Admin\TeacherReviewController::class, 'teacherSummary'])->name('teacher-reviews.summary')->middleware('permission:teachers.view');
+    Route::get('teacher-reviews/{teacher_review}', [Admin\TeacherReviewController::class, 'show'])->name('teacher-reviews.show')->middleware('permission:teachers.view');
+    Route::post('teacher-reviews/{teacher_review}/flag', [Admin\TeacherReviewController::class, 'flag'])->name('teacher-reviews.flag')->middleware('permission:teachers.manage');
+    Route::post('teacher-reviews/{teacher_review}/unflag', [Admin\TeacherReviewController::class, 'unflag'])->name('teacher-reviews.unflag')->middleware('permission:teachers.manage');
+    Route::delete('teacher-reviews/{teacher_review}', [Admin\TeacherReviewController::class, 'destroy'])->name('teacher-reviews.destroy')->middleware('permission:teachers.manage');
+
     // ── Bank Integration (Ethiopian Banks) ───────────────────
     Route::get('bank-integration', [BankIntegrationController::class, 'index'])->name('bank-integration.index')->middleware('permission:fee_payments.view');
     Route::get('bank-integration-settings', [BankIntegrationController::class, 'settings'])->name('bank-integration.settings')->middleware('permission:fees.view');
@@ -603,6 +611,12 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->gro
     Route::post('assessment/question/{questionId}', [StudentAssessmentController::class, 'submitAnswer'])->name('assessment.submit');
     Route::get('assessment/question/{questionId}/retake', [StudentAssessmentController::class, 'retakeQuestion'])->name('assessment.retake');
     Route::get('assessment/progress', [StudentAssessmentController::class, 'progress'])->name('assessment.progress');
+
+    // Teacher Review
+    Route::get('teacher-review', [Student\TeacherReviewController::class, 'index'])->name('teacher-review.index');
+    Route::get('teacher-review/create', [Student\TeacherReviewController::class, 'create'])->name('teacher-review.create');
+    Route::post('teacher-review', [Student\TeacherReviewController::class, 'store'])->name('teacher-review.store');
+    Route::get('teacher-review/{teacher_review}', [Student\TeacherReviewController::class, 'show'])->name('teacher-review.show');
 });
 
 // ── Parent Portal ───────────────────────────────────────────

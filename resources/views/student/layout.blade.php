@@ -465,6 +465,13 @@
                     </a>
                 </li>
 
+                <li class="menu-header">TEACHER REVIEW</li>
+                <li class="{{ request()->routeIs('student.teacher-review.*') ? 'active' : '' }}">
+                    <a href="{{ route('student.teacher-review.index') }}" class="{{ request()->routeIs('student.teacher-review.*') ? 'active' : '' }}">
+                        <i class="fas fa-chalkboard-teacher"></i><span>Review Teachers</span>
+                    </a>
+                </li>
+
                 <li class="menu-header">COMMUNICATION</li>
                 <li class="{{ request()->routeIs('student.chat.*') ? 'active' : '' }}">
                     <a href="{{ route('student.chat.index') }}" class="{{ request()->routeIs('student.chat.*') ? 'active' : '' }}">

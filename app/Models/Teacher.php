@@ -43,6 +43,7 @@ public function assignments() { return $this->hasMany(TeacherAssignment::class, 
 public function branchPrincipal() { return $this->hasOne(Branch::class, 'principal_id'); }
 public function department() { return $this->belongsTo(Department::class, 'department_id'); }
 public function examQuestions() { return $this->hasMany(ExamQuestion::class, 'teacher_id'); }
+public function reviews() { return $this->hasMany(TeacherReview::class, 'teacher_id'); }
 
 /**
  * Primary branch assignment.

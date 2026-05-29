@@ -29,6 +29,7 @@ class Student extends Model
     public function currentEnrollment() { return $this->hasOne(StudentEnrollment::class)->where('academic_year_id', AcademicYear::where('is_current', true)->value('id') ?? AcademicYear::max('id'))->where('status', 'enrolled'); }
     public function comments() { return $this->hasMany(StudentComment::class)->latestFirst(); }
     public function reportComments() { return $this->hasMany(StudentComment::class)->forReport()->latestFirst(); }
+    public function teacherReviews() { return $this->hasMany(TeacherReview::class); }
 
     /**
      * Full name is now a real column.
