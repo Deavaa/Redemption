@@ -32,7 +32,7 @@
 .me-filter-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #eee; margin-bottom: 6px; }
 .me-filter-header { display: none; }
 .me-filter-body { padding: 6px 8px; }
-.me-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.me-filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
 .me-filter-group { display: flex; flex-direction: column; min-width: 0; }
 .me-filter-label { font-weight: 600; color: #555; margin-bottom: 2px; font-size: 0.65rem; }
 .me-filter-label .me-required { color: #ef4444; margin-left: 1px; }
@@ -287,7 +287,7 @@
 .me-swipe-hint { animation: meSwipeHint 1.5s ease-in-out 2; }
 
 /* ===== RESPONSIVE — MOBILE-FIRST, scale UP for larger screens ===== */
-/* Mobile (<480px): uses defaults above — 3-col CA, 2-col exam, 2-col filter */
+/* Mobile (<480px): uses defaults above — 3-col filter, 3-col CA, 2-col exam */
 /* Small tablet */
 @media (min-width: 481px) {
     .me-filter-grid { grid-template-columns: repeat(3, 1fr); }
@@ -295,13 +295,13 @@
 }
 /* Tablet */
 @media (min-width: 768px) {
-    .me-filter-grid { grid-template-columns: repeat(3, 1fr); }
+    .me-filter-grid { grid-template-columns: repeat(6, 1fr); }
     .me-sc-ca-grid { grid-template-columns: repeat(5, 1fr); }
     .me-cards-container { max-height: calc(100vh - 280px); }
 }
 /* Desktop */
 @media (min-width: 992px) {
-    .me-filter-grid { grid-template-columns: repeat(5, 1fr); }
+    .me-filter-grid { grid-template-columns: repeat(6, 1fr); }
     .me-sc-ca-grid { grid-template-columns: repeat(5, 1fr); }
 }
 /* Large desktop */
@@ -401,11 +401,23 @@
                     </select>
                 </div>
                 <div class="me-filter-group">
+                    <label class="me-filter-label" for="filterBranch">Branch</label>
+                    <select id="filterBranch" class="me-filter-select" name="branch_id" {{ $branchScope ? 'disabled' : '' }}>
+                        <option value="">-- All Branches --</option>
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->id }}" {{ $userBranchId && $userBranchId == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                    @if($branchScope)
+                        <input type="hidden" name="branch_id" value="{{ $branchScope }}">
+                    @endif
+                </div>
+                <div class="me-filter-group">
                     <label class="me-filter-label" for="filterClass">Class <span class="me-required">*</span></label>
                     <select id="filterClass" class="me-filter-select">
                         <option value="">-- Select Class --</option>
                         @foreach ($classes as $cls)
-                            <option value="{{ $cls->id }}">{{ $cls->name }}</option>
+                            <option value="{{ $cls->id }}" data-branch-id="{{ $cls->branch_id }}">{{ $cls->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -532,6 +544,7 @@
     // ========== DOM REFS ==========
     var filterAy = document.getElementById('filterAy');
     var filterTerm = document.getElementById('filterTerm');
+    var filterBranch = document.getElementById('filterBranch');
     var filterClass = document.getElementById('filterClass');
     var filterSection = document.getElementById('filterSection');
     var filterSubject = document.getElementById('filterSubject');
@@ -569,6 +582,7 @@
 
     // ========== API ROUTES ==========
     var API_TERMS = '{{ route("admin.mark-entries.api.terms") }}';
+    var API_BRANCHES = '{{ route("admin.mark-entries.api.branches") }}';
     var API_CLASSES = '{{ route("admin.mark-entries.api.classes") }}';
     var API_SECTIONS = '{{ route("admin.mark-entries.api.sections") }}';
     var API_SUBJECTS = '{{ route("admin.mark-entries.api.subjects") }}';
@@ -770,6 +784,7 @@
     // ========== TEACHER CLASS POPULATION ==========
     function populateTeacherClasses() {
         var ayId = filterAy.value;
+        var branchId = filterBranch ? filterBranch.value : '';
         var classes = {};
 
         teacherAssignments.forEach(function(a) {
@@ -793,7 +808,7 @@
         }
     }
 
-    // ========== CASCADE: AY -> Terms ==========
+    // ========== CASCADE: AY -> Terms + Branches ==========
     filterAy.addEventListener('change', function() {
         var ayId = this.value;
         document.getElementById('chipAy').textContent = ayId
@@ -801,6 +816,7 @@
             : 'No Academic Year';
 
         filterTerm.innerHTML = '<option value="">-- Select Term --</option>';
+        filterBranch.innerHTML = '<option value="">-- All Branches --</option>';
         filterClass.innerHTML = '<option value="">-- Select Class --</option>';
         filterSection.innerHTML = '<option value="">-- Select Section --</option>';
         filterSection.disabled = true;
@@ -836,6 +852,9 @@
                 console.error('Failed to load terms:', err);
             });
 
+        // Also reload branches for this academic year
+        loadBranches(ayId);
+
         if (teacherAssignments && teacherAssignments.length > 0) {
             populateTeacherClasses();
         } else {
@@ -862,6 +881,24 @@
         if (termId) checkLockStatus();
 
         // Reload classes for the current academic year when term changes
+        if (teacherAssignments && teacherAssignments.length > 0) {
+            populateTeacherClasses();
+        } else {
+            loadClasses();
+        }
+
+        updateLoadButton();
+    });
+
+    // ========== CASCADE: Branch -> Classes ==========
+    filterBranch.addEventListener('change', function() {
+        filterClass.innerHTML = '<option value="">-- Select Class --</option>';
+        filterSection.innerHTML = '<option value="">-- Select Section --</option>';
+        filterSection.disabled = true;
+        filterSubject.innerHTML = '<option value="">-- Select Subject --</option>';
+        filterSubject.disabled = true;
+        hideMarkEntry();
+
         if (teacherAssignments && teacherAssignments.length > 0) {
             populateTeacherClasses();
         } else {
@@ -985,10 +1022,13 @@
     // ========== LOAD CLASSES (API fallback) ==========
     function loadClasses() {
         var ayId = filterAy.value;
+        var branchId = filterBranch ? filterBranch.value : '';
         var url = API_CLASSES;
-        if (ayId) {
-            url += '?academic_year_id=' + ayId;
-        }
+        var params = [];
+        if (ayId) params.push('academic_year_id=' + ayId);
+        if (branchId) params.push('branch_id=' + branchId);
+        if (params.length > 0) url += '?' + params.join('&');
+
         fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1000,6 +1040,7 @@
                     var opt = document.createElement('option');
                     opt.value = c.id;
                     opt.textContent = c.name;
+                    if (c.branch_id) opt.setAttribute('data-branch-id', c.branch_id);
                     filterClass.appendChild(opt);
                 });
                 filterSection.innerHTML = '<option value="">-- Select Section --</option>';
@@ -1007,6 +1048,40 @@
             })
             .catch(function(err) {
                 console.error('Failed to load classes:', err);
+            });
+    }
+
+    // ========== LOAD BRANCHES (API) ==========
+    function loadBranches(ayId) {
+        var url = API_BRANCHES;
+        if (ayId) url += '?academic_year_id=' + ayId;
+
+        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function(data) {
+                var currentBranchId = filterBranch ? filterBranch.value : '';
+                filterBranch.innerHTML = '<option value="">-- All Branches --</option>';
+                data.forEach(function(b) {
+                    var opt = document.createElement('option');
+                    opt.value = b.id;
+                    opt.textContent = b.name;
+                    filterBranch.appendChild(opt);
+                });
+                // Restore previous selection if still valid
+                if (currentBranchId) {
+                    var exists = data.some(function(b) { return b.id == currentBranchId; });
+                    if (exists) filterBranch.value = currentBranchId;
+                }
+                // Auto-select if there's only one branch
+                if (data.length === 1) {
+                    filterBranch.value = data[0].id;
+                }
+            })
+            .catch(function(err) {
+                console.error('Failed to load branches:', err);
             });
     }
 

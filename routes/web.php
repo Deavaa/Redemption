@@ -150,6 +150,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('subject-assignments/api/sections', [SubjectAssignmentController::class, 'apiSections'])->name('subject-assignments.api.sections');
 
     // Mark Entry API routes (MUST be defined BEFORE the resource route to avoid conflicts)
+    Route::get('mark-entries/api/branches', [MarkEntryController::class, 'apiBranches'])->name('mark-entries.api.branches');
     Route::get('mark-entries/api/terms', [MarkEntryController::class, 'apiTerms'])->name('mark-entries.api.terms');
     Route::get('mark-entries/api/classes', [MarkEntryController::class, 'apiClasses'])->name('mark-entries.api.classes');
     Route::get('mark-entries/api/sections', [MarkEntryController::class, 'apiSections'])->name('mark-entries.api.sections');

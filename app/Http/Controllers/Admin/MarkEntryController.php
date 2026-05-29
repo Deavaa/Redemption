@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
+use App\Models\Branch;
 use App\Models\Term;
 use App\Models\ClassRoom;
 use App\Models\Section;
@@ -36,11 +37,19 @@ class MarkEntryController extends Controller
         return $teacher;
     }
 
-    public function index() {
+    public function index(Request $request) {
         $academicYears = AcademicYear::orderBy('id','desc')->get();
         $currentAy = $academicYears->first();
         $terms = $currentAy ? Term::where('academic_year_id', $currentAy->id)->orderBy('id','asc')->get() : collect();
         $currentTerm = $terms->first();
+
+        // ── Branch scope: principals only see their branch ──
+        $branchScope = $request->attributes->get('branch_scope');
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+        if ($branchScope) {
+            $branches = $branches->where('id', $branchScope);
+        }
+        $userBranchId = auth()->user()->branch_id;
 
         // Teacher-scoped filtering
         $isTeacher = false;
@@ -75,13 +84,18 @@ class MarkEntryController extends Controller
             $homeroomClassIds = $teacher->classRooms()->pluck('id');
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
 
-            // Load teacher-scoped classes for dropdown
-            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name']);
+            // Load teacher-scoped classes for dropdown (also filter by branch if scoped)
+            $classes = ClassRoom::whereIn('id', $classIds)
+                ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+                ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
 
             $sections = Section::with('classRoom')
                 ->where(function($q) use ($sectionIds, $classIds) {
                     $q->whereIn('id', $sectionIds)
                       ->orWhereIn('class_id', $classIds);
+                })
+                ->when($branchScope, function($q) use ($branchScope) {
+                    $q->whereHas('classRoom', fn($cq) => $cq->where('branch_id', $branchScope));
                 })
                 ->orderBy('class_id','asc')
                 ->orderBy('name','asc')
@@ -141,20 +155,32 @@ class MarkEntryController extends Controller
                 }
             }
         } else {
-            // Admin: load classes for the current academic year (with fallback)
-            $classes = ClassRoom::where('academic_year_id', $currentAy?->id)->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name']);
+            // Admin: load classes for the current academic year (with fallback), filtered by branch scope
+            $classes = ClassRoom::where('academic_year_id', $currentAy?->id)
+                ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+                ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
             if ($classes->isEmpty()) {
-                $classes = ClassRoom::orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name']);
+                $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+                    ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
             }
-            $sections = Section::with('classRoom')->orderBy('class_id','asc')->orderBy('name','asc')->get();
+            $sections = Section::with('classRoom')
+                ->when($branchScope, function($q) use ($branchScope) {
+                    $q->whereHas('classRoom', fn($cq) => $cq->where('branch_id', $branchScope));
+                })
+                ->orderBy('class_id','asc')->orderBy('name','asc')->get();
         }
 
-        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'classes', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments'));
+        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'classes', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments', 'branches', 'branchScope', 'userBranchId'));
     }
 
     public function apiClasses(Request $request) {
         $ayId = $request->query('academic_year_id');
+        $branchId = $request->query('branch_id');
         $teacher = $this->getTeacherForUser();
+
+        // Branch scope: principals only see their branch classes
+        $branchScope = $request->attributes->get('branch_scope');
+        $effectiveBranchId = $branchScope ?? $branchId;
 
         // Default to current academic year if none provided
         if (!$ayId) {
@@ -173,11 +199,18 @@ class MarkEntryController extends Controller
             if ($ayId) {
                 $query->where('academic_year_id', $ayId);
             }
+            if ($effectiveBranchId) {
+                $query->where('branch_id', $effectiveBranchId);
+            }
             $classes = $query->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
 
             // Fallback: if no classes found for this AY, show all teacher classes
             if ($classes->isEmpty()) {
-                $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+                $fallbackQuery = ClassRoom::whereIn('id', $classIds);
+                if ($effectiveBranchId) {
+                    $fallbackQuery->where('branch_id', $effectiveBranchId);
+                }
+                $classes = $fallbackQuery->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
             }
 
             return response()->json($classes);
@@ -187,14 +220,43 @@ class MarkEntryController extends Controller
         if ($ayId) {
             $query->where('academic_year_id', $ayId);
         }
+        if ($effectiveBranchId) {
+            $query->where('branch_id', $effectiveBranchId);
+        }
         $classes = $query->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
 
-        // Fallback: if no classes for this AY, show all classes
+        // Fallback: if no classes for this AY, show all classes for the branch
         if ($classes->isEmpty() && $ayId) {
-            $classes = ClassRoom::orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+            $fallbackQuery = ClassRoom::query();
+            if ($effectiveBranchId) {
+                $fallbackQuery->where('branch_id', $effectiveBranchId);
+            }
+            $classes = $fallbackQuery->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
         }
 
         return response()->json($classes);
+    }
+
+    public function apiBranches(Request $request) {
+        $academicYearId = $request->get('academic_year_id');
+
+        // Branch scope: principals only see their branch
+        $branchScope = $request->attributes->get('branch_scope');
+
+        if ($branchScope) {
+            return response()->json(Branch::where('id', $branchScope)->where('is_active', true)->get());
+        }
+
+        $branches = Branch::where('is_active', true)
+            ->when($academicYearId, function ($q) use ($academicYearId) {
+                $q->whereHas('classes', function ($q2) use ($academicYearId) {
+                    $q2->where('academic_year_id', $academicYearId);
+                });
+            })
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($branches);
     }
 
     public function apiTerms(Request $request) {
