@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailInboxSetting;
 use App\Models\EmailMessage;
 use App\Models\Branch;
+use Ddeboer\Imap\Server;
+use Ddeboer\Imap\SearchExpression;
+use Ddeboer\Imap\Search\Flag\Unseen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -190,8 +193,10 @@ class EmailInboxController extends Controller
             $username = $inboxSetting->imap_username;
             $password = $inboxSetting->getDecryptedPassword();
             $encryption = $inboxSetting->imap_encryption;
-            $folder = $inboxSetting->folder;
+            $folder = $inboxSetting->folder ?? 'INBOX';
 
+            // Build the server connection string and flags for ddeboer/imap
+            // This library uses PHP sockets - no php-imap extension required
             $flags = '';
             if ($encryption === 'ssl') {
                 $flags = '/imap/ssl/novalidate-cert';
@@ -201,75 +206,126 @@ class EmailInboxController extends Controller
                 $flags = '/imap/novalidate-cert';
             }
 
-            $mailbox = imap_open("{" . $host . ":" . $port . $flags . "}" . $folder, $username, $password);
+            $server = new Server($host, $port, $flags);
 
-            if (!$mailbox) {
-                return back()->with('error', 'Failed to connect to email server: ' . imap_last_error());
-            }
+            // Connect and authenticate
+            $connection = $server->authenticate($username, $password);
 
-            $emails = imap_search($mailbox, 'UNSEEN');
+            // Select the mailbox folder
+            $mailbox = $connection->getMailbox($folder);
+
+            // Search for unread messages
+            $search = new SearchExpression();
+            $search->addCondition(new Unseen());
+
+            $messages = $mailbox->getMessages($search);
             $synced = 0;
+            $count = 0;
 
-            if ($emails) {
-                rsort($emails);
-                $maxToSync = 50; // Limit sync to prevent timeout
-                $emails = array_slice($emails, 0, $maxToSync);
+            foreach ($messages as $message) {
+                $count++;
 
-                foreach ($emails as $emailNumber) {
-                    $header = imap_headerinfo($mailbox, $emailNumber);
-                    $messageId = $header->message_id ?? uniqid();
+                // Limit sync to prevent timeout
+                if ($count > 50) {
+                    break;
+                }
 
-                    // Skip if already exists
-                    if (EmailMessage::where('message_id', $messageId)->exists()) {
-                        continue;
-                    }
+                $messageId = $message->getId() ?? uniqid();
 
-                    $fromName = isset($header->from[0]) ? $header->from[0]->personal ?? '' : '';
-                    $fromEmail = isset($header->from[0]) ? $header->from[0]->mailbox . '@' . $header->from[0]->host : '';
-                    $toEmail = isset($header->to[0]) ? $header->to[0]->mailbox . '@' . $header->to[0]->host : '';
-                    $subject = isset($header->subject) ? imap_utf8($header->subject) : '(No Subject)';
-                    $date = isset($header->date) ? date('Y-m-d H:i:s', strtotime($header->date)) : now();
+                // Skip if already exists
+                if (EmailMessage::where('message_id', $messageId)->exists()) {
+                    continue;
+                }
 
-                    // Get body
+                // Extract from address
+                $from = $message->getFrom();
+                $fromName = $from ? $from->getName() : '';
+                $fromEmail = $from ? $from->getAddress() : '';
+
+                // Extract to address
+                $to = $message->getTo();
+                $toEmail = '';
+                if ($to && count($to) > 0) {
+                    $toEmail = $to[0]->getAddress();
+                }
+
+                // Subject
+                $subject = $message->getSubject() ?? '(No Subject)';
+
+                // Date
+                $date = $message->getDate();
+                $dateStr = $date ? $date->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s');
+
+                // Get body - try HTML first, fall back to plain text
+                $bodyHtml = '';
+                $bodyText = '';
+
+                try {
+                    $bodyHtml = $message->getBodyHtml() ?: '';
+                } catch (\Exception $e) {
                     $bodyHtml = '';
-                    $bodyText = '';
-                    $structure = imap_fetchstructure($mailbox, $emailNumber);
+                }
 
-                    if (!$structure->parts) {
-                        $bodyText = imap_body($mailbox, $emailNumber);
-                    } else {
-                        // Multipart - get text and html parts
-                        foreach ($structure->parts as $partNumber => $part) {
-                            if ($part->type === 0 && $part->subtype === 'PLAIN') {
-                                $bodyText = imap_fetchbody($mailbox, $emailNumber, $partNumber + 1);
-                            } elseif ($part->type === 0 && $part->subtype === 'HTML') {
-                                $bodyHtml = imap_fetchbody($mailbox, $emailNumber, $partNumber + 1);
-                            }
+                try {
+                    $bodyText = $message->getBodyText() ?: '';
+                } catch (\Exception $e) {
+                    $bodyText = '';
+                }
+
+                // If no plain text, strip HTML tags
+                if (empty($bodyText) && !empty($bodyHtml)) {
+                    $bodyText = strip_tags($bodyHtml);
+                }
+
+                // Auto-categorize based on subject/body
+                $category = $this->autoCategorize($subject, $bodyText);
+
+                // Get CC recipients
+                $ccList = [];
+                $cc = $message->getCc();
+                if ($cc) {
+                    foreach ($cc as $ccRecipient) {
+                        $ccList[] = $ccRecipient->getAddress();
+                    }
+                }
+
+                // Get attachments info
+                $attachmentsList = [];
+                try {
+                    $attachments = $message->getAttachments();
+                    if ($attachments) {
+                        foreach ($attachments as $attachment) {
+                            $attachmentsList[] = [
+                                'filename' => $attachment->getFilename(),
+                                'size' => $attachment->getSize(),
+                            ];
                         }
                     }
-
-                    // Auto-categorize based on subject/body
-                    $category = $this->autoCategorize($subject, $bodyText);
-
-                    EmailMessage::create([
-                        'email_inbox_setting_id' => $inboxSetting->id,
-                        'message_id' => $messageId,
-                        'subject' => $subject,
-                        'body_html' => $bodyHtml,
-                        'body_text' => $bodyText,
-                        'from_name' => $fromName,
-                        'from_email' => $fromEmail,
-                        'to_email' => $toEmail,
-                        'received_at' => $date,
-                        'is_read' => false,
-                        'category' => $category,
-                    ]);
-
-                    $synced++;
+                } catch (\Exception $e) {
+                    // Attachments not critical for sync
                 }
+
+                EmailMessage::create([
+                    'email_inbox_setting_id' => $inboxSetting->id,
+                    'message_id' => $messageId,
+                    'subject' => $subject,
+                    'body_html' => $bodyHtml,
+                    'body_text' => $bodyText,
+                    'from_name' => $fromName,
+                    'from_email' => $fromEmail,
+                    'to_email' => $toEmail,
+                    'cc' => !empty($ccList) ? $ccList : null,
+                    'attachments' => !empty($attachmentsList) ? $attachmentsList : null,
+                    'received_at' => $dateStr,
+                    'is_read' => false,
+                    'category' => $category,
+                ]);
+
+                $synced++;
             }
 
-            imap_close($mailbox);
+            // Close connection
+            $connection->close();
 
             $inboxSetting->update(['last_synced_at' => now()]);
 
