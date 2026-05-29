@@ -509,6 +509,11 @@ class MarkEntryController extends Controller
             'term_id' => 'required',
         ]);
 
+        // Explicitly touch the session to ensure it stays alive during mark entry.
+        // This guarantees the session file timestamp is updated even if the
+        // StartSession middleware optimizes away a no-change write.
+        session(['_last_mark_save' => time()]);
+
         $studentId = $request->input('student_id');
         $subjectId = $request->input('subject_id');
         $ayId = $request->input('academic_year_id') ?: null;

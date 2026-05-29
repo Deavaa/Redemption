@@ -23,6 +23,12 @@ class AdminMiddleware
         $user = $request->user();
 
         if (!$user) {
+            // For AJAX/JSON requests, return 401 instead of redirecting.
+            // This prevents fetch() from silently following the redirect
+            // and failing to detect session expiry.
+            if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json(['error' => 'Unauthenticated.'], 401);
+            }
             return redirect()->route('login');
         }
 

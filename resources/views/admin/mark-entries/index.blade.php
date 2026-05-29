@@ -631,8 +631,10 @@
 
     // ========== CSRF TOKEN REFRESH ==========
     // Fetches a fresh CSRF token from the server and updates the global variable.
-    // This is critical when a 419 (CSRF token mismatch / session expired) is detected.
+    // CRITICAL: Uses redirect:'manual' to prevent fetch() from silently following
+    // 302 redirects to the login page, which would mask session expiry.
     var csrfRefreshInProgress = false;
+    var sessionExpiredHandled = false; // Prevent multiple session-expired alerts
 
     function updateCSRFToken(newToken) {
         if (!newToken) return;
@@ -641,30 +643,55 @@
         if (metaTag) metaTag.setAttribute('content', CSRF);
     }
 
+    function handleSessionExpired(source) {
+        if (sessionExpiredHandled) return; // Only show once
+        sessionExpiredHandled = true;
+        console.error('[MarkEntry] Session expired detected from:', source);
+        backupMarksToLocalStorage();
+        alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up to local storage and will be available after you log back in.');
+        window.location.href = '{{ route("login") }}';
+    }
+
     function refreshCSRFToken() {
+        if (sessionExpiredHandled) return Promise.reject(new Error('Session expired'));
         if (csrfRefreshInProgress) return Promise.resolve(CSRF);
         csrfRefreshInProgress = true;
 
         return fetch(API_KEEPALIVE, {
             credentials: 'same-origin',
+            redirect: 'manual', // CRITICAL: Do NOT follow redirects — detect them instead
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(function(r) {
+            // With redirect:'manual', a 302 redirect returns an opaque-redirect response
+            // type='opaqueredirect', status=0. This is the KEY detection that was missing.
+            if (r.type === 'opaqueredirect' || r.status === 0) {
+                // Server tried to redirect us (likely to /login) — session expired
+                csrfRefreshInProgress = false;
+                handleSessionExpired('keepalive redirect');
+                return Promise.reject(new Error('Session expired (redirect)'));
+            }
             if (!r.ok) {
-                if (r.status === 401 || r.status === 302 || r.redirected) {
-                    // Session truly expired - redirect to login
-                    alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up to local storage and will be available after you log back in.');
-                    backupMarksToLocalStorage();
-                    window.location.href = '{{ route("login") }}';
-                    throw new Error('Session expired');
+                if (r.status === 401 || r.status === 419) {
+                    // Server explicitly says unauthenticated or CSRF mismatch
+                    csrfRefreshInProgress = false;
+                    handleSessionExpired('keepalive HTTP ' + r.status);
+                    return Promise.reject(new Error('Session expired (HTTP ' + r.status + ')'));
                 }
                 throw new Error('Keepalive failed: HTTP ' + r.status);
+            }
+            // Also check r.redirected (in case redirect:'manual' isn't supported in older browsers)
+            if (r.redirected) {
+                csrfRefreshInProgress = false;
+                handleSessionExpired('keepalive followed redirect');
+                return Promise.reject(new Error('Session expired (redirect followed)'));
             }
             return r.json();
         })
         .then(function(data) {
             if (data.csrf_token) {
                 updateCSRFToken(data.csrf_token);
+                lastKeepaliveTime = Date.now();
                 console.log('[MarkEntry] CSRF token refreshed via keepalive');
             }
             csrfRefreshInProgress = false;
@@ -672,6 +699,9 @@
         })
         .catch(function(err) {
             csrfRefreshInProgress = false;
+            if (err.message && err.message.indexOf('Session expired') !== -1) {
+                throw err; // Re-throw session expiry errors
+            }
             console.error('[MarkEntry] CSRF refresh failed:', err);
             throw err;
         });
@@ -680,31 +710,44 @@
     // ========== SESSION KEEPALIVE (ACTIVITY-DRIVEN) ==========
     // The keepalive pings the server to keep the session alive during long mark entry sessions.
     // It runs on TWO triggers:
-    //   1. Timer: every 2 minutes (prevents idle expiry even if user types slowly)
-    //   2. Activity: resets the timer whenever the user types/clicks (prevents expiry during active use)
+    //   1. Timer: every 60 seconds (prevents idle expiry even if user types slowly)
+    //   2. Activity: fires an IMMEDIATE keepalive when user types/clicks after 30s of idle
     // The CSRF token is refreshed on every ping AND on every successful auto-save.
-    var KEEPALIVE_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes (reduced from 5 min)
+    var KEEPALIVE_INTERVAL_MS = 60 * 1000; // 1 minute (aggressive — session must stay alive)
     var keepaliveTimer = null;
     var lastKeepaliveTime = Date.now();
+
+    function fireKeepalive() {
+        if (sessionExpiredHandled) return;
+        refreshCSRFToken()
+            .then(function() {
+                lastKeepaliveTime = Date.now();
+                console.log('[MarkEntry] Keepalive OK');
+            })
+            .catch(function(err) {
+                if (err.message && err.message.indexOf('Session expired') !== -1) return; // Already handled
+                console.warn('[MarkEntry] Keepalive ping failed (will retry):', err.message);
+            });
+    }
 
     function scheduleKeepalive() {
         if (keepaliveTimer) clearTimeout(keepaliveTimer);
         keepaliveTimer = setTimeout(function() {
-            refreshCSRFToken()
-                .then(function() { lastKeepaliveTime = Date.now(); })
-                .catch(function(err) {
-                    console.warn('[MarkEntry] Keepalive ping failed (will retry):', err.message);
-                })
-                .finally(function() { scheduleKeepalive(); });
+            fireKeepalive();
+            // Always reschedule regardless of success/failure
+            scheduleKeepalive();
         }, KEEPALIVE_INTERVAL_MS);
     }
 
     function startKeepalive() {
+        // Fire an immediate keepalive to confirm session is alive
+        fireKeepalive();
         scheduleKeepalive();
-        console.log('[MarkEntry] Session keepalive started (every 2 minutes, activity-driven)');
+        console.log('[MarkEntry] Session keepalive started (every 60 seconds, activity-driven)');
 
-        // Listen for user activity — any typing or clicking resets the keepalive timer
-        // This ensures the session NEVER expires while the user is actively entering marks
+        // Listen for user activity — any typing or clicking fires an immediate keepalive
+        // if it's been more than 30 seconds since the last server contact.
+        // This ensures the session NEVER expires while the user is actively entering marks.
         document.addEventListener('input', resetKeepaliveOnActivity);
         document.addEventListener('click', resetKeepaliveOnActivity);
         document.addEventListener('keydown', resetKeepaliveOnActivity);
@@ -712,13 +755,55 @@
     }
 
     function resetKeepaliveOnActivity() {
-        // If more than 30 seconds since last keepalive, reschedule immediately
-        // This prevents the scenario where the user is typing constantly but the
-        // keepalive hasn't had a chance to run, and the session silently expires.
+        if (sessionExpiredHandled) return;
         var elapsed = Date.now() - lastKeepaliveTime;
-        if (elapsed > 30 * 1000) { // 30 seconds since last server contact
-            scheduleKeepalive(); // Reset the 2-minute timer
+        if (elapsed > 30 * 1000) {
+            // More than 30 seconds since last server contact — fire IMMEDIATE keepalive
+            // instead of just resetting the timer. This ensures the session is actually
+            // refreshed on the server, not just scheduled for later.
+            console.log('[MarkEntry] Activity detected after ' + Math.round(elapsed/1000) + 's — firing immediate keepalive');
+            fireKeepalive();
+            // Also reschedule the periodic timer from now
+            scheduleKeepalive();
         }
+    }
+
+    // ========== SESSION-SAFE FETCH HELPER ==========
+    // Wrapper around fetch() that adds redirect:'manual' and proper headers
+    // to detect session expiry (302 redirect to /login) instead of silently following it.
+    function safeFetch(url, options) {
+        options = options || {};
+        options.credentials = 'same-origin';
+        options.redirect = 'manual'; // Detect redirects instead of following them
+        if (!options.headers) options.headers = {};
+        // Ensure AJAX headers so Laravel returns 401 instead of 302 for expired sessions
+        if (!options.headers['Accept']) options.headers['Accept'] = 'application/json';
+        if (!options.headers['X-Requested-With']) options.headers['X-Requested-With'] = 'XMLHttpRequest';
+
+        return fetch(url, options).then(function(r) {
+            // Detect redirect — session expired
+            if (r.type === 'opaqueredirect' || r.status === 0) {
+                handleSessionExpired('safeFetch redirect');
+                return Promise.reject(new Error('Session expired (redirect)'));
+            }
+            // Detect 401 — explicitly unauthenticated
+            if (r.status === 401) {
+                handleSessionExpired('safeFetch 401');
+                return Promise.reject(new Error('Session expired (401)'));
+            }
+            // Detect 419 — CSRF token mismatch (session may have rotated)
+            if (r.status === 419) {
+                // Try to refresh the CSRF token once
+                return refreshCSRFToken().then(function() {
+                    // Retry the request with the new token
+                    if (options.headers && options.headers['X-CSRF-TOKEN']) {
+                        options.headers['X-CSRF-TOKEN'] = CSRF;
+                    }
+                    return fetch(url, options);
+                });
+            }
+            return r;
+        });
     }
 
     // ========== LOCAL STORAGE BACKUP ==========
@@ -860,7 +945,7 @@
 
         if (!ayId) { updateLoadButton(); return; }
 
-        fetch(API_TERMS + '?academic_year_id=' + ayId, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        safeFetch(API_TERMS + '?academic_year_id=' + ayId)
             .then(function(r) {
                 if (!r.ok) {
                     if (r.status === 302 || r.redirected) throw new Error('Session expired. Please refresh the page.');
@@ -980,7 +1065,7 @@
         }
 
         // Fallback: API
-        fetch(API_SECTIONS + '?class_id=' + classId, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        safeFetch(API_SECTIONS + '?class_id=' + classId)
             .then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
@@ -1024,7 +1109,7 @@
         if (!classId) return;
 
         var params = 'class_id=' + classId + (sectionId ? '&section_id=' + sectionId : '') + (ayId ? '&academic_year_id=' + ayId : '');
-        fetch(API_SUBJECTS + '?' + params, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        safeFetch(API_SUBJECTS + '?' + params)
             .then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
@@ -1063,7 +1148,7 @@
         if (branchId) params.push('branch_id=' + branchId);
         if (params.length > 0) url += '?' + params.join('&');
 
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        safeFetch(url)
             .then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
@@ -1090,7 +1175,7 @@
         var url = API_BRANCHES;
         if (ayId) url += '?academic_year_id=' + ayId;
 
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        safeFetch(url)
             .then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
@@ -1139,7 +1224,7 @@
 
         if (!ayId || !termId) return;
 
-        fetch(API_CHECK_LOCK + '?academic_year_id=' + ayId + '&term_id=' + termId + (branchId ? '&branch_id=' + branchId : ''), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        safeFetch(API_CHECK_LOCK + '?academic_year_id=' + ayId + '&term_id=' + termId + (branchId ? '&branch_id=' + branchId : ''))
             .then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
@@ -1203,12 +1288,9 @@
             + '&section_id=' + sectionId
             + '&subject_id=' + subjectId;
 
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+        safeFetch(url)
             .then(function(r) {
-                if (!r.ok) {
-                    if (r.status === 302 || r.redirected) throw new Error('Session expired. Please refresh the page.');
-                    throw new Error('HTTP ' + r.status);
-                }
+                if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
             })
             .then(function(data) {
@@ -1753,6 +1835,8 @@
 
     // ========== SAVE MARK ==========
     function saveMark(studentId, markKey, value, isRetry) {
+        if (sessionExpiredHandled) return; // Don't save if session is expired
+
         var ayId = filterAy.value;
         var termId = filterTerm.value;
         var classId = filterClass.value;
@@ -1768,7 +1852,8 @@
         fetch(API_SAVE, {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+            redirect: 'manual', // CRITICAL: Detect 302 redirects instead of following them
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({
                 student_id: studentId,
                 academic_year_id: ayId,
@@ -1781,13 +1866,19 @@
             })
         })
         .then(function(r) {
+            // ── Detect 302 redirect (session expired) ──
+            // With redirect:'manual', a 302 returns type='opaqueredirect', status=0
+            if (r.type === 'opaqueredirect' || r.status === 0) {
+                handleSessionExpired('save redirect');
+                throw new Error('Session expired (redirect during save)');
+            }
+
             // ── Handle 419 CSRF Token Mismatch ──
             if (r.status === 419) {
                 if (isRetry) {
-                    // Already retried once — give up and alert the user
+                    // Already retried once — give up, backup marks, alert user
                     setGlobalSaveStatus('error', 'Session Expired');
-                    backupMarksToLocalStorage();
-                    alert('Your session has expired and marks could not be saved.\n\nYour marks have been backed up to local storage. Please refresh the page and try again.');
+                    handleSessionExpired('419 after retry');
                     throw new Error('Session expired (419 after retry)');
                 }
                 // First 419 — refresh CSRF token and retry the save
@@ -1795,6 +1886,12 @@
                 return refreshCSRFToken().then(function(newToken) {
                     return saveMark(studentId, markKey, value, true);
                 });
+            }
+
+            // ── Handle 401 Unauthorized ──
+            if (r.status === 401) {
+                handleSessionExpired('save 401');
+                throw new Error('Session expired (401 during save)');
             }
 
             if (!r.ok) {
@@ -1805,14 +1902,22 @@
                         var jsonErr = JSON.parse(text);
                         errMsg = jsonErr.error || jsonErr.message || errMsg;
                     } catch(e) {
-                        // Response is HTML (e.g. login redirect page) — check for redirect
-                        if (r.status === 401 || text.indexOf('login') !== -1) {
-                            errMsg = 'Session expired';
+                        // Response is HTML (e.g. login redirect page)
+                        if (text.indexOf('login') !== -1) {
+                            handleSessionExpired('save HTML login page');
+                            throw new Error('Session expired');
                         }
                     }
                     throw new Error(errMsg);
                 });
             }
+
+            // Check if fetch followed a redirect despite our manual setting
+            if (r.redirected) {
+                handleSessionExpired('save followed redirect');
+                throw new Error('Session expired (redirect followed during save)');
+            }
+
             return r.json();
         })
         .then(function(res) {
@@ -1867,6 +1972,7 @@
             }
         })
         .catch(function(err) {
+            if (err.message && err.message.indexOf('Session expired') !== -1) return; // Already handled
             setGlobalSaveStatus('error', 'Not Saved');
             var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
             if (inp) {

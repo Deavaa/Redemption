@@ -123,7 +123,12 @@ Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
     // Session Keepalive & CSRF Refresh — prevents session expiry during long mark entry sessions
+    // Explicitly writes to the session to guarantee the session file timestamp is updated,
+    // preventing garbage collection from deleting an "idle" session that is actually active.
     Route::get('/keepalive', function () {
+        // Touch the session — this forces the session file to be written/updated
+        session(['_last_keepalive' => time()]);
+
         return response()->json([
             'csrf_token' => csrf_token(),
             'timestamp' => time(),
