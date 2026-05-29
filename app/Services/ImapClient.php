@@ -7,6 +7,8 @@ namespace App\Services;
  * No php-imap extension or external composer package required.
  *
  * Supports SSL/TLS connections via stream_socket_client.
+ * Uses AUTHENTICATE PLAIN for reliable credential handling
+ * (avoids quoting/escaping issues with the LOGIN command).
  */
 class ImapClient
 {
@@ -52,7 +54,7 @@ class ImapClient
         );
 
         if (!$this->stream) {
-            $this->lastError = "Connection failed: {$errstr} ({$errno})";
+            $this->lastError = "Connection failed: {$errstr} ({$errno}). Check that the IMAP host and port are correct.";
             return false;
         }
 
@@ -61,7 +63,7 @@ class ImapClient
         // Read server greeting
         $greeting = $this->readLine();
         if ($greeting === false || !str_starts_with($greeting, '* OK')) {
-            $this->lastError = "Server greeting failed: " . ($greeting ?: 'No response');
+            $this->lastError = "Server greeting failed: " . ($greeting ?: 'No response from server. Check host/port/encryption settings.');
             $this->disconnect();
             return false;
         }
@@ -77,16 +79,24 @@ class ImapClient
 
             // Enable crypto
             if (!@stream_socket_enable_crypto($this->stream, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-                $this->lastError = "TLS negotiation failed";
+                $this->lastError = "TLS negotiation failed. Try using SSL encryption instead of TLS.";
                 $this->disconnect();
                 return false;
             }
         }
 
-        // Authenticate
-        $response = $this->sendCommand('LOGIN ' . $this->escape($username) . ' ' . $this->escape($password));
-        if (!$this->isResponseOk($response)) {
-            $this->lastError = "Login failed: {$response}";
+        // Authenticate using AUTHENTICATE PLAIN (SASL)
+        // This is more reliable than LOGIN because it sends credentials in base64,
+        // avoiding all quoting/escaping issues with special characters.
+        $authResult = $this->authenticatePlain($username, $password);
+
+        if (!$authResult) {
+            // Fallback: try LOGIN command with proper literal continuation protocol
+            $authResult = $this->authenticateLogin($username, $password);
+        }
+
+        if (!$authResult) {
+            // Error is already set by the auth methods
             $this->disconnect();
             return false;
         }
@@ -95,11 +105,144 @@ class ImapClient
     }
 
     /**
+     * Authenticate using SASL PLAIN mechanism.
+     * Sends base64-encoded \0username\0password after server continuation.
+     */
+    private function authenticatePlain(string $username, string $password): bool
+    {
+        if (!$this->stream) {
+            return false;
+        }
+
+        $tag = 'TAG' . ++$this->tagCounter;
+
+        // Send AUTHENTICATE PLAIN
+        @fwrite($this->stream, $tag . " AUTHENTICATE PLAIN\r\n");
+
+        // Read continuation response (+ ...)
+        $line = $this->readLine();
+        if ($line === false || !str_starts_with($line, '+')) {
+            // Server doesn't support AUTHENTICATE PLAIN
+            return false;
+        }
+
+        // Send base64-encoded credentials: \0username\0password
+        $credentials = base64_encode("\x00" . $username . "\x00" . $password);
+        @fwrite($this->stream, $credentials . "\r\n");
+
+        // Read response
+        $response = '';
+        while (($line = $this->readLine()) !== false) {
+            $response .= $line . "\n";
+            if (str_starts_with($line, $tag . ' ')) {
+                break;
+            }
+        }
+
+        if ($this->isResponseOk($response)) {
+            return true;
+        }
+
+        $this->lastError = $this->parseAuthError($response);
+        return false;
+    }
+
+    /**
+     * Authenticate using LOGIN command with proper IMAP literal continuation.
+     * This handles the + continuation protocol correctly.
+     */
+    private function authenticateLogin(string $username, string $password): bool
+    {
+        if (!$this->stream) {
+            return false;
+        }
+
+        $tag = 'TAG' . ++$this->tagCounter;
+
+        // Send LOGIN with literal for username
+        @fwrite($this->stream, $tag . " LOGIN {" . strlen($username) . "}\r\n");
+
+        // Wait for continuation (+)
+        $line = $this->readLine();
+        if ($line === false || !str_starts_with($line, '+')) {
+            $this->lastError = "Login failed: server does not support literal continuation.";
+            return false;
+        }
+
+        // Send username, then literal for password
+        @fwrite($this->stream, $username . " {" . strlen($password) . "}\r\n");
+
+        // Wait for continuation (+)
+        $line = $this->readLine();
+        if ($line === false || !str_starts_with($line, '+')) {
+            $this->lastError = "Login failed: server does not support literal continuation for password.";
+            return false;
+        }
+
+        // Send password
+        @fwrite($this->stream, $password . "\r\n");
+
+        // Read response
+        $response = '';
+        while (($line = $this->readLine()) !== false) {
+            $response .= $line . "\n";
+            if (str_starts_with($line, $tag . ' ')) {
+                break;
+            }
+        }
+
+        if ($this->isResponseOk($response)) {
+            return true;
+        }
+
+        $this->lastError = $this->parseAuthError($response);
+        return false;
+    }
+
+    /**
+     * Parse an authentication error response into a user-friendly message.
+     */
+    private function parseAuthError(string $response): string
+    {
+        // Extract the error code/message from the tagged response
+        $errorMsg = $response;
+
+        // Remove the tag prefix
+        $errorMsg = preg_replace('/^TAG\d+\s+(NO|BAD)\s*/i', '', $errorMsg);
+        $errorMsg = trim($errorMsg);
+
+        // Check for common Gmail-specific errors
+        if (str_contains($errorMsg, 'AUTHENTICATIONFAILED') || str_contains($errorMsg, 'Invalid credentials')) {
+            return "Authentication failed: Invalid username or password. "
+                . "For Gmail, you must use an App Password (not your regular password). "
+                . "Steps: 1) Enable 2-Step Verification in your Google Account, "
+                . "2) Go to Security > App Passwords, "
+                . "3) Generate a new App Password for 'Mail', "
+                . "4) Use that 16-character password here.";
+        }
+
+        if (str_contains($errorMsg, 'Too many login') || str_contains($errorMsg, 'temporarily locked')) {
+            return "Authentication failed: Account temporarily locked due to too many failed login attempts. Please try again later.";
+        }
+
+        if (str_contains($errorMsg, 'Application-specific password required')) {
+            return "Authentication failed: You need to use an App Password. "
+                . "Go to your Google Account > Security > App Passwords to generate one.";
+        }
+
+        if (str_contains($errorMsg, 'Web login required')) {
+            return "Authentication failed: Web login required. Please log in to your email account via browser first, then try again.";
+        }
+
+        return "Login failed: {$errorMsg}";
+    }
+
+    /**
      * Select a mailbox folder.
      */
     public function selectFolder(string $folder = 'INBOX'): ?array
     {
-        $response = $this->sendCommand('SELECT ' . $this->escape($folder));
+        $response = $this->sendCommand('SELECT "' . addcslashes($folder, '\\"') . '"');
 
         if (!$this->isResponseOk($response)) {
             $this->lastError = "Failed to select folder: {$response}";
@@ -319,6 +462,21 @@ class ImapClient
     }
 
     /**
+     * Test the connection without syncing. Returns folder info on success.
+     */
+    public function testConnection(string $username, string $password, string $folder = 'INBOX'): ?array
+    {
+        if (!$this->connect($username, $password)) {
+            return null;
+        }
+
+        $info = $this->selectFolder($folder);
+        $this->disconnect();
+
+        return $info;
+    }
+
+    /**
      * Disconnect from the IMAP server.
      */
     public function disconnect(): void
@@ -376,15 +534,6 @@ class ImapClient
     private function isResponseOk(string $response): bool
     {
         return (bool) preg_match('/TAG\d+\s+OK/i', $response);
-    }
-
-    private function escape(string $str): string
-    {
-        // If string contains special chars, use literal syntax
-        if (preg_match('/[\x00-\x1f\x7f*\\"(){}]/', $str)) {
-            return '{' . strlen($str) . "}\r\n" . $str;
-        }
-        return '"' . addcslashes($str, '\\"') . '"';
     }
 
     private function parseHeaders(string $response): array
@@ -452,10 +601,6 @@ class ImapClient
             if (preg_match('/"mixed"|"alternative"|"related"|"plain"|"html"/i', $response, $m)) {
                 $structure['subtype'] = strtoupper(trim($m[0], '"'));
             }
-
-            // Count top-level parts
-            $partCount = preg_match_all('/\("(TEXT|APPLICATION|IMAGE|AUDIO|VIDEO|MULTIPART)"/i', $response, $partMatches);
-            $partTypes = $partMatches[1] ?? [];
 
             // Try to extract part info
             if (preg_match_all('/"((?:PLAIN|HTML|PDF|JPEG|PNG|GIF|ZIP|OCTET-STREAM)[^"]*)"/i', $response, $subtypeMatches)) {

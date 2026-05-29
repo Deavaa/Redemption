@@ -270,6 +270,41 @@ class EmailInboxController extends Controller
         }
     }
 
+    public function testConnection(EmailInboxSetting $inboxSetting)
+    {
+        try {
+            $imap = new ImapClient(
+                $inboxSetting->imap_host,
+                $inboxSetting->imap_port,
+                $inboxSetting->imap_encryption
+            );
+
+            $result = $imap->testConnection(
+                $inboxSetting->imap_username,
+                $inboxSetting->getDecryptedPassword(),
+                $inboxSetting->folder ?? 'INBOX'
+            );
+
+            if ($result === null) {
+                return back()->with('error', 'Connection test failed: ' . $imap->getLastError());
+            }
+
+            $info = [];
+            if (isset($result['exists'])) {
+                $info[] = "Total messages: {$result['exists']}";
+            }
+            if (isset($result['unseen'])) {
+                $info[] = "Unread messages: {$result['unseen']}";
+            }
+
+            $infoStr = !empty($info) ? ' (' . implode(', ', $info) . ')' : '';
+
+            return back()->with('success', 'Connection test successful!' . $infoStr);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Connection test failed: ' . $e->getMessage());
+        }
+    }
+
     private function autoCategorize(string $subject, string $body): string
     {
         $subjectLower = strtolower($subject);

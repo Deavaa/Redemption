@@ -166,6 +166,12 @@
                                 </span>
                             </td>
                             <td style="text-align:right;">
+                                <form method="POST" action="{{ route('admin.email-inbox.test', $inbox->id) }}" style="display:inline">
+                                    @csrf
+                                    <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;" title="Test Connection">
+                                        <i class="fas fa-plug"></i>
+                                    </button>
+                                </form>
                                 <form method="POST" action="{{ route('admin.email-inbox.sync', $inbox->id) }}" style="display:inline">
                                     @csrf
                                     <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;" title="Sync Now">

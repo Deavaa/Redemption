@@ -563,6 +563,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::put('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'updateSettings'])->name('email-inbox.settings.update')->middleware('permission:settings.edit');
     Route::delete('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'destroySettings'])->name('email-inbox.settings.destroy')->middleware('permission:settings.edit');
     Route::post('email-inbox-sync/{inboxSetting}', [EmailInboxController::class, 'syncInbox'])->name('email-inbox.sync')->middleware('permission:settings.edit');
+    Route::post('email-inbox-test/{inboxSetting}', [EmailInboxController::class, 'testConnection'])->name('email-inbox.test')->middleware('permission:settings.edit');
 
     // ── Bank Integration (Ethiopian Banks) ───────────────────
     Route::get('bank-integration', [BankIntegrationController::class, 'index'])->name('bank-integration.index')->middleware('permission:fee_payments.view');
