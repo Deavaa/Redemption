@@ -148,7 +148,7 @@ class ExamQuestionController extends Controller
         }
 
         // Get current active academic year
-        $activeAcademicYear = AcademicYear::where('is_active', 1)->first();
+        $activeAcademicYear = AcademicYear::where('is_current', 1)->first();
 
         return view('admin.exam-questions.create', compact(
             'subjects', 'classes', 'exams', 'academicYears', 'terms', 'branches',
