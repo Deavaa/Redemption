@@ -90,6 +90,8 @@ use App\Http\Controllers\Exam\ExamQuestionController;
 use App\Http\Controllers\Assessment\AssessmentQuestionController;
 use App\Http\Controllers\ContentNote\SubjectContentNoteController;
 use App\Http\Controllers\Assessment\StudentAssessmentController;
+use App\Http\Controllers\Student\TeacherReviewController as StudentTeacherReviewController;
+use App\Http\Controllers\Admin\TeacherReviewController as AdminTeacherReviewController;
 use App\Http\Controllers\Enrollment\EnrollmentController;
 use Illuminate\Support\Facades\Route;
 
@@ -566,12 +568,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('email-inbox-test/{inboxSetting}', [EmailInboxController::class, 'testConnection'])->name('email-inbox.test')->middleware('permission:settings.edit');
 
     // ── Teacher Reviews (by Students) ────────────────────────
-    Route::get('teacher-reviews', [Admin\TeacherReviewController::class, 'index'])->name('teacher-reviews.index')->middleware('permission:teachers.view');
-    Route::get('teacher-reviews/summary', [Admin\TeacherReviewController::class, 'teacherSummary'])->name('teacher-reviews.summary')->middleware('permission:teachers.view');
-    Route::get('teacher-reviews/{teacher_review}', [Admin\TeacherReviewController::class, 'show'])->name('teacher-reviews.show')->middleware('permission:teachers.view');
-    Route::post('teacher-reviews/{teacher_review}/flag', [Admin\TeacherReviewController::class, 'flag'])->name('teacher-reviews.flag')->middleware('permission:teachers.manage');
-    Route::post('teacher-reviews/{teacher_review}/unflag', [Admin\TeacherReviewController::class, 'unflag'])->name('teacher-reviews.unflag')->middleware('permission:teachers.manage');
-    Route::delete('teacher-reviews/{teacher_review}', [Admin\TeacherReviewController::class, 'destroy'])->name('teacher-reviews.destroy')->middleware('permission:teachers.manage');
+    Route::get('teacher-reviews', [AdminTeacherReviewController::class, 'index'])->name('teacher-reviews.index')->middleware('permission:teachers.view');
+    Route::get('teacher-reviews/summary', [AdminTeacherReviewController::class, 'teacherSummary'])->name('teacher-reviews.summary')->middleware('permission:teachers.view');
+    Route::get('teacher-reviews/{teacher_review}', [AdminTeacherReviewController::class, 'show'])->name('teacher-reviews.show')->middleware('permission:teachers.view');
+    Route::post('teacher-reviews/{teacher_review}/flag', [AdminTeacherReviewController::class, 'flag'])->name('teacher-reviews.flag')->middleware('permission:teachers.manage');
+    Route::post('teacher-reviews/{teacher_review}/unflag', [AdminTeacherReviewController::class, 'unflag'])->name('teacher-reviews.unflag')->middleware('permission:teachers.manage');
+    Route::delete('teacher-reviews/{teacher_review}', [AdminTeacherReviewController::class, 'destroy'])->name('teacher-reviews.destroy')->middleware('permission:teachers.manage');
 
     // ── Bank Integration (Ethiopian Banks) ───────────────────
     Route::get('bank-integration', [BankIntegrationController::class, 'index'])->name('bank-integration.index')->middleware('permission:fee_payments.view');
@@ -613,10 +615,10 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->gro
     Route::get('assessment/progress', [StudentAssessmentController::class, 'progress'])->name('assessment.progress');
 
     // Teacher Review
-    Route::get('teacher-review', [Student\TeacherReviewController::class, 'index'])->name('teacher-review.index');
-    Route::get('teacher-review/create', [Student\TeacherReviewController::class, 'create'])->name('teacher-review.create');
-    Route::post('teacher-review', [Student\TeacherReviewController::class, 'store'])->name('teacher-review.store');
-    Route::get('teacher-review/{teacher_review}', [Student\TeacherReviewController::class, 'show'])->name('teacher-review.show');
+    Route::get('teacher-review', [StudentTeacherReviewController::class, 'index'])->name('teacher-review.index');
+    Route::get('teacher-review/create', [StudentTeacherReviewController::class, 'create'])->name('teacher-review.create');
+    Route::post('teacher-review', [StudentTeacherReviewController::class, 'store'])->name('teacher-review.store');
+    Route::get('teacher-review/{teacher_review}', [StudentTeacherReviewController::class, 'show'])->name('teacher-review.show');
 });
 
 // ── Parent Portal ───────────────────────────────────────────
