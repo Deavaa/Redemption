@@ -634,6 +634,13 @@
     // This is critical when a 419 (CSRF token mismatch / session expired) is detected.
     var csrfRefreshInProgress = false;
 
+    function updateCSRFToken(newToken) {
+        if (!newToken) return;
+        CSRF = newToken;
+        var metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) metaTag.setAttribute('content', CSRF);
+    }
+
     function refreshCSRFToken() {
         if (csrfRefreshInProgress) return Promise.resolve(CSRF);
         csrfRefreshInProgress = true;
@@ -657,11 +664,8 @@
         })
         .then(function(data) {
             if (data.csrf_token) {
-                CSRF = data.csrf_token;
-                // Also update the meta tag so other components have the fresh token
-                var metaTag = document.querySelector('meta[name="csrf-token"]');
-                if (metaTag) metaTag.setAttribute('content', CSRF);
-                console.log('[MarkEntry] CSRF token refreshed successfully');
+                updateCSRFToken(data.csrf_token);
+                console.log('[MarkEntry] CSRF token refreshed via keepalive');
             }
             csrfRefreshInProgress = false;
             return CSRF;
@@ -673,18 +677,48 @@
         });
     }
 
-    // ========== SESSION KEEPALIVE ==========
-    // Ping the server every 5 minutes to keep the session alive during long mark entry sessions.
-    // Also refreshes the CSRF token proactively so it never becomes stale.
-    var KEEPALIVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+    // ========== SESSION KEEPALIVE (ACTIVITY-DRIVEN) ==========
+    // The keepalive pings the server to keep the session alive during long mark entry sessions.
+    // It runs on TWO triggers:
+    //   1. Timer: every 2 minutes (prevents idle expiry even if user types slowly)
+    //   2. Activity: resets the timer whenever the user types/clicks (prevents expiry during active use)
+    // The CSRF token is refreshed on every ping AND on every successful auto-save.
+    var KEEPALIVE_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes (reduced from 5 min)
+    var keepaliveTimer = null;
+    var lastKeepaliveTime = Date.now();
+
+    function scheduleKeepalive() {
+        if (keepaliveTimer) clearTimeout(keepaliveTimer);
+        keepaliveTimer = setTimeout(function() {
+            refreshCSRFToken()
+                .then(function() { lastKeepaliveTime = Date.now(); })
+                .catch(function(err) {
+                    console.warn('[MarkEntry] Keepalive ping failed (will retry):', err.message);
+                })
+                .finally(function() { scheduleKeepalive(); });
+        }, KEEPALIVE_INTERVAL_MS);
+    }
 
     function startKeepalive() {
-        setInterval(function() {
-            refreshCSRFToken().catch(function(err) {
-                console.warn('[MarkEntry] Keepalive ping failed (will retry next interval):', err.message);
-            });
-        }, KEEPALIVE_INTERVAL_MS);
-        console.log('[MarkEntry] Session keepalive started (every 5 minutes)');
+        scheduleKeepalive();
+        console.log('[MarkEntry] Session keepalive started (every 2 minutes, activity-driven)');
+
+        // Listen for user activity — any typing or clicking resets the keepalive timer
+        // This ensures the session NEVER expires while the user is actively entering marks
+        document.addEventListener('input', resetKeepaliveOnActivity);
+        document.addEventListener('click', resetKeepaliveOnActivity);
+        document.addEventListener('keydown', resetKeepaliveOnActivity);
+        document.addEventListener('touchstart', resetKeepaliveOnActivity);
+    }
+
+    function resetKeepaliveOnActivity() {
+        // If more than 30 seconds since last keepalive, reschedule immediately
+        // This prevents the scenario where the user is typing constantly but the
+        // keepalive hasn't had a chance to run, and the session silently expires.
+        var elapsed = Date.now() - lastKeepaliveTime;
+        if (elapsed > 30 * 1000) { // 30 seconds since last server contact
+            scheduleKeepalive(); // Reset the 2-minute timer
+        }
     }
 
     // ========== LOCAL STORAGE BACKUP ==========
@@ -1783,6 +1817,13 @@
         })
         .then(function(res) {
             if (res && res.success) {
+                // Refresh CSRF token from server response — this is the MOST RELIABLE
+                // way to prevent 419 errors. Every successful save returns a fresh token.
+                if (res.csrf_token) {
+                    updateCSRFToken(res.csrf_token);
+                    lastKeepaliveTime = Date.now(); // Save itself counts as activity
+                }
+
                 setGlobalSaveStatus('saved', 'Saved \u2713');
 
                 // Flash the input green

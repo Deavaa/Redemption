@@ -730,6 +730,8 @@ class MarkEntryController extends Controller
             'ca_total' => $entry->ca_total,
             'exam_total' => $entry->exam_total,
             'grand_total' => $entry->grand_total,
+            'grade' => $entry->grade ?? null,
+            'csrf_token' => csrf_token(),  // Fresh token — prevents 419 on next save
         ]);
     }
 }
