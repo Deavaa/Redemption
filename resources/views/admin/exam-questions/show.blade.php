@@ -3,17 +3,24 @@
 
 @section('content')
 <div class="modern-page">
+    {{-- Page Header --}}
     <div class="modern-page-header">
         <div class="modern-page-header-left">
             <nav aria-label="breadcrumb" class="modern-breadcrumb">
                 <ol>
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
                     <li><a href="{{ route('admin.exam-questions.index') }}">Exam Questions</a></li>
-                    <li class="active">{{ $examQuestion->title }}</li>
+                    <li class="active">{{ Str::limit($exam_question->title, 40) }}</li>
                 </ol>
             </nav>
         </div>
         <div class="modern-page-header-right">
+            @if($canEdit)
+            <a href="{{ route('admin.exam-questions.edit', $exam_question->id) }}" class="btn-modern btn-modern-outline" style="border-color:#d97706;color:#d97706;">
+                <i class="fas fa-pen"></i>
+                <span>Edit</span>
+            </a>
+            @endif
             <a href="{{ route('admin.exam-questions.index') }}" class="btn-modern btn-modern-outline">
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to List</span>
@@ -22,25 +29,41 @@
     </div>
 
     {{-- Status Banner --}}
-    <div class="eq-status-banner eq-status-{{ $examQuestion->status }}">
+    @php
+        $statusLabel = \App\Models\ExamQuestion::statusOptions()[$exam_question->status] ?? ucfirst(str_replace('_', ' ', $exam_question->status));
+        $statusBadge = \App\Models\ExamQuestion::statusBadgeClass($exam_question->status);
+    @endphp
+    <div class="eq-status-banner eq-status-{{ $exam_question->status }}">
         <div class="eq-status-icon">
-            <i class="{{ $examQuestion->status_icon }}"></i>
+            @if($exam_question->status === 'approved')
+                <i class="fas fa-check-circle"></i>
+            @elseif($exam_question->status === 'pending_department')
+                <i class="fas fa-hourglass-half"></i>
+            @elseif($exam_question->status === 'pending_principal')
+                <i class="fas fa-arrow-right"></i>
+            @elseif(str_starts_with($exam_question->status, 'rejected'))
+                <i class="fas fa-times-circle"></i>
+            @elseif($exam_question->status === 'revision')
+                <i class="fas fa-redo"></i>
+            @else
+                <i class="fas fa-file-alt"></i>
+            @endif
         </div>
         <div class="eq-status-info">
-            <h3>{{ $examQuestion->status_label }}</h3>
+            <h3>{{ $statusLabel }}</h3>
             <p>
-                @if($examQuestion->isDraft())
-                    This question is still a draft. You can edit and submit it for review.
-                @elseif($examQuestion->isSubmitted())
+                @if($exam_question->status === 'pending_department')
                     Waiting for the Department Head to review and approve/reject this question.
-                @elseif($examQuestion->isDeptApproved())
+                @elseif($exam_question->status === 'pending_principal')
                     Approved by Department Head. Waiting for the Principal's final approval.
-                @elseif($examQuestion->isDeptRejected())
-                    Rejected by Department Head. You can revise and resubmit.
-                @elseif($examQuestion->isPrincipalApproved())
+                @elseif($exam_question->status === 'approved')
                     This question has been fully approved and can be used for exams.
-                @elseif($examQuestion->isPrincipalRejected())
-                    Rejected by Principal. You can revise and resubmit.
+                @elseif($exam_question->status === 'rejected_by_department')
+                    Rejected by Department Head. The teacher can revise and resubmit.
+                @elseif($exam_question->status === 'rejected_by_principal')
+                    Rejected by Principal. The teacher can revise and resubmit.
+                @elseif($exam_question->status === 'revision')
+                    Revision has been requested. The teacher should update and resubmit.
                 @endif
             </p>
         </div>
@@ -49,17 +72,18 @@
     {{-- Workflow Progress --}}
     <div class="eq-workflow-card">
         <div class="eq-workflow-steps">
-            <div class="eq-step {{ in_array($examQuestion->status, ['submitted','dept_approved','principal_approved','dept_rejected','principal_rejected']) ? 'eq-step-done' : ($examQuestion->isDraft() ? 'eq-step-active' : '') }}">
+            @php $step = $exam_question->getPipelineStep(); @endphp
+            <div class="eq-step {{ $step >= 1 ? 'eq-step-done' : 'eq-step-active' }}">
                 <div class="eq-step-circle"><i class="fas fa-pen"></i></div>
                 <div class="eq-step-label">Created by Teacher</div>
             </div>
-            <div class="eq-step-line {{ in_array($examQuestion->status, ['submitted','dept_approved','principal_approved']) ? 'eq-step-line-done' : '' }}"></div>
-            <div class="eq-step {{ in_array($examQuestion->status, ['submitted']) ? 'eq-step-active' : (in_array($examQuestion->status, ['dept_approved','principal_approved']) ? 'eq-step-done' : '') }}">
+            <div class="eq-step-line {{ $step >= 2 ? 'eq-step-line-done' : '' }}"></div>
+            <div class="eq-step {{ $step >= 2 ? ($step >= 3 ? 'eq-step-done' : 'eq-step-active') : '' }}">
                 <div class="eq-step-circle"><i class="fas fa-user-tie"></i></div>
                 <div class="eq-step-label">Dept. Head Review</div>
             </div>
-            <div class="eq-step-line {{ in_array($examQuestion->status, ['dept_approved','principal_approved']) ? 'eq-step-line-done' : '' }}"></div>
-            <div class="eq-step {{ $examQuestion->status === 'dept_approved' ? 'eq-step-active' : ($examQuestion->status === 'principal_approved' ? 'eq-step-done' : '') }}">
+            <div class="eq-step-line {{ $step >= 3 ? 'eq-step-line-done' : '' }}"></div>
+            <div class="eq-step {{ $step >= 3 ? 'eq-step-active' : '' }}">
                 <div class="eq-step-circle"><i class="fas fa-user-shield"></i></div>
                 <div class="eq-step-label">Principal Approval</div>
             </div>
@@ -79,66 +103,68 @@
                 <div class="eq-detail-body">
                     <div class="eq-info-row">
                         <span class="eq-info-label">Title</span>
-                        <span class="eq-info-value">{{ $examQuestion->title }}</span>
+                        <span class="eq-info-value">{{ $exam_question->title }}</span>
                     </div>
                     <div class="eq-info-row">
                         <span class="eq-info-label">Subject</span>
-                        <span class="eq-info-value"><span class="modern-badge modern-badge-light">{{ $examQuestion->subject->name ?? '-' }}</span></span>
+                        <span class="eq-info-value"><span class="modern-badge modern-badge-light">{{ $exam_question->subject->name ?? '-' }}</span></span>
                     </div>
                     <div class="eq-info-row">
-                        <span class="eq-info-label">Class</span>
-                        <span class="eq-info-value">{{ $examQuestion->classRoom->name ?? 'All Classes' }}</span>
+                        <span class="eq-info-label">Class / Section</span>
+                        <span class="eq-info-value">
+                            {{ $exam_question->classRoom->name ?? '-' }}
+                            @if($exam_question->section)
+                                <span class="eq-cell-sub">/ {{ $exam_question->section->name }}</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="eq-info-row">
+                        <span class="eq-info-label">Branch</span>
+                        <span class="eq-info-value">{{ $exam_question->branch->name ?? '-' }}</span>
                     </div>
                     <div class="eq-info-row">
                         <span class="eq-info-label">Question Type</span>
-                        <span class="eq-info-value">{{ $examQuestion->question_type_label }}</span>
+                        <span class="eq-info-value">{{ \App\Models\ExamQuestion::questionTypeOptions()[$exam_question->question_type] ?? ucfirst(str_replace('_', ' ', $exam_question->question_type)) }}</span>
                     </div>
                     <div class="eq-info-row">
                         <span class="eq-info-label">Total Marks</span>
-                        <span class="eq-info-value eq-marks">{{ $examQuestion->total_marks }}</span>
+                        <span class="eq-info-value eq-marks">{{ $exam_question->total_marks }}</span>
                     </div>
                     <div class="eq-info-row">
                         <span class="eq-info-label">Duration</span>
-                        <span class="eq-info-value">{{ $examQuestion->duration_minutes ? $examQuestion->duration_minutes . ' minutes' : 'Not specified' }}</span>
+                        <span class="eq-info-value">{{ $exam_question->duration_minutes ? $exam_question->duration_minutes . ' minutes' : 'Not specified' }}</span>
                     </div>
                     <div class="eq-info-row">
                         <span class="eq-info-label">Academic Year</span>
-                        <span class="eq-info-value">{{ $examQuestion->academicYear->name ?? '-' }}</span>
+                        <span class="eq-info-value">{{ $exam_question->academicYear->name ?? '-' }}</span>
                     </div>
                     <div class="eq-info-row">
                         <span class="eq-info-label">Term</span>
-                        <span class="eq-info-value">{{ $examQuestion->term->name ?? '-' }}</span>
+                        <span class="eq-info-value">{{ $exam_question->term->name ?? '-' }}</span>
                     </div>
-
-                    @if($examQuestion->content)
-                    <div class="eq-info-block">
-                        <span class="eq-info-label">Questions Content</span>
-                        <div class="eq-content-box">{!! nl2br(e($examQuestion->content)) !!}</div>
-                    </div>
-                    @endif
-
-                    @if($examQuestion->attachment)
                     <div class="eq-info-row">
-                        <span class="eq-info-label">Attachment</span>
-                        <span class="eq-info-value">
-                            <a href="{{ Storage::url($examQuestion->attachment) }}" target="_blank" class="eq-attachment-link">
-                                <i class="fas fa-paperclip"></i> View Attachment
-                            </a>
-                        </span>
+                        <span class="eq-info-label">Exam</span>
+                        <span class="eq-info-value">{{ $exam_question->exam->name ?? '-' }}</span>
+                    </div>
+
+                    @if($exam_question->description)
+                    <div class="eq-info-block" style="margin-top:1rem;">
+                        <span class="eq-info-label">Description / Notes</span>
+                        <div class="eq-content-box">{!! nl2br(e($exam_question->description)) !!}</div>
                     </div>
                     @endif
 
-                    @if($examQuestion->notes)
-                    <div class="eq-info-block">
-                        <span class="eq-info-label">Notes</span>
-                        <div class="eq-notes-box">{!! nl2br(e($examQuestion->notes)) !!}</div>
+                    @if($exam_question->questions)
+                    <div class="eq-info-block" style="margin-top:1rem;">
+                        <span class="eq-info-label">Questions Content</span>
+                        <div class="eq-content-box">{!! nl2br(e($exam_question->questions)) !!}</div>
                     </div>
                     @endif
                 </div>
             </div>
 
             {{-- Review History --}}
-            @if($examQuestion->dept_reviewed_by || $examQuestion->principal_reviewed_by)
+            @if($exam_question->department_head_id || $exam_question->principal_id)
             <div class="modern-card">
                 <div class="modern-card-header">
                     <div class="modern-card-header-left">
@@ -146,34 +172,34 @@
                     </div>
                 </div>
                 <div class="eq-detail-body">
-                    @if($examQuestion->dept_reviewed_by)
+                    @if($exam_question->department_head_id)
                     <div class="eq-review-entry">
                         <div class="eq-review-header">
-                            <div class="eq-review-badge {{ $examQuestion->isDeptApproved() || $examQuestion->isPrincipalApproved() ? 'eq-badge-approved' : 'eq-badge-rejected' }}">
-                                <i class="{{ $examQuestion->isDeptApproved() || $examQuestion->isPrincipalApproved() ? 'fas fa-check' : 'fas fa-times' }}"></i>
-                                Department Head {{ $examQuestion->isDeptApproved() || $examQuestion->isPrincipalApproved() ? 'Approved' : 'Rejected' }}
+                            <div class="eq-review-badge {{ in_array($exam_question->status, ['pending_principal', 'approved']) ? 'eq-badge-approved' : 'eq-badge-rejected' }}">
+                                <i class="{{ in_array($exam_question->status, ['pending_principal', 'approved']) ? 'fas fa-check' : 'fas fa-times' }}"></i>
+                                Department Head {{ in_array($exam_question->status, ['pending_principal', 'approved']) ? 'Approved' : 'Rejected' }}
                             </div>
-                            <span class="eq-review-date">{{ $examQuestion->dept_reviewed_at?->format('M d, Y H:i') }}</span>
+                            <span class="eq-review-date">{{ $exam_question->department_head_reviewed_at?->format('M d, Y H:i') }}</span>
                         </div>
-                        <div class="eq-review-reviewer">Reviewed by: {{ $examQuestion->deptReviewer->name ?? '-' }}</div>
-                        @if($examQuestion->dept_comments)
-                        <div class="eq-review-comments">{{ $examQuestion->dept_comments }}</div>
+                        <div class="eq-review-reviewer">Reviewed by: {{ $exam_question->departmentHead->name ?? '-' }}</div>
+                        @if($exam_question->department_head_comment)
+                        <div class="eq-review-comments">{{ $exam_question->department_head_comment }}</div>
                         @endif
                     </div>
                     @endif
 
-                    @if($examQuestion->principal_reviewed_by)
+                    @if($exam_question->principal_id)
                     <div class="eq-review-entry">
                         <div class="eq-review-header">
-                            <div class="eq-review-badge {{ $examQuestion->isPrincipalApproved() ? 'eq-badge-approved' : 'eq-badge-rejected' }}">
-                                <i class="{{ $examQuestion->isPrincipalApproved() ? 'fas fa-check' : 'fas fa-times' }}"></i>
-                                Principal {{ $examQuestion->isPrincipalApproved() ? 'Approved' : 'Rejected' }}
+                            <div class="eq-review-badge {{ $exam_question->status === 'approved' ? 'eq-badge-approved' : 'eq-badge-rejected' }}">
+                                <i class="{{ $exam_question->status === 'approved' ? 'fas fa-check' : 'fas fa-times' }}"></i>
+                                Principal {{ $exam_question->status === 'approved' ? 'Approved' : 'Rejected' }}
                             </div>
-                            <span class="eq-review-date">{{ $examQuestion->principal_reviewed_at?->format('M d, Y H:i') }}</span>
+                            <span class="eq-review-date">{{ $exam_question->principal_reviewed_at?->format('M d, Y H:i') }}</span>
                         </div>
-                        <div class="eq-review-reviewer">Reviewed by: {{ $examQuestion->principalReviewer->name ?? '-' }}</div>
-                        @if($examQuestion->principal_comments)
-                        <div class="eq-review-comments">{{ $examQuestion->principal_comments }}</div>
+                        <div class="eq-review-reviewer">Reviewed by: {{ $exam_question->principal->name ?? '-' }}</div>
+                        @if($exam_question->principal_comment)
+                        <div class="eq-review-comments">{{ $exam_question->principal_comment }}</div>
                         @endif
                     </div>
                     @endif
@@ -194,19 +220,15 @@
                 <div class="eq-detail-body">
                     <div class="eq-info-row">
                         <span class="eq-info-label">Teacher</span>
-                        <span class="eq-info-value">{{ $examQuestion->teacher->full_name ?? '-' }}</span>
+                        <span class="eq-info-value">{{ $exam_question->teacher->full_name ?? '-' }}</span>
                     </div>
                     <div class="eq-info-row">
                         <span class="eq-info-label">Created</span>
-                        <span class="eq-info-value">{{ $examQuestion->created_at->format('M d, Y') }}</span>
-                    </div>
-                    <div class="eq-info-row">
-                        <span class="eq-info-label">Submitted</span>
-                        <span class="eq-info-value">{{ $examQuestion->submitted_at?->format('M d, Y H:i') ?? 'Not yet' }}</span>
+                        <span class="eq-info-value">{{ $exam_question->created_at->format('M d, Y') }}</span>
                     </div>
                     <div class="eq-info-row">
                         <span class="eq-info-label">Status</span>
-                        <span class="eq-info-value"><span class="modern-badge {{ $examQuestion->status_badge }}">{{ $examQuestion->status_label }}</span></span>
+                        <span class="eq-info-value"><span class="modern-badge {{ $statusBadge }}">{{ $statusLabel }}</span></span>
                     </div>
                 </div>
             </div>
@@ -219,76 +241,99 @@
                     </div>
                 </div>
                 <div class="eq-detail-body">
-                    @php $user = Auth::user(); @endphp
-
-                    {{-- Teacher Actions --}}
-                    @if($examQuestion->canBeEdited() && ($user->role === 'teacher' || in_array($user->role, ['admin', 'super_admin'])))
-                    <a href="{{ route('admin.exam-questions.edit', $examQuestion->id) }}" class="eq-action-btn eq-action-edit">
+                    @if($canEdit)
+                    <a href="{{ route('admin.exam-questions.edit', $exam_question->id) }}" class="eq-action-btn eq-action-edit">
                         <i class="fas fa-pen"></i> Edit Question
                     </a>
                     @endif
 
-                    @if($examQuestion->canBeSubmitted() && ($user->role === 'teacher' || in_array($user->role, ['admin', 'super_admin'])))
-                    <form method="POST" action="{{ route('admin.exam-questions.submit', $examQuestion->id) }}" onsubmit="return confirm('Submit for department head review?')">
-                        @csrf
-                        <button type="submit" class="eq-action-btn eq-action-submit">
-                            <i class="fas fa-paper-plane"></i> Submit for Review
-                        </button>
-                    </form>
-                    @endif
-
-                    {{-- Department Head Review --}}
-                    @if($examQuestion->canBeReviewedByDept() && in_array($user->role, ['department_head', 'admin', 'super_admin']))
-                    <div class="eq-review-section">
-                        <h4><i class="fas fa-user-tie"></i> Department Head Review</h4>
-                        <form method="POST" action="{{ route('admin.exam-questions.dept-review', $examQuestion->id) }}">
-                            @csrf
-                            <div class="eq-review-form-group">
-                                <label>Comments (optional)</label>
-                                <textarea name="dept_comments" class="eq-review-textarea" placeholder="Add review comments..."></textarea>
-                            </div>
-                            <div class="eq-review-btns">
-                                <button type="submit" name="action" value="approve" class="eq-action-btn eq-action-approve" onclick="return confirm('Approve and forward to principal?')">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button type="submit" name="action" value="reject" class="eq-action-btn eq-action-reject" onclick="return confirm('Reject this question?')">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    @endif
-
-                    {{-- Principal Review --}}
-                    @if($examQuestion->canBeReviewedByPrincipal() && in_array($user->role, ['branch_principal', 'admin', 'super_admin']))
-                    <div class="eq-review-section">
-                        <h4><i class="fas fa-user-shield"></i> Principal Review</h4>
-                        <form method="POST" action="{{ route('admin.exam-questions.principal-review', $examQuestion->id) }}">
-                            @csrf
-                            <div class="eq-review-form-group">
-                                <label>Comments (optional)</label>
-                                <textarea name="principal_comments" class="eq-review-textarea" placeholder="Add review comments..."></textarea>
-                            </div>
-                            <div class="eq-review-btns">
-                                <button type="submit" name="action" value="approve" class="eq-action-btn eq-action-approve" onclick="return confirm('Give final approval?')">
-                                    <i class="fas fa-check-double"></i> Approve
-                                </button>
-                                <button type="submit" name="action" value="reject" class="eq-action-btn eq-action-reject" onclick="return confirm('Reject this question?')">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    @endif
-
-                    {{-- Delete --}}
-                    @if(in_array($user->role, ['admin', 'super_admin']))
-                    <form method="POST" action="{{ route('admin.exam-questions.destroy', $examQuestion->id) }}" onsubmit="return confirm('Delete this exam question?')">
+                    @if($canDelete)
+                    <form method="POST" action="{{ route('admin.exam-questions.destroy', $exam_question->id) }}" onsubmit="return confirm('Delete this exam question?')">
                         @csrf @method('DELETE')
                         <button type="submit" class="eq-action-btn eq-action-delete">
                             <i class="fas fa-trash-alt"></i> Delete
                         </button>
                     </form>
+                    @endif
+
+                    {{-- Department Head Review --}}
+                    @if($canReviewDepartment && $exam_question->status === 'pending_department')
+                    <div class="eq-review-section">
+                        <h4><i class="fas fa-user-tie"></i> Department Head Review</h4>
+                        <form method="POST" action="{{ route('admin.exam-questions.department-review', $exam_question->id) }}">
+                            @csrf
+                            <div class="eq-review-form-group">
+                                <label>Comments (optional)</label>
+                                <textarea name="comment" class="eq-review-textarea" placeholder="Add review comments..."></textarea>
+                            </div>
+                            <div class="eq-review-btns">
+                                <button type="submit" name="action" value="approve" class="eq-action-btn eq-action-approve" onclick="return confirm('Approve and forward to principal?')">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                            </div>
+                        </form>
+                        <form method="POST" action="{{ route('admin.exam-questions.department-review', $exam_question->id) }}" onsubmit="return confirm('Reject this question?')">
+                            @csrf
+                            <input type="hidden" name="action" value="reject">
+                            <div class="eq-review-form-group">
+                                <label>Rejection Reason</label>
+                                <textarea name="comment" class="eq-review-textarea" placeholder="Reason for rejection..." required></textarea>
+                            </div>
+                            <button type="submit" class="eq-action-btn eq-action-reject">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.exam-questions.request-revision', $exam_question->id) }}" onsubmit="return confirm('Request revision for this question?')">
+                            @csrf
+                            <div class="eq-review-form-group">
+                                <label>Revision Request Details</label>
+                                <textarea name="comment" class="eq-review-textarea" placeholder="What needs to be revised..." required></textarea>
+                            </div>
+                            <button type="submit" class="eq-action-btn eq-action-revision" style="background:#fffbeb;color:#d97706;">
+                                <i class="fas fa-redo"></i> Request Revision
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+
+                    {{-- Principal Review --}}
+                    @if($canReviewPrincipal && $exam_question->status === 'pending_principal')
+                    <div class="eq-review-section">
+                        <h4><i class="fas fa-user-shield"></i> Principal Review</h4>
+                        <form method="POST" action="{{ route('admin.exam-questions.principal-review', $exam_question->id) }}">
+                            @csrf
+                            <div class="eq-review-form-group">
+                                <label>Comments (optional)</label>
+                                <textarea name="comment" class="eq-review-textarea" placeholder="Add review comments..."></textarea>
+                            </div>
+                            <div class="eq-review-btns">
+                                <button type="submit" name="action" value="approve" class="eq-action-btn eq-action-approve" onclick="return confirm('Give final approval?')">
+                                    <i class="fas fa-check-double"></i> Approve
+                                </button>
+                            </div>
+                        </form>
+                        <form method="POST" action="{{ route('admin.exam-questions.principal-review', $exam_question->id) }}" onsubmit="return confirm('Reject this question?')">
+                            @csrf
+                            <input type="hidden" name="action" value="reject">
+                            <div class="eq-review-form-group">
+                                <label>Rejection Reason</label>
+                                <textarea name="comment" class="eq-review-textarea" placeholder="Reason for rejection..." required></textarea>
+                            </div>
+                            <button type="submit" class="eq-action-btn eq-action-reject">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.exam-questions.request-revision', $exam_question->id) }}" onsubmit="return confirm('Request revision for this question?')">
+                            @csrf
+                            <div class="eq-review-form-group">
+                                <label>Revision Request Details</label>
+                                <textarea name="comment" class="eq-review-textarea" placeholder="What needs to be revised..." required></textarea>
+                            </div>
+                            <button type="submit" class="eq-action-btn eq-action-revision" style="background:#fffbeb;color:#d97706;">
+                                <i class="fas fa-redo"></i> Request Revision
+                            </button>
+                        </form>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -318,24 +363,28 @@
 .modern-badge-danger { background:#fef2f2; color:#dc2626; }
 .modern-badge-warning { background:#fffbeb; color:#d97706; }
 .modern-badge-info { background:#eff6ff; color:#2563eb; }
+.modern-badge-orange { background:#fff7ed; color:#ea580c; }
+.btn-modern { display:inline-flex; align-items:center; gap:.5rem; padding:.65rem 1.35rem; border-radius:10px; font-weight:600; font-size:.9rem; text-decoration:none; border:none; cursor:pointer; transition:all .25s; }
+.btn-modern-outline { background:transparent; color:#6b7280; border:1.5px solid #e5e7eb; }
+.btn-modern-outline:hover { border-color:#4361ee; color:#4361ee; background:#f8f9ff; }
 
 /* Status Banner */
 .eq-status-banner { display:flex; align-items:center; gap:1rem; padding:1.25rem 1.5rem; border-radius:14px; margin-bottom:1.5rem; }
 .eq-status-icon { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
 .eq-status-info h3 { margin:0; font-size:1.1rem; font-weight:700; }
 .eq-status-info p { margin:.25rem 0 0; font-size:.85rem; opacity:.8; }
-.eq-status-draft { background:#f3f4f6; color:#4b5563; }
-.eq-status-draft .eq-status-icon { background:#e5e7eb; }
-.eq-status-submitted { background:#fffbeb; color:#92400e; }
-.eq-status-submitted .eq-status-icon { background:#fef3c7; }
-.eq-status-dept_approved { background:#eff6ff; color:#1e40af; }
-.eq-status-dept_approved .eq-status-icon { background:#dbeafe; }
-.eq-status-dept_rejected { background:#fef2f2; color:#991b1b; }
-.eq-status-dept_rejected .eq-status-icon { background:#fecaca; }
-.eq-status-principal_approved { background:#ecfdf5; color:#065f46; }
-.eq-status-principal_approved .eq-status-icon { background:#a7f3d0; }
-.eq-status-principal_rejected { background:#fef2f2; color:#991b1b; }
-.eq-status-principal_rejected .eq-status-icon { background:#fecaca; }
+.eq-status-pending_department { background:#fffbeb; color:#92400e; }
+.eq-status-pending_department .eq-status-icon { background:#fef3c7; }
+.eq-status-pending_principal { background:#eff6ff; color:#1e40af; }
+.eq-status-pending_principal .eq-status-icon { background:#dbeafe; }
+.eq-status-approved { background:#ecfdf5; color:#065f46; }
+.eq-status-approved .eq-status-icon { background:#a7f3d0; }
+.eq-status-rejected_by_department { background:#fef2f2; color:#991b1b; }
+.eq-status-rejected_by_department .eq-status-icon { background:#fecaca; }
+.eq-status-rejected_by_principal { background:#fef2f2; color:#991b1b; }
+.eq-status-rejected_by_principal .eq-status-icon { background:#fecaca; }
+.eq-status-revision { background:#fffbeb; color:#92400e; }
+.eq-status-revision .eq-status-icon { background:#fef3c7; }
 
 /* Workflow Progress */
 .eq-workflow-card { background:#fff; border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,.06); border:1px solid #f0f0f0; padding:1.5rem; margin-bottom:1.5rem; }
@@ -358,12 +407,10 @@
 .eq-info-label { font-size:.85rem; color:#6b7280; font-weight:500; }
 .eq-info-value { font-size:.88rem; color:#1a1a2e; font-weight:600; text-align:right; }
 .eq-marks { font-size:1.1rem; color:#4361ee; }
+.eq-cell-sub { font-size:.8rem; color:#9ca3af; }
 .eq-info-block { margin-top:.75rem; }
 .eq-info-block .eq-info-label { display:block; margin-bottom:.5rem; }
 .eq-content-box { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:1rem; font-size:.88rem; line-height:1.7; color:#374151; white-space:pre-wrap; max-height:400px; overflow-y:auto; }
-.eq-notes-box { background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:.75rem 1rem; font-size:.85rem; color:#92400e; line-height:1.6; white-space:pre-wrap; }
-.eq-attachment-link { display:inline-flex; align-items:center; gap:.4rem; color:#4361ee; text-decoration:none; font-weight:600; font-size:.88rem; }
-.eq-attachment-link:hover { text-decoration:underline; }
 
 /* Review Entries */
 .eq-review-entry { padding:1rem 0; border-bottom:1px solid #f3f4f6; }
@@ -389,23 +436,19 @@
 .eq-action-btn { display:flex; align-items:center; justify-content:center; gap:.5rem; width:100%; padding:.65rem 1rem; border-radius:10px; font-weight:600; font-size:.88rem; border:none; cursor:pointer; text-decoration:none; transition:all .2s; margin-bottom:.5rem; }
 .eq-action-edit { background:#fefce8; color:#d97706; }
 .eq-action-edit:hover { background:#d97706; color:#fff; }
-.eq-action-submit { background:#eef2ff; color:#4361ee; }
-.eq-action-submit:hover { background:#4361ee; color:#fff; }
+.eq-action-delete { background:#fef2f2; color:#dc2626; }
+.eq-action-delete:hover { background:#dc2626; color:#fff; }
 .eq-action-approve { background:#ecfdf5; color:#059669; }
 .eq-action-approve:hover { background:#059669; color:#fff; }
 .eq-action-reject { background:#fef2f2; color:#dc2626; }
 .eq-action-reject:hover { background:#dc2626; color:#fff; }
-.eq-action-delete { background:#fef2f2; color:#dc2626; }
-.eq-action-delete:hover { background:#dc2626; color:#fff; }
-.btn-modern { display:inline-flex; align-items:center; gap:.5rem; padding:.65rem 1.35rem; border-radius:10px; font-weight:600; font-size:.9rem; text-decoration:none; border:none; cursor:pointer; transition:all .25s; }
-.btn-modern-outline { background:transparent; color:#6b7280; border:1.5px solid #e5e7eb; }
-.btn-modern-outline:hover { border-color:#4361ee; color:#4361ee; background:#f8f9ff; }
 
 @media(max-width:768px) {
     .eq-detail-grid { grid-template-columns:1fr; }
     .eq-workflow-steps { flex-direction:column; }
     .eq-step-line { width:3px; height:30px; margin-bottom:0; }
     .eq-status-banner { flex-direction:column; text-align:center; }
+    .modern-page-header { flex-direction:column; }
 }
 </style>
 @endpush

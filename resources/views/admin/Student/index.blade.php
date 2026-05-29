@@ -76,6 +76,37 @@
             </div>
         </div>
 
+        {{-- Filter Bar --}}
+        <form method="GET" action="{{ route('admin.students.index') }}" id="filterForm" class="sl-filter-bar">
+            <select name="branch_id" class="sl-filter-select" id="filterBranch">
+                <option value="">All Branches</option>
+                @foreach($branches as $branch)
+                <option value="{{ $branch->id }}" {{ $branchFilter == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                @endforeach
+            </select>
+            <select name="class_id" class="sl-filter-select" id="filterClass">
+                <option value="">All Classes</option>
+                @foreach($classes as $class)
+                <option value="{{ $class->id }}" {{ $classFilter == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                @endforeach
+            </select>
+            <select name="section_id" class="sl-filter-select" id="filterSection">
+                <option value="">All Sections</option>
+                @foreach($sections as $section)
+                <option value="{{ $section->id }}" {{ $sectionFilter == $section->id ? 'selected' : '' }}>{{ $section->name }}</option>
+                @endforeach
+            </select>
+            <select name="status" class="sl-filter-select" id="filterStatus">
+                <option value="">All Statuses</option>
+                <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Active</option>
+                <option value="inactive" {{ $statusFilter === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                <option value="transferred" {{ $statusFilter === 'transferred' ? 'selected' : '' }}>Transferred</option>
+                <option value="graduated" {{ $statusFilter === 'graduated' ? 'selected' : '' }}>Graduated</option>
+            </select>
+            <button type="submit" class="sl-filter-btn"><i class="fas fa-filter"></i> Filter</button>
+            <a href="{{ route('admin.students.index') }}" class="sl-filter-clear"><i class="fas fa-times"></i> Clear</a>
+        </form>
+
         @if(session('success'))
             <div class="sl-alert sl-alert-ok">
                 <i class="fas fa-check-circle"></i>
@@ -91,6 +122,7 @@
                     <tr>
                         <th class="sl-th-narrow">#</th>
                         <th>Student</th>
+                        <th>Branch</th>
                         <th>Class</th>
                         <th>Section</th>
                         <th>Roll No</th>
@@ -114,6 +146,7 @@
                                 <span class="sl-name">{{ $student->full_name }}</span>
                             </div>
                         </td>
+                        <td><span class="sl-text">{{ $student->branch?->name ?? '-' }}</span></td>
                         <td><span class="sl-text">{{ $student->classroom?->name ?? '-' }}</span></td>
                         <td><span class="sl-text">{{ $student->section?->name ?? '-' }}</span></td>
                         <td><span class="sl-text">{{ $student->roll_number ?? '-' }}</span></td>
@@ -297,6 +330,37 @@
 .sl-search input:focus { border-color: #4361ee; background: #fff; }
 .sl-search input::placeholder { color: #9ca3af; }
 
+/* --- Filter Bar --- */
+.sl-filter-bar {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.5rem 0.75rem; border-bottom: 1px solid #f0f0f0;
+    background: #fafbfc; flex-wrap: wrap;
+}
+.sl-filter-select {
+    border: 1px solid #e5e7eb; border-radius: 6px;
+    padding: 0.3rem 1.6rem 0.3rem 0.5rem; font-size: 0.75rem;
+    background: #fff; color: #374151; appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.3rem center; background-repeat: no-repeat; background-size: 1rem;
+    outline: none; transition: border-color 0.2s;
+}
+.sl-filter-select:focus { border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,0.1); }
+.sl-filter-btn {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.3rem 0.65rem; border-radius: 6px; font-weight: 600;
+    font-size: 0.73rem; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #4361ee, #3a0ca3); color: #fff;
+    transition: all 0.2s;
+}
+.sl-filter-btn:hover { box-shadow: 0 2px 8px rgba(67,97,238,0.3); }
+.sl-filter-clear {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.3rem 0.5rem; border-radius: 6px; font-weight: 600;
+    font-size: 0.73rem; text-decoration: none; border: 1px solid #e5e7eb;
+    background: #fff; color: #6b7280; transition: all 0.2s;
+}
+.sl-filter-clear:hover { border-color: #ef4444; color: #ef4444; }
+
 /* --- Buttons --- */
 .sl-btn {
     display: inline-flex; align-items: center; gap: 0.3rem;
@@ -429,6 +493,9 @@
     .sl-stat-lbl { font-size: 0.6rem; }
     .sl-card-head { flex-direction: column; align-items: stretch; padding: 0.4rem 0.5rem; }
     .sl-search input { width: 100%; }
+    .sl-filter-bar { flex-wrap: wrap; gap: 0.3rem; }
+    .sl-filter-select { width: 100%; }
+    .sl-filter-btn, .sl-filter-clear { width: auto; }
     .sl-table { font-size: 0.72rem; }
     .sl-table td { padding: 0.25rem 0.35rem; }
     .sl-text { max-width: 65px; }
@@ -453,6 +520,85 @@ function filterTable() {
         row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
     });
 }
+
+$(function() {
+    var branchSelect = $('#filterBranch');
+    var classSelect = $('#filterClass');
+    var sectionSelect = $('#filterSection');
+
+    // When branch changes → load classes for that branch
+    branchSelect.on('change', function() {
+        var branchId = $(this).val();
+        // Reset class and section dropdowns
+        classSelect.html('<option value="">All Classes</option>');
+        sectionSelect.html('<option value="">All Sections</option>');
+
+        if (!branchId) {
+            // No branch selected — reload all classes
+            $.ajax({
+                url: '{{ route("admin.students.index") }}',
+                data: { branch_id: '', class_id: '', section_id: '' },
+                dataType: 'html',
+                success: function() {
+                    // Just submit the form to reload with all classes
+                }
+            });
+            // Reload page with just branch cleared
+            $('#filterForm').submit();
+            return;
+        }
+
+        // Load classes for this branch
+        $.ajax({
+            url: '{{ route("admin.students.api.classes-by-branch") }}',
+            data: { branch_id: branchId },
+            dataType: 'json',
+            success: function(data) {
+                $.each(data, function(i, cls) {
+                    classSelect.append('<option value="' + cls.id + '">' + cls.name + '</option>');
+                });
+            }
+        });
+
+        // Auto-submit the form
+        $('#filterForm').submit();
+    });
+
+    // When class changes → load sections for that class
+    classSelect.on('change', function() {
+        var classId = $(this).val();
+        sectionSelect.html('<option value="">All Sections</option>');
+
+        if (!classId) {
+            $('#filterForm').submit();
+            return;
+        }
+
+        $.ajax({
+            url: '{{ route("admin.students.api.sections", ["classId" => 0]) }}'.replace('/0', '/' + classId),
+            data: { class_id: classId },
+            dataType: 'json',
+            success: function(data) {
+                $.each(data, function(i, sec) {
+                    sectionSelect.append('<option value="' + sec.id + '">' + sec.name + '</option>');
+                });
+            }
+        });
+
+        // Auto-submit the form
+        $('#filterForm').submit();
+    });
+
+    // When section changes → auto-submit
+    sectionSelect.on('change', function() {
+        $('#filterForm').submit();
+    });
+
+    // When status changes → auto-submit
+    $('#filterStatus').on('change', function() {
+        $('#filterForm').submit();
+    });
+});
 </script>
 @endpush
 @endsection

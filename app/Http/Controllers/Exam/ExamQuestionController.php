@@ -435,6 +435,32 @@ class ExamQuestionController extends Controller
         }
     }
 
+    /**
+     * API: Get sections for a given class (for dependent dropdowns)
+     */
+    public function apiSectionsByClass(Request $request)
+    {
+        $classId = $request->query('class_id');
+        if (!$classId) {
+            return response()->json([]);
+        }
+
+        return response()->json(
+            Section::where('class_id', $classId)->orderBy('name')->get(['id', 'name'])
+        );
+    }
+
+    /**
+     * API: Get exam details (academic_year_id, term_id) for auto-fill
+     */
+    public function apiExamDetails(Exam $exam)
+    {
+        return response()->json([
+            'academic_year_id' => $exam->academic_year_id,
+            'term_id'          => $exam->term_id,
+        ]);
+    }
+
     public function requestRevision(Request $request, ExamQuestion $exam_question)
     {
         $user = auth()->user();

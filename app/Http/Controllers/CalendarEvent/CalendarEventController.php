@@ -157,6 +157,7 @@ class CalendarEventController extends Controller
         $startDayOfWeek = $firstDay->dayOfWeekIso; // 1=Mon, 7=Sun
 
         $monthName = $firstDay->format('F Y');
+        $ethMonth = \App\Helpers\EthiopianDate::fromGregorian($firstDay->format('Y-m-d'));
 
         $days = [];
         // Fill leading blanks (Mon=1, so if startDayOfWeek is 1, no blanks)
@@ -178,6 +179,7 @@ class CalendarEventController extends Controller
 
         return [
             'name' => $monthName,
+            'eth_name' => $ethMonth['month_name'] . ' ' . $ethMonth['year'] . ' ዓ.ም.',
             'year' => $year,
             'month' => $month,
             'weeks' => $weeks,
@@ -457,6 +459,7 @@ class CalendarEventController extends Controller
         }
 
         $announcements = $query->orderBy('start_date')->limit(20)->get()->map(function ($e) {
+            $ethStart = \App\Helpers\EthiopianDate::fromGregorian($e->start_date->format('Y-m-d'));
             return [
                 'id'          => $e->id,
                 'title'       => $e->title,
@@ -464,7 +467,9 @@ class CalendarEventController extends Controller
                 'category'    => $e->category,
                 'color'       => $e->color,
                 'start_date'  => $e->start_date->format('M d, Y'),
+                'start_date_eth' => $ethStart['formatted'],
                 'end_date'    => $e->end_date?->format('M d, Y'),
+                'end_date_eth' => $e->end_date ? \App\Helpers\EthiopianDate::fromGregorian($e->end_date->format('Y-m-d'))['formatted'] : null,
                 'is_all_day'  => $e->is_all_day,
                 'scope'       => $e->scope,
                 'branch_name' => $e->branch?->name,

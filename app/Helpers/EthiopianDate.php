@@ -5,12 +5,30 @@ namespace App\Helpers;
 class EthiopianDate
 {
     /**
-     * Ethiopian month names
+     * Ethiopian month names in Amharic script
+     */
+    private static $monthNamesAmharic = [
+        'መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ',
+        'ጥር', 'የካቲት', 'መጋቢት', 'ሚያዝያ',
+        'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'
+    ];
+
+    /**
+     * Ethiopian month names in English transliteration
+     */
+    private static $monthNamesEnglish = [
+        'Meskerem', 'Tikimt', 'Hidar', 'Tahsas',
+        'Tir', 'Yekatit', 'Megabit', 'Miyazia',
+        'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'
+    ];
+
+    /**
+     * Ethiopian month names (default: Amharic)
      */
     private static $monthNames = [
-        'Meskerem', 'Tikimt', 'Hidar', 'Tahsas', 
-        'Tir', 'Yekatit', 'Megabit', 'Miyazia', 
-        'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'
+        'መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ',
+        'ጥር', 'የካቲት', 'መጋቢት', 'ሚያዝያ',
+        'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'
     ];
 
     /**
@@ -90,14 +108,17 @@ class EthiopianDate
             self::$daysInMonth[12] = 5;
         }
         
-        $monthName = self::$monthNames[$ethiopianMonth - 1];
+        $monthNameAmharic = self::$monthNamesAmharic[$ethiopianMonth - 1];
+        $monthNameEnglish = self::$monthNamesEnglish[$ethiopianMonth - 1];
         
         return [
             'year' => $ethiopianYear,
             'month' => $ethiopianMonth,
             'day' => $ethiopianDay,
-            'month_name' => $monthName,
-            'formatted' => "{$ethiopianDay} {$monthName}, {$ethiopianYear}"
+            'month_name' => $monthNameAmharic,
+            'month_name_en' => $monthNameEnglish,
+            'formatted' => "{$ethiopianDay} {$monthNameAmharic}, {$ethiopianYear}",
+            'formatted_en' => "{$ethiopianDay} {$monthNameEnglish}, {$ethiopianYear}",
         ];
     }
     
@@ -113,12 +134,34 @@ class EthiopianDate
     }
     
     /**
-     * Get month name by number
+     * Get month name by number (Amharic by default)
      * @param int $month
+     * @param bool $english Whether to return English transliteration
      * @return string
      */
-    public static function getMonthName($month)
+    public static function getMonthName($month, $english = false)
     {
-        return self::$monthNames[$month - 1] ?? 'Pagume';
+        if ($english) {
+            return self::$monthNamesEnglish[$month - 1] ?? 'Pagume';
+        }
+        return self::$monthNamesAmharic[$month - 1] ?? 'ጳጉሜ';
+    }
+
+    /**
+     * Get all Amharic month names
+     * @return array
+     */
+    public static function getAmharicMonths(): array
+    {
+        return self::$monthNamesAmharic;
+    }
+
+    /**
+     * Get all English transliteration month names
+     * @return array
+     */
+    public static function getEnglishMonths(): array
+    {
+        return self::$monthNamesEnglish;
     }
 }

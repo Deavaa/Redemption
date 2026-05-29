@@ -31,8 +31,11 @@ class StudentController extends Controller
     {
         $search = $request->get('search', '');
         $statusFilter = $request->get('status', '');
+        $branchFilter = $request->get('branch_id', '');
+        $classFilter = $request->get('class_id', '');
+        $sectionFilter = $request->get('section_id', '');
 
-        $query = Student::with(['classroom', 'section', 'parents']);
+        $query = Student::with(['classroom', 'section', 'branch', 'parents']);
 
         // Branch scoping: branch_principal only sees students in their branch
         $branchScope = $request->attributes->get('branch_scope');
@@ -53,17 +56,51 @@ class StudentController extends Controller
             $query->where('status', $statusFilter);
         }
 
+        // Filter by branch
+        if ($branchFilter) {
+            $query->where('branch_id', $branchFilter);
+        }
+
+        // Filter by class
+        if ($classFilter) {
+            $query->where('class_id', $classFilter);
+        }
+
+        // Filter by section
+        if ($sectionFilter) {
+            $query->where('section_id', $sectionFilter);
+        }
+
         $students = $query->orderBy('full_name')->paginate(10)->withQueryString();
 
+        // Stats base query (respects branch scope)
         $baseQuery = Student::query();
         if ($branchScope) {
             $baseQuery->where('branch_id', $branchScope);
         }
-        $totalStudents = (clone $baseQuery)->count();
-        $activeStudents = (clone $baseQuery)->where('status', 'active')->count();
-        $inactiveStudents = (clone $baseQuery)->where('status', 'inactive')->count();
+        // Also apply same filters for stats so they reflect filtered data
+        $statsQuery = clone $baseQuery;
+        if ($branchFilter) $statsQuery->where('branch_id', $branchFilter);
+        if ($classFilter) $statsQuery->where('class_id', $classFilter);
+        if ($sectionFilter) $statsQuery->where('section_id', $sectionFilter);
 
-        return view('admin.Student.index', compact('students', 'totalStudents', 'activeStudents', 'inactiveStudents', 'search', 'statusFilter'));
+        $totalStudents = (clone $statsQuery)->count();
+        $activeStudents = (clone $statsQuery)->where('status', 'active')->count();
+        $inactiveStudents = (clone $statsQuery)->where('status', 'inactive')->count();
+
+        // Load filter dropdown data
+        $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $sections = collect();
+        if ($classFilter) {
+            $sections = Section::where('class_id', $classFilter)->orderBy('name')->get();
+        }
+
+        return view('admin.Student.index', compact(
+            'students', 'totalStudents', 'activeStudents', 'inactiveStudents',
+            'search', 'statusFilter', 'branchFilter', 'classFilter', 'sectionFilter',
+            'branches', 'classes', 'sections'
+        ));
     }
 
     public function create()
@@ -840,6 +877,16 @@ class StudentController extends Controller
     }
 
     /**
+     * API: Return sections for a given class.
+     */
+    public function getSections($classId)
+    {
+        return response()->json(
+            Section::where('class_id', $classId)->orderBy('name')->get(['id', 'name'])
+        );
+    }
+
+    /**
      * API: Return sections with their class name for a given branch.
      */
     public function apiSectionsByBranch(Request $request)
@@ -866,6 +913,24 @@ class StudentController extends Controller
             });
 
         return response()->json($sections);
+    }
+
+    /**
+     * API: Return classes for a given branch (for filter dropdowns).
+     */
+    public function apiClassesByBranch(Request $request)
+    {
+        $branchId = $request->input('branch_id');
+        if (!$branchId) {
+            return response()->json([]);
+        }
+
+        return response()->json(
+            ClassRoom::where('branch_id', $branchId)
+                ->orderBy('numeric_name')
+                ->orderBy('name')
+                ->get(['id', 'name'])
+        );
     }
 
     /**

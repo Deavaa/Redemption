@@ -51,7 +51,7 @@
 
     {{-- Form Card --}}
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.exam-questions.store') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('admin.exam-questions.store') }}" id="examQuestionForm">
             @csrf
 
             {{-- Question Information --}}
@@ -88,12 +88,9 @@
                                 <i class="fas fa-list modern-input-icon"></i>
                                 <select name="question_type" id="question_type" class="modern-input modern-select {{ $errors->has('question_type') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Type --</option>
-                                    <option value="multiple_choice" {{ old('question_type') == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
-                                    <option value="true_false" {{ old('question_type') == 'true_false' ? 'selected' : '' }}>True / False</option>
-                                    <option value="short_answer" {{ old('question_type') == 'short_answer' ? 'selected' : '' }}>Short Answer</option>
-                                    <option value="essay" {{ old('question_type') == 'essay' ? 'selected' : '' }}>Essay</option>
-                                    <option value="fill_blank" {{ old('question_type') == 'fill_blank' ? 'selected' : '' }}>Fill in the Blank</option>
-                                    <option value="mixed" {{ old('question_type') == 'mixed' ? 'selected' : '' }}>Mixed</option>
+                                    @foreach(\App\Models\ExamQuestion::questionTypeOptions() as $key => $label)
+                                    <option value="{{ $key }}" {{ old('question_type') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             @error('question_type')<span class="modern-form-error">{{ $message }}</span>@enderror
@@ -107,7 +104,7 @@
                                 <i class="fas fa-star modern-input-icon"></i>
                                 <input type="number" name="total_marks" id="total_marks"
                                     class="modern-input {{ $errors->has('total_marks') ? 'is-invalid' : '' }}"
-                                    value="{{ old('total_marks', 100) }}" min="0" placeholder="100" required>
+                                    value="{{ old('total_marks', 100) }}" min="1" placeholder="100" required>
                             </div>
                             @error('total_marks')<span class="modern-form-error">{{ $message }}</span>@enderror
                         </div>
@@ -136,7 +133,7 @@
                     </div>
                     <div>
                         <h3 class="modern-form-section-title">Academic Context</h3>
-                        <p class="modern-form-section-desc">Select the subject, class, term and academic year</p>
+                        <p class="modern-form-section-desc">Select the subject, class, section, branch and academic year</p>
                     </div>
                 </div>
                 <div class="modern-form-section-body">
@@ -159,12 +156,12 @@
 
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="class_id">
-                                Class <small>(optional)</small>
+                                Class <span class="modern-required">*</span>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-building modern-input-icon"></i>
-                                <select name="class_id" id="class_id" class="modern-input modern-select {{ $errors->has('class_id') ? 'is-invalid' : '' }}">
-                                    <option value="">-- All Classes --</option>
+                                <select name="class_id" id="class_id" class="modern-input modern-select {{ $errors->has('class_id') ? 'is-invalid' : '' }}" required>
+                                    <option value="">-- Select Class --</option>
                                     @foreach($classes as $class)
                                         <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
                                     @endforeach
@@ -174,12 +171,60 @@
                         </div>
 
                         <div class="modern-form-group">
+                            <label class="modern-form-label" for="section_id">
+                                Section <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-layer-group modern-input-icon"></i>
+                                <select name="section_id" id="section_id" class="modern-input modern-select {{ $errors->has('section_id') ? 'is-invalid' : '' }}">
+                                    <option value="">-- All Sections --</option>
+                                    @foreach($sections as $section)
+                                        <option value="{{ $section->id }}" {{ old('section_id') == $section->id ? 'selected' : '' }}>{{ $section->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @error('section_id')<span class="modern-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="branch_id">
+                                Branch <small>(optional)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-sitemap modern-input-icon"></i>
+                                <select name="branch_id" id="branch_id" class="modern-input modern-select {{ $errors->has('branch_id') ? 'is-invalid' : '' }}">
+                                    <option value="">-- Select Branch --</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @error('branch_id')<span class="modern-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="exam_id">
+                                Exam <small>(optional — auto-fills year & term)</small>
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <i class="fas fa-file-signature modern-input-icon"></i>
+                                <select name="exam_id" id="exam_id" class="modern-input modern-select {{ $errors->has('exam_id') ? 'is-invalid' : '' }}">
+                                    <option value="">-- Select Exam --</option>
+                                    @foreach($exams as $exam)
+                                        <option value="{{ $exam->id }}" {{ old('exam_id') == $exam->id ? 'selected' : '' }}>{{ $exam->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @error('exam_id')<span class="modern-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="modern-form-group">
                             <label class="modern-form-label" for="academic_year_id">
                                 Academic Year <small>(optional)</small>
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-calendar modern-input-icon"></i>
-                                <select name="academic_year_id" id="exam_ay" class="modern-input modern-select {{ $errors->has('academic_year_id') ? 'is-invalid' : '' }}">
+                                <select name="academic_year_id" id="academic_year_id" class="modern-input modern-select {{ $errors->has('academic_year_id') ? 'is-invalid' : '' }}">
                                     <option value="">-- Select Year --</option>
                                     @foreach($academicYears as $ay)
                                         <option value="{{ $ay->id }}" {{ old('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>
@@ -195,8 +240,11 @@
                             </label>
                             <div class="modern-input-wrapper">
                                 <i class="fas fa-list-ol modern-input-icon"></i>
-                                <select name="term_id" id="exam_term" class="modern-input modern-select {{ $errors->has('term_id') ? 'is-invalid' : '' }}">
-                                    <option value="">-- Select Year First --</option>
+                                <select name="term_id" id="term_id" class="modern-input modern-select {{ $errors->has('term_id') ? 'is-invalid' : '' }}">
+                                    <option value="">-- Select Term --</option>
+                                    @foreach($terms as $term)
+                                        <option value="{{ $term->id }}" {{ old('term_id') == $term->id ? 'selected' : '' }}>{{ $term->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             @error('term_id')<span class="modern-form-error">{{ $message }}</span>@enderror
@@ -213,56 +261,34 @@
                     </div>
                     <div>
                         <h3 class="modern-form-section-title">Questions Content</h3>
-                        <p class="modern-form-section-desc">Type or paste the exam questions below, or upload a document</p>
+                        <p class="modern-form-section-desc">Type or paste the exam questions below</p>
                     </div>
                 </div>
                 <div class="modern-form-section-body">
                     <div class="modern-form-group" style="margin-bottom:1.25rem;">
-                        <label class="modern-form-label" for="content">
-                            Questions Content <small>(optional if uploading a file)</small>
+                        <label class="modern-form-label" for="questions">
+                            Questions Content <span class="modern-required">*</span>
                         </label>
                         <div class="modern-input-wrapper">
                             <i class="fas fa-comment-dots modern-input-icon modern-input-icon-textarea"></i>
-                            <textarea name="content" id="content"
-                                class="modern-input modern-textarea {{ $errors->has('content') ? 'is-invalid' : '' }}"
-                                placeholder="Type or paste the exam questions here..." rows="10">{{ old('content') }}</textarea>
+                            <textarea name="questions" id="questions"
+                                class="modern-input modern-textarea {{ $errors->has('questions') ? 'is-invalid' : '' }}"
+                                placeholder="Type or paste the exam questions here..." rows="10" required>{{ old('questions') }}</textarea>
                         </div>
-                        @error('content')<span class="modern-form-error">{{ $message }}</span>@enderror
+                        @error('questions')<span class="modern-form-error">{{ $message }}</span>@enderror
                     </div>
+
                     <div class="modern-form-group">
-                        <label class="modern-form-label" for="attachment">
-                            Upload Attachment <small>(PDF, Word, Excel, Image — max 10MB)</small>
+                        <label class="modern-form-label" for="description">
+                            Description / Notes <small>(optional)</small>
                         </label>
                         <div class="modern-input-wrapper">
-                            <input type="file" name="attachment" id="attachment"
-                                class="modern-input" style="padding-left:0.9rem;"
-                                accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png">
-                        </div>
-                        @error('attachment')<span class="modern-form-error">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-            </div>
-
-            {{-- Notes --}}
-            <div class="modern-form-section">
-                <div class="modern-form-section-header">
-                    <div class="modern-form-section-icon modern-form-section-icon-purple">
-                        <i class="fas fa-sticky-note"></i>
-                    </div>
-                    <div>
-                        <h3 class="modern-form-section-title">Additional Notes</h3>
-                        <p class="modern-form-section-desc">Any notes for the reviewers</p>
-                    </div>
-                </div>
-                <div class="modern-form-section-body">
-                    <div class="modern-form-group">
-                        <div class="modern-input-wrapper">
                             <i class="fas fa-comment modern-input-icon modern-input-icon-textarea"></i>
-                            <textarea name="notes" id="notes"
-                                class="modern-input modern-textarea {{ $errors->has('notes') ? 'is-invalid' : '' }}"
-                                placeholder="Notes or special instructions for reviewers..." rows="3">{{ old('notes') }}</textarea>
+                            <textarea name="description" id="description"
+                                class="modern-input modern-textarea {{ $errors->has('description') ? 'is-invalid' : '' }}"
+                                placeholder="Additional notes or special instructions..." rows="3">{{ old('description') }}</textarea>
                         </div>
-                        @error('notes')<span class="modern-form-error">{{ $message }}</span>@enderror
+                        @error('description')<span class="modern-form-error">{{ $message }}</span>@enderror
                     </div>
                 </div>
             </div>
@@ -270,11 +296,7 @@
             {{-- Form Actions --}}
             <div class="modern-form-actions">
                 <a href="{{ route('admin.exam-questions.index') }}" class="btn-modern btn-modern-ghost">Cancel</a>
-                <button type="submit" name="action" value="draft" class="btn-modern btn-modern-outline">
-                    <i class="fas fa-save"></i>
-                    <span>Save as Draft</span>
-                </button>
-                <button type="submit" name="action" value="submit" class="btn-modern btn-modern-primary">
+                <button type="submit" class="btn-modern btn-modern-primary">
                     <i class="fas fa-paper-plane"></i>
                     <span>Submit for Review</span>
                 </button>
@@ -352,32 +374,59 @@
 
 @push('scripts')
 <script>
-(function() {
-    var allTerms = {!! $allTerms->toJson() !!};
-    var selAY = document.getElementById('exam_ay');
-    var selTerm = document.getElementById('exam_term');
+$(function() {
+    // Load sections when class changes
+    var classSelect = $('#class_id');
+    var sectionSelect = $('#section_id');
 
-    function filterTerms(ayId) {
-        selTerm.innerHTML = '<option value="">-- Select Term --</option>';
-        if (!ayId) return;
-        for (var i = 0; i < allTerms.length; i++) {
-            if (allTerms[i].academic_year_id == ayId) {
-                var opt = document.createElement('option');
-                opt.value = allTerms[i].id;
-                opt.textContent = allTerms[i].name;
-                selTerm.appendChild(opt);
+    classSelect.on('change', function() {
+        var classId = $(this).val();
+        sectionSelect.html('<option value="">-- All Sections --</option>');
+        if (!classId) return;
+
+        $.ajax({
+            url: '{{ route("admin.api.sections-by-class") }}',
+            data: { class_id: classId },
+            dataType: 'json',
+            success: function(data) {
+                $.each(data, function(i, sec) {
+                    sectionSelect.append('<option value="' + sec.id + '">' + sec.name + '</option>');
+                });
             }
-        }
-    }
+        });
+    });
 
-    if (selAY) {
-        selAY.addEventListener('change', function() { filterTerms(this.value); });
-        @if(old('academic_year_id'))
-        selAY.value = '{{ old('academic_year_id') }}';
-        filterTerms(selAY.value);
-        @endif
-    }
-})();
+    // Auto-fill academic year and term when exam is selected
+    var examSelect = $('#exam_id');
+    var aySelect = $('#academic_year_id');
+    var termSelect = $('#term_id');
+
+    examSelect.on('change', function() {
+        var examId = $(this).val();
+        if (!examId) return;
+
+        $.ajax({
+            url: '{{ route("admin.api.exam-details", ["exam" => 0]) }}'.replace('/0', '/' + examId),
+            dataType: 'json',
+            success: function(data) {
+                if (data.academic_year_id) {
+                    aySelect.val(data.academic_year_id);
+                }
+                if (data.term_id) {
+                    termSelect.val(data.term_id);
+                }
+            },
+            error: function() {
+                // Silently ignore — manual selection still works
+            }
+        });
+    });
+
+    // Auto-select teacher's branch
+    @if($teacherProfile && auth()->user()->branch_id)
+    $('#branch_id').val('{{ auth()->user()->branch_id }}');
+    @endif
+});
 </script>
 @endpush
 @endsection

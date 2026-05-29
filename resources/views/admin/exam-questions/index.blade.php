@@ -15,10 +15,7 @@
             </nav>
         </div>
         <div class="modern-page-header-right">
-            @php
-                $canCreate = in_array(Auth::user()->role, ['admin', 'super_admin', 'teacher', 'department_head']);
-            @endphp
-            @if($canCreate)
+            @if($canManage)
             <a href="{{ route('admin.exam-questions.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-plus"></i>
                 <span>Submit Exam Question</span>
@@ -28,45 +25,32 @@
     </div>
 
     {{-- Stats Cards --}}
-    @php
-        $user = Auth::user();
-        $draftCount = $data->where('status', 'draft')->count();
-        $pendingDeptCount = $data->where('status', 'submitted')->count();
-        $pendingPrincipalCount = $data->where('status', 'dept_approved')->count();
-        $approvedCount = $data->where('status', 'principal_approved')->count();
-        $rejectedCount = $data->whereIn('status', ['dept_rejected', 'principal_rejected'])->count();
-    @endphp
-
     <div class="modern-stats-row">
-        @if(in_array($user->role, ['teacher', 'admin', 'super_admin']))
         <div class="modern-stat-card">
-            <div class="modern-stat-icon modern-stat-icon-gray">
-                <i class="fas fa-edit"></i>
+            <div class="modern-stat-icon modern-stat-icon-blue">
+                <i class="fas fa-file-alt"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $draftCount }}</span>
-                <span class="modern-stat-label">Drafts</span>
+                <span class="modern-stat-value">{{ $totalQuestions }}</span>
+                <span class="modern-stat-label">Total</span>
             </div>
         </div>
-        @endif
-        @if(in_array($user->role, ['department_head', 'admin', 'super_admin']))
+        @if($canReview)
         <div class="modern-stat-card">
             <div class="modern-stat-icon modern-stat-icon-gold">
                 <i class="fas fa-hourglass-half"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $pendingDeptCount }}</span>
+                <span class="modern-stat-value">{{ $pendingDepartment }}</span>
                 <span class="modern-stat-label">Pending Dept. Review</span>
             </div>
         </div>
-        @endif
-        @if(in_array($user->role, ['branch_principal', 'admin', 'super_admin']))
         <div class="modern-stat-card">
             <div class="modern-stat-icon modern-stat-icon-blue">
                 <i class="fas fa-arrow-right"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $pendingPrincipalCount }}</span>
+                <span class="modern-stat-value">{{ $pendingPrincipal }}</span>
                 <span class="modern-stat-label">Pending Principal</span>
             </div>
         </div>
@@ -76,7 +60,7 @@
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $approvedCount }}</span>
+                <span class="modern-stat-value">{{ $approved }}</span>
                 <span class="modern-stat-label">Approved</span>
             </div>
         </div>
@@ -85,8 +69,17 @@
                 <i class="fas fa-times-circle"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ $rejectedCount }}</span>
+                <span class="modern-stat-value">{{ $rejected }}</span>
                 <span class="modern-stat-label">Rejected</span>
+            </div>
+        </div>
+        <div class="modern-stat-card">
+            <div class="modern-stat-icon modern-stat-icon-gray">
+                <i class="fas fa-redo"></i>
+            </div>
+            <div class="modern-stat-info">
+                <span class="modern-stat-value">{{ $revisionCount }}</span>
+                <span class="modern-stat-label">Needs Revision</span>
             </div>
         </div>
     </div>
@@ -94,7 +87,7 @@
     {{-- Workflow Banner --}}
     <div class="modern-info-banner">
         <i class="fas fa-route"></i>
-        <span>Approval Workflow: <strong>Teacher</strong> submits → <strong>Department Head</strong> reviews → <strong>Principal</strong> gives final approval</span>
+        <span>Approval Workflow: <strong>Teacher</strong> submits &rarr; <strong>Department Head</strong> reviews &rarr; <strong>Principal</strong> gives final approval</span>
     </div>
 
     {{-- Questions Table Card --}}
@@ -102,17 +95,17 @@
         <div class="modern-card-header">
             <div class="modern-card-header-left">
                 <h2 class="modern-card-title">Exam Questions</h2>
-                <span class="modern-badge modern-badge-light">{{ $data->total() }} records</span>
+                <span class="modern-badge modern-badge-light">{{ $examQuestions->total() }} records</span>
             </div>
             <div class="modern-card-header-right" style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
                 <div class="modern-search-box">
                     <i class="fas fa-search"></i>
                     <input type="text" id="eqSearch" placeholder="Search questions..." onkeyup="filterTable()">
                 </div>
-                <form method="GET" action="{{ route('admin.exam-questions.index') }}" style="display:flex;gap:0.5rem;align-items:center;">
+                <form method="GET" action="{{ route('admin.exam-questions.index') }}" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
                     <select name="status" class="modern-filter-select" onchange="this.form.submit()">
                         <option value="">All Statuses</option>
-                        @foreach($statuses as $key => $label)
+                        @foreach(\App\Models\ExamQuestion::statusOptions() as $key => $label)
                         <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -120,6 +113,24 @@
                         <option value="">All Subjects</option>
                         @foreach($subjects as $subject)
                         <option value="{{ $subject->id }}" {{ request('subject_id') == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="class_id" class="modern-filter-select" onchange="this.form.submit()">
+                        <option value="">All Classes</option>
+                        @foreach($classes as $class)
+                        <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="branch_id" class="modern-filter-select" onchange="this.form.submit()">
+                        <option value="">All Branches</option>
+                        @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="exam_id" class="modern-filter-select" onchange="this.form.submit()">
+                        <option value="">All Exams</option>
+                        @foreach($exams as $exam)
+                        <option value="{{ $exam->id }}" {{ request('exam_id') == $exam->id ? 'selected' : '' }}>{{ $exam->name }}</option>
                         @endforeach
                     </select>
                 </form>
@@ -146,37 +157,43 @@
                 </div>
             @endif
 
-            @if($data->count() > 0)
+            @if($examQuestions->count() > 0)
             <div class="modern-table-wrapper">
                 <table class="modern-table" id="eqTable">
                     <thead>
                         <tr>
                             <th class="th-narrow">#</th>
                             <th>Title</th>
-                            @if($user->role !== 'teacher')
+                            @if(auth()->user()->role !== 'teacher')
                             <th>Teacher</th>
                             @endif
                             <th>Subject</th>
+                            <th>Class / Section</th>
                             <th>Type</th>
                             <th class="th-center">Marks</th>
                             <th class="th-center">Status</th>
-                            <th>Submitted</th>
+                            <th>Branch</th>
                             <th class="th-actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($data as $item)
+                        @foreach($examQuestions as $item)
+                        @php
+                            $statusLabel = \App\Models\ExamQuestion::statusOptions()[$item->status] ?? ucfirst(str_replace('_', ' ', $item->status));
+                            $statusBadge = \App\Models\ExamQuestion::statusBadgeClass($item->status);
+                            $typeLabel = \App\Models\ExamQuestion::questionTypeOptions()[$item->question_type] ?? ucfirst(str_replace('_', ' ', $item->question_type));
+                        @endphp
                         <tr class="modern-table-row">
                             <td class="td-narrow">
-                                <span class="modern-row-number">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</span>
+                                <span class="modern-row-number">{{ $loop->iteration + ($examQuestions->currentPage() - 1) * $examQuestions->perPage() }}</span>
                             </td>
                             <td>
                                 <div class="modern-cell-title">{{ $item->title }}</div>
-                                @if($item->classRoom)
-                                <div class="modern-cell-sub">{{ $item->classRoom->name }}</div>
+                                @if($item->description)
+                                <div class="modern-cell-sub">{{ Str::limit($item->description, 60) }}</div>
                                 @endif
                             </td>
-                            @if($user->role !== 'teacher')
+                            @if(auth()->user()->role !== 'teacher')
                             <td>
                                 <div class="modern-cell-text">{{ $item->teacher->full_name ?? '-' }}</div>
                             </td>
@@ -185,42 +202,38 @@
                                 <span class="modern-badge modern-badge-light">{{ $item->subject->name ?? '-' }}</span>
                             </td>
                             <td>
-                                <span class="modern-badge modern-badge-light">{{ $item->question_type_label }}</span>
+                                <div class="modern-cell-text">
+                                    {{ $item->classRoom->name ?? '-' }}
+                                    @if($item->section)
+                                        <span class="modern-cell-sub"> / {{ $item->section->name }}</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td>
+                                <span class="modern-badge modern-badge-light">{{ $typeLabel }}</span>
                             </td>
                             <td class="td-center">
                                 <span class="modern-cell-marks">{{ $item->total_marks }}</span>
                             </td>
                             <td class="td-center">
-                                <span class="modern-badge {{ $item->status_badge }}">
-                                    <i class="{{ $item->status_icon }}"></i> {{ $item->status_label }}
+                                <span class="modern-badge {{ $statusBadge }}">
+                                    {{ $statusLabel }}
                                 </span>
                             </td>
                             <td>
-                                @if($item->submitted_at)
-                                    <div class="modern-cell-date">{{ $item->submitted_at->format('M d, Y') }}</div>
-                                @else
-                                    <span class="modern-cell-muted">Not submitted</span>
-                                @endif
+                                <span class="modern-cell-text">{{ $item->branch->name ?? '-' }}</span>
                             </td>
                             <td class="td-actions">
                                 <div class="modern-action-group">
                                     <a href="{{ route('admin.exam-questions.show', $item->id) }}" class="modern-btn-icon modern-btn-view" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @if($item->canBeEdited() && ($user->role === 'teacher' || in_array($user->role, ['admin', 'super_admin'])))
+                                    @if($item->isEditable() && (auth()->user()->role === 'admin' || (auth()->user()->role === 'teacher' && auth()->user()->teacherProfile && $item->teacher_id === auth()->user()->teacherProfile->id)))
                                     <a href="{{ route('admin.exam-questions.edit', $item->id) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                         <i class="fas fa-pen"></i>
                                     </a>
                                     @endif
-                                    @if($item->canBeSubmitted() && ($user->role === 'teacher' || in_array($user->role, ['admin', 'super_admin'])))
-                                    <form method="POST" action="{{ route('admin.exam-questions.submit', $item->id) }}" style="display:inline" onsubmit="return confirm('Submit this question for department head review?')">
-                                        @csrf
-                                        <button type="submit" class="modern-btn-icon modern-btn-submit" title="Submit for Review" style="background:#eef2ff;color:#4361ee;">
-                                            <i class="fas fa-paper-plane"></i>
-                                        </button>
-                                    </form>
-                                    @endif
-                                    @if(in_array($user->role, ['admin', 'super_admin', 'teacher']))
+                                    @if(auth()->user()->role === 'admin' || (auth()->user()->role === 'teacher' && $item->isDeletable() && auth()->user()->teacherProfile && $item->teacher_id === auth()->user()->teacherProfile->id))
                                     <form method="POST" action="{{ route('admin.exam-questions.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Delete this exam question?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
@@ -237,9 +250,9 @@
             </div>
 
             {{-- Pagination --}}
-            @if($data->hasPages())
+            @if($examQuestions->hasPages())
             <div class="modern-pagination-wrapper">
-                {{ $data->withQueryString()->links() }}
+                {{ $examQuestions->withQueryString()->links() }}
             </div>
             @endif
             @else
@@ -248,8 +261,8 @@
                     <i class="fas fa-question-circle"></i>
                 </div>
                 <h3>No Exam Questions</h3>
-                <p>@if($canCreate)Submit your first exam question for review.@else No exam questions found matching your filters.@endif</p>
-                @if($canCreate)
+                <p>@if($canManage)Submit your first exam question for review.@else No exam questions found matching your filters.@endif</p>
+                @if($canManage)
                 <a href="{{ route('admin.exam-questions.create') }}" class="btn-modern btn-modern-primary">
                     <i class="fas fa-plus"></i> Submit Exam Question
                 </a>
@@ -302,6 +315,7 @@
 .modern-badge-gold { background:#fefce8; color:#b45309; }
 .modern-badge-warning { background:#fffbeb; color:#d97706; }
 .modern-badge-info { background:#eff6ff; color:#2563eb; }
+.modern-badge-orange { background:#fff7ed; color:#ea580c; }
 .modern-search-box { position:relative; display:flex; align-items:center; }
 .modern-search-box i { position:absolute; left:12px; color:#adb5bd; font-size:.85rem; }
 .modern-search-box input { border:1.5px solid #e5e7eb; border-radius:10px; padding:.55rem .75rem .55rem 2.25rem; font-size:.875rem; width:220px; transition:all .2s; background:#f9fafb; color:#374151; }

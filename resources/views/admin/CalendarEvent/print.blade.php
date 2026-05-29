@@ -425,7 +425,7 @@
             <div class="months-grid">
                 @foreach($monthGrids as $monthKey => $grid)
                     <div class="month-box">
-                        <div class="month-header">{{ $grid['name'] }}</div>
+                        <div class="month-header">{{ $grid['name'] }} — {{ $grid['eth_name'] }}</div>
                         <table class="month-table">
                             <thead>
                                 <tr>
@@ -491,6 +491,10 @@
                     <div class="event-month-group">
                         <div class="event-month-header">
                             {{ \Carbon\Carbon::createFromFormat('Y-m', $monthKey)->format('F Y') }}
+                            @php
+                                $ethMonthHeader = \App\Helpers\EthiopianDate::fromGregorian(\Carbon\Carbon::createFromFormat('Y-m', $monthKey)->format('Y-m-d'));
+                            @endphp
+                            / {{ $ethMonthHeader['month_name'] }} {{ $ethMonthHeader['year'] }} ዓ.ም.
                             ({{ $monthEvents->count() }} event{{ $monthEvents->count() !== 1 ? 's' : '' }})
                         </div>
                         @foreach($monthEvents as $event)
@@ -506,12 +510,12 @@
                                     @php
                                         $ethStart = \App\Helpers\EthiopianDate::fromGregorian($event->start_date->format('Y-m-d'));
                                     @endphp
-                                    <span class="event-eth-date"><br>{{ $ethStart['day'] }} {{ $ethStart['month_name'] }} {{ $ethStart['year'] }}</span>
+                                    <span class="event-eth-date"><br>{{ $ethStart['day'] }} {{ $ethStart['month_name'] }} {{ $ethStart['year'] }} ዓ.ም.</span>
                                     @if($event->end_date && $event->end_date->format('Y-m-d') !== $event->start_date->format('Y-m-d'))
                                         @php
                                             $ethEnd = \App\Helpers\EthiopianDate::fromGregorian($event->end_date->format('Y-m-d'));
                                         @endphp
-                                        <span class="event-eth-date"> &ndash; {{ $ethEnd['day'] }} {{ $ethEnd['month_name'] }} {{ $ethEnd['year'] }}</span>
+                                        <span class="event-eth-date"> &ndash; {{ $ethEnd['day'] }} {{ $ethEnd['month_name'] }} {{ $ethEnd['year'] }} ዓ.ም.</span>
                                     @endif
                                 </div>
                                 <div class="event-cat-col">

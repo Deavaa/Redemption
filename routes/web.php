@@ -252,6 +252,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
     Route::get('students/api/sections/{classId}', [StudentController::class, 'getSections'])->name('students.api.sections');
     Route::get('students/api/sections-by-branch', [StudentController::class, 'apiSectionsByBranch'])->name('students.api.sections-by-branch');
+    Route::get('students/api/classes-by-branch', [StudentController::class, 'apiClassesByBranch'])->name('students.api.classes-by-branch');
     Route::get('students/inactive/list', [StudentController::class, 'inactive'])->name('students.inactive')->middleware('permission:students.view');
     Route::resource('students', StudentController::class)->middleware('permission:students.view');
     Route::get('students/{student}/readmit', [StudentController::class, 'readmit'])->name('students.readmit')->middleware('permission:students.manage');
@@ -340,6 +341,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::resource('content-notes', SubjectContentNoteController::class)->middleware('permission:lesson_plans.view');
 
     // ── Exam Questions (Department → Principal Pipeline) ──────
+    Route::get('exam-questions/api/sections-by-class', [ExamQuestionController::class, 'apiSectionsByClass'])->name('api.sections-by-class')->middleware('permission:exams.view');
+    Route::get('exam-questions/api/exam-details/{exam}', [ExamQuestionController::class, 'apiExamDetails'])->name('api.exam-details')->middleware('permission:exams.view');
     Route::resource('exam-questions', ExamQuestionController::class)->middleware('permission:exams.view');
     Route::post('exam-questions/{exam_question}/department-review', [ExamQuestionController::class, 'reviewByDepartment'])->name('exam-questions.department-review')->middleware('permission:exams.manage');
     Route::post('exam-questions/{exam_question}/principal-review', [ExamQuestionController::class, 'reviewByPrincipal'])->name('exam-questions.principal-review')->middleware('permission:exams.manage');
