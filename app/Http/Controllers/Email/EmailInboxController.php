@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailInboxSetting;
 use App\Models\EmailMessage;
 use App\Models\Branch;
-use Ddeboer\Imap\Server;
-use Ddeboer\Imap\SearchExpression;
-use Ddeboer\Imap\Search\Flag\Unseen;
+use App\Services\ImapClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -187,6 +185,8 @@ class EmailInboxController extends Controller
 
     public function syncInbox(EmailInboxSetting $inboxSetting)
     {
+        $imap = null;
+
         try {
             $host = $inboxSetting->imap_host;
             $port = $inboxSetting->imap_port;
@@ -195,143 +195,78 @@ class EmailInboxController extends Controller
             $encryption = $inboxSetting->imap_encryption;
             $folder = $inboxSetting->folder ?? 'INBOX';
 
-            // Build the server connection string and flags for ddeboer/imap
-            // This library uses PHP sockets - no php-imap extension required
-            $flags = '';
-            if ($encryption === 'ssl') {
-                $flags = '/imap/ssl/novalidate-cert';
-            } elseif ($encryption === 'tls') {
-                $flags = '/imap/tls/novalidate-cert';
-            } else {
-                $flags = '/imap/novalidate-cert';
-            }
-
-            $server = new Server($host, $port, $flags);
+            // Use our built-in ImapClient (no php-imap extension required)
+            $imap = new ImapClient($host, $port, $encryption);
 
             // Connect and authenticate
-            $connection = $server->authenticate($username, $password);
-
-            // Select the mailbox folder
-            $mailbox = $connection->getMailbox($folder);
-
-            // Search for unread messages
-            $search = new SearchExpression();
-            $search->addCondition(new Unseen());
-
-            $messages = $mailbox->getMessages($search);
-            $synced = 0;
-            $count = 0;
-
-            foreach ($messages as $message) {
-                $count++;
-
-                // Limit sync to prevent timeout
-                if ($count > 50) {
-                    break;
-                }
-
-                $messageId = $message->getId() ?? uniqid();
-
-                // Skip if already exists
-                if (EmailMessage::where('message_id', $messageId)->exists()) {
-                    continue;
-                }
-
-                // Extract from address
-                $from = $message->getFrom();
-                $fromName = $from ? $from->getName() : '';
-                $fromEmail = $from ? $from->getAddress() : '';
-
-                // Extract to address
-                $to = $message->getTo();
-                $toEmail = '';
-                if ($to && count($to) > 0) {
-                    $toEmail = $to[0]->getAddress();
-                }
-
-                // Subject
-                $subject = $message->getSubject() ?? '(No Subject)';
-
-                // Date
-                $date = $message->getDate();
-                $dateStr = $date ? $date->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s');
-
-                // Get body - try HTML first, fall back to plain text
-                $bodyHtml = '';
-                $bodyText = '';
-
-                try {
-                    $bodyHtml = $message->getBodyHtml() ?: '';
-                } catch (\Exception $e) {
-                    $bodyHtml = '';
-                }
-
-                try {
-                    $bodyText = $message->getBodyText() ?: '';
-                } catch (\Exception $e) {
-                    $bodyText = '';
-                }
-
-                // If no plain text, strip HTML tags
-                if (empty($bodyText) && !empty($bodyHtml)) {
-                    $bodyText = strip_tags($bodyHtml);
-                }
-
-                // Auto-categorize based on subject/body
-                $category = $this->autoCategorize($subject, $bodyText);
-
-                // Get CC recipients
-                $ccList = [];
-                $cc = $message->getCc();
-                if ($cc) {
-                    foreach ($cc as $ccRecipient) {
-                        $ccList[] = $ccRecipient->getAddress();
-                    }
-                }
-
-                // Get attachments info
-                $attachmentsList = [];
-                try {
-                    $attachments = $message->getAttachments();
-                    if ($attachments) {
-                        foreach ($attachments as $attachment) {
-                            $attachmentsList[] = [
-                                'filename' => $attachment->getFilename(),
-                                'size' => $attachment->getSize(),
-                            ];
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Attachments not critical for sync
-                }
-
-                EmailMessage::create([
-                    'email_inbox_setting_id' => $inboxSetting->id,
-                    'message_id' => $messageId,
-                    'subject' => $subject,
-                    'body_html' => $bodyHtml,
-                    'body_text' => $bodyText,
-                    'from_name' => $fromName,
-                    'from_email' => $fromEmail,
-                    'to_email' => $toEmail,
-                    'cc' => !empty($ccList) ? $ccList : null,
-                    'attachments' => !empty($attachmentsList) ? $attachmentsList : null,
-                    'received_at' => $dateStr,
-                    'is_read' => false,
-                    'category' => $category,
-                ]);
-
-                $synced++;
+            if (!$imap->connect($username, $password)) {
+                return back()->with('error', 'Failed to connect to email server: ' . $imap->getLastError());
             }
 
-            // Close connection
-            $connection->close();
+            // Select the mailbox folder
+            $folderInfo = $imap->selectFolder($folder);
+            if ($folderInfo === null) {
+                return back()->with('error', 'Failed to select folder: ' . $imap->getLastError());
+            }
+
+            // Search for unread messages (using UIDs)
+            $messageUids = $imap->search('UNSEEN', true);
+            $synced = 0;
+
+            if (!empty($messageUids)) {
+                // Reverse to get newest first
+                $messageUids = array_reverse($messageUids);
+
+                // Limit sync to prevent timeout
+                $messageUids = array_slice($messageUids, 0, 50);
+
+                foreach ($messageUids as $uid) {
+                    // Skip if already exists
+                    if (EmailMessage::where('message_id', (string) $uid)->exists()) {
+                        continue;
+                    }
+
+                    // Fetch message details
+                    $messageData = $imap->fetchMessageForSync($uid, true);
+                    if ($messageData === null) {
+                        continue;
+                    }
+
+                    // Auto-categorize based on subject/body
+                    $category = $this->autoCategorize(
+                        $messageData['subject'] ?? '',
+                        $messageData['body_text'] ?? ''
+                    );
+
+                    EmailMessage::create([
+                        'email_inbox_setting_id' => $inboxSetting->id,
+                        'message_id' => $messageData['message_id'] ?? (string) $uid,
+                        'subject' => $messageData['subject'] ?? '(No Subject)',
+                        'body_html' => $messageData['body_html'] ?? '',
+                        'body_text' => $messageData['body_text'] ?? '',
+                        'from_name' => $messageData['from_name'] ?? '',
+                        'from_email' => $messageData['from_email'] ?? '',
+                        'to_email' => $messageData['to_email'] ?? '',
+                        'cc' => !empty($messageData['cc']) ? $messageData['cc'] : null,
+                        'received_at' => $messageData['date'] ?? now()->format('Y-m-d H:i:s'),
+                        'is_read' => false,
+                        'category' => $category,
+                    ]);
+
+                    $synced++;
+                }
+            }
 
             $inboxSetting->update(['last_synced_at' => now()]);
 
             return back()->with('success', "Synced {$synced} new email(s) successfully.");
         } catch (\Exception $e) {
             return back()->with('error', 'Sync failed: ' . $e->getMessage());
+        } finally {
+            // Always close the connection
+            if ($imap) {
+                $imap->disconnect();
+            }
         }
     }
 
