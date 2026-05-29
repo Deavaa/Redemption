@@ -104,7 +104,7 @@ class EnrollmentController extends Controller
         if ($effectiveBranchId) {
             $classesQuery->where('branch_id', $effectiveBranchId);
         }
-        $classes = $classesQuery->orderBy('name')->get();
+        $classes = $classesQuery->orderBy('numeric_name')->orderBy('name')->get();
 
         // Fallback: if no classes found for this AY, show all classes for the branch
         if ($classes->isEmpty()) {
@@ -112,10 +112,10 @@ class EnrollmentController extends Controller
             if ($effectiveBranchId) {
                 $fallbackQuery->where('branch_id', $effectiveBranchId);
             }
-            $classes = $fallbackQuery->orderBy('name')->get();
+            $classes = $fallbackQuery->orderBy('numeric_name')->orderBy('name')->get();
         }
 
-        $sections = $classId ? Section::where('class_id', $classId)->get() : collect();
+        $sections = $classId ? Section::where('class_id', $classId)->orderBy('name')->get() : collect();
 
         // For branch principals, auto-limit branches to their own
         if ($branchScope) {
@@ -163,7 +163,7 @@ class EnrollmentController extends Controller
         if ($currentAy) {
             $classesQuery->where('academic_year_id', $currentAy->id);
         }
-        $classes = $classesQuery->orderBy('name')->get();
+        $classes = $classesQuery->orderBy('numeric_name')->orderBy('name')->get();
 
         // Fallback: if no classes for current AY, show all classes for the branch
         if ($classes->isEmpty()) {
@@ -171,7 +171,7 @@ class EnrollmentController extends Controller
             if ($branchScope) {
                 $fallbackQuery->where('branch_id', $branchScope);
             }
-            $classes = $fallbackQuery->orderBy('name')->get();
+            $classes = $fallbackQuery->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.Enrollment.create', compact('students', 'academicYears', 'branches', 'classes'));
@@ -266,13 +266,13 @@ class EnrollmentController extends Controller
         // Try to load classes for the enrollment's academic year, with fallback
         $classesQuery = Classroom::with('sections')
             ->where('academic_year_id', $enrollment->academic_year_id);
-        $classes = $classesQuery->orderBy('name')->get();
+        $classes = $classesQuery->orderBy('numeric_name')->orderBy('name')->get();
 
         if ($classes->isEmpty()) {
-            $classes = Classroom::with('sections')->orderBy('name')->get();
+            $classes = Classroom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         }
 
-        $sections = Section::where('class_id', $enrollment->class_id)->get();
+        $sections = Section::where('class_id', $enrollment->class_id)->orderBy('name')->get();
 
         return view('admin.Enrollment.edit', compact('enrollment', 'academicYears', 'branches', 'classes', 'sections'));
     }
@@ -563,7 +563,7 @@ class EnrollmentController extends Controller
     public function apiSections(Request $request)
     {
         $classId = $request->get('class_id');
-        $sections = Section::where('class_id', $classId)->get(['id', 'name', 'max_students']);
+        $sections = Section::where('class_id', $classId)->orderBy('name')->get(['id', 'name', 'max_students']);
         return response()->json($sections);
     }
 
@@ -617,6 +617,7 @@ class EnrollmentController extends Controller
         $classes = Classroom::when($effectiveBranchId, fn($q) => $q->where('branch_id', $effectiveBranchId))
             ->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))
             ->with('sections')
+            ->orderBy('numeric_name')
             ->orderBy('name')
             ->get();
 
@@ -624,6 +625,7 @@ class EnrollmentController extends Controller
         if ($classes->isEmpty() && $academicYearId) {
             $classes = Classroom::when($effectiveBranchId, fn($q) => $q->where('branch_id', $effectiveBranchId))
                 ->with('sections')
+                ->orderBy('numeric_name')
                 ->orderBy('name')
                 ->get();
         }

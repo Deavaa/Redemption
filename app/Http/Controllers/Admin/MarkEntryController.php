@@ -76,7 +76,7 @@ class MarkEntryController extends Controller
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
 
             // Load teacher-scoped classes for dropdown
-            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name','asc')->get(['id','name']);
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name']);
 
             $sections = Section::with('classRoom')
                 ->where(function($q) use ($sectionIds, $classIds) {
@@ -142,9 +142,9 @@ class MarkEntryController extends Controller
             }
         } else {
             // Admin: load classes for the current academic year (with fallback)
-            $classes = ClassRoom::where('academic_year_id', $currentAy?->id)->orderBy('name','asc')->get(['id','name']);
+            $classes = ClassRoom::where('academic_year_id', $currentAy?->id)->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name']);
             if ($classes->isEmpty()) {
-                $classes = ClassRoom::orderBy('name','asc')->get(['id','name']);
+                $classes = ClassRoom::orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name']);
             }
             $sections = Section::with('classRoom')->orderBy('class_id','asc')->orderBy('name','asc')->get();
         }
@@ -173,11 +173,11 @@ class MarkEntryController extends Controller
             if ($ayId) {
                 $query->where('academic_year_id', $ayId);
             }
-            $classes = $query->orderBy('name','asc')->get(['id','name','branch_id']);
+            $classes = $query->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
 
             // Fallback: if no classes found for this AY, show all teacher classes
             if ($classes->isEmpty()) {
-                $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name','asc')->get(['id','name','branch_id']);
+                $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
             }
 
             return response()->json($classes);
@@ -187,11 +187,11 @@ class MarkEntryController extends Controller
         if ($ayId) {
             $query->where('academic_year_id', $ayId);
         }
-        $classes = $query->orderBy('name','asc')->get(['id','name','branch_id']);
+        $classes = $query->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
 
         // Fallback: if no classes for this AY, show all classes
         if ($classes->isEmpty() && $ayId) {
-            $classes = ClassRoom::orderBy('name','asc')->get(['id','name','branch_id']);
+            $classes = ClassRoom::orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
         }
 
         return response()->json($classes);

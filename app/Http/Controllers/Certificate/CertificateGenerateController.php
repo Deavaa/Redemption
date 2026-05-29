@@ -11,7 +11,7 @@ class CertificateGenerateController extends Controller
 {
     public function index()
     {
-        $classes = Classroom::orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $preselectedStudentId = request()->query('student_id');
         $preselectedStudent = null;
 

@@ -16,7 +16,7 @@ class LeavingCertificateController extends Controller
 {
     public function index()
     {
-        $classes = Classroom::orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
 
         // If student_id is provided, directly generate the leaving certificate
         $preselectedStudentId = request()->query('student_id');

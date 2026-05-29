@@ -65,9 +65,9 @@ class MarkRosterController extends Controller
             $homeroomClassIds = $teacher->classRooms()->pluck('id');
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
 
-            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-roster.index', compact('academicYears', 'terms', 'classes', 'isTeacher'));
@@ -306,9 +306,9 @@ class MarkRosterController extends Controller
             $assignmentClassIds = $teacher->assignments()->pluck('class_id')->unique();
             $homeroomClassIds = $teacher->classRooms()->pluck('id');
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
-            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-roster.index', compact(

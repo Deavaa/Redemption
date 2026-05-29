@@ -42,12 +42,12 @@ class GraphicalReportController extends Controller
 
         // Student enrollment by class
         try {
-            $studentsByClass = ClassRoom::withCount('students')->orderBy('name')->get()->map(fn($c) => [
+            $studentsByClass = ClassRoom::withCount('students')->orderBy('numeric_name')->orderBy('name')->get()->map(fn($c) => [
                 'name' => $c->name,
                 'count' => $c->students_count,
             ]);
         } catch (\BadMethodCallException $e) {
-            $studentsByClass = ClassRoom::orderBy('name')->get()->map(fn($c) => [
+            $studentsByClass = ClassRoom::orderBy('numeric_name')->orderBy('name')->get()->map(fn($c) => [
                 'name' => $c->name,
                 'count' => Student::where('class_id', $c->id)->count(),
             ]);

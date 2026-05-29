@@ -81,7 +81,7 @@ class LessonPlanController extends Controller
         $terms = Term::when($request->filled('academic_year_id'),
             fn($q) => $q->where('academic_year_id', $request->academic_year_id)
         )->orderBy('name')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $subjects = Subject::active()->ordered()->get();
 
         // Teacher assignments for teacher users (for cascading dropdowns)
@@ -118,7 +118,7 @@ class LessonPlanController extends Controller
 
         $academicYears = AcademicYear::orderBy('name')->get();
         $terms = Term::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $subjects = Subject::active()->ordered()->get();
         $teachers = $isTeacher ? collect() : Teacher::orderBy('full_name')->get();
         $currentAy = AcademicYear::where('is_current', true)->first();
@@ -230,7 +230,7 @@ class LessonPlanController extends Controller
 
         $academicYears = AcademicYear::orderBy('name')->get();
         $terms = Term::where('academic_year_id', $lessonPlan->academic_year_id)->orderBy('name')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $subjects = Subject::active()->ordered()->get();
         $teachers = $isTeacher ? collect() : Teacher::orderBy('full_name')->get();
 

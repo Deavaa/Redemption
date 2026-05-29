@@ -16,7 +16,7 @@ class TranscriptController extends Controller
 {
     public function index()
     {
-        $classes = Classroom::orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
 
         // If student_id is provided, directly generate the transcript
         $preselectedStudentId = request()->query('student_id');

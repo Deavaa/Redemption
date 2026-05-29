@@ -30,7 +30,7 @@ class Classroom extends Model
         $this->saveQuietly();
     }
 
-    public function sections() { return $this->hasMany(Section::class, 'class_id'); }
+    public function sections() { return $this->hasMany(Section::class, 'class_id')->orderBy('name'); }
     public function students() { return $this->hasMany(Student::class, 'class_id'); }
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
     public function branch() { return $this->belongsTo(Branch::class); }

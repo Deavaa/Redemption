@@ -210,7 +210,7 @@ class PerformanceAnalysisController extends Controller
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $terms = Term::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
 
         $selectedYear = $request->filled('academic_year_id')
             ? AcademicYear::find($request->academic_year_id)

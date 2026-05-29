@@ -100,7 +100,7 @@ class ExamQuestionController extends Controller
 
         // Filter dropdowns
         $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $exams = Exam::orderByDesc('start_date')->limit(50)->get();
         $branches = Branch::orderBy('name')->get();
 
@@ -125,7 +125,7 @@ class ExamQuestionController extends Controller
         $user = auth()->user();
 
         $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $exams = Exam::orderByDesc('start_date')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $terms = Term::orderBy('id')->get();
@@ -250,7 +250,7 @@ class ExamQuestionController extends Controller
         $exam_question->load(['teacher', 'subject', 'classRoom', 'section', 'exam', 'academicYear', 'term', 'branch']);
 
         $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $exams = Exam::orderByDesc('start_date')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $terms = Term::orderBy('id')->get();

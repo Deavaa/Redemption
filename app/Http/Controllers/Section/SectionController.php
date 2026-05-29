@@ -19,13 +19,13 @@ class SectionController extends Controller {
         if ($r->filled('class_id')) $q->where('class_id', $r->class_id);
         $data = $q->latest()->paginate(20);
         $totalSections = Section::count();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         return view('admin.Section.index', compact('data', 'totalSections', 'classes'));
     }
 
     public function create()
     {
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
         return view('admin.Section.create', compact('classes','teachers'));
     }
@@ -53,7 +53,7 @@ class SectionController extends Controller {
 
     public function edit(Section $section)
     {
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
         return view('admin.Section.edit', compact('section','classes','teachers'));
     }

@@ -58,9 +58,9 @@ class MarkSheetFullController extends Controller
             $sectionHomeroomClassIds = Section::where('teacher_id', $teacher->id)->pluck('class_id')->unique();
             $classIds = $homeroomClassIds->merge($sectionHomeroomClassIds)->unique();
 
-            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.full', compact('academicYears', 'classes', 'isTeacher'));
@@ -314,9 +314,9 @@ class MarkSheetFullController extends Controller
             if ($activeAy) {
                 $academicYears = collect([$activeAy]);
             }
-            $classes = $teacher->classRooms()->orderBy('name')->get();
+            $classes = $teacher->classRooms()->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.full', compact(

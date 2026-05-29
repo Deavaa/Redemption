@@ -66,9 +66,9 @@ class MarkSheetController extends Controller
             $sectionHomeroomClassIds = Section::where('teacher_id', $teacher->id)->pluck('class_id')->unique();
             $classIds = $homeroomClassIds->merge($assignmentClassIds)->merge($sectionHomeroomClassIds)->unique();
 
-            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.index', compact('academicYears', 'terms', 'classes', 'exams', 'isTeacher'));

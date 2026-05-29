@@ -38,9 +38,9 @@ class PromotionController extends Controller
         // Get classes
         $user = auth()->user();
         if ($user->role === 'branch_principal' || $user->role === 'general_manager') {
-            $classes = Classroom::with(['branch', 'sections'])->orderBy('name')->get();
+            $classes = Classroom::with(['branch', 'sections'])->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = Classroom::with(['branch', 'sections'])->orderBy('name')->get();
+            $classes = Classroom::with(['branch', 'sections'])->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         if ($selectedAyModel) {

@@ -440,7 +440,7 @@ class StudentController extends Controller
         if ($currentAy) {
             $query->where('academic_year_id', $currentAy->id);
         }
-        $classrooms = $query->orderBy('name')->get();
+        $classrooms = $query->orderBy('numeric_name')->orderBy('name')->get();
 
         // Fallback: if no classes for current AY, show all for the branch
         if ($classrooms->isEmpty()) {
@@ -448,7 +448,7 @@ class StudentController extends Controller
             if ($branchId) {
                 $fallbackQuery->where('branch_id', $branchId);
             }
-            $classrooms = $fallbackQuery->orderBy('name')->get();
+            $classrooms = $fallbackQuery->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return $classrooms;
@@ -850,10 +850,12 @@ class StudentController extends Controller
         }
 
         $sections = Section::with('classroom')
-            ->whereHas('classroom', function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            })
-            ->orderBy('name')
+            ->join('classes', 'sections.class_id', '=', 'classes.id')
+            ->where('classes.branch_id', $branchId)
+            ->orderBy('classes.numeric_name')
+            ->orderBy('classes.name')
+            ->orderBy('sections.name')
+            ->select('sections.*')
             ->get()
             ->map(function ($s) {
                 return [

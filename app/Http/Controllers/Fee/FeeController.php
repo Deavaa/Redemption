@@ -36,7 +36,7 @@ class FeeController extends Controller
 
     public function create()
     {
-        $classrooms = Classroom::orderBy('name')->get();
+        $classrooms = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
         $enrollmentTypes = Fee::enrollmentTypes();
@@ -83,7 +83,7 @@ class FeeController extends Controller
 
     public function edit(Fee $fee)
     {
-        $classrooms = Classroom::orderBy('name')->get();
+        $classrooms = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
         $enrollmentTypes = Fee::enrollmentTypes();

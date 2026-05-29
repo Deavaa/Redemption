@@ -84,7 +84,7 @@ class ExamQuestionController extends Controller
         }
 
         $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $allTerms = Term::orderBy('id')->get();
 
@@ -162,7 +162,7 @@ class ExamQuestionController extends Controller
         }
 
         $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $allTerms = Term::orderBy('id')->get();
 

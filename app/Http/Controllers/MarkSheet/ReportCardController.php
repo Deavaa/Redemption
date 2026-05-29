@@ -20,7 +20,7 @@ class ReportCardController extends Controller
     public function index()
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
 
         return view('admin.report-card.index', compact('academicYears', 'classes'));
     }
@@ -217,7 +217,7 @@ class ReportCardController extends Controller
         }
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
 
         return view('admin.report-card.card', compact(
             'students', 'class', 'section', 'academicYear',

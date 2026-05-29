@@ -20,7 +20,7 @@ class PerformanceAnalysisController extends Controller
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $terms = Term::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
 
         return view('admin.performance-analysis.index', compact('academicYears', 'terms', 'classes'));
     }

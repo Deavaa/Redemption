@@ -13,7 +13,7 @@ class ClassroomController extends Controller
 {
     public function index()
     {
-        $classes = Classroom::with(["academicYear", "sections"])->orderBy("name")->paginate(10);
+        $classes = Classroom::with(["academicYear", "sections"])->orderBy("numeric_name")->orderBy("name")->paginate(10);
         $totalClasses = Classroom::count();
         $totalSections = \App\Models\Section::count();
         $activeAcademicYear = \App\Models\AcademicYear::latest()->first();

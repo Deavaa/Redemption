@@ -203,7 +203,7 @@ class StockController extends Controller
     {
         $items = StockItem::where('is_active', true)->where('quantity', '>', 0)->orderBy('name')->get();
         $employees = User::whereIn('role', ['admin', 'teacher', 'staff'])->orderBy('name')->get();
-        $classrooms = Classroom::with('section')->orderBy('name')->get();
+        $classrooms = Classroom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         $reasons = StockTransaction::reasonOptions();
         // Filter to only 'out' reasons
         $outReasons = array_intersect_key($reasons, array_flip(['issue_employee', 'issue_class', 'damaged', 'lost', 'adjustment', 'transfer']));

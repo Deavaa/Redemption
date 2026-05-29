@@ -67,7 +67,7 @@ class AttendanceController extends Controller
             $classQuery->whereIn('id', $assignableClassIds);
         }
 
-        $classSummary = $classQuery->orderBy('name')->get()->map(function ($class) use ($date) {
+        $classSummary = $classQuery->orderBy('numeric_name')->orderBy('name')->get()->map(function ($class) use ($date) {
             $records = Attendance::where('date', $date)->where('class_id', $class->id)->get();
             $class->att_present = $records->where('status', 'present')->count();
             $class->att_absent  = $records->where('status', 'absent')->count();
@@ -89,9 +89,9 @@ class AttendanceController extends Controller
             ->limit(20)
             ->get();
 
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         if ($isTeacher && $teacherModel) {
-            $classes = ClassRoom::whereIn('id', $assignableClassIds)->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $assignableClassIds)->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.attendance.index', compact(
@@ -142,9 +142,9 @@ class AttendanceController extends Controller
         // Get available classes
         if ($isTeacher && $teacherModel) {
             $assignableClassIds = AttendanceDelegation::getAssignableClasses($teacherModel->id, $selectedDate);
-            $classes = ClassRoom::whereIn('id', $assignableClassIds)->with('sections')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $assignableClassIds)->with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::with('sections')->orderBy('name')->get();
+            $classes = ClassRoom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         $terms = Term::orderByDesc('created_at')->get();
@@ -277,7 +277,7 @@ class AttendanceController extends Controller
 
     public function edit($date, $classId)
     {
-        $classes = ClassRoom::with('sections')->orderBy('name')->get();
+        $classes = ClassRoom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         $terms = Term::orderByDesc('created_at')->get();
 
         $records = Attendance::with(['student', 'classRoom', 'section'])
@@ -363,7 +363,7 @@ class AttendanceController extends Controller
         // Group by class
         $byClass = $records->groupBy('class_id');
 
-        $classes = ClassRoom::whereIn('id', $byClass->keys())->orderBy('name')->get()->keyBy('id');
+        $classes = ClassRoom::whereIn('id', $byClass->keys())->orderBy('numeric_name')->orderBy('name')->get()->keyBy('id');
 
         return view('admin.attendance.show', compact(
             'date', 'records', 'totalRecords', 'presentCount', 'absentCount',
@@ -526,7 +526,7 @@ class AttendanceController extends Controller
             }
         }
 
-        $classes = ClassRoom::orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $sections = collect();
         if ($classId) {
             $sections = Section::where('class_id', $classId)->orderBy('name')->get();
