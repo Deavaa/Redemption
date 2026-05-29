@@ -68,7 +68,7 @@
     @endif
 
     <div class="modern-card">
-        <form method="POST" action="{{ route('admin.exam-questions.update', $exam_question->id) }}" id="examQuestionEditForm">
+        <form method="POST" action="{{ route('admin.exam-questions.update', $exam_question->id) }}" id="examQuestionEditForm" enctype="multipart/form-data">
             @csrf @method('PUT')
 
             {{-- Question Information --}}
@@ -250,41 +250,69 @@
                     </div>
                     <div>
                         <h3 class="modern-form-section-title">Questions Content</h3>
-                        <p class="modern-form-section-desc">Update the questions below</p>
+                        <p class="modern-form-section-desc">Edit your exam questions below</p>
                     </div>
                 </div>
                 <div class="modern-form-section-body">
-                    <div class="modern-form-group" style="margin-bottom:1.25rem;">
-                        <label class="modern-form-label" for="questions">Questions Content <span class="modern-required">*</span></label>
-                        <div class="modern-input-wrapper">
-                            <i class="fas fa-comment-dots modern-input-icon modern-input-icon-textarea"></i>
-                            <textarea name="questions" id="questions"
-                                class="modern-input modern-textarea {{ $errors->has('questions') ? 'is-invalid' : '' }}"
-                                rows="10" required>{{ old('questions', $exam_question->questions) }}</textarea>
-                        </div>
-                        @error('questions')<span class="modern-form-error">{{ $message }}</span>@enderror
-                    </div>
+                    <textarea name="questions" id="questions"
+                        class="modern-input modern-textarea" rows="12" required
+                        style="padding-left:0.9rem;font-family:inherit;"
+                        placeholder="Type or paste all exam questions here...">{{ old('questions', $exam_question->questions) }}</textarea>
+                    @error('questions')<span class="modern-form-error">{{ $message }}</span>@enderror
 
-                    <div class="modern-form-group">
-                        <label class="modern-form-label" for="description">Description / Notes <small>(optional)</small></label>
-                        <div class="modern-input-wrapper">
-                            <i class="fas fa-comment modern-input-icon modern-input-icon-textarea"></i>
-                            <textarea name="description" id="description"
-                                class="modern-input modern-textarea"
-                                rows="3">{{ old('description', $exam_question->description) }}</textarea>
-                        </div>
-                        @error('description')<span class="modern-form-error">{{ $message }}</span>@enderror
+                    <div style="margin-top:1.25rem;">
+                        <label class="modern-form-label">Notes / Special Instructions</label>
+                        <textarea name="description" class="modern-input modern-textarea" rows="2"
+                            style="padding-left:0.9rem;"
+                            placeholder="Additional notes or special instructions for the reviewer...">{{ old('description', $exam_question->description) }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Attachment --}}
+            <div class="modern-form-section">
+                <div class="modern-form-section-header">
+                    <div class="modern-form-section-icon modern-form-section-icon-purple">
+                        <i class="fas fa-paperclip"></i>
+                    </div>
+                    <div>
+                        <h3 class="modern-form-section-title">Attachment <small style="font-weight:400;color:#9ca3af;">(optional)</small></h3>
+                        <p class="modern-form-section-desc">Upload or replace the attached file</p>
+                    </div>
+                </div>
+                <div class="modern-form-section-body">
+                    @if($exam_question->attachment)
+                    <div style="margin-bottom:0.75rem;padding:0.5rem 0.75rem;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;display:flex;align-items:center;gap:0.5rem;">
+                        <i class="fas fa-file" style="color:#10b981;"></i>
+                        <span style="color:#065f46;font-weight:500;">{{ basename($exam_question->attachment) }}</span>
+                        <span style="color:#6b7280;font-size:0.8rem;">(current file)</span>
+                    </div>
+                    @endif
+                    <div class="eq-dropzone" onclick="document.getElementById('attachmentInput').click()" style="border:2px dashed #d1d5db;border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:#9ca3af;margin-bottom:0.25rem;"></i>
+                        <p style="color:#6b7280;margin:0;font-size:0.85rem;">Click to upload replacement file</p>
+                        <p style="color:#9ca3af;font-size:0.75rem;margin:0.15rem 0 0;">PDF, DOC, DOCX, XLSX, PPT, TXT, JPG, PNG (max 10MB)</p>
+                        <input type="file" name="attachment" id="attachmentInput" accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" style="display:none;">
                     </div>
                 </div>
             </div>
 
             {{-- Form Actions --}}
-            <div class="modern-form-actions">
+            <div class="modern-form-actions" style="justify-content:space-between;">
                 <a href="{{ route('admin.exam-questions.index') }}" class="btn-modern btn-modern-ghost">Cancel</a>
-                <button type="submit" class="btn-modern btn-modern-primary">
-                    <i class="fas fa-paper-plane"></i>
-                    <span>@if(in_array($exam_question->status, ['revision', 'rejected_by_department', 'rejected_by_principal']))Resubmit for Review@else Update Question @endif</span>
-                </button>
+                <div style="display:flex;gap:0.75rem;">
+                    <button type="submit" name="action" value="draft" class="btn-modern btn-modern-outline">
+                        <i class="fas fa-save"></i> Save as Draft
+                    </button>
+                    <button type="submit" name="action" value="submit" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        @if(in_array($exam_question->status, ['draft','dept_rejected','principal_rejected','rejected_by_department','rejected_by_principal','revision']))
+                            Resubmit for Review
+                        @else
+                            Submit for Review
+                        @endif
+                    </button>
+                </div>
             </div>
         </form>
     </div>

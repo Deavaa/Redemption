@@ -10,6 +10,8 @@ use App\Models\ClassRoom;
 use App\Models\Term;
 use App\Models\AcademicYear;
 use App\Models\Department;
+use App\Models\Branch;
+use App\Models\Exam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -23,17 +25,14 @@ class ExamQuestionController extends Controller
         $query = ExamQuestion::with(['teacher', 'subject', 'classRoom', 'term', 'academicYear', 'deptReviewer', 'principalReviewer']);
 
         if ($user->role === 'teacher') {
-            $teacher = Teacher::where('user_id', $user->id)->first();
-            if (!$teacher) {
-                $teacher = Teacher::where('email', $user->email)->first();
-            }
+            $teacher = Teacher::where('user_id', $user->id)->first()
+                ?? Teacher::where('email', $user->email)->first();
             if ($teacher) {
                 $query->where('teacher_id', $teacher->id);
             } else {
-                $query->whereRaw('1 = 0'); // No teacher profile = no questions
+                $query->whereRaw('1 = 0');
             }
         } elseif ($user->role === 'department_head') {
-            // Department head sees questions from teachers in their department
             $dept = Department::where('head_user_id', $user->id)->first();
             if ($dept) {
                 $teacherIds = $dept->teachers()->pluck('teachers.id');
@@ -42,34 +41,21 @@ class ExamQuestionController extends Controller
                 $query->whereRaw('1 = 0');
             }
         } elseif ($user->role === 'branch_principal') {
-            // Principal sees dept-approved questions pending their review + all others
-            $statusFilter = $request->get('status');
-            if ($statusFilter) {
-                $query->where('status', $statusFilter);
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
             }
         }
-        // admin/super_admin/general_manager see all
 
-        // Status filter
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
-        // Subject filter
         if ($request->filled('subject_id')) {
             $query->where('subject_id', $request->subject_id);
         }
 
         $data = $query->latest()->paginate(15)->withQueryString();
         $subjects = Subject::orderBy('name')->get();
-        $statuses = [
-            'draft' => 'Draft',
-            'submitted' => 'Pending Dept. Review',
-            'dept_approved' => 'Pending Principal',
-            'dept_rejected' => 'Rejected by Dept.',
-            'principal_approved' => 'Approved',
-            'principal_rejected' => 'Rejected by Principal',
-        ];
+        $statuses = ExamQuestion::statusOptions();
 
         return view('admin.ExamQuestion.index', compact('data', 'subjects', 'statuses'));
     }
@@ -78,49 +64,50 @@ class ExamQuestionController extends Controller
     public function create()
     {
         $user = Auth::user();
-        $teacher = Teacher::where('user_id', $user->id)->first();
-        if (!$teacher) {
-            $teacher = Teacher::where('email', $user->email)->first();
-        }
+        $teacher = Teacher::where('user_id', $user->id)->first()
+            ?? Teacher::where('email', $user->email)->first();
 
         $subjects = Subject::orderBy('name')->get();
         $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $allTerms = Term::orderBy('id')->get();
+        $branches = Branch::orderBy('name')->get();
+        $exams = Exam::orderBy('name')->get();
 
-        return view('admin.ExamQuestion.create', compact('subjects', 'classes', 'academicYears', 'allTerms', 'teacher'));
+        return view('admin.ExamQuestion.create', compact('subjects', 'classes', 'academicYears', 'allTerms', 'teacher', 'branches', 'exams'));
     }
 
     // ── Teacher: Store new question ────────────────────────
     public function store(Request $request)
     {
         $user = Auth::user();
-        $teacher = Teacher::where('user_id', $user->id)->first();
-        if (!$teacher) {
-            $teacher = Teacher::where('email', $user->email)->first();
-        }
+        $teacher = Teacher::where('user_id', $user->id)->first()
+            ?? Teacher::where('email', $user->email)->first();
 
         if (!$teacher) {
             return back()->with('error', 'No teacher profile found for your account.')->withInput();
         }
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'subject_id' => 'required|exists:subjects,id',
-            'class_id' => 'nullable|exists:classes,id',
-            'term_id' => 'nullable|exists:terms,id',
-            'academic_year_id' => 'nullable|exists:academic_years,id',
-            'question_type' => 'required|in:multiple_choice,true_false,short_answer,essay,fill_blank,mixed',
-            'content' => 'nullable|string',
-            'total_marks' => 'required|integer|min:0',
-            'duration_minutes' => 'nullable|integer|min:1',
-            'notes' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xlsx,ppt,pptx,txt,jpg,jpeg,png|max:10240',
-            'action' => 'nullable|in:draft,submit',
+            'title'             => 'required|string|max:255',
+            'subject_id'        => 'required|exists:subjects,id',
+            'class_id'          => 'nullable|exists:classes,id',
+            'section_id'        => 'nullable|exists:sections,id',
+            'exam_id'           => 'nullable|exists:exams,id',
+            'term_id'           => 'nullable|exists:terms,id',
+            'academic_year_id'  => 'nullable|exists:academic_years,id',
+            'branch_id'         => 'nullable|exists:branches,id',
+            'question_type'     => 'required|in:multiple_choice,true_false,short_answer,essay,fill_blank,mixed',
+            'questions'         => 'required|string',
+            'total_marks'       => 'required|integer|min:1',
+            'duration_minutes'  => 'nullable|integer|min:1',
+            'description'       => 'nullable|string',
+            'attachment'        => 'nullable|file|mimes:pdf,doc,docx,xlsx,ppt,pptx,txt,jpg,jpeg,png|max:10240',
+            'action'            => 'nullable|in:draft,submit',
         ]);
 
         $validated['teacher_id'] = $teacher->id;
-        $action = $validated['action'] ?? 'draft';
+        $action = $validated['action'] ?? 'submit';
         unset($validated['action']);
 
         if ($action === 'submit') {
@@ -134,8 +121,7 @@ class ExamQuestionController extends Controller
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('exam_questions', $filename, 'public');
-            $validated['attachment'] = $path;
+            $validated['attachment'] = $file->storeAs('exam_questions', $filename, 'public');
         }
 
         ExamQuestion::create($validated);
@@ -150,7 +136,7 @@ class ExamQuestionController extends Controller
     // ── View single question ───────────────────────────────
     public function show(ExamQuestion $examQuestion)
     {
-        $examQuestion->load(['teacher', 'subject', 'classRoom', 'term', 'academicYear', 'deptReviewer', 'principalReviewer']);
+        $examQuestion->load(['teacher', 'subject', 'classRoom', 'section', 'term', 'academicYear', 'deptReviewer', 'principalReviewer']);
         return view('admin.ExamQuestion.show', compact('examQuestion'));
     }
 
@@ -165,8 +151,10 @@ class ExamQuestionController extends Controller
         $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $allTerms = Term::orderBy('id')->get();
+        $branches = Branch::orderBy('name')->get();
+        $exams = Exam::orderBy('name')->get();
 
-        return view('admin.ExamQuestion.edit', compact('examQuestion', 'subjects', 'classes', 'academicYears', 'allTerms'));
+        return view('admin.ExamQuestion.edit', compact('examQuestion', 'subjects', 'classes', 'academicYears', 'allTerms', 'branches', 'exams'));
     }
 
     // ── Teacher: Update question ───────────────────────────
@@ -177,18 +165,21 @@ class ExamQuestionController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'subject_id' => 'required|exists:subjects,id',
-            'class_id' => 'nullable|exists:classes,id',
-            'term_id' => 'nullable|exists:terms,id',
-            'academic_year_id' => 'nullable|exists:academic_years,id',
-            'question_type' => 'required|in:multiple_choice,true_false,short_answer,essay,fill_blank,mixed',
-            'content' => 'nullable|string',
-            'total_marks' => 'required|integer|min:0',
-            'duration_minutes' => 'nullable|integer|min:1',
-            'notes' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xlsx,ppt,pptx,txt,jpg,jpeg,png|max:10240',
-            'action' => 'nullable|in:draft,submit',
+            'title'             => 'required|string|max:255',
+            'subject_id'        => 'required|exists:subjects,id',
+            'class_id'          => 'nullable|exists:classes,id',
+            'section_id'        => 'nullable|exists:sections,id',
+            'exam_id'           => 'nullable|exists:exams,id',
+            'term_id'           => 'nullable|exists:terms,id',
+            'academic_year_id'  => 'nullable|exists:academic_years,id',
+            'branch_id'         => 'nullable|exists:branches,id',
+            'question_type'     => 'required|in:multiple_choice,true_false,short_answer,essay,fill_blank,mixed',
+            'questions'         => 'required|string',
+            'total_marks'       => 'required|integer|min:1',
+            'duration_minutes'  => 'nullable|integer|min:1',
+            'description'       => 'nullable|string',
+            'attachment'        => 'nullable|file|mimes:pdf,docx,xlsx,ppt,pptx,txt,jpg,jpeg,png|max:10240',
+            'action'            => 'nullable|in:draft,submit',
         ]);
 
         $action = $validated['action'] ?? 'draft';
@@ -197,7 +188,7 @@ class ExamQuestionController extends Controller
         if ($action === 'submit') {
             $validated['status'] = 'submitted';
             $validated['submitted_at'] = now();
-            // Clear previous rejection data when resubmitting
+            // Clear previous rejection data
             $validated['dept_reviewed_by'] = null;
             $validated['dept_reviewed_at'] = null;
             $validated['dept_comments'] = null;
@@ -208,14 +199,12 @@ class ExamQuestionController extends Controller
 
         // Handle file upload
         if ($request->hasFile('attachment')) {
-            // Delete old file
             if ($examQuestion->attachment && Storage::disk('public')->exists($examQuestion->attachment)) {
                 Storage::disk('public')->delete($examQuestion->attachment);
             }
             $file = $request->file('attachment');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('exam_questions', $filename, 'public');
-            $validated['attachment'] = $path;
+            $validated['attachment'] = $file->storeAs('exam_questions', $filename, 'public');
         }
 
         $examQuestion->update($validated);
@@ -258,7 +247,7 @@ class ExamQuestionController extends Controller
         return redirect()->route('admin.exam-questions.index')->with('success', 'Exam question submitted for department head review.');
     }
 
-    // ── Department Head: Review (approve/reject) ───────────
+    // ── Department Head: Review ────────────────────────────
     public function deptReview(Request $request, ExamQuestion $examQuestion)
     {
         if (!$examQuestion->canBeReviewedByDept()) {
@@ -289,7 +278,7 @@ class ExamQuestionController extends Controller
         }
     }
 
-    // ── Principal: Review (approve/reject) ─────────────────
+    // ── Principal: Review ──────────────────────────────────
     public function principalReview(Request $request, ExamQuestion $examQuestion)
     {
         if (!$examQuestion->canBeReviewedByPrincipal()) {
