@@ -135,9 +135,25 @@ class ExamQuestionController extends Controller
         // Get teacher profile for auto-selection
         $teacherProfile = $user->teacherProfile;
 
+        // Get teacher's assigned subjects and classes for auto-fill
+        $teacherAssignments = collect();
+        $teacherSubjectIds = [];
+        $teacherClassIds = [];
+        if ($teacherProfile) {
+            $teacherAssignments = \App\Models\TeacherAssignment::where('teacher_id', $teacherProfile->id)
+                ->with(['subject', 'classRoom'])
+                ->get();
+            $teacherSubjectIds = $teacherAssignments->pluck('subject_id')->unique()->values()->toArray();
+            $teacherClassIds = $teacherAssignments->pluck('class_id')->unique()->values()->toArray();
+        }
+
+        // Get current active academic year
+        $activeAcademicYear = AcademicYear::where('is_active', 1)->first();
+
         return view('admin.exam-questions.create', compact(
             'subjects', 'classes', 'exams', 'academicYears', 'terms', 'branches',
-            'sections', 'teacherProfile'
+            'sections', 'teacherProfile', 'teacherAssignments', 'teacherSubjectIds',
+            'teacherClassIds', 'activeAcademicYear'
         ));
     }
 
@@ -185,6 +201,13 @@ class ExamQuestionController extends Controller
                     $validated['term_id'] = $exam->term_id;
                 }
             }
+        }
+
+        // Handle file attachment
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $validated['attachment'] = $file->storeAs('exam_questions', $filename, 'public');
         }
 
         try {
@@ -307,6 +330,13 @@ class ExamQuestionController extends Controller
             $validated['principal_comment'] = null;
             $validated['principal_id'] = null;
             $validated['principal_reviewed_at'] = null;
+        }
+
+        // Handle file attachment replacement
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $validated['attachment'] = $file->storeAs('exam_questions', $filename, 'public');
         }
 
         try {
