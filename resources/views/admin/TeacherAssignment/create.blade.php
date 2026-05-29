@@ -21,7 +21,7 @@
 .ta-btn-outline:hover{border-color:#4361ee;color:#4361ee;background:#f8f9ff;transform:none;box-shadow:none}
 .ta-actions{display:flex;justify-content:flex-end;gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
 .ta-info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;color:#1e40af;font-weight:500;font-size:.88rem}
-@error('teacher_id') .ta-select[name="teacher_id"],@error('class_id') .ta-select[name="class_id"],@error('section_id') .ta-select[name="section_id"],@error('subject_id') .ta-select[name="subject_id"],@error('academic_year_id') .ta-select[name="academic_year_id"]{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.1)}
+.ta-select.is-invalid{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.1)}
 .ta-error{font-size:.8rem;color:#ef4444;margin-top:.25rem}
 @media(max-width:768px){.ta-grid{grid-template-columns:1fr}.ta-group[style]{grid-column:1!important}}
 </style>
@@ -49,7 +49,7 @@
                 <div class="ta-grid">
                     <div class="ta-group">
                         <label class="ta-label">Academic Year <span style="color:#ef4444">*</span></label>
-                        <select name="academic_year_id" class="ta-select" required>
+                        <select name="academic_year_id" class="ta-select @error('academic_year_id') is-invalid @enderror" required>
                             <option value="">-- Select Academic Year --</option>
                             @foreach($academicYears as $ay)
                                 <option value="{{ $ay->id }}" {{ old('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>
@@ -59,7 +59,7 @@
                     </div>
                     <div class="ta-group">
                         <label class="ta-label">Teacher <span style="color:#ef4444">*</span></label>
-                        <select name="teacher_id" class="ta-select" required>
+                        <select name="teacher_id" class="ta-select @error('teacher_id') is-invalid @enderror" required>
                             <option value="">-- Select Teacher --</option>
                             @foreach($teachers as $t)
                                 <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->full_name }}@if($t->email) ({{ $t->email }})@endif</option>
@@ -69,7 +69,7 @@
                     </div>
                     <div class="ta-group">
                         <label class="ta-label">Class <span style="color:#ef4444">*</span></label>
-                        <select name="class_id" id="taClassSelect" class="ta-select" required>
+                        <select name="class_id" id="taClassSelect" class="ta-select @error('class_id') is-invalid @enderror" required>
                             <option value="">-- Select Class --</option>
                             @foreach($classes as $c)
                                 <option value="{{ $c->id }}" {{ old('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
@@ -79,14 +79,14 @@
                     </div>
                     <div class="ta-group">
                         <label class="ta-label">Section</label>
-                        <select name="section_id" id="taSectionSelect" class="ta-select">
+                        <select name="section_id" id="taSectionSelect" class="ta-select @error('section_id') is-invalid @enderror">
                             <option value="">-- All Sections --</option>
                         </select>
                         @error('section_id')<div class="ta-error">{{ $message }}</div>@enderror
                     </div>
                     <div class="ta-group" style="grid-column:1/-1">
                         <label class="ta-label">Subject <span style="color:#ef4444">*</span></label>
-                        <select name="subject_id" id="taSubjectSelect" class="ta-select" required>
+                        <select name="subject_id" id="taSubjectSelect" class="ta-select @error('subject_id') is-invalid @enderror" required>
                             <option value="">-- Select Subject --</option>
                         </select>
                         @error('subject_id')<div class="ta-error">{{ $message }}</div>@enderror
