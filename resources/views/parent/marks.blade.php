@@ -115,11 +115,12 @@
                         @php
                             $grade = $mark->grade ?? '';
                             $badgeClass = 'modern-badge-light';
-                            if (in_array($grade, ['A+', 'A', 'A-'])) $badgeClass = 'modern-badge-green';
-                            elseif (in_array($grade, ['B+', 'B', 'B-'])) $badgeClass = 'modern-badge-blue';
-                            elseif (in_array($grade, ['C+', 'C', 'C-'])) $badgeClass = 'modern-badge-amber';
-                            elseif (in_array($grade, ['D'])) $badgeClass = 'modern-badge-orange';
+                            if ($grade === 'A') $badgeClass = 'modern-badge-green';
+                            elseif ($grade === 'B') $badgeClass = 'modern-badge-blue';
+                            elseif ($grade === 'C') $badgeClass = 'modern-badge-amber';
+                            elseif ($grade === 'D') $badgeClass = 'modern-badge-orange';
                             elseif ($grade === 'F') $badgeClass = 'modern-badge-red';
+                            elseif ($grade === 'I') $badgeClass = 'modern-badge-light';
                         @endphp
                         <span class="modern-badge {{ $badgeClass }}">{{ $grade }}</span>
                     </td>

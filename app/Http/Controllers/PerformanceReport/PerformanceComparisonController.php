@@ -45,7 +45,7 @@ class PerformanceComparisonController extends Controller
                 $lowest = $studentAverages->count() > 0 ? round($studentAverages->min(), 2) : 0;
 
                 // Grade distribution
-                $gradeDist = ['A+' => 0, 'A' => 0, 'B+' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0];
+                $gradeDist = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0, 'I' => 0];
                 foreach ($studentAverages as $sa) {
                     $g = $this->getGrade($sa);
                     $gradeDist[$g] = ($gradeDist[$g] ?? 0) + 1;

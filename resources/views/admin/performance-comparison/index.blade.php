@@ -53,7 +53,7 @@
                         <td style="padding:10px 14px;font-size:11px;">
                             @foreach($bc['grade_distribution'] as $grade => $count)
                                 @if($count > 0)
-                                <span style="display:inline-block;padding:1px 5px;border-radius:3px;margin:1px;font-size:10px;background:{{ $grade === 'F' ? '#fee2e2' : ($grade === 'A+' || $grade === 'A' ? '#dcfce7' : '#f3f4f6') }};color:{{ $grade === 'F' ? '#dc2626' : '#333' }};">{{ $grade }}:{{ $count }}</span>
+                                <span style="display:inline-block;padding:1px 5px;border-radius:3px;margin:1px;font-size:10px;background:{{ $grade === 'F' ? '#fee2e2' : ($grade === 'A' ? '#dcfce7' : '#f3f4f6') }};color:{{ $grade === 'F' ? '#dc2626' : '#333' }};">{{ $grade }}:{{ $count }}</span>
                                 @endif
                             @endforeach
                         </td>

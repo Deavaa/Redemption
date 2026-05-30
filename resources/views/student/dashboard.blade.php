@@ -78,11 +78,12 @@
                                     @php
                                         $gradeClass = 'grade-c';
                                         $g = $mark->grade ?? '';
-                                        if (in_array($g, ['A+', 'A', 'A-'])) $gradeClass = 'grade-a';
-                                        elseif (in_array($g, ['B+', 'B', 'B-'])) $gradeClass = 'grade-b';
-                                        elseif (in_array($g, ['C+', 'C', 'C-'])) $gradeClass = 'grade-c';
+                                        if ($g === 'A') $gradeClass = 'grade-a';
+                                        elseif ($g === 'B') $gradeClass = 'grade-b';
+                                        elseif ($g === 'C') $gradeClass = 'grade-c';
                                         elseif ($g === 'D') $gradeClass = 'grade-d';
                                         elseif ($g === 'F') $gradeClass = 'grade-f';
+                                        elseif ($g === 'I') $gradeClass = 'grade-i';
                                     @endphp
                                     <span class="grade-badge {{ $gradeClass }}">{{ $g }}</span>
                                 </td>

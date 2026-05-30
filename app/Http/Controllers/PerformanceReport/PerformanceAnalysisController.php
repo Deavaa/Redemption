@@ -122,7 +122,7 @@ class PerformanceAnalysisController extends Controller
         }
 
         // Grade distribution
-        $gradeDistribution = ['A+' => 0, 'A' => 0, 'A-' => 0, 'B+' => 0, 'B' => 0, 'B-' => 0, 'C+' => 0, 'C' => 0, 'C-' => 0, 'D' => 0, 'F' => 0];
+        $gradeDistribution = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0, 'I' => 0];
         foreach ($analysis as $row) {
             $g = $this->getGrade($row['average']);
             $gradeDistribution[$g] = ($gradeDistribution[$g] ?? 0) + 1;

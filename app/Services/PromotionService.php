@@ -19,17 +19,12 @@ class PromotionService
     // ── Grading thresholds (matching MarkEntry::calcTotals & GradeScale seeds) ───
 
     protected const GRADE_MAP = [
-        ['min' => 90, 'grade' => 'A+', 'point' => 4.00],
         ['min' => 80, 'grade' => 'A',  'point' => 4.00],
-        ['min' => 75, 'grade' => 'A-', 'point' => 3.75],
-        ['min' => 70, 'grade' => 'B+', 'point' => 3.50],
-        ['min' => 65, 'grade' => 'B',  'point' => 3.00],
-        ['min' => 60, 'grade' => 'B-', 'point' => 2.75],
-        ['min' => 55, 'grade' => 'C+', 'point' => 2.50],
+        ['min' => 60, 'grade' => 'B',  'point' => 3.00],
         ['min' => 50, 'grade' => 'C',  'point' => 2.00],
-        ['min' => 45, 'grade' => 'C-', 'point' => 1.75],
         ['min' => 40, 'grade' => 'D',  'point' => 1.00],
-        ['min' => 0,  'grade' => 'F',  'point' => 0.00],
+        ['min' => 0.01,'grade' => 'F',  'point' => 0.00],
+        ['min' => 0,  'grade' => 'I',  'point' => 0.00],
     ];
 
     // ── Public API ──────────────────────────────────────────────────────────────

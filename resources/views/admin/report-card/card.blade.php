@@ -158,11 +158,12 @@
 
     // Grade color helper
     function gradeColor($g) {
-        if (in_array($g, ['A+','A','A-'])) return 'color:#059669;';
-        if (in_array($g, ['B+','B','B-'])) return 'color:#2563eb;';
-        if (in_array($g, ['C+','C','C-'])) return 'color:#d97706;';
-        if (in_array($g, ['D','D-'])) return 'color:#ea580c;';
+        if ($g === 'A') return 'color:#059669;';
+        if ($g === 'B') return 'color:#2563eb;';
+        if ($g === 'C') return 'color:#d97706;';
+        if ($g === 'D') return 'color:#ea580c;';
         if ($g === 'F') return 'color:#dc2626;';
+        if ($g === 'I') return 'color:#6b7280;';
         return '';
     }
 
@@ -320,17 +321,12 @@
         <table class="rc-grade-scale">
             <thead><tr><th>Range</th><th>Grade</th><th>Description</th></tr></thead>
             <tbody>
-                <tr><td>90-100</td><td style="font-weight:800;color:#059669">A+</td><td>Outstanding</td></tr>
-                <tr><td>80-89</td><td style="font-weight:700;color:#059669">A</td><td>Excellent</td></tr>
-                <tr><td>75-79</td><td style="font-weight:700;color:#10b981">A-</td><td>Very Good</td></tr>
-                <tr><td>70-74</td><td style="font-weight:700;color:#2563eb">B+</td><td>Good</td></tr>
-                <tr><td>65-69</td><td style="font-weight:700;color:#2563eb">B</td><td>Above Average</td></tr>
-                <tr><td>60-64</td><td style="font-weight:700;color:#3b82f6">B-</td><td>Satisfactory</td></tr>
-                <tr><td>55-59</td><td style="font-weight:700;color:#d97706">C+</td><td>Average</td></tr>
-                <tr><td>50-54</td><td style="font-weight:700;color:#d97706">C</td><td>Below Average</td></tr>
-                <tr><td>45-49</td><td style="font-weight:700;color:#ea580c">C-</td><td>Poor</td></tr>
-                <tr><td>40-44</td><td style="font-weight:700;color:#ea580c">D</td><td>Very Poor</td></tr>
-                <tr><td>&lt;40</td><td style="font-weight:800;color:#dc2626">F</td><td>Fail</td></tr>
+                <tr><td>80-100</td><td style="font-weight:800;color:#059669">A</td><td>Excellent / በጣም ጥሩ</td></tr>
+                <tr><td>60-79</td><td style="font-weight:700;color:#2563eb">B</td><td>Good / ጥሩ</td></tr>
+                <tr><td>50-59</td><td style="font-weight:700;color:#d97706">C</td><td>Average / መካከለኛ</td></tr>
+                <tr><td>40-49</td><td style="font-weight:700;color:#ea580c">D</td><td>Below Average / ከመካከለኛ በታች</td></tr>
+                <tr><td>1-39</td><td style="font-weight:800;color:#dc2626">F</td><td>Fail / ያልተሳካ</td></tr>
+                <tr><td>-</td><td style="font-weight:700;color:#6b7280">I</td><td>Incomplete / ያልተጠናቀቀ</td></tr>
             </tbody>
         </table>
 

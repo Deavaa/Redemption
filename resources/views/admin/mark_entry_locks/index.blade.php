@@ -242,7 +242,7 @@
     <div class="mlock-alert mlock-alert-info">
         <i class="bi bi-shield-lock"></i>
         <div>
-            <strong>How it works:</strong> Lock mark entry to prevent teachers from editing marks for a specific term. When locked, only teachers with special <a href="{{ route('admin.mark-permissions.index') }}" style="color:#1e40af;font-weight:600;">edit permissions</a> can modify marks. You must provide a reason for each lock/unlock action.
+            <strong>How it works:</strong> Lock mark entry to prevent teachers from editing marks for a specific term. When locked, only teachers with special <a href="{{ route('admin.mark-entry-permissions.index') }}" style="color:#1e40af;font-weight:600;">edit permissions</a> can modify marks. You must provide a reason for each lock/unlock action.
         </div>
     </div>
 

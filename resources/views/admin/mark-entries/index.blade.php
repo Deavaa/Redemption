@@ -231,6 +231,7 @@
 .me-grade-C { background: rgba(251,191,36,0.15); color: #d97706; }
 .me-grade-D { background: rgba(251,146,60,0.15); color: #ea580c; }
 .me-grade-F { background: rgba(248,113,113,0.15); color: #dc2626; }
+.me-grade-I { background: rgba(156,163,175,0.15); color: #6b7280; }
 
 /* Keyboard hint */
 .me-card-hint { text-align: center; padding: 3px; font-size: 0.6rem; color: #9ca3af; margin-top: 2px; }
@@ -1629,6 +1630,7 @@
 
     function getGradeClass(grade) {
         if (!grade || grade === '-') return 'me-grade-F';
+        if (grade === 'I') return 'me-grade-I';
         var g = grade.charAt(0);
         if (g === 'A') return 'me-grade-A';
         if (g === 'B') return 'me-grade-B';

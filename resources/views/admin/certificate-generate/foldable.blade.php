@@ -24,20 +24,20 @@
             border-right: 2px dashed #bbb;
         }
         .back-panel h3 {
-            font-size: 1rem; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 10px;
-            padding-bottom: 5px; border-bottom: 3px solid #2d2d3a; display: inline-block;
+            font-size: 0.9rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 6px;
+            padding-bottom: 3px; border-bottom: 3px solid #2d2d3a; display: inline-block;
         }
-        .back-panel h4 { font-size: 0.9rem; font-weight: 700; color: #1a1a2e; margin: 12px 0 6px; }
-        .back-panel p, .back-panel li { font-size: 0.8rem; color: #4b5563; line-height: 1.7; }
-        .back-panel ul { padding-left: 16px; margin-bottom: 8px; }
-        .grading-scale { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.78rem; }
-        .grading-scale th { background: #1a1a2e; color: #fff; padding: 7px 9px; text-align: center; font-size: 0.72rem; }
-        .grading-scale td { padding: 6px 9px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.75rem; }
+        .back-panel h4 { font-size: 0.85rem; font-weight: 700; color: #1a1a2e; margin: 8px 0 3px; }
+        .back-panel p, .back-panel li { font-size: 0.75rem; color: #4b5563; line-height: 1.4; }
+        .back-panel ul { padding-left: 16px; margin-bottom: 4px; }
+        .grading-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.72rem; }
+        .grading-scale th { background: #1a1a2e; color: #fff; padding: 4px 6px; text-align: center; font-size: 0.68rem; }
+        .grading-scale td { padding: 3px 6px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.7rem; line-height: 1.3; }
         .grading-scale td:first-child { font-weight: 700; text-align: left; }
-        .conduct-scale { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.78rem; }
-        .conduct-scale th { background: #2d2d3a; color: #fff; padding: 7px 9px; text-align: center; font-size: 0.72rem; }
-        .conduct-scale td { padding: 6px 9px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.75rem; }
+        .conduct-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.72rem; }
+        .conduct-scale th { background: #2d2d3a; color: #fff; padding: 4px 6px; text-align: center; font-size: 0.68rem; }
+        .conduct-scale td { padding: 3px 6px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.7rem; line-height: 1.3; }
 
         /* FRONT COVER PANEL */
         .front-panel {
@@ -61,9 +61,10 @@
             border-top: 1.5px solid rgba(99,102,241,0.15);
         }
         .front-student-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; color: #1a1a2e; }
-        .front-info-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 7px; }
+        .front-info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; margin-bottom: 4px; }
         .front-info-item { font-size: 0.78rem; color: #4b5563; }
         .front-info-item strong { color: #1a1a2e; font-weight: 600; }
+        .front-student-name-label { font-size: 0.72rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
         .front-status-badge { display: inline-block; padding: 5px 14px; border-radius: 5px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-top: 8px; }
         .front-status-promoted { background: rgba(16,185,129,0.15); color: #059669; border: 1px solid rgba(16,185,129,0.3); }
         .front-status-detained { background: rgba(220,38,38,0.12); color: #dc2626; border: 1px solid rgba(220,38,38,0.25); }
@@ -260,8 +261,8 @@
             <h4>2. Marking Composition / የምዘና አካላት</h4>
             <ul>
                 <li><strong>Continuous Assessment (CA) / የቀጥታ ምዘና:</strong> Comprises class tests, quizzes, homework, projects, and class participation. This accounts for 30% of the total mark. / የክፍል ፈተና፣ መልስ፣ የቤት ስራ፣ ፕሮጀክት እና የክፍል ተሳትፎ ያካትታል። ከጠቅላሉ 30% ይይዛል።</li>
-                <li><strong>Mid-Term Examination / የአጋማሽ ፈተና:</strong> A comprehensive assessment administered at the midpoint of each term covering all material taught. / በእያንዳንዱ ወር መካከል የሚሰጥ ሁሉንም ትምህርት የሚሸፍን ምዘና።</li>
-                <li><strong>Final Examination / የመጨረሻ ፈተና:</strong> A summative assessment at the end of each term evaluating the full term curriculum. This accounts for 70% of the total mark. / በእያንዳንዱ ወር መጨረሻ የሚሰጥ ከጠቅላሉ 70% የሚይዝ ምዘና።</li>
+                <li><strong>Mid-Term Examination / የአጋማሽ ፈተና:</strong> A comprehensive assessment administered at the midpoint of each semester covering all material taught. / በእያንዳንዱ ሴሚስተር መካከል የሚሰጥ ሁሉንም ትምህርት የሚሸፍን ምዘና።</li>
+                <li><strong>Final Examination / የመጨረሻ ፈተና:</strong> A summative assessment at the end of each semester evaluating the full semester curriculum. This accounts for 70% of the total mark. / በእያንዳንዱ ሴሚስተር መጨረሻ የሚሰጥ ከጠቅላሉ 70% የሚይዝ ምዘና።</li>
             </ul>
 
             <h4>3. Behavioral Assessment / የባህሪ ምዘና</h4>
@@ -280,7 +281,7 @@
             <h4>4. Promotion Policy / የማስተማሪያ ፖሊሲ</h4>
             <ul>
                 <li><strong>Promoted / የተማረከ:</strong> Overall average of 50% or above with minimum passing grades in core subjects. Student advances to the next grade level. / አጠቃላይ አማካይ 50% እና ከዚያ በላይ በዋና የትምህርት ዘርፎች ዝቅተኛ የማለፍ ውጤት ሲኖር።</li>
-                <li><strong>Conditionally Promoted / በሁኔታ የተማረከ:</strong> Average between 40%-49% or fails no more than 2 subjects. Student must show improvement in the next term. / አማካይ ከ40%-49% መካከል ወይም ከ2 በላይ ያልተሳካ የለም። ተማሪው በሚቀጥለው ወር ማሻሻል አለበት።</li>
+                <li><strong>Conditionally Promoted / በሁኔታ የተማረከ:</strong> Average between 40%-49% or fails no more than 2 subjects. Student must show improvement in the next semester. / አማካይ ከ40%-49% መካከል ወይም ከ2 በላይ ያልተሳካ የለም። ተማሪው በሚቀጥለው ሴሚስተር ማሻሻል አለበት።</li>
                 <li><strong>Detained / የተያዘ:</strong> Average below 40% or fails more than 2 subjects. Student must repeat the grade. / አማካይ ከ40% በታች ወይም ከ2 በላይ ያልተሳካ። ተማሪው ክፍሉን መድገም አለበት።</li>
             </ul>
 
@@ -306,16 +307,19 @@
             </div>
 
             <div class="front-bottom">
+                <div class="front-student-name-label">Student Name / የተማሪ ስም</div>
                 <div class="front-student-name">{{ $student->full_name }}</div>
                 <div class="front-info-row">
                     <div class="front-info-item"><strong>Class / ክፍል:</strong> {{ $student->classroom->name ?? '-' }}</div>
                     <div class="front-info-item"><strong>Section / መደብ:</strong> {{ $student->section->name ?? '-' }}</div>
-                    <div class="front-info-item"><strong>Roll No / ቁጥር:</strong> {{ $student->roll_number }}</div>
                 </div>
                 <div class="front-info-row">
+                    <div class="front-info-item"><strong>Roll No / ቁጥር:</strong> {{ $student->roll_number }}</div>
                     <div class="front-info-item"><strong>Admission No / የመግቢያ ቁጥር:</strong> {{ $student->admission_number }}</div>
+                </div>
+                <div class="front-info-row">
                     <div class="front-info-item"><strong>Gender / ጾታ:</strong> {{ $student->gender ?? '-' }}</div>
-                    <div class="front-info-item"><strong>DOB / የልደት ቀን:</strong> {{ $student->date_of_birth ?? '-' }}</div>
+                    <div class="front-info-item"><strong>Age / ዕድሜ:</strong> {{ $student->date_of_birth ? \Carbon\Carbon::parse($student->date_of_birth)->age : '-' }}</div>
                 </div>
                 <div class="front-status-badge front-status-{{ $statusClass }}">
                     @if($promotionStatus !== 'N/A')
@@ -343,8 +347,8 @@
                 <thead>
                     <tr>
                         <th>Subject / ስም</th>
-                        <th>Term 1<br>ወር 1</th>
-                        <th>Term 2<br>ወር 2</th>
+                        <th>Term 1<br>ሴሚስተር 1</th>
+                        <th>Term 2<br>ሴሚስተር 2</th>
                         <th>Yearly<br>ዓመታዊ</th>
                         <th>Grade<br>ደረጃ</th>
                     </tr>

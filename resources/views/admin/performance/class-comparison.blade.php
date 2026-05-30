@@ -75,7 +75,7 @@
                         <td>
                             @foreach($cc['grade_distribution'] as $grade => $count)
                                 @if($count > 0)
-                                <span class="pf-grade-chip" style="background:{{ $grade === 'F' ? '#fee2e2' : ($grade === 'A+' || $grade === 'A' ? '#dcfce7' : '#f3f4f6') }};color:{{ $grade === 'F' ? '#dc2626' : '#333' }}">{{ $grade }}:{{ $count }}</span>
+                                <span class="pf-grade-chip" style="background:{{ $grade === 'F' ? '#fee2e2' : ($grade === 'A' ? '#dcfce7' : '#f3f4f6') }};color:{{ $grade === 'F' ? '#dc2626' : '#333' }}">{{ $grade }}:{{ $count }}</span>
                                 @endif
                             @endforeach
                         </td>

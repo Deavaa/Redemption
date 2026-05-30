@@ -101,7 +101,7 @@
             @php
                 $maleTotal = array_sum($genderData['male']['grade_distribution']);
                 $femaleTotal = array_sum($genderData['female']['grade_distribution']);
-                $gradeColors = ['A+'=>'#059669','A'=>'#10b981','B+'=>'#2563eb','B'=>'#3b82f6','C'=>'#d97706','D'=>'#ea580c','F'=>'#ef4444'];
+                $gradeColors = ['A'=>'#10b981','B'=>'#3b82f6','C'=>'#d97706','D'=>'#ea580c','F'=>'#ef4444','I'=>'#6b7280'];
             @endphp
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem">
                 <div>

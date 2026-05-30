@@ -250,7 +250,7 @@ class PerformanceAnalysisController extends Controller
                     : 0;
 
                 // Grade distribution
-                $gradeDist = ['A+' => 0, 'A' => 0, 'B+' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0];
+                $gradeDist = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0, 'I' => 0];
                 foreach ($studentAvgs as $sa) {
                     $g = $this->getGrade($sa);
                     $gradeDist[$g] = ($gradeDist[$g] ?? 0) + 1;
@@ -339,7 +339,7 @@ class PerformanceAnalysisController extends Controller
                     : 0;
 
                 // Grade distribution
-                $gradeDist = ['A+' => 0, 'A' => 0, 'B+' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0];
+                $gradeDist = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0, 'I' => 0];
                 foreach ($studentAvgs as $sa) {
                     $g = $this->getGrade($sa);
                     $gradeDist[$g] = ($gradeDist[$g] ?? 0) + 1;
@@ -417,8 +417,8 @@ class PerformanceAnalysisController extends Controller
             $groupedByStudent = $marks->groupBy('student_id');
             $maleAverages = [];
             $femaleAverages = [];
-            $maleGradeDist = ['A+' => 0, 'A' => 0, 'B+' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0];
-            $femaleGradeDist = ['A+' => 0, 'A' => 0, 'B+' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0];
+            $maleGradeDist = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0, 'I' => 0];
+            $femaleGradeDist = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0, 'I' => 0];
 
             // Subject-level gender data
             $subjectGenderMap = [];

@@ -47,10 +47,11 @@
                             @php
                                 $grade = $progress_report->overall_grade;
                                 $gradeClass = 'modern-badge-light';
-                                if (in_array($grade, ['A+', 'A'])) $gradeClass = 'modern-badge-success';
-                                elseif (in_array($grade, ['B+', 'B'])) $gradeClass = 'modern-badge-info';
+                                if ($grade === 'A') $gradeClass = 'modern-badge-success';
+                                elseif ($grade === 'B') $gradeClass = 'modern-badge-info';
                                 elseif ($grade === 'C') $gradeClass = 'modern-badge-gold';
-                                elseif (in_array($grade, ['D', 'F'])) $gradeClass = 'modern-badge-danger';
+                                elseif ($grade === 'D' || $grade === 'F') $gradeClass = 'modern-badge-danger';
+                                elseif ($grade === 'I') $gradeClass = 'modern-badge-light';
                             @endphp
                             <span class="modern-badge {{ $gradeClass }}"><i class="fas fa-award"></i> Grade: {{ $grade }}</span>
                         @endif

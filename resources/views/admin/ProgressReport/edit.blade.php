@@ -168,13 +168,12 @@
                                 <i class="fas fa-award modern-input-icon"></i>
                                 <select name="overall_grade" id="overall_grade" class="modern-input modern-select">
                                     <option value="">-- Select Grade --</option>
-                                    <option value="A+" {{ old('overall_grade', $progress_report->overall_grade) === 'A+' ? 'selected' : '' }}>A+</option>
                                     <option value="A" {{ old('overall_grade', $progress_report->overall_grade) === 'A' ? 'selected' : '' }}>A</option>
-                                    <option value="B+" {{ old('overall_grade', $progress_report->overall_grade) === 'B+' ? 'selected' : '' }}>B+</option>
                                     <option value="B" {{ old('overall_grade', $progress_report->overall_grade) === 'B' ? 'selected' : '' }}>B</option>
                                     <option value="C" {{ old('overall_grade', $progress_report->overall_grade) === 'C' ? 'selected' : '' }}>C</option>
                                     <option value="D" {{ old('overall_grade', $progress_report->overall_grade) === 'D' ? 'selected' : '' }}>D</option>
                                     <option value="F" {{ old('overall_grade', $progress_report->overall_grade) === 'F' ? 'selected' : '' }}>F</option>
+                                    <option value="I" {{ old('overall_grade', $progress_report->overall_grade) === 'I' ? 'selected' : '' }}>I (Incomplete)</option>
                                 </select>
                             </div>
                         </div>

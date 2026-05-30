@@ -320,10 +320,11 @@
                             $gClass = 'g-f';
                             if ($row['grade']) {
                                 $g = $row['grade'];
-                                if (in_array($g, ['A+','A','A-'])) $gClass = 'g-a';
-                                elseif (in_array($g, ['B+','B','B-'])) $gClass = 'g-b';
-                                elseif (in_array($g, ['C+','C','C-'])) $gClass = 'g-c';
-                                elseif (in_array($g, ['D','D-'])) $gClass = 'g-d';
+                                if ($g === 'A') $gClass = 'g-a';
+                                elseif ($g === 'B') $gClass = 'g-b';
+                                elseif ($g === 'C') $gClass = 'g-c';
+                                elseif ($g === 'D') $gClass = 'g-d';
+                                elseif ($g === 'I') $gClass = 'g-i';
                             }
                         @endphp
                         <td class="grade-col {{ $gClass }}">{{ $row['grade'] ?? '-' }}</td>

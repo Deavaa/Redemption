@@ -107,7 +107,7 @@
                     </div>
                     <div class="stu-form-group">
                         <label class="stu-form-label">Grade <span style="color:#ef4444;">*</span></label>
-                        <input type="text" name="grade" class="stu-form-input" placeholder="e.g., A+" required>
+                        <input type="text" name="grade" class="stu-form-input" placeholder="e.g., A" required>
                     </div>
                     <div class="stu-form-group">
                         <label class="stu-form-label">Grade Point</label>
