@@ -82,8 +82,11 @@ class AppServiceProvider extends ServiceProvider
         // Partitioned cookies: false — not needed
         config(['session.partitioned' => false]);
 
-        // Session lifetime: 120 minutes (2 hours)
-        config(['session.lifetime' => 120]);
+        // Session lifetime: 480 minutes (8 hours) — extended for long mark entry sessions
+        // Teachers need extended sessions to enter marks for entire classes without
+        // being logged out mid-entry. The keepalive system + 8-hour lifetime ensures
+        // sessions survive even during breaks or slow data entry.
+        config(['session.lifetime' => 480]);
 
         // Session connection and store: null (using file driver)
         config(['session.connection' => null]);
