@@ -403,24 +403,24 @@
 
             <div class="comment-section">
                 <div class="comment-label">Semester 1 - Homeroom Teacher's Comment</div>
-                <div class="comment-label-am">የ1ኛ ሴሚስተር - የክፍል መምህር አስተያየት</div>
+                <div class="comment-label-am">የ1ኛው ሴሚስተር የክፍል መምህር አስተያየት</div>
                 <div class="comment-box">
                     @if($t1Comment)
                         {{ $t1Comment }}
                     @else
-                        {{ $student->full_name }} has shown {{ $avgYearly >= 70 ? 'excellent / በጣም ጥሩ' : ($avgYearly >= 50 ? 'good / ጥሩ' : 'below average / ከመካከለኛ በታች') }} performance in the first semester. {{ $avgYearly >= 70 ? 'Continue to encourage this level of dedication. / ይህን የትጋት ደረጃ ማስቀጠል ይቻላል።' : ($avgYearly >= 50 ? 'There is room for improvement. Additional focus will help. / ማሻሻያ አለ። ተጨማሪ ትኩረት ይረዳል።' : 'Significant improvement is needed. Please provide extra support at home. / ከፍተኛ ማሻሻያ ይፈለጋል። እባክዎ በቤት ተጨማሪ ድጋፍ ያድርጉ።') }}
+                        {{ $student->full_name }} has shown {{ $avgYearly >= 70 ? 'excellent / በጣም ጥሩ' : ($avgYearly >= 50 ? 'good / ጥሩ' : 'below average / ከመካከለኛ በታች') }} performance in the first semester. {{ $avgYearly >= 70 ? 'Continue to encourage this level of dedication. / ይህን የትጋት ደረጃ ማስቀጠል ይገባል።' : ($avgYearly >= 50 ? 'There is room for improvement. Additional focus will help. / ማሻሻያ አለበት። ተጨማሪ ትኩረት መስጠት ይገባል።' : 'Significant improvement is needed. Please provide extra support at home. / ከፍተኛ ማሻሻያ ይፈለጋል። እባክዎት በቤት ተጨማሪ ድጋፍ ያድርጉ።') }}
                     @endif
                 </div>
             </div>
 
             <div class="comment-section">
                 <div class="comment-label">Semester 2 - Homeroom Teacher's Comment</div>
-                <div class="comment-label-am">የ2ኛ ሴሚስተር - የክፍል መምህር አስተያየት</div>
+                <div class="comment-label-am">የ2ኛው ሴሚስተር የክፍል መምህር አስተያየት</div>
                 <div class="comment-box">
                     @if($t2Comment)
                         {{ $t2Comment }}
                     @else
-                        {{ $student->full_name }} has shown {{ $avgYearly >= 70 ? 'excellent / በጣም ጥሩ' : ($avgYearly >= 50 ? 'good / ጥሩ' : 'below average / ከመካከለኛ በታች') }} performance in the second semester. {{ $promotionStatus === 'promoted' ? 'I am pleased to recommend this student for promotion. / ይህን ተማሪ ለማስተማር መመረካችን አለ።' : ($promotionStatus === 'detained' ? 'Unfortunately, this student will need to repeat this class. / ለማዘንበት ይህ ተማሪ ክፍሉን መድገም አለበት።' : 'This student is conditionally promoted and must improve. / ይህ ተማሪ በሁኔታ የተማረከ ሲሆን ማሻሻል አለበት።') }}
+                        {{ $student->full_name }} has shown {{ $avgYearly >= 70 ? 'excellent / በጣም ጥሩ' : ($avgYearly >= 50 ? 'good / ጥሩ' : 'below average / ከመካከለኛ በታች') }} performance in the second semester. {{ $promotionStatus === 'promoted' ? 'I am pleased to recommend this student for promotion. / ይህን ተማሪ ለማስተማር የምመረቀው ነው።' : ($promotionStatus === 'detained' ? 'Unfortunately, this student will need to repeat this class. / ለማዘኔታ ይህ ተማሪ ክፍሉን መድገም አለበት።' : 'This student is conditionally promoted and must improve. / ይህ ተማሪ በሁኔታ የተማረከ ስለሆነ ማሻሻል አለበት።') }}
                     @endif
                 </div>
             </div>
