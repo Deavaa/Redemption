@@ -82,6 +82,7 @@
         .grade-c { background: #fef9c3; color: #854d0e; }
         .grade-d { background: #fed7aa; color: #9a3412; }
         .grade-f { background: #fecaca; color: #991b1b; }
+        .grade-i { background: #e5e7eb; color: #6b7280; }
 
         /* Footer / Signatures */
         .footer-section { margin-top: 16px; }
@@ -263,17 +264,12 @@
     <div class="grading-section">
         <div class="grading-title">Grading Scale</div>
         <div class="grading-scale">
-            <div class="grading-item grade-a"><span>A+</span> 90-100</div>
-            <div class="grading-item grade-a"><span>A</span> 80-89</div>
-            <div class="grading-item grade-a"><span>A-</span> 75-79</div>
-            <div class="grading-item grade-b"><span>B+</span> 70-74</div>
-            <div class="grading-item grade-b"><span>B</span> 65-69</div>
-            <div class="grading-item grade-b"><span>B-</span> 60-64</div>
-            <div class="grading-item grade-c"><span>C+</span> 55-59</div>
-            <div class="grading-item grade-c"><span>C</span> 50-54</div>
-            <div class="grading-item grade-c"><span>C-</span> 45-49</div>
-            <div class="grading-item grade-d"><span>D</span> 40-44</div>
+            <div class="grading-item grade-a"><span>A</span> 80-100</div>
+            <div class="grading-item grade-b"><span>B</span> 60-79</div>
+            <div class="grading-item grade-c"><span>C</span> 50-59</div>
+            <div class="grading-item grade-d"><span>D</span> 40-49</div>
             <div class="grading-item grade-f"><span>F</span> &lt;40</div>
+            <div class="grading-item grade-i"><span>I</span> Incomplete</div>
         </div>
     </div>
 

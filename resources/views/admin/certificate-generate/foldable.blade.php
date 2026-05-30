@@ -182,7 +182,12 @@
 
             $grade = '-';
             if($yearly !== null) {
-                $grade = $yearly >= 90 ? 'A+' : ($yearly >= 80 ? 'A' : ($yearly >= 75 ? 'B+' : ($yearly >= 70 ? 'B' : ($yearly >= 65 ? 'C+' : ($yearly >= 60 ? 'C' : ($yearly >= 50 ? 'D' : 'F'))))));
+                if($yearly == 0 || $yearly === '') { $grade = 'I'; }
+                elseif($yearly >= 80) { $grade = 'A'; }
+                elseif($yearly >= 60) { $grade = 'B'; }
+                elseif($yearly >= 50) { $grade = 'C'; }
+                elseif($yearly >= 40) { $grade = 'D'; }
+                else { $grade = 'F'; }
             }
 
             $markData[] = [
@@ -199,7 +204,7 @@
         }
 
         $avgYearly = $countWithMarks > 0 ? round($totalYearly / $countWithMarks, 1) : 0;
-        $overallGrade = $avgYearly >= 90 ? 'A+' : ($avgYearly >= 80 ? 'A' : ($avgYearly >= 75 ? 'B+' : ($avgYearly >= 70 ? 'B' : ($avgYearly >= 65 ? 'C+' : ($avgYearly >= 60 ? 'C' : ($avgYearly >= 50 ? 'D' : 'F'))))));
+        $overallGrade = $avgYearly >= 80 ? 'A' : ($avgYearly >= 60 ? 'B' : ($avgYearly >= 50 ? 'C' : ($avgYearly >= 40 ? 'D' : 'F')));
         $overallStatus = $avgYearly >= 50 ? 'PASS' : 'FAIL';
 
         // Conduct from marks
@@ -241,16 +246,14 @@
             <h4>1. Academic Grading Scale / የአካዳሚክ ውጤት ደረጃ</h4>
             <p>Student performance is evaluated using the following grading scale. Each grade corresponds to a specific range of percentage scores and carries a designated grade point value used for computing cumulative averages. / የተማሪዎች ውጤት በሚከተለው የውጤት ደረጃ መሰረት ይገመገማል። እያንዳንዱ ደረጃ የተወሰነ የፍተሻ ውጤት ክልል እና የነጥብ እሴት ይዞ ይቀራል።</p>
             <table class="grading-scale">
-                <thead><tr><th>Grade / ደረጃ</th><th>Score / ውጤት</th><th>Point / ነጥብ</th><th>Description / መግለጫ</th></tr></thead>
+                <thead><tr><th>Grade / ደረጃ</th><th>Score / ውጤት</th><th>Description / መግለጫ</th></tr></thead>
                 <tbody>
-                    <tr><td>A+</td><td>90 - 100</td><td>4.0</td><td>Excellent / በጣም ብሩህ</td></tr>
-                    <tr><td>A</td><td>80 - 89</td><td>3.5</td><td>Very Good / በጣም ጥሩ</td></tr>
-                    <tr><td>B+</td><td>75 - 79</td><td>3.0</td><td>Good / ጥሩ</td></tr>
-                    <tr><td>B</td><td>70 - 74</td><td>2.5</td><td>Fairly Good / ተቀባይነት ያለው</td></tr>
-                    <tr><td>C+</td><td>65 - 69</td><td>2.0</td><td>Above Average / ከመካከለኛ በላይ</td></tr>
-                    <tr><td>C</td><td>60 - 64</td><td>1.5</td><td>Average / መካከለኛ</td></tr>
-                    <tr><td>D</td><td>50 - 59</td><td>1.0</td><td>Below Average / ከመካከለኛ በታች</td></tr>
-                    <tr><td>F</td><td>0 - 49</td><td>0.0</td><td>Fail / ያልተሳካ</td></tr>
+                    <tr><td>A</td><td>80 - 100</td><td>Excellent / በጣም ጥሩ</td></tr>
+                    <tr><td>B</td><td>60 - 79</td><td>Good / ጥሩ</td></tr>
+                    <tr><td>C</td><td>50 - 59</td><td>Average / መካከለኛ</td></tr>
+                    <tr><td>D</td><td>40 - 49</td><td>Below Average / ከመካከለኛ በታች</td></tr>
+                    <tr><td>F</td><td>0 - 39</td><td>Fail / ያልተሳካ</td></tr>
+                    <tr><td>I</td><td>-</td><td>Incomplete / ያልተጠናቀቀ</td></tr>
                 </tbody>
             </table>
 

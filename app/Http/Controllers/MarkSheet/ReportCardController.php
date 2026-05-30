@@ -252,15 +252,10 @@ class ReportCardController extends Controller
      */
     private function getGrade(float $mark): string
     {
-        if ($mark >= 90) return 'A+';
+        if ($mark <= 0) return 'I';
         if ($mark >= 80) return 'A';
-        if ($mark >= 75) return 'A-';
-        if ($mark >= 70) return 'B+';
-        if ($mark >= 65) return 'B';
-        if ($mark >= 60) return 'B-';
-        if ($mark >= 55) return 'C+';
+        if ($mark >= 60) return 'B';
         if ($mark >= 50) return 'C';
-        if ($mark >= 45) return 'C-';
         if ($mark >= 40) return 'D';
         return 'F';
     }

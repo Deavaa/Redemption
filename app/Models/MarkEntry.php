@@ -36,15 +36,10 @@ class MarkEntry extends Model
         $data['grand_total'] = round($caTotal + $examTotal, 2);
         // Calculate grade
         $gt = $data['grand_total'];
-        if ($gt >= 90) $data['grade'] = 'A+';
+        if ($gt <= 0 || $gt === '') $data['grade'] = 'I';
         elseif ($gt >= 80) $data['grade'] = 'A';
-        elseif ($gt >= 75) $data['grade'] = 'A-';
-        elseif ($gt >= 70) $data['grade'] = 'B+';
-        elseif ($gt >= 65) $data['grade'] = 'B';
-        elseif ($gt >= 60) $data['grade'] = 'B-';
-        elseif ($gt >= 55) $data['grade'] = 'C+';
+        elseif ($gt >= 60) $data['grade'] = 'B';
         elseif ($gt >= 50) $data['grade'] = 'C';
-        elseif ($gt >= 45) $data['grade'] = 'C-';
         elseif ($gt >= 40) $data['grade'] = 'D';
         else $data['grade'] = 'F';
         return $data;

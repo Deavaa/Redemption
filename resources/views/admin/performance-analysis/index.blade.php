@@ -151,7 +151,7 @@
         <div class="pa-card-body">
             @php
                 $total = array_sum($gradeDistribution);
-                $colors = ['A+'=>'#059669','A'=>'#10b981','A-'=>'#34d399','B+'=>'#2563eb','B'=>'#3b82f6','B-'=>'#60a5fa','C+'=>'#d97706','C'=>'#f59e0b','C-'=>'#fbbf24','D'=>'#ea580c','F'=>'#ef4444'];
+                $colors = ['A'=>'#059669','B'=>'#3b82f6','C'=>'#f59e0b','D'=>'#ea580c','F'=>'#ef4444','I'=>'#9ca3af'];
             @endphp
             <div class="pa-grade-bar">
                 @foreach($gradeDistribution as $grade => $count)

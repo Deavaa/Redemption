@@ -849,9 +849,8 @@ class PerformanceAnalysisController extends Controller
      */
     private function getGrade($avg)
     {
-        if ($avg >= 90) return 'A+';
+        if ($avg <= 0 || $avg === '') return 'I';
         if ($avg >= 80) return 'A';
-        if ($avg >= 70) return 'B+';
         if ($avg >= 60) return 'B';
         if ($avg >= 50) return 'C';
         if ($avg >= 40) return 'D';

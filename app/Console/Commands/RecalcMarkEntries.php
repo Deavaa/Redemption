@@ -39,15 +39,10 @@ class RecalcMarkEntries extends Command
             $grandTotal = round($caTotal + $examTotal, 2);
 
             // Calculate grade
-            if ($grandTotal >= 90) $grade = 'A+';
+            if ($grandTotal <= 0) $grade = 'I';
             elseif ($grandTotal >= 80) $grade = 'A';
-            elseif ($grandTotal >= 75) $grade = 'A-';
-            elseif ($grandTotal >= 70) $grade = 'B+';
-            elseif ($grandTotal >= 65) $grade = 'B';
-            elseif ($grandTotal >= 60) $grade = 'B-';
-            elseif ($grandTotal >= 55) $grade = 'C+';
+            elseif ($grandTotal >= 60) $grade = 'B';
             elseif ($grandTotal >= 50) $grade = 'C';
-            elseif ($grandTotal >= 45) $grade = 'C-';
             elseif ($grandTotal >= 40) $grade = 'D';
             else $grade = 'F';
 

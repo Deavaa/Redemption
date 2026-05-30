@@ -54,7 +54,7 @@
     @php $subjectCount = max($marks->where('student_id', $student->id)->count(), 1); $average = round($totalMarks / $subjectCount, 1); @endphp
     <div class="mark-summary">
         <div class="mark-summary-item"><span>Average:</span> <strong>{{ $average }}</strong></div>
-        <div class="mark-summary-item"><span>Grade:</span> <strong>{{ $average >= 90 ? 'A+' : ($average >= 80 ? 'A' : ($average >= 70 ? 'B+' : ($average >= 60 ? 'B' : ($average >= 50 ? 'C' : ($average >= 40 ? 'D' : 'F'))))) }}</strong></div>
+        <div class="mark-summary-item"><span>Grade:</span> <strong>{{ $average >= 80 ? 'A' : ($average >= 60 ? 'B' : ($average >= 50 ? 'C' : ($average >= 40 ? 'D' : ($average <= 0 ? 'I' : 'F')))) }}</strong></div>
         <div class="mark-summary-item"><span>Result:</span> <strong class="{{ $average >= 50 ? 'text-success' : 'text-danger' }}">{{ $average >= 50 ? 'PASS' : 'FAIL' }}</strong></div>
     </div>
 

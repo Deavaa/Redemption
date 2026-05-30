@@ -225,15 +225,10 @@ class MarkRosterController extends Controller
                     $row['grand_total'] = round($row['ca_total'] + $row['exam_total'], 2);
                     // Calculate grade from recalculated grand_total
                     $gt = $row['grand_total'];
-                    if ($gt >= 90) $row['grade'] = 'A+';
+                    if ($gt <= 0) $row['grade'] = 'I';
                     elseif ($gt >= 80) $row['grade'] = 'A';
-                    elseif ($gt >= 75) $row['grade'] = 'A-';
-                    elseif ($gt >= 70) $row['grade'] = 'B+';
-                    elseif ($gt >= 65) $row['grade'] = 'B';
-                    elseif ($gt >= 60) $row['grade'] = 'B-';
-                    elseif ($gt >= 55) $row['grade'] = 'C+';
+                    elseif ($gt >= 60) $row['grade'] = 'B';
                     elseif ($gt >= 50) $row['grade'] = 'C';
-                    elseif ($gt >= 45) $row['grade'] = 'C-';
                     elseif ($gt >= 40) $row['grade'] = 'D';
                     else $row['grade'] = 'F';
                 } else {

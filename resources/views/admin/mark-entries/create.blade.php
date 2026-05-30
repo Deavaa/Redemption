@@ -485,15 +485,10 @@
         // Grand total: round to 2 decimals like PHP
         var tot = Math.round((caS + exT) * 100) / 100;
         var g = 'F', gClass = 'mc-grade-F';
-        if (tot >= 90) { g = 'A+'; gClass = 'mc-grade-A'; }
+        if (tot <= 0) { g = 'I'; gClass = 'mc-grade-I'; }
         else if (tot >= 80) { g = 'A'; gClass = 'mc-grade-A'; }
-        else if (tot >= 75) { g = 'A-'; gClass = 'mc-grade-A'; }
-        else if (tot >= 70) { g = 'B+'; gClass = 'mc-grade-B'; }
-        else if (tot >= 65) { g = 'B'; gClass = 'mc-grade-B'; }
-        else if (tot >= 60) { g = 'B-'; gClass = 'mc-grade-B'; }
-        else if (tot >= 55) { g = 'C+'; gClass = 'mc-grade-C'; }
+        else if (tot >= 60) { g = 'B'; gClass = 'mc-grade-B'; }
         else if (tot >= 50) { g = 'C'; gClass = 'mc-grade-C'; }
-        else if (tot >= 45) { g = 'C-'; gClass = 'mc-grade-C'; }
         else if (tot >= 40) { g = 'D'; gClass = 'mc-grade-D'; }
         document.getElementById('tCaRaw').textContent = caR.toFixed(1);
         document.getElementById('tCaScaled').textContent = caS.toFixed(2);
