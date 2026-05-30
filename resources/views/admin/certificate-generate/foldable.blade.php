@@ -20,24 +20,24 @@
 
         /* ===== PAGE 1 OUTSIDE: LEFT = Grading Info, RIGHT = Cover ===== */
         .back-panel {
-            background: #fff; padding: 9mm 8mm; overflow-y: auto;
+            background: #fff; padding: 7mm 7mm; overflow-y: auto;
             border-right: 2px dashed #bbb;
         }
         .back-panel h3 {
-            font-size: 0.9rem; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 1.5px; color: #2d2d3a; margin-bottom: 6px;
-            padding-bottom: 3px; border-bottom: 3px solid #2d2d3a; display: inline-block;
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1px; color: #2d2d3a; margin-bottom: 4px;
+            padding-bottom: 2px; border-bottom: 2px solid #2d2d3a; display: inline-block;
         }
-        .back-panel h4 { font-size: 0.85rem; font-weight: 700; color: #1a1a2e; margin: 8px 0 3px; }
-        .back-panel p, .back-panel li { font-size: 0.75rem; color: #4b5563; line-height: 1.4; }
-        .back-panel ul { padding-left: 16px; margin-bottom: 4px; }
-        .grading-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.72rem; }
-        .grading-scale th { background: #1a1a2e; color: #fff; padding: 4px 6px; text-align: center; font-size: 0.68rem; }
-        .grading-scale td { padding: 3px 6px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.7rem; line-height: 1.3; }
+        .back-panel h4 { font-size: 0.68rem; font-weight: 700; color: #1a1a2e; margin: 5px 0 2px; }
+        .back-panel p, .back-panel li { font-size: 0.6rem; color: #4b5563; line-height: 1.3; }
+        .back-panel ul { padding-left: 14px; margin-bottom: 2px; }
+        .grading-scale { width: 100%; border-collapse: collapse; margin: 3px 0; font-size: 0.58rem; }
+        .grading-scale th { background: #1a1a2e; color: #fff; padding: 2px 4px; text-align: center; font-size: 0.55rem; }
+        .grading-scale td { padding: 2px 4px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.57rem; line-height: 1.2; }
         .grading-scale td:first-child { font-weight: 700; text-align: left; }
-        .conduct-scale { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 0.72rem; }
-        .conduct-scale th { background: #2d2d3a; color: #fff; padding: 4px 6px; text-align: center; font-size: 0.68rem; }
-        .conduct-scale td { padding: 3px 6px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.7rem; line-height: 1.3; }
+        .conduct-scale { width: 100%; border-collapse: collapse; margin: 3px 0; font-size: 0.58rem; }
+        .conduct-scale th { background: #2d2d3a; color: #fff; padding: 2px 4px; text-align: center; font-size: 0.55rem; }
+        .conduct-scale td { padding: 2px 4px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.57rem; line-height: 1.2; }
 
         /* FRONT COVER PANEL */
         .front-panel {
@@ -242,7 +242,7 @@
     <!-- PAGE 1: OUTSIDE - Back (left: grading rules) + Front (right: cover with student info) -->
     <div class="page">
         <div class="panel back-panel">
-            <h3>Grading &amp; Assessment Policy<br><span style="font-weight:600;font-size:0.85rem;opacity:0.8;">የውጤት ምዘና ፖሊሲ</span></h3>
+            <h3>Grading &amp; Assessment Policy<br><span style="font-weight:600;font-size:0.7rem;opacity:0.8;">የውጤት ምዘና ፖሊሲ</span></h3>
 
             <h4>1. Academic Grading Scale / የአካዳሚክ ውጤት ደረጃ</h4>
             <p>Student performance is evaluated using the following grading scale. Each grade corresponds to a specific range of percentage scores and carries a designated grade point value used for computing cumulative averages. / የተማሪዎች ውጤት በሚከተለው የውጤት ደረጃ መሰረት ይገመገማል። እያንዳንዱ ደረጃ የተወሰነ የፍተሻ ውጤት ክልል እና የነጥብ እሴት ይዞ ይቀራል።</p>
