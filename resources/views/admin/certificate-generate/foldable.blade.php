@@ -41,37 +41,45 @@
 
         /* FRONT COVER PANEL */
         .front-panel {
-            background: linear-gradient(160deg, #1a1a2e 0%, #2d2d3a 50%, #3d3d52 100%);
-            color: #fff; display: flex; flex-direction: column;
+            background-color: #ffffff;
+            color: #2d2d3a; display: flex; flex-direction: column;
             justify-content: space-between; position: relative;
+            overflow: hidden;
         }
         .front-panel::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4d4d8' stroke-width='0.5' fill-rule='evenodd'%3E%3Cpath d='M40 10 L55 18.66 L55 35.98 L40 44.64 L25 35.98 L25 18.66 Z'/%3E%3Cpath d='M40 18 L48 22.67 L48 31.98 L40 36.64 L32 31.98 L32 22.67 Z'/%3E%3Cpath d='M80 10 L95 18.66 L95 35.98 L80 44.64 L65 35.98 L65 18.66 Z'/%3E%3Cpath d='M0 10 L15 18.66 L15 35.98 L0 44.64 L-15 35.98 L-15 18.66 Z'/%3E%3Cpath d='M40 50 L55 58.66 L55 75.98 L40 84.64 L25 75.98 L25 58.66 Z'/%3E%3Cpath d='M40 58 L48 62.67 L48 71.98 L40 76.64 L32 71.98 L32 62.67 Z'/%3E%3Cpath d='M80 50 L95 58.66 L95 75.98 L80 84.64 L65 75.98 L65 58.66 Z'/%3E%3Cpath d='M0 50 L15 58.66 L15 75.98 L0 84.64 L-15 75.98 L-15 58.66 Z'/%3E%3Cpath d='M20 30 L35 38.66 L35 55.98 L20 64.64 L5 55.98 L5 38.66 Z'/%3E%3Cpath d='M60 30 L75 38.66 L75 55.98 L60 64.64 L45 55.98 L45 38.66 Z'/%3E%3Cpath d='M60 -10 L75 -1.34 L75 15.98 L60 24.64 L45 15.98 L45 -1.34 Z'/%3E%3Cpath d='M20 -10 L35 -1.34 L35 15.98 L20 24.64 L5 15.98 L5 -1.34 Z'/%3E%3C/g%3E%3C/svg%3E");
+            z-index: 0;
         }
-        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 24mm; }
-        .front-logo { max-height: 85px; max-width: 120px; object-fit: contain; margin: 0 auto 16px; display: block; border-radius: 12px; background: rgba(255,255,255,0.15); padding: 6px; }
-        .front-school-name { font-size: 1.6rem; font-weight: 800; letter-spacing: 3.5px; margin-bottom: 5px; }
-        .front-school-name-am { font-size: 1.25rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 10px; opacity: 0.9; }
-        .front-line { width: 65px; height: 3px; background: rgba(255,255,255,0.5); margin: 0 auto 12px; }
-        .front-academic-year { font-size: 1rem; font-weight: 300; letter-spacing: 2.5px; opacity: 0.85; }
-        .front-cert-title { font-size: 0.9rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 12px; opacity: 0.7; }
-        .front-cert-title-am { font-size: 0.85rem; font-weight: 500; margin-top: 4px; opacity: 0.6; }
+        .front-panel::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 40%, rgba(26,26,46,0.03) 100%);
+            z-index: 0;
+        }
+        .front-top { position: relative; z-index: 2; text-align: center; padding-top: 24mm; }
+        .front-logo { max-height: 85px; max-width: 120px; object-fit: contain; margin: 0 auto 16px; display: block; border-radius: 12px; background: rgba(45,45,58,0.06); padding: 6px; }
+        .front-school-name { font-size: 1.6rem; font-weight: 800; letter-spacing: 3.5px; margin-bottom: 5px; color: #1a1a2e; }
+        .front-school-name-am { font-size: 1.25rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 10px; color: #4b5563; }
+        .front-line { width: 65px; height: 3px; background: linear-gradient(90deg, #1a1a2e, #6366f1, #1a1a2e); margin: 0 auto 12px; border-radius: 2px; }
+        .front-academic-year { font-size: 1rem; font-weight: 300; letter-spacing: 2.5px; color: #6b7280; }
+        .front-cert-title { font-size: 0.9rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 12px; color: #6366f1; }
+        .front-cert-title-am { font-size: 0.85rem; font-weight: 500; margin-top: 4px; color: #9ca3af; }
 
         .front-bottom {
-            position: relative; z-index: 1;
-            background: rgba(0,0,0,0.25); padding: 10mm 12mm 16mm;
-            border-top: 1px solid rgba(255,255,255,0.15);
+            position: relative; z-index: 2;
+            background: rgba(26,26,46,0.04); padding: 10mm 12mm 16mm;
+            border-top: 1.5px solid rgba(99,102,241,0.15);
         }
-        .front-student-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; }
+        .front-student-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; color: #1a1a2e; }
         .front-info-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 7px; }
-        .front-info-item { font-size: 0.78rem; opacity: 0.85; }
-        .front-info-item strong { opacity: 1; font-weight: 600; }
+        .front-info-item { font-size: 0.78rem; color: #4b5563; }
+        .front-info-item strong { color: #1a1a2e; font-weight: 600; }
         .front-status-badge { display: inline-block; padding: 5px 14px; border-radius: 5px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-top: 8px; }
-        .front-status-promoted { background: rgba(16,185,129,0.3); color: #6ee7b7; }
-        .front-status-detained { background: rgba(220,38,38,0.3); color: #fca5a5; }
-        .front-status-conditional { background: rgba(217,119,6,0.3); color: #fcd34d; }
-        .front-status-na { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
+        .front-status-promoted { background: rgba(16,185,129,0.15); color: #059669; border: 1px solid rgba(16,185,129,0.3); }
+        .front-status-detained { background: rgba(220,38,38,0.12); color: #dc2626; border: 1px solid rgba(220,38,38,0.25); }
+        .front-status-conditional { background: rgba(217,119,6,0.12); color: #d97706; border: 1px solid rgba(217,119,6,0.25); }
+        .front-status-na { background: rgba(107,114,128,0.1); color: #6b7280; border: 1px solid rgba(107,114,128,0.2); }
 
         /* ===== PAGE 2 INSIDE: LEFT = Marks Table, RIGHT = Comments + Signatures ===== */
         .inside-left {
@@ -291,11 +299,11 @@
         <div class="panel front-panel" style="position:relative;">
             {{-- Logo Watermark for front panel --}}
             @if($logoUrl)
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;opacity:0.06;pointer-events:none;z-index:0;">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;opacity:0.05;pointer-events:none;z-index:1;">
                 <img src="{{ $logoUrl }}" style="width:100%;height:100%;object-fit:contain;" alt="">
             </div>
             @endif
-            <div class="front-top" style="position:relative;z-index:1;">
+            <div class="front-top" style="position:relative;z-index:2;">
                 @if($logoUrl)<img src="{{ $logoUrl }}" class="front-logo" alt="Logo">@endif
                 <div class="front-school-name">{{ strtoupper($schoolName) }}</div>
                 <div class="front-school-name-am">የትምህርት ቤቱ ስም</div>
