@@ -410,6 +410,20 @@
                 </li>
                 @endif
 
+                {{-- TEACHER EFFICIENCY ASSESSMENT --}}
+                @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+                <li class="{{ request()->routeIs('admin.teacher-efficiency.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.teacher-efficiency.index') }}">
+                        <i class="fas fa-clipboard-check"></i><span>Teacher Efficiency</span>
+                    </a>
+                </li>
+                <li class="{{ request()->routeIs('admin.teacher-evaluations.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.teacher-evaluations.index') }}">
+                        <i class="fas fa-user-check"></i><span>Teacher Evaluation</span>
+                    </a>
+                </li>
+                @endif
+
                 {{-- DOCUMENT CENTER --}}
                 @if($menuLevel === 'teacher')
                 <li class="menu-header">DOCUMENTS</li>

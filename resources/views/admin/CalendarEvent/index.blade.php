@@ -329,6 +329,12 @@ const ethiopianMonths = [
     'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'
 ];
 
+const ethiopianMonthsLatin = [
+    'Meskerem', 'Tikimt', 'Hidar', 'Tahsas',
+    'Tir', 'Yekatit', 'Megabit', 'Miyazia',
+    'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'
+];
+
 function gregorianToEthiopian(dateStr) {
     const date = new Date(dateStr + 'T12:00:00');
     let gYear = date.getFullYear();
@@ -378,7 +384,9 @@ function gregorianToEthiopian(dateStr) {
         month: ethMonth,
         day: ethDay,
         monthName: ethiopianMonths[ethMonth - 1],
-        formatted: ethDay + ' ' + ethiopianMonths[ethMonth - 1] + ', ' + ethYear + ' ዓ.ም.'
+        monthNameLatin: ethiopianMonthsLatin[ethMonth - 1],
+        formatted: ethDay + ' ' + ethiopianMonths[ethMonth - 1] + ', ' + ethYear,
+        formattedLatin: ethDay + ' ' + ethiopianMonthsLatin[ethMonth - 1] + ', ' + ethYear
     };
 }
 
@@ -386,13 +394,6 @@ function ethShort(dateStr) {
     const e = gregorianToEthiopian(dateStr);
     return e.day + ' ' + e.monthName;
 }
-
-// Amharic short month names for calendar badges
-const ethiopianMonthsShort = [
-    'መስከ', 'ጥቅም', 'ኅዳር', 'ታኅሣ',
-    'ጥር', 'የካቲ', 'መጋቢ', 'ሚያዝ',
-    'ግንቦ', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'
-];
 // ── End Ethiopian Calendar ─────────────────────────────────────
 
 // All-day toggle
@@ -450,7 +451,7 @@ const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), 
         dayNum.textContent = info.date.getDate();
         const ethBadge = document.createElement('span');
         ethBadge.className = 'eth-day';
-        ethBadge.textContent = eth.day + ' ' + ethiopianMonthsShort[eth.month - 1];
+        ethBadge.textContent = eth.day + ' ' + eth.monthName.substring(0, 3);
         const container = document.createElement('span');
         container.className = 'fc-daygrid-day-number';
         container.appendChild(dayNum);
@@ -582,11 +583,11 @@ function showEventDetail(event) {
     html += '<div class="cal-modal-row"><div class="cal-modal-label">Category</div><div class="cal-modal-value"><span style="background:' + (categoryColors[props.category] || '#6b7280') + '15;color:' + (categoryColors[props.category] || '#6b7280') + ';padding:0.15rem 0.6rem;border-radius:50px;font-size:0.78rem;font-weight:600;">' + (categoryLabels[props.category] || props.category) + '</span></div></div>';
     var startDateStr = event.startStr.substring(0, 10);
     var startEth = gregorianToEthiopian(startDateStr);
-    html += '<div class="cal-modal-row"><div class="cal-modal-label">Date</div><div class="cal-modal-value">' + event.start.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '<span class="eth-date-row">(' + startEth.formatted + ')</span></div></div>';
+    html += '<div class="cal-modal-row"><div class="cal-modal-label">Date</div><div class="cal-modal-value">' + event.start.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '<span class="eth-date-row">(' + startEth.formatted + ' EC)</span></div></div>';
     if (event.end) {
         var endDateStr = event.endStr.substring(0, 10);
         var endEth = gregorianToEthiopian(endDateStr);
-        html += '<div class="cal-modal-row"><div class="cal-modal-label">End Date</div><div class="cal-modal-value">' + event.end.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '<span class="eth-date-row">(' + endEth.formatted + ')</span></div></div>';
+        html += '<div class="cal-modal-row"><div class="cal-modal-label">End Date</div><div class="cal-modal-value">' + event.end.toLocaleDateString(undefined, {weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '<span class="eth-date-row">(' + endEth.formatted + ' EC)</span></div></div>';
     }
     if (!event.allDay && event.start) {
         html += '<div class="cal-modal-row"><div class="cal-modal-label">Time</div><div class="cal-modal-value">' + event.start.toLocaleTimeString(undefined, {hour:'2-digit',minute:'2-digit'}) + '</div></div>';
@@ -721,7 +722,7 @@ function updateUpcoming(events) {
     container.innerHTML = upcoming.map(e => {
         const date = new Date(e.start).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'});
         const eth = gregorianToEthiopian(e.start.substring(0, 10));
-        return '<div class="cal-upcoming-item"><div class="cal-upcoming-dot" style="background:' + e.backgroundColor + '"></div><div class="cal-upcoming-info"><div class="cal-upcoming-title">' + e.title + '</div><div class="cal-upcoming-date">' + date + ' <span style="color:#d97706;font-size:0.72rem;">(' + eth.day + ' ' + eth.monthName + ' ዓ.ም.)</span></div><div class="cal-upcoming-cat">' + (categoryLabels[e.extendedProps?.category] || '') + '</div></div></div>';
+        return '<div class="cal-upcoming-item"><div class="cal-upcoming-dot" style="background:' + e.backgroundColor + '"></div><div class="cal-upcoming-info"><div class="cal-upcoming-title">' + e.title + '</div><div class="cal-upcoming-date">' + date + ' <span style="color:#d97706;font-size:0.72rem;">(' + eth.day + ' ' + eth.monthName.substring(0, 3) + ' EC)</span></div><div class="cal-upcoming-cat">' + (categoryLabels[e.extendedProps?.category] || '') + '</div></div></div>';
     }).join('');
 }
 

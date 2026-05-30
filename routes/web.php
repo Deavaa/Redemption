@@ -93,6 +93,8 @@ use App\Http\Controllers\Assessment\StudentAssessmentController;
 use App\Http\Controllers\Student\TeacherReviewController as StudentTeacherReviewController;
 use App\Http\Controllers\Admin\TeacherReviewController as AdminTeacherReviewController;
 use App\Http\Controllers\Enrollment\EnrollmentController;
+use App\Http\Controllers\TeacherEfficiency\TeacherEfficiencyAssessmentController;
+use App\Http\Controllers\TeacherEvaluation\TeacherEvaluationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -588,6 +590,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // ── Club Follow-up Configuration ────────────────────────
     Route::resource('club-follow-up-configs', ClubFollowUpConfigController::class)->middleware('permission:settings.view');
+
+    // ── Teacher Efficiency Assessment (Principal by Term) ───
+    // Summary route MUST be before resource to avoid {teacher_efficiency} parameter conflict
+    Route::get('teacher-efficiency/summary', [TeacherEfficiencyAssessmentController::class, 'summary'])->name('teacher-efficiency.summary')->middleware('permission:exams.view');
+    Route::get('api/teachers-by-branch', [TeacherEfficiencyAssessmentController::class, 'apiTeachersByBranch'])->name('api.teachers-by-branch');
+    Route::post('teacher-efficiency/{teacher_efficiency_assessment}/acknowledge', [TeacherEfficiencyAssessmentController::class, 'acknowledge'])->name('teacher-efficiency.acknowledge')->middleware('permission:exams.view');
+    Route::post('teacher-efficiency/{teacher_efficiency_assessment}/lock', [TeacherEfficiencyAssessmentController::class, 'lock'])->name('teacher-efficiency.lock')->middleware('permission:exams.manage');
+    Route::resource('teacher-efficiency', TeacherEfficiencyAssessmentController::class)->middleware('permission:exams.view')->parameter('teacher-efficiency', 'teacher_efficiency_assessment');
+
+    // ── Teacher Evaluation (General) ──────────────────────────
+    Route::get('teacher-evaluations/analysis', [TeacherEvaluationController::class, 'analysis'])->name('teacher-evaluations.analysis')->middleware('permission:exams.view');
+    Route::resource('teacher-evaluations', TeacherEvaluationController::class)->middleware('permission:exams.view');
 });
 
 // ── Student Portal ──────────────────────────────────────────

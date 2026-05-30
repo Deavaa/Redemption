@@ -76,4 +76,9 @@ public function assignedSubjects()
     return $this->hasMany(TeacherAssignment::class, 'teacher_id')
         ->with('subject');
 }
+
+public function efficiencyAssessments()
+{
+    return $this->hasMany(TeacherEfficiencyAssessment::class, 'teacher_id');
+}
 }
