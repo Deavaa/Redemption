@@ -42,22 +42,11 @@
         /* FRONT COVER PANEL */
         .front-panel {
             background-color: #ffffff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%239da5b4' fill-opacity='0.15'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
             color: #2d2d3a; display: flex; flex-direction: column;
             justify-content: space-between; position: relative;
-            overflow: hidden;
         }
-        .front-panel::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ffffff;
-            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4d4d8' stroke-width='0.5' fill-rule='evenodd'%3E%3Cpath d='M40 10 L55 18.66 L55 35.98 L40 44.64 L25 35.98 L25 18.66 Z'/%3E%3Cpath d='M40 18 L48 22.67 L48 31.98 L40 36.64 L32 31.98 L32 22.67 Z'/%3E%3Cpath d='M80 10 L95 18.66 L95 35.98 L80 44.64 L65 35.98 L65 18.66 Z'/%3E%3Cpath d='M0 10 L15 18.66 L15 35.98 L0 44.64 L-15 35.98 L-15 18.66 Z'/%3E%3Cpath d='M40 50 L55 58.66 L55 75.98 L40 84.64 L25 75.98 L25 58.66 Z'/%3E%3Cpath d='M40 58 L48 62.67 L48 71.98 L40 76.64 L32 71.98 L32 62.67 Z'/%3E%3Cpath d='M80 50 L95 58.66 L95 75.98 L80 84.64 L65 75.98 L65 58.66 Z'/%3E%3Cpath d='M0 50 L15 58.66 L15 75.98 L0 84.64 L-15 75.98 L-15 58.66 Z'/%3E%3Cpath d='M20 30 L35 38.66 L35 55.98 L20 64.64 L5 55.98 L5 38.66 Z'/%3E%3Cpath d='M60 30 L75 38.66 L75 55.98 L60 64.64 L45 55.98 L45 38.66 Z'/%3E%3Cpath d='M60 -10 L75 -1.34 L75 15.98 L60 24.64 L45 15.98 L45 -1.34 Z'/%3E%3Cpath d='M20 -10 L35 -1.34 L35 15.98 L20 24.64 L5 15.98 L5 -1.34 Z'/%3E%3C/g%3E%3C/svg%3E");
-            z-index: 0;
-        }
-        .front-panel::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 40%, rgba(26,26,46,0.03) 100%);
-            z-index: 0;
-        }
-        .front-top { position: relative; z-index: 2; text-align: center; padding-top: 24mm; }
+        .front-top { position: relative; z-index: 1; text-align: center; padding-top: 24mm; }
         .front-logo { max-height: 85px; max-width: 120px; object-fit: contain; margin: 0 auto 16px; display: block; border-radius: 12px; background: rgba(45,45,58,0.06); padding: 6px; }
         .front-school-name { font-size: 1.6rem; font-weight: 800; letter-spacing: 3.5px; margin-bottom: 5px; color: #1a1a2e; }
         .front-school-name-am { font-size: 1.25rem; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 10px; color: #4b5563; }
@@ -67,7 +56,7 @@
         .front-cert-title-am { font-size: 0.85rem; font-weight: 500; margin-top: 4px; color: #9ca3af; }
 
         .front-bottom {
-            position: relative; z-index: 2;
+            position: relative; z-index: 1;
             background: rgba(26,26,46,0.04); padding: 10mm 12mm 16mm;
             border-top: 1.5px solid rgba(99,102,241,0.15);
         }
@@ -299,11 +288,11 @@
         <div class="panel front-panel" style="position:relative;">
             {{-- Logo Watermark for front panel --}}
             @if($logoUrl)
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;opacity:0.05;pointer-events:none;z-index:1;">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;opacity:0.06;pointer-events:none;z-index:0;">
                 <img src="{{ $logoUrl }}" style="width:100%;height:100%;object-fit:contain;" alt="">
             </div>
             @endif
-            <div class="front-top" style="position:relative;z-index:2;">
+            <div class="front-top" style="position:relative;z-index:1;">
                 @if($logoUrl)<img src="{{ $logoUrl }}" class="front-logo" alt="Logo">@endif
                 <div class="front-school-name">{{ strtoupper($schoolName) }}</div>
                 <div class="front-school-name-am">የትምህርት ቤቱ ስም</div>
