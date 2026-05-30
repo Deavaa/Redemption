@@ -384,7 +384,8 @@
 <script>
 (function() {
     var students = [], marksData = {}, curIdx = 0, saveTimer = null;
-    var csrf = document.querySelector('meta[name="csrf-token"]').content;
+    // Read CSRF token dynamically from meta tag (global keepalive keeps it fresh)
+    function getCSRF() { return document.querySelector('meta[name="csrf-token"]').content; }
 
     document.getElementById('sel_ay').addEventListener('change', function() {
         if (!this.value) {
@@ -517,11 +518,18 @@
         st.className = 'mc-save-badge saving';
         st.textContent = 'Saving...';
         fetch('/admin/mark-entries/api/save', {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf }, body: JSON.stringify(d)
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCSRF() }, body: JSON.stringify(d)
         }).then(function(r) {
+            if (r.status === 419) {
+                // CSRF mismatch — the global interceptor already retries once, but if still 419:
+                st.className = 'mc-save-badge error'; st.textContent = 'Session expired, refreshing...';
+                setTimeout(function() { window.location.reload(); }, 1500);
+                return null;
+            }
             if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || 'Server error ' + r.status); });
             return r.json();
         }).then(function(res) {
+            if (!res) return;
             if (res.success) {
                 st.className = 'mc-save-badge saved'; st.textContent = 'Saved!';
                 marksData[s.id] = res.entry || marksData[s.id];
@@ -554,11 +562,17 @@
         st.className = 'mc-save-badge saving';
         st.textContent = 'Saving...';
         fetch('/admin/mark-entries/api/save', {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf }, body: JSON.stringify(d)
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCSRF() }, body: JSON.stringify(d)
         }).then(function(r) {
+            if (r.status === 419) {
+                st.className = 'mc-save-badge error'; st.textContent = 'Session expired, refreshing...';
+                setTimeout(function() { window.location.reload(); }, 1500);
+                return null;
+            }
             if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || 'Server error ' + r.status); });
             return r.json();
         }).then(function(res) {
+            if (!res) return;
             if (res.success) {
                 st.className = 'mc-save-badge saved'; st.textContent = 'Saved!';
                 marksData[s.id] = res.entry || d;

@@ -3,30 +3,164 @@
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
-    {{-- Global Session Expiry Detection --}}
+    {{-- Global Session Keepalive + Expiry Detection + CSRF Auto-Refresh --}}
     <script>
-    // Intercept ALL fetch() calls to detect session expiry (302 redirect to login)
     (function() {
         var originalFetch = window.fetch;
         var loginUrl = '{{ route("login") }}';
+        var keepaliveUrl = '{{ route("admin.keepalive") }}';
         var sessionExpired = false;
+        var csrfRefreshInProgress = false;
+        var lastKeepaliveTime = Date.now();
+        var KEEPALIVE_INTERVAL = 2 * 60 * 1000; // 2 minutes
+        var ACTIVITY_THRESHOLD = 30 * 1000; // 30 seconds of idle before activity triggers immediate keepalive
 
+        // ===== 1. GLOBAL CSRF TOKEN REFRESH =====
+        function getCSRFToken() {
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
+        function updateCSRFToken(newToken) {
+            if (!newToken) return;
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta) meta.setAttribute('content', newToken);
+            // Also update any page-level CSRF variables (mark entry pages use window.CSRF or csrf var)
+            if (typeof window.CSRF !== 'undefined') window.CSRF = newToken;
+        }
+
+        function refreshCSRFToken() {
+            if (sessionExpired) return Promise.reject(new Error('Session expired'));
+            if (csrfRefreshInProgress) return Promise.resolve(getCSRFToken());
+            csrfRefreshInProgress = true;
+
+            return originalFetch.call(window, keepaliveUrl, {
+                credentials: 'same-origin',
+                redirect: 'manual',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) {
+                // Detect redirect (session expired) — with redirect:'manual', we get status=0 and type='opaqueredirect'
+                if (r.type === 'opaqueredirect' || r.status === 0) {
+                    csrfRefreshInProgress = false;
+                    handleSessionExpired('keepalive redirect');
+                    return Promise.reject(new Error('Session expired'));
+                }
+                if (r.status === 401 || r.status === 419) {
+                    csrfRefreshInProgress = false;
+                    handleSessionExpired('keepalive HTTP ' + r.status);
+                    return Promise.reject(new Error('Session expired'));
+                }
+                if (!r.ok) {
+                    csrfRefreshInProgress = false;
+                    throw new Error('Keepalive failed: HTTP ' + r.status);
+                }
+                if (r.redirected) {
+                    csrfRefreshInProgress = false;
+                    handleSessionExpired('keepalive followed redirect');
+                    return Promise.reject(new Error('Session expired'));
+                }
+                return r.json();
+            })
+            .then(function(data) {
+                if (data.csrf_token) {
+                    updateCSRFToken(data.csrf_token);
+                    lastKeepaliveTime = Date.now();
+                }
+                csrfRefreshInProgress = false;
+                return getCSRFToken();
+            })
+            .catch(function(err) {
+                csrfRefreshInProgress = false;
+                if (err.message && err.message.indexOf('Session expired') !== -1) throw err;
+                console.warn('[Keepalive] CSRF refresh failed:', err.message);
+                throw err;
+            });
+        }
+
+        // ===== 2. SESSION EXPIRED HANDLER =====
+        function handleSessionExpired(source) {
+            if (sessionExpired) return;
+            sessionExpired = true;
+            console.error('[Keepalive] Session expired detected from:', source);
+            alert('Your session has expired. You will be redirected to the login page.\n\nAny unsaved data may be lost.');
+            window.location.href = loginUrl;
+        }
+
+        // ===== 3. FETCH INTERCEPTOR — detect expiry + auto-retry on 419 =====
         window.fetch = function() {
             var args = arguments;
             return originalFetch.apply(this, args).then(function(response) {
-                // If the response was redirected to the login page, the session has expired
+                // Detect redirect to login — session expired
                 if (response.redirected && response.url.indexOf('/login') !== -1) {
-                    if (!sessionExpired) {
-                        sessionExpired = true;
-                        alert('Your session has expired. You will be redirected to the login page.');
-                        window.location.href = loginUrl;
-                    }
-                    // Return a rejected promise so the calling code doesn't try to parse HTML as JSON
+                    handleSessionExpired('fetch redirect');
+                    return Promise.reject(new Error('Session expired'));
+                }
+                // Detect 419 CSRF mismatch — try refreshing token and retrying ONCE
+                if (response.status === 419 && !sessionExpired) {
+                    console.warn('[Keepalive] 419 CSRF mismatch detected — refreshing token and retrying');
+                    return refreshCSRFToken().then(function(newToken) {
+                        // Retry the request with the new CSRF token
+                        var retryArgs = Array.prototype.slice.call(args);
+                        if (retryArgs.length > 1 && retryArgs[1] && retryArgs[1].headers) {
+                            if (retryArgs[1].headers['X-CSRF-TOKEN']) {
+                                retryArgs[1].headers['X-CSRF-TOKEN'] = newToken;
+                            }
+                        }
+                        return originalFetch.apply(window, retryArgs);
+                    }).catch(function(err) {
+                        if (err.message && err.message.indexOf('Session expired') !== -1) {
+                            return Promise.reject(err);
+                        }
+                        // If CSRF refresh failed, just return the original 419 response
+                        return response;
+                    });
+                }
+                // Detect 401 — unauthenticated
+                if (response.status === 401 && !sessionExpired) {
+                    handleSessionExpired('fetch 401');
                     return Promise.reject(new Error('Session expired'));
                 }
                 return response;
             });
         };
+
+        // ===== 4. PERIODIC KEEPALIVE — prevents session from expiring =====
+        function fireKeepalive() {
+            if (sessionExpired) return;
+            refreshCSRFToken()
+                .then(function() { lastKeepaliveTime = Date.now(); })
+                .catch(function(err) {
+                    if (err.message && err.message.indexOf('Session expired') !== -1) return;
+                    // Non-fatal — will retry on next interval
+                });
+        }
+
+        function scheduleKeepalive() {
+            setInterval(function() {
+                if (!sessionExpired) fireKeepalive();
+            }, KEEPALIVE_INTERVAL);
+        }
+
+        // ===== 5. ACTIVITY-DRIVEN KEEPALIVE =====
+        // If the user types/clicks after 30s of idle, fire an immediate keepalive
+        var activityEvents = ['input', 'click', 'keydown', 'touchstart'];
+        activityEvents.forEach(function(evtName) {
+            document.addEventListener(evtName, function() {
+                if (sessionExpired) return;
+                var elapsed = Date.now() - lastKeepaliveTime;
+                if (elapsed > ACTIVITY_THRESHOLD) {
+                    fireKeepalive();
+                }
+            }, { passive: true });
+        });
+
+        // ===== 6. START KEEPALIVE =====
+        // Fire initial keepalive after page loads (wait 5s to avoid colliding with page-specific keepalive)
+        setTimeout(function() {
+            fireKeepalive();
+            scheduleKeepalive();
+        }, 5000);
     })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">

@@ -591,7 +591,8 @@
     var API_SAVE = '{{ route("admin.mark-entries.api.save") }}';
     var API_CHECK_LOCK = '{{ route("admin.mark-entries.api.check-lock") }}';
     var API_KEEPALIVE = '{{ route("admin.keepalive") }}';
-    var CSRF = '{{ csrf_token() }}';
+    // Read CSRF dynamically from meta tag (global keepalive keeps it fresh)
+    function getCSRF() { return document.querySelector('meta[name="csrf-token"]').content; }
 
     // ========== MARK FIELDS DEFINITION ==========
     var CA_FIELDS = [
@@ -639,9 +640,8 @@
 
     function updateCSRFToken(newToken) {
         if (!newToken) return;
-        CSRF = newToken;
         var metaTag = document.querySelector('meta[name="csrf-token"]');
-        if (metaTag) metaTag.setAttribute('content', CSRF);
+        if (metaTag) metaTag.setAttribute('content', newToken);
     }
 
     function handleSessionExpired(source) {
@@ -655,7 +655,7 @@
 
     function refreshCSRFToken() {
         if (sessionExpiredHandled) return Promise.reject(new Error('Session expired'));
-        if (csrfRefreshInProgress) return Promise.resolve(CSRF);
+        if (csrfRefreshInProgress) return Promise.resolve(getCSRF());
         csrfRefreshInProgress = true;
 
         return fetch(API_KEEPALIVE, {
@@ -696,7 +696,7 @@
                 console.log('[MarkEntry] CSRF token refreshed via keepalive');
             }
             csrfRefreshInProgress = false;
-            return CSRF;
+            return getCSRF();
         })
         .catch(function(err) {
             csrfRefreshInProgress = false;
@@ -798,7 +798,7 @@
                 return refreshCSRFToken().then(function() {
                     // Retry the request with the new token
                     if (options.headers && options.headers['X-CSRF-TOKEN']) {
-                        options.headers['X-CSRF-TOKEN'] = CSRF;
+                        options.headers['X-CSRF-TOKEN'] = getCSRF();
                     }
                     return fetch(url, options);
                 });
@@ -1850,7 +1850,7 @@
             method: 'POST',
             credentials: 'same-origin',
             redirect: 'manual', // CRITICAL: Detect 302 redirects instead of following them
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCSRF(), 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({
                 student_id: studentId,
                 academic_year_id: ayId,
