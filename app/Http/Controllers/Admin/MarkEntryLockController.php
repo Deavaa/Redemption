@@ -54,8 +54,10 @@ class MarkEntryLockController extends Controller
 
         $userBranch = $user->role === 'branch_principal' ? Branch::find($user->branch_id) : null;
 
+        $locks = $allLocks;
+
         return view('admin.mark_entry_locks.index', compact(
-            'branches', 'academicYears', 'terms', 'lockStatuses', 'allLocks',
+            'branches', 'academicYears', 'terms', 'lockStatuses', 'allLocks', 'locks',
             'selectedBranch', 'selectedAy', 'userBranch'
         ));
     }
