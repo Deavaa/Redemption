@@ -9,6 +9,7 @@ use App\Http\Middleware\ParentMiddleware;
 use App\Http\Middleware\StudentMiddleware;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SessionKeepAlive;
 use App\Http\Middleware\TrustProxies;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -32,7 +33,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'branch-scope' => BranchScope::class,
             'locale' => SetLocale::class,
         ]);
-        // Apply SetLocale to all web routes
+        // Apply SessionKeepAlive FIRST (before other middleware) to override PHP's
+        // native session garbage collection that kills sessions in <5 min on XAMPP.
+        // Then apply SetLocale to all web routes.
+        $middleware->web(prepend: [
+            SessionKeepAlive::class,
+        ]);
         $middleware->web(append: [
             SetLocale::class,
         ]);

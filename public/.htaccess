@@ -5,6 +5,18 @@
 
     RewriteEngine On
 
+    # ── PHP Session Configuration ──
+    # Override PHP's native session garbage collection lifetime.
+    # Default php.ini on XAMPP often has session.gc_maxlifetime = 1440 (24 min)
+    # or even lower, which causes Laravel sessions to expire prematurely.
+    # Setting to 28800 seconds = 8 hours = Laravel's SESSION_LIFETIME of 480 minutes.
+    <IfModule mod_php.c>
+        php_value session.gc_maxlifetime 28800
+        php_value session.gc_probability 0
+        php_value session.gc_divisor 1
+        php_value session.cookie_lifetime 28800
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

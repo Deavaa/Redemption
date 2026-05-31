@@ -14,8 +14,12 @@
  * - SESSION_DOMAIN=null (literal string) in .env broke cookies
  * - SESSION_ENCRYPT=true with wrong APP_KEY corrupted sessions
  * - APP_URL with wrong path set incorrect cookie path
+ * - File-based sessions expired in <5 min on XAMPP due to PHP's
+ *   native session.gc_maxlifetime overriding Laravel's lifetime
  *
- * If you need to change any session setting, edit this file directly.
+ * KEY CHANGE: Switched from 'file' to 'database' driver.
+ * The database driver is immune to PHP's native garbage collection,
+ * which was deleting session files prematurely on XAMPP.
  * ──────────────────────────────────────────────────────────────────
  */
 
@@ -26,12 +30,20 @@ return [
     | Default Session Driver
     |--------------------------------------------------------------------------
     |
-    | HARD-CODED to 'file'. This app uses file-based sessions.
-    | The .env SESSION_DRIVER value is IGNORED.
+    | CHANGED to 'database' from 'file'.
+    |
+    | WHY: On XAMPP, PHP's native session garbage collection
+    | (session.gc_maxlifetime) was deleting Laravel's session files
+    | in under 5 minutes, causing constant 419 Page Expired errors
+    | during mark entry. The database driver stores sessions in MySQL,
+    | which is immune to PHP's file-based garbage collection.
+    |
+    | The sessions table already exists in the database (migration
+    | 2026_05_13_200001_create_sessions_table.php).
     |
     */
 
-    'driver' => 'file',
+    'driver' => 'database',
 
     /*
     |--------------------------------------------------------------------------
@@ -71,7 +83,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Session File Location
+    | Session File Location (unused — driver is 'database')
     |--------------------------------------------------------------------------
     */
 
@@ -79,23 +91,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Session Database Connection (unused — driver is 'file')
+    | Session Database Connection
     |--------------------------------------------------------------------------
+    |
+    | null = use the default MySQL connection from config/database.php.
+    | The sessions table uses the same MySQL database as the rest of the app.
+    |
     */
 
     'connection' => null,
 
     /*
     |--------------------------------------------------------------------------
-    | Session Database Table (unused — driver is 'file')
+    | Session Database Table
     |--------------------------------------------------------------------------
+    |
+    | The MySQL table where sessions are stored.
+    | Created by migration 2026_05_13_200001_create_sessions_table.php.
+    |
     */
 
     'table' => 'sessions',
 
     /*
     |--------------------------------------------------------------------------
-    | Session Cache Store (unused — driver is 'file')
+    | Session Cache Store (unused — driver is 'database')
     |--------------------------------------------------------------------------
     */
 
@@ -105,9 +125,18 @@ return [
     |--------------------------------------------------------------------------
     | Session Sweeping Lottery
     |--------------------------------------------------------------------------
+    |
+    | The lottery determines the chance of expired sessions being cleaned up.
+    | [2, 100] means 2% chance on each request. With database driver, this
+    | only deletes sessions older than 'lifetime' minutes from the DB table,
+    | completely bypassing PHP's native session.gc_maxlifetime.
+    |
+    | Reduced from [2, 100] to [1, 1000] to further reduce the chance of
+    | aggressive cleanup that could affect long sessions.
+    |
     */
 
-    'lottery' => [2, 100],
+    'lottery' => [1, 1000],
 
     /*
     |--------------------------------------------------------------------------
@@ -118,6 +147,10 @@ return [
     | ensures consistency regardless of APP_NAME or SESSION_COOKIE
     | values in .env. The old cookie name (based on APP_NAME) could
     | conflict with previously set cookies in the browser.
+    |
+    | IMPORTANT: After switching from file to database driver, the
+    | cookie name stays the same, so existing sessions will be
+    | transparently migrated when users log in again.
     |
     */
 
@@ -133,11 +166,6 @@ return [
     |   - https://localhost/Redemption/public/login
     |   - https://localhost/Redemption/public/admin/dashboard
     |   - Any subdirectory or path under the domain
-    |
-    | Previously, this was auto-detected from APP_URL, which could
-    | result in '/Redemption/public' — but if APP_URL was wrong,
-    | the cookie path would be wrong and the browser would never
-    | send the cookie back, causing 419 Page Expired errors.
     |
     */
 

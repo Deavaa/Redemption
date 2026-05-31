@@ -8,7 +8,14 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function showLogin() { return view('auth.login'); }
+    public function showLogin(Request $request) {
+        // If there's a redirect parameter, store it in the session so
+        // redirect()->intended() can use it after login
+        if ($request->has('redirect')) {
+            session(['url.intended' => $request->redirect]);
+        }
+        return view('auth.login');
+    }
 
     public function login(Request $r) {
         $r->validate(['login'=>'required','password'=>'required']);
@@ -71,7 +78,13 @@ class AuthController extends Controller
         // Force-save the session to disk immediately (prevents session loss)
         $r->session()->save();
 
-        // Redirect based on role
+        // Redirect based on role — if a redirect URL was saved in session, use it
+        // This ensures that after session expiry + re-login, the user returns to
+        // the mark entry page (or wherever they were working)
+        $redirectUrl = $r->input('redirect') ?: session('url.intended');
+        if ($redirectUrl) {
+            session(['url.intended' => $redirectUrl]);
+        }
         return redirect()->intended($this->getHomeRoute($user));
     }
 

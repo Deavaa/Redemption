@@ -124,6 +124,9 @@ body{min-height:100vh;display:flex;align-items:center;justify-content:center;bac
   @endif
   <form method="POST" action="{{ route('login') }}">
     @csrf
+    @if(request('redirect'))
+    <input type="hidden" name="redirect" value="{{ request('redirect') }}">
+    @endif
     <div class="form-group">
       <label><i class="bi bi-person"></i> {{ __('app.email_id_phone') }}</label>
       <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Student ID / Employee ID / Email / Phone (0900000000)">

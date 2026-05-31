@@ -387,6 +387,17 @@
     // Read CSRF token dynamically from meta tag (global keepalive keeps it fresh)
     function getCSRF() { return document.querySelector('meta[name="csrf-token"]').content; }
 
+    // Session expiry handler — backup marks to localStorage and redirect
+    function handleSessionExpired() {
+        try {
+            var backup = { timestamp: new Date().toISOString(), marks: marksData, students: students.map(function(s) { return s.id; }) };
+            localStorage.setItem('markEntryCreateBackup', JSON.stringify(backup));
+        } catch(e) {}
+        alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up.');
+        var returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = '/login?redirect=' + returnUrl;
+    }
+
     document.getElementById('sel_ay').addEventListener('change', function() {
         if (!this.value) {
             document.getElementById('sel_term').innerHTML = '<option value="">-- Year First --</option>';
@@ -521,9 +532,12 @@
             method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCSRF() }, body: JSON.stringify(d)
         }).then(function(r) {
             if (r.status === 419) {
-                // CSRF mismatch — the global interceptor already retries once, but if still 419:
-                st.className = 'mc-save-badge error'; st.textContent = 'Session expired, refreshing...';
-                setTimeout(function() { window.location.reload(); }, 1500);
+                // CSRF mismatch — session expired
+                handleSessionExpired();
+                return null;
+            }
+            if (r.status === 401) {
+                handleSessionExpired();
                 return null;
             }
             if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || 'Server error ' + r.status); });
@@ -565,8 +579,11 @@
             method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCSRF() }, body: JSON.stringify(d)
         }).then(function(r) {
             if (r.status === 419) {
-                st.className = 'mc-save-badge error'; st.textContent = 'Session expired, refreshing...';
-                setTimeout(function() { window.location.reload(); }, 1500);
+                handleSessionExpired();
+                return null;
+            }
+            if (r.status === 401) {
+                handleSessionExpired();
                 return null;
             }
             if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || 'Server error ' + r.status); });
