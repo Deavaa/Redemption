@@ -509,35 +509,14 @@ class MarkEntryController extends Controller
             'term_id' => 'required',
         ]);
 
-        // Explicitly touch the session to ensure it stays alive during mark entry.
-        // This guarantees the session timestamp is updated even if the
-        // StartSession middleware optimizes away a no-change write.
+        // Touch session to keep it alive during mark entry
         $request->session()->put('_last_mark_save', time());
-
-        // For database driver: also explicitly update the last_activity column
         if (config('session.driver') === 'database') {
             try {
                 \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
                     ->where('id', $request->session()->getId())
                     ->update(['last_activity' => time()]);
-            } catch (\Throwable $e) {
-                // Don't crash the mark save
-            }
-        }
-
-        // For file driver: create a backup copy that PHP's GC won't delete
-        if (config('session.driver') === 'file') {
-            try {
-                $sessionId = $request->session()->getId();
-                $sessionPath = storage_path('framework/sessions');
-                $mainFile = $sessionPath . '/' . $sessionId;
-                $backupFile = $sessionPath . '/backup_' . $sessionId;
-                if (file_exists($mainFile)) {
-                    @copy($mainFile, $backupFile);
-                }
-            } catch (\Throwable $e) {
-                // Backup failed — don't crash
-            }
+            } catch (\Throwable $e) {}
         }
 
         $studentId = $request->input('student_id');

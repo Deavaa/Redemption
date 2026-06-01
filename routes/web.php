@@ -126,50 +126,24 @@ Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
-    // Session Keepalive & CSRF Refresh — prevents session expiry during long sessions.
-    // Works with both database and file drivers:
-    // - database: Updates last_activity column in sessions table
-    // - file: Overrides PHP GC settings and creates backup session files
+    // Session Keepalive — updates last_activity + refreshes CSRF token
     Route::get('/keepalive', function () {
         $request = request();
-        $driver = config('session.driver');
-
-        // Touch the session to update its timestamp
         $request->session()->put('_last_keepalive', time());
 
-        // For database driver: explicitly update last_activity
-        if ($driver === 'database') {
+        // Database driver: update last_activity
+        if (config('session.driver') === 'database') {
             try {
                 \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
                     ->where('id', $request->session()->getId())
                     ->update(['last_activity' => time()]);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Keepalive: Failed to update sessions table', ['error' => $e->getMessage()]);
-            }
+            } catch (\Throwable $e) {}
         }
-
-        // For file driver: create a backup copy that PHP's GC won't delete
-        if ($driver === 'file') {
-            try {
-                $sessionId = $request->session()->getId();
-                $sessionPath = storage_path('framework/sessions');
-                $mainFile = $sessionPath . '/' . $sessionId;
-                $backupFile = $sessionPath . '/backup_' . $sessionId;
-                if (file_exists($mainFile)) {
-                    @copy($mainFile, $backupFile);
-                }
-            } catch (\Throwable $e) {
-                // Backup failed — don't crash
-            }
-        }
-
-        $token = csrf_token();
 
         return response()->json([
-            'csrf_token' => $token,
+            'csrf_token' => csrf_token(),
             'timestamp' => time(),
-            'session_id' => $request->session()->getId(),
-            'driver' => $driver,
+            'driver' => config('session.driver'),
             'lifetime' => config('session.lifetime'),
             'ok' => true,
         ])->header('Cache-Control', 'no-store, no-cache, must-revalidate')
