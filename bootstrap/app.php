@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
+            'admin/keepalive',  // Keepalive must work even with stale CSRF token
         ]);
         $middleware->alias([
             'admin' => AdminMiddleware::class,

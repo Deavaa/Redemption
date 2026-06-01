@@ -693,9 +693,18 @@
                             }
                             reject(new Error('JSON parse error'));
                         }
-                    } else if (xhr.status === 401 || xhr.status === 419) {
-                        handleSessionExpired('keepalive HTTP ' + xhr.status);
-                        reject(new Error('Session expired (HTTP ' + xhr.status + ')'));
+                    } else if (xhr.status === 401) {
+                        handleSessionExpired('keepalive HTTP 401');
+                        reject(new Error('Session expired (HTTP 401)'));
+                    } else if (xhr.status === 419) {
+                        // 419 from keepalive might just be stale CSRF token on the GET request
+                        // The session itself might still be alive — don't give up immediately
+                        console.warn('[MarkEntry] Keepalive got 419, session may still be alive. Retrying...');
+                        csrfRefreshInProgress = false;
+                        // Wait a moment and try again
+                        setTimeout(function() {
+                            refreshCSRFToken().then(resolve).catch(reject);
+                        }, 2000);
                     } else {
                         reject(new Error('Keepalive failed: HTTP ' + xhr.status));
                     }

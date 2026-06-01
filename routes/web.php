@@ -127,18 +127,27 @@ Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
     // Session Keepalive — updates last_activity + refreshes CSRF token
-    Route::get('/keepalive', function () {
+    // Also accepts POST so AJAX mark-saves can double as keepalive
+    Route::match(['get', 'post'], '/keepalive', function () {
         $request = request();
+
+        // Touch the session to keep it alive
         $request->session()->put('_last_keepalive', time());
 
-        // Database driver: update last_activity
+        // Database driver: update last_activity directly
         if (config('session.driver') === 'database') {
             try {
-                \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
-                    ->where('id', $request->session()->getId())
-                    ->update(['last_activity' => time()]);
+                $sessionId = $request->session()->getId();
+                if ($sessionId) {
+                    \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
+                        ->where('id', $sessionId)
+                        ->update(['last_activity' => time()]);
+                }
             } catch (\Throwable $e) {}
         }
+
+        // Regenerate CSRF token to prevent 419 errors
+        $request->session()->regenerateToken();
 
         return response()->json([
             'csrf_token' => csrf_token(),

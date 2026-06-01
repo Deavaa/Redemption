@@ -3,15 +3,15 @@
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
-    {{-- Global Session Keepalive v2 — Uses XMLHttpRequest (more reliable on XAMPP HTTPS) --}}
+    {{-- Global Session Keepalive v3 — Bulletproof session management --}}
     <script>
     (function() {
         var loginUrl = '{{ route("login") }}';
         var keepaliveUrl = '{{ route("admin.keepalive") }}';
         var sessionExpired = false;
         var lastKeepaliveTime = Date.now();
-        var KEEPALIVE_INTERVAL = 60 * 1000; // 1 minute — aggressive but necessary
-        var ACTIVITY_THRESHOLD = 20 * 1000; // 20 seconds of idle before activity triggers keepalive
+        var KEEPALIVE_INTERVAL = 45 * 1000;  // 45 seconds — frequent enough to prevent expiry
+        var ACTIVITY_THRESHOLD = 15 * 1000;  // 15 seconds of activity before triggering keepalive
 
         // ===== 1. GLOBAL CSRF TOKEN HELPERS =====
         window.getGlobalCSRFToken = function() {
@@ -26,9 +26,7 @@
             if (typeof window.CSRF !== 'undefined') window.CSRF = newToken;
         }
 
-        // ===== 2. KEEPALIVE USING XMLHttpRequest — much more reliable on XAMPP HTTPS =====
-        // fetch() with redirect:'manual' returns opaque responses on some browsers/configs.
-        // XMLHttpRequest reliably follows redirects and lets us detect the login page redirect.
+        // ===== 2. KEEPALIVE — Using XMLHttpRequest (more reliable on XAMPP HTTPS) =====
         function fireKeepalive() {
             if (sessionExpired) return;
 
@@ -37,13 +35,12 @@
                 xhr.open('GET', keepaliveUrl, true);
                 xhr.setRequestHeader('Accept', 'application/json');
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                xhr.timeout = 10000; // 10 second timeout
+                xhr.timeout = 15000; // 15 second timeout
 
                 xhr.onload = function() {
                     if (sessionExpired) return;
 
-                    // If the response URL contains /login, the session is expired
-                    // (XMLHttpRequest follows redirects, so we check the final URL)
+                    // If redirected to login page, session is expired
                     if (xhr.responseURL && xhr.responseURL.indexOf('/login') !== -1) {
                         handleSessionExpired('keepalive redirected to login');
                         return;
@@ -64,14 +61,15 @@
                             }
                         }
                     } else if (xhr.status === 401 || xhr.status === 419) {
-                        handleSessionExpired('keepalive HTTP ' + xhr.status);
+                        // Don't give up immediately on 419 — try to refresh CSRF and retry
+                        console.warn('[Keepalive] Got 419, attempting CSRF refresh...');
+                        refreshCSRFAndRetry();
                     } else {
                         console.warn('[Keepalive] Unexpected status:', xhr.status);
                     }
                 };
 
                 xhr.onerror = function() {
-                    // Network error — don't treat as session expired, just log
                     console.warn('[Keepalive] Network error (will retry)');
                 };
 
@@ -85,7 +83,91 @@
             }
         }
 
-        // ===== 3. SESSION EXPIRED HANDLER =====
+        // ===== 3. CSRF REFRESH — Fetch a fresh CSRF token without full page reload =====
+        function refreshCSRFAndRetry() {
+            // Use a separate request to get a fresh token
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', keepaliveUrl, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.timeout = 10000;
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            if (data.csrf_token) {
+                                updateCSRFToken(data.csrf_token);
+                                lastKeepaliveTime = Date.now();
+                                console.log('[Keepalive] CSRF token refreshed successfully');
+                            }
+                        } catch(e) {}
+                    } else if (xhr.status === 419 || xhr.status === 401 ||
+                               (xhr.responseURL && xhr.responseURL.indexOf('/login') !== -1)) {
+                        // Session is truly gone
+                        handleSessionExpired('CSRF refresh failed (HTTP ' + xhr.status + ')');
+                    }
+                };
+
+                xhr.send();
+            } catch(e) {}
+        }
+
+        // ===== 4. GLOBAL AJAX 419 HANDLER — Auto-retry on CSRF token mismatch =====
+        // This is the KEY fix: when mark entry AJAX gets a 419 error,
+        // we automatically get a fresh CSRF token and retry the request.
+        jQuery(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
+            if (jqXHR.status === 419 && !sessionExpired) {
+                console.warn('[AJAX 419 Handler] CSRF token expired, refreshing and retrying...');
+
+                // Get a fresh CSRF token via keepalive
+                var refreshXhr = new XMLHttpRequest();
+                refreshXhr.open('GET', keepaliveUrl, false); // synchronous — we need the token before retrying
+                refreshXhr.setRequestHeader('Accept', 'application/json');
+                refreshXhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                refreshXhr.timeout = 10000;
+
+                try {
+                    refreshXhr.send();
+                    if (refreshXhr.status === 200) {
+                        var data = JSON.parse(refreshXhr.responseText);
+                        if (data.csrf_token) {
+                            updateCSRFToken(data.csrf_token);
+
+                            // Retry the original AJAX request with the new token
+                            if (ajaxSettings.type && ajaxSettings.url && ajaxSettings.data) {
+                                // Replace the old CSRF token in the data
+                                var newData = ajaxSettings.data;
+                                if (typeof newData === 'string') {
+                                    newData = newData.replace(/_token=[^&]+/, '_token=' + encodeURIComponent(data.csrf_token));
+                                }
+
+                                console.log('[AJAX 419 Handler] Retrying request with fresh token...');
+                                $.ajax({
+                                    type: ajaxSettings.type,
+                                    url: ajaxSettings.url,
+                                    data: newData,
+                                    dataType: ajaxSettings.dataType || 'json',
+                                    success: ajaxSettings.success,
+                                    error: function(retryJqXHR) {
+                                        if (retryJqXHR.status === 419 || retryJqXHR.status === 401) {
+                                            handleSessionExpired('Retry also failed (HTTP ' + retryJqXHR.status + ')');
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    } else if (refreshXhr.status === 419 || refreshXhr.status === 401) {
+                        handleSessionExpired('Token refresh failed (HTTP ' + refreshXhr.status + ')');
+                    }
+                } catch(e) {
+                    console.warn('[AJAX 419 Handler] Refresh failed:', e.message);
+                }
+            }
+        });
+
+        // ===== 5. SESSION EXPIRED HANDLER =====
         function handleSessionExpired(source) {
             if (sessionExpired) return;
             sessionExpired = true;
@@ -98,21 +180,21 @@
                 }
             } catch(e) {}
 
-            alert('Your session has expired due to inactivity. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
+            alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
 
             // Add a return URL so the user gets back to where they were
             var returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
             window.location.href = loginUrl + '?redirect=' + returnUrl;
         }
 
-        // ===== 4. PERIODIC KEEPALIVE =====
+        // ===== 6. PERIODIC KEEPALIVE =====
         function scheduleKeepalive() {
             setInterval(function() {
                 if (!sessionExpired) fireKeepalive();
             }, KEEPALIVE_INTERVAL);
         }
 
-        // ===== 5. ACTIVITY-DRIVEN KEEPALIVE =====
+        // ===== 7. ACTIVITY-DRIVEN KEEPALIVE =====
         var activityEvents = ['input', 'click', 'keydown', 'touchstart'];
         activityEvents.forEach(function(evtName) {
             document.addEventListener(evtName, function() {
@@ -124,11 +206,11 @@
             }, { passive: true });
         });
 
-        // ===== 6. START KEEPALIVE =====
+        // ===== 8. START KEEPALIVE =====
         setTimeout(function() {
             fireKeepalive();
             scheduleKeepalive();
-        }, 3000);
+        }, 2000);
     })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">

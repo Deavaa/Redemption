@@ -513,9 +513,12 @@ class MarkEntryController extends Controller
         $request->session()->put('_last_mark_save', time());
         if (config('session.driver') === 'database') {
             try {
-                \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
-                    ->where('id', $request->session()->getId())
-                    ->update(['last_activity' => time()]);
+                $sessionId = $request->session()->getId();
+                if ($sessionId) {
+                    DB::table(config('session.table', 'sessions'))
+                        ->where('id', $sessionId)
+                        ->update(['last_activity' => time()]);
+                }
             } catch (\Throwable $e) {}
         }
 

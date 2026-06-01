@@ -40,24 +40,45 @@ class AppServiceProvider extends ServiceProvider
         config(['database.default' => 'mysql']);
 
         // ============================================================
-        // SESSION: Force database driver UNCONDITIONALLY.
-        //
-        // The file driver is broken on XAMPP because PHP's native
-        // session.gc_maxlifetime (often 300s/5min on XAMPP) deletes
-        // session files regardless of Laravel's session.lifetime.
-        //
-        // The database driver stores sessions in MySQL and is
-        // completely immune to PHP's garbage collection.
-        //
-        // The sessions table is auto-created in boot() if missing.
+        // SESSION CONFIGURATION
         // ============================================================
-        config(['session.driver' => 'database']);
+        // We set the session driver to 'database' which stores sessions
+        // in MySQL and is immune to PHP's native garbage collection.
+        //
+        // As a safety net, we also override PHP's native GC settings
+        // here. These are also set in public/index.php and .user.ini
+        // for maximum coverage.
+        //
+        // CRITICAL: Cookie name must be CONSISTENT everywhere.
+        // We use 'redemption_session' — matching config/session.php.
+        // ============================================================
+        @ini_set('session.gc_maxlifetime', 28800);  // 8 hours
+        @ini_set('session.gc_probability', 0);       // Disable PHP GC
+        @ini_set('session.gc_divisor', 1);
+        @ini_set('session.cookie_lifetime', 28800);
+
+        // Session driver — use 'database' if sessions table exists,
+        // otherwise fall back to 'file' (with PHP GC disabled above)
+        try {
+            $canUseDatabase = Schema::hasTable('sessions');
+        } catch (\Throwable $e) {
+            $canUseDatabase = false;
+        }
+
+        if ($canUseDatabase) {
+            config(['session.driver' => 'database']);
+        } else {
+            // Fall back to file driver — PHP GC is disabled above so
+            // file sessions won't be prematurely deleted
+            config(['session.driver' => 'file']);
+        }
+
         config(['session.table' => 'sessions']);
         config(['session.connection' => null]);
         config(['session.store' => null]);
 
-        // Session cookie settings
-        config(['session.cookie' => 'redemption_session_v3']); // New name = forces fresh cookies
+        // Session cookie settings — MUST match config/session.php
+        config(['session.cookie' => 'redemption_session']);
         config(['session.path' => '/']);
         config(['session.domain' => null]);
         config(['session.secure' => false]);
@@ -67,7 +88,7 @@ class AppServiceProvider extends ServiceProvider
         config(['session.expire_on_close' => false]);
         config(['session.partitioned' => false]);
         config(['session.lifetime' => 480]); // 8 hours
-        config(['session.lottery' => [1, 1000]]); // Very low GC chance
+        config(['session.lottery' => [0, 1000]]); // DISABLE Laravel GC too (0% chance)
     }
 
     /**
@@ -97,10 +118,10 @@ class AppServiceProvider extends ServiceProvider
                 });
             }
         } catch (\Throwable $e) {
-            // Don't crash if table creation fails
+            // Don't crash if table creation fails — file driver will be used
         }
 
-        // Ensure session directory exists (for any fallback)
+        // Ensure session directory exists (for file driver fallback)
         try {
             $sessionDir = storage_path('framework/sessions');
             if (!is_dir($sessionDir)) {
