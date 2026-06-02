@@ -9,11 +9,6 @@ use Illuminate\Support\Facades\Cache;
 
 class MarkEntryConfigController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('permission:mark_entries.manage');
-    }
-
     /**
      * Display the mark entry configuration page
      */
