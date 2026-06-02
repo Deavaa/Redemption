@@ -4,34 +4,24 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Session Keep-Alive Middleware
  *
- * This middleware ensures that AJAX activity counts as active session usage.
- * It runs on every web request and:
+ * With the COOKIE session driver, PHP garbage collection is no longer
+ * a concern (no server-side state = nothing for GC to delete).
  *
- * 1. Overrides PHP's native session garbage collection settings
- * 2. Touches the session to update last_activity
- * 3. For database driver: explicitly updates the sessions table
- * 4. For file driver: ensures the session file exists and is fresh
- * 5. Sets headers to indicate session was refreshed
- *
- * This is prepended to the web middleware group in bootstrap/app.php.
+ * This middleware now serves simpler purposes:
+ * 1. Extra safety: disable PHP's native GC on every request
+ * 2. Touch the session to keep it alive
+ * 3. Set response headers so the client knows the session is alive
  */
 class SessionKeepAlive
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // ============================================================
-        // Override PHP's native GC settings on EVERY request.
-        // This is a safety net — they're also set in:
-        //   - public/index.php (before Laravel boots)
-        //   - public/.user.ini (before PHP parses any script)
-        //   - app/Providers/AppServiceProvider::register()
-        // ============================================================
+        // Disable PHP's native GC as extra safety net
         @ini_set('session.gc_maxlifetime', 28800);
         @ini_set('session.gc_probability', 0);
         @ini_set('session.gc_divisor', 1);
@@ -39,30 +29,11 @@ class SessionKeepAlive
 
         $response = $next($request);
 
-        // Update session's last_activity timestamp
+        // Touch the session to keep it alive
         if ($request->hasSession()) {
             try {
                 $session = $request->session();
                 $session->put('_last_touch', time());
-
-                // Database driver: explicitly update last_activity in the sessions table
-                $driver = config('session.driver');
-                if ($driver === 'database' || $driver === 'safe_database') {
-                    $sessionId = $session->getId();
-                    if ($sessionId) {
-                        DB::table(config('session.table', 'sessions'))
-                            ->where('id', $sessionId)
-                            ->update(['last_activity' => time()]);
-                    }
-                } elseif ($driver === 'file' || $driver === 'safe_file') {
-                    // Write session changes and refresh the session file timestamp
-                    $sessionId = $session->getId();
-                    $sessionPath = config('session.files', storage_path('framework/sessions'));
-                    $sessionFile = $sessionPath . DIRECTORY_SEPARATOR . 'sess_' . $sessionId;
-                    if ($sessionId) {
-                        @touch($sessionFile);
-                    }
-                }
 
                 // Set response header so the client knows the session is alive
                 if ($request->ajax() || $request->wantsJson()) {

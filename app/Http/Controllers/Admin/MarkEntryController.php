@@ -511,21 +511,6 @@ class MarkEntryController extends Controller
 
         // Touch session to keep it alive during mark entry
         $request->session()->put('_last_mark_save', time());
-        $driver = config('session.driver');
-        if (in_array($driver, ['database', 'safe_database'], true)) {
-            try {
-                $sessionId = $request->session()->getId();
-                if ($sessionId) {
-                    DB::table(config('session.table', 'sessions'))
-                        ->where('id', $sessionId)
-                        ->update(['last_activity' => time()]);
-                }
-            } catch (\Throwable $e) {}
-        } elseif (in_array($driver, ['file', 'safe_file'], true)) {
-            try {
-                $request->session()->save();
-            } catch (\Throwable $e) {}
-        }
 
         $studentId = $request->input('student_id');
         $subjectId = $request->input('subject_id');

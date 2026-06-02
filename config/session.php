@@ -1,51 +1,48 @@
 <?php
 
 /**
- * SESSION CONFIGURATION
+ * SESSION CONFIGURATION — Cookie Driver
  *
- * Uses 'safe_database' driver — a custom driver that wraps Laravel's
- * database handler with NoGarbageSessionHandler which DISABLES gc().
+ * Uses the COOKIE driver — the DEFINITIVE fix for session expiration on XAMPP.
  *
- * This means PHP's garbage collection can NEVER delete sessions,
- * regardless of php.ini settings. Sessions only expire through
- * Laravel's own session.lifetime check.
+ * Session data is stored encrypted in the browser cookie. There is NO
+ * server-side state, so PHP's garbage collection CANNOT delete sessions.
+ * This makes it 100% immune to php.ini gc_maxlifetime/gc_probability
+ * settings that were causing sessions to expire in 5 minutes.
  */
 
 return [
 
-    // Custom driver that disables garbage collection
-    'driver' => 'safe_database',
+    'driver' => env('SESSION_DRIVER', 'cookie'),
 
-    'lifetime' => 480,
+    'lifetime' => env('SESSION_LIFETIME', 480),
 
-    'expire_on_close' => false,
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
-    'encrypt' => false,
+    'encrypt' => env('SESSION_ENCRYPT', true),
 
     'files' => storage_path('framework/sessions'),
 
-    'connection' => null,
+    'connection' => env('SESSION_CONNECTION'),
 
     'table' => 'sessions',
 
-    'store' => null,
+    'store' => env('SESSION_STORE'),
 
-    // 0% chance of Laravel's own GC running
     'lottery' => [0, 1000],
 
-    // Cookie name — MUST match AppServiceProvider
-    'cookie' => 'redemption_session',
+    'cookie' => env('SESSION_COOKIE', 'redemption_session'),
 
-    'path' => '/',
+    'path' => env('SESSION_PATH', '/'),
 
-    'domain' => null,
+    'domain' => env('SESSION_DOMAIN'),
 
-    'secure' => false,
+    'secure' => env('SESSION_SECURE_COOKIE', false),
 
-    'http_only' => true,
+    'http_only' => env('SESSION_HTTP_ONLY', true),
 
-    'same_site' => 'lax',
+    'same_site' => env('SESSION_SAME_SITE', 'lax'),
 
-    'partitioned' => false,
+    'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
 ];

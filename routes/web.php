@@ -126,30 +126,12 @@ Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
-    // Session Keepalive — updates last_activity + refreshes CSRF token
-    // Also accepts POST so AJAX mark-saves can double as keepalive
+    // Session Keepalive — touches session + refreshes CSRF token
     Route::match(['get', 'post'], '/keepalive', function () {
         $request = request();
 
         // Touch the session to keep it alive
         $request->session()->put('_last_keepalive', time());
-
-        // Database driver: update last_activity directly
-        $driver = config('session.driver');
-        if ($driver === 'database' || $driver === 'safe_database') {
-            try {
-                $sessionId = $request->session()->getId();
-                if ($sessionId) {
-                    \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
-                        ->where('id', $sessionId)
-                        ->update(['last_activity' => time()]);
-                }
-            } catch (\Throwable $e) {}
-        } elseif ($driver === 'file' || $driver === 'safe_file') {
-            try {
-                $request->session()->save();
-            } catch (\Throwable $e) {}
-        }
 
         // Regenerate CSRF token to prevent 419 errors
         $request->session()->regenerateToken();
@@ -165,7 +147,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
           ->header('X-Session-Refreshed', '1');
     })->name('keepalive');
 
-    // Session Diagnostic — helps debug session expiration issues
+    // Session Diagnostic — helps verify session is working correctly
     Route::get('/session-diagnostic', function () {
         $request = request();
         $sessionId = $request->session()->getId();
@@ -179,50 +161,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
             'session_driver_config' => config('session.driver'),
             'session_lifetime_config' => config('session.lifetime'),
             'session_cookie_config' => config('session.cookie'),
+            'session_encrypt_config' => config('session.encrypt'),
             'session_lottery_config' => config('session.lottery'),
             'handler_class' => $handlerClass,
-            'handler_is_no_garbage' => $handler instanceof \App\Session\NoGarbageSessionHandler,
-            'underlying_handler_class' => ($handler instanceof \App\Session\NoGarbageSessionHandler)
-                ? get_class($handler->getHandler())
-                : 'N/A',
             'php_gc_maxlifetime' => ini_get('session.gc_maxlifetime'),
             'php_gc_probability' => ini_get('session.gc_probability'),
             'php_gc_divisor' => ini_get('session.gc_divisor'),
-            'php_session_save_handler' => ini_get('session.save_handler'),
-            'php_session_save_path' => ini_get('session.save_path'),
             'php_session_cookie_lifetime' => ini_get('session.cookie_lifetime'),
             'session_data_keys' => array_keys($request->session()->all()),
             'auth_user_id' => auth()->id(),
             'auth_user_role' => auth()->user()?->role,
         ];
-
-        // Check sessions table
-        try {
-            $sessionsTableExists = \Illuminate\Support\Facades\DB::selectOne("SHOW TABLES LIKE 'sessions'") ? true : false;
-            $diagnostics['sessions_table_exists'] = $sessionsTableExists;
-
-            if ($sessionsTableExists) {
-                $mySession = \Illuminate\Support\Facades\DB::table('sessions')->where('id', $sessionId)->first();
-                $diagnostics['my_session_in_db'] = $mySession ? [
-                    'id' => $mySession->id,
-                    'user_id' => $mySession->user_id,
-                    'last_activity' => $mySession->last_activity,
-                    'last_activity_ago_seconds' => time() - $mySession->last_activity,
-                    'ip_address' => $mySession->ip_address,
-                ] : 'NOT FOUND IN DATABASE';
-
-                $totalSessions = \Illuminate\Support\Facades\DB::table('sessions')->count();
-                $diagnostics['total_active_sessions'] = $totalSessions;
-
-                // Check for recently expired sessions
-                $recentlyExpired = \Illuminate\Support\Facades\DB::table('sessions')
-                    ->where('last_activity', '<', time() - 300) // older than 5 min
-                    ->count();
-                $diagnostics['sessions_older_than_5min'] = $recentlyExpired;
-            }
-        } catch (\Throwable $e) {
-            $diagnostics['sessions_table_error'] = $e->getMessage();
-        }
 
         return response()->json($diagnostics, 200, [], JSON_PRETTY_PRINT);
     })->name('session-diagnostic');
