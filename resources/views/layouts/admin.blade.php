@@ -1841,7 +1841,7 @@ function toggleMobileMenu() {
         overflow: visible !important;
     }
     .admin-content {
-        padding: 0 !important;
+        padding: 4mm !important;
         margin: 0 !important;
         overflow: visible !important;
         max-width: 100% !important;

@@ -600,28 +600,31 @@
         <div class="install-card android">
             <div class="install-card-icon"><i class="fab fa-android"></i></div>
             <h3>For Android</h3>
-            <p class="subtitle">Install from Chrome browser</p>
+            <p class="subtitle">Download & install the native app</p>
             <ul class="install-steps">
                 <li>
                     <span class="step-num">1</span>
-                    <span>Open <strong>schoolofredemption.net/login</strong> in Chrome browser</span>
+                    <span>Tap <strong>"Download APK"</strong> below to download the app</span>
                 </li>
                 <li>
                     <span class="step-num">2</span>
-                    <span>Tap the <i class="fas fa-ellipsis-v"></i> menu (3 dots) in the top right</span>
+                    <span>Open the downloaded <strong>.apk</strong> file from your notification bar or Downloads</span>
                 </li>
                 <li>
                     <span class="step-num">3</span>
-                    <span>Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong></span>
+                    <span>If prompted, allow <strong>"Install from unknown sources"</strong> in Settings</span>
                 </li>
                 <li>
                     <span class="step-num">4</span>
-                    <span>Tap <strong>"Install"</strong> to confirm</span>
+                    <span>Tap <strong>"Install"</strong> then <strong>"Open"</strong> to launch the app</span>
                 </li>
             </ul>
-            <button class="btn-install android-btn" id="androidInstallBtn" onclick="installPWA()">
-                <i class="fas fa-download"></i> Install Now
-            </button>
+            <a href="{{ asset('downloads/SchoolOfRedemption.apk') }}" class="btn-install android-btn" download>
+                <i class="fas fa-download"></i> Download APK (3 MB)
+            </a>
+            <div style="text-align:center;margin-top:12px;">
+                <small style="color:var(--gray);font-size:11px;">Alternative: Open schoolofredemption.net/login in Chrome &rarr; Menu &rarr; "Install app"</small>
+            </div>
         </div>
 
         {{-- iPHONE / iOS --}}
@@ -650,6 +653,9 @@
             <a href="{{ url('/login') }}" class="btn-install ios-btn">
                 <i class="fas fa-external-link-alt"></i> Open in Safari
             </a>
+            <div style="text-align:center;margin-top:12px;">
+                <small style="color:var(--gray);font-size:11px;">iOS native app coming soon to the App Store</small>
+            </div>
         </div>
     </div>
 </section>
