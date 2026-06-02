@@ -1,0 +1,22 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Route all requests to the public directory
+    # This allows Laravel to work when the document root points to the project root
+    # instead of the public/ directory (common on shared hosting)
+
+    # If the request is for an existing file/directory in public/, serve it
+    RewriteCond %{REQUEST_URI} ^/(css|js|build|icons|downloads|images|favicon\.ico|robots\.txt|sw\.js|manifest\.json) [OR]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Route everything else through public/index.php
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Protect sensitive directories from direct access
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Block direct access to .env, storage, app, etc.
+    RewriteRule ^(?!public/)(\.env|storage|app|bootstrap|config|database|resources|routes|tests|vendor|artisan|composer\.(json|lock)|package\.json|phpunit\.xml|vite\.config\.js) - [F,L]
+</IfModule>
