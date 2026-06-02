@@ -608,20 +608,33 @@
                 </li>
                 <li>
                     <span class="step-num">2</span>
-                    <span>Open the downloaded <strong>.apk</strong> file from your notification bar or Downloads</span>
+                    <span>Open the downloaded <strong>.apk</strong> file from your notification bar or Downloads folder</span>
                 </li>
                 <li>
                     <span class="step-num">3</span>
-                    <span>If prompted, allow <strong>"Install from unknown sources"</strong> in Settings</span>
+                    <span>If you see <strong>"Install blocked"</strong>, go to Settings &rarr; allow from this source</span>
                 </li>
                 <li>
                     <span class="step-num">4</span>
+                    <span>If Google Play Protect warns you, tap <strong>"Install anyway"</strong> (this app is safe)</span>
+                </li>
+                <li>
+                    <span class="step-num">5</span>
                     <span>Tap <strong>"Install"</strong> then <strong>"Open"</strong> to launch the app</span>
                 </li>
             </ul>
             <a href="{{ route('app.download.apk') }}" class="btn-install android-btn">
                 <i class="fas fa-download"></i> Download APK (3 MB)
             </a>
+            <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 14px;margin-top:14px;">
+                <small style="color:#fbbf24;font-size:12px;font-weight:600;display:block;margin-bottom:4px;"><i class="fas fa-exclamation-triangle"></i> Troubleshooting</small>
+                <small style="color:#d1d5db;font-size:11px;line-height:1.5;display:block;">
+                    If you get <strong>"App not installed"</strong>:<br>
+                    1. Uninstall any previous version of the app first<br>
+                    2. Go to Settings &rarr; Security &rarr; disable "Scan apps with Play Protect" temporarily<br>
+                    3. Try installing again, then re-enable Play Protect
+                </small>
+            </div>
             <div style="text-align:center;margin-top:12px;">
                 <small style="color:var(--gray);font-size:11px;">Alternative: Open schoolofredemption.net/login in Chrome &rarr; Menu &rarr; "Install app"</small>
             </div>
