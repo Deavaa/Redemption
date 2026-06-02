@@ -10,6 +10,7 @@ use App\Models\Subject;
 use App\Models\TeacherAssignment;
 use App\Models\Student;
 use App\Models\MarkEntry;
+use App\Models\MarkEntryConfig;
 use App\Models\MarkEntryLock;
 use App\Models\MarkEntryPermission;
 use App\Models\Teacher;
@@ -472,8 +473,28 @@ class MarkEntryController extends Controller
         $existingMarks = MarkEntry::where('academic_year_id',$ayId)->where('term_id',$termId)
             ->where('class_id',$classId)->where('section_id',$sectionId)->where('subject_id',$subjectId)->get()->keyBy('student_id');
         $markFields = MarkEntry::getMarkFields();
-        $caFields = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10','conduct','handwriting','creativity'];
-        $examFields = ['test1','test2','mid_term','final_exam'];
+        // Build CA and exam field lists from config
+        $caFields = [];
+        $examFields = [];
+        foreach ($markFields as $field) {
+            $cat = $field['category'] ?? 'ca';
+            if ($cat === 'ca' || $cat === 'extra_ca') {
+                $caFields[] = $field['col'];
+            } elseif ($cat === 'exam') {
+                $examFields[] = $field['col'];
+            }
+        }
+        $caWeight = MarkEntryConfig::getCaWeight();
+        $examWeight = MarkEntryConfig::getExamWeight();
+        $precision = MarkEntryConfig::getRoundingPrecision();
+        // Calculate CA raw total from field max values
+        $caRawTotal = 0;
+        foreach ($markFields as $field) {
+            $cat = $field['category'] ?? 'ca';
+            if ($cat === 'ca' || $cat === 'extra_ca') {
+                $caRawTotal += $field['max'];
+            }
+        }
         $rows = [];
         foreach ($students as $s) {
             $mark = $existingMarks->get($s->student_id);
@@ -485,9 +506,9 @@ class MarkEntryController extends Controller
                 foreach ($caFields as $f) { $caRaw += floatval($mark->$f ?? 0); }
                 $examRaw = 0;
                 foreach ($examFields as $f) { $examRaw += floatval($mark->$f ?? 0); }
-                $row['ca_total'] = round(($caRaw / 70) * 30, 2);
-                $row['exam_total'] = min($examRaw, 70);
-                $row['grand_total'] = round($row['ca_total'] + $row['exam_total'], 2);
+                $row['ca_total'] = $caRawTotal > 0 ? round(($caRaw / $caRawTotal) * $caWeight, $precision) : 0;
+                $row['exam_total'] = min($examRaw, $examWeight);
+                $row['grand_total'] = round($row['ca_total'] + $row['exam_total'], $precision);
             } else {
                 $row['ca_total'] = 0;
                 $row['exam_total'] = 0;
@@ -599,9 +620,8 @@ class MarkEntryController extends Controller
             }
         }
 
-        // Collect only the mark fields that were actually sent
-        $markFieldNames = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10',
-            'conduct','handwriting','creativity','test1','test2','mid_term','final_exam'];
+        // Collect only the mark fields that were actually sent (from config)
+        $markFieldNames = array_map(function($f) { return $f['col']; }, MarkEntry::getMarkFields());
         $data = [];
         $data['student_id'] = $studentId;
         $data['subject_id'] = $subjectId;

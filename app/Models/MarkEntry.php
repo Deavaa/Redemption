@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 class MarkEntry extends Model
 {
     use HasFactory;
@@ -14,36 +15,90 @@ class MarkEntry extends Model
         'test1','test2','mid_term','final_exam',
         'ca_total','exam_total','grand_total',
     ];
-    public static function getMarkFields() {
-        return [
-            ['col'=>'ca1','max'=>5],['col'=>'ca2','max'=>5],['col'=>'ca3','max'=>5],['col'=>'ca4','max'=>5],['col'=>'ca5','max'=>5],
-            ['col'=>'ca6','max'=>5],['col'=>'ca7','max'=>5],['col'=>'ca8','max'=>5],['col'=>'ca9','max'=>5],['col'=>'ca10','max'=>5],
-            ['col'=>'conduct','max'=>5],['col'=>'handwriting','max'=>5],['col'=>'creativity','max'=>10],
-            ['col'=>'test1','max'=>10],['col'=>'test2','max'=>10],['col'=>'mid_term','max'=>20],['col'=>'final_exam','max'=>30],
-        ];
+
+    /**
+     * Get mark fields from config (with hardcoded fallback)
+     */
+    public static function getMarkFields(): array
+    {
+        return \App\Models\MarkEntryConfig::getMarkFields();
     }
-    public static function calcTotals(array $data): array {
-        $caFields = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10','conduct','handwriting','creativity'];
-        $examFields = ['test1','test2','mid_term','final_exam'];
+
+    /**
+     * Calculate totals using DB-driven configuration
+     */
+    public static function calcTotals(array $data): array
+    {
+        $markFields = static::getMarkFields();
+        $caWeight = MarkEntryConfig::getCaWeight();
+        $examWeight = MarkEntryConfig::getExamWeight();
+        $precision = MarkEntryConfig::getRoundingPrecision();
+        $gradeScale = MarkEntryConfig::getGradeScale();
+
+        // Calculate CA raw total from all CA and Extra CA fields
+        $caRawTotal = 0;
+        $caFields = [];
+        $examFields = [];
+
+        foreach ($markFields as $field) {
+            $cat = $field['category'] ?? 'ca';
+            $col = $field['col'];
+            if ($cat === 'ca' || $cat === 'extra_ca') {
+                $caFields[] = $col;
+                $caRawTotal += $field['max'];
+            } elseif ($cat === 'exam') {
+                $examFields[] = $col;
+            }
+        }
+
+        // Sum raw marks
         $caRaw = 0;
         foreach ($caFields as $f) $caRaw += floatval($data[$f] ?? 0);
         $examRaw = 0;
         foreach ($examFields as $f) $examRaw += floatval($data[$f] ?? 0);
-        $caTotal = round(($caRaw / 70) * 30, 2);
-        $examTotal = min($examRaw, 70);
+
+        // Scale CA to its weight percentage
+        $caTotal = $caRawTotal > 0
+            ? round(($caRaw / $caRawTotal) * $caWeight, $precision)
+            : 0;
+
+        // Cap exam at exam weight
+        $examTotal = min($examRaw, $examWeight);
+
         $data['ca_total'] = $caTotal;
         $data['exam_total'] = $examTotal;
-        $data['grand_total'] = round($caTotal + $examTotal, 2);
-        // Calculate grade
+        $data['grand_total'] = round($caTotal + $examTotal, $precision);
+
+        // Calculate grade using DB-driven grade scale
         $gt = $data['grand_total'];
-        if ($gt <= 0 || $gt === '') $data['grade'] = 'I';
-        elseif ($gt >= 80) $data['grade'] = 'A';
-        elseif ($gt >= 60) $data['grade'] = 'B';
-        elseif ($gt >= 50) $data['grade'] = 'C';
-        elseif ($gt >= 40) $data['grade'] = 'D';
-        else $data['grade'] = 'F';
+        $data['grade'] = static::calcGrade($gt, $gradeScale);
+
         return $data;
     }
+
+    /**
+     * Calculate grade from score using DB-driven grade scale
+     */
+    public static function calcGrade(float $score, ?array $gradeScale = null): string
+    {
+        $gradeScale = $gradeScale ?? MarkEntryConfig::getGradeScale();
+
+        // Handle 0 / empty as Incomplete
+        if ($score <= 0) return 'I';
+
+        // Sort descending by min score
+        usort($gradeScale, fn($a, $b) => $b['min'] <=> $a['min']);
+
+        foreach ($gradeScale as $gs) {
+            $min = floatval($gs['min'] ?? 0);
+            if ($score >= $min) {
+                return $gs['grade'] ?? 'F';
+            }
+        }
+
+        return 'F';
+    }
+
     public function student() { return $this->belongsTo(Student::class); }
     public function subject() { return $this->belongsTo(Subject::class); }
     public function exam() { return $this->belongsTo(Exam::class); }

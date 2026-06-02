@@ -594,23 +594,11 @@
     // Read CSRF dynamically from meta tag (global keepalive keeps it fresh)
     function getCSRF() { return document.querySelector('meta[name="csrf-token"]').content; }
 
-    // ========== MARK FIELDS DEFINITION ==========
-    var CA_FIELDS = [
-        { key: 'ca1', max: 5, label: 'CA1' }, { key: 'ca2', max: 5, label: 'CA2' },
-        { key: 'ca3', max: 5, label: 'CA3' }, { key: 'ca4', max: 5, label: 'CA4' },
-        { key: 'ca5', max: 5, label: 'CA5' }, { key: 'ca6', max: 5, label: 'CA6' },
-        { key: 'ca7', max: 5, label: 'CA7' }, { key: 'ca8', max: 5, label: 'CA8' },
-        { key: 'ca9', max: 5, label: 'CA9' }, { key: 'ca10', max: 5, label: 'CA10' }
-    ];
-    var EXTRA_CA_FIELDS = [
-        { key: 'conduct', max: 5, label: 'Conduct' },
-        { key: 'handwriting', max: 5, label: 'Handwriting' },
-        { key: 'creativity', max: 10, label: 'Creativity' }
-    ];
-    var EXAM_FIELDS = [
-        { key: 'test1', max: 10, label: 'Test 1' }, { key: 'test2', max: 10, label: 'Test 2' },
-        { key: 'mid_term', max: 20, label: 'Mid-Term' }, { key: 'final_exam', max: 30, label: 'Final Exam' }
-    ];
+    // ========== MARK FIELDS DEFINITION (from DB config) ==========
+    var MARK_CONFIG = @json(\App\Models\MarkEntryConfig::getFrontendConfig());
+    var CA_FIELDS = MARK_CONFIG.mark_fields.filter(function(f) { return f.category === 'ca'; }).map(function(f) { return { key: f.col, max: f.max, label: f.label }; });
+    var EXTRA_CA_FIELDS = MARK_CONFIG.mark_fields.filter(function(f) { return f.category === 'extra_ca'; }).map(function(f) { return { key: f.col, max: f.max, label: f.label }; });
+    var EXAM_FIELDS = MARK_CONFIG.mark_fields.filter(function(f) { return f.category === 'exam'; }).map(function(f) { return { key: f.col, max: f.max, label: f.label }; });
     var ALL_MARK_FIELDS = CA_FIELDS.concat(EXTRA_CA_FIELDS).concat(EXAM_FIELDS);
     var CA_KEYS = CA_FIELDS.map(function(f) { return f.key; });
     var EXTRA_CA_KEYS = EXTRA_CA_FIELDS.map(function(f) { return f.key; });
@@ -1671,8 +1659,8 @@
         var examRaw = 0;
         EXAM_KEYS.forEach(function(k) { examRaw += parseFloat(s.marks[k]) || 0; });
 
-        var caScaled = Math.round((caRaw / 70) * 30 * 100) / 100;
-        var examTotal = Math.min(examRaw, 70);
+        var caScaled = MARK_CONFIG.ca_raw_total > 0 ? Math.round((caRaw / MARK_CONFIG.ca_raw_total) * MARK_CONFIG.ca_weight * 100) / 100 : 0;
+        var examTotal = Math.min(examRaw, MARK_CONFIG.exam_weight);
         var grandTotal = Math.round((caScaled + examTotal) * 100) / 100;
 
         s.marks.ca_total = caScaled;
@@ -1698,10 +1686,11 @@
 
     function calcGrade(total) {
         if (total <= 0) return 'I';
-        if (total >= 80) return 'A';
-        if (total >= 60) return 'B';
-        if (total >= 50) return 'C';
-        if (total >= 40) return 'D';
+        // Use grade scale from MARK_CONFIG (sorted descending by min)
+        var scale = MARK_CONFIG.grade_scale;
+        for (var i = 0; i < scale.length; i++) {
+            if (total >= scale[i].min) return scale[i].grade;
+        }
         return 'F';
     }
 

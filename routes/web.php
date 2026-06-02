@@ -95,6 +95,7 @@ use App\Http\Controllers\Admin\TeacherReviewController as AdminTeacherReviewCont
 use App\Http\Controllers\Enrollment\EnrollmentController;
 use App\Http\Controllers\TeacherEfficiency\TeacherEfficiencyAssessmentController;
 use App\Http\Controllers\TeacherEvaluation\TeacherEvaluationController;
+use App\Http\Controllers\Admin\MarkEntryConfigController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -246,6 +247,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('mark-entry-locks', [MarkEntryLockController::class, 'index'])->name('mark-entry-locks.index')->middleware('permission:mark_entries.view');
     Route::post('mark-entry-locks/lock', [MarkEntryLockController::class, 'lock'])->name('mark-entry-locks.lock')->middleware('permission:mark_entries.manage');
     Route::post('mark-entry-locks/unlock', [MarkEntryLockController::class, 'unlock'])->name('mark-entry-locks.unlock')->middleware('permission:mark_entries.manage');
+
+    // Mark Entry Configuration (Admin only)
+    Route::get('mark-entry-configs', [MarkEntryConfigController::class, 'index'])->name('mark-entry-configs.index')->middleware('permission:mark_entries.manage');
+    Route::put('mark-entry-configs', [MarkEntryConfigController::class, 'update'])->name('mark-entry-configs.update')->middleware('permission:mark_entries.manage');
+    Route::post('mark-entry-configs/reset', [MarkEntryConfigController::class, 'reset'])->name('mark-entry-configs.reset')->middleware('permission:mark_entries.manage');
+    Route::get('mark-entry-configs/api', [MarkEntryConfigController::class, 'apiGetConfig'])->name('mark-entry-configs.api');
 
     // Mark Entry Permission Management (Branch Principal / Admin)
     Route::get('mark-entry-permissions', [MarkEntryPermissionController::class, 'index'])->name('mark-entry-permissions.index')->middleware('permission:mark_entries.view');
