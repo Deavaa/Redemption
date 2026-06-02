@@ -7,6 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', __('app.school_name'))</title>
 
+    {{-- PWA & Mobile Integration --}}
+    <link rel="manifest" href="{{ route('app.manifest') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Redemption">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+
     {{-- Google Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -505,6 +514,9 @@
                 <a href="{{ url('login') }}" class="btn-login">
                     <i class="fas fa-sign-in-alt"></i>{{ __('app.login') }}
                 </a>
+                <a href="{{ route('app.download') }}" class="btn-login" style="background:var(--indigo-500);box-shadow:0 1px 6px rgba(99,102,241,.35);">
+                    <i class="fas fa-mobile-alt"></i>Get App
+                </a>
             </div>
 
             {{-- Mobile Controls --}}
@@ -530,6 +542,9 @@
             <a href="{{ url('team') }}"><i class="fas fa-users"></i>{{ __('app.team') }}</a>
             <a href="{{ url('login') }}" class="mobile-login-btn">
                 <i class="fas fa-sign-in-alt"></i>{{ __('app.login') }}
+            </a>
+            <a href="{{ route('app.download') }}" class="mobile-login-btn" style="margin-top:8px;background:var(--indigo-500);box-shadow:0 1px 6px rgba(99,102,241,.3);">
+                <i class="fas fa-mobile-alt"></i>Get the App
             </a>
         </div>
     </nav>

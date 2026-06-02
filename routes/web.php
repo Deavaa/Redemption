@@ -97,6 +97,7 @@ use App\Http\Controllers\TeacherEfficiency\TeacherEfficiencyAssessmentController
 use App\Http\Controllers\TeacherEvaluation\TeacherEvaluationController;
 use App\Http\Controllers\Admin\MarkEntryConfigController;
 use App\Http\Controllers\Admin\MarkEntryDisallowalController;
+use App\Http\Controllers\AppController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -104,6 +105,12 @@ Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::get('/team', [HomeController::class, 'team'])->name('team');
+
+// PWA Dynamic Manifest (replaces static manifest.json for environment-aware paths)
+Route::get('/manifest.webmanifest', [AppController::class, 'manifest'])->name('app.manifest');
+
+// App Download / Install Page
+Route::get('/app', [AppController::class, 'download'])->name('app.download');
 
 // Public Contact Form
 Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');

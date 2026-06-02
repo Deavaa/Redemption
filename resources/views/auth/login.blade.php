@@ -6,6 +6,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('app.login') }} - {{ __('app.school_name') }}</title>
+
+    {{-- PWA & Mobile Integration --}}
+    <link rel="manifest" href="{{ route('app.manifest') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Redemption">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#6366f1">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192x192.png') }}">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.min.css">
     <style>
         * {
@@ -299,7 +311,21 @@
             <a href="{{ route('password.forgot') }}" class="forgot-link"><i class="bi bi-key"></i> Forgot
                 Password?</a>
         @endif
+        <a href="{{ route('app.download') }}" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;padding:10px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;text-decoration:none;font-size:13px;font-weight:600;transition:opacity .2s;">
+            <i class="bi bi-phone"></i> Download Mobile App
+        </a>
     </div>
+
+    {{-- PWA Service Worker Registration --}}
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('{{ asset('sw.js') }}', { scope: '/' })
+                .then(function(reg) { console.log('[PWA] SW registered:', reg.scope); })
+                .catch(function(err) { console.log('[PWA] SW registration failed:', err); });
+        });
+    }
+    </script>
 </body>
 
 </html>

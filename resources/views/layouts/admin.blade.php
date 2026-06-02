@@ -222,7 +222,7 @@
     <title>@yield('title', __('app.dashboard')) - Redemption School</title>
 
     {{-- PWA & Mobile Integration --}}
-    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="manifest" href="{{ route('app.manifest') }}">
     <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -743,6 +743,11 @@
             </ul>
         </div>
         <div class="sidebar-footer">
+            <a href="{{ route('app.download') }}" class="d-flex align-items-center gap-2 px-2 py-2 mb-2 rounded-3 text-decoration-none" style="background:rgba(99,102,241,0.1);color:#a5b4fc;font-size:12px;font-weight:600;transition:all .2s;" onmouseover="this.style.background='rgba(99,102,241,0.2)'" onmouseout="this.style.background='rgba(99,102,241,0.1)'">
+                <i class="fas fa-mobile-alt" style="font-size:14px;"></i>
+                <span>Download Mobile App</span>
+                <i class="fas fa-external-link-alt ms-auto" style="font-size:9px;opacity:0.5;"></i>
+            </a>
             <div class="sidebar-footer-user">
                 <div class="sidebar-footer-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
                 <div class="sidebar-footer-info">
@@ -1851,6 +1856,9 @@ function toggleMobileMenu() {
 </style>
 @stack('scripts')
 @yield('scripts')
+
+{{-- PWA Install Prompt --}}
+<script src="{{ asset('js/pwa-install.js') }}"></script>
 
 {{-- PWA Service Worker Registration & Notification Permission --}}
 <script>

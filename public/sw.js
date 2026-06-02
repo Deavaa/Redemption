@@ -1,17 +1,20 @@
-// Redemption School Management System - Service Worker
+// Redemption School Management System - Service Worker v2
 // Provides offline capability, caching, and push notification support
 
-const CACHE_NAME = 'redemption-v1';
+const CACHE_NAME = 'redemption-v2';
 const STATIC_ASSETS = [
-    '/school-of-redemption/public/',
-    '/school-of-redemption/public/manifest.json',
+    './',
+    './login',
+    './manifest.json',
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS);
+            return cache.addAll(STATIC_ASSETS).catch(err => {
+                console.warn('[SW] Failed to cache some static assets:', err);
+            });
         })
     );
     self.skipWaiting();
@@ -36,18 +39,85 @@ self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (event.request.method !== 'GET') return;
 
-    // Skip cross-origin requests
-    if (!event.request.url.startsWith(self.location.origin)) return;
-
-    // For API calls, always use network
-    if (event.request.url.includes('/api/') || event.request.url.includes('/admin/attendance-api/') || event.request.url.includes('/admin/transcript/api/')) {
+    // Skip cross-origin requests (except CDN resources we want to cache)
+    if (!event.request.url.startsWith(self.location.origin)) {
+        // Allow caching of CDN resources (Bootstrap, Font Awesome, etc.)
+        if (event.request.url.includes('cdn.jsdelivr.net') || 
+            event.request.url.includes('cdnjs.cloudflare.com') ||
+            event.request.url.includes('fonts.googleapis.com') ||
+            event.request.url.includes('fonts.gstatic.com')) {
+            event.respondWith(
+                caches.match(event.request).then((cachedResponse) => {
+                    if (cachedResponse) return cachedResponse;
+                    return fetch(event.request).then((response) => {
+                        if (response.status === 200) {
+                            const responseClone = response.clone();
+                            caches.open(CACHE_NAME).then((cache) => {
+                                cache.put(event.request, responseClone);
+                            });
+                        }
+                        return response;
+                    }).catch(() => cachedResponse);
+                })
+            );
+        }
         return;
     }
 
+    // For API calls, always use network
+    if (event.request.url.includes('/api/') || 
+        event.request.url.includes('/admin/attendance-api/') || 
+        event.request.url.includes('/admin/transcript/api/') ||
+        event.request.url.includes('/admin/keepalive') ||
+        event.request.url.includes('/admin/session-diagnostic')) {
+        return;
+    }
+
+    // For navigation requests (HTML pages), network first
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request)
+                .then((response) => {
+                    if (response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    return caches.match(event.request).then((cachedResponse) => {
+                        return cachedResponse || caches.match('./login');
+                    });
+                })
+        );
+        return;
+    }
+
+    // For static assets (CSS, JS, images), cache first, then network
+    if (event.request.url.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) return cachedResponse;
+                return fetch(event.request).then((response) => {
+                    if (response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
+                    return response;
+                });
+            })
+        );
+        return;
+    }
+
+    // Default: network first, fallback to cache
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                // Clone the response and cache it
                 if (response.status === 200) {
                     const responseClone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
@@ -57,7 +127,6 @@ self.addEventListener('fetch', (event) => {
                 return response;
             })
             .catch(() => {
-                // Network failed, try cache
                 return caches.match(event.request).then((cachedResponse) => {
                     return cachedResponse || new Response('Offline', {
                         status: 503,
@@ -73,10 +142,10 @@ self.addEventListener('push', (event) => {
     let data = {
         title: 'Redemption School',
         body: 'You have a new notification',
-        icon: '/school-of-redemption/public/icons/icon-192x192.png',
-        badge: '/school-of-redemption/public/icons/icon-72x72.png',
+        icon: './icons/icon-192x192.png',
+        badge: './icons/icon-72x72.png',
         data: {
-            url: '/school-of-redemption/public/admin'
+            url: './admin'
         }
     };
 
@@ -113,17 +182,15 @@ self.addEventListener('notificationclick', (event) => {
 
     if (event.action === 'dismiss') return;
 
-    const urlToOpen = event.notification.data?.url || '/school-of-redemption/public/admin';
+    const urlToOpen = event.notification.data?.url || './admin';
 
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // If there's already a window open, focus it
             for (const client of clientList) {
                 if (client.url.includes('/admin') && 'focus' in client) {
                     return client.focus();
                 }
             }
-            // Otherwise open new window
             return self.clients.openWindow(urlToOpen);
         })
     );
@@ -141,10 +208,8 @@ self.addEventListener('sync', (event) => {
 
 async function syncAttendanceData() {
     // Get pending attendance from IndexedDB and submit
-    // This will be implemented when offline support is needed
 }
 
 async function syncMarkEntryData() {
     // Get pending mark entries from IndexedDB and submit
-    // This will be implemented when offline support is needed
 }

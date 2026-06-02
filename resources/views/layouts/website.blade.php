@@ -13,6 +13,15 @@
     <meta name="description" content="{{ $settings['school_name'] ?? 'School' }} - {{ $settings['school_tagline'] ?? '' }}">
     <title>@yield('title', ($settings['school_name'] ?? 'School') . ' - ' . ($settings['school_tagline'] ?? ''))</title>
 
+    {{-- PWA & Mobile Integration --}}
+    <link rel="manifest" href="{{ route('app.manifest') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Redemption">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -752,6 +761,11 @@
                         <a class="nav-link @if(request()->routeIs('contact')) active @endif" href="{{ route('contact') }}">Contact</a>
                     </li>
                     <li class="nav-item ms-3">
+                        <a class="btn btn-nav-portal" href="{{ route('app.download') }}">
+                            <i class="fas fa-mobile-alt me-2"></i>Get App
+                        </a>
+                    </li>
+                    <li class="nav-item ms-2">
                         <a class="btn btn-nav-portal" href="{{ route('login') }}">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </a>
@@ -782,6 +796,9 @@
         </ul>
         <a href="{{ route('login') }}" class="mobile-login-btn">
             <i class="fas fa-sign-in-alt me-2"></i>Login
+        </a>
+        <a href="{{ route('app.download') }}" class="mobile-login-btn" style="margin-top:8px;background:#6366f1;">
+            <i class="fas fa-mobile-alt me-2"></i>Get the App
         </a>
     </div>
 
