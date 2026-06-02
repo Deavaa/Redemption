@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # ── APK Download Support ──
+    # Allow direct download of APK files
+    <IfModule mod_mime.c>
+        AddType application/vnd.android.package-archive .apk
+    </IfModule>
+
     # ── PHP Session Configuration ──
     # These directives only work with mod_php (Apache module).
     # For PHP-CGI/FPM, the .user.ini file in this directory handles overrides.
