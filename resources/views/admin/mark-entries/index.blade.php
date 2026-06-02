@@ -636,8 +636,11 @@
         console.error('[MarkEntry] Session expired detected from:', source);
         backupMarksToLocalStorage();
         alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
-        // Redirect with return URL so the user comes back to mark entry after re-login
-        var returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        // Use FULL URL (href) instead of pathname to avoid double-path 404 bug on XAMPP.
+        // On XAMPP with subdirectory app, pathname includes the base path (e.g. /Redemption/public/admin/mark-entries),
+        // which redirect()->intended() prepends again, creating /Redemption/public/Redemption/public/... → 404.
+        // Using the full URL makes Laravel recognize it as valid and use it as-is.
+        var returnUrl = encodeURIComponent(window.location.href);
         window.location.href = '{{ route("login") }}?redirect=' + returnUrl;
     }
 
@@ -717,13 +720,12 @@
     }
 
     // ========== SESSION KEEPALIVE (ACTIVITY-DRIVEN) ==========
-    // The keepalive pings the server to keep the session alive during long mark entry sessions.
-    // It runs on TWO triggers:
-    //   1. Timer: every 60 seconds (prevents idle expiry even if user types slowly)
-    //   2. Activity: fires an IMMEDIATE keepalive when user types/clicks after 30s of idle
-    // The CSRF token is refreshed on every ping AND on every successful auto-save.
-    var KEEPALIVE_INTERVAL_MS = 60 * 1000; // 1 minute (aggressive — session must stay alive)
-    var keepaliveTimer = null;
+    // NOTE: The admin layout (admin.blade.php) already runs a global keepalive every 45 seconds.
+    // We only add an ACTIVITY-DRIVEN keepalive here for mark entry — when the user types or
+    // clicks after 30s of idle, we fire an immediate keepalive to ensure the session stays
+    // alive during active mark entry. We do NOT run a separate periodic keepalive timer
+    // to avoid conflicts with the admin layout's keepalive (which was causing CSRF token
+    // race conditions when both systems regenerated tokens simultaneously).
     var lastKeepaliveTime = Date.now();
 
     function fireKeepalive() {
@@ -731,28 +733,18 @@
         refreshCSRFToken()
             .then(function() {
                 lastKeepaliveTime = Date.now();
-                console.log('[MarkEntry] Keepalive OK');
+                console.log('[MarkEntry] Activity keepalive OK');
             })
             .catch(function(err) {
                 if (err.message && err.message.indexOf('Session expired') !== -1) return; // Already handled
-                console.warn('[MarkEntry] Keepalive ping failed (will retry):', err.message);
+                console.warn('[MarkEntry] Activity keepalive failed (will retry):', err.message);
             });
     }
 
-    function scheduleKeepalive() {
-        if (keepaliveTimer) clearTimeout(keepaliveTimer);
-        keepaliveTimer = setTimeout(function() {
-            fireKeepalive();
-            // Always reschedule regardless of success/failure
-            scheduleKeepalive();
-        }, KEEPALIVE_INTERVAL_MS);
-    }
-
     function startKeepalive() {
-        // Fire an immediate keepalive to confirm session is alive
-        fireKeepalive();
-        scheduleKeepalive();
-        console.log('[MarkEntry] Session keepalive started (every 60 seconds, activity-driven)');
+        // NO periodic timer — the admin layout's global keepalive handles that.
+        // Only listen for user activity to fire immediate keepalive when needed.
+        console.log('[MarkEntry] Activity-driven keepalive started (no periodic timer — using admin layout global keepalive)');
 
         // Listen for user activity — any typing or clicking fires an immediate keepalive
         // if it's been more than 30 seconds since the last server contact.
@@ -772,8 +764,6 @@
             // refreshed on the server, not just scheduled for later.
             console.log('[MarkEntry] Activity detected after ' + Math.round(elapsed/1000) + 's — firing immediate keepalive');
             fireKeepalive();
-            // Also reschedule the periodic timer from now
-            scheduleKeepalive();
         }
     }
 
@@ -1605,10 +1595,11 @@
                 // Show editing status immediately when user types
                 setGlobalSaveStatus('editing', 'Editing...');
 
-                // Debounced auto-save
+                // Debounced auto-save (500ms — fast enough for responsive feedback,
+                // slow enough to batch rapid typing into a single save)
                 var timerKey = studentId + '_' + markKey;
                 if (saveTimers[timerKey]) clearTimeout(saveTimers[timerKey]);
-                saveTimers[timerKey] = setTimeout(function() { saveMark(studentId, markKey, value); }, 900);
+                saveTimers[timerKey] = setTimeout(function() { saveMark(studentId, markKey, value); }, 500);
             });
 
             // BLUR: Enforce max, immediate save
@@ -2001,25 +1992,25 @@
                     setTimeout(function() { inp.classList.remove('input-saved'); }, 1200);
                 }
 
-                // Update totals from server response
+                // Update totals: RECALCULATE from client data instead of blindly using server response.
+                // This prevents a race condition: if the user edits CA1 then CA2 quickly, the CA1 save
+                // response returns totals that DON'T include CA2 yet. If we blindly set those totals,
+                // the displayed total would be WRONG (missing the unsaved CA2 value).
+                // By recalculating from client data, we always show the correct total based on what's
+                // currently on screen. The server's values will match once all fields are saved.
                 var idx = students.findIndex(function(s) { return s.id == studentId; });
-                if (idx !== -1 && res.entry) {
-                    if (res.ca_total !== undefined) students[idx].marks.ca_total = res.ca_total;
-                    if (res.exam_total !== undefined) students[idx].marks.exam_total = res.exam_total;
-                    if (res.grand_total !== undefined) students[idx].marks.grand_total = res.grand_total;
-                    if (res.grade !== undefined) students[idx].marks.grade = res.grade;
-
-                    var caEl = document.getElementById('cardCaTotal_' + studentId);
-                    var exEl = document.getElementById('cardExamTotal_' + studentId);
-                    var gtEl = document.getElementById('cardGrandTotal_' + studentId);
-                    var grEl = document.getElementById('cardGrade_' + studentId);
-                    if (caEl) caEl.textContent = res.ca_total !== undefined ? parseFloat(res.ca_total).toFixed(1) : '-';
-                    if (exEl) exEl.textContent = res.exam_total !== undefined ? parseFloat(res.exam_total).toFixed(1) : '-';
-                    if (gtEl) gtEl.textContent = res.grand_total !== undefined ? parseFloat(res.grand_total).toFixed(1) : '-';
-                    if (grEl && res.grade) {
-                        grEl.textContent = res.grade;
-                        grEl.className = 'me-grade-badge ' + getGradeClass(res.grade);
+                if (idx !== -1) {
+                    // Sync the saved field value from server response (in case of rounding)
+                    if (res.entry && res.entry[markKey] !== undefined) {
+                        students[idx].marks[markKey] = res.entry[markKey];
+                        // Update the input field if the server rounded the value
+                        var savedInp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
+                        if (savedInp && document.activeElement !== savedInp) {
+                            savedInp.value = res.entry[markKey] !== null ? res.entry[markKey] : '';
+                        }
                     }
+                    // Recalculate totals from ALL current client-side values
+                    recalcStudent(idx);
                 }
 
                 // Save succeeded — clear localStorage backup after a short delay

@@ -18,7 +18,21 @@ class AuthController extends Controller
         // If there's a redirect parameter, store it in the session so
         // redirect()->intended() can use it after login.
         if ($request->has('redirect')) {
-            session(['url.intended' => $request->redirect]);
+            $redirectUrl = $request->redirect;
+
+            // Validate: only allow redirects to our own domain to prevent open redirect attacks
+            // Accept both full URLs (https://localhost/...) and relative paths (/admin/...)
+            if (filter_var($redirectUrl, FILTER_VALIDATE_URL)) {
+                // Full URL — verify it belongs to our app domain
+                $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+                $redirectHost = parse_url($redirectUrl, PHP_URL_HOST);
+                if ($redirectHost && $redirectHost === $appHost) {
+                    session(['url.intended' => $redirectUrl]);
+                }
+            } else {
+                // Relative path — store as-is (Laravel will resolve it against APP_URL)
+                session(['url.intended' => $redirectUrl]);
+            }
         }
 
         // Regenerate the CSRF token for a fresh login page.

@@ -182,8 +182,13 @@
 
             alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
 
-            // Add a return URL so the user gets back to where they were
-            var returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            // Use the FULL URL (href) instead of just pathname for the redirect parameter.
+            // On XAMPP with APP_URL=https://localhost/Redemption/public, using pathname
+            // (e.g. /Redemption/public/admin/mark-entries) causes a double-path 404 bug
+            // because redirect()->intended() prepends the APP_URL base path again.
+            // Using the full URL (https://localhost/Redemption/public/admin/mark-entries)
+            // makes Laravel recognize it as a valid URL and use it as-is.
+            var returnUrl = encodeURIComponent(window.location.href);
             window.location.href = loginUrl + '?redirect=' + returnUrl;
         }
 

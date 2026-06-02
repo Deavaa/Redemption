@@ -162,15 +162,22 @@ Route::get('/session-test', function () {
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
-    // Session Keepalive — touches session + refreshes CSRF token
+    // Session Keepalive — touches session to keep it alive
+    // NOTE: We do NOT regenerate the CSRF token here anymore.
+    // Regenerating the token on every keepalive caused a race condition:
+    // a keepalive ping could invalidate the CSRF token of an in-flight
+    // mark-entry save request, leading to 419 errors.
+    // The CSRF token is refreshed only when:
+    //   1. A save response returns a fresh token (mark entry auto-save)
+    //   2. A 419 error triggers a token refresh + retry
     Route::match(['get', 'post'], '/keepalive', function () {
         $request = request();
 
         // Touch the session to keep it alive
         $request->session()->put('_last_keepalive', time());
 
-        // Regenerate CSRF token to prevent 419 errors
-        $request->session()->regenerateToken();
+        // Force-save session to disk immediately (critical for file-based sessions)
+        $request->session()->save();
 
         return response()->json([
             'csrf_token' => csrf_token(),

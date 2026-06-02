@@ -532,6 +532,8 @@ class MarkEntryController extends Controller
 
         // Touch session to keep it alive during mark entry
         $request->session()->put('_last_mark_save', time());
+        // Force-save session to disk immediately (critical for file-based sessions on XAMPP)
+        $request->session()->save();
 
         $studentId = $request->input('student_id');
         $subjectId = $request->input('subject_id');

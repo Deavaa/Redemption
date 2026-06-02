@@ -29,7 +29,9 @@ class AdminMiddleware
             if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
-            return redirect()->route('login');
+            // For non-AJAX requests, redirect to login with the current URL as the intended destination.
+            // Use the full URL so that redirect()->intended() works correctly on XAMPP (avoids double-path bug).
+            return redirect()->route('login')->withIntended($request->fullUrl());
         }
 
         // Inactive users cannot access the panel
