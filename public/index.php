@@ -1,7 +1,11 @@
 <?php
 
 // ============================================================
-// Session GC override — safety net (primary fix is cookie driver)
+// Session GC override — safety net (primary fix is database driver)
+// These settings are belt-and-suspenders for the database driver.
+// File-based sessions on XAMPP get killed by PHP's native GC
+// regardless of these settings. The database driver bypasses
+// PHP's file session handling entirely.
 // ============================================================
 @ini_set('session.gc_maxlifetime', 28800);
 @ini_set('session.gc_probability', 0);

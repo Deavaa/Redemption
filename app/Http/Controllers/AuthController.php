@@ -120,18 +120,47 @@ class AuthController extends Controller
         // Log in the user
         Auth::login($user, $r->boolean('remember'));
         Log::info('AuthController@login success', ['user_id' => $user->id, 'login' => $login]);
+
+        // ── IMPORTANT: Read the redirect URL BEFORE regenerating the session.
+        // Session regeneration creates a new session ID and migrates data, but
+        // we want to be explicit about preserving the redirect URL.
+        // Priority: POST input > session 'url.intended'
+        $redirectUrl = $r->input('redirect') ?: $r->session()->get('url.intended');
+
         $r->session()->regenerate();
 
-        // Force-save the session to disk immediately (prevents session loss)
+        // Force-save the session to database immediately (prevents session loss)
         $r->session()->save();
 
-        // Redirect based on role — if a redirect URL was saved in session, use it.
-        // If the intended URL somehow points back to the login page, clear it.
-        $redirectUrl = $r->input('redirect') ?: session('url.intended');
-        if ($redirectUrl === route('login') || $redirectUrl === url('/login')) {
-            session()->forget('url.intended');
-            $redirectUrl = null;
+        // Validate redirect URL — prevent redirect to login page or external sites
+        if ($redirectUrl) {
+            // If it's a full URL, verify it belongs to our app
+            if (filter_var($redirectUrl, FILTER_VALIDATE_URL)) {
+                $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+                $redirectHost = parse_url($redirectUrl, PHP_URL_HOST);
+                if (!$redirectHost || $redirectHost !== $appHost) {
+                    $redirectUrl = null; // Not our domain — ignore
+                }
+            }
+
+            // Don't redirect back to login page
+            $loginPath = '/login';
+            if (str_ends_with(parse_url($redirectUrl, PHP_URL_PATH) ?? '', $loginPath)) {
+                $redirectUrl = null;
+            }
         }
+
+        // ── Use redirect()->away() for FULL URLs to prevent XAMPP double-path 404.
+        // On XAMPP with subdirectory (e.g. /Redemption/public/), redirect()->intended()
+        // may prepend APP_URL to an already-full URL, creating:
+        //   /Redemption/public/https://localhost/Redemption/public/admin/mark-entries
+        // which results in a 404. redirect()->away() uses the URL as-is.
+        if ($redirectUrl && filter_var($redirectUrl, FILTER_VALIDATE_URL)) {
+            // Full URL — use away() to prevent path manipulation
+            return redirect()->away($redirectUrl);
+        }
+
+        // Relative path or no redirect — use intended() with fallback
         if ($redirectUrl) {
             session(['url.intended' => $redirectUrl]);
         }

@@ -3,12 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Models\MarkEntry;
+use App\Models\MarkEntryConfig;
 use Illuminate\Console\Command;
 
 class RecalcMarkEntries extends Command
 {
     protected $signature = 'marks:recalc {--dry-run : Show what would change without saving}';
-    protected $description = 'Recalculate ca_total, exam_total, grand_total and grade for all mark entries from raw fields';
+    protected $description = 'Recalculate ca_total, exam_total, grand_total and grade for all mark entries from raw fields using DB-driven config';
 
     public function handle()
     {
@@ -21,30 +22,56 @@ class RecalcMarkEntries extends Command
             return 0;
         }
 
+        // ── Load config from database (same as the model uses) ──
+        $markFields = MarkEntry::getMarkFields();
+        $caWeight = MarkEntryConfig::getCaWeight();
+        $examWeight = MarkEntryConfig::getExamWeight();
+        $precision = MarkEntryConfig::getRoundingPrecision();
+        $gradeScale = MarkEntryConfig::getGradeScale();
+
+        // Classify fields by category
+        $caFields = [];
+        $examFields = [];
+        $caRawTotal = 0;
+        foreach ($markFields as $field) {
+            $cat = $field['category'] ?? 'ca';
+            if ($cat === 'ca' || $cat === 'extra_ca') {
+                $caFields[] = $field['col'];
+                $caRawTotal += $field['max'];
+            } elseif ($cat === 'exam') {
+                $examFields[] = $field['col'];
+            }
+        }
+
+        $this->info("Config: CA weight={$caWeight}, Exam weight={$examWeight}, CA raw total={$caRawTotal}, Precision={$precision}");
+        $this->info("CA fields: " . implode(', ', $caFields));
+        $this->info("Exam fields: " . implode(', ', $examFields));
         $this->info("Processing {$total} mark entries...");
         $bar = $this->output->createProgressBar($total);
         $fixed = 0;
 
         foreach ($entries as $entry) {
-            $caFields = ['ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10','conduct','handwriting','creativity'];
-            $examFields = ['test1','test2','mid_term','final_exam'];
-
+            // Sum raw CA marks
             $caRaw = 0;
             foreach ($caFields as $f) { $caRaw += floatval($entry->$f ?? 0); }
+
+            // Sum raw exam marks
             $examRaw = 0;
             foreach ($examFields as $f) { $examRaw += floatval($entry->$f ?? 0); }
 
-            $caTotal = round(($caRaw / 70) * 30, 2);
-            $examTotal = min($examRaw, 70);
-            $grandTotal = round($caTotal + $examTotal, 2);
+            // Scale CA: (caRaw / caRawTotal) * caWeight
+            $caTotal = $caRawTotal > 0
+                ? round(($caRaw / $caRawTotal) * $caWeight, $precision)
+                : 0;
 
-            // Calculate grade
-            if ($grandTotal <= 0) $grade = 'I';
-            elseif ($grandTotal >= 80) $grade = 'A';
-            elseif ($grandTotal >= 60) $grade = 'B';
-            elseif ($grandTotal >= 50) $grade = 'C';
-            elseif ($grandTotal >= 40) $grade = 'D';
-            else $grade = 'F';
+            // Cap exam at exam weight
+            $examTotal = min($examRaw, $examWeight);
+
+            // Grand total
+            $grandTotal = round($caTotal + $examTotal, $precision);
+
+            // Calculate grade from DB-driven grade scale
+            $grade = MarkEntry::calcGrade($grandTotal, $gradeScale);
 
             $changed = false;
             if (floatval($entry->ca_total) !== $caTotal) $changed = true;

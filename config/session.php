@@ -13,7 +13,22 @@
 
 return [
 
-    'driver' => env('SESSION_DRIVER', 'safe_file'),
+    /*
+    |--------------------------------------------------------------------------
+    | Default Session Driver
+    |--------------------------------------------------------------------------
+    |
+    | DATABASE driver is the ONLY reliable option on XAMPP.
+    | File-based sessions are killed by PHP's native garbage collection
+    | despite all ini_set overrides. Database sessions give Laravel
+    | full control over session lifecycle — no PHP GC interference.
+    |
+    | Supported: "file", "cookie", "database", "apc",
+    |            "memcached", "redis", "dynamodb", "array"
+    |
+    | DO NOT use "safe_file" or "file" — they WILL expire on XAMPP.
+    */
+    'driver' => env('SESSION_DRIVER', 'database'),
 
     'lifetime' => env('SESSION_LIFETIME', 480),
 
@@ -29,11 +44,13 @@ return [
 
     'store' => env('SESSION_STORE'),
 
-    // 0% chance of Laravel's own GC running
-    'lottery' => [0, 1000],
+    // 2% lottery for Laravel's own GC (cleans expired DB session rows)
+    // This is SAFE because it only deletes sessions where last_activity
+    // is older than session.lifetime — it does NOT kill active sessions.
+    'lottery' => [2, 100],
 
-    // NEW cookie name to avoid conflicts with old driver cookies
-    'cookie' => env('SESSION_COOKIE', 'redemption_session_v4'),
+    // New cookie name v5 — avoids conflicts with old file-driver cookies
+    'cookie' => env('SESSION_COOKIE', 'redemption_session_v5'),
 
     'path' => env('SESSION_PATH', '/'),
 

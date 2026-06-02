@@ -535,6 +535,28 @@
     var currentMarkField = 'all';
     var currentStudentIndex = 0;
 
+    // ========== SAVE QUEUE ==========
+    // Serializes save requests so they execute one at a time.
+    // This prevents the race condition where two concurrent saves
+    // for the same student overwrite each other's totals.
+    var saveQueue = [];
+    var saveInProgress = false;
+
+    function enqueueSave(studentId, markKey, value, isRetry) {
+        saveQueue.push({ studentId: studentId, markKey: markKey, value: value, isRetry: isRetry || false });
+        processSaveQueue();
+    }
+
+    function processSaveQueue() {
+        if (saveInProgress || saveQueue.length === 0) return;
+        saveInProgress = true;
+        var item = saveQueue.shift();
+        executeSave(item.studentId, item.markKey, item.value, item.isRetry, function() {
+            saveInProgress = false;
+            processSaveQueue(); // Process next in queue
+        });
+    }
+
     // ========== CAROUSEL TOUCH STATE ==========
     var touchStartX = 0;
     var touchStartY = 0;
@@ -1888,8 +1910,14 @@
     });
 
     // ========== SAVE MARK ==========
+    // Public API — enqueues the save into the serial queue
     function saveMark(studentId, markKey, value, isRetry) {
-        if (sessionExpiredHandled) return; // Don't save if session is expired
+        enqueueSave(studentId, markKey, value, isRetry);
+    }
+
+    // Internal — actually executes the save (called by processSaveQueue)
+    function executeSave(studentId, markKey, value, isRetry, onDone) {
+        if (sessionExpiredHandled) { if (onDone) onDone(); return; } // Don't save if session is expired
 
         var ayId = filterAy.value;
         var termId = filterTerm.value;
@@ -2024,9 +2052,10 @@
                     setTimeout(function() { inp.classList.remove('input-error'); }, 2000);
                 }
             }
+            if (onDone) onDone();
         })
         .catch(function(err) {
-            if (err.message && err.message.indexOf('Session expired') !== -1) return; // Already handled
+            if (err.message && err.message.indexOf('Session expired') !== -1) { if (onDone) onDone(); return; } // Already handled
             setGlobalSaveStatus('error', 'Not Saved');
             var inp = document.querySelector('.mark-input[data-student-id="' + studentId + '"][data-mark-key="' + markKey + '"]');
             if (inp) {
@@ -2034,6 +2063,7 @@
                 setTimeout(function() { inp.classList.remove('input-error'); }, 2000);
             }
             console.error('Save error:', err);
+            if (onDone) onDone();
         });
     }
 

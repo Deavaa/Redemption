@@ -4,9 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Session;
 use App\Models\CalendarEvent;
-use App\Session\NoGarbageSessionHandler;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,36 +37,42 @@ class AppServiceProvider extends ServiceProvider
         config(['database.default' => 'mysql']);
 
         // ============================================================
-        // SESSION: Use 'safe_file' driver with NoGarbageSessionHandler.
+        // SESSION: Use 'database' driver.
         //
-        // This uses the standard file driver but wraps it so that
-        // PHP's garbage collection gc() is a NO-OP. Sessions are
-        // stored as files on disk but can NEVER be deleted by PHP GC.
+        // This is the ONLY reliable session driver on XAMPP.
+        // File-based sessions get killed by PHP's native garbage
+        // collection (gc) regardless of ini_set settings, because
+        // XAMPP's PHP SAPI ignores gc_probability=0 overrides.
         //
-        // The cookie driver was tried but broke login because old
-        // session cookies from the previous driver couldn't be
-        // decrypted by the cookie driver, causing 419 errors.
+        // Database sessions store session data in MySQL, where Laravel
+        // has FULL control over the session lifecycle. PHP's native GC
+        // cannot touch database rows. Session expiry is handled entirely
+        // by Laravel checking the last_activity column against
+        // session.lifetime (480 min = 8 hours).
         //
         // Key settings:
-        // - session.driver = safe_file (NoGarbageSessionHandler wrapper)
-        // - session.cookie = redemption_session_v4 (NEW name to avoid
-        //   conflicts with old session cookies from previous drivers)
-        // - session.lottery = [0, 1000] (Laravel's own GC disabled)
+        // - session.driver = database
+        // - session.cookie = redemption_session_v5 (NEW name to avoid
+        //   conflicts with old session cookies from file/cookie drivers)
+        // - session.lottery = [2, 100] (2% chance of Laravel GC,
+        //   which only deletes expired rows — SAFE)
         // - session.lifetime = 480 (8 hours)
         // ============================================================
-        config(['session.driver' => 'safe_file']);
+        config(['session.driver' => 'database']);
         config(['session.lifetime' => 480]);           // 8 hours
         config(['session.encrypt' => false]);
-        config(['session.cookie' => 'redemption_session_v4']);  // NEW cookie name!
+        config(['session.cookie' => 'redemption_session_v5']);  // NEW cookie name!
         config(['session.path' => '/']);
         config(['session.domain' => null]);
         config(['session.secure' => false]);            // false for XAMPP
         config(['session.http_only' => true]);
         config(['session.same_site' => 'lax']);
         config(['session.expire_on_close' => false]);
-        config(['session.lottery' => [0, 1000]]);      // 0% lottery
+        config(['session.lottery' => [2, 100]]);       // 2% lottery (safe for DB)
 
-        // Disable PHP's native session GC
+        // Disable PHP's native session GC (belt-and-suspenders —
+        // database driver doesn't use PHP file sessions, but we
+        // keep these settings in case any PHP code uses $_SESSION)
         @ini_set('session.gc_maxlifetime', 28800);
         @ini_set('session.gc_probability', 0);
         @ini_set('session.gc_divisor', 1);
@@ -86,7 +90,7 @@ class AppServiceProvider extends ServiceProvider
             @unlink($cachedConfig);
         }
 
-        // Ensure session directory exists
+        // Ensure session directory exists (still needed for any file-based fallback)
         try {
             $sessionDir = storage_path('framework/sessions');
             if (!is_dir($sessionDir)) {
@@ -94,24 +98,9 @@ class AppServiceProvider extends ServiceProvider
             }
         } catch (\Throwable $e) {}
 
-        // ============================================================
-        // Register 'safe_file' session driver.
-        // Wraps Laravel's file handler with NoGarbageSessionHandler
-        // that makes gc() a NO-OP — sessions can NEVER be deleted
-        // by PHP's garbage collection.
-        // ============================================================
-        Session::extend('safe_file', function ($app) {
-            $path = $app['config']->get('session.files', storage_path('framework/sessions'));
-            $lifetime = $app['config']->get('session.lifetime', 480);
-
-            // Create Laravel's default file session handler
-            $fileHandler = new \Illuminate\Session\FileSessionHandler(
-                $app['files'], $path, $lifetime
-            );
-
-            // Wrap it with NoGarbageSessionHandler that disables gc()
-            return new NoGarbageSessionHandler($fileHandler);
-        });
+        // NOTE: The 'safe_file' driver registration is REMOVED.
+        // We no longer need NoGarbageSessionHandler because we use
+        // the 'database' driver. PHP's GC cannot touch DB rows.
 
         // Share active announcements with admin layout
         View::composer('layouts.admin', function ($view) {

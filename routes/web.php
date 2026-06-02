@@ -137,7 +137,7 @@ Route::get('/session-test', function () {
 
     $handler = $session->getHandler();
 
-    return response()->json([
+    $result = [
         'status' => $testValue === 'session_works_' . substr($testValue, -10) ? 'OK' : 'FAIL',
         'test_write_read' => $testValue,
         'session_id' => $session->getId(),
@@ -146,16 +146,31 @@ Route::get('/session-test', function () {
         'lifetime' => config('session.lifetime'),
         'lottery' => config('session.lottery'),
         'handler_class' => get_class($handler),
-        'handler_is_no_garbage' => $handler instanceof \App\Session\NoGarbageSessionHandler,
         'php_gc_maxlifetime' => ini_get('session.gc_maxlifetime'),
         'php_gc_probability' => ini_get('session.gc_probability'),
         'php_gc_divisor' => ini_get('session.gc_divisor'),
-        'session_path' => config('session.files'),
-        'session_path_writable' => is_writable(config('session.files', storage_path('framework/sessions'))),
         'encrypt' => config('session.encrypt'),
         'same_site' => config('session.same_site'),
         'secure' => config('session.secure'),
-    ], 200, [], JSON_PRETTY_PRINT);
+    ];
+
+    // Add driver-specific diagnostics
+    if (config('session.driver') === 'database') {
+        try {
+            $dbSession = \DB::table('sessions')->where('id', $session->getId())->first();
+            $result['db_session_found'] = $dbSession ? true : false;
+            $result['db_session_last_activity'] = $dbSession ? $dbSession->last_activity : null;
+            $result['db_session_user_id'] = $dbSession ? $dbSession->user_id : null;
+            $result['db_total_sessions'] = \DB::table('sessions')->count();
+        } catch (\Throwable $e) {
+            $result['db_error'] = $e->getMessage();
+        }
+    } else {
+        $result['session_path'] = config('session.files');
+        $result['session_path_writable'] = is_writable(config('session.files', storage_path('framework/sessions')));
+    }
+
+    return response()->json($result, 200, [], JSON_PRETTY_PRINT);
 });
 
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
@@ -176,7 +191,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
         // Touch the session to keep it alive
         $request->session()->put('_last_keepalive', time());
 
-        // Force-save session to disk immediately (critical for file-based sessions)
+        // Force-save session to database immediately
         $request->session()->save();
 
         return response()->json([
@@ -215,6 +230,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
             'auth_user_id' => auth()->id(),
             'auth_user_role' => auth()->user()?->role,
         ];
+
+        // Database driver specific diagnostics
+        if (config('session.driver') === 'database') {
+            try {
+                $dbSession = \DB::table('sessions')->where('id', $sessionId)->first();
+                $diagnostics['db_session_found'] = $dbSession ? true : false;
+                $diagnostics['db_session_last_activity'] = $dbSession ? $dbSession->last_activity : null;
+                $diagnostics['db_session_last_activity_readable'] = $dbSession ? date('Y-m-d H:i:s', $dbSession->last_activity) : null;
+                $diagnostics['db_session_user_id'] = $dbSession ? $dbSession->user_id : null;
+                $diagnostics['db_session_ip'] = $dbSession ? $dbSession->ip_address : null;
+                $diagnostics['db_total_sessions'] = \DB::table('sessions')->count();
+                $diagnostics['db_session_age_seconds'] = $dbSession ? (time() - $dbSession->last_activity) : null;
+                $diagnostics['db_session_expires_in_seconds'] = $dbSession ? (config('session.lifetime') * 60 - (time() - $dbSession->last_activity)) : null;
+            } catch (\Throwable $e) {
+                $diagnostics['db_error'] = $e->getMessage();
+            }
+        }
 
         return response()->json($diagnostics, 200, [], JSON_PRETTY_PRINT);
     })->name('session-diagnostic');

@@ -47,3 +47,23 @@ Schedule::command('backup:database')
     ->evenInMaintenanceMode()
     ->onOneServer()
     ->emailOutputOnFailure(safeSetting('backup_email', config('mail.from.address', 'admin@schoolofredemption.com')));
+
+// Clean up old file-based session files (leftover from previous safe_file driver)
+// These are no longer needed since we switched to the database driver.
+Schedule::call(function () {
+    $sessionPath = storage_path('framework/sessions');
+    if (is_dir($sessionPath)) {
+        $files = glob($sessionPath . '/sess_*');
+        $deleted = 0;
+        foreach ($files as $file) {
+            // Delete session files older than 24 hours
+            if (filemtime($file) < time() - 86400) {
+                @unlink($file);
+                $deleted++;
+            }
+        }
+        if ($deleted > 0) {
+            \Log::info("Cleaned up {$deleted} old session files from file-based driver");
+        }
+    }
+})->daily()->at('03:00')->timezone('Africa/Addis_Ababa');
