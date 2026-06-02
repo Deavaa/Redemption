@@ -121,7 +121,7 @@
 /* Print styles — each subject on its own page */
 @page{
     size:landscape;
-    margin:5mm
+    margin:8mm
 }
 @media print{
     /* Reset all layout containers to full width - override sidebar offset */

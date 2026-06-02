@@ -108,7 +108,7 @@
 /* Print styles */
 @page{
     size:landscape;
-    margin:5mm
+    margin:8mm
 }
 @media print{
     /* Reset all layout containers to full width - override sidebar offset */
@@ -151,13 +151,12 @@
         background:#fff!important;
         margin:0!important;
         padding:0!important;
-        width:100%!important;
         overflow:visible!important
     }
     .fms-page{
         width:100%!important;
         max-width:100%!important;
-        padding:0!important;
+        padding:4mm!important;
         margin:0!important;
         box-shadow:none!important;
         border:none!important;
@@ -204,7 +203,7 @@
         font-size:6pt!important
     }
     .fms-seq-table td{
-        padding:2px 3px!important;
+        padding:2px 4px!important;
         font-size:7.5pt!important;
         overflow:hidden!important;
         text-overflow:ellipsis!important
@@ -218,7 +217,7 @@
     }
     .fms-seq-table .th-fixed{
         font-size:7pt!important;
-        padding:3px 3px!important
+        padding:3px 4px!important
     }
     .fms-seq-table .total-col,
     .fms-seq-table .avg-col,
