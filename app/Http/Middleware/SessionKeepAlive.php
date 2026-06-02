@@ -9,19 +9,17 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Session Keep-Alive Middleware
  *
- * With the COOKIE session driver, PHP garbage collection is no longer
- * a concern (no server-side state = nothing for GC to delete).
- *
- * This middleware now serves simpler purposes:
- * 1. Extra safety: disable PHP's native GC on every request
- * 2. Touch the session to keep it alive
- * 3. Set response headers so the client knows the session is alive
+ * Runs on every web request to:
+ * 1. Disable PHP's native GC on every request
+ * 2. Touch the session to update its last_activity
+ * 3. For file driver: touch the session file to update mtime
+ * 4. Set response headers so the client knows the session is alive
  */
 class SessionKeepAlive
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Disable PHP's native GC as extra safety net
+        // Disable PHP's native GC on every request
         @ini_set('session.gc_maxlifetime', 28800);
         @ini_set('session.gc_probability', 0);
         @ini_set('session.gc_divisor', 1);
@@ -29,11 +27,23 @@ class SessionKeepAlive
 
         $response = $next($request);
 
-        // Touch the session to keep it alive
+        // Update session's last activity
         if ($request->hasSession()) {
             try {
                 $session = $request->session();
                 $session->put('_last_touch', time());
+
+                // Touch the session file to update its modification time
+                // This helps Laravel's own session expiry check see it as active
+                $driver = config('session.driver');
+                if ($driver === 'file' || $driver === 'safe_file') {
+                    $sessionId = $session->getId();
+                    $sessionPath = config('session.files', storage_path('framework/sessions'));
+                    $sessionFile = $sessionPath . DIRECTORY_SEPARATOR . 'sess_' . $sessionId;
+                    if ($sessionId && file_exists($sessionFile)) {
+                        @touch($sessionFile);
+                    }
+                }
 
                 // Set response header so the client knows the session is alive
                 if ($request->ajax() || $request->wantsJson()) {

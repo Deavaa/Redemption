@@ -122,6 +122,41 @@ Route::post('/password/reset', [AuthController::class, 'submitResetPassword'])->
 // Telegram webhook (public)
 Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 
+// Public session test — NO auth required, tests if sessions work at all
+Route::get('/session-test', function () {
+    $request = request();
+    $session = $request->session();
+
+    // Write a test value
+    $session->put('_test_value', 'session_works_' . time());
+    $session->save();
+
+    // Read it back
+    $testValue = $session->get('_test_value');
+
+    $handler = $session->getHandler();
+
+    return response()->json([
+        'status' => $testValue === 'session_works_' . substr($testValue, -10) ? 'OK' : 'FAIL',
+        'test_write_read' => $testValue,
+        'session_id' => $session->getId(),
+        'driver' => config('session.driver'),
+        'cookie_name' => config('session.cookie'),
+        'lifetime' => config('session.lifetime'),
+        'lottery' => config('session.lottery'),
+        'handler_class' => get_class($handler),
+        'handler_is_no_garbage' => $handler instanceof \App\Session\NoGarbageSessionHandler,
+        'php_gc_maxlifetime' => ini_get('session.gc_maxlifetime'),
+        'php_gc_probability' => ini_get('session.gc_probability'),
+        'php_gc_divisor' => ini_get('session.gc_divisor'),
+        'session_path' => config('session.files'),
+        'session_path_writable' => is_writable(config('session.files', storage_path('framework/sessions'))),
+        'encrypt' => config('session.encrypt'),
+        'same_site' => config('session.same_site'),
+        'secure' => config('session.secure'),
+    ], 200, [], JSON_PRETTY_PRINT);
+});
+
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
