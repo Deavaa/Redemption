@@ -54,6 +54,14 @@ class SessionKeepAlive
                             ->where('id', $sessionId)
                             ->update(['last_activity' => time()]);
                     }
+                } elseif ($driver === 'file' || $driver === 'safe_file') {
+                    // Write session changes and refresh the session file timestamp
+                    $sessionId = $session->getId();
+                    $sessionPath = config('session.files', storage_path('framework/sessions'));
+                    $sessionFile = $sessionPath . DIRECTORY_SEPARATOR . 'sess_' . $sessionId;
+                    if ($sessionId) {
+                        @touch($sessionFile);
+                    }
                 }
 
                 // Set response header so the client knows the session is alive

@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -9,12 +10,24 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     public function showLogin(Request $request) {
+        // If already authenticated, send the user to their home dashboard.
+        if (Auth::check()) {
+            return redirect()->intended($this->getHomeRoute(Auth::user()));
+        }
+
         // If there's a redirect parameter, store it in the session so
-        // redirect()->intended() can use it after login
+        // redirect()->intended() can use it after login.
         if ($request->has('redirect')) {
             session(['url.intended' => $request->redirect]);
         }
-        return view('auth.login');
+
+        // Regenerate the CSRF token for a fresh login page.
+        $request->session()->regenerateToken();
+
+        return response()->view('auth.login')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function login(Request $r) {
@@ -22,6 +35,12 @@ class AuthController extends Controller
 
         $login = $r->login;
         $password = $r->password;
+        Log::debug('AuthController@login attempt', [
+            'login' => $login,
+            'remember' => $r->boolean('remember'),
+            'session_id' => $r->session()->getId(),
+            'csrf_token' => $r->input('_token'),
+        ]);
         
         // Normalize phone number: strip country code (+251, 251), remove spaces/dashes
         // Format: 0900000000 (10 digits starting with 0)
@@ -56,35 +75,53 @@ class AuthController extends Controller
         $user = $query->first();
         
         if (!$user) {
-            throw ValidationException::withMessages(['login' => 'Invalid credentials. Please check your login details.']);
+            Log::warning('AuthController@login failed: user not found', ['login' => $login]);
+            return view('auth.login')
+                ->with('login', $login)
+                ->withErrors(['login' => 'Invalid credentials. Please check your login details.'])
+                ->with('error', 'Invalid credentials. Please check your login details.');
         }
+        Log::debug('AuthController@login user found', ['user_id' => $user->id, 'login' => $login]);
         
         // Check password
         if (!Hash::check($password, $user->password)) {
-            throw ValidationException::withMessages(['login' => 'Invalid credentials. Please check your password.']);
+            Log::warning('AuthController@login failed: wrong password', ['user_id' => $user->id, 'login' => $login]);
+            return view('auth.login')
+                ->with('login', $login)
+                ->withErrors(['login' => 'Invalid credentials. Please check your password.'])
+                ->with('error', 'Invalid credentials. Please check your password.');
         }
         
         // Check if account is active
         if (isset($user->is_active) && !$user->is_active) {
+            Log::warning('AuthController@login blocked: account inactive', ['user_id' => $user->id, 'login' => $login]);
             Auth::logout();
             $r->session()->invalidate();
-            throw ValidationException::withMessages(['login' => 'Your account has been deactivated. Please contact the administrator.']);
+            return view('auth.login')
+                ->with('login', $login)
+                ->withErrors(['login' => 'Your account has been deactivated. Please contact the administrator.'])
+                ->with('error', 'Your account has been deactivated. Please contact the administrator.');
         }
         
         // Log in the user
         Auth::login($user, $r->boolean('remember'));
+        Log::info('AuthController@login success', ['user_id' => $user->id, 'login' => $login]);
         $r->session()->regenerate();
 
         // Force-save the session to disk immediately (prevents session loss)
         $r->session()->save();
 
-        // Redirect based on role — if a redirect URL was saved in session, use it
-        // This ensures that after session expiry + re-login, the user returns to
-        // the mark entry page (or wherever they were working)
+        // Redirect based on role — if a redirect URL was saved in session, use it.
+        // If the intended URL somehow points back to the login page, clear it.
         $redirectUrl = $r->input('redirect') ?: session('url.intended');
+        if ($redirectUrl === route('login') || $redirectUrl === url('/login')) {
+            session()->forget('url.intended');
+            $redirectUrl = null;
+        }
         if ($redirectUrl) {
             session(['url.intended' => $redirectUrl]);
         }
+
         return redirect()->intended($this->getHomeRoute($user));
     }
 

@@ -116,8 +116,8 @@ class AppServiceProvider extends ServiceProvider
                     });
                 }
             } catch (\Throwable $e2) {
-                // If both fail, fall back to file driver
-                config(['session.driver' => 'file']);
+                // If both fail, fall back to safe file driver
+                config(['session.driver' => 'safe_file']);
             }
         }
 

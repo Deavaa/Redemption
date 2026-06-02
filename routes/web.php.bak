@@ -53,8 +53,6 @@ use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\WebContentController;
 use App\Http\Controllers\Slider\SliderController;
 use App\Http\Controllers\Student\StudentController;
-use App\Http\Controllers\Student\StudentCommentController;
-use App\Http\Controllers\Student\ParentController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Parent\ParentDashboardController;
 use App\Http\Controllers\Subject\SubjectController;
@@ -88,23 +86,12 @@ use App\Http\Controllers\Bank\BankIntegrationController;
 use App\Http\Controllers\Club\ClubFollowUpConfigController;
 use App\Http\Controllers\Exam\ExamQuestionController;
 use App\Http\Controllers\Assessment\AssessmentQuestionController;
-use App\Http\Controllers\ContentNote\SubjectContentNoteController;
 use App\Http\Controllers\Assessment\StudentAssessmentController;
-use App\Http\Controllers\Student\TeacherReviewController as StudentTeacherReviewController;
-use App\Http\Controllers\Admin\TeacherReviewController as AdminTeacherReviewController;
-use App\Http\Controllers\Enrollment\EnrollmentController;
-use App\Http\Controllers\TeacherEfficiency\TeacherEfficiencyAssessmentController;
-use App\Http\Controllers\TeacherEvaluation\TeacherEvaluationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
-Route::get('/about', [HomeController::class, 'about'])->name('about');
-Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
-Route::get('/team', [HomeController::class, 'team'])->name('team');
-
-// Public Contact Form
 Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');
+Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
 
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
@@ -125,108 +112,7 @@ Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
-    // Session Keepalive — updates last_activity + refreshes CSRF token
-    // Also accepts POST so AJAX mark-saves can double as keepalive
-    Route::match(['get', 'post'], '/keepalive', function () {
-        $request = request();
-
-        // Touch the session to keep it alive
-        $request->session()->put('_last_keepalive', time());
-
-        // Database driver: update last_activity directly
-        $driver = config('session.driver');
-        if ($driver === 'database' || $driver === 'safe_database') {
-            try {
-                $sessionId = $request->session()->getId();
-                if ($sessionId) {
-                    \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
-                        ->where('id', $sessionId)
-                        ->update(['last_activity' => time()]);
-                }
-            } catch (\Throwable $e) {}
-        } elseif ($driver === 'file' || $driver === 'safe_file') {
-            try {
-                $request->session()->save();
-            } catch (\Throwable $e) {}
-        }
-
-        // Regenerate CSRF token to prevent 419 errors
-        $request->session()->regenerateToken();
-
-        return response()->json([
-            'csrf_token' => csrf_token(),
-            'timestamp' => time(),
-            'driver' => config('session.driver'),
-            'lifetime' => config('session.lifetime'),
-            'ok' => true,
-        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate')
-          ->header('Pragma', 'no-cache')
-          ->header('X-Session-Refreshed', '1');
-    })->name('keepalive');
-
-    // Session Diagnostic — helps debug session expiration issues
-    Route::get('/session-diagnostic', function () {
-        $request = request();
-        $sessionId = $request->session()->getId();
-        $handler = $request->session()->getHandler();
-        $handlerClass = get_class($handler);
-
-        $diagnostics = [
-            'timestamp' => date('Y-m-d H:i:s'),
-            'php_version' => PHP_VERSION,
-            'session_id' => $sessionId,
-            'session_driver_config' => config('session.driver'),
-            'session_lifetime_config' => config('session.lifetime'),
-            'session_cookie_config' => config('session.cookie'),
-            'session_lottery_config' => config('session.lottery'),
-            'handler_class' => $handlerClass,
-            'handler_is_no_garbage' => $handler instanceof \App\Session\NoGarbageSessionHandler,
-            'underlying_handler_class' => ($handler instanceof \App\Session\NoGarbageSessionHandler)
-                ? get_class($handler->getHandler())
-                : 'N/A',
-            'php_gc_maxlifetime' => ini_get('session.gc_maxlifetime'),
-            'php_gc_probability' => ini_get('session.gc_probability'),
-            'php_gc_divisor' => ini_get('session.gc_divisor'),
-            'php_session_save_handler' => ini_get('session.save_handler'),
-            'php_session_save_path' => ini_get('session.save_path'),
-            'php_session_cookie_lifetime' => ini_get('session.cookie_lifetime'),
-            'session_data_keys' => array_keys($request->session()->all()),
-            'auth_user_id' => auth()->id(),
-            'auth_user_role' => auth()->user()?->role,
-        ];
-
-        // Check sessions table
-        try {
-            $sessionsTableExists = \Illuminate\Support\Facades\DB::selectOne("SHOW TABLES LIKE 'sessions'") ? true : false;
-            $diagnostics['sessions_table_exists'] = $sessionsTableExists;
-
-            if ($sessionsTableExists) {
-                $mySession = \Illuminate\Support\Facades\DB::table('sessions')->where('id', $sessionId)->first();
-                $diagnostics['my_session_in_db'] = $mySession ? [
-                    'id' => $mySession->id,
-                    'user_id' => $mySession->user_id,
-                    'last_activity' => $mySession->last_activity,
-                    'last_activity_ago_seconds' => time() - $mySession->last_activity,
-                    'ip_address' => $mySession->ip_address,
-                ] : 'NOT FOUND IN DATABASE';
-
-                $totalSessions = \Illuminate\Support\Facades\DB::table('sessions')->count();
-                $diagnostics['total_active_sessions'] = $totalSessions;
-
-                // Check for recently expired sessions
-                $recentlyExpired = \Illuminate\Support\Facades\DB::table('sessions')
-                    ->where('last_activity', '<', time() - 300) // older than 5 min
-                    ->count();
-                $diagnostics['sessions_older_than_5min'] = $recentlyExpired;
-            }
-        } catch (\Throwable $e) {
-            $diagnostics['sessions_table_error'] = $e->getMessage();
-        }
-
-        return response()->json($diagnostics, 200, [], JSON_PRETTY_PRINT);
-    })->name('session-diagnostic');
-
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');
 
@@ -234,7 +120,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profile/reset-user-password', [ProfileController::class, 'resetUserPassword'])->name('profile.reset-user-password');
-    Route::post('/profile/generate-employee-ids', [ProfileController::class, 'generateMissingEmployeeIds'])->name('profile.generate-employee-ids');
 
     // ── Academic ──────────────────────────────────────────
     Route::resource('academic-years', AcademicYearController::class)->middleware('permission:academic_years.view');
@@ -247,7 +132,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('subject-assignments/api/sections', [SubjectAssignmentController::class, 'apiSections'])->name('subject-assignments.api.sections');
 
     // Mark Entry API routes (MUST be defined BEFORE the resource route to avoid conflicts)
-    Route::get('mark-entries/api/branches', [MarkEntryController::class, 'apiBranches'])->name('mark-entries.api.branches');
     Route::get('mark-entries/api/terms', [MarkEntryController::class, 'apiTerms'])->name('mark-entries.api.terms');
     Route::get('mark-entries/api/classes', [MarkEntryController::class, 'apiClasses'])->name('mark-entries.api.classes');
     Route::get('mark-entries/api/sections', [MarkEntryController::class, 'apiSections'])->name('mark-entries.api.sections');
@@ -276,7 +160,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('promotion', [PromotionController::class, 'index'])->name('promotion.index')->middleware('permission:mark_entries.view');
     Route::get('promotion/preview', [PromotionController::class, 'preview'])->name('promotion.preview')->middleware('permission:mark_entries.view');
     Route::post('promotion/process', [PromotionController::class, 'processClass'])->name('promotion.process')->middleware('permission:mark_entries.manage');
-    Route::post('promotion/process-bulk', [PromotionController::class, 'processBulkPromotion'])->name('promotion.process-bulk')->middleware('permission:mark_entries.manage');
     Route::post('promotion/process-student', [PromotionController::class, 'processStudent'])->name('promotion.process-student')->middleware('permission:mark_entries.manage');
     Route::patch('promotion/override', [PromotionController::class, 'processStudent'])->name('promotion.override')->middleware('permission:mark_entries.manage');
     Route::get('promotion/{id}', [PromotionController::class, 'show'])->name('promotion.detail')->middleware('permission:mark_entries.view');
@@ -300,18 +183,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // Mark Roster
     Route::get('mark-roster', [MarkRosterController::class, 'index'])->name('mark-roster.index')->middleware('permission:mark_sheets.view');
-    Route::match(['get', 'post'], 'mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate')->middleware('permission:mark_sheets.generate');
+    Route::post('mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate')->middleware('permission:mark_sheets.generate');
     Route::get('mark-roster/api/sections', [MarkRosterController::class, 'getSections'])->name('mark-roster.sections');
 
     // Report Card
     Route::get('report-card', [ReportCardController::class, 'index'])->name('report-card.index')->middleware('permission:mark_sheets.view');
-    Route::match(['get', 'post'], 'report-card/generate', [ReportCardController::class, 'generate'])->name('report-card.generate')->middleware('permission:mark_sheets.generate');
+    Route::post('report-card/generate', [ReportCardController::class, 'generate'])->name('report-card.generate')->middleware('permission:mark_sheets.generate');
     Route::get('report-card/api/sections', [ReportCardController::class, 'getSections'])->name('report-card.sections');
     Route::get('report-card/api/students', [ReportCardController::class, 'getStudents'])->name('report-card.students');
 
     // Performance Analysis (Legacy - Class-based)
     Route::get('performance-analysis', [PerformanceReportAnalysisController::class, 'index'])->name('performance-analysis.index')->middleware('permission:mark_sheets.view');
-    Route::match(['get', 'post'], 'performance-analysis/generate', [PerformanceReportAnalysisController::class, 'generate'])->name('performance-analysis.generate')->middleware('permission:mark_sheets.generate');
+    Route::post('performance-analysis/generate', [PerformanceReportAnalysisController::class, 'generate'])->name('performance-analysis.generate')->middleware('permission:mark_sheets.generate');
     Route::get('performance-analysis/api/sections', [PerformanceReportAnalysisController::class, 'getSections'])->name('performance-analysis.sections');
 
     // ID Card Generation
@@ -337,69 +220,20 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('leaving-certificate/api/students', [LeavingCertificateController::class, 'getStudents'])->name('leaving-certificate.students');
 
     // ── People ────────────────────────────────────────────
-    // NOTE: Static sub-routes MUST come BEFORE Route::resource to avoid {student} parameter matching
     Route::get('students/generate-ids', [StudentController::class, 'generateIds'])->name('students.generateIds');
-    Route::get('students/bulk-create', [StudentController::class, 'bulkCreate'])->name('students.bulk-create')->middleware('permission:students.manage');
-    Route::get('students/download-template', [StudentController::class, 'downloadTemplate'])->name('students.download-template')->middleware('permission:students.manage');
-    Route::post('students/upload-students', [StudentController::class, 'uploadStudents'])->name('students.upload-students')->middleware('permission:students.manage');
-    Route::post('students/bulk-store', [StudentController::class, 'bulkStore'])->name('students.bulk-store')->middleware('permission:students.manage');
-    Route::post('students/bulk-transfer', [StudentController::class, 'bulkTransfer'])->name('students.bulk-transfer')->middleware('permission:students.manage');
-    Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
+    Route::resource('students', StudentController::class)->middleware('permission:students.view');
     Route::get('students/api/admission-preview', [StudentController::class, 'apiAdmissionPreview'])->name('students.api.admission-preview');
     Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
+    Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
     Route::get('students/api/sections/{classId}', [StudentController::class, 'getSections'])->name('students.api.sections');
-    Route::get('students/api/sections-by-branch', [StudentController::class, 'apiSectionsByBranch'])->name('students.api.sections-by-branch');
-    Route::get('students/api/classes-by-branch', [StudentController::class, 'apiClassesByBranch'])->name('students.api.classes-by-branch');
     Route::get('students/inactive/list', [StudentController::class, 'inactive'])->name('students.inactive')->middleware('permission:students.view');
-    Route::resource('students', StudentController::class)->middleware('permission:students.view');
     Route::get('students/{student}/readmit', [StudentController::class, 'readmit'])->name('students.readmit')->middleware('permission:students.manage');
     Route::post('students/{student}/readmit', [StudentController::class, 'readmitStore'])->name('students.readmit-store')->middleware('permission:students.manage');
     Route::post('students/{student}/mark-as-left', [StudentController::class, 'markAsLeft'])->name('students.mark-as-left')->middleware('permission:students.manage');
-    Route::get('students/{student}/transfer', [StudentController::class, 'transferForm'])->name('students.transfer')->middleware('permission:students.manage');
-    Route::post('students/{student}/transfer', [StudentController::class, 'transfer'])->name('students.transfer-store')->middleware('permission:students.manage');
-
-    // ── Student Comments ──────────────────────────────────
-    Route::get('students/{student}/comments', [StudentCommentController::class, 'index'])->name('students.comments.index');
-    Route::post('students/{student}/comments', [StudentCommentController::class, 'store'])->name('students.comments.store');
-    Route::put('students/{student}/comments/{comment}', [StudentCommentController::class, 'update'])->name('students.comments.update');
-    Route::delete('students/{student}/comments/{comment}', [StudentCommentController::class, 'destroy'])->name('students.comments.destroy');
-    Route::get('students/{student}/report-comments', [StudentCommentController::class, 'reportComments'])->name('students.comments.report');
-
-    // ── Parent Search & Add ───────────────────────────────
-    Route::get('parents/search', [ParentController::class, 'search'])->name('parents.search');
-    Route::post('parents/add', [ParentController::class, 'store'])->name('parents.add');
-    Route::post('parents/link-student', [ParentController::class, 'linkToStudent'])->name('parents.link-student');
-    Route::get('teachers/{teacher}/transfer', [TeacherController::class, 'transferForm'])->name('teachers.transfer')->middleware('permission:teachers.manage');
-    Route::post('teachers/{teacher}/transfer', [TeacherController::class, 'transfer'])->name('teachers.transfer-store')->middleware('permission:teachers.manage');
     Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');
-    Route::get('staff/api/employee-id-preview', [StaffController::class, 'apiEmployeeIdPreview'])->name('staff.api.employee-id-preview')->middleware('permission:staff.view');
     Route::resource('staff', StaffController::class)->middleware('permission:staff.view');
     Route::resource('team-members', TeamMemberController::class)->middleware('permission:team_members.view');
     Route::resource('parents', ParentModelController::class)->middleware('permission:parents.view');
-
-    // ── Enrollment ────────────────────────────────────────
-    // NOTE: Static sub-routes (bulk-enroll, api/*) MUST come BEFORE {enrollment} parameterized routes,
-    // otherwise Laravel matches "bulk-enroll" or "api" as the {enrollment} parameter → 404
-    Route::get('enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index')->middleware('permission:students.view');
-    Route::get('enrollments/create', [EnrollmentController::class, 'create'])->name('enrollments.create')->middleware('permission:students.manage');
-    Route::post('enrollments', [EnrollmentController::class, 'store'])->name('enrollments.store')->middleware('permission:students.manage');
-    Route::get('enrollments/bulk-enroll', [EnrollmentController::class, 'bulkEnroll'])->name('enrollments.bulk-enroll')->middleware('permission:students.manage');
-    Route::post('enrollments/bulk-enroll', [EnrollmentController::class, 'processBulkEnroll'])->name('enrollments.process-bulk-enroll')->middleware('permission:students.manage');
-    Route::get('enrollments/api/sections', [EnrollmentController::class, 'apiSections'])->name('enrollments.api.sections');
-    Route::get('enrollments/api/classes', [EnrollmentController::class, 'apiClasses'])->name('enrollments.api.classes');
-    Route::get('enrollments/api/branches', [EnrollmentController::class, 'apiBranches'])->name('enrollments.api.branches');
-    Route::get('enrollments/api/unenrolled-students', [EnrollmentController::class, 'apiUnenrolledStudents'])->name('enrollments.api.unenrolled-students');
-    Route::get('enrollments/api/stats', [EnrollmentController::class, 'apiStats'])->name('enrollments.api.stats');
-    Route::post('enrollments/sync', [EnrollmentController::class, 'syncEnrollments'])->name('enrollments.sync')->middleware('permission:students.manage');
-    Route::get('enrollments/{enrollment}', [EnrollmentController::class, 'show'])->name('enrollments.show')->middleware('permission:students.view');
-    Route::get('enrollments/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('enrollments.edit')->middleware('permission:students.manage');
-    Route::put('enrollments/{enrollment}', [EnrollmentController::class, 'update'])->name('enrollments.update')->middleware('permission:students.manage');
-    Route::delete('enrollments/{enrollment}', [EnrollmentController::class, 'destroy'])->name('enrollments.destroy')->middleware('permission:students.manage');
-    Route::get('enrollments/{enrollment}/pay-registration-fee', [EnrollmentController::class, 'payRegistrationFee'])->name('enrollments.pay-registration-fee')->middleware('permission:fee_payments.manage');
-    Route::post('enrollments/{enrollment}/pay-registration-fee', [EnrollmentController::class, 'processPayRegistrationFee'])->name('enrollments.process-pay-registration-fee')->middleware('permission:fee_payments.manage');
-    Route::post('enrollments/{enrollment}/waive-registration-fee', [EnrollmentController::class, 'waiveRegistrationFee'])->name('enrollments.waive-registration-fee')->middleware('permission:fee_payments.manage');
-    Route::get('enrollments/{enrollment}/withdraw', [EnrollmentController::class, 'withdraw'])->name('enrollments.withdraw')->middleware('permission:students.manage');
-    Route::post('enrollments/{enrollment}/withdraw', [EnrollmentController::class, 'processWithdraw'])->name('enrollments.process-withdraw')->middleware('permission:students.manage');
 
     // ── Website ───────────────────────────────────────────
     Route::resource('sliders', SliderController::class)->middleware('permission:sliders.view');
@@ -419,9 +253,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('teacher-assignments/api/subjects', [TeacherAssignmentController::class, 'apiSubjects'])->name('teacher-assignments.api.subjects');
 
     // ── Lesson Plans ─────────────────────────────────────────
-    // Print routes MUST be before resource to avoid {lesson_plan} matching "print"
-    Route::get('lesson-plans/print/yearly', [LessonPlanController::class, 'printYearly'])->name('lesson-plans.print-yearly')->middleware('permission:lesson_plans.view');
-    Route::get('lesson-plans/print/weekly', [LessonPlanController::class, 'printWeekly'])->name('lesson-plans.print-weekly')->middleware('permission:lesson_plans.view');
     Route::resource('lesson-plans', LessonPlanController::class)->middleware('permission:lesson_plans.view');
     Route::post('lesson-plans/{lessonPlan}/review', [LessonPlanController::class, 'review'])->name('lesson-plans.review')->middleware('permission:lesson_plans.review');
     Route::post('lesson-plans/{lessonPlan}/department-review', [LessonPlanController::class, 'departmentReview'])->name('lesson-plans.department-review')->middleware('permission:lesson_plans.review');
@@ -430,31 +261,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::put('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'update'])->name('lesson-plans.follow-ups.update')->middleware('permission:lesson_plans.follow_up');
     Route::delete('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'destroy'])->name('lesson-plans.follow-ups.destroy')->middleware('permission:lesson_plans.follow_up');
 
-    // ── Subject Content Note Bank ──────────────────────────────
-    // Reusable teaching notes linked to lesson plans — shared across sections
-    Route::get('content-notes/api/sections', [SubjectContentNoteController::class, 'apiSections'])->name('content-notes.api-sections')->middleware('permission:lesson_plans.view');
-    Route::patch('content-notes/{content_note}/toggle-active', [SubjectContentNoteController::class, 'toggleActive'])->name('content-notes.toggle-active')->middleware('permission:lesson_plans.create');
-    Route::patch('content-notes/{content_note}/toggle-shared', [SubjectContentNoteController::class, 'toggleShared'])->name('content-notes.toggle-shared')->middleware('permission:lesson_plans.create');
-    Route::resource('content-notes', SubjectContentNoteController::class)->middleware('permission:lesson_plans.view');
-
     // ── Exam Questions (Department → Principal Pipeline) ──────
-    Route::get('exam-questions/api/sections-by-class', [ExamQuestionController::class, 'apiSectionsByClass'])->name('api.sections-by-class')->middleware('permission:exams.view');
-    Route::get('exam-questions/api/exam-details/{exam}', [ExamQuestionController::class, 'apiExamDetails'])->name('api.exam-details')->middleware('permission:exams.view');
     Route::resource('exam-questions', ExamQuestionController::class)->middleware('permission:exams.view');
     Route::post('exam-questions/{exam_question}/department-review', [ExamQuestionController::class, 'reviewByDepartment'])->name('exam-questions.department-review')->middleware('permission:exams.manage');
     Route::post('exam-questions/{exam_question}/principal-review', [ExamQuestionController::class, 'reviewByPrincipal'])->name('exam-questions.principal-review')->middleware('permission:exams.manage');
     Route::post('exam-questions/{exam_question}/request-revision', [ExamQuestionController::class, 'requestRevision'])->name('exam-questions.request-revision')->middleware('permission:exams.manage');
 
     // ── Self-Assessment Questions (Teacher creates, Student answers) ──
-    // Questions are class-level: apply to ALL branches and ALL sections within the class
-    // Custom routes MUST be before resource to avoid {assessment_question} conflicts
-    Route::get('assessment-questions/bulk/create', [AssessmentQuestionController::class, 'bulkCreate'])->name('assessment-questions.bulk-create')->middleware('permission:lesson_plans.create');
-    Route::post('assessment-questions/bulk', [AssessmentQuestionController::class, 'bulkStore'])->name('assessment-questions.bulk-store')->middleware('permission:lesson_plans.create');
-    Route::post('assessment-questions/bulk/import', [AssessmentQuestionController::class, 'bulkImport'])->name('assessment-questions.bulk-import')->middleware('permission:lesson_plans.create');
-    Route::get('assessment-questions/bulk/template', [AssessmentQuestionController::class, 'downloadTemplate'])->name('assessment-questions.download-template')->middleware('permission:lesson_plans.create');
-    Route::get('assessment-questions/report', [AssessmentQuestionController::class, 'report'])->name('assessment-questions.report')->middleware('permission:lesson_plans.view');
     Route::resource('assessment-questions', AssessmentQuestionController::class)->middleware('permission:lesson_plans.view');
     Route::post('assessment-questions/{assessment_question}/toggle-active', [AssessmentQuestionController::class, 'toggleActive'])->name('assessment-questions.toggle-active')->middleware('permission:lesson_plans.create');
+    Route::get('assessment-questions/bulk/create', [AssessmentQuestionController::class, 'bulkCreate'])->name('assessment-questions.bulk-create')->middleware('permission:lesson_plans.create');
+    Route::post('assessment-questions/bulk', [AssessmentQuestionController::class, 'bulkStore'])->name('assessment-questions.bulk-store')->middleware('permission:lesson_plans.create');
+    Route::get('assessment-questions/report', [AssessmentQuestionController::class, 'report'])->name('assessment-questions.report')->middleware('permission:lesson_plans.view');
+    Route::get('assessment-questions/api/sections/{classId}', [AssessmentQuestionController::class, 'apiSections'])->name('assessment-questions.api-sections');
 
     // ── Documents ─────────────────────────────────────────
     Route::resource('id-cards', IdCardController::class)->middleware('permission:id_cards.generate');
@@ -507,7 +326,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::resource('finance-statements', FinanceStatementController::class)->middleware('permission:finance_statements.view');
     Route::resource('fees', FeeController::class)->middleware('permission:fees.view');
     Route::resource('fee-payments', FeePaymentController::class)->middleware('permission:fee_payments.view');
-    Route::get('fee-payments/student/{studentId}/applicable-fees', [FeePaymentController::class, 'getApplicableFees'])->name('fee-payments.applicable-fees')->middleware('permission:fee_payments.view');
     Route::resource('payrolls', PayrollController::class)->middleware('permission:payrolls.view');
     Route::resource('leaves', LeaveController::class)->middleware('permission:leaves.view');
     Route::resource('employee-assets', EmployeeAssetController::class)->middleware('permission:employee_assets.view');
@@ -526,11 +344,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     // Academic Calendar
     Route::get('calendar', [CalendarEventController::class, 'index'])->name('calendar.index')->middleware('permission:calendar.view');
     Route::post('calendar', [CalendarEventController::class, 'store'])->name('calendar.store')->middleware('permission:calendar.manage');
-    Route::get('calendar/print', [CalendarEventController::class, 'printCalendar'])->name('calendar.print')->middleware('permission:calendar.view');
     Route::put('calendar/{calendar_event}', [CalendarEventController::class, 'update'])->name('calendar.update')->middleware('permission:calendar.manage');
     Route::delete('calendar/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar.destroy')->middleware('permission:calendar.manage');
-    Route::post('calendar/{calendar_event}/approve', [CalendarEventController::class, 'approve'])->name('calendar.approve')->middleware('permission:calendar.manage');
-    Route::post('calendar/{calendar_event}/reject', [CalendarEventController::class, 'reject'])->name('calendar.reject')->middleware('permission:calendar.manage');
     Route::get('api/calendar/events', [CalendarEventController::class, 'apiEvents'])->name('calendar.api.events');
     Route::get('api/calendar/event/{calendar_event}', [CalendarEventController::class, 'apiEvent'])->name('calendar.api.event');
 
@@ -603,7 +418,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // Web Content Management
     Route::get('web-content', [WebContentController::class, 'index'])->name('web-content.index')->middleware('permission:settings.view');
-    Route::match(['post', 'put'], 'web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
+    Route::post('web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
     Route::post('web-content/upload', [WebContentController::class, 'upload'])->name('web-content.upload')->middleware('permission:settings.edit');
 
     // Announcements
@@ -626,7 +441,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('report-exchange/{report_exchange}/download', [ReportExchangeController::class, 'download'])->name('report-exchange.download')->middleware('permission:settings.view');
     Route::post('report-exchange/{report_exchange}/comment', [ReportExchangeController::class, 'addComment'])->name('report-exchange.comment')->middleware('permission:settings.edit');
     Route::get('report-exchange-api/terms', [ReportExchangeController::class, 'getTerms'])->name('report-exchange.terms');
-    Route::get('report-exchange-api/period-options', [ReportExchangeController::class, 'getPeriodOptions'])->name('report-exchange.period-options');
 
     // User Access Management
     Route::get('user-access/teachers', [TeacherAccessController::class, 'index'])->name('user-access.teachers');
@@ -655,15 +469,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::put('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'updateSettings'])->name('email-inbox.settings.update')->middleware('permission:settings.edit');
     Route::delete('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'destroySettings'])->name('email-inbox.settings.destroy')->middleware('permission:settings.edit');
     Route::post('email-inbox-sync/{inboxSetting}', [EmailInboxController::class, 'syncInbox'])->name('email-inbox.sync')->middleware('permission:settings.edit');
-    Route::post('email-inbox-test/{inboxSetting}', [EmailInboxController::class, 'testConnection'])->name('email-inbox.test')->middleware('permission:settings.edit');
-
-    // ── Teacher Reviews (by Students) ────────────────────────
-    Route::get('teacher-reviews', [AdminTeacherReviewController::class, 'index'])->name('teacher-reviews.index')->middleware('permission:teachers.view');
-    Route::get('teacher-reviews/summary', [AdminTeacherReviewController::class, 'teacherSummary'])->name('teacher-reviews.summary')->middleware('permission:teachers.view');
-    Route::get('teacher-reviews/{teacher_review}', [AdminTeacherReviewController::class, 'show'])->name('teacher-reviews.show')->middleware('permission:teachers.view');
-    Route::post('teacher-reviews/{teacher_review}/flag', [AdminTeacherReviewController::class, 'flag'])->name('teacher-reviews.flag')->middleware('permission:teachers.manage');
-    Route::post('teacher-reviews/{teacher_review}/unflag', [AdminTeacherReviewController::class, 'unflag'])->name('teacher-reviews.unflag')->middleware('permission:teachers.manage');
-    Route::delete('teacher-reviews/{teacher_review}', [AdminTeacherReviewController::class, 'destroy'])->name('teacher-reviews.destroy')->middleware('permission:teachers.manage');
 
     // ── Bank Integration (Ethiopian Banks) ───────────────────
     Route::get('bank-integration', [BankIntegrationController::class, 'index'])->name('bank-integration.index')->middleware('permission:fee_payments.view');
@@ -678,18 +483,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // ── Club Follow-up Configuration ────────────────────────
     Route::resource('club-follow-up-configs', ClubFollowUpConfigController::class)->middleware('permission:settings.view');
-
-    // ── Teacher Efficiency Assessment (Principal by Term) ───
-    // Summary route MUST be before resource to avoid {teacher_efficiency} parameter conflict
-    Route::get('teacher-efficiency/summary', [TeacherEfficiencyAssessmentController::class, 'summary'])->name('teacher-efficiency.summary')->middleware('permission:exams.view');
-    Route::get('api/teachers-by-branch', [TeacherEfficiencyAssessmentController::class, 'apiTeachersByBranch'])->name('api.teachers-by-branch');
-    Route::post('teacher-efficiency/{teacher_efficiency_assessment}/acknowledge', [TeacherEfficiencyAssessmentController::class, 'acknowledge'])->name('teacher-efficiency.acknowledge')->middleware('permission:exams.view');
-    Route::post('teacher-efficiency/{teacher_efficiency_assessment}/lock', [TeacherEfficiencyAssessmentController::class, 'lock'])->name('teacher-efficiency.lock')->middleware('permission:exams.manage');
-    Route::resource('teacher-efficiency', TeacherEfficiencyAssessmentController::class)->middleware('permission:exams.view')->parameter('teacher-efficiency', 'teacher_efficiency_assessment');
-
-    // ── Teacher Evaluation (General) ──────────────────────────
-    Route::get('teacher-evaluations/analysis', [TeacherEvaluationController::class, 'analysis'])->name('teacher-evaluations.analysis')->middleware('permission:exams.view');
-    Route::resource('teacher-evaluations', TeacherEvaluationController::class)->middleware('permission:exams.view');
 });
 
 // ── Student Portal ──────────────────────────────────────────
@@ -715,12 +508,6 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->gro
     Route::post('assessment/question/{questionId}', [StudentAssessmentController::class, 'submitAnswer'])->name('assessment.submit');
     Route::get('assessment/question/{questionId}/retake', [StudentAssessmentController::class, 'retakeQuestion'])->name('assessment.retake');
     Route::get('assessment/progress', [StudentAssessmentController::class, 'progress'])->name('assessment.progress');
-
-    // Teacher Review
-    Route::get('teacher-review', [StudentTeacherReviewController::class, 'index'])->name('teacher-review.index');
-    Route::get('teacher-review/create', [StudentTeacherReviewController::class, 'create'])->name('teacher-review.create');
-    Route::post('teacher-review', [StudentTeacherReviewController::class, 'store'])->name('teacher-review.store');
-    Route::get('teacher-review/{teacher_review}', [StudentTeacherReviewController::class, 'show'])->name('teacher-review.show');
 });
 
 // ── Parent Portal ───────────────────────────────────────────
