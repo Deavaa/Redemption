@@ -624,7 +624,7 @@
                 </li>
             </ul>
             <a href="{{ route('app.download.apk') }}" class="btn-install android-btn">
-                <i class="fas fa-download"></i> Download APK (3 MB)
+                <i class="fas fa-download"></i> Download APK (4.5 MB)
             </a>
             <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 14px;margin-top:14px;">
                 <small style="color:#fbbf24;font-size:12px;font-weight:600;display:block;margin-bottom:4px;"><i class="fas fa-exclamation-triangle"></i> Troubleshooting</small>

@@ -2005,6 +2005,113 @@ document.addEventListener('DOMContentLoaded', initMobileIntegration);
 
 // Make functions globally available for other scripts
 window.showToast = showToast;
+
+// ── Capacitor Native Bridge Integration ──
+// This runs inside the native Android/iOS WebView and connects to native features
+(function() {
+    // Check if running inside Capacitor native app
+    var isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    if (!isCapacitor) return;
+
+    console.log('[Redemption] Running inside Capacitor native app');
+
+    // ── Push Notifications ──
+    if (window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
+        var PushNotifications = window.Capacitor.Plugins.PushNotifications;
+
+        // Request notification permission
+        PushNotifications.requestPermissions().then(function(result) {
+            if (result.receive === 'granted') {
+                PushNotifications.register();
+                console.log('[Redemption] Push notifications registered');
+            }
+        });
+
+        // Handle notification received while app is in foreground
+        PushNotifications.addListener('pushNotificationReceived', function(notification) {
+            console.log('[Redemption] Notification received:', notification);
+            // Show in-app toast
+            if (notification.title && notification.body) {
+                showToast(notification.body, 'info');
+                // Vibrate on notification
+                if (window.Capacitor.Plugins.Haptics) {
+                    window.Capacitor.Plugins.Haptics.notification();
+                }
+            }
+        });
+
+        // Handle notification clicked/tapped
+        PushNotifications.addListener('pushNotificationActionPerformed', function(action) {
+            console.log('[Redemption] Notification action:', action);
+            var data = action.notification && action.notification.data;
+            if (data && data.url) {
+                window.location.href = data.url;
+            }
+        });
+    }
+
+    // ── Network Status ──
+    if (window.Capacitor.Plugins && window.Capacitor.Plugins.Network) {
+        var Network = window.Capacitor.Plugins.Network;
+
+        Network.getStatus().then(function(status) {
+            if (status.connected === false) {
+                showToast('No internet connection', 'warning');
+            }
+        });
+
+        Network.addListener('networkStatusChange', function(status) {
+            if (status.connected) {
+                showToast('Back online', 'success');
+            } else {
+                showToast('You are offline', 'warning');
+            }
+        });
+    }
+
+    // ── Local Notifications (for in-app notifications) ──
+    if (window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+        var LocalNotifications = window.Capacitor.Plugins.LocalNotifications;
+
+        // Request permission
+        LocalNotifications.requestPermissions().then(function(result) {
+            console.log('[Redemption] Local notifications permission:', result.display);
+        });
+
+        // Handle local notification tap
+        LocalNotifications.addListener('localNotificationActionPerformed', function(action) {
+            console.log('[Redemption] Local notification action:', action);
+            var data = action.notification && action.notification.extra;
+            if (data && data.url) {
+                window.location.href = data.url;
+            }
+        });
+    }
+
+    // ── Native Loading Indicator Bridge ──
+    // Listen for custom loading events injected by the native MainActivity
+    document.addEventListener('redemption-loading', function(e) {
+        // Show a subtle in-app loading indicator for AJAX requests
+        var loader = document.getElementById('redemption-native-loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'redemption-native-loader';
+            loader.style.cssText = 'position:fixed;top:0;left:0;right:0;height:3px;z-index:99999;background:linear-gradient(90deg,#1a237e,#6366f1,#1a237e);background-size:200% 100%;animation:redemptionSlide 1.5s ease-in-out infinite;';
+            var style = document.createElement('style');
+            style.textContent = '@keyframes redemptionSlide{0%{background-position:200% 0}100%{background-position:-200% 0}}';
+            document.head.appendChild(style);
+            document.body.appendChild(loader);
+        }
+        loader.style.display = 'block';
+    });
+
+    document.addEventListener('redemption-loaded', function(e) {
+        var loader = document.getElementById('redemption-native-loader');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    });
+})();
 </script>
 </body>
 </html>
