@@ -96,6 +96,7 @@ use App\Http\Controllers\Enrollment\EnrollmentController;
 use App\Http\Controllers\TeacherEfficiency\TeacherEfficiencyAssessmentController;
 use App\Http\Controllers\TeacherEvaluation\TeacherEvaluationController;
 use App\Http\Controllers\Admin\MarkEntryConfigController;
+use App\Http\Controllers\Admin\MarkEntryDisallowalController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -301,6 +302,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::delete('mark-entry-permissions/{id}/revoke', [MarkEntryPermissionController::class, 'revoke'])->name('mark-entry-permissions.revoke')->middleware('permission:mark_entries.manage');
     Route::get('mark-entry-permissions/api/students', [MarkEntryPermissionController::class, 'apiStudents'])->name('mark-entry-permissions.api.students');
     Route::get('mark-entry-permissions/api/teacher-subjects', [MarkEntryPermissionController::class, 'apiTeacherSubjects'])->name('mark-entry-permissions.api.teacher-subjects');
+
+    // Mark Entry Disallowal Management (Branch Principal / Admin)
+    Route::get('mark-entry-disallowals', [MarkEntryDisallowalController::class, 'index'])->name('mark-entry-disallowals.index')->middleware('permission:mark_entries.view');
+    Route::post('mark-entry-disallowals', [MarkEntryDisallowalController::class, 'store'])->name('mark-entry-disallowals.store')->middleware('permission:mark_entries.manage');
+    Route::delete('mark-entry-disallowals/{id}/revoke', [MarkEntryDisallowalController::class, 'revoke'])->name('mark-entry-disallowals.revoke')->middleware('permission:mark_entries.manage');
+    Route::post('mark-entry-disallowals/batch', [MarkEntryDisallowalController::class, 'batchStore'])->name('mark-entry-disallowals.batch')->middleware('permission:mark_entries.manage');
+    Route::get('mark-entry-disallowals/api/teacher-assignments', [MarkEntryDisallowalController::class, 'apiTeacherAssignments'])->name('mark-entry-disallowals.api.teacher-assignments');
+    Route::get('mark-entry-disallowals/api/sections', [MarkEntryDisallowalController::class, 'apiSections'])->name('mark-entry-disallowals.api.sections');
+    Route::get('mark-entry-disallowals/api/subjects', [MarkEntryDisallowalController::class, 'apiSubjects'])->name('mark-entry-disallowals.api.subjects');
 
     // Promotion & Detention Management
     Route::get('promotion', [PromotionController::class, 'index'])->name('promotion.index')->middleware('permission:mark_entries.view');

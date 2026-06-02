@@ -111,7 +111,7 @@ class PermissionMiddleware
                 'subjects.view', 'subject_assignments.view',
                 'exams.view', 'classrooms.view', 'sections.view',
                 // Marks & Assessment
-                'mark_entries.view', 'mark_entries.create', 'mark_entries.edit',
+                'mark_entries.view', 'mark_entries.create', 'mark_entries.edit', 'mark_entries.manage',
                 'mark_sheets.view', 'mark_sheets.generate',
                 // People (full management within own branch only)
                 'students.view', 'students.create', 'students.edit', 'students.manage',

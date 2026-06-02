@@ -13,6 +13,7 @@ use App\Models\MarkEntry;
 use App\Models\MarkEntryConfig;
 use App\Models\MarkEntryLock;
 use App\Models\MarkEntryPermission;
+use App\Models\MarkEntryDisallowal;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -575,6 +576,35 @@ class MarkEntryController extends Controller
                 return response()->json([
                     'success' => false,
                     'error' => 'You are not authorized to enter marks for this class/section/subject.',
+                ], 403);
+            }
+
+            // ── Disallowal check: branch principal can disallow specific teachers ──
+            $effectiveAyId = $ayId;
+            $effectiveTermId = $termId;
+            if (!$effectiveAyId) {
+                $activeAy = AcademicYear::where('is_current', true)->first();
+                $effectiveAyId = $activeAy?->id;
+            }
+            if (!$effectiveTermId && $effectiveAyId) {
+                $activeTerm = Term::where('academic_year_id', $effectiveAyId)->where('is_active', true)->first();
+                $effectiveTermId = $activeTerm?->id;
+            }
+
+            $isDisallowed = MarkEntryDisallowal::isDisallowed(
+                $teacher->id,
+                $classId,
+                $sectionId,
+                $subjectId,
+                $effectiveAyId,
+                $effectiveTermId
+            );
+
+            if ($isDisallowed) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Your mark entry permission has been restricted for this class/section/subject. Contact your branch principal for assistance.',
+                    'is_disallowed' => true,
                 ], 403);
             }
         }
