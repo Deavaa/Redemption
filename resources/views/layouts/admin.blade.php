@@ -1816,21 +1816,34 @@ function toggleMobileMenu() {
 @media print {
     .admin-sidebar, .sidebar-backdrop, .admin-topbar, .sidebar-footer, .sidebar-toggle,
     .no-print, .mr-filter-card, .mr-header, .mr-actions, .me-filter-card, .me-header,
-    .me-keyboard-hint, .fms-card:first-of-type, .global-alert {
+    .me-keyboard-hint, .fms-card:first-of-type, .global-alert, .mobile-bottom-nav,
+    .swipe-indicator, #adminAnnouncementBar {
         display: none !important;
     }
-    .admin-wrapper, .admin-main {
+    .admin-wrapper {
         margin: 0 !important;
         padding: 0 !important;
+        display: block !important;
+    }
+    .admin-main {
+        margin: 0 !important;
+        margin-left: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow: visible !important;
     }
     .admin-content {
         padding: 0 !important;
-    }
-    .admin-sidebar {
-        display: none !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        max-width: 100% !important;
+        width: 100% !important;
     }
     body {
         background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 }
 </style>

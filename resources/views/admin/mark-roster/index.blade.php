@@ -121,11 +121,27 @@
 /* Print styles — each subject on its own page */
 @page{
     size:landscape;
-    margin:8mm
+    margin:5mm
 }
 @media print{
-    /* Reset all layout containers to full width */
-    .admin-wrapper,.admin-main,.admin-content{
+    /* Reset all layout containers to full width - override sidebar offset */
+    .admin-wrapper{
+        margin:0!important;
+        padding:0!important;
+        display:block!important;
+        box-sizing:border-box!important
+    }
+    .admin-main{
+        margin:0!important;
+        margin-left:0!important;
+        padding:0!important;
+        overflow:visible!important;
+        max-width:100%!important;
+        width:100%!important;
+        display:block!important;
+        box-sizing:border-box!important
+    }
+    .admin-content{
         margin:0!important;
         padding:0!important;
         overflow:visible!important;
@@ -134,30 +150,33 @@
         display:block!important;
         box-sizing:border-box!important
     }
-    body{
+    body,html{
         background:#fff!important;
         margin:0!important;
-        padding:0!important
+        padding:0!important;
+        width:100%!important;
+        overflow:visible!important
     }
     .mr-page{
         width:100%!important;
         max-width:100%!important;
         padding:0!important;
-        margin:0!important
+        margin:0!important;
+        overflow:visible!important
     }
     .print-only { display: block !important; }
     .mr-header,.mr-filter-card,.mr-actions,.mr-btn,
     .admin-sidebar,.sidebar-backdrop,.admin-topbar,.sidebar-footer,.sidebar-toggle,
-    .no-print,.global-alert{display:none!important}
+    .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{display:none!important}
     .mr-page{animation:none!important}
     .mr-subject-section{page-break-after:always;break-after:page}
     .mr-subject-section:last-child{page-break-after:auto;break-after:auto}
     .mr-subject-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0!important}
-    .mr-table{font-size:7pt;width:100%!important}
-    .mr-table-wrap{overflow:visible!important;width:100%!important}
+    .mr-table{font-size:7pt;width:100%!important;table-layout:fixed!important}
+    .mr-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important}
     .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .mr-table .rot-th{height:70px;font-size:6pt}
-    .mr-table td{padding:2px 3px!important;font-size:7pt!important}
+    .mr-table td{padding:2px 3px!important;font-size:7pt!important;overflow:hidden!important;text-overflow:ellipsis!important}
     .group-ca th,.group-exam th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .avg-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .info-bar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
