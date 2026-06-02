@@ -106,15 +106,88 @@
 .fms-stat-card.annual .stat-value{color:#059669}
 
 /* Print styles */
+@page{
+    size:landscape;
+    margin:8mm
+}
 @media print{
-    .fms-header,.fms-card,.fms-actions,.fms-term-stats{display:none!important}
-    .fms-term-head{border-radius:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .fms-seq-table{font-size:9pt}
-    .fms-seq-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .fms-term-section{page-break-inside:avoid}
-    .avg-row td,.highest-row td,.lowest-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .fms-seq-table .th-rotated{height:100px!important}
-    .fms-seq-table .th-rotated .th-rotate-text{font-size:7pt!important}
+    /* Reset all layout containers to full width */
+    .admin-wrapper,.admin-main,.admin-content{
+        margin:0!important;
+        padding:0!important;
+        overflow:visible!important;
+        max-width:100%!important;
+        width:100%!important;
+        display:block!important;
+        box-sizing:border-box!important
+    }
+    /* Hide non-print elements */
+    .fms-header,.fms-card,.fms-actions,.fms-term-stats,
+    .admin-sidebar,.sidebar-backdrop,.admin-topbar,.sidebar-footer,.sidebar-toggle,
+    .no-print,.global-alert{
+        display:none!important
+    }
+    /* Remove box shadows and decorative borders */
+    body{
+        background:#fff!important;
+        margin:0!important;
+        padding:0!important
+    }
+    .fms-page{
+        width:100%!important;
+        max-width:100%!important;
+        padding:0!important;
+        margin:0!important;
+        box-shadow:none!important;
+        border:none!important
+    }
+    .fms-term-head{
+        border-radius:0!important;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+        margin:0!important;
+        padding:6px 10px!important
+    }
+    /* Table container must not clip content */
+    .fms-seq-table-wrap{
+        overflow:visible!important;
+        width:100%!important
+    }
+    .fms-seq-table{
+        font-size:8pt;
+        width:100%!important;
+        table-layout:auto!important
+    }
+    .fms-seq-table th{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact
+    }
+    .fms-term-section{
+        page-break-inside:avoid;
+        margin-bottom:10px!important
+    }
+    .avg-row td,.highest-row td,.lowest-row td{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact
+    }
+    .fms-seq-table .th-rotated{
+        height:90px!important
+    }
+    .fms-seq-table .th-rotated .th-rotate-text{
+        font-size:6.5pt!important
+    }
+    .fms-seq-table td{
+        padding:3px 4px!important;
+        font-size:8pt!important
+    }
+    .fms-seq-table .stu-name{
+        min-width:120px!important;
+        font-size:8pt!important
+    }
+    .fms-seq-table .th-fixed{
+        font-size:7.5pt!important;
+        padding:4px 4px!important
+    }
 }
 
 /* Responsive */
