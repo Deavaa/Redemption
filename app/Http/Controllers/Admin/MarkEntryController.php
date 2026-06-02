@@ -511,7 +511,7 @@ class MarkEntryController extends Controller
 
         // Touch session to keep it alive during mark entry
         $request->session()->put('_last_mark_save', time());
-        if (config('session.driver') === 'database') {
+        if (in_array(config('session.driver'), ['database', 'safe_database'])) {
             try {
                 $sessionId = $request->session()->getId();
                 if ($sessionId) {

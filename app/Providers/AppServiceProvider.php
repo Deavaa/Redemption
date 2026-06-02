@@ -6,8 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
 use App\Models\CalendarEvent;
-use Illuminate\Support\Facades\Auth;
+use App\Session\NoGarbageSessionHandler;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,44 +41,17 @@ class AppServiceProvider extends ServiceProvider
         config(['database.default' => 'mysql']);
 
         // ============================================================
-        // SESSION CONFIGURATION
-        // ============================================================
-        // We set the session driver to 'database' which stores sessions
-        // in MySQL and is immune to PHP's native garbage collection.
+        // SESSION: Use 'database' driver with NoGarbageSessionHandler.
         //
-        // As a safety net, we also override PHP's native GC settings
-        // here. These are also set in public/index.php and .user.ini
-        // for maximum coverage.
-        //
-        // CRITICAL: Cookie name must be CONSISTENT everywhere.
-        // We use 'redemption_session' — matching config/session.php.
+        // The KEY FIX is a custom session driver called 'safe_database'
+        // that wraps Laravel's database handler with NoGarbageSessionHandler.
+        // This makes gc() a NO-OP so sessions can NEVER be deleted by
+        // PHP's garbage collection, regardless of php.ini settings.
         // ============================================================
-        @ini_set('session.gc_maxlifetime', 28800);  // 8 hours
-        @ini_set('session.gc_probability', 0);       // Disable PHP GC
-        @ini_set('session.gc_divisor', 1);
-        @ini_set('session.cookie_lifetime', 28800);
-
-        // Session driver — use 'database' if sessions table exists,
-        // otherwise fall back to 'file' (with PHP GC disabled above)
-        try {
-            $canUseDatabase = Schema::hasTable('sessions');
-        } catch (\Throwable $e) {
-            $canUseDatabase = false;
-        }
-
-        if ($canUseDatabase) {
-            config(['session.driver' => 'database']);
-        } else {
-            // Fall back to file driver — PHP GC is disabled above so
-            // file sessions won't be prematurely deleted
-            config(['session.driver' => 'file']);
-        }
-
+        config(['session.driver' => 'safe_database']);  // Our custom driver
         config(['session.table' => 'sessions']);
         config(['session.connection' => null]);
         config(['session.store' => null]);
-
-        // Session cookie settings — MUST match config/session.php
         config(['session.cookie' => 'redemption_session']);
         config(['session.path' => '/']);
         config(['session.domain' => null]);
@@ -88,7 +62,13 @@ class AppServiceProvider extends ServiceProvider
         config(['session.expire_on_close' => false]);
         config(['session.partitioned' => false]);
         config(['session.lifetime' => 480]); // 8 hours
-        config(['session.lottery' => [0, 1000]]); // DISABLE Laravel GC too (0% chance)
+        config(['session.lottery' => [0, 1000]]); // 0% chance — disabled
+
+        // Also try to disable PHP GC as extra safety net
+        @ini_set('session.gc_maxlifetime', 28800);
+        @ini_set('session.gc_probability', 0);
+        @ini_set('session.gc_divisor', 1);
+        @ini_set('session.cookie_lifetime', 28800);
     }
 
     /**
@@ -103,22 +83,42 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // ============================================================
-        // AUTO-CREATE sessions table if it doesn't exist.
-        // This ensures the database session driver works immediately.
+        // AUTO-CREATE sessions table using RAW SQL.
+        // Schema::create() can fail silently. Raw SQL is more reliable.
         // ============================================================
         try {
-            if (!Schema::hasTable('sessions')) {
-                Schema::create('sessions', function ($table) {
-                    $table->string('id')->primary();
-                    $table->foreignId('user_id')->nullable()->index();
-                    $table->string('ip_address', 45)->nullable();
-                    $table->text('user_agent')->nullable();
-                    $table->longText('payload');
-                    $table->integer('last_activity')->index();
-                });
+            $exists = DB::selectOne("SHOW TABLES LIKE 'sessions'");
+            if (!$exists) {
+                DB::statement("
+                    CREATE TABLE `sessions` (
+                        `id` varchar(255) NOT NULL PRIMARY KEY,
+                        `user_id` bigint unsigned DEFAULT NULL,
+                        `ip_address` varchar(45) DEFAULT NULL,
+                        `user_agent` text DEFAULT NULL,
+                        `payload` longtext NOT NULL,
+                        `last_activity` int NOT NULL,
+                        KEY `sessions_user_id_index` (`user_id`),
+                        KEY `sessions_last_activity_index` (`last_activity`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                ");
             }
         } catch (\Throwable $e) {
-            // Don't crash if table creation fails — file driver will be used
+            // Don't crash — try Schema::create as fallback
+            try {
+                if (!Schema::hasTable('sessions')) {
+                    Schema::create('sessions', function ($table) {
+                        $table->string('id')->primary();
+                        $table->foreignId('user_id')->nullable()->index();
+                        $table->string('ip_address', 45)->nullable();
+                        $table->text('user_agent')->nullable();
+                        $table->longText('payload');
+                        $table->integer('last_activity')->index();
+                    });
+                }
+            } catch (\Throwable $e2) {
+                // If both fail, fall back to file driver
+                config(['session.driver' => 'file']);
+            }
         }
 
         // Ensure session directory exists (for file driver fallback)
@@ -128,6 +128,48 @@ class AppServiceProvider extends ServiceProvider
                 mkdir($sessionDir, 0755, true);
             }
         } catch (\Throwable $e) {}
+
+        // ============================================================
+        // THE KEY FIX: Register 'safe_database' session driver.
+        //
+        // This creates a custom session driver that wraps Laravel's
+        // default database handler with NoGarbageSessionHandler.
+        //
+        // The NoGarbageSessionHandler overrides gc() to do NOTHING.
+        // When PHP calls gc() (garbage collection), it returns 0
+        // and does not delete any sessions. This makes sessions
+        // completely immune to PHP's garbage collection regardless
+        // of any php.ini, .user.ini, or ini_set() settings.
+        //
+        // Sessions still expire based on Laravel's session.lifetime
+        // check, but NOT through PHP's gc() function.
+        // ============================================================
+        Session::extend('safe_database', function ($app) {
+            $connection = $app['db']->connection($app['config']->get('session.connection'));
+            $table = $app['config']->get('session.table', 'sessions');
+            $minutes = $app['config']->get('session.lifetime', 480);
+
+            // Create Laravel's default database session handler
+            $databaseHandler = new \Illuminate\Session\DatabaseSessionHandler(
+                $connection, $table, $minutes, $app
+            );
+
+            // Wrap it with our NoGarbageSessionHandler that disables gc()
+            return new NoGarbageSessionHandler($databaseHandler);
+        });
+
+        // Also register a 'safe_file' driver as fallback
+        Session::extend('safe_file', function ($app) {
+            $path = $app['config']->get('session.files', storage_path('framework/sessions'));
+
+            // Create Laravel's default file session handler
+            $fileHandler = new \Illuminate\Session\FileSessionHandler(
+                $app['files'], $path, $app['config']->get('session.lifetime', 480)
+            );
+
+            // Wrap it with our NoGarbageSessionHandler that disables gc()
+            return new NoGarbageSessionHandler($fileHandler);
+        });
 
         // Share active announcements with admin layout
         View::composer('layouts.admin', function ($view) {

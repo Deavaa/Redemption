@@ -1,26 +1,20 @@
 <?php
 
 /**
- * ──────────────────────────────────────────────────────────────────
  * SESSION CONFIGURATION
- * ──────────────────────────────────────────────────────────────────
  *
- * All values are hard-coded to prevent misconfiguration from .env.
+ * Uses 'safe_database' driver — a custom driver that wraps Laravel's
+ * database handler with NoGarbageSessionHandler which DISABLES gc().
  *
- * KEY POINTS:
- * - Driver is 'database' (immune to PHP's garbage collection)
- * - AppServiceProvider may override to 'file' if sessions table
- *   doesn't exist (with PHP GC disabled in index.php and .user.ini)
- * - Cookie name is 'redemption_session' — MUST be consistent
- * - Lottery is [0, 1000] = 0% chance of session cleanup
- *   (We handle cleanup manually or let sessions naturally expire)
- *
- * ──────────────────────────────────────────────────────────────────
+ * This means PHP's garbage collection can NEVER delete sessions,
+ * regardless of php.ini settings. Sessions only expire through
+ * Laravel's own session.lifetime check.
  */
 
 return [
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    // Custom driver that disables garbage collection
+    'driver' => 'safe_database',
 
     'lifetime' => 480,
 
@@ -30,28 +24,23 @@ return [
 
     'files' => storage_path('framework/sessions'),
 
-    'connection' => env('SESSION_CONNECTION', null),
+    'connection' => null,
 
     'table' => 'sessions',
 
-    'store' => env('SESSION_STORE', null),
+    'store' => null,
 
-    // DISABLE Laravel's session GC entirely.
-    // [0, 1000] means 0% chance of cleanup on any request.
-    // Session cleanup is handled by the session.lifetime setting
-    // and manual cleanup, not by random garbage collection.
-    // This prevents any chance of active sessions being cleaned up.
+    // 0% chance of Laravel's own GC running
     'lottery' => [0, 1000],
 
-    // Cookie name — MUST match what AppServiceProvider sets.
-    // Never change this without updating AppServiceProvider too.
+    // Cookie name — MUST match AppServiceProvider
     'cookie' => 'redemption_session',
 
     'path' => '/',
 
-    'domain' => env('SESSION_DOMAIN', null),
+    'domain' => null,
 
-    'secure' => env('SESSION_SECURE_COOKIE', false),
+    'secure' => false,
 
     'http_only' => true,
 

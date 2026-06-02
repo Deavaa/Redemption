@@ -135,7 +135,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
         $request->session()->put('_last_keepalive', time());
 
         // Database driver: update last_activity directly
-        if (config('session.driver') === 'database') {
+        $driver = config('session.driver');
+        if ($driver === 'database' || $driver === 'safe_database') {
             try {
                 $sessionId = $request->session()->getId();
                 if ($sessionId) {
@@ -159,6 +160,68 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
           ->header('Pragma', 'no-cache')
           ->header('X-Session-Refreshed', '1');
     })->name('keepalive');
+
+    // Session Diagnostic — helps debug session expiration issues
+    Route::get('/session-diagnostic', function () {
+        $request = request();
+        $sessionId = $request->session()->getId();
+        $handler = $request->session()->getHandler();
+        $handlerClass = get_class($handler);
+
+        $diagnostics = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'php_version' => PHP_VERSION,
+            'session_id' => $sessionId,
+            'session_driver_config' => config('session.driver'),
+            'session_lifetime_config' => config('session.lifetime'),
+            'session_cookie_config' => config('session.cookie'),
+            'session_lottery_config' => config('session.lottery'),
+            'handler_class' => $handlerClass,
+            'handler_is_no_garbage' => $handler instanceof \App\Session\NoGarbageSessionHandler,
+            'underlying_handler_class' => ($handler instanceof \App\Session\NoGarbageSessionHandler)
+                ? get_class($handler->getHandler())
+                : 'N/A',
+            'php_gc_maxlifetime' => ini_get('session.gc_maxlifetime'),
+            'php_gc_probability' => ini_get('session.gc_probability'),
+            'php_gc_divisor' => ini_get('session.gc_divisor'),
+            'php_session_save_handler' => ini_get('session.save_handler'),
+            'php_session_save_path' => ini_get('session.save_path'),
+            'php_session_cookie_lifetime' => ini_get('session.cookie_lifetime'),
+            'session_data_keys' => array_keys($request->session()->all()),
+            'auth_user_id' => auth()->id(),
+            'auth_user_role' => auth()->user()?->role,
+        ];
+
+        // Check sessions table
+        try {
+            $sessionsTableExists = \Illuminate\Support\Facades\DB::selectOne("SHOW TABLES LIKE 'sessions'") ? true : false;
+            $diagnostics['sessions_table_exists'] = $sessionsTableExists;
+
+            if ($sessionsTableExists) {
+                $mySession = \Illuminate\Support\Facades\DB::table('sessions')->where('id', $sessionId)->first();
+                $diagnostics['my_session_in_db'] = $mySession ? [
+                    'id' => $mySession->id,
+                    'user_id' => $mySession->user_id,
+                    'last_activity' => $mySession->last_activity,
+                    'last_activity_ago_seconds' => time() - $mySession->last_activity,
+                    'ip_address' => $mySession->ip_address,
+                ] : 'NOT FOUND IN DATABASE';
+
+                $totalSessions = \Illuminate\Support\Facades\DB::table('sessions')->count();
+                $diagnostics['total_active_sessions'] = $totalSessions;
+
+                // Check for recently expired sessions
+                $recentlyExpired = \Illuminate\Support\Facades\DB::table('sessions')
+                    ->where('last_activity', '<', time() - 300) // older than 5 min
+                    ->count();
+                $diagnostics['sessions_older_than_5min'] = $recentlyExpired;
+            }
+        } catch (\Throwable $e) {
+            $diagnostics['sessions_table_error'] = $e->getMessage();
+        }
+
+        return response()->json($diagnostics, 200, [], JSON_PRETTY_PRINT);
+    })->name('session-diagnostic');
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');

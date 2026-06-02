@@ -46,7 +46,8 @@ class SessionKeepAlive
                 $session->put('_last_touch', time());
 
                 // Database driver: explicitly update last_activity in the sessions table
-                if (config('session.driver') === 'database') {
+                $driver = config('session.driver');
+                if ($driver === 'database' || $driver === 'safe_database') {
                     $sessionId = $session->getId();
                     if ($sessionId) {
                         DB::table(config('session.table', 'sessions'))
