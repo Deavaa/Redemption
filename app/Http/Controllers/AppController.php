@@ -81,4 +81,27 @@ class AppController extends Controller
         $settings = \App\Models\Setting::pluck('value', 'key')->toArray();
         return view('app.download', compact('settings'));
     }
+
+    /**
+     * Download the Android APK file
+     */
+    public function downloadApk()
+    {
+        // Try storage/app/public/downloads first, then public/downloads
+        $paths = [
+            storage_path('app/public/downloads/SchoolOfRedemption.apk'),
+            public_path('downloads/SchoolOfRedemption.apk'),
+        ];
+
+        foreach ($paths as $path) {
+            if (file_exists($path)) {
+                return response()->download($path, 'SchoolOfRedemption.apk', [
+                    'Content-Type' => 'application/vnd.android.package-archive',
+                    'Content-Length' => filesize($path),
+                ]);
+            }
+        }
+
+        abort(404, 'APK file not found. Please contact the administrator.');
+    }
 }

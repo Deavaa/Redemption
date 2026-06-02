@@ -619,7 +619,7 @@
                     <span>Tap <strong>"Install"</strong> then <strong>"Open"</strong> to launch the app</span>
                 </li>
             </ul>
-            <a href="{{ asset('downloads/SchoolOfRedemption.apk') }}" class="btn-install android-btn" download>
+            <a href="{{ route('app.download.apk') }}" class="btn-install android-btn">
                 <i class="fas fa-download"></i> Download APK (3 MB)
             </a>
             <div style="text-align:center;margin-top:12px;">

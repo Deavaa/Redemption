@@ -111,6 +111,7 @@ Route::get('/manifest.webmanifest', [AppController::class, 'manifest'])->name('a
 
 // App Download / Install Page
 Route::get('/app', [AppController::class, 'download'])->name('app.download');
+Route::get('/app/download/apk', [AppController::class, 'downloadApk'])->name('app.download.apk');
 
 // Public Contact Form
 Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');
