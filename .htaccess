@@ -40,20 +40,24 @@ Options -Indexes
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
     # ── Serve existing static files from public/ directory ──
-    # Only serve REAL files (CSS, JS, images, fonts, APK, etc.)
-    # Example: /Redemption/css/app.css → serves /Redemption/public/css/app.css
-    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    # When the browser requests /Redemption/css/admin.css, we need to
+    # serve the file from /Redemption/public/css/admin.css.
+    #
+    # HOW IT WORKS:
+    #   %{REQUEST_FILENAME} = the physical path Apache resolves for the URL
+    #     e.g., C:/xampp/htdocs/Redemption/css/admin.css
+    #   We check if C:/xampp/htdocs/Redemption/public/css/admin.css exists
+    #   If yes, rewrite to public/$1 so Apache serves it.
+    #
+    # We do NOT use %{DOCUMENT_ROOT}/public%{REQUEST_URI} because
+    # REQUEST_URI includes the subdirectory (/redemption/css/admin.css)
+    # and DOCUMENT_ROOT doesn't, so the path would be wrong.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond public/$1 -f
     RewriteRule ^(.*)$ public/$1 [L]
 
-    # ── Route ALL requests to root index.php ──
-    # This single rule catches EVERYTHING — dynamic routes, invalid URLs,
-    # directory requests — and sends them to Laravel. Laravel then shows
-    # the correct page or a proper 404 (instead of Apache's ugly 403).
-    #
-    # We only skip this rule if the request matches a REAL file on disk.
-    # We do NOT skip for directories because directories under this project
-    # (like /storage/, /vendor/) should not be browsable — they should
-    # be handled by Laravel or the block rules above.
+    # ── Route ALL other requests to root index.php ──
+    # This catches everything that isn't a real static file.
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.*)$ index.php [L]
 </IfModule>
