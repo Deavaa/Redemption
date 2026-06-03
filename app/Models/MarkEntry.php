@@ -104,7 +104,7 @@ class MarkEntry extends Model
     public function exam() { return $this->belongsTo(Exam::class); }
     public function term() { return $this->belongsTo(Term::class); }
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
-    public function classRoom() { return $this->belongsTo(Classroom::class, 'class_id'); }
+    public function classRoom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
     public function section() { return $this->belongsTo(Section::class); }
     public function teacher() { return $this->belongsTo(Teacher::class); }
 }

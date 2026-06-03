@@ -92,7 +92,7 @@
                                 <i class="fas fa-chalkboard modern-input-icon"></i>
                                 <select name="class_id" id="class_id" class="modern-input modern-select {{ $errors->has('class_id') ? 'is-invalid' : '' }}" required>
                                     <option value="">-- Select Class --</option>
-                                    @foreach(\App\Models\Classroom::orderBy('name')->get() as $class)
+                                    @foreach(\App\Models\ClassRoom::orderBy('name')->get() as $class)
                                         <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>
                                             {{ $class->name }}
                                         </option>

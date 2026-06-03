@@ -9,7 +9,7 @@ class Exam extends Model
     protected $casts = ['start_date'=>'date','end_date'=>'date'];
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
     public function term() { return $this->belongsTo(Term::class); }
-    public function classRoom() { return $this->belongsTo(Classroom::class, 'class_id'); }
+    public function classRoom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
     public function subject() { return $this->belongsTo(Subject::class); }
     public function calendarEvent() { return $this->hasOne(CalendarEvent::class); }
 }

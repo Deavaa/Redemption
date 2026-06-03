@@ -11,7 +11,7 @@ class Section extends Model
     // case-insensitive, $section->classroom and $section->classRoom both resolve
     // to this single method.  Do NOT add a separate classroom() alias or PHP
     // will throw "Cannot redeclare" fatal error.
-    public function classRoom() { return $this->belongsTo(Classroom::class, 'class_id'); }
+    public function classRoom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
     public function teacher() { return $this->belongsTo(Teacher::class, 'teacher_id'); }
 
     /**
@@ -19,6 +19,6 @@ class Section extends Model
      */
     public function branch()
     {
-        return $this->hasOneThrough(Branch::class, Classroom::class, 'id', 'id', 'class_id', 'branch_id');
+        return $this->hasOneThrough(Branch::class, ClassRoom::class, 'id', 'id', 'class_id', 'branch_id');
     }
 }

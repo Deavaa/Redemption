@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\IdCard;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\IdCard;
 use App\Models\AcademicYear;
@@ -12,7 +12,7 @@ class IdCardGenerateController extends Controller
 {
     public function index()
     {
-        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $preselectedStudentId = request()->query('student_id');
         $preselectedStudent = null;
 

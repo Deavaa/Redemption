@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Branch;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\MarkEntryDisallowal;
 use App\Models\Section;
 use App\Models\Subject;
@@ -41,7 +41,7 @@ class MarkEntryDisallowalController extends Controller
         $selectedTerm = $request->filled('term_id') ? Term::find($request->term_id) : $currentTerm;
 
         // Get classes for the selected branch
-        $classes = Classroom::when($selectedBranch, fn($q) => $q->where('branch_id', $selectedBranch->id))
+        $classes = ClassRoom::when($selectedBranch, fn($q) => $q->where('branch_id', $selectedBranch->id))
             ->orderBy('numeric_name', 'asc')->orderBy('name', 'asc')->get();
 
         // Get existing disallowals
@@ -99,7 +99,7 @@ class MarkEntryDisallowalController extends Controller
         if ($user->role === 'branch_principal') {
             // Branch principal can only disallow teachers in their own branch
             if (!empty($validated['class_id'])) {
-                $class = Classroom::find($validated['class_id']);
+                $class = ClassRoom::find($validated['class_id']);
                 if ($class && $class->branch_id != $user->branch_id) {
                     abort(403, 'You can only manage disallowals for your own branch.');
                 }

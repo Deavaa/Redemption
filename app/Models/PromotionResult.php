@@ -46,12 +46,12 @@ class PromotionResult extends Model
 
     public function fromClass()
     {
-        return $this->belongsTo(Classroom::class, 'from_class_id');
+        return $this->belongsTo(ClassRoom::class, 'from_class_id');
     }
 
     public function toClass()
     {
-        return $this->belongsTo(Classroom::class, 'to_class_id');
+        return $this->belongsTo(ClassRoom::class, 'to_class_id');
     }
 
     public function academicYear()

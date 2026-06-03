@@ -206,7 +206,7 @@
                         <label class="gmp-form-label" for="classId">Class <span class="required">*</span></label>
                         <select id="classId" class="gmp-select" required>
                             <option value="">-- Select Class --</option>
-                            @foreach (\App\Models\Classroom::orderBy('name')->get() as $class)
+                            @foreach (\App\Models\ClassRoom::orderBy('name')->get() as $class)
                                 <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
                             @endforeach
                         </select>

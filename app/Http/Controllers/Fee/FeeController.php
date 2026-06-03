@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Fee;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Branch;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Fee;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -36,7 +36,7 @@ class FeeController extends Controller
 
     public function create()
     {
-        $classrooms = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+        $classrooms = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
         $enrollmentTypes = Fee::enrollmentTypes();
@@ -83,7 +83,7 @@ class FeeController extends Controller
 
     public function edit(Fee $fee)
     {
-        $classrooms = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+        $classrooms = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
         $enrollmentTypes = Fee::enrollmentTypes();

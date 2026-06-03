@@ -4,7 +4,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Branch;
 use App\Models\Term;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
@@ -87,7 +87,7 @@ class MarkEntryController extends Controller
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
 
             // Load teacher-scoped classes for dropdown (also filter by branch if scoped)
-            $classes = Classroom::whereIn('id', $classIds)
+            $classes = ClassRoom::whereIn('id', $classIds)
                 ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
                 ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
 
@@ -158,11 +158,11 @@ class MarkEntryController extends Controller
             }
         } else {
             // Admin: load classes for the current academic year (with fallback), filtered by branch scope
-            $classes = Classroom::where('academic_year_id', $currentAy?->id)
+            $classes = ClassRoom::where('academic_year_id', $currentAy?->id)
                 ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
                 ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
             if ($classes->isEmpty()) {
-                $classes = Classroom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+                $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
                     ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
             }
             $sections = Section::with('classRoom')
@@ -197,7 +197,7 @@ class MarkEntryController extends Controller
             $homeroomClassIds = $teacher->classRooms()->pluck('id');
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
 
-            $query = Classroom::whereIn('id', $classIds);
+            $query = ClassRoom::whereIn('id', $classIds);
             if ($ayId) {
                 $query->where('academic_year_id', $ayId);
             }
@@ -208,7 +208,7 @@ class MarkEntryController extends Controller
 
             // Fallback: if no classes found for this AY, show all teacher classes
             if ($classes->isEmpty()) {
-                $fallbackQuery = Classroom::whereIn('id', $classIds);
+                $fallbackQuery = ClassRoom::whereIn('id', $classIds);
                 if ($effectiveBranchId) {
                     $fallbackQuery->where('branch_id', $effectiveBranchId);
                 }
@@ -218,7 +218,7 @@ class MarkEntryController extends Controller
             return response()->json($classes);
         }
 
-        $query = Classroom::query();
+        $query = ClassRoom::query();
         if ($ayId) {
             $query->where('academic_year_id', $ayId);
         }
@@ -229,7 +229,7 @@ class MarkEntryController extends Controller
 
         // Fallback: if no classes for this AY, show all classes for the branch
         if ($classes->isEmpty() && $ayId) {
-            $fallbackQuery = Classroom::query();
+            $fallbackQuery = ClassRoom::query();
             if ($effectiveBranchId) {
                 $fallbackQuery->where('branch_id', $effectiveBranchId);
             }
@@ -517,7 +517,7 @@ class MarkEntryController extends Controller
             }
             $rows[]=$row;
         }
-        $subject=Subject::find($subjectId); $term=Term::find($termId); $class=Classroom::find($classId); $section=Section::find($sectionId);
+        $subject=Subject::find($subjectId); $term=Term::find($termId); $class=ClassRoom::find($classId); $section=Section::find($sectionId);
         return response()->json(['students'=>$rows,'markFields'=>$markFields,
             'subject'=>$subject?$subject->name:'','term'=>$term?$term->name:'',
             'class'=>$class?$class->name:'','section'=>$section?$section->name:'']);
@@ -549,7 +549,7 @@ class MarkEntryController extends Controller
 
             // Resolve class_id from class_grade if needed
             if (empty($classId) && $request->filled('class_grade')) {
-                $classRoom = Classroom::where('name', $request->input('class_grade'))->first();
+                $classRoom = ClassRoom::where('name', $request->input('class_grade'))->first();
                 if ($classRoom) $classId = $classRoom->id;
             }
             // Resolve section_id from section if needed
@@ -617,13 +617,13 @@ class MarkEntryController extends Controller
             // Resolve class_id for lock check
             $lockClassId = $request->input('class_id');
             if (empty($lockClassId) && $request->filled('class_grade')) {
-                $cr = Classroom::where('name', $request->input('class_grade'))->first();
+                $cr = ClassRoom::where('name', $request->input('class_grade'))->first();
                 if ($cr) $lockClassId = $cr->id;
             }
             // Get branch_id from the class
             $branchId = null;
             if ($lockClassId) {
-                $classModel = Classroom::find($lockClassId);
+                $classModel = ClassRoom::find($lockClassId);
                 if ($classModel) $branchId = $classModel->branch_id;
             }
             // Fallback: use user's branch
@@ -669,7 +669,7 @@ class MarkEntryController extends Controller
 
         // Resolve class_id and section_id from class_grade/section if not provided
         if (empty($data['class_id']) && !empty($data['class_grade'])) {
-            $classRoom = Classroom::where('name', $data['class_grade'])->first();
+            $classRoom = ClassRoom::where('name', $data['class_grade'])->first();
             if ($classRoom) {
                 $data['class_id'] = $classRoom->id;
             }

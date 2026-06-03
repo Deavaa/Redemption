@@ -5,7 +5,7 @@ namespace App\Http\Controllers\ContentNote;
 use App\Http\Controllers\Controller;
 use App\Models\SubjectContentNote;
 use App\Models\Subject;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\TeacherAssignment;
 use App\Models\AcademicYear;
@@ -377,11 +377,11 @@ class SubjectContentNoteController extends Controller
     {
         $user = Auth::user();
         if ($user && in_array($user->role, ['admin', 'super_admin', 'branch_principal', 'general_manager'])) {
-            return Classroom::orderBy('name')->get();
+            return ClassRoom::orderBy('name')->get();
         }
 
         if (!$teacher) {
-            return Classroom::orderBy('name')->get();
+            return ClassRoom::orderBy('name')->get();
         }
 
         $classIds = collect();
@@ -411,10 +411,10 @@ class SubjectContentNoteController extends Controller
         }
 
         if ($classIds->isEmpty()) {
-            return Classroom::orderBy('name')->get();
+            return ClassRoom::orderBy('name')->get();
         }
 
-        return Classroom::whereIn('id', $classIds)->orderBy('name')->get();
+        return ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();
     }
 
     private function getTeacherLessonPlans($teacher, $activeAy)

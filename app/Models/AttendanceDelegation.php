@@ -27,7 +27,7 @@ class AttendanceDelegation extends Model
     // Relationships
     public function classRoom()
     {
-        return $this->belongsTo(Classroom::class, 'class_id');
+        return $this->belongsTo(ClassRoom::class, 'class_id');
     }
 
     public function section()
@@ -67,7 +67,7 @@ class AttendanceDelegation extends Model
         $date = $date ?? now()->toDateString();
 
         // Check if the teacher is a homeroom teacher for this class
-        $isHomeroom = Classroom::where('id', $classId)
+        $isHomeroom = ClassRoom::where('id', $classId)
             ->where('teacher_id', $teacherId)
             ->exists();
 
@@ -114,7 +114,7 @@ class AttendanceDelegation extends Model
         $date = $date ?? now()->toDateString();
 
         // Classes where teacher is the class homeroom
-        $classHomeroom = Classroom::where('teacher_id', $teacherId)->pluck('id')->toArray();
+        $classHomeroom = ClassRoom::where('teacher_id', $teacherId)->pluck('id')->toArray();
 
         // Classes where teacher is a section homeroom
         $sectionHomeroom = Section::where('teacher_id', $teacherId)

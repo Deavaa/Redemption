@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Attendance;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\AttendanceDelegation;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -58,7 +58,7 @@ class AttendanceController extends Controller
             : 0;
 
         // Summary by class
-        $classQuery = Classroom::withCount([
+        $classQuery = ClassRoom::withCount([
             'students as total_students' => fn($q) => $q->where('status', 'active'),
         ])->with(['sections']);
 
@@ -89,9 +89,9 @@ class AttendanceController extends Controller
             ->limit(20)
             ->get();
 
-        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         if ($isTeacher && $teacherModel) {
-            $classes = Classroom::whereIn('id', $assignableClassIds)->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $assignableClassIds)->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.attendance.index', compact(
@@ -142,9 +142,9 @@ class AttendanceController extends Controller
         // Get available classes
         if ($isTeacher && $teacherModel) {
             $assignableClassIds = AttendanceDelegation::getAssignableClasses($teacherModel->id, $selectedDate);
-            $classes = Classroom::whereIn('id', $assignableClassIds)->with('sections')->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $assignableClassIds)->with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = Classroom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         $terms = Term::orderByDesc('created_at')->get();
@@ -180,7 +180,7 @@ class AttendanceController extends Controller
         $isHomeroomForClass = false;
         $delegationInfo = null;
         if ($isTeacher && $teacherModel && $selectedClass) {
-            $isHomeroomForClass = Classroom::where('id', $selectedClass)
+            $isHomeroomForClass = ClassRoom::where('id', $selectedClass)
                 ->where('teacher_id', $teacherModel->id)
                 ->exists();
 
@@ -277,7 +277,7 @@ class AttendanceController extends Controller
 
     public function edit($date, $classId)
     {
-        $classes = Classroom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         $terms = Term::orderByDesc('created_at')->get();
 
         $records = Attendance::with(['student', 'classRoom', 'section'])
@@ -290,7 +290,7 @@ class AttendanceController extends Controller
                 ->with('error', 'No attendance records found for this date and class.');
         }
 
-        $classRoom = Classroom::findOrFail($classId);
+        $classRoom = ClassRoom::findOrFail($classId);
         $sections = Section::where('class_id', $classId)->orderBy('name')->get();
 
         // Get all active students in the class for the edit form
@@ -363,7 +363,7 @@ class AttendanceController extends Controller
         // Group by class
         $byClass = $records->groupBy('class_id');
 
-        $classes = Classroom::whereIn('id', $byClass->keys())->orderBy('numeric_name')->orderBy('name')->get()->keyBy('id');
+        $classes = ClassRoom::whereIn('id', $byClass->keys())->orderBy('numeric_name')->orderBy('name')->get()->keyBy('id');
 
         return view('admin.attendance.show', compact(
             'date', 'records', 'totalRecords', 'presentCount', 'absentCount',
@@ -526,7 +526,7 @@ class AttendanceController extends Controller
             }
         }
 
-        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $sections = collect();
         if ($classId) {
             $sections = Section::where('class_id', $classId)->orderBy('name')->get();

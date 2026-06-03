@@ -4,7 +4,7 @@ namespace App\Http\Controllers\MarkSheet;
 
 use App\Http\Controllers\Controller;
 use App\Models\MarkEntry;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\Term;
@@ -58,9 +58,9 @@ class MarkSheetFullController extends Controller
             $sectionHomeroomClassIds = Section::where('teacher_id', $teacher->id)->pluck('class_id')->unique();
             $classIds = $homeroomClassIds->merge($sectionHomeroomClassIds)->unique();
 
-            $classes = Classroom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.full', compact('academicYears', 'classes', 'isTeacher'));
@@ -301,7 +301,7 @@ class MarkSheetFullController extends Controller
         }
 
         // Lookup reference models
-        $class        = Classroom::find($classId);
+        $class        = ClassRoom::find($classId);
         $section      = $sectionId ? Section::find($sectionId) : null;
         $academicYear = AcademicYear::find($academicYearId);
 
@@ -316,7 +316,7 @@ class MarkSheetFullController extends Controller
             }
             $classes = $teacher->classRooms()->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.full', compact(

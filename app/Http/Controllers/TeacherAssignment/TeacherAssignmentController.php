@@ -4,7 +4,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TeacherAssignment;
 use App\Models\Teacher;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\Subject;
 use App\Models\AcademicYear;
@@ -18,14 +18,14 @@ class TeacherAssignmentController extends Controller
         if ($r->filled('class_id')) $q->where('class_id', $r->class_id);
         $data = $q->latest()->paginate(20);
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         return view('admin.TeacherAssignment.index', compact('data', 'academicYears', 'classes'));
     }
 
     public function create()
     {
         $teachers = Teacher::orderBy('full_name')->get();
-        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
 
         return view('admin.TeacherAssignment.create', compact('teachers', 'classes', 'academicYears'));
@@ -53,7 +53,7 @@ class TeacherAssignmentController extends Controller
     public function edit(TeacherAssignment $teacher_assignment)
     {
         $teachers = Teacher::orderBy('full_name')->get();
-        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         $sections = Section::where('class_id', $teacher_assignment->class_id)->orderBy('name')->get();
         $subjects = Subject::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();

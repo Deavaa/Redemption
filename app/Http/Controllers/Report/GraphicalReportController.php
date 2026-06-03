@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Report;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\Teacher;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Branch;
 use App\Models\FeePayment;
 use App\Models\Fee;
@@ -42,12 +42,12 @@ class GraphicalReportController extends Controller
 
         // Student enrollment by class
         try {
-            $studentsByClass = Classroom::withCount('students')->orderBy('numeric_name')->orderBy('name')->get()->map(fn($c) => [
+            $studentsByClass = ClassRoom::withCount('students')->orderBy('numeric_name')->orderBy('name')->get()->map(fn($c) => [
                 'name' => $c->name,
                 'count' => $c->students_count,
             ]);
         } catch (\BadMethodCallException $e) {
-            $studentsByClass = Classroom::orderBy('numeric_name')->orderBy('name')->get()->map(fn($c) => [
+            $studentsByClass = ClassRoom::orderBy('numeric_name')->orderBy('name')->get()->map(fn($c) => [
                 'name' => $c->name,
                 'count' => Student::where('class_id', $c->id)->count(),
             ]);

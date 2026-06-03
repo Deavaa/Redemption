@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Enrollment;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Branch;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
@@ -99,7 +99,7 @@ class EnrollmentController extends Controller
         $effectiveAyId = $academicYearId;
         $effectiveBranchId = $branchScope ?? $branchId;
 
-        $classesQuery = Classroom::with('sections')
+        $classesQuery = ClassRoom::with('sections')
             ->where('academic_year_id', $effectiveAyId);
         if ($effectiveBranchId) {
             $classesQuery->where('branch_id', $effectiveBranchId);
@@ -108,7 +108,7 @@ class EnrollmentController extends Controller
 
         // Fallback: if no classes found for this AY, show all classes for the branch
         if ($classes->isEmpty()) {
-            $fallbackQuery = Classroom::with('sections');
+            $fallbackQuery = ClassRoom::with('sections');
             if ($effectiveBranchId) {
                 $fallbackQuery->where('branch_id', $effectiveBranchId);
             }
@@ -156,7 +156,7 @@ class EnrollmentController extends Controller
         $currentAy = AcademicYear::where('is_current', true)->first()
             ?? AcademicYear::orderBy('id', 'desc')->first();
 
-        $classesQuery = Classroom::with('sections');
+        $classesQuery = ClassRoom::with('sections');
         if ($branchScope) {
             $classesQuery->where('branch_id', $branchScope);
         }
@@ -167,7 +167,7 @@ class EnrollmentController extends Controller
 
         // Fallback: if no classes for current AY, show all classes for the branch
         if ($classes->isEmpty()) {
-            $fallbackQuery = Classroom::with('sections');
+            $fallbackQuery = ClassRoom::with('sections');
             if ($branchScope) {
                 $fallbackQuery->where('branch_id', $branchScope);
             }
@@ -264,12 +264,12 @@ class EnrollmentController extends Controller
         $branches = Branch::where('is_active', true)->get();
 
         // Try to load classes for the enrollment's academic year, with fallback
-        $classesQuery = Classroom::with('sections')
+        $classesQuery = ClassRoom::with('sections')
             ->where('academic_year_id', $enrollment->academic_year_id);
         $classes = $classesQuery->orderBy('numeric_name')->orderBy('name')->get();
 
         if ($classes->isEmpty()) {
-            $classes = Classroom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         $sections = Section::where('class_id', $enrollment->class_id)->orderBy('name')->get();
@@ -614,7 +614,7 @@ class EnrollmentController extends Controller
         $branchScope = $request->attributes->get('branch_scope');
         $effectiveBranchId = $branchScope ?? $branchId;
 
-        $classes = Classroom::when($effectiveBranchId, fn($q) => $q->where('branch_id', $effectiveBranchId))
+        $classes = ClassRoom::when($effectiveBranchId, fn($q) => $q->where('branch_id', $effectiveBranchId))
             ->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))
             ->with('sections')
             ->orderBy('numeric_name')
@@ -623,7 +623,7 @@ class EnrollmentController extends Controller
 
         // Fallback: if no classes found for this AY, show all classes for the branch
         if ($classes->isEmpty() && $academicYearId) {
-            $classes = Classroom::when($effectiveBranchId, fn($q) => $q->where('branch_id', $effectiveBranchId))
+            $classes = ClassRoom::when($effectiveBranchId, fn($q) => $q->where('branch_id', $effectiveBranchId))
                 ->with('sections')
                 ->orderBy('numeric_name')
                 ->orderBy('name')
@@ -696,7 +696,7 @@ class EnrollmentController extends Controller
      */
     private function getPromotedClassSection(int $currentClassId, int $currentSectionId, int $branchId, int $targetAyId): ?array
     {
-        $currentClass = Classroom::find($currentClassId);
+        $currentClass = ClassRoom::find($currentClassId);
         $currentSection = Section::find($currentSectionId);
 
         if (!$currentClass) return null;
@@ -711,14 +711,14 @@ class EnrollmentController extends Controller
         }
 
         // Find the next grade class in the target academic year
-        $nextClass = Classroom::where('branch_id', $branchId)
+        $nextClass = ClassRoom::where('branch_id', $branchId)
             ->where('academic_year_id', $targetAyId)
             ->where('numeric_name', $nextGrade)
             ->first();
 
         if (!$nextClass) {
             // If no next grade exists, keep in same grade
-            $nextClass = Classroom::where('branch_id', $branchId)
+            $nextClass = ClassRoom::where('branch_id', $branchId)
                 ->where('academic_year_id', $targetAyId)
                 ->where('numeric_name', $currentGrade)
                 ->first();
@@ -788,11 +788,11 @@ class EnrollmentController extends Controller
             $sectionId = $student->section_id;
 
             if ($classId) {
-                $existingClass = Classroom::find($classId);
+                $existingClass = ClassRoom::find($classId);
                 // If the student's class belongs to a different AY, try to find
                 // the equivalent class in the current AY (same grade + branch)
                 if ($existingClass && $existingClass->academic_year_id != $currentAy->id) {
-                    $matchingClass = Classroom::where('branch_id', $existingClass->branch_id)
+                    $matchingClass = ClassRoom::where('branch_id', $existingClass->branch_id)
                         ->where('academic_year_id', $currentAy->id)
                         ->where('numeric_name', $existingClass->numeric_name)
                         ->first();

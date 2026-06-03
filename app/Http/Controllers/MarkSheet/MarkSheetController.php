@@ -5,7 +5,7 @@ namespace App\Http\Controllers\MarkSheet;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\MarkEntry;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\Exam;
 use App\Models\AcademicYear;
@@ -66,9 +66,9 @@ class MarkSheetController extends Controller
             $sectionHomeroomClassIds = Section::where('teacher_id', $teacher->id)->pluck('class_id')->unique();
             $classIds = $homeroomClassIds->merge($assignmentClassIds)->merge($sectionHomeroomClassIds)->unique();
 
-            $classes = Classroom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.index', compact('academicYears', 'terms', 'classes', 'exams', 'isTeacher'));
@@ -117,7 +117,7 @@ class MarkSheetController extends Controller
             $s = $studentMarks->first()?->student;
             return $s ? (intval($s->roll_number) * 10000 + ord(strtoupper($s->full_name[0] ?? 'A'))) : 0;
         });
-        $class = Classroom::find($r->class_id);
+        $class = ClassRoom::find($r->class_id);
         $academicYear = AcademicYear::find($r->academic_year_id);
         $term = $r->filled('term_id') ? Term::find($r->term_id) : null;
 

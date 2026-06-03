@@ -4,7 +4,7 @@ namespace App\Http\Controllers\MarkSheet;
 
 use App\Http\Controllers\Controller;
 use App\Models\MarkEntry;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\Term;
@@ -65,9 +65,9 @@ class MarkRosterController extends Controller
             $homeroomClassIds = $teacher->classRooms()->pluck('id');
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
 
-            $classes = Classroom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-roster.index', compact('academicYears', 'terms', 'classes', 'isTeacher'));
@@ -275,7 +275,7 @@ class MarkRosterController extends Controller
         }
 
         // ── Lookup reference models ──────────────────────────────────
-        $class        = Classroom::find($r->class_id);
+        $class        = ClassRoom::find($r->class_id);
         $section      = $r->filled('section_id') ? Section::find($r->section_id) : null;
         $academicYear = AcademicYear::find($r->academic_year_id);
         $term         = Term::find($r->term_id);
@@ -301,9 +301,9 @@ class MarkRosterController extends Controller
             $assignmentClassIds = $teacher->assignments()->pluck('class_id')->unique();
             $homeroomClassIds = $teacher->classRooms()->pluck('id');
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
-            $classes = Classroom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-roster.index', compact(
