@@ -38,7 +38,7 @@ public function getLastNameAttribute()
 }
 
 public function sections() { return $this->hasMany(Section::class, 'teacher_id'); }
-public function classRooms() { return $this->hasMany(ClassRoom::class, 'teacher_id'); }
+public function classRooms() { return $this->hasMany(Classroom::class, 'teacher_id'); }
 public function assignments() { return $this->hasMany(TeacherAssignment::class, 'teacher_id'); }
 public function branchPrincipal() { return $this->hasOne(Branch::class, 'principal_id'); }
 public function department() { return $this->belongsTo(Department::class, 'department_id'); }

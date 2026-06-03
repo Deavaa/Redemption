@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Certificate;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\MarkEntry;
 use App\Models\Certificate;
 use App\Models\AcademicYear;
@@ -16,7 +16,7 @@ class TranscriptController extends Controller
 {
     public function index()
     {
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
 
         // If student_id is provided, directly generate the transcript
         $preselectedStudentId = request()->query('student_id');

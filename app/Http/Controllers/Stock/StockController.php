@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\StockItem;
 use App\Models\StockTransaction;
 use App\Models\User;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Branch;
 
 class StockController extends Controller
@@ -203,7 +203,7 @@ class StockController extends Controller
     {
         $items = StockItem::where('is_active', true)->where('quantity', '>', 0)->orderBy('name')->get();
         $employees = User::whereIn('role', ['admin', 'teacher', 'staff'])->orderBy('name')->get();
-        $classrooms = ClassRoom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
+        $classrooms = Classroom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
         $reasons = StockTransaction::reasonOptions();
         // Filter to only 'out' reasons
         $outReasons = array_intersect_key($reasons, array_flip(['issue_employee', 'issue_class', 'damaged', 'lost', 'adjustment', 'transfer']));
@@ -233,7 +233,7 @@ class StockController extends Controller
         if ($r->reason === 'issue_employee' && $recipientId) {
             $recipientType = User::class;
         } elseif ($r->reason === 'issue_class' && $recipientId) {
-            $recipientType = ClassRoom::class;
+            $recipientType = Classroom::class;
         }
 
         // Deduct stock

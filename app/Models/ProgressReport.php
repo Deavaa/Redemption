@@ -9,6 +9,6 @@ class ProgressReport extends Model{
     public function student(){return $this->belongsTo(Student::class);}
     public function academicYear(){return $this->belongsTo(AcademicYear::class);}
     public function term(){return $this->belongsTo(Term::class);}
-    public function classroom(){return $this->belongsTo(ClassRoom::class,'class_id');}
+    public function classroom(){return $this->belongsTo(Classroom::class,'class_id');}
     public function subjects(){return $this->hasMany(ProgressReportSubject::class,"progress_report_id");}
 }

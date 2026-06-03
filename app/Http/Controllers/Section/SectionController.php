@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Section;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Section;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Teacher;
 
 class SectionController extends Controller {
@@ -19,13 +19,13 @@ class SectionController extends Controller {
         if ($r->filled('class_id')) $q->where('class_id', $r->class_id);
         $data = $q->latest()->paginate(20);
         $totalSections = Section::count();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         return view('admin.Section.index', compact('data', 'totalSections', 'classes'));
     }
 
     public function create()
     {
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
         return view('admin.Section.create', compact('classes','teachers'));
     }
@@ -40,7 +40,7 @@ class SectionController extends Controller {
         ]);
         $section = Section::create($r->only(['class_id','name','max_students','teacher_id']));
         // Recalculate parent classroom capacity
-        $class = ClassRoom::find($r->class_id);
+        $class = Classroom::find($r->class_id);
         if ($class) $class->recalculateCapacity();
         return redirect()->route('admin.sections.index')->with('success','Section created successfully');
     }
@@ -53,7 +53,7 @@ class SectionController extends Controller {
 
     public function edit(Section $section)
     {
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
         return view('admin.Section.edit', compact('section','classes','teachers'));
     }
@@ -70,16 +70,16 @@ class SectionController extends Controller {
         $section->update($r->only(['class_id','name','max_students','teacher_id']));
         // Recalculate capacity for old and new classroom
         if ($oldClassId != $r->class_id) {
-            $oldClass = ClassRoom::find($oldClassId);
+            $oldClass = Classroom::find($oldClassId);
             if ($oldClass) $oldClass->recalculateCapacity();
         }
-        $newClass = ClassRoom::find($r->class_id);
+        $newClass = Classroom::find($r->class_id);
         if ($newClass) $newClass->recalculateCapacity();
         return redirect()->route('admin.sections.index')->with('success','Section updated successfully');
     }
 
     public function destroy(Section $section) {
-        $class = ClassRoom::find($section->class_id);
+        $class = Classroom::find($section->class_id);
         $section->delete();
         if ($class) $class->recalculateCapacity();
         return back()->with('success','Section deleted successfully');

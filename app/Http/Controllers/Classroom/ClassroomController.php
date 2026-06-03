@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Classroom;
 use App\Http\Controllers\Controller;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\Teacher;
@@ -13,8 +13,8 @@ class ClassroomController extends Controller
 {
     public function index()
     {
-        $classes = ClassRoom::with(["academicYear", "sections"])->orderBy("numeric_name")->orderBy("name")->paginate(10);
-        $totalClasses = ClassRoom::count();
+        $classes = Classroom::with(["academicYear", "sections"])->orderBy("numeric_name")->orderBy("name")->paginate(10);
+        $totalClasses = Classroom::count();
         $totalSections = \App\Models\Section::count();
         $activeAcademicYear = \App\Models\AcademicYear::latest()->first();
 
@@ -42,7 +42,7 @@ class ClassroomController extends Controller
         ]);
 
         try {
-            $class = ClassRoom::create($request->only('name','academic_year_id','branch_id','numeric_name'));
+            $class = Classroom::create($request->only('name','academic_year_id','branch_id','numeric_name'));
             if ($request->has('sections')) {
                 foreach ($request->sections as $sec) {
                     if (!empty($sec['name'])) {
@@ -68,7 +68,7 @@ class ClassroomController extends Controller
 
     public function edit($id)
     {
-        $data = ClassRoom::with(['sections.teacher','academicYear','branch'])->findOrFail($id);
+        $data = Classroom::with(['sections.teacher','academicYear','branch'])->findOrFail($id);
         $academicYears = AcademicYear::orderBy('name')->get();
         $teachers = Teacher::orderBy('full_name')->get();
         $branches = Branch::orderBy('name')->get();
@@ -98,7 +98,7 @@ class ClassroomController extends Controller
         ]);
 
         try {
-            $class = ClassRoom::findOrFail($id);
+            $class = Classroom::findOrFail($id);
 
             // Update class info — no teacher_id at class level
             $class->update($request->only('name','academic_year_id','branch_id','numeric_name'));
@@ -139,7 +139,7 @@ class ClassroomController extends Controller
 
     public function destroy($id)
     {
-        $class = ClassRoom::findOrFail($id);
+        $class = Classroom::findOrFail($id);
         Section::where('class_id', $class->id)->delete();
         $class->delete();
         return redirect()->route('admin.classrooms.index')->with('success','Deleted');

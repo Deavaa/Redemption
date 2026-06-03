@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExamQuestion;
 use App\Models\Teacher;
 use App\Models\Subject;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Term;
 use App\Models\AcademicYear;
 use App\Models\Department;
@@ -68,7 +68,7 @@ class ExamQuestionController extends Controller
             ?? Teacher::where('email', $user->email)->first();
 
         $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $allTerms = Term::orderBy('id')->get();
         $branches = Branch::orderBy('name')->get();
@@ -148,7 +148,7 @@ class ExamQuestionController extends Controller
         }
 
         $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $allTerms = Term::orderBy('id')->get();
         $branches = Branch::orderBy('name')->get();

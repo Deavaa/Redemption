@@ -5,7 +5,7 @@ namespace App\Http\Controllers\MarkSheet;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\MarkEntry;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\Term;
@@ -20,7 +20,7 @@ class ReportCardController extends Controller
     public function index()
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
 
         return view('admin.report-card.index', compact('academicYears', 'classes'));
     }
@@ -197,7 +197,7 @@ class ReportCardController extends Controller
         });
 
         // Reference data
-        $class = ClassRoom::find($classId);
+        $class = Classroom::find($classId);
         $section = $sectionId ? Section::find($sectionId) : null;
         $academicYear = AcademicYear::find($academicYearId);
 
@@ -217,7 +217,7 @@ class ReportCardController extends Controller
         }
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
 
         return view('admin.report-card.card', compact(
             'students', 'class', 'section', 'academicYear',

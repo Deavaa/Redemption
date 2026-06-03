@@ -6,7 +6,7 @@ use App\Models\ProgressReportSubject;
 use App\Models\Student;
 use App\Models\AcademicYear;
 use App\Models\Term;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use Illuminate\Http\Request;
 
 class ProgressReportController extends Controller
@@ -32,7 +32,7 @@ class ProgressReportController extends Controller
         $s = Student::where("status", "active")->orderBy("full_name")->get();
         $ay = AcademicYear::orderBy("name")->get();
         $t = Term::orderBy("name")->get();
-        $c = ClassRoom::orderBy("numeric_name")->orderBy("name")->get();
+        $c = Classroom::orderBy("numeric_name")->orderBy("name")->get();
         return view("admin.ProgressReport.create", compact("s", "ay", "t", "c"));
     }
 
@@ -98,7 +98,7 @@ class ProgressReportController extends Controller
         $s = Student::where("status", "active")->orderBy("full_name")->get();
         $ay = AcademicYear::orderBy("name")->get();
         $t = Term::orderBy("name")->get();
-        $c = ClassRoom::orderBy("numeric_name")->orderBy("name")->get();
+        $c = Classroom::orderBy("numeric_name")->orderBy("name")->get();
         return view("admin.ProgressReport.edit", compact("progress_report", "s", "ay", "t", "c"));
     }
 

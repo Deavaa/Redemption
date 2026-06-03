@@ -4,7 +4,7 @@ namespace App\Http\Controllers\LessonPlan;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\LessonPlan;
 use App\Models\Section;
 use App\Models\Setting;
@@ -81,7 +81,7 @@ class LessonPlanController extends Controller
         $terms = Term::when($request->filled('academic_year_id'),
             fn($q) => $q->where('academic_year_id', $request->academic_year_id)
         )->orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $subjects = Subject::active()->ordered()->get();
 
         // Teacher assignments for teacher users (for cascading dropdowns)
@@ -118,7 +118,7 @@ class LessonPlanController extends Controller
 
         $academicYears = AcademicYear::orderBy('name')->get();
         $terms = Term::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $subjects = Subject::active()->ordered()->get();
         $teachers = $isTeacher ? collect() : Teacher::orderBy('full_name')->get();
         $currentAy = AcademicYear::where('is_current', true)->first();
@@ -230,7 +230,7 @@ class LessonPlanController extends Controller
 
         $academicYears = AcademicYear::orderBy('name')->get();
         $terms = Term::where('academic_year_id', $lessonPlan->academic_year_id)->orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $subjects = Subject::active()->ordered()->get();
         $teachers = $isTeacher ? collect() : Teacher::orderBy('full_name')->get();
 
@@ -432,7 +432,7 @@ class LessonPlanController extends Controller
         $term = $termId ? Term::find($termId) : null;
         $teacher = $teacherId ? Teacher::find($teacherId) : null;
         $subject = $subjectId ? Subject::find($subjectId) : null;
-        $classRoom = $classId ? ClassRoom::find($classId) : null;
+        $classRoom = $classId ? Classroom::find($classId) : null;
         $section = $sectionId ? Section::find($sectionId) : null;
 
         return view('admin.lesson-plans.print-yearly', compact(
@@ -499,7 +499,7 @@ class LessonPlanController extends Controller
         $term = $termId ? Term::find($termId) : null;
         $teacher = $teacherId ? Teacher::find($teacherId) : null;
         $subject = $subjectId ? Subject::find($subjectId) : null;
-        $classRoom = $classId ? ClassRoom::find($classId) : null;
+        $classRoom = $classId ? Classroom::find($classId) : null;
         $section = $sectionId ? Section::find($sectionId) : null;
 
         return view('admin.lesson-plans.print-weekly', compact(

@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Student;
 use App\Models\User;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Branch;
 use App\Models\Subject;
 use App\Models\AcademicYear;
@@ -17,7 +17,7 @@ class DashboardController extends Controller
     public function index() {
         $totalStudents = Student::count();
         $totalTeachers = User::where('role','teacher')->count();
-        $totalClasses = ClassRoom::count();
+        $totalClasses = Classroom::count();
         $totalBranches = Branch::count();
         $totalSubjects = Subject::count();
         $unreadMessages = ContactMessage::where('is_read',0)->count();

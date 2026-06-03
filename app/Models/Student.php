@@ -11,7 +11,7 @@ class Student extends Model
     protected function casts(): array { return ['admission_date'=>'date','date_of_birth'=>'date','original_admission_date'=>'date','leave_date'=>'date','is_readmitted'=>'boolean']; }
     public function user() { return $this->belongsTo(User::class); }
     public function branch() { return $this->belongsTo(Branch::class); }
-    public function classroom() { return $this->belongsTo(ClassRoom::class, 'class_id'); }
+    public function classroom() { return $this->belongsTo(Classroom::class, 'class_id'); }
     public function section() { return $this->belongsTo(Section::class); }
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
     public function parents() { return $this->belongsToMany(ParentModel::class, 'student_parent', 'student_id', 'parent_id')->withPivot('relation')->withTimestamps(); }
@@ -23,7 +23,7 @@ class Student extends Model
     public function feePayments() { return $this->hasMany(FeePayment::class); }
     public function attendances() { return $this->hasMany(Attendance::class); }
     public function promotionResults() { return $this->hasMany(PromotionResult::class); }
-    public function previousClassroom() { return $this->belongsTo(ClassRoom::class, 'previous_class_id'); }
+    public function previousClassroom() { return $this->belongsTo(Classroom::class, 'previous_class_id'); }
     public function previousSection() { return $this->belongsTo(Section::class, 'previous_section_id'); }
     public function enrollments() { return $this->hasMany(StudentEnrollment::class); }
     public function currentEnrollment() { return $this->hasOne(StudentEnrollment::class)->where('academic_year_id', AcademicYear::where('is_current', true)->value('id') ?? AcademicYear::max('id'))->where('status', 'enrolled'); }

@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\AcademicYear;
 use App\Models\Attendance;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\GradeScale;
 use App\Models\MarkEntry;
 use App\Models\PromotionResult;
@@ -398,18 +398,18 @@ class PromotionService
      * Get the next class for promotion based on numeric_name ordering.
      *
      * @param  int  $classId  Current class ID
-     * @return ClassRoom|null
+     * @return Classroom|null
      */
-    public function getNextClass(int $classId): ?ClassRoom
+    public function getNextClass(int $classId): ?Classroom
     {
-        $currentClass = ClassRoom::find($classId);
+        $currentClass = Classroom::find($classId);
 
         if (! $currentClass) {
             return null;
         }
 
         // Find the class with the next higher numeric_name in the same branch
-        return ClassRoom::where('branch_id', $currentClass->branch_id)
+        return Classroom::where('branch_id', $currentClass->branch_id)
             ->where('numeric_name', '>', $currentClass->numeric_name)
             ->orderBy('numeric_name', 'asc')
             ->first();

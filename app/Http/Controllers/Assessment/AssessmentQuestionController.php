@@ -7,7 +7,7 @@ use App\Models\AssessmentQuestion;
 use App\Models\AssessmentOption;
 use App\Models\AssessmentAnswer;
 use App\Models\Subject;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\TeacherAssignment;
 use App\Models\AcademicYear;
 use Illuminate\Http\Request;
@@ -654,7 +654,7 @@ class AssessmentQuestionController extends Controller
         // Resolve class
         $class = null;
         if (!empty($className)) {
-            $class = ClassRoom::where('name', $className)->first();
+            $class = Classroom::where('name', $className)->first();
             if (!$class) {
                 return "Row {$rowNum}: Class '{$className}' not found.";
             }
@@ -809,7 +809,7 @@ class AssessmentQuestionController extends Controller
     private function getTeacherClasses($teacher, $activeAy)
     {
         if (!$teacher || !$activeAy) {
-            return ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+            return Classroom::orderBy('numeric_name')->orderBy('name')->get();
         }
 
         // Primary lookup: teacher_id references teachers.id
@@ -839,6 +839,6 @@ class AssessmentQuestionController extends Controller
             }
         }
 
-        return ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
+        return Classroom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
     }
 }

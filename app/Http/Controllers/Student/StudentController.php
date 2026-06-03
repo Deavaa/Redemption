@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Branch;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\ParentModel;
 use App\Models\Section;
 use App\Models\Student;
@@ -90,7 +90,7 @@ class StudentController extends Controller
 
         // Load filter dropdown data
         $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
         $sections = collect();
         if ($classFilter) {
             $sections = Section::where('class_id', $classFilter)->orderBy('name')->get();
@@ -256,7 +256,7 @@ class StudentController extends Controller
                 if ($retryCount >= $maxRetries) {
                     // Last resort: generate a guaranteed-unique roll_number with timestamp
                     $section = Section::find($validated['section_id']);
-                    $class = $section ? ClassRoom::find($section->class_id) : null;
+                    $class = $section ? Classroom::find($section->class_id) : null;
                     $gradeNum = 0;
                     if ($class) {
                         $gradeNum = $class->numeric_name ? (int) $class->numeric_name : (preg_match('/(\d+)/', $class->name, $m) ? (int) $m[1] : 0);
@@ -470,7 +470,7 @@ class StudentController extends Controller
     {
         $currentAy = $this->getCurrentAcademicYear();
 
-        $query = ClassRoom::with('sections', 'branch');
+        $query = Classroom::with('sections', 'branch');
         if ($branchId) {
             $query->where('branch_id', $branchId);
         }
@@ -481,7 +481,7 @@ class StudentController extends Controller
 
         // Fallback: if no classes for current AY, show all for the branch
         if ($classrooms->isEmpty()) {
-            $fallbackQuery = ClassRoom::with('sections', 'branch');
+            $fallbackQuery = Classroom::with('sections', 'branch');
             if ($branchId) {
                 $fallbackQuery->where('branch_id', $branchId);
             }
@@ -552,7 +552,7 @@ class StudentController extends Controller
         }
 
         // Determine grade number from the class
-        $class = ClassRoom::find($section->class_id);
+        $class = Classroom::find($section->class_id);
         $gradeNum = 0;
         if ($class) {
             if ($class->numeric_name) {
@@ -926,7 +926,7 @@ class StudentController extends Controller
         }
 
         return response()->json(
-            ClassRoom::where('branch_id', $branchId)
+            Classroom::where('branch_id', $branchId)
                 ->orderBy('numeric_name')
                 ->orderBy('name')
                 ->get(['id', 'name'])

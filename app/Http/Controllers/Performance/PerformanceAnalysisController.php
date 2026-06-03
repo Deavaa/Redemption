@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Performance;
 use App\Http\Controllers\Controller;
 use App\Models\MarkEntry;
 use App\Models\Student;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Branch;
 use App\Models\Term;
 use App\Models\AcademicYear;
@@ -28,7 +28,7 @@ class PerformanceAnalysisController extends Controller
         // Overall school stats
         $totalStudents = Student::where('status', 'active')->count();
         $totalBranches = Branch::where('is_active', true)->count();
-        $totalClasses = ClassRoom::count();
+        $totalClasses = Classroom::count();
 
         // Compute overall average from mark entries
         $overallAvg = 0;
@@ -210,7 +210,7 @@ class PerformanceAnalysisController extends Controller
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $terms = Term::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
 
         $selectedYear = $request->filled('academic_year_id')
             ? AcademicYear::find($request->academic_year_id)

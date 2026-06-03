@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Attendance;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceDelegation;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class AttendanceDelegationController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $classes = ClassRoom::with(['sections', 'teacher'])->orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::with(['sections', 'teacher'])->orderBy('numeric_name')->orderBy('name')->get();
         $teachers = Teacher::with('user')->orderBy('full_name')->get();
 
         return view('admin.attendance.delegation', compact(
@@ -92,7 +92,7 @@ class AttendanceDelegationController extends Controller
     /**
      * Get sections for a class (AJAX endpoint).
      */
-    public function apiSections(ClassRoom $class)
+    public function apiSections(Classroom $class)
     {
         $sections = $class->sections()->with('teacher')->orderBy('name')->get();
 

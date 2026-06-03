@@ -4,7 +4,7 @@ namespace App\Http\Controllers\PerformanceReport;
 
 use App\Http\Controllers\Controller;
 use App\Models\MarkEntry;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\Term;
@@ -20,7 +20,7 @@ class PerformanceAnalysisController extends Controller
     {
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $terms = Term::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = Classroom::orderBy('numeric_name')->orderBy('name')->get();
 
         return view('admin.performance-analysis.index', compact('academicYears', 'terms', 'classes'));
     }
@@ -137,7 +137,7 @@ class PerformanceAnalysisController extends Controller
             'lowest_average' => count($averages) > 0 ? round(min($averages), 2) : 0,
         ];
 
-        $class = ClassRoom::find($r->class_id);
+        $class = Classroom::find($r->class_id);
         $section = $r->filled('section_id') ? Section::find($r->section_id) : null;
         $academicYear = AcademicYear::find($r->academic_year_id);
         $term = Term::find($r->term_id);

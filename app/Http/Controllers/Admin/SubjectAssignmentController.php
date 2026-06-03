@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\Subject;
 use App\Models\AcademicYear;
@@ -18,11 +18,11 @@ class SubjectAssignmentController extends Controller
         $coreAssignments=$assignments->whereNull('section_id');
         $electiveAssignments=$assignments->whereNotNull('section_id');
         $academicYears=AcademicYear::orderBy('id','desc')->get();
-        $classes=ClassRoom::orderBy('numeric_name','asc')->orderBy('name','asc')->get();
+        $classes=Classroom::orderBy('numeric_name','asc')->orderBy('name','asc')->get();
         return view('admin.subject-assignments.index',compact('assignments','coreAssignments','electiveAssignments','academicYears','classes'));
     }
     public function create() {
-        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
+        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=Classroom::with('branch')->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
         $teachers=Teacher::orderBy('full_name')->select('id','full_name')->get();
         return view('admin.subject-assignments.create',compact('academicYears','classes','subjects','teachers'));
@@ -49,7 +49,7 @@ class SubjectAssignmentController extends Controller
         return redirect()->route('admin.subject-assignments.index')->with('success',$msg);
     }
     public function edit(TeacherAssignment $subject_assignment) {
-        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
+        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=Classroom::with('branch')->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
         $sections=Section::where('class_id',$subject_assignment->class_id)->orderBy('name','asc')->get();
         $teachers=Teacher::orderBy('full_name')->select('id','full_name')->get();
@@ -71,7 +71,7 @@ class SubjectAssignmentController extends Controller
         if (!empty($ids)) { TeacherAssignment::whereIn('id',$ids)->delete(); return redirect()->route('admin.subject-assignments.index')->with('success',count($ids).' deleted.'); }
         return redirect()->route('admin.subject-assignments.index');
     }
-    public function apiClasses() { return response()->json(ClassRoom::orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name'])); }
+    public function apiClasses() { return response()->json(Classroom::orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name'])); }
     public function apiSections(Request $request) {
         $classId=$request->query('class_id'); if (!$classId) return response()->json([]);
         return response()->json(Section::where('class_id',$classId)->orderBy('name','asc')->get(['id','name']));
