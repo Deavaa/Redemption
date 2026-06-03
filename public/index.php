@@ -12,6 +12,20 @@
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
 
+// ── CRITICAL: Set LARAVEL_BASE_PATH for subdirectory detection ──
+// When accessed via /public/index.php, we need to go up one level
+// to find the project root, then compare with DOCUMENT_ROOT.
+// Example: __DIR__ = C:\xampp\htdocs\Redemption\public
+//          DOCUMENT_ROOT = C:\xampp\htdocs
+//          LARAVEL_BASE_PATH = /Redemption
+$documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+$appRoot = dirname(__DIR__); // Go up from public/ to project root
+if ($documentRoot && str_starts_with($appRoot, $documentRoot)) {
+    $basePath = substr($appRoot, strlen($documentRoot));
+    $basePath = str_replace('\\', '/', $basePath); // Windows backslash fix
+    $_SERVER['LARAVEL_BASE_PATH'] = $basePath;
+}
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 

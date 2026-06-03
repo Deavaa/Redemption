@@ -152,9 +152,9 @@ class AppServiceProvider extends ServiceProvider
      * http://localhost/Redemption/login.
      *
      * Detection strategy (in order of priority):
-     * 1. Auto-detect from SCRIPT_NAME (most reliable for web requests)
-     * 2. Fall back to APP_URL from .env
-     * 3. If SCRIPT_NAME is /index.php (root), just use APP_URL
+     * 1. Use LARAVEL_BASE_PATH set by root index.php (most reliable)
+     * 2. Auto-detect from SCRIPT_FILENAME + DOCUMENT_ROOT
+     * 3. Fall back to APP_URL from .env
      */
     private function forceCorrectRootUrl(): void
     {
@@ -166,44 +166,51 @@ class AppServiceProvider extends ServiceProvider
             return;
         }
 
-        // Auto-detect from server variables
-        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $httpHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
                  || ($_SERVER['SERVER_PORT'] ?? '') === '443';
         $scheme = $https ? 'https' : 'http';
 
-        // SCRIPT_NAME examples:
-        //   /Redemption/index.php          → base = /Redemption
-        //   /Redemption/public/index.php   → base = /Redemption
-        //   /index.php                     → base = "" (root)
-        //   /public/index.php              → base = "" (root)
-        $basePath = rtrim(dirname($scriptName), '/');
+        // ── METHOD 1: Use LARAVEL_BASE_PATH set by root index.php ──
+        // This is set in the root index.php and is the most reliable
+        // because __DIR__ is always correct regardless of Apache rewrites.
+        $basePath = $_SERVER['LARAVEL_BASE_PATH'] ?? null;
+        if ($basePath === null) {
+            // ── METHOD 2: Detect from SCRIPT_FILENAME + DOCUMENT_ROOT ──
+            // SCRIPT_FILENAME is the actual file path on disk, which is
+            // more reliable than SCRIPT_NAME (which Apache can modify).
+            // Example: C:/xampp/htdocs/Redemption/index.php
+            $scriptFilename = realpath($_SERVER['SCRIPT_FILENAME'] ?? '');
+            $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? $_SERVER['APPL_PHYSICAL_PATH'] ?? '');
 
-        // If SCRIPT_NAME is inside public/, go up one level
-        // e.g. /Redemption/public/index.php → /Redemption
-        if (str_ends_with($basePath, '/public')) {
-            $basePath = substr($basePath, 0, -7); // Remove '/public'
+            if ($scriptFilename && $documentRoot && str_starts_with($scriptFilename, $documentRoot)) {
+                $relativePath = substr($scriptFilename, strlen($documentRoot));
+                $relativePath = str_replace('\\', '/', $relativePath); // Windows backslash fix
+
+                // Remove /index.php or /public/index.php from the end
+                $relativePath = preg_replace('#/(public/)?index\.php$#', '', $relativePath);
+                $basePath = $relativePath;
+            }
         }
 
-        // Don't use '.' (current dir) as base path
-        if ($basePath === '.' || $basePath === '') {
-            // Running at root — use APP_URL as-is
-            if (config('app.url')) {
-                URL::forceRootUrl(config('app.url'));
+        // If we detected a base path, build the URL
+        if ($basePath !== null && $basePath !== '') {
+            $detectedUrl = $scheme . '://' . $httpHost . $basePath;
+            URL::forceRootUrl($detectedUrl);
+
+            if ($https) {
+                URL::forceScheme('https');
             }
             return;
         }
 
-        // Build the detected root URL
-        $detectedUrl = $scheme . '://' . $httpHost . $basePath;
+        // ── METHOD 3: Fall back to APP_URL from .env ──
+        if (config('app.url')) {
+            URL::forceRootUrl(config('app.url'));
 
-        // Force Laravel to use this root URL for ALL generated URLs
-        URL::forceRootUrl($detectedUrl);
-
-        // Force scheme
-        if ($https) {
-            URL::forceScheme('https');
+            if (str_starts_with(config('app.url'), 'https://')) {
+                URL::forceScheme('https');
+            }
         }
     }
 }

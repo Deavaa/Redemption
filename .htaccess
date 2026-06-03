@@ -5,17 +5,18 @@
 # On shared hosting, this is inside public_html/ or htdocs/.
 #
 # This file does TWO things:
-# 1. Routes all web traffic to public/ (so /public is not in the URL)
+# 1. Routes all web traffic to public/index.php (so /public is NOT in the URL)
 # 2. Blocks direct access to sensitive Laravel files and directories
+#
+# KEY: We route to public/index.php (NOT root index.php) because
+# Laravel's public/index.php + Symfony's Request class properly
+# detect and handle subdirectories like /Redemption on XAMPP.
 # ──────────────────────────────────────────────────────────────
 
-DirectoryIndex index.php
+DirectoryIndex public/index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-
-    # Set RewriteBase to root — needed on some shared hosts
-    RewriteBase /
 
     # ── Block direct access to sensitive directories ──
     # Returns 403 Forbidden if someone tries to access app/, config/, etc. directly
@@ -28,21 +29,24 @@ DirectoryIndex index.php
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # ── Serve existing files from public/ directly ──
-    # CSS, JS, images, fonts, etc.
+    # ── If request is for an existing file in public/, serve it directly ──
+    # CSS, JS, images, fonts, APK, etc.
     RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -f
     RewriteRule ^(.*)$ public/$1 [L]
 
-    # ── Serve existing directories from public/ ──
+    # ── If request is for an existing directory in public/, serve it ──
     RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -d
     RewriteRule ^(.*)$ public/$1 [L]
 
-    # ── Route all other requests through root index.php ──
-    # This uses the ROOT index.php (which bootstraps Laravel directly)
-    # as the front controller, bypassing the need for /public in the URL.
+    # ── Route ALL other requests to public/index.php ──
+    # This is the key: we use Laravel's standard public/index.php as
+    # the front controller. Symfony's Request class automatically detects
+    # the subdirectory from SCRIPT_NAME and generates correct URLs.
+    # e.g. SCRIPT_NAME=/Redemption/public/index.php → base path=/Redemption
+    #      route('login') → http://localhost/Redemption/login ✓
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ index.php [L]
+    RewriteRule ^(.*)$ public/index.php [L]
 </IfModule>
 
 # ── Block direct access to .env file (CRITICAL SECURITY) ──

@@ -7,8 +7,7 @@
  * Place this file in the DOCUMENT ROOT (public_html or htdocs)
  * alongside the .htaccess file.
  *
- * IMPORTANT: This is the SAME file as the root index.php.
- * On shared hosting, copy this to your document root.
+ * CRITICAL: This file sets LARAVEL_BASE_PATH for subdirectory detection.
  * ──────────────────────────────────────────────────────────────
  */
 
@@ -18,30 +17,20 @@
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
 
-// ── FIX: Correct SCRIPT_NAME for subdirectory installations ──
-// Apache's mod_rewrite can change SCRIPT_NAME when routing through
-// .htaccess, which causes Laravel to generate incorrect URLs.
-// We fix this by calculating the CORRECT SCRIPT_NAME from
-// SCRIPT_FILENAME and DOCUMENT_ROOT (not affected by mod_rewrite).
-if (isset($_SERVER['SCRIPT_FILENAME']) && isset($_SERVER['DOCUMENT_ROOT'])) {
-    $correctScriptName = str_replace(
-        str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']),
-        '',
-        str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME'])
-    );
-    if ($correctScriptName && $correctScriptName !== $_SERVER['SCRIPT_NAME']) {
-        $_SERVER['SCRIPT_NAME'] = $correctScriptName;
-    }
+// ── CRITICAL: Set LARAVEL_BASE_PATH for subdirectory detection ──
+$documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+$appRoot = __DIR__;
+if ($documentRoot && str_starts_with($appRoot, $documentRoot)) {
+    $basePath = substr($appRoot, strlen($documentRoot));
+    $basePath = str_replace('\\', '/', $basePath); // Windows backslash fix
+    $_SERVER['LARAVEL_BASE_PATH'] = $basePath;
 }
-
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode
-if (file_exists(__DIR__.'/storage/framework/maintenance.php')) {
-    require __DIR__.'/storage/framework/maintenance.php';
+if (file_exists($maintenance = __DIR__.'/storage/framework/maintenance.php')) {
+    require $maintenance;
 }
 
 // Register the Composer autoloader
@@ -49,5 +38,7 @@ require __DIR__.'/vendor/autoload.php';
 
 // Bootstrap Laravel and handle the request
 $app = require_once __DIR__.'/bootstrap/app.php';
+
+use Illuminate\Http\Request;
 
 $app->handleRequest(Request::capture());
