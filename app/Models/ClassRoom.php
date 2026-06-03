@@ -10,14 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * This is the CANONICAL model file for the "classes" table.
  * It contains the complete class definition and does NOT depend on
- * Classroom.php. This is critical for shared hosting (ByetHost/cPanel)
- * where the autoloader classmap may be stale and Classroom.php may
- * not exist on the server.
- *
- * At the bottom of this file, class_alias() registers "Classroom" as
- * an alias for "ClassRoom", so both class names work everywhere:
- *   use App\Models\ClassRoom;   ← works (this file)
- *   use App\Models\Classroom;   ← works (via class_alias)
+ * any other file.
  */
 class ClassRoom extends Model
 {
@@ -52,13 +45,4 @@ class ClassRoom extends Model
     public function students() { return $this->hasMany(Student::class, 'class_id'); }
     public function academicYear() { return $this->belongsTo(AcademicYear::class); }
     public function branch() { return $this->belongsTo(Branch::class); }
-}
-
-// ── Backward-compatible alias: "Classroom" also works ──
-// If Classroom.php exists on the server AND has already been loaded,
-// class_alias will be a no-op (PHP ignores aliasing an existing class
-// to itself). If Classroom.php doesn't exist (common on shared hosting),
-// this ensures `App\Models\Classroom` still resolves.
-if (!class_exists('App\Models\Classroom')) {
-    class_alias('App\Models\ClassRoom', 'App\Models\Classroom');
 }

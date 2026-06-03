@@ -44,7 +44,7 @@ return new class extends Migration
                 $table->date('transaction_date');
                 // Polymorphic: who received/issued the item
                 $table->unsignedBigInteger('recipient_id')->nullable();
-                $table->string('recipient_type')->nullable(); // App\Models\User, App\Models\Classroom, etc.
+                $table->string('recipient_type')->nullable(); // App\Models\User, App\Models\ClassRoom, etc.
                 $table->string('reference_no')->nullable(); // Invoice/Receipt number
                 $table->string('notes')->nullable();
                 $table->unsignedBigInteger('created_by')->nullable();
