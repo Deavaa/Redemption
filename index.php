@@ -21,6 +21,36 @@
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
 
+// ── FIX: Correct SCRIPT_NAME for subdirectory installations ──
+// Apache's mod_rewrite can change SCRIPT_NAME when routing through
+// .htaccess, which causes Laravel to generate incorrect URLs
+// (e.g. http://localhost/login instead of http://localhost/Redemption/login).
+//
+// We fix this by calculating the CORRECT SCRIPT_NAME from SCRIPT_FILENAME
+// and DOCUMENT_ROOT, which are NOT affected by mod_rewrite.
+//
+// Example on XAMPP:
+//   SCRIPT_FILENAME = C:/xampp/htdocs/Redemption/index.php
+//   DOCUMENT_ROOT   = C:/xampp/htdocs
+//   → Correct SCRIPT_NAME = /Redemption/index.php
+//   → Laravel detects base path = /Redemption ✅
+//
+// Example on live hosting (domain root):
+//   SCRIPT_FILENAME = /home/user/public_html/index.php
+//   DOCUMENT_ROOT   = /home/user/public_html
+//   → Correct SCRIPT_NAME = /index.php
+//   → Laravel detects base path = / ✅
+if (isset($_SERVER['SCRIPT_FILENAME']) && isset($_SERVER['DOCUMENT_ROOT'])) {
+    $correctScriptName = str_replace(
+        str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']),
+        '',
+        str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME'])
+    );
+    if ($correctScriptName && $correctScriptName !== $_SERVER['SCRIPT_NAME']) {
+        $_SERVER['SCRIPT_NAME'] = $correctScriptName;
+    }
+}
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 

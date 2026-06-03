@@ -7,9 +7,6 @@
  * Place this file in the DOCUMENT ROOT (public_html or htdocs)
  * alongside the .htaccess file.
  *
- * It bootstraps Laravel exactly like public/index.php does,
- * but from the project root instead of the public/ subdirectory.
- *
  * IMPORTANT: This is the SAME file as the root index.php.
  * On shared hosting, copy this to your document root.
  * ──────────────────────────────────────────────────────────────
@@ -20,6 +17,22 @@
 @ini_set('session.gc_probability', 0);
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
+
+// ── FIX: Correct SCRIPT_NAME for subdirectory installations ──
+// Apache's mod_rewrite can change SCRIPT_NAME when routing through
+// .htaccess, which causes Laravel to generate incorrect URLs.
+// We fix this by calculating the CORRECT SCRIPT_NAME from
+// SCRIPT_FILENAME and DOCUMENT_ROOT (not affected by mod_rewrite).
+if (isset($_SERVER['SCRIPT_FILENAME']) && isset($_SERVER['DOCUMENT_ROOT'])) {
+    $correctScriptName = str_replace(
+        str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']),
+        '',
+        str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME'])
+    );
+    if ($correctScriptName && $correctScriptName !== $_SERVER['SCRIPT_NAME']) {
+        $_SERVER['SCRIPT_NAME'] = $correctScriptName;
+    }
+}
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
