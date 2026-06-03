@@ -17,7 +17,10 @@ class StudentMiddleware
         $user = $request->user();
 
         if (!$user) {
-            return redirect()->route('login');
+            if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json(['error' => 'Unauthenticated.'], 401);
+            }
+            return redirect()->route('login')->withIntended($request->getRequestUri());
         }
 
         if (isset($user->is_active) && !$user->is_active) {

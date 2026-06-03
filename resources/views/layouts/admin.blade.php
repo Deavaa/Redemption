@@ -182,13 +182,13 @@
 
             alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
 
-            // Use the FULL URL (href) instead of just pathname for the redirect parameter.
-            // On XAMPP with APP_URL=https://localhost/Redemption/public, using pathname
-            // (e.g. /Redemption/public/admin/mark-entries) causes a double-path 404 bug
-            // because redirect()->intended() prepends the APP_URL base path again.
-            // Using the full URL (https://localhost/Redemption/public/admin/mark-entries)
-            // makes Laravel recognize it as a valid URL and use it as-is.
-            var returnUrl = encodeURIComponent(window.location.href);
+            // Use RELATIVE PATH (pathname) instead of full URL for the redirect parameter.
+            // This avoids the APP_URL host mismatch bug where the server's APP_URL
+            // doesn't match the live domain (e.g. APP_URL=localhost but site is
+            // schoolofredemption.net). The AuthController now converts full URLs
+            // to relative paths anyway, so sending a relative path directly is
+            // simpler and more reliable across XAMPP, live servers, and mobile WebView.
+            var returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
             window.location.href = loginUrl + '?redirect=' + returnUrl;
         }
 

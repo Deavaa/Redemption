@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\URL;
 
 class AuthController extends Controller
 {
@@ -20,18 +21,10 @@ class AuthController extends Controller
         if ($request->has('redirect')) {
             $redirectUrl = $request->redirect;
 
-            // Validate: only allow redirects to our own domain to prevent open redirect attacks
-            // Accept both full URLs (https://localhost/...) and relative paths (/admin/...)
-            if (filter_var($redirectUrl, FILTER_VALIDATE_URL)) {
-                // Full URL — verify it belongs to our app domain
-                $appHost = parse_url(config('app.url'), PHP_URL_HOST);
-                $redirectHost = parse_url($redirectUrl, PHP_URL_HOST);
-                if ($redirectHost && $redirectHost === $appHost) {
-                    session(['url.intended' => $redirectUrl]);
-                }
-            } else {
-                // Relative path — store as-is (Laravel will resolve it against APP_URL)
-                session(['url.intended' => $redirectUrl]);
+            // Validate and normalize the redirect URL
+            $validatedRedirect = $this->validateRedirectUrl($redirectUrl);
+            if ($validatedRedirect) {
+                session(['url.intended' => $validatedRedirect]);
             }
         }
 
@@ -132,37 +125,17 @@ class AuthController extends Controller
         // Force-save the session to database immediately (prevents session loss)
         $r->session()->save();
 
-        // Validate redirect URL — prevent redirect to login page or external sites
-        if ($redirectUrl) {
-            // If it's a full URL, verify it belongs to our app
-            if (filter_var($redirectUrl, FILTER_VALIDATE_URL)) {
-                $appHost = parse_url(config('app.url'), PHP_URL_HOST);
-                $redirectHost = parse_url($redirectUrl, PHP_URL_HOST);
-                if (!$redirectHost || $redirectHost !== $appHost) {
-                    $redirectUrl = null; // Not our domain — ignore
-                }
-            }
+        // Validate and normalize the redirect URL
+        $validatedRedirect = $this->validateRedirectUrl($redirectUrl);
 
-            // Don't redirect back to login page
-            $loginPath = '/login';
-            if (str_ends_with(parse_url($redirectUrl, PHP_URL_PATH) ?? '', $loginPath)) {
-                $redirectUrl = null;
-            }
-        }
-
-        // ── Use redirect()->away() for FULL URLs to prevent XAMPP double-path 404.
-        // On XAMPP with subdirectory (e.g. /Redemption/public/), redirect()->intended()
-        // may prepend APP_URL to an already-full URL, creating:
-        //   /Redemption/public/https://localhost/Redemption/public/admin/mark-entries
-        // which results in a 404. redirect()->away() uses the URL as-is.
-        if ($redirectUrl && filter_var($redirectUrl, FILTER_VALIDATE_URL)) {
-            // Full URL — use away() to prevent path manipulation
-            return redirect()->away($redirectUrl);
-        }
-
-        // Relative path or no redirect — use intended() with fallback
-        if ($redirectUrl) {
-            session(['url.intended' => $redirectUrl]);
+        // ── Redirect strategy: always convert to a RELATIVE path for maximum
+        // compatibility across XAMPP subdirectories, live domains, and mobile WebView.
+        // Using relative paths avoids the double-path 404 bug where Laravel prepends
+        // APP_URL to an already-full URL.
+        if ($validatedRedirect) {
+            // Store as intended URL — redirect()->intended() handles it correctly
+            // whether it's relative (/admin/...) or full URL
+            session(['url.intended' => $validatedRedirect]);
         }
 
         return redirect()->intended($this->getHomeRoute($user));
@@ -303,6 +276,84 @@ class AuthController extends Controller
         
         // Return cleaned input as-is (may be email or ID number)
         return $cleaned;
+    }
+
+    /**
+     * Validate and normalize a redirect URL.
+     *
+     * - Accepts both full URLs and relative paths
+     * - Validates the host against BOTH APP_URL and the current request host
+     *   (fixes 404 when APP_URL doesn't match the live domain)
+     * - Converts full URLs to relative paths for maximum compatibility
+     * - Blocks redirects to login page or external sites
+     *
+     * @param string|null $url
+     * @return string|null Normalized relative path, or null if invalid
+     */
+    private function validateRedirectUrl(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        // If it's a relative path, validate and return as-is
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            // It's a relative path like /admin/mark-entries
+            // Block paths that point to the login page
+            if (str_ends_with($url, '/login') || $url === '/login') {
+                return null;
+            }
+            // Block external-looking paths (starting with //)
+            if (str_starts_with($url, '//')) {
+                return null;
+            }
+            // Must start with /
+            if (!str_starts_with($url, '/')) {
+                return null;
+            }
+            return $url;
+        }
+
+        // It's a full URL — validate host and convert to relative path
+        $parsed = parse_url($url);
+        $redirectHost = $parsed['host'] ?? null;
+        $redirectPath = $parsed['path'] ?? '/';
+
+        // Block redirects to login page
+        if (str_ends_with($redirectPath, '/login') || $redirectPath === '/login') {
+            return null;
+        }
+
+        if (!$redirectHost) {
+            return null;
+        }
+
+        // Validate host against APP_URL host
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+
+        // Also validate against the current request's host — this is critical
+        // because APP_URL might still be set to XAMPP values on the live server
+        $requestHost = request()->getHost();
+
+        $hostAllowed = (
+            $redirectHost === $appHost ||
+            $redirectHost === $requestHost ||
+            // Also allow if the redirect host ends with the request host (subdomain)
+            str_ends_with($redirectHost, '.' . $requestHost)
+        );
+
+        if (!$hostAllowed) {
+            return null; // Not our domain — block
+        }
+
+        // Convert full URL to relative path for maximum compatibility
+        // This avoids the double-path 404 bug with redirect()->away()
+        $relativePath = $redirectPath;
+        if (isset($parsed['query'])) {
+            $relativePath .= '?' . $parsed['query'];
+        }
+
+        return $relativePath;
     }
 
     private function getHomeRoute(User $user): string

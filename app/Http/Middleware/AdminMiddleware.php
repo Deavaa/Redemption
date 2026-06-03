@@ -30,8 +30,9 @@ class AdminMiddleware
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
             // For non-AJAX requests, redirect to login with the current URL as the intended destination.
-            // Use the full URL so that redirect()->intended() works correctly on XAMPP (avoids double-path bug).
-            return redirect()->route('login')->withIntended($request->fullUrl());
+            // Use the REQUEST URI (relative path) instead of full URL to avoid APP_URL host mismatch.
+            // The AuthController's validateRedirectUrl() will handle it correctly as a relative path.
+            return redirect()->route('login')->withIntended($request->getRequestUri());
         }
 
         // Inactive users cannot access the panel
