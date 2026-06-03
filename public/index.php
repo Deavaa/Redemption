@@ -1,30 +1,26 @@
 <?php
 
-// ============================================================
-// Session GC override — safety net (primary fix is database driver)
-// These settings are belt-and-suspenders for the database driver.
-// File-based sessions on XAMPP get killed by PHP's native GC
-// regardless of these settings. The database driver bypasses
-// PHP's file session handling entirely.
-// ============================================================
+/**
+ * ──────────────────────────────────────────────────────────────
+ * PUBLIC INDEX.PHP — Standard Laravel entry point
+ * ──────────────────────────────────────────────────────────────
+ * This is the standard Laravel entry point when accessing via
+ * the /public URL (e.g. http://localhost/Redemption/public/).
+ *
+ * For subdirectory hosting WITHOUT /public, the root index.php
+ * is used instead (see ../index.php).
+ *
+ * This file is still needed for:
+ * - Direct /public access (legacy/fallback)
+ * - artisan serve (development server)
+ * ──────────────────────────────────────────────────────────────
+ */
+
+// Session GC override — safety net
 @ini_set('session.gc_maxlifetime', 28800);
 @ini_set('session.gc_probability', 0);
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
-
-// ── CRITICAL: Set LARAVEL_BASE_PATH for subdirectory detection ──
-// When accessed via /public/index.php, we need to go up one level
-// to find the project root, then compare with DOCUMENT_ROOT.
-// Example: __DIR__ = C:\xampp\htdocs\Redemption\public
-//          DOCUMENT_ROOT = C:\xampp\htdocs
-//          LARAVEL_BASE_PATH = /Redemption
-$documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
-$appRoot = dirname(__DIR__); // Go up from public/ to project root
-if ($documentRoot && str_starts_with($appRoot, $documentRoot)) {
-    $basePath = substr($appRoot, strlen($documentRoot));
-    $basePath = str_replace('\\', '/', $basePath); // Windows backslash fix
-    $_SERVER['LARAVEL_BASE_PATH'] = $basePath;
-}
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;

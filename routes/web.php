@@ -182,6 +182,45 @@ Route::get('/session-test', function () {
     return response()->json($result, 200, [], JSON_PRETTY_PRINT);
 });
 
+// URL Diagnostic — helps verify URL generation works correctly in subdirectory
+Route::get('/url-test', function () {
+    $appUrl = config('app.url');
+    $assetUrl = config('app.asset_url');
+
+    // Get key server variables
+    $serverVars = [
+        'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'] ?? null,
+        'SCRIPT_FILENAME' => $_SERVER['SCRIPT_FILENAME'] ?? null,
+        'DOCUMENT_ROOT' => $_SERVER['DOCUMENT_ROOT'] ?? null,
+        'REQUEST_URI' => $_SERVER['REQUEST_URI'] ?? null,
+        'HTTP_HOST' => $_SERVER['HTTP_HOST'] ?? null,
+    ];
+
+    // Test URL generation
+    $urlTests = [
+        'route_login' => route('login'),
+        'route_admin_dashboard' => route('admin.dashboard'),
+        'url_to_login' => url('/login'),
+        'url_to_root' => url('/'),
+        'asset_css' => asset('css/app.css'),
+    ];
+
+    // Get request base path info
+    $request = request();
+    $basePath = $request->getBasePath();
+    $baseUrl = $request->getBaseUrl();
+
+    return response()->json([
+        'config_app_url' => $appUrl,
+        'config_asset_url' => $assetUrl,
+        'server_vars' => $serverVars,
+        'request_base_path' => $basePath,
+        'request_base_url' => $baseUrl,
+        'url_tests' => $urlTests,
+        'forced_root_url' => app('url')->getRequest()->getUri(),
+    ], 200, [], JSON_PRETTY_PRINT);
+});
+
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
