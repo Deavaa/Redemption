@@ -33,6 +33,20 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // ============================================================
+        // AUTO-DETECT APP_URL from the actual HTTP request
+        // ============================================================
+        // CRITICAL: The .env file may have APP_URL=http://localhost/Redemption
+        // (from XAMPP), but on cPanel/ByetHost the actual URL is different.
+        // Dotenv loads .env and OVERWRITES any APP_URL we set in index.php.
+        // We must override config('app.url') HERE (after Dotenv loads, but
+        // before URL generation) to prevent redirect-to-localhost bugs.
+        // ============================================================
+        $detectedAppUrl = $this->detectAppUrl();
+        if ($detectedAppUrl) {
+            config(['app.url' => $detectedAppUrl]);
+        }
+
+        // ============================================================
         // FORCE correct database: always MySQL (never sqlite)
         // ============================================================
         config(['database.default' => 'mysql']);
@@ -203,5 +217,80 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('activeAnnouncements', $activeAnnouncements);
         });
+    }
+
+    /**
+     * Detect the actual APP_URL from the current HTTP request.
+     *
+     * This is CRITICAL for shared hosting (cPanel/ByetHost) where the .env
+     * file still has APP_URL=http://localhost/Redemption from XAMPP.
+     * Dotenv loads .env and overwrites any APP_URL we set in index.php,
+     * so we must detect and override it HERE (after Dotenv, before routing).
+     *
+     * Also works for CLI (artisan) — falls back to existing config value.
+     */
+    private function detectAppUrl(): ?string
+    {
+        // CLI (artisan) — no HTTP request, use existing config
+        if (PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg') {
+            return null;
+        }
+
+        // No HTTP_HOST — can't detect URL
+        $httpHost = $_SERVER['HTTP_HOST'] ?? null;
+        if (!$httpHost) {
+            return null;
+        }
+
+        // Detect HTTPS — check multiple indicators (ByetHost uses reverse proxy)
+        $isHttps = false;
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            $isHttps = true;
+        } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+            $isHttps = true;
+        } elseif (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
+            $isHttps = true;
+        } elseif (($_SERVER['SERVER_PORT'] ?? '') === '443') {
+            $isHttps = true;
+        }
+        $scheme = $isHttps ? 'https' : 'http';
+
+        // Detect subdirectory/base path from SCRIPT_NAME or DOCUMENT_ROOT
+        $basePath = '';
+        $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+        $currentDir = realpath(base_path()); // Laravel base_path() = project root
+
+        if ($documentRoot && $currentDir && str_starts_with($currentDir, $documentRoot)) {
+            $basePath = substr($currentDir, strlen($documentRoot));
+            $basePath = str_replace('\\', '/', $basePath);
+            $basePath = rtrim($basePath, '/');
+
+            // Case-fix: match the case from REQUEST_URI
+            $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+            if ($basePath !== '' && $uriPath !== '' && stripos($uriPath, $basePath) === 0) {
+                $basePath = substr($uriPath, 0, strlen($basePath));
+            }
+        }
+
+        $detectedUrl = $scheme . '://' . $httpHost . $basePath;
+
+        // Validate: if the detected URL is localhost and the .env value is also
+        // localhost, there's nothing to override (XAMPP local dev)
+        $envUrl = config('app.url');
+        if ($envUrl && str_contains($envUrl, 'localhost') && str_contains($detectedUrl, 'localhost')) {
+            return null; // Both are localhost, no override needed
+        }
+
+        // If .env has localhost but actual host is NOT localhost, we MUST override
+        if ($envUrl && str_contains($envUrl, 'localhost') && !str_contains($detectedUrl, 'localhost')) {
+            return $detectedUrl;
+        }
+
+        // If detected URL differs from config, override
+        if ($envUrl && $detectedUrl !== $envUrl) {
+            return $detectedUrl;
+        }
+
+        return null;
     }
 }

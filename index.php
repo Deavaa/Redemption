@@ -31,6 +31,28 @@
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
 
+// ── Class alias: ClassRoom → Classroom (autoloader safety net) ──
+// The Composer optimized autoloader classmap may not have "ClassRoom"
+// (only "Classroom"). This alias ensures both names work regardless
+// of autoloader state. We load the Classroom.php file manually first,
+// then register the alias. This is needed on shared hosting where we
+// can't run "composer dump-autoload" after renaming classes.
+$classroomFile = __DIR__ . '/app/Models/Classroom.php';
+if (file_exists($classroomFile)) {
+    require_once $classroomFile;
+    if (class_exists('App\Models\Classroom', false) && !class_exists('App\Models\ClassRoom', false)) {
+        class_alias('App\Models\Classroom', 'App\Models\ClassRoom');
+    }
+}
+// Also check ClassRoom.php in case only that file exists (older deploy)
+$classRoomFile = __DIR__ . '/app/Models/ClassRoom.php';
+if (file_exists($classRoomFile) && !file_exists($classroomFile)) {
+    require_once $classRoomFile;
+    if (class_exists('App\Models\ClassRoom', false) && !class_exists('App\Models\Classroom', false)) {
+        class_alias('App\Models\ClassRoom', 'App\Models\Classroom');
+    }
+}
+
 // ── AUTO-DETECT subdirectory from filesystem ──
 $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
 $currentDir = realpath(__DIR__);
