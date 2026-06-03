@@ -4,17 +4,12 @@
 # Place this file in the PROJECT ROOT (same level as artisan, .env).
 # On XAMPP, this is inside htdocs/Redemption/.
 #
-# This file does TWO things:
-# 1. Routes all web traffic to root index.php (so /public is NOT in the URL)
-# 2. Serves static files (CSS, JS, images) from the public/ directory
+# This file routes ALL web traffic through root index.php so that
+# /public is NOT needed in the URL. Static files (CSS, JS, images)
+# are served from the public/ directory automatically.
 #
-# CRITICAL: We route to ROOT index.php (NOT public/index.php).
-# Root index.php fixes SCRIPT_NAME before delegating to public/index.php.
-#
-# IMPORTANT: Do NOT set RewriteBase here! Apache automatically uses
-# the directory containing this .htaccess as the base. Setting
-# RewriteBase / would route rewrites to htdocs/index.php (XAMPP's
-# default page that redirects to /dashboard/ — that's the bug!).
+# IMPORTANT: Do NOT set RewriteBase here! Apache auto-detects
+# the base from the .htaccess directory.
 # ──────────────────────────────────────────────────────────────
 
 # ── Required for mod_rewrite in subdirectories ──
@@ -31,7 +26,6 @@ Options -Indexes
 
     # ── DO NOT SET RewriteBase! ──
     # Apache auto-detects the base from the .htaccess directory.
-    # For /Redemption/.htaccess, the base is automatically /Redemption/.
     # Setting RewriteBase / would break everything by routing to
     # htdocs/index.php (XAMPP's redirect to /dashboard/).
 
@@ -46,19 +40,20 @@ Options -Indexes
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
     # ── Serve existing static files from public/ directory ──
-    # Examples:
-    #   /Redemption/css/app.css     → serves /Redemption/public/css/app.css
-    #   /Redemption/favicon.ico     → serves /Redemption/public/favicon.ico
+    # Only serve REAL files (CSS, JS, images, fonts, APK, etc.)
+    # Example: /Redemption/css/app.css → serves /Redemption/public/css/app.css
     RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
     RewriteRule ^(.*)$ public/$1 [L]
 
-    # ── Route ALL other requests to root index.php ──
-    # This handles all dynamic routes (login, dashboard, etc.)
-    # as well as the root URL (/Redemption/).
+    # ── Route ALL requests to root index.php ──
+    # This single rule catches EVERYTHING — dynamic routes, invalid URLs,
+    # directory requests — and sends them to Laravel. Laravel then shows
+    # the correct page or a proper 404 (instead of Apache's ugly 403).
     #
-    # We only check "!-f" (not a file), NOT "!-d" (not a directory),
-    # because /Redemption/ IS a directory and we want it to route
-    # through index.php, not show a directory listing.
+    # We only skip this rule if the request matches a REAL file on disk.
+    # We do NOT skip for directories because directories under this project
+    # (like /storage/, /vendor/) should not be browsable — they should
+    # be handled by Laravel or the block rules above.
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.*)$ index.php [L]
 </IfModule>

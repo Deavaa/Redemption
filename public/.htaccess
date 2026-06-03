@@ -36,7 +36,9 @@
     RewriteRule ^ %1 [L,R=301]
 
     # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # We only check !-f (not a file). We do NOT check !-d because
+    # directories should also be handled by Laravel (prevents 403 errors
+    # when someone requests /public/some-path that maps to a directory).
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
