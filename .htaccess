@@ -1,9 +1,16 @@
 # ──────────────────────────────────────────────────────────────
-# LARAVEL ON SHARED HOSTING - REMOVE /public FROM URL
+# REMOVE /public FROM URL
 # ──────────────────────────────────────────────────────────────
-# Place this file in the DOCUMENT ROOT (public_html or htdocs)
-# when the entire Laravel project is uploaded there.
-# It routes all requests to public/ so URLs don't show /public.
+# This .htaccess file goes in the PROJECT ROOT directory
+# (same level as artisan, composer.json, etc.)
+#
+# It rewrites ALL requests to the public/ directory,
+# so the URL becomes:
+#   https://yoursite.com/login        (instead of /public/login)
+#   https://yoursite.com/admin/dashboard
+#   https://yoursite.com/css/admin.css
+#
+# This works on BOTH XAMPP and live hosting.
 # ──────────────────────────────────────────────────────────────
 
 DirectoryIndex public/index.php
@@ -14,6 +21,8 @@ DirectoryIndex public/index.php
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # ── Route all requests to public/ ──
 
     # If the request points to an existing file in public/, serve it
     RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -f
@@ -29,18 +38,20 @@ DirectoryIndex public/index.php
     RewriteRule ^(.*)$ public/index.php [L]
 </IfModule>
 
-# Block direct access to sensitive files
+# ── Block direct access to sensitive files ──
 <FilesMatch "^\.env">
     Require all denied
 </FilesMatch>
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Block access to sensitive directories (except public)
     RewriteRule ^(?!public/)(app|bootstrap|config|database|resources|routes|storage|tests|vendor) - [F,L]
+    # Block artisan and composer files
     RewriteRule ^(artisan|composer\.(json|lock)|package\.json|phpunit\.xml|vite\.config\.js) - [F,L]
 </IfModule>
 
-# PHP Settings
+# ── PHP Settings (for XAMPP/mod_php) ──
 <IfModule mod_php.c>
     php_value session.gc_maxlifetime 28800
     php_value session.gc_probability 0
