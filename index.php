@@ -7,25 +7,21 @@
  *
  * HOW THIS WORKS:
  * This file sits in the project root (e.g., htdocs/Redemption/).
- * It auto-detects the subdirectory from the filesystem, fixes
- * $_SERVER['SCRIPT_NAME'] so Laravel knows the correct base path,
- * then delegates to public/index.php.
+ * It auto-detects the subdirectory, fixes SCRIPT_NAME so Laravel
+ * knows the correct base path, then delegates to public/index.php.
  *
- * WHY SCRIPT_NAME MATTERS:
- * Laravel uses Symfony's Request which reads SCRIPT_NAME to detect
- * the base path. If SCRIPT_NAME = /Redemption/index.php, then
- * base path = /Redemption, and ALL generated URLs include /Redemption.
+ * KEY FIX: Case sensitivity!
+ * On Windows/XAMPP, the directory might be "Redemption" but the user
+ * accesses "http://localhost/redemption/" (lowercase). Windows is
+ * case-insensitive for files, but Laravel/Symfony does CASE-SENSITIVE
+ * comparison when stripping the base path from the request URI.
+ * If SCRIPT_NAME says /Redemption but REQUEST_URI says /redemption,
+ * Symfony can't strip the base path → Laravel sees /redemption/login
+ * as the route instead of /login → 404!
  *
- * PROBLEM THIS FIXES:
- * On some Apache/XAMPP configs, SCRIPT_NAME might be wrong — e.g.,
- *   - /index.php (missing subdirectory)
- *   - /Redemption/public/index.php (includes /public)
- *   - /redemption/index.php (wrong case on Windows)
- *
- * We fix it by computing the CORRECT path from __DIR__ (which is
- * always the directory of this file) relative to DOCUMENT_ROOT.
- *
- * This approach does NOT depend on APP_URL or .env at all!
+ * Solution: We compute the base path from the filesystem, then adjust
+ * its case to match REQUEST_URI. This way SCRIPT_NAME always matches
+ * the URL case the user actually used.
  * ──────────────────────────────────────────────────────────────
  */
 
@@ -36,23 +32,32 @@
 @ini_set('session.cookie_lifetime', 28800);
 
 // ── AUTO-DETECT subdirectory from filesystem ──
-// This is the MOST RELIABLE way to determine the base path.
-// __DIR__ is always the directory containing this file.
-// DOCUMENT_ROOT is the Apache document root (e.g., C:/xampp/htdocs).
-// The difference is the subdirectory path (e.g., /Redemption).
 $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
 $currentDir = realpath(__DIR__);
 
 if ($documentRoot && $currentDir && str_starts_with($currentDir, $documentRoot)) {
-    // Compute the subdirectory path
+    // Compute the subdirectory path from filesystem
     $basePath = substr($currentDir, strlen($documentRoot));
     $basePath = str_replace('\\', '/', $basePath); // Fix Windows backslashes
+    $basePath = rtrim($basePath, '/');              // Remove trailing slash
 
-    // Remove trailing slash (keep leading slash)
-    $basePath = rtrim($basePath, '/');
+    // ── CASE FIX: Adjust base path case to match REQUEST_URI ──
+    // The filesystem might give us /Redemption (capital R) but the
+    // user accessed /redemption/ (lowercase). Symfony does case-
+    // sensitive comparison, so we must match the URL's case.
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+    $uriPath = parse_url($requestUri, PHP_URL_PATH) ?: '';
+
+    if ($basePath !== '' && $uriPath !== '') {
+        // Case-insensitive match: does the URI start with our base path?
+        if (stripos($uriPath, $basePath) === 0) {
+            // YES — replace our base path with the case from the URI
+            $basePath = substr($uriPath, 0, strlen($basePath));
+        }
+    }
 
     // Force SCRIPT_NAME and PHP_SELF to the correct value
-    // This is what Laravel/Symfony reads to detect the base path
+    // (with the correct case matching the URL)
     $_SERVER['SCRIPT_NAME'] = $basePath . '/index.php';
     $_SERVER['PHP_SELF'] = $basePath . '/index.php';
 
