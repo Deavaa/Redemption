@@ -88,22 +88,25 @@ class AppServiceProvider extends ServiceProvider
         // ============================================================
         // URL FIX FOR SUBDIRECTORY HOSTING
         // ============================================================
-        // The root index.php fixes SCRIPT_NAME so Laravel auto-detects
-        // the base path as /Redemption. As a SAFETY NET only, we also
-        // call forceRootUrl() with APP_URL. This handles edge cases
-        // like artisan commands or unusual server configurations.
+        // The root index.php auto-detects the subdirectory from
+        // __DIR__ relative to DOCUMENT_ROOT, and forces SCRIPT_NAME
+        // so Laravel's Request object detects the correct base path.
+        //
+        // As a SAFETY NET (for artisan, queue workers, etc.), we also
+        // call forceRootUrl() with the detected APP_URL. The root
+        // index.php sets APP_URL in $_SERVER/$_ENV/putenv before
+        // Laravel boots, so config('app.url') should always be correct.
         // ============================================================
-        if (config('app.url')) {
-            URL::forceRootUrl(config('app.url'));
+        $appUrl = config('app.url');
 
-            if (str_starts_with(config('app.url'), 'https://')) {
+        if ($appUrl) {
+            URL::forceRootUrl($appUrl);
+
+            if (str_starts_with($appUrl, 'https://')) {
                 URL::forceScheme('https');
             }
-        }
 
-        // Set ASSET_URL so asset() helper generates correct paths
-        $appUrl = config('app.url');
-        if ($appUrl) {
+            // Set ASSET_URL so asset() helper generates correct paths
             $basePath = parse_url($appUrl, PHP_URL_PATH);
             if ($basePath && $basePath !== '/') {
                 config(['app.asset_url' => $appUrl]);
