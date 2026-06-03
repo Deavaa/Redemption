@@ -5,23 +5,9 @@
  * ROOT INDEX.PHP — Makes Laravel work WITHOUT /public in the URL
  * ──────────────────────────────────────────────────────────────
  *
- * HOW THIS WORKS:
  * This file sits in the project root (e.g., htdocs/Redemption/).
  * It auto-detects the subdirectory, fixes SCRIPT_NAME so Laravel
  * knows the correct base path, then delegates to public/index.php.
- *
- * KEY FIX: Case sensitivity!
- * On Windows/XAMPP, the directory might be "Redemption" but the user
- * accesses "http://localhost/redemption/" (lowercase). Windows is
- * case-insensitive for files, but Laravel/Symfony does CASE-SENSITIVE
- * comparison when stripping the base path from the request URI.
- * If SCRIPT_NAME says /Redemption but REQUEST_URI says /redemption,
- * Symfony can't strip the base path → Laravel sees /redemption/login
- * as the route instead of /login → 404!
- *
- * Solution: We compute the base path from the filesystem, then adjust
- * its case to match REQUEST_URI. This way SCRIPT_NAME always matches
- * the URL case the user actually used.
  * ──────────────────────────────────────────────────────────────
  */
 
@@ -30,9 +16,6 @@
 @ini_set('session.gc_probability', 0);
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
-
-// NOTE: ClassRoom/Classroom compatibility is handled by app/Models/ClassRoom.php
-// which uses require_once + class_alias(). No manual alias needed here.
 
 // ── AUTO-DETECT subdirectory from filesystem ──
 $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
@@ -45,22 +28,16 @@ if ($documentRoot && $currentDir && str_starts_with($currentDir, $documentRoot))
     $basePath = rtrim($basePath, '/');              // Remove trailing slash
 
     // ── CASE FIX: Adjust base path case to match REQUEST_URI ──
-    // The filesystem might give us /Redemption (capital R) but the
-    // user accessed /redemption/ (lowercase). Symfony does case-
-    // sensitive comparison, so we must match the URL's case.
     $requestUri = $_SERVER['REQUEST_URI'] ?? '';
     $uriPath = parse_url($requestUri, PHP_URL_PATH) ?: '';
 
     if ($basePath !== '' && $uriPath !== '') {
-        // Case-insensitive match: does the URI start with our base path?
         if (stripos($uriPath, $basePath) === 0) {
-            // YES — replace our base path with the case from the URI
             $basePath = substr($uriPath, 0, strlen($basePath));
         }
     }
 
     // Force SCRIPT_NAME and PHP_SELF to the correct value
-    // (with the correct case matching the URL)
     $_SERVER['SCRIPT_NAME'] = $basePath . '/index.php';
     $_SERVER['PHP_SELF'] = $basePath . '/index.php';
 
@@ -72,7 +49,6 @@ if ($documentRoot && $currentDir && str_starts_with($currentDir, $documentRoot))
     $scheme = $https ? 'https' : 'http';
     $detectedUrl = $scheme . '://' . $httpHost . $basePath;
 
-    // Set in all places Laravel might read from
     $_ENV['APP_URL'] = $detectedUrl;
     $_SERVER['APP_URL'] = $detectedUrl;
     putenv('APP_URL=' . $detectedUrl);
