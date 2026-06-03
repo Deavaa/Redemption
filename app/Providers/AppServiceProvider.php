@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use App\Models\CalendarEvent;
 
@@ -84,6 +85,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ============================================================
+        // FORCE URL ROOT — Fixes URL generation in subdirectories
+        // ============================================================
+        // When running from a subdirectory (e.g. XAMPP: localhost/Redemption)
+        // or using root index.php instead of public/index.php, Laravel's
+        // URL generator may produce incorrect URLs missing the subdirectory
+        // prefix (e.g. localhost/admin/dashboard instead of
+        // localhost/Redemption/admin/dashboard).
+        //
+        // This forces ALL generated URLs (route(), redirect(), asset(),
+        // etc.) to use APP_URL as the root, ensuring correct paths
+        // on both XAMPP subdirectories and live domains.
+        // ============================================================
+        if (config('app.url')) {
+            URL::forceRootUrl(config('app.url'));
+        }
+
+        // Also force the scheme (http vs https) from APP_URL
+        // This prevents mixed-content issues on HTTPS live servers
+        if (str_starts_with(config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         // Delete stale cached config EVERY request (ensures fresh config)
         $cachedConfig = base_path('bootstrap/cache/config.php');
         if (file_exists($cachedConfig)) {
