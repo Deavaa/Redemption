@@ -46,5 +46,36 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // ── Handle CSRF token mismatches (419 Page Expired) ──
+        // Instead of showing a generic "Page Expired" error, redirect back
+        // to the login page with a user-friendly message. This fixes the
+        // "session expired after re-login" bug where the user gets stuck
+        // in a loop after their session expires.
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            // For AJAX/JSON requests, return a JSON error
+            if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'error' => 'CSRF token expired. Please refresh the page.',
+                    'csrf_expired' => true,
+                ], 419);
+            }
+
+            // For the login POST specifically, redirect back to login with a message
+            // (instead of showing the 419 error page)
+            if ($request->is('login') || $request->is('/login')) {
+                return redirect()->route('login')
+                    ->with('error', 'Your session expired. Please try logging in again.')
+                    ->withInput($request->except('password', '_token'));
+            }
+
+            // For all other pages, redirect to login with the intended URL preserved
+            $intended = $request->getRequestUri();
+            // Don't store login URL as intended
+            if ($intended !== '/login' && !str_ends_with($intended, '/login')) {
+                session(['url.intended' => $intended]);
+            }
+
+            return redirect()->route('login')
+                ->with('error', 'Your session has expired. Please log in again to continue.');
+        });
     })->create();

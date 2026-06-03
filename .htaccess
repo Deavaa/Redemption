@@ -1,57 +1,57 @@
 # ──────────────────────────────────────────────────────────────
-# REMOVE /public FROM URL
+# LARAVEL — REMOVE /public FROM URL (Root .htaccess)
 # ──────────────────────────────────────────────────────────────
-# This .htaccess file goes in the PROJECT ROOT directory
-# (same level as artisan, composer.json, etc.)
+# Place this file in the PROJECT ROOT (same level as artisan, .env).
+# On shared hosting, this is inside public_html/ or htdocs/.
 #
-# It rewrites ALL requests to the public/ directory,
-# so the URL becomes:
-#   https://yoursite.com/login        (instead of /public/login)
-#   https://yoursite.com/admin/dashboard
-#   https://yoursite.com/css/admin.css
-#
-# This works on BOTH XAMPP and live hosting.
+# This file does TWO things:
+# 1. Routes all web traffic to public/ (so /public is not in the URL)
+# 2. Blocks direct access to sensitive Laravel files and directories
 # ──────────────────────────────────────────────────────────────
 
-DirectoryIndex public/index.php
+DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Handle Authorization Header
+    # Set RewriteBase to root — needed on some shared hosts
+    RewriteBase /
+
+    # ── Block direct access to sensitive directories ──
+    # Returns 403 Forbidden if someone tries to access app/, config/, etc. directly
+    RewriteRule ^(app|bootstrap|config|database|lang|resources|routes|storage|tests|vendor|deploy|node_modules)(/|$) - [F,L,NC]
+
+    # ── Block direct access to sensitive files ──
+    RewriteRule ^(artisan|composer\.(json|lock)|package\.json|package-lock\.json|phpunit\.xml|vite\.config\.js|webpack\.mix\.js|\.env\.example)(/|$) - [F,L,NC]
+
+    # ── Handle Authorization Header ──
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # ── Route all requests to public/ ──
-
-    # If the request points to an existing file in public/, serve it
+    # ── Serve existing files from public/ directly ──
+    # CSS, JS, images, fonts, etc.
     RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -f
     RewriteRule ^(.*)$ public/$1 [L]
 
-    # If the request points to an existing directory in public/, serve it
+    # ── Serve existing directories from public/ ──
     RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -d
     RewriteRule ^(.*)$ public/$1 [L]
 
-    # For all other requests (Laravel routes), route through public/index.php
+    # ── Route all other requests through root index.php ──
+    # This uses the ROOT index.php (which bootstraps Laravel directly)
+    # as the front controller, bypassing the need for /public in the URL.
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ public/index.php [L]
+    RewriteRule ^(.*)$ index.php [L]
 </IfModule>
 
-# ── Block direct access to sensitive files ──
+# ── Block direct access to .env file (CRITICAL SECURITY) ──
 <FilesMatch "^\.env">
     Require all denied
 </FilesMatch>
 
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    # Block access to sensitive directories (except public)
-    RewriteRule ^(?!public/)(app|bootstrap|config|database|resources|routes|storage|tests|vendor) - [F,L]
-    # Block artisan and composer files
-    RewriteRule ^(artisan|composer\.(json|lock)|package\.json|phpunit\.xml|vite\.config\.js) - [F,L]
-</IfModule>
-
-# ── PHP Settings (for XAMPP/mod_php) ──
+# ── PHP Settings (only works with mod_php on Apache) ──
+# For PHP-CGI/FPM, use .user.ini instead
 <IfModule mod_php.c>
     php_value session.gc_maxlifetime 28800
     php_value session.gc_probability 0

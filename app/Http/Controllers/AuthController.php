@@ -16,6 +16,47 @@ class AuthController extends Controller
             return redirect()->intended($this->getHomeRoute(Auth::user()));
         }
 
+        // ── FIX: When arriving after session expiration, the old session cookie
+        // may point to a deleted/expired session row. This causes the CSRF token
+        // to be generated for a session that won't persist, leading to 419 errors
+        // on the login POST. We must fully invalidate and regenerate the session
+        // to ensure a clean state.
+        // ──
+        try {
+            // Check if the current session is actually valid (exists in the database)
+            $sessionId = $request->session()->getId();
+            $sessionValid = false;
+
+            if (config('session.driver') === 'database') {
+                $existingSession = \DB::table('sessions')->where('id', $sessionId)->first();
+                $sessionValid = $existingSession !== null;
+            } else {
+                // For file driver, check if the session file exists
+                $sessionPath = config('session.files') . '/' . $sessionId;
+                $sessionValid = file_exists($sessionPath);
+            }
+
+            if (!$sessionValid) {
+                // Session is invalid — fully invalidate and regenerate
+                Log::info('AuthController@showLogin: invalid session detected, regenerating', [
+                    'old_session_id' => substr($sessionId, 0, 8) . '...',
+                ]);
+                $request->session()->invalidate();
+                $request->session()->regenerate();
+            }
+        } catch (\Throwable $e) {
+            // If session check fails, force regenerate anyway
+            Log::warning('AuthController@showLogin: session check failed, regenerating', [
+                'error' => $e->getMessage(),
+            ]);
+            try {
+                $request->session()->invalidate();
+                $request->session()->regenerate();
+            } catch (\Throwable $e2) {
+                // Last resort — just continue with whatever session we have
+            }
+        }
+
         // If there's a redirect parameter, store it in the session so
         // redirect()->intended() can use it after login.
         if ($request->has('redirect')) {
@@ -30,6 +71,9 @@ class AuthController extends Controller
 
         // Regenerate the CSRF token for a fresh login page.
         $request->session()->regenerateToken();
+
+        // Force-save the session immediately to prevent race conditions
+        $request->session()->save();
 
         return response()->view('auth.login')
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
