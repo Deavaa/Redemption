@@ -91,21 +91,20 @@ class AppServiceProvider extends ServiceProvider
         // When running from a subdirectory (e.g. XAMPP: localhost/Redemption)
         // or using root index.php instead of public/index.php, Laravel's
         // URL generator may produce incorrect URLs missing the subdirectory
-        // prefix (e.g. localhost/admin/dashboard instead of
-        // localhost/Redemption/admin/dashboard).
+        // prefix (e.g. localhost/login instead of localhost/Redemption/login).
         //
-        // This forces ALL generated URLs (route(), redirect(), asset(),
-        // etc.) to use APP_URL as the root, ensuring correct paths
-        // on both XAMPP subdirectories and live domains.
+        // We auto-detect the root URL from server variables, which is
+        // more reliable than relying on APP_URL being set correctly.
         // ============================================================
-        if (config('app.url')) {
-            URL::forceRootUrl(config('app.url'));
-        }
+        $this->forceCorrectRootUrl();
 
-        // Also force the scheme (http vs https) from APP_URL
-        // This prevents mixed-content issues on HTTPS live servers
-        if (str_starts_with(config('app.url'), 'https://')) {
-            URL::forceScheme('https');
+        // Also set ASSET_URL so asset() helper generates correct paths
+        $appUrl = config('app.url');
+        if ($appUrl) {
+            $basePath = parse_url($appUrl, PHP_URL_PATH);
+            if ($basePath && $basePath !== '/') {
+                config(['app.asset_url' => $appUrl]);
+            }
         }
 
         // Delete stale cached config EVERY request (ensures fresh config)
@@ -143,5 +142,68 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('activeAnnouncements', $activeAnnouncements);
         });
+    }
+
+    /**
+     * Auto-detect and force the correct root URL.
+     *
+     * This solves the subdirectory problem on XAMPP/shared hosting where
+     * Laravel generates URLs like http://localhost/login instead of
+     * http://localhost/Redemption/login.
+     *
+     * Detection strategy (in order of priority):
+     * 1. Auto-detect from SCRIPT_NAME (most reliable for web requests)
+     * 2. Fall back to APP_URL from .env
+     * 3. If SCRIPT_NAME is /index.php (root), just use APP_URL
+     */
+    private function forceCorrectRootUrl(): void
+    {
+        // For CLI (artisan), just use APP_URL
+        if (app()->runningInConsole()) {
+            if (config('app.url')) {
+                URL::forceRootUrl(config('app.url'));
+            }
+            return;
+        }
+
+        // Auto-detect from server variables
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $httpHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                 || ($_SERVER['SERVER_PORT'] ?? '') === '443';
+        $scheme = $https ? 'https' : 'http';
+
+        // SCRIPT_NAME examples:
+        //   /Redemption/index.php          → base = /Redemption
+        //   /Redemption/public/index.php   → base = /Redemption
+        //   /index.php                     → base = "" (root)
+        //   /public/index.php              → base = "" (root)
+        $basePath = rtrim(dirname($scriptName), '/');
+
+        // If SCRIPT_NAME is inside public/, go up one level
+        // e.g. /Redemption/public/index.php → /Redemption
+        if (str_ends_with($basePath, '/public')) {
+            $basePath = substr($basePath, 0, -7); // Remove '/public'
+        }
+
+        // Don't use '.' (current dir) as base path
+        if ($basePath === '.' || $basePath === '') {
+            // Running at root — use APP_URL as-is
+            if (config('app.url')) {
+                URL::forceRootUrl(config('app.url'));
+            }
+            return;
+        }
+
+        // Build the detected root URL
+        $detectedUrl = $scheme . '://' . $httpHost . $basePath;
+
+        // Force Laravel to use this root URL for ALL generated URLs
+        URL::forceRootUrl($detectedUrl);
+
+        // Force scheme
+        if ($https) {
+            URL::forceScheme('https');
+        }
     }
 }
