@@ -10,10 +10,14 @@
 #
 # CRITICAL: We route to ROOT index.php (NOT public/index.php).
 # Root index.php fixes SCRIPT_NAME before delegating to public/index.php.
+#
+# IMPORTANT: Do NOT set RewriteBase here! Apache automatically uses
+# the directory containing this .htaccess as the base. Setting
+# RewriteBase / would route rewrites to htdocs/index.php (XAMPP's
+# default page that redirects to /dashboard/ — that's the bug!).
 # ──────────────────────────────────────────────────────────────
 
 # ── Required for mod_rewrite in subdirectories ──
-# Without this, Apache returns 403 Forbidden on many configurations
 Options +FollowSymLinks +SymLinksIfOwnerMatch
 
 # ── Serve index.php when a directory is requested ──
@@ -25,12 +29,11 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # ── Set RewriteBase to the subdirectory ──
-    # This tells Apache where the rewrite root is.
-    # On XAMPP: /Redemption/
-    # On live site root: /
-    # If your app is in a different subdirectory, change this!
-    RewriteBase /
+    # ── DO NOT SET RewriteBase! ──
+    # Apache auto-detects the base from the .htaccess directory.
+    # For /Redemption/.htaccess, the base is automatically /Redemption/.
+    # Setting RewriteBase / would break everything by routing to
+    # htdocs/index.php (XAMPP's redirect to /dashboard/).
 
     # ── Block direct access to sensitive directories ──
     RewriteRule ^(app|bootstrap|config|database|lang|resources|routes|storage|tests|vendor|deploy|node_modules)(/|$) - [F,L,NC]
