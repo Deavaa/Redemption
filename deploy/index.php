@@ -17,24 +17,8 @@
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
 
-// ── Class alias: ClassRoom → Classroom (autoloader safety net) ──
-// The Composer optimized autoloader classmap on shared hosting may not
-// have the latest class names. This alias ensures both ClassRoom and
-// Classroom work regardless of autoloader state.
-$classroomFile = __DIR__ . '/app/Models/Classroom.php';
-if (file_exists($classroomFile)) {
-    require_once $classroomFile;
-    if (class_exists('App\Models\Classroom', false) && !class_exists('App\Models\ClassRoom', false)) {
-        class_alias('App\Models\Classroom', 'App\Models\ClassRoom');
-    }
-}
-$classRoomFile = __DIR__ . '/app/Models/ClassRoom.php';
-if (file_exists($classRoomFile) && !file_exists($classroomFile)) {
-    require_once $classRoomFile;
-    if (class_exists('App\Models\ClassRoom', false) && !class_exists('App\Models\Classroom', false)) {
-        class_alias('App\Models\ClassRoom', 'App\Models\Classroom');
-    }
-}
+// NOTE: ClassRoom/Classroom compatibility is handled by app/Models/ClassRoom.php
+// which defines "class ClassRoom extends Classroom". No manual alias needed.
 
 // ── CRITICAL: Set LARAVEL_BASE_PATH for subdirectory detection ──
 $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
