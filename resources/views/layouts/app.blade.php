@@ -26,6 +26,8 @@
 
     @stack('styles')
 
+    <style>html,body{overflow-x:hidden;max-width:100vw;width:100%;}</style>
+
     <style>
         :root {
             --navy-950: #0a0f1e;
