@@ -8,8 +8,15 @@
 # /public is NOT needed in the URL. Static files (CSS, JS, images)
 # are served from the public/ directory automatically.
 #
-# IMPORTANT: Do NOT set RewriteBase here! Apache auto-detects
-# the base from the .htaccess directory.
+# HOW STATIC FILES WORK:
+# We route ALL requests to index.php (including CSS/JS/image requests).
+# The root index.php delegates to public/index.php, which is the
+# standard Laravel entry point. Laravel then checks if the requested
+# file exists in public/ and serves it directly via the MediaController
+# fallback route, or routes the request through the normal Laravel router.
+#
+# This approach is SIMPLER and MORE RELIABLE than trying to rewrite
+# static file paths in .htaccess, which breaks on many Apache configs.
 # ──────────────────────────────────────────────────────────────
 
 # ── Required for mod_rewrite in subdirectories ──
@@ -39,25 +46,14 @@ Options -Indexes
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # ── Serve existing static files from public/ directory ──
-    # When the browser requests /Redemption/css/admin.css, we need to
-    # serve the file from /Redemption/public/css/admin.css.
+    # ── Route ALL requests to root index.php ──
+    # Every request (including CSS, JS, images) goes through index.php.
+    # Laravel handles routing and serves static files from public/
+    # via the fallback route or direct file serving.
     #
-    # HOW IT WORKS:
-    #   %{REQUEST_FILENAME} = the physical path Apache resolves for the URL
-    #     e.g., C:/xampp/htdocs/Redemption/css/admin.css
-    #   We check if C:/xampp/htdocs/Redemption/public/css/admin.css exists
-    #   If yes, rewrite to public/$1 so Apache serves it.
-    #
-    # We do NOT use %{DOCUMENT_ROOT}/public%{REQUEST_URI} because
-    # REQUEST_URI includes the subdirectory (/redemption/css/admin.css)
-    # and DOCUMENT_ROOT doesn't, so the path would be wrong.
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond public/$1 -f
-    RewriteRule ^(.*)$ public/$1 [L]
-
-    # ── Route ALL other requests to root index.php ──
-    # This catches everything that isn't a real static file.
+    # This is the SIMPLEST and MOST RELIABLE approach for subdirectory
+    # hosting. It avoids complex .htaccess rewrite rules for static
+    # files that break on different Apache configurations.
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.*)$ index.php [L]
 </IfModule>

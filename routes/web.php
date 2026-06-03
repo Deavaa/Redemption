@@ -224,6 +224,54 @@ Route::get('/url-test', function () {
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
 
+// ── Static file fallback for subdirectory hosting ──
+// When running without /public in the URL (e.g., http://localhost/redemption/css/admin.css),
+// the .htaccess routes ALL requests through index.php. Laravel needs to serve static
+// files (CSS, JS, images, fonts, etc.) from the public/ directory.
+// This route catches requests for common static file extensions and serves them.
+Route::get('/{path}', function ($path) {
+    $publicPath = public_path($path);
+
+    // Only serve if the file actually exists in public/
+    if (file_exists($publicPath) && is_file($publicPath)) {
+        $mimeTypes = [
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'ico' => 'image/x-icon',
+            'webp' => 'image/webp',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ttf' => 'font/ttf',
+            'eot' => 'application/vnd.ms-fontobject',
+            'otf' => 'font/otf',
+            'json' => 'application/json',
+            'xml' => 'application/xml',
+            'txt' => 'text/plain',
+            'pdf' => 'application/pdf',
+            'apk' => 'application/vnd.android.package-archive',
+            'idsig' => 'application/octet-stream',
+            'webmanifest' => 'application/manifest+json',
+            'map' => 'application/json',
+        ];
+
+        $ext = strtolower(pathinfo($publicPath, PATHINFO_EXTENSION));
+        $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
+
+        return response()->file($publicPath, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    // File not found — let Laravel show 404
+    abort(404);
+})->where('path', '.*')->fallback();
+
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
     // Session Keepalive — touches session to keep it alive
     // NOTE: We do NOT regenerate the CSRF token here anymore.
