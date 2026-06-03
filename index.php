@@ -32,7 +32,7 @@
 @ini_set('session.cookie_lifetime', 28800);
 
 // NOTE: ClassRoom/Classroom compatibility is handled by app/Models/ClassRoom.php
-// which defines "class ClassRoom extends Classroom". No manual alias needed.
+// which uses require_once + class_alias(). No manual alias needed here.
 
 // ── AUTO-DETECT subdirectory from filesystem ──
 $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
