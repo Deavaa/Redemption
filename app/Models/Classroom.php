@@ -1,37 +1,25 @@
 <?php
-namespace App\Models;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-class Classroom extends Model
-{
-    use HasFactory;
-    protected $table = 'classes';
-    protected $fillable = ['branch_id','academic_year_id','name','numeric_name','capacity'];
 
-    /**
-     * Calculated capacity = sum of all sections' max_students.
-     * Falls back to the stored capacity column if no sections exist.
-     */
-    public function getCalculatedCapacityAttribute()
-    {
-        if ($this->relationLoaded('sections') || $this->sections()->exists()) {
-            $sum = $this->sections->sum('max_students');
-            if ($sum > 0) return $sum;
-        }
-        return $this->capacity;
-    }
+/**
+ * ALIAS FILE — Classroom → ClassRoom
+ *
+ * The canonical model is in ClassRoom.php. This file exists ONLY for
+ * backward compatibility with the Composer autoloader classmap, which
+ * may have an entry like:
+ *   'App\Models\Classroom' => 'app/Models/Classroom.php'
+ *
+ * If the autoloader loads THIS file first (because the classmap points
+ * here), we load ClassRoom.php and create the alias.
+ *
+ * If ClassRoom.php was already loaded (more common), the class_alias
+ * call in that file already registered the alias, and this file is
+ * never touched.
+ */
 
-    /**
-     * Recalculate and save capacity from sections.
-     */
-    public function recalculateCapacity(): void
-    {
-        $this->capacity = $this->sections()->sum('max_students') ?: null;
-        $this->saveQuietly();
-    }
+// Load the real model — bypass the autoloader entirely
+require_once __DIR__ . '/ClassRoom.php';
 
-    public function sections() { return $this->hasMany(Section::class, 'class_id')->orderBy('name'); }
-    public function students() { return $this->hasMany(Student::class, 'class_id'); }
-    public function academicYear() { return $this->belongsTo(AcademicYear::class); }
-    public function branch() { return $this->belongsTo(Branch::class); }
+// Ensure the alias exists (safe to call even if already aliased)
+if (!class_exists('App\Models\Classroom')) {
+    class_alias('App\Models\ClassRoom', 'App\Models\Classroom');
 }
