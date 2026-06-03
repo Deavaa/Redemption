@@ -49,7 +49,7 @@ class Branch extends Model
 
     public function classes()
     {
-        return $this->hasMany(Classroom::class);
+        return $this->hasMany(ClassRoom::class);
     }
 
     public function enrollments()
@@ -60,7 +60,7 @@ class Branch extends Model
     public function sections()
     {
         // Sections don't have branch_id directly; they belong to classes which have branch_id
-        return $this->hasManyThrough(Section::class, Classroom::class, 'branch_id', 'class_id');
+        return $this->hasManyThrough(Section::class, ClassRoom::class, 'branch_id', 'class_id');
     }
 
     /**

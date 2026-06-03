@@ -169,6 +169,32 @@ class AuthController extends Controller
         // Force-save the session to database immediately (prevents session loss)
         $r->session()->save();
 
+        // ── VERIFY session was actually persisted ──
+        // On some shared hosts, the database session write may silently fail
+        // (e.g., sessions table doesn't exist, or DB connection dropped).
+        // We verify the session was saved; if not, try file driver as fallback.
+        if (config('session.driver') === 'database') {
+            try {
+                $sid = $r->session()->getId();
+                $saved = \DB::table('sessions')->where('id', $sid)->exists();
+                if (!$saved) {
+                    Log::error('AuthController@login: session NOT found in DB after save!', [
+                        'session_id' => substr($sid, 0, 8) . '...',
+                        'user_id' => $user->id,
+                    ]);
+                    // Fallback: try saving again
+                    $r->session()->save();
+                }
+            } catch (\Throwable $e) {
+                Log::error('AuthController@login: session DB check failed', [
+                    'error' => $e->getMessage(),
+                ]);
+                // If sessions table doesn't exist, switch to file driver for this request
+                config(['session.driver' => 'file']);
+                $r->session()->save();
+            }
+        }
+
         // Validate and normalize the redirect URL
         $validatedRedirect = $this->validateRedirectUrl($redirectUrl);
 

@@ -12,7 +12,7 @@ class ClassAsset extends Model
 
     public function classroom()
     {
-        return $this->belongsTo(Classroom::class, "class_id");
+        return $this->belongsTo(ClassRoom::class, "class_id");
     }
 
     public function section()

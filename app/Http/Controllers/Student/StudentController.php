@@ -470,7 +470,7 @@ class StudentController extends Controller
     {
         $currentAy = $this->getCurrentAcademicYear();
 
-        $query = Classroom::with('sections', 'branch');
+        $query = ClassRoom::with('sections', 'branch');
         if ($branchId) {
             $query->where('branch_id', $branchId);
         }
@@ -481,7 +481,7 @@ class StudentController extends Controller
 
         // Fallback: if no classes for current AY, show all for the branch
         if ($classrooms->isEmpty()) {
-            $fallbackQuery = Classroom::with('sections', 'branch');
+            $fallbackQuery = ClassRoom::with('sections', 'branch');
             if ($branchId) {
                 $fallbackQuery->where('branch_id', $branchId);
             }

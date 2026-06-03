@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
-use App\Models\Classroom;
+use App\Models\ClassRoom;
 use App\Models\GradeScale;
 use App\Models\PromotionResult;
 use App\Models\PromotionSetting;
@@ -28,7 +28,7 @@ class PromotionController extends Controller
         // Store the full model for querying, and the ID for the view
         $selectedAyModel = $request->filled('academic_year_id') ? AcademicYear::find($request->academic_year_id) : $currentAy;
         $selectedTermModel = $request->filled('term_id') ? Term::find($request->term_id) : null;
-        $selectedClassModel = $request->filled('class_id') ? Classroom::find($request->class_id) : null;
+        $selectedClassModel = $request->filled('class_id') ? ClassRoom::find($request->class_id) : null;
 
         // Pass IDs to the view (avoids "Object could not be converted to int" errors)
         $selectedAy = $selectedAyModel?->id;
@@ -38,9 +38,9 @@ class PromotionController extends Controller
         // Get classes
         $user = auth()->user();
         if ($user->role === 'branch_principal' || $user->role === 'general_manager') {
-            $classes = Classroom::with(['branch', 'sections'])->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::with(['branch', 'sections'])->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = Classroom::with(['branch', 'sections'])->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::with(['branch', 'sections'])->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         if ($selectedAyModel) {
@@ -222,7 +222,7 @@ class PromotionController extends Controller
         ]);
 
         $service = new PromotionService();
-        $class = Classroom::find($validated['class_id']);
+        $class = ClassRoom::find($validated['class_id']);
         $students = Student::where('class_id', $validated['class_id'])
             ->where('status', 'active')
             ->orderBy('full_name')
@@ -345,7 +345,7 @@ class PromotionController extends Controller
             ->orderByDesc('average_score')
             ->get();
 
-        $class = Classroom::find($validated['class_id']);
+        $class = ClassRoom::find($validated['class_id']);
         $academicYear = AcademicYear::find($validated['academic_year_id']);
         $term = Term::find($validated['term_id']);
 

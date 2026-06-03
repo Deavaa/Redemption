@@ -19,7 +19,7 @@ class AcademicYear extends Model
     }
 
     public function terms() { return $this->hasMany(Term::class); }
-    public function classes() { return $this->hasMany(Classroom::class); }
+    public function classes() { return $this->hasMany(ClassRoom::class); }
     public function students() { return $this->hasMany(Student::class); }
     public function exams() { return $this->hasMany(Exam::class); }
     public function teacherAssignments() { return $this->hasMany(TeacherAssignment::class); }
