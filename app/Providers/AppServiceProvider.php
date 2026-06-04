@@ -186,16 +186,6 @@ class AppServiceProvider extends ServiceProvider
             // Silently fail — session secure flag will use default
         }
 
-        // Delete stale cached config EVERY request (ensures fresh config)
-        try {
-            $cachedConfig = base_path('bootstrap/cache/config.php');
-            if (file_exists($cachedConfig)) {
-                @unlink($cachedConfig);
-            }
-        } catch (\Throwable $e) {
-            // Silently fail
-        }
-
         // Ensure session directory exists (still needed for any file-based fallback)
         try {
             $sessionDir = storage_path('framework/sessions');
@@ -205,22 +195,27 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Throwable $e) {}
 
         // ============================================================
-        // AUTO-CREATE sessions table if it doesn't exist
+        // AUTO-CREATE sessions table if it doesn't exist (runs ONCE)
         // ============================================================
         // On cPanel/ByetHost, the user may not have run php artisan migrate.
         // Without the sessions table, the database session driver silently
         // fails, causing "session expired" loops. We auto-create it here.
+        // Uses a file flag to only check once instead of every request.
         // ============================================================
         try {
-            if (!\Schema::hasTable('sessions')) {
-                \Schema::create('sessions', function ($table) {
-                    $table->string('id')->primary();
-                    $table->foreignId('user_id')->nullable()->index();
-                    $table->string('ip_address', 45)->nullable();
-                    $table->text('user_agent')->nullable();
-                    $table->longText('payload');
-                    $table->integer('last_activity')->index();
-                });
+            $flagFile = storage_path('framework/sessions_table_created');
+            if (!file_exists($flagFile)) {
+                if (!\Schema::hasTable('sessions')) {
+                    \Schema::create('sessions', function ($table) {
+                        $table->string('id')->primary();
+                        $table->foreignId('user_id')->nullable()->index();
+                        $table->string('ip_address', 45)->nullable();
+                        $table->text('user_agent')->nullable();
+                        $table->longText('payload');
+                        $table->integer('last_activity')->index();
+                    });
+                }
+                @file_put_contents($flagFile, date('Y-m-d H:i:s'));
             }
         } catch (\Throwable $e) {
             // If we can't create the table (no DB connection, etc.),
