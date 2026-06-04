@@ -14,9 +14,16 @@ DirectoryIndex index.php
     # Set RewriteBase to root — needed on some shared hosts
     RewriteBase /
 
+    # ── Allow /storage/ URLs (serves uploaded images, logos, files) ──
+    # /storage/X maps to /public/storage/X physically, and falls through
+    # to Laravel's MediaController route if the file doesn't exist.
+    # Do NOT block /storage/ here — it breaks ALL uploaded images.
+
     # ── Block direct access to sensitive directories ──
-    # Returns 403 Forbidden if someone tries to access app/, config/, etc. directly
-    RewriteRule ^(app|bootstrap|config|database|lang|resources|routes|storage|tests|vendor|deploy|node_modules)(/|$) - [F,L,NC]
+    # Note: 'storage' is intentionally EXCLUDED from this list.
+    # The /storage/ URL path serves public uploads (logos, photos, etc.)
+    # and is NOT the same as the on-disk storage/ directory.
+    RewriteRule ^(app|bootstrap|config|database|lang|resources|routes|tests|vendor|deploy|node_modules)(/|$) - [F,L,NC]
 
     # ── Block direct access to sensitive files ──
     RewriteRule ^(artisan|composer\.(json|lock)|package\.json|package-lock\.json|phpunit\.xml|vite\.config\.js|webpack\.mix\.js|\.env\.example)(/|$) - [F,L,NC]
