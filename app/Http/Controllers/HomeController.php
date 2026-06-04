@@ -13,6 +13,31 @@ class HomeController extends Controller
 {
     public function index()
     {
+        try {
+            return $this->renderHomepage();
+        } catch (\Throwable $e) {
+            // Log the actual error so we can diagnose it
+            \Log::error('Homepage 500 Error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile() . ':' . $e->getLine(),
+                'previous' => $e->getPrevious() ? $e->getPrevious()->getMessage() : null,
+            ]);
+
+            // If the full homepage fails, try a minimal fallback
+            try {
+                return $this->renderMinimalHomepage();
+            } catch (\Throwable $e2) {
+                // Last resort: plain HTML
+                return response($this->renderEmergencyHomepage($e), 500);
+            }
+        }
+    }
+
+    /**
+     * Full homepage rendering with all features
+     */
+    private function renderHomepage()
+    {
         // Wrap ALL database queries in try-catch so the homepage
         // still renders even if tables are missing on shared hosting.
         $sliders = collect();
@@ -62,6 +87,61 @@ class HomeController extends Controller
         } catch (\Throwable $e) {}
 
         return view('welcome', compact('sliders', 'teamMembers', 'galleryImages', 'websiteVideos', 'galleryVideos', 'settings', 'latestNews'));
+    }
+
+    /**
+     * Minimal fallback homepage — no complex view, just basic HTML
+     */
+    private function renderMinimalHomepage()
+    {
+        $settings = $this->getWebsiteSettings();
+        $schoolName = $settings['school_name'] ?? 'School of Redemption';
+        $tagline = $settings['school_tagline'] ?? 'Excellence in Education';
+        $loginUrl = url('/login');
+
+        return response()->view('home', compact('settings'), 200);
+    }
+
+    /**
+     * Emergency fallback — plain HTML when even the minimal view fails
+     */
+    private function renderEmergencyHomepage(\Throwable $originalError): string
+    {
+        $schoolName = 'School of Redemption';
+        $loginUrl = '/login';
+        $errorMsg = htmlspecialchars($originalError->getMessage());
+        $errorFile = htmlspecialchars(basename($originalError->getFile()) . ':' . $originalError->getLine());
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$schoolName}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0d0d2b; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .container { text-align: center; padding: 2rem; max-width: 600px; }
+        h1 { font-size: 2.5rem; color: #c9a84c; margin-bottom: 1rem; }
+        p { color: rgba(255,255,255,0.7); margin-bottom: 1.5rem; line-height: 1.6; }
+        .btn { display: inline-block; background: #c9a84c; color: #0d0d2b; padding: 0.75rem 2rem; border-radius: 50px; text-decoration: none; font-weight: 600; transition: background 0.3s; }
+        .btn:hover { background: #e8b82e; }
+        .error-info { margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{$schoolName}</h1>
+        <p>Welcome to School of Redemption. Our website is being updated. Please use the login portal to access the system.</p>
+        <a href="{$loginUrl}" class="btn">Login to Portal</a>
+        <div class="error-info">
+            <p>Technical details: {$errorMsg} in {$errorFile}</p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
     }
 
     /**
