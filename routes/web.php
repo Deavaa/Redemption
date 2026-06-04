@@ -112,9 +112,8 @@ Route::get('/manifest.webmanifest', [AppController::class, 'manifest'])->name('a
 // App Download / Install Page
 // NOTE: Route uses /mobile-app instead of /app to avoid conflict with
 // the physical app/ directory which is blocked by .htaccess for security
-// TEMP: Redirecting to /login for testing — change back to AppController after test
-Route::get('/mobile-app', function () { return redirect()->route('login'); })->name('app.download');
-Route::get('/mobile-app/download/apk', function () { return redirect()->route('login'); })->name('app.download.apk');
+Route::get('/mobile-app', [AppController::class, 'download'])->name('app.download');
+Route::get('/mobile-app/download/apk', [AppController::class, 'downloadApk'])->name('app.download.apk');
 
 // Public Contact Form
 Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');
