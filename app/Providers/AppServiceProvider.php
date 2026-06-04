@@ -17,19 +17,23 @@ class AppServiceProvider extends ServiceProvider
         // ============================================================
         // SAFETY NET: Auto-generate APP_KEY if missing.
         // ============================================================
-        if (empty(config('app.key'))) {
-            $key = 'base64:' . base64_encode(random_bytes(32));
-            config(['app.key' => $key]);
-            $envPath = base_path('.env');
-            if (file_exists($envPath)) {
-                $envContent = file_get_contents($envPath);
-                if (preg_match('/^APP_KEY\s*=/m', $envContent)) {
-                    $envContent = preg_replace('/^APP_KEY\s*=.*/m', "APP_KEY={$key}", $envContent);
-                } else {
-                    $envContent .= "\nAPP_KEY={$key}\n";
+        try {
+            if (empty(config('app.key'))) {
+                $key = 'base64:' . base64_encode(random_bytes(32));
+                config(['app.key' => $key]);
+                $envPath = base_path('.env');
+                if (file_exists($envPath)) {
+                    $envContent = file_get_contents($envPath);
+                    if (preg_match('/^APP_KEY\s*=/m', $envContent)) {
+                        $envContent = preg_replace('/^APP_KEY\s*=.*/m', "APP_KEY={$key}", $envContent);
+                    } else {
+                        $envContent .= "\nAPP_KEY={$key}\n";
+                    }
+                    @file_put_contents($envPath, $envContent);
                 }
-                @file_put_contents($envPath, $envContent);
             }
+        } catch (\Throwable $e) {
+            // Silently fail — app key will be empty but container won't crash
         }
 
         // ============================================================
@@ -41,15 +45,23 @@ class AppServiceProvider extends ServiceProvider
         // We must override config('app.url') HERE (after Dotenv loads, but
         // before URL generation) to prevent redirect-to-localhost bugs.
         // ============================================================
-        $detectedAppUrl = $this->detectAppUrl();
-        if ($detectedAppUrl) {
-            config(['app.url' => $detectedAppUrl]);
+        try {
+            $detectedAppUrl = $this->detectAppUrl();
+            if ($detectedAppUrl) {
+                config(['app.url' => $detectedAppUrl]);
+            }
+        } catch (\Throwable $e) {
+            // Silently fail — will use .env APP_URL as fallback
         }
 
         // ============================================================
         // FORCE correct database: always MySQL (never sqlite)
         // ============================================================
-        config(['database.default' => 'mysql']);
+        try {
+            config(['database.default' => 'mysql']);
+        } catch (\Throwable $e) {
+            // Silently fail
+        }
 
         // ============================================================
         // SESSION: Use 'database' driver.
@@ -73,32 +85,36 @@ class AppServiceProvider extends ServiceProvider
         //   which only deletes expired rows — SAFE)
         // - session.lifetime = 480 (8 hours)
         // ============================================================
-        config(['session.driver' => 'database']);
-        config(['session.lifetime' => 480]);           // 8 hours
-        config(['session.encrypt' => false]);
-        // Use a host-specific cookie name to avoid conflicts between
-        // XAMPP (localhost) and cPanel (byethost4.com) when the same
-        // browser accesses both. The hash is based on HTTP_HOST.
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $hostSuffix = substr(md5($host), 0, 6);
-        config(['session.cookie' => 'redemption_sess_' . $hostSuffix]);
-        config(['session.path' => '/']);
-        config(['session.domain' => null]);
-        // NOTE: session.secure is set dynamically in boot() based on the
-        // actual request scheme. Default false here for XAMPP (HTTP).
-        config(['session.secure' => false]);
-        config(['session.http_only' => true]);
-        config(['session.same_site' => 'lax']);
-        config(['session.expire_on_close' => false]);
-        config(['session.lottery' => [2, 100]]);       // 2% lottery (safe for DB)
+        try {
+            config(['session.driver' => 'database']);
+            config(['session.lifetime' => 480]);           // 8 hours
+            config(['session.encrypt' => false]);
+            // Use a host-specific cookie name to avoid conflicts between
+            // XAMPP (localhost) and cPanel (byethost4.com) when the same
+            // browser accesses both. The hash is based on HTTP_HOST.
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $hostSuffix = substr(md5($host), 0, 6);
+            config(['session.cookie' => 'redemption_sess_' . $hostSuffix]);
+            config(['session.path' => '/']);
+            config(['session.domain' => null]);
+            // NOTE: session.secure is set dynamically in boot() based on the
+            // actual request scheme. Default false here for XAMPP (HTTP).
+            config(['session.secure' => false]);
+            config(['session.http_only' => true]);
+            config(['session.same_site' => 'lax']);
+            config(['session.expire_on_close' => false]);
+            config(['session.lottery' => [2, 100]]);       // 2% lottery (safe for DB)
 
-        // Disable PHP's native session GC (belt-and-suspenders —
-        // database driver doesn't use PHP file sessions, but we
-        // keep these settings in case any PHP code uses $_SESSION)
-        @ini_set('session.gc_maxlifetime', 28800);
-        @ini_set('session.gc_probability', 0);
-        @ini_set('session.gc_divisor', 1);
-        @ini_set('session.cookie_lifetime', 28800);
+            // Disable PHP's native session GC (belt-and-suspenders —
+            // database driver doesn't use PHP file sessions, but we
+            // keep these settings in case any PHP code uses $_SESSION)
+            @ini_set('session.gc_maxlifetime', 28800);
+            @ini_set('session.gc_probability', 0);
+            @ini_set('session.gc_divisor', 1);
+            @ini_set('session.cookie_lifetime', 28800);
+        } catch (\Throwable $e) {
+            // Silently fail — session config will use defaults
+        }
     }
 
     /**
@@ -118,20 +134,24 @@ class AppServiceProvider extends ServiceProvider
         // index.php sets APP_URL in $_SERVER/$_ENV/putenv before
         // Laravel boots, so config('app.url') should always be correct.
         // ============================================================
-        $appUrl = config('app.url');
+        try {
+            $appUrl = config('app.url');
 
-        if ($appUrl) {
-            URL::forceRootUrl($appUrl);
+            if ($appUrl) {
+                URL::forceRootUrl($appUrl);
 
-            if (str_starts_with($appUrl, 'https://')) {
-                URL::forceScheme('https');
+                if (str_starts_with($appUrl, 'https://')) {
+                    URL::forceScheme('https');
+                }
+
+                // Set ASSET_URL so asset() helper generates correct paths
+                $basePath = parse_url($appUrl, PHP_URL_PATH);
+                if ($basePath && $basePath !== '/') {
+                    config(['app.asset_url' => $appUrl]);
+                }
             }
-
-            // Set ASSET_URL so asset() helper generates correct paths
-            $basePath = parse_url($appUrl, PHP_URL_PATH);
-            if ($basePath && $basePath !== '/') {
-                config(['app.asset_url' => $appUrl]);
-            }
+        } catch (\Throwable $e) {
+            // Silently fail — URL generation may use defaults
         }
 
         // ============================================================
@@ -145,27 +165,35 @@ class AppServiceProvider extends ServiceProvider
         // send the cookie only over HTTPS (required by some browsers when
         // SameSite=Lax on an HTTPS page).
         // ============================================================
-        $isHttps = false;
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-            $isHttps = true;
-        } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-            $isHttps = true;
-        } elseif (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
-            $isHttps = true;
-        } elseif (($appUrl && str_starts_with($appUrl, 'https://'))) {
-            $isHttps = true;
-        } elseif (($_SERVER['SERVER_PORT'] ?? '') === '443') {
-            $isHttps = true;
-        }
-        if ($isHttps) {
-            config(['session.secure' => true]);
-            URL::forceScheme('https');
+        try {
+            $isHttps = false;
+            if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+                $isHttps = true;
+            } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+                $isHttps = true;
+            } elseif (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
+                $isHttps = true;
+            } elseif (($appUrl ?? null) && str_starts_with($appUrl, 'https://')) {
+                $isHttps = true;
+            } elseif (($_SERVER['SERVER_PORT'] ?? '') === '443') {
+                $isHttps = true;
+            }
+            if ($isHttps) {
+                config(['session.secure' => true]);
+                URL::forceScheme('https');
+            }
+        } catch (\Throwable $e) {
+            // Silently fail — session secure flag will use default
         }
 
         // Delete stale cached config EVERY request (ensures fresh config)
-        $cachedConfig = base_path('bootstrap/cache/config.php');
-        if (file_exists($cachedConfig)) {
-            @unlink($cachedConfig);
+        try {
+            $cachedConfig = base_path('bootstrap/cache/config.php');
+            if (file_exists($cachedConfig)) {
+                @unlink($cachedConfig);
+            }
+        } catch (\Throwable $e) {
+            // Silently fail
         }
 
         // Ensure session directory exists (still needed for any file-based fallback)
@@ -197,26 +225,34 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Throwable $e) {
             // If we can't create the table (no DB connection, etc.),
             // fall back to file driver for this request
-            config(['session.driver' => 'file']);
+            try {
+                config(['session.driver' => 'file']);
+            } catch (\Throwable $e2) {
+                // Even fallback failed — truly silent
+            }
         }
 
         // Share active announcements with admin layout
-        View::composer('layouts.admin', function ($view) {
-            try {
-                $activeAnnouncements = CalendarEvent::where('is_announcement', true)
-                    ->where(function ($q) {
-                        $q->where('start_date', '>=', now()->subDays(30))
-                          ->orWhere('start_date', '>=', now());
-                    })
-                    ->orderBy('start_date', 'desc')
-                    ->limit(10)
-                    ->get();
-            } catch (\Throwable $e) {
-                $activeAnnouncements = collect([]);
-            }
+        try {
+            View::composer('layouts.admin', function ($view) {
+                try {
+                    $activeAnnouncements = CalendarEvent::where('is_announcement', true)
+                        ->where(function ($q) {
+                            $q->where('start_date', '>=', now()->subDays(30))
+                              ->orWhere('start_date', '>=', now());
+                        })
+                        ->orderBy('start_date', 'desc')
+                        ->limit(10)
+                        ->get();
+                } catch (\Throwable $e) {
+                    $activeAnnouncements = collect([]);
+                }
 
-            $view->with('activeAnnouncements', $activeAnnouncements);
-        });
+                $view->with('activeAnnouncements', $activeAnnouncements);
+            });
+        } catch (\Throwable $e) {
+            // Silently fail — announcements won't be shared but app won't crash
+        }
     }
 
     /**
@@ -231,66 +267,71 @@ class AppServiceProvider extends ServiceProvider
      */
     private function detectAppUrl(): ?string
     {
-        // CLI (artisan) — no HTTP request, use existing config
-        if (PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg') {
-            return null;
-        }
-
-        // No HTTP_HOST — can't detect URL
-        $httpHost = $_SERVER['HTTP_HOST'] ?? null;
-        if (!$httpHost) {
-            return null;
-        }
-
-        // Detect HTTPS — check multiple indicators (ByetHost uses reverse proxy)
-        $isHttps = false;
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-            $isHttps = true;
-        } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-            $isHttps = true;
-        } elseif (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
-            $isHttps = true;
-        } elseif (($_SERVER['SERVER_PORT'] ?? '') === '443') {
-            $isHttps = true;
-        }
-        $scheme = $isHttps ? 'https' : 'http';
-
-        // Detect subdirectory/base path from SCRIPT_NAME or DOCUMENT_ROOT
-        $basePath = '';
-        $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
-        $currentDir = realpath(base_path()); // Laravel base_path() = project root
-
-        if ($documentRoot && $currentDir && str_starts_with($currentDir, $documentRoot)) {
-            $basePath = substr($currentDir, strlen($documentRoot));
-            $basePath = str_replace('\\', '/', $basePath);
-            $basePath = rtrim($basePath, '/');
-
-            // Case-fix: match the case from REQUEST_URI
-            $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
-            if ($basePath !== '' && $uriPath !== '' && stripos($uriPath, $basePath) === 0) {
-                $basePath = substr($uriPath, 0, strlen($basePath));
+        try {
+            // CLI (artisan) — no HTTP request, use existing config
+            if (PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg') {
+                return null;
             }
+
+            // No HTTP_HOST — can't detect URL
+            $httpHost = $_SERVER['HTTP_HOST'] ?? null;
+            if (!$httpHost) {
+                return null;
+            }
+
+            // Detect HTTPS — check multiple indicators (ByetHost uses reverse proxy)
+            $isHttps = false;
+            if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+                $isHttps = true;
+            } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+                $isHttps = true;
+            } elseif (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
+                $isHttps = true;
+            } elseif (($_SERVER['SERVER_PORT'] ?? '') === '443') {
+                $isHttps = true;
+            }
+            $scheme = $isHttps ? 'https' : 'http';
+
+            // Detect subdirectory/base path from SCRIPT_NAME or DOCUMENT_ROOT
+            $basePath = '';
+            $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+            $currentDir = realpath(base_path()); // Laravel base_path() = project root
+
+            if ($documentRoot && $currentDir && str_starts_with($currentDir, $documentRoot)) {
+                $basePath = substr($currentDir, strlen($documentRoot));
+                $basePath = str_replace('\\', '/', $basePath);
+                $basePath = rtrim($basePath, '/');
+
+                // Case-fix: match the case from REQUEST_URI
+                $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+                if ($basePath !== '' && $uriPath !== '' && stripos($uriPath, $basePath) === 0) {
+                    $basePath = substr($uriPath, 0, strlen($basePath));
+                }
+            }
+
+            $detectedUrl = $scheme . '://' . $httpHost . $basePath;
+
+            // Validate: if the detected URL is localhost and the .env value is also
+            // localhost, there's nothing to override (XAMPP local dev)
+            $envUrl = config('app.url');
+            if ($envUrl && str_contains($envUrl, 'localhost') && str_contains($detectedUrl, 'localhost')) {
+                return null; // Both are localhost, no override needed
+            }
+
+            // If .env has localhost but actual host is NOT localhost, we MUST override
+            if ($envUrl && str_contains($envUrl, 'localhost') && !str_contains($detectedUrl, 'localhost')) {
+                return $detectedUrl;
+            }
+
+            // If detected URL differs from config, override
+            if ($envUrl && $detectedUrl !== $envUrl) {
+                return $detectedUrl;
+            }
+
+            return null;
+        } catch (\Throwable $e) {
+            // Silently fail — return null so the caller falls back to .env APP_URL
+            return null;
         }
-
-        $detectedUrl = $scheme . '://' . $httpHost . $basePath;
-
-        // Validate: if the detected URL is localhost and the .env value is also
-        // localhost, there's nothing to override (XAMPP local dev)
-        $envUrl = config('app.url');
-        if ($envUrl && str_contains($envUrl, 'localhost') && str_contains($detectedUrl, 'localhost')) {
-            return null; // Both are localhost, no override needed
-        }
-
-        // If .env has localhost but actual host is NOT localhost, we MUST override
-        if ($envUrl && str_contains($envUrl, 'localhost') && !str_contains($detectedUrl, 'localhost')) {
-            return $detectedUrl;
-        }
-
-        // If detected URL differs from config, override
-        if ($envUrl && $detectedUrl !== $envUrl) {
-            return $detectedUrl;
-        }
-
-        return null;
     }
 }
