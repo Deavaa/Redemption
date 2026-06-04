@@ -595,6 +595,20 @@
 
 {{-- INSTALL CARDS --}}
 <section class="install-section">
+    {{-- TRAINING APP BANNER --}}
+    <div style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1));border:1px solid rgba(99,102,241,0.25);border-radius:16px;padding:24px 28px;margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#1a237e,#6366f1);display:flex;align-items:center;justify-content:center;font-size:24px;color:#ffc107;flex-shrink:0;">
+            <i class="fas fa-book-open"></i>
+        </div>
+        <div style="flex:1;min-width:200px;">
+            <h3 style="font-size:18px;font-weight:700;margin:0 0 4px;">Redemption Training App</h3>
+            <p style="font-size:13px;color:var(--gray);margin:0 0 12px;">Dedicated training app for accessing courses and learning materials on the go.</p>
+            <a href="{{ route('app.download.training_apk') }}" class="btn-install android-btn" style="width:auto;display:inline-flex;padding:10px 24px;font-size:14px;">
+                <i class="fas fa-download"></i> Download Training APK
+            </a>
+        </div>
+    </div>
+
     <div class="install-grid">
         {{-- ANDROID --}}
         <div class="install-card android">

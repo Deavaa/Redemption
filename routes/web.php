@@ -114,6 +114,7 @@ Route::get('/manifest.webmanifest', [AppController::class, 'manifest'])->name('a
 // the physical app/ directory which is blocked by .htaccess for security
 Route::get('/mobile-app', [AppController::class, 'download'])->name('app.download');
 Route::get('/mobile-app/download/apk', [AppController::class, 'downloadApk'])->name('app.download.apk');
+Route::get('/mobile-app/download/training-apk', [AppController::class, 'downloadTrainingApk'])->name('app.download.training_apk');
 
 // Public Contact Form
 Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');

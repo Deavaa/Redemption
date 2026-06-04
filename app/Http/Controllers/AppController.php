@@ -104,4 +104,26 @@ class AppController extends Controller
 
         abort(404, 'APK file not found. Please contact the administrator.');
     }
+
+    /**
+     * Download the Training Android APK file
+     */
+    public function downloadTrainingApk()
+    {
+        $paths = [
+            storage_path('app/public/downloads/RedemptionTraining.apk'),
+            public_path('downloads/RedemptionTraining.apk'),
+        ];
+
+        foreach ($paths as $path) {
+            if (file_exists($path)) {
+                return response()->download($path, 'RedemptionTraining.apk', [
+                    'Content-Type' => 'application/vnd.android.package-archive',
+                    'Content-Length' => filesize($path),
+                ]);
+            }
+        }
+
+        abort(404, 'Training APK file not found. Please contact the administrator.');
+    }
 }
