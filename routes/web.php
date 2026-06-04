@@ -110,8 +110,10 @@ Route::get('/team', [HomeController::class, 'team'])->name('team');
 Route::get('/manifest.webmanifest', [AppController::class, 'manifest'])->name('app.manifest');
 
 // App Download / Install Page
-Route::get('/app', [AppController::class, 'download'])->name('app.download');
-Route::get('/app/download/apk', [AppController::class, 'downloadApk'])->name('app.download.apk');
+// NOTE: Route uses /mobile-app instead of /app to avoid conflict with
+// the physical app/ directory which is blocked by .htaccess for security
+Route::get('/mobile-app', [AppController::class, 'download'])->name('app.download');
+Route::get('/mobile-app/download/apk', [AppController::class, 'downloadApk'])->name('app.download.apk');
 
 // Public Contact Form
 Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');
