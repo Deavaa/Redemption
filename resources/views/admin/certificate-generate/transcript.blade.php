@@ -106,8 +106,7 @@
 <div class="watermark">TRANSCRIPT</div>
 
 @php
-    $schoolLogo = \App\Models\Setting::get('school_logo', '');
-    $schoolLogoUrl = $schoolLogo ? asset('storage/' . $schoolLogo) : '';
+    $schoolLogoUrl = \App\Models\Setting::getLogoUrl();
 @endphp
 
 <div class="page">

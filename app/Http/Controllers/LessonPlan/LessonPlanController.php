@@ -427,7 +427,7 @@ class LessonPlanController extends Controller
 
         // School info
         $schoolName = Setting::get('school_name', 'Redemption School');
-        $schoolLogo = Setting::get('school_logo');
+        $schoolLogo = Setting::getLogoUrl();
 
         // Get filter labels
         $academicYear = $academicYearId ? AcademicYear::find($academicYearId) : null;
@@ -494,7 +494,7 @@ class LessonPlanController extends Controller
 
         // School info
         $schoolName = Setting::get('school_name', 'Redemption School');
-        $schoolLogo = Setting::get('school_logo');
+        $schoolLogo = Setting::getLogoUrl();
 
         // Get filter labels
         $academicYear = $academicYearId ? AcademicYear::find($academicYearId) : null;

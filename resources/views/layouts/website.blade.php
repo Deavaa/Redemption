@@ -64,8 +64,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar">
         <div class="container-fluid nav-container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
-                @if(($settings['school_logo'] ?? '') && file_exists(public_path('storage/' . $settings['school_logo'])))
-                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;" loading="lazy">
+                @if($settings['school_logo'] ?? '')
+                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;" loading="lazy" onerror="this.style.display='none'">
                 @endif
                 <div>
                     <span class="brand-pre">{{ Str::beforeLast($settings['school_name'] ?? 'School', ' ') }}</span>
@@ -153,8 +153,8 @@
                 <!-- Brand Column -->
                 <div class="col-lg-4 col-md-6">
                     <div class="footer-brand d-flex align-items-center gap-2">
-                        @if(($settings['school_logo'] ?? '') && file_exists(public_path('storage/' . $settings['school_logo'])))
-                            <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 40px; opacity: 0.85;">
+                        @if($settings['school_logo'] ?? '')
+                            <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 40px; opacity: 0.85;" onerror="this.style.display='none'">
                         @endif
                         <div>
                             <span class="brand-pre">{{ Str::beforeLast($settings['school_name'] ?? 'School', ' ') }}</span>

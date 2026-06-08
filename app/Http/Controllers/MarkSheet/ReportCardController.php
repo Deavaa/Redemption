@@ -206,17 +206,10 @@ class ReportCardController extends Controller
         // School settings
         $schoolName = Setting::get('school_name', 'School of Redemption');
         $schoolMotto = Setting::get('school_motto', '');
-        $schoolLogo = Setting::get('school_logo', '');
+        $logoUrl = Setting::getLogoUrl();
         $schoolAddress = Setting::get('address', '');
         $schoolPhone = Setting::get('phone', '');
         $schoolEmail = Setting::get('email', '');
-
-        $logoUrl = null;
-        if ($schoolLogo) {
-            $logoUrl = filter_var($schoolLogo, FILTER_VALIDATE_URL)
-                ? $schoolLogo
-                : Setting::getLogoUrl();
-        }
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();

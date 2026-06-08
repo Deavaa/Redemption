@@ -156,8 +156,9 @@
                 <div class="col-lg-3 col-md-6">
                     <div class="team-card reveal">
                         <div class="team-avatar">
-                            @if($member->photo && file_exists(public_path('storage/' . $member->photo)))
-                            <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}">
+                            @if($member->photo)
+                            <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <span class="team-avatar-initial" style="display:none;">{{ strtoupper(substr($member->name, 0, 1)) }}</span>
                             @else
                             <span class="team-avatar-initial">{{ strtoupper(substr($member->name, 0, 1)) }}</span>
                             @endif
