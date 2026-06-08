@@ -1175,7 +1175,8 @@
                         @foreach(config('app.available_locales') as $code => $name)
                             <li>
                                 <a class="dropdown-item {{ app()->getLocale() === $code ? 'active' : '' }}"
-                                   href="{{ route('lang.switch', $code) }}">
+                                   href="{{ route('lang.switch', $code) }}"
+                                   onclick="event.preventDefault(); window.location.href=this.href;">
                                     @if(app()->getLocale() === $code)
                                         <i class="fas fa-check me-2 text-success"></i>
                                     @else
@@ -1637,6 +1638,63 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => a.remove(), 300);
         }, delay);
     });
+
+    // ===== MOBILE DROPDOWN FIX =====
+    // Bootstrap 5 dropdowns may not work on mobile WebView (touch events).
+    // This ensures clicking/tapping the toggle buttons opens dropdowns on mobile.
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        document.querySelectorAll('.topbar-icon-btn.dropdown .topbar-icon-toggle, .topbar-dropdown.dropdown .topbar-avatar').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                var dropdown = btn.closest('.dropdown');
+                if (!dropdown) return;
+                var menu = dropdown.querySelector('.dropdown-menu');
+                if (!menu) return;
+
+                // Close all other open dropdowns first
+                document.querySelectorAll('.dropdown-menu.show').forEach(function(openMenu) {
+                    if (openMenu !== menu) {
+                        openMenu.classList.remove('show');
+                        openMenu.closest('.dropdown')?.classList.remove('show');
+                    }
+                });
+
+                // Toggle this dropdown
+                var isOpen = menu.classList.contains('show');
+                if (isOpen) {
+                    menu.classList.remove('show');
+                    dropdown.classList.remove('show');
+                    btn.setAttribute('aria-expanded', 'false');
+                } else {
+                    menu.classList.add('show');
+                    dropdown.classList.add('show');
+                    btn.setAttribute('aria-expanded', 'true');
+                }
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        // Close dropdown when tapping outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
+                    menu.classList.remove('show');
+                    menu.closest('.dropdown')?.classList.remove('show');
+                });
+            }
+        });
+
+        // Close dropdown when tapping a dropdown item
+        document.querySelectorAll('.topbar-icon-dropdown .dropdown-item, .topbar-notif-dropdown .dropdown-item, .topbar-dropdown .dropdown-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var menu = item.closest('.dropdown-menu');
+                if (menu) {
+                    menu.classList.remove('show');
+                    menu.closest('.dropdown')?.classList.remove('show');
+                }
+            });
+        });
+    }
 })();
 
 // Mobile Menu Sheet Toggle

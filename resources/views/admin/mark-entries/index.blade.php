@@ -328,20 +328,33 @@
     .me-page, .me-page > *, .me-page > div,
     .me-filter-card, .me-filter-summary, .me-global-status,
     .me-carousel-nav, .me-cards-container, .me-mark-entry-area,
-    .me-student-card, .me-sc-header, .me-sc-body, .me-sc-totals,
     .me-sc-ca-grid, .me-sc-exam-grid,
     .me-sc-field, .me-filter-grid, .me-filter-group {
         max-width: 100% !important; overflow-x: hidden !important;
-        box-sizing: border-box !important; width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    /* Student cards: must NOT have width: 100% relative to slider — they use min-width for flex sizing */
+    .me-student-card {
+        min-width: 100% !important;
+        max-width: 100% !important;
+        flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+    .me-sc-header, .me-sc-totals {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
     }
     /* Card slider MUST NOT have max-width: 100% - it needs to be wider to hold all cards */
     .me-card-slider {
         max-width: none !important;
         overflow: visible !important;
         width: auto !important;
+        display: flex !important;
     }
     /* Cards container clips the overflow so only one card is visible */
-    .me-cards-container { overflow: hidden !important; max-height: calc(100vh - 280px); }
+    .me-cards-container { overflow: hidden !important; max-height: calc(100vh - 280px); width: 100% !important; }
     .me-cards-container .me-card-slider { max-width: none !important; }
     /* Card body can scroll horizontally for input grids */
     .me-sc-body { overflow-x: auto !important; width: 100% !important; }

@@ -67,7 +67,7 @@ a { text-decoration: none; color: inherit; }
     flex-direction: column;
     transition: transform 0.3s ease;
     overflow-x: hidden;
-    overflow-y: hidden;
+    overflow-y: auto;
 }
 
 .sidebar-header {
@@ -1406,6 +1406,27 @@ html, body {
     .dropdown-menu {
         min-width: 200px;
         max-width: 90vw;
+        z-index: 1200 !important;
+    }
+    .topbar-notif-dropdown {
+        width: 300px !important;
+        max-width: 90vw !important;
+        max-height: 350px !important;
+        position: absolute !important;
+        right: 0 !important;
+        left: auto !important;
+    }
+    .topbar-icon-dropdown {
+        position: absolute !important;
+        right: 0 !important;
+        left: auto !important;
+    }
+    .topbar-right {
+        position: relative;
+        z-index: 1050;
+    }
+    .topbar-icon-btn.dropdown {
+        position: relative;
     }
 
     /* Improve topbar on very small screens */

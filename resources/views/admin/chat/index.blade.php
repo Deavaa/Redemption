@@ -111,11 +111,14 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Select Member(s)</label>
-                        <select name="participant_ids[]" class="form-select" id="participantSelect" size="8" required>
-                            @foreach($users as $u)
-                                <option value="{{ $u->id }}">{{ $u->name }} ({{ ucfirst(str_replace('_', ' ', $u->role ?? 'user')) }})</option>
-                            @endforeach
-                        </select>
+                        <div style="position:relative;">
+                            <input type="text" id="participantSearch" class="form-control mb-2" placeholder="Search users by name..." autocomplete="off">
+                            <select name="participant_ids[]" class="form-select" id="participantSelect" size="8" required>
+                                @foreach($users as $u)
+                                    <option value="{{ $u->id }}" data-search="{{ strtolower($u->name . ' ' . ($u->role ?? '') . ' ' . ($u->email ?? '')) }}">{{ $u->name }} ({{ ucfirst(str_replace('_', ' ', $u->role ?? 'user')) }})</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <small class="text-muted">Hold Ctrl/Cmd to select multiple for group chats</small>
                     </div>
                 </div>
@@ -219,6 +222,21 @@ document.getElementById('chatSearch')?.addEventListener('input', function() {
         const name = item.querySelector('.chat-item-name')?.textContent.toLowerCase() || '';
         const preview = item.querySelector('.chat-item-preview')?.textContent.toLowerCase() || '';
         item.style.display = (name.includes(q) || preview.includes(q)) ? '' : 'none';
+    });
+});
+
+// Search/filter users in New Conversation modal
+document.getElementById('participantSearch')?.addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    const select = document.getElementById('participantSelect');
+    if (!select) return;
+    Array.from(select.options).forEach(function(opt) {
+        const searchText = opt.getAttribute('data-search') || opt.textContent.toLowerCase();
+        if (q === '' || searchText.includes(q)) {
+            opt.style.display = '';
+        } else {
+            opt.style.display = 'none';
+        }
     });
 });
 
