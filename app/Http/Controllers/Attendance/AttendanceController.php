@@ -26,6 +26,7 @@ class AttendanceController extends Controller
         // For teachers, only show their assigned classes
         $user = Auth::user();
         $isTeacher = $user->role === 'teacher';
+        $branchScope = $request->attributes->get('branch_scope');
         $teacherModel = null;
         $assignableClassIds = [];
 
@@ -46,6 +47,10 @@ class AttendanceController extends Controller
         if ($isTeacher && $teacherModel) {
             $baseQuery->whereIn('class_id', $assignableClassIds);
         }
+        // Branch scope: restrict attendance to branch students
+        if ($branchScope) {
+            $baseQuery->whereHas('student', fn($q) => $q->where('branch_id', $branchScope));
+        }
 
         $totalRecords = (clone $baseQuery)->count();
         $presentCount = (clone $baseQuery)->where('status', 'present')->count();
@@ -65,6 +70,10 @@ class AttendanceController extends Controller
         // Filter classes for teachers
         if ($isTeacher && $teacherModel) {
             $classQuery->whereIn('id', $assignableClassIds);
+        }
+        // Branch scope: only show branch classes
+        if ($branchScope) {
+            $classQuery->where('branch_id', $branchScope);
         }
 
         $classSummary = $classQuery->orderBy('numeric_name')->orderBy('name')->get()->map(function ($class) use ($date) {
@@ -89,9 +98,12 @@ class AttendanceController extends Controller
             ->limit(20)
             ->get();
 
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderBy('numeric_name')->orderBy('name')->get();
         if ($isTeacher && $teacherModel) {
-            $classes = ClassRoom::whereIn('id', $assignableClassIds)->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $assignableClassIds)
+                ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+                ->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.attendance.index', compact(
@@ -110,6 +122,7 @@ class AttendanceController extends Controller
         $isAdmin = in_array($user->role, ['admin', 'full']);
         $isBranchPrincipal = $user->role === 'branch_principal';
         $isGeneralManager = $user->role === 'general_manager';
+        $branchScope = $request->attributes->get('branch_scope');
 
         $teacherModel = null;
         $assignableClassIds = [];
@@ -142,9 +155,13 @@ class AttendanceController extends Controller
         // Get available classes
         if ($isTeacher && $teacherModel) {
             $assignableClassIds = AttendanceDelegation::getAssignableClasses($teacherModel->id, $selectedDate);
-            $classes = ClassRoom::whereIn('id', $assignableClassIds)->with('sections')->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::whereIn('id', $assignableClassIds)->with('sections')
+                ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+                ->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::with('sections')
+                ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+                ->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         $terms = Term::orderByDesc('created_at')->get();
@@ -277,7 +294,10 @@ class AttendanceController extends Controller
 
     public function edit($date, $classId)
     {
-        $classes = ClassRoom::with('sections')->orderBy('numeric_name')->orderBy('name')->get();
+        $branchScope = request()->attributes->get('branch_scope');
+        $classes = ClassRoom::with('sections')
+            ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderBy('numeric_name')->orderBy('name')->get();
         $terms = Term::orderByDesc('created_at')->get();
 
         $records = Attendance::with(['student', 'classRoom', 'section'])
@@ -377,6 +397,7 @@ class AttendanceController extends Controller
     {
         $classId = $request->input('class_id');
         $sectionId = $request->input('section_id');
+        $branchScope = $request->attributes->get('branch_scope');
 
         if (!$classId) {
             return response()->json([]);
@@ -384,6 +405,11 @@ class AttendanceController extends Controller
 
         $query = Student::where('class_id', $classId)
             ->where('status', 'active');
+
+        // Branch scope: restrict to branch students
+        if ($branchScope) {
+            $query->where('branch_id', $branchScope);
+        }
 
         if ($sectionId) {
             $query->where('section_id', $sectionId);
@@ -526,7 +552,9 @@ class AttendanceController extends Controller
             }
         }
 
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $branchScope = $request->attributes->get('branch_scope');
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderBy('numeric_name')->orderBy('name')->get();
         $sections = collect();
         if ($classId) {
             $sections = Section::where('class_id', $classId)->orderBy('name')->get();

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 class SubjectAssignmentController extends Controller
 {
     public function index(Request $request) {
+        $branchScope = $request->attributes->get('branch_scope');
         $query=TeacherAssignment::with(['subject','classRoom','section','teacher','academicYear']);
         if ($request->filled('academic_year_id')) $query->where('academic_year_id',$request->academic_year_id);
         if ($request->filled('class_id')) $query->where('class_id',$request->class_id);
@@ -18,13 +19,14 @@ class SubjectAssignmentController extends Controller
         $coreAssignments=$assignments->whereNull('section_id');
         $electiveAssignments=$assignments->whereNotNull('section_id');
         $academicYears=AcademicYear::orderBy('id','desc')->get();
-        $classes=ClassRoom::orderBy('numeric_name','asc')->orderBy('name','asc')->get();
+        $classes=ClassRoom::when($branchScope,fn($q)=>$q->where('branch_id',$branchScope))->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
         return view('admin.subject-assignments.index',compact('assignments','coreAssignments','electiveAssignments','academicYears','classes'));
     }
-    public function create() {
-        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
+    public function create(Request $request) {
+        $branchScope = $request->attributes->get('branch_scope');
+        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->when($branchScope,fn($q)=>$q->where('branch_id',$branchScope))->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
-        $teachers=Teacher::orderBy('full_name')->select('id','full_name')->get();
+        $teachers=Teacher::when($branchScope,fn($q)=>$q->where('branch_id',$branchScope))->orderBy('full_name')->select('id','full_name')->get();
         return view('admin.subject-assignments.create',compact('academicYears','classes','subjects','teachers'));
     }
     public function store(Request $request) {
@@ -48,11 +50,12 @@ class SubjectAssignmentController extends Controller
         $msg=$created>0?"Assigned \"$subject->name\" ($type) to $created combination(s).":"No new assignments (duplicates).";
         return redirect()->route('admin.subject-assignments.index')->with('success',$msg);
     }
-    public function edit(TeacherAssignment $subject_assignment) {
-        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
+    public function edit(Request $request, TeacherAssignment $subject_assignment) {
+        $branchScope = $request->attributes->get('branch_scope');
+        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->when($branchScope,fn($q)=>$q->where('branch_id',$branchScope))->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
         $sections=Section::where('class_id',$subject_assignment->class_id)->orderBy('name','asc')->get();
-        $teachers=Teacher::orderBy('full_name')->select('id','full_name')->get();
+        $teachers=Teacher::when($branchScope,fn($q)=>$q->where('branch_id',$branchScope))->orderBy('full_name')->select('id','full_name')->get();
         $assignment=$subject_assignment;
         return view('admin.subject-assignments.edit',compact('academicYears','classes','subjects','sections','teachers','assignment'));
     }

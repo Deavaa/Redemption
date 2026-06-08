@@ -19,6 +19,7 @@ class SubjectContentNoteController extends Controller
 
     public function index(Request $request)
     {
+        $branchScope = $request->attributes->get('branch_scope');
         $user = Auth::user();
         $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
         $activeAy = AcademicYear::where('is_current', true)->first();
@@ -66,10 +67,8 @@ class SubjectContentNoteController extends Controller
 
         $notes = $query->orderBy('sort_order')->latest()->paginate(20);
 
-        $subjects = $this->getTeacherSubjects($teacher, $activeAy);
-        $classes = $this->getTeacherClasses($teacher, $activeAy);
-
-        // Stats
+        $subjects = $this->getTeacherSubjects($teacher, $activeAy, $branchScope);
+        $classes = $this->getTeacherClasses($teacher, $activeAy, $branchScope);
         $totalNotes = SubjectContentNote::when($teacher, fn($q) => $q->where('teacher_id', $teacher->id))->count();
         $sharedNotes = SubjectContentNote::when($teacher, fn($q) => $q->where('teacher_id', $teacher->id))
             ->where('is_shared', true)->count();
@@ -84,14 +83,15 @@ class SubjectContentNoteController extends Controller
 
     // ── Create Note ────────────────────────────────────────
 
-    public function create()
+    public function create(Request $request)
     {
+        $branchScope = $request->attributes->get('branch_scope');
         $user = Auth::user();
         $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
         $activeAy = AcademicYear::where('is_current', true)->first();
 
-        $subjects = $this->getTeacherSubjects($teacher, $activeAy);
-        $classes = $this->getTeacherClasses($teacher, $activeAy);
+        $subjects = $this->getTeacherSubjects($teacher, $activeAy, $branchScope);
+        $classes = $this->getTeacherClasses($teacher, $activeAy, $branchScope);
 
         // Lesson plans for linking (teacher's own or all for admin)
         $lessonPlans = $this->getTeacherLessonPlans($teacher, $activeAy);
@@ -190,8 +190,9 @@ class SubjectContentNoteController extends Controller
 
     // ── Edit Note ──────────────────────────────────────────
 
-    public function edit(SubjectContentNote $content_note)
+    public function edit(Request $request, SubjectContentNote $content_note)
     {
+        $branchScope = $request->attributes->get('branch_scope');
         $user = Auth::user();
         $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
 
@@ -203,8 +204,8 @@ class SubjectContentNoteController extends Controller
         $content_note->load('sections');
         $activeAy = AcademicYear::where('is_current', true)->first();
 
-        $subjects = $this->getTeacherSubjects($teacher, $activeAy);
-        $classes = $this->getTeacherClasses($teacher, $activeAy);
+        $subjects = $this->getTeacherSubjects($teacher, $activeAy, $branchScope);
+        $classes = $this->getTeacherClasses($teacher, $activeAy, $branchScope);
         $lessonPlans = $this->getTeacherLessonPlans($teacher, $activeAy);
 
         // Get sections for the note's class
@@ -329,15 +330,17 @@ class SubjectContentNoteController extends Controller
 
     // ── Helpers ─────────────────────────────────────────────
 
-    private function getTeacherSubjects($teacher, $activeAy)
+    private function getTeacherSubjects($teacher, $activeAy, $branchScope = null)
     {
         $user = Auth::user();
         if ($user && in_array($user->role, ['admin', 'super_admin', 'branch_principal', 'general_manager'])) {
-            return Subject::orderBy('name')->get();
+            return Subject::when($branchScope, fn($q) => $q->whereHas('teacherAssignments.classRoom', fn($cq) => $cq->where('branch_id', $branchScope)))
+                ->orderBy('name')->get();
         }
 
         if (!$teacher) {
-            return Subject::orderBy('name')->get();
+            return Subject::when($branchScope, fn($q) => $q->whereHas('teacherAssignments.classRoom', fn($cq) => $cq->where('branch_id', $branchScope)))
+                ->orderBy('name')->get();
         }
 
         $subjectIds = collect();
@@ -367,21 +370,22 @@ class SubjectContentNoteController extends Controller
         }
 
         if ($subjectIds->isEmpty()) {
-            return Subject::orderBy('name')->get();
+            return Subject::when($branchScope, fn($q) => $q->whereHas('teacherAssignments.classRoom', fn($cq) => $cq->where('branch_id', $branchScope)))
+                ->orderBy('name')->get();
         }
 
         return Subject::whereIn('id', $subjectIds)->orderBy('name')->get();
     }
 
-    private function getTeacherClasses($teacher, $activeAy)
+    private function getTeacherClasses($teacher, $activeAy, $branchScope = null)
     {
         $user = Auth::user();
         if ($user && in_array($user->role, ['admin', 'super_admin', 'branch_principal', 'general_manager'])) {
-            return ClassRoom::orderBy('name')->get();
+            return ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('name')->get();
         }
 
         if (!$teacher) {
-            return ClassRoom::orderBy('name')->get();
+            return ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('name')->get();
         }
 
         $classIds = collect();
@@ -411,7 +415,7 @@ class SubjectContentNoteController extends Controller
         }
 
         if ($classIds->isEmpty()) {
-            return ClassRoom::orderBy('name')->get();
+            return ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('name')->get();
         }
 
         return ClassRoom::whereIn('id', $classIds)->orderBy('name')->get();

@@ -41,45 +41,80 @@ class StaffController extends Controller
      */
     protected const ADMIN_ONLY_ROLES = ['admin', 'general_manager', 'branch_principal', 'finance', 'hr'];
 
+    /**
+     * Roles that branch principals are allowed to create/manage.
+     * These are the operational staff roles that work within a branch.
+     */
+    protected const BRANCH_PRINCIPAL_ROLES = [
+        'teacher'           => 'Teacher',
+        'registrar'         => 'Registrar',
+        'cashier'           => 'Cashier',
+        'librarian'         => 'Librarian',
+        'staff'             => 'Staff',
+    ];
+
     public function index()
     {
-        // Only admin can access staff management
-        if (auth()->user()->role !== 'admin') {
+        $authUser = auth()->user();
+        $isAdmin = $authUser->role === 'admin';
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+
+        // Only admin and branch_principal can access staff management
+        if (!$isAdmin && !$isBranchPrincipal) {
             return redirect()->route('admin.dashboard')
-                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+                ->with('error', 'You do not have permission to access Staff Management.');
         }
 
         $query = User::whereIn('role', array_keys(self::STAFF_ROLES))
             ->with('branch');
 
+        // Branch principal: only see their own branch's staff
+        if ($isBranchPrincipal) {
+            $query->where('branch_id', $authUser->branch_id);
+        }
+
         // Apply role filter if provided
         if (request()->filled('role') && in_array(request('role'), array_keys(self::STAFF_ROLES))) {
-            $query->where('role', request('role'));
+            // Branch principal cannot filter by admin-only roles
+            if ($isBranchPrincipal && in_array(request('role'), self::ADMIN_ONLY_ROLES)) {
+                // ignore the filter
+            } else {
+                $query->where('role', request('role'));
+            }
         }
 
         $staff = $query->orderBy('name', 'asc')->paginate(20);
 
-        return view('admin.staff.index', compact('staff'));
+        // Pass available roles for the filter dropdown
+        $filterRoles = $isAdmin ? self::STAFF_ROLES : self::BRANCH_PRINCIPAL_ROLES;
+
+        return view('admin.staff.index', compact('staff', 'filterRoles', 'isAdmin', 'isBranchPrincipal'));
     }
 
     public function create()
     {
-        // Only admin can access staff management
-        if (auth()->user()->role !== 'admin') {
+        $authUser = auth()->user();
+        $isAdmin = $authUser->role === 'admin';
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+
+        // Only admin and branch_principal can access staff management
+        if (!$isAdmin && !$isBranchPrincipal) {
             return redirect()->route('admin.dashboard')
-                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+                ->with('error', 'You do not have permission to access Staff Management.');
         }
 
         $roles = self::STAFF_ROLES;
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
         $branchRoles = self::BRANCH_ROLES;
-        $authUser = auth()->user();
-        $isAdmin = $authUser->role === 'admin';
-        $isBranchPrincipal = $authUser->role === 'branch_principal';
         $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
 
         // Only admins can assign admin-only roles (admin, general_manager, branch_principal, finance, hr)
-        if (!$isAdmin) {
+        // Branch principals can only assign operational roles (teacher, registrar, cashier, librarian, staff)
+        if ($isBranchPrincipal) {
+            $roles = self::BRANCH_PRINCIPAL_ROLES;
+            // Only show their own branch
+            $branches = Branch::where('id', $authUser->branch_id)->get();
+        } elseif (!$isAdmin) {
             $roles = array_filter($roles, fn($key) => !in_array($key, self::ADMIN_ONLY_ROLES), ARRAY_FILTER_USE_KEY);
         }
 
@@ -96,17 +131,23 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
-        // Only admin can access staff management
-        if (auth()->user()->role !== 'admin') {
+        $authUser = auth()->user();
+        $isAdmin = $authUser->role === 'admin';
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+
+        // Only admin and branch_principal can access staff management
+        if (!$isAdmin && !$isBranchPrincipal) {
             return redirect()->route('admin.dashboard')
-                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+                ->with('error', 'You do not have permission to access Staff Management.');
         }
 
         $allowedRoles = self::STAFF_ROLES;
-        $isAdmin = auth()->user()->role === 'admin';
 
-        // Only admins can assign admin-only roles
-        if (!$isAdmin) {
+        // Branch principals can only assign their allowed roles
+        if ($isBranchPrincipal) {
+            $allowedRoles = self::BRANCH_PRINCIPAL_ROLES;
+        } elseif (!$isAdmin) {
+            // Other non-admins cannot assign admin-only roles
             $allowedRoles = array_filter($allowedRoles, fn($key) => !in_array($key, self::ADMIN_ONLY_ROLES), ARRAY_FILTER_USE_KEY);
         }
 
@@ -135,8 +176,8 @@ class StaffController extends Controller
 
         // Force branch_principal's own branch — they cannot assign other branches
         // This applies to ALL roles when the logged-in user is a branch principal
-        if (auth()->user()->role === 'branch_principal') {
-            $validated['branch_id'] = auth()->user()->branch_id;
+        if ($isBranchPrincipal) {
+            $validated['branch_id'] = $authUser->branch_id;
         }
 
         // Auto-assign branch for branch-scoped roles if not provided
@@ -178,29 +219,42 @@ class StaffController extends Controller
 
     public function edit(User $staff)
     {
-        // Only admin can access staff management (but users can edit their own profile)
-        if (auth()->user()->role !== 'admin' && $staff->id !== auth()->id()) {
+        $authUser = auth()->user();
+        $isAdmin = $authUser->role === 'admin';
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+
+        // Only admin and branch_principal can access staff management
+        // Users can also edit their own profile
+        if (!$isAdmin && !$isBranchPrincipal && $staff->id !== auth()->id()) {
             return redirect()->route('admin.dashboard')
-                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+                ->with('error', 'You do not have permission to access Staff Management.');
+        }
+
+        // Branch principal can only edit staff in their own branch
+        if ($isBranchPrincipal && $staff->branch_id !== $authUser->branch_id && $staff->id !== auth()->id()) {
+            return redirect()->route('admin.staff.index')
+                ->with('error', 'You can only edit staff members in your own branch.');
+        }
+
+        // Branch principal cannot edit users with admin-only roles
+        if ($isBranchPrincipal && in_array($staff->role, self::ADMIN_ONLY_ROLES)) {
+            return redirect()->route('admin.staff.index')
+                ->with('error', 'You do not have permission to edit users with the ' . ucfirst(str_replace('_', ' ', $staff->role)) . ' role.');
         }
 
         $user = $staff; // Alias for blade template compatibility
         $roles = self::STAFF_ROLES;
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
         $branchRoles = self::BRANCH_ROLES;
-        $authUser = auth()->user();
-        $isAdmin = $authUser->role === 'admin';
-        $isBranchPrincipal = $authUser->role === 'branch_principal';
         $authBranchId = $isBranchPrincipal ? $authUser->branch_id : null;
 
-        // Non-admins cannot edit users with admin-only roles
-        if (!$isAdmin && in_array($user->role, self::ADMIN_ONLY_ROLES)) {
-            return redirect()->route('admin.staff.index')
-                ->with('error', 'You do not have permission to edit users with the ' . ucfirst(str_replace('_', ' ', $user->role)) . ' role.');
-        }
-
-        // Only admins can assign admin-only roles
-        if (!$isAdmin) {
+        // Branch principals can only assign operational roles
+        if ($isBranchPrincipal) {
+            $roles = self::BRANCH_PRINCIPAL_ROLES;
+            // Only show their own branch
+            $branches = Branch::where('id', $authUser->branch_id)->get();
+        } elseif (!$isAdmin) {
+            // Non-admins cannot assign admin-only roles
             $roles = array_filter($roles, fn($key) => !in_array($key, self::ADMIN_ONLY_ROLES), ARRAY_FILTER_USE_KEY);
         }
 
@@ -217,14 +271,24 @@ class StaffController extends Controller
 
     public function update(Request $request, User $staff)
     {
-        // Only admin can update staff (but users can update their own profile)
-        if (auth()->user()->role !== 'admin' && $staff->id !== auth()->id()) {
+        $authUser = auth()->user();
+        $isAdmin = $authUser->role === 'admin';
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+
+        // Only admin and branch_principal can update staff
+        // Users can also update their own profile
+        if (!$isAdmin && !$isBranchPrincipal && $staff->id !== auth()->id()) {
             return redirect()->route('admin.dashboard')
-                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+                ->with('error', 'You do not have permission to access Staff Management.');
         }
 
         $user = $staff; // Alias for compatibility
-        $isAdmin = auth()->user()->role === 'admin';
+
+        // Branch principal can only edit staff in their own branch
+        if ($isBranchPrincipal && $user->branch_id !== $authUser->branch_id && $user->id !== auth()->id()) {
+            return redirect()->route('admin.staff.index')
+                ->with('error', 'You can only edit staff members in your own branch.');
+        }
 
         // Non-admins cannot update users with admin-only roles
         if (!$isAdmin && in_array($user->role, self::ADMIN_ONLY_ROLES)) {
@@ -234,8 +298,11 @@ class StaffController extends Controller
 
         $allowedRoles = self::STAFF_ROLES;
 
-        // Only admins can assign admin-only roles
-        if (!$isAdmin) {
+        // Branch principals can only assign their allowed roles
+        if ($isBranchPrincipal) {
+            $allowedRoles = self::BRANCH_PRINCIPAL_ROLES;
+        } elseif (!$isAdmin) {
+            // Non-admins cannot assign admin-only roles
             $allowedRoles = array_filter($allowedRoles, fn($key) => !in_array($key, self::ADMIN_ONLY_ROLES), ARRAY_FILTER_USE_KEY);
         }
 
@@ -264,8 +331,8 @@ class StaffController extends Controller
 
         // Force branch_principal's own branch — they cannot assign other branches
         // This applies to ALL roles when the logged-in user is a branch principal
-        if (auth()->user()->role === 'branch_principal') {
-            $validated['branch_id'] = auth()->user()->branch_id;
+        if ($isBranchPrincipal) {
+            $validated['branch_id'] = $authUser->branch_id;
         }
 
         // Auto-assign branch for branch-scoped roles if not provided
@@ -287,14 +354,23 @@ class StaffController extends Controller
 
     public function destroy(User $staff)
     {
-        // Only admin can access staff management
-        if (auth()->user()->role !== 'admin') {
+        $authUser = auth()->user();
+        $isAdmin = $authUser->role === 'admin';
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+
+        // Only admin and branch_principal can delete staff
+        if (!$isAdmin && !$isBranchPrincipal) {
             return redirect()->route('admin.dashboard')
-                ->with('error', 'You do not have permission to access Staff Management. Only admins can manage staff.');
+                ->with('error', 'You do not have permission to access Staff Management.');
         }
 
         $user = $staff; // Alias for compatibility
-        $isAdmin = auth()->user()->role === 'admin';
+
+        // Branch principal can only delete staff in their own branch
+        if ($isBranchPrincipal && $user->branch_id !== $authUser->branch_id) {
+            return redirect()->route('admin.staff.index')
+                ->with('error', 'You can only delete staff members in your own branch.');
+        }
 
         // Non-admins cannot delete users with admin-only roles
         if (!$isAdmin && in_array($user->role, self::ADMIN_ONLY_ROLES)) {
@@ -326,12 +402,21 @@ class StaffController extends Controller
      */
     public function apiEmployeeIdPreview(Request $request)
     {
-        // Only admin can access staff management
-        if (auth()->user()->role !== 'admin') {
-            return response()->json(['error' => 'Only admins can access Staff Management.'], 403);
+        $authUser = auth()->user();
+        $isAdmin = $authUser->role === 'admin';
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+
+        // Only admin and branch_principal can access
+        if (!$isAdmin && !$isBranchPrincipal) {
+            return response()->json(['error' => 'Only admins and branch principals can access Staff Management.'], 403);
         }
 
         $branchId = $request->query('branch_id');
+
+        // Branch principal can only preview for their own branch
+        if ($isBranchPrincipal) {
+            $branchId = $authUser->branch_id;
+        }
 
         if ($branchId) {
             $branch = Branch::find($branchId);

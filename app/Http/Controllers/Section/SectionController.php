@@ -9,6 +9,7 @@ use App\Models\Teacher;
 class SectionController extends Controller {
     public function index(Request $r)
     {
+        $branchScope = $r->attributes->get('branch_scope');
         $q = Section::with(['classRoom','teacher']);
         if ($r->filled('search')) {
             $s = $r->search;
@@ -19,14 +20,15 @@ class SectionController extends Controller {
         if ($r->filled('class_id')) $q->where('class_id', $r->class_id);
         $data = $q->latest()->paginate(20);
         $totalSections = Section::count();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         return view('admin.Section.index', compact('data', 'totalSections', 'classes'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
-        $teachers = Teacher::orderBy('full_name')->get();
+        $branchScope = $request->attributes->get('branch_scope');
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
+        $teachers = Teacher::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('full_name')->get();
         return view('admin.Section.create', compact('classes','teachers'));
     }
 
@@ -51,10 +53,11 @@ class SectionController extends Controller {
         return view('admin.Section.show', compact('section'));
     }
 
-    public function edit(Section $section)
+    public function edit(Request $request, Section $section)
     {
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
-        $teachers = Teacher::orderBy('full_name')->get();
+        $branchScope = $request->attributes->get('branch_scope');
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
+        $teachers = Teacher::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('full_name')->get();
         return view('admin.Section.edit', compact('section','classes','teachers'));
     }
 

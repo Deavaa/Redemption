@@ -13,19 +13,21 @@ class TeacherAssignmentController extends Controller
 {
     public function index(Request $r)
     {
+        $branchScope = $r->attributes->get('branch_scope');
         $q = TeacherAssignment::with(['teacher','classRoom','section','subject','academicYear']);
         if ($r->filled('academic_year_id')) $q->where('academic_year_id', $r->academic_year_id);
         if ($r->filled('class_id')) $q->where('class_id', $r->class_id);
         $data = $q->latest()->paginate(20);
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         return view('admin.TeacherAssignment.index', compact('data', 'academicYears', 'classes'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $teachers = Teacher::orderBy('full_name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $branchScope = $request->attributes->get('branch_scope');
+        $teachers = Teacher::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('full_name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
 
         return view('admin.TeacherAssignment.create', compact('teachers', 'classes', 'academicYears'));
@@ -50,10 +52,11 @@ class TeacherAssignmentController extends Controller
         return view('admin.TeacherAssignment.show', ['item' => $teacher_assignment]);
     }
 
-    public function edit(TeacherAssignment $teacher_assignment)
+    public function edit(Request $request, TeacherAssignment $teacher_assignment)
     {
-        $teachers = Teacher::orderBy('full_name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $branchScope = $request->attributes->get('branch_scope');
+        $teachers = Teacher::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('full_name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         $sections = Section::where('class_id', $teacher_assignment->class_id)->orderBy('name')->get();
         $subjects = Subject::orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();

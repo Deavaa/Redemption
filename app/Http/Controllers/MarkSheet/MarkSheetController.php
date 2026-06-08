@@ -36,6 +36,7 @@ class MarkSheetController extends Controller
 
     public function index(Request $r)
     {
+        $branchScope = $r->attributes->get('branch_scope');
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $terms = Term::orderBy('id', 'desc')->get();
         $exams = Exam::orderBy('id', 'desc')->get();
@@ -68,7 +69,7 @@ class MarkSheetController extends Controller
 
             $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.index', compact('academicYears', 'terms', 'classes', 'exams', 'isTeacher'));

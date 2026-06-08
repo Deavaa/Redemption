@@ -19,14 +19,20 @@ class AttendanceDelegationController extends Controller
     public function index(Request $request)
     {
         $date = $request->input('date', now()->toDateString());
+        $branchScope = $request->attributes->get('branch_scope');
 
         $delegations = AttendanceDelegation::with(['classRoom', 'section', 'delegatedTeacher', 'delegatedBy'])
             ->where('date', $date)
+            ->when($branchScope, fn($q) => $q->whereHas('classRoom', fn($cq) => $cq->where('branch_id', $branchScope)))
             ->orderByDesc('created_at')
             ->get();
 
-        $classes = ClassRoom::with(['sections', 'teacher'])->orderBy('numeric_name')->orderBy('name')->get();
-        $teachers = Teacher::with('user')->orderBy('full_name')->get();
+        $classes = ClassRoom::with(['sections', 'teacher'])
+            ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderBy('numeric_name')->orderBy('name')->get();
+        $teachers = Teacher::with('user')
+            ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderBy('full_name')->get();
 
         return view('admin.attendance.delegation', compact(
             'date', 'delegations', 'classes', 'teachers'

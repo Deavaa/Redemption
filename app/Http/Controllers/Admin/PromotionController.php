@@ -21,6 +21,7 @@ class PromotionController extends Controller
      */
     public function index(Request $request)
     {
+        $branchScope = $request->attributes->get('branch_scope');
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $currentAy = AcademicYear::where('is_current', true)->first();
         $terms = $currentAy ? Term::where('academic_year_id', $currentAy->id)->orderBy('id')->get() : collect();
@@ -36,12 +37,9 @@ class PromotionController extends Controller
         $selectedClass = $selectedClassModel?->id;
 
         // Get classes
-        $user = auth()->user();
-        if ($user->role === 'branch_principal' || $user->role === 'general_manager') {
-            $classes = ClassRoom::with(['branch', 'sections'])->orderBy('numeric_name')->orderBy('name')->get();
-        } else {
-            $classes = ClassRoom::with(['branch', 'sections'])->orderBy('numeric_name')->orderBy('name')->get();
-        }
+        $classes = ClassRoom::with(['branch', 'sections'])
+            ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderBy('numeric_name')->orderBy('name')->get();
 
         if ($selectedAyModel) {
             $terms = Term::where('academic_year_id', $selectedAyModel->id)->orderBy('id')->get();

@@ -37,8 +37,9 @@ class MarkRosterController extends Controller
     /**
      * Show the filter form for generating a mark roster.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $branchScope = $request->attributes->get('branch_scope');
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         $terms         = Term::orderBy('id', 'desc')->get();
 
@@ -67,7 +68,7 @@ class MarkRosterController extends Controller
 
             $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-roster.index', compact('academicYears', 'terms', 'classes', 'isTeacher'));
@@ -80,6 +81,7 @@ class MarkRosterController extends Controller
      */
     public function generate(Request $r)
     {
+        $branchScope = $r->attributes->get('branch_scope');
         // If GET request with no filters, redirect to index
         if ($r->isMethod('GET') && !$r->filled('academic_year_id')) {
             return redirect()->route('admin.mark-roster.index');
@@ -303,7 +305,7 @@ class MarkRosterController extends Controller
             $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
             $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-roster.index', compact(

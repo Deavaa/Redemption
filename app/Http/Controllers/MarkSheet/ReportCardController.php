@@ -17,10 +17,11 @@ class ReportCardController extends Controller
     /**
      * Show filter form for generating report cards.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $branchScope = $request->attributes->get('branch_scope');
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
 
         return view('admin.report-card.index', compact('academicYears', 'classes'));
     }
@@ -35,6 +36,7 @@ class ReportCardController extends Controller
      */
     public function generate(Request $r)
     {
+        $branchScope = $r->attributes->get('branch_scope');
         // If GET request with no filters, redirect to index
         if ($r->isMethod('GET') && !$r->filled('academic_year_id')) {
             return redirect()->route('admin.report-card.index');
@@ -217,7 +219,7 @@ class ReportCardController extends Controller
         }
 
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
 
         return view('admin.report-card.card', compact(
             'students', 'class', 'section', 'academicYear',

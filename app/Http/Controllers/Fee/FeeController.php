@@ -14,6 +14,7 @@ class FeeController extends Controller
 {
     public function index(Request $r)
     {
+        $branchScope = $r->attributes->get('branch_scope');
         $q = Fee::with('classroom', 'academicYear', 'branch');
         if ($r->filled('search')) {
             $s = $r->search;
@@ -29,16 +30,17 @@ class FeeController extends Controller
         $totalFees = Fee::count();
         $totalAmount = Fee::sum('amount');
         $academicYears = AcademicYear::orderBy('name')->get();
-        $branches = Branch::orderBy('name')->get();
+        $branches = Branch::when($branchScope, fn($q) => $q->where('id', $branchScope))->orderBy('name')->get();
         $enrollmentTypes = Fee::enrollmentTypes();
         return view('admin.Fee.index', compact('data', 'totalFees', 'totalAmount', 'academicYears', 'branches', 'enrollmentTypes'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $classrooms = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $branchScope = $request->attributes->get('branch_scope');
+        $classrooms = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
-        $branches = Branch::orderBy('name')->get();
+        $branches = Branch::when($branchScope, fn($q) => $q->where('id', $branchScope))->orderBy('name')->get();
         $enrollmentTypes = Fee::enrollmentTypes();
         $feeDueDay = Setting::where('key', 'fee_due_day')->value('value') ?? 10;
         $nextDueDate = $this->getNextDueDate();
@@ -81,11 +83,12 @@ class FeeController extends Controller
         return view('admin.Fee.show', ['item' => $fee]);
     }
 
-    public function edit(Fee $fee)
+    public function edit(Request $request, Fee $fee)
     {
-        $classrooms = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $branchScope = $request->attributes->get('branch_scope');
+        $classrooms = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('name')->get();
-        $branches = Branch::orderBy('name')->get();
+        $branches = Branch::when($branchScope, fn($q) => $q->where('id', $branchScope))->orderBy('name')->get();
         $enrollmentTypes = Fee::enrollmentTypes();
         $feeDueDay = Setting::where('key', 'fee_due_day')->value('value') ?? 10;
         return view('admin.Fee.edit', ['item' => $fee, 'classrooms' => $classrooms, 'academicYears' => $academicYears, 'branches' => $branches, 'enrollmentTypes' => $enrollmentTypes, 'feeDueDay' => $feeDueDay]);

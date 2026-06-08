@@ -46,9 +46,11 @@ class BranchScope
         'admin.terms.edit',
         'admin.terms.update',
         'admin.terms.destroy',
-        // Exams — no create/edit/delete
+        // Exams — no access for branch principals
+        'admin.exams.index',
         'admin.exams.create',
         'admin.exams.store',
+        'admin.exams.show',
         'admin.exams.edit',
         'admin.exams.update',
         'admin.exams.destroy',
@@ -60,14 +62,6 @@ class BranchScope
         'admin.team-members.edit',
         'admin.team-members.update',
         'admin.team-members.destroy',
-        // Teacher Assignments — admin/GM only
-        'admin.teacher-assignments.index',
-        'admin.teacher-assignments.create',
-        'admin.teacher-assignments.store',
-        'admin.teacher-assignments.show',
-        'admin.teacher-assignments.edit',
-        'admin.teacher-assignments.update',
-        'admin.teacher-assignments.destroy',
         // Website — admin/GM only
         'admin.sliders.index', 'admin.sliders.create', 'admin.sliders.store',
         'admin.sliders.edit', 'admin.sliders.update', 'admin.sliders.destroy',

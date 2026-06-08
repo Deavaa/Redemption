@@ -36,8 +36,9 @@ class MarkSheetFullController extends Controller
     /**
      * Show the filter form for the full mark sheet (Term1 + Term2 + Annual).
      */
-    public function index()
+    public function index(Request $request)
     {
+        $branchScope = $request->attributes->get('branch_scope');
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
 
         $isTeacher = false;
@@ -60,7 +61,7 @@ class MarkSheetFullController extends Controller
 
             $classes = ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.full', compact('academicYears', 'classes', 'isTeacher'));
@@ -73,6 +74,7 @@ class MarkSheetFullController extends Controller
      */
     public function generate(Request $r)
     {
+        $branchScope = $r->attributes->get('branch_scope');
         // If GET request with no filters, redirect to index
         if ($r->isMethod('GET') && !$r->filled('academic_year_id')) {
             return redirect()->route('admin.mark-sheet-full.index');
@@ -316,7 +318,7 @@ class MarkSheetFullController extends Controller
             }
             $classes = $teacher->classRooms()->orderBy('numeric_name')->orderBy('name')->get();
         } else {
-            $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+            $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         }
 
         return view('admin.mark-sheet.full', compact(

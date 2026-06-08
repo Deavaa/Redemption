@@ -107,9 +107,9 @@ class PermissionMiddleware
             $branchPrincipalAllowedPermissions = [
                 'dashboard.view',
                 // NO academic_years or terms access — managed by admin/GM only
-                // Academic setup (view only for subjects, classrooms, exams)
+                // Academic setup (view only for subjects, classrooms — NO exams access)
                 'subjects.view', 'subject_assignments.view',
-                'exams.view', 'classrooms.view', 'sections.view',
+                'classrooms.view', 'sections.view',
                 // Marks & Assessment
                 'mark_entries.view', 'mark_entries.create', 'mark_entries.edit', 'mark_entries.manage',
                 'mark_sheets.view', 'mark_sheets.generate',
@@ -121,7 +121,8 @@ class PermissionMiddleware
                 'teacher_assignments.view', 'teacher_assignments.create', 'teacher_assignments.edit',
                 // Class Assets — branch principal can manage assets in their branch
                 'class_assets.view',
-                // Staff management — admin only, branch principals cannot access staff management
+                // Staff management — branch principals can manage staff in their own branch
+                'staff.view', 'staff.manage',
                 // Attendance
                 'attendance.view', 'attendance.manage',
                 // Lesson Plans
@@ -141,6 +142,7 @@ class PermissionMiddleware
                 'departments.view',
                 // Enrollment
                 'students.manage',
+                'enrollments.view', 'enrollments.manage',
                 // Fees (view only for own branch)
                 'fees.view', 'fee_payments.view',
             ];

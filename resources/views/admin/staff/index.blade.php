@@ -17,7 +17,7 @@
         <div class="modern-page-header-right">
             <a href="{{ route('admin.staff.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-user-plus"></i>
-                <span>Add User</span>
+                <span>{{ $isBranchPrincipal ? 'Add Staff' : 'Add User' }}</span>
             </a>
         </div>
     </div>
@@ -29,7 +29,9 @@
         $adminOnlyRoles = ['admin', 'general_manager', 'branch_principal', 'finance', 'hr'];
         $isAdmin = auth()->user()->role === 'admin';
         $isBranchPrincipal = auth()->user()->role === 'branch_principal';
-        foreach($allRoles as $key => $label) {
+        // Branch principal: only show their allowed roles in the filter
+        $displayRoles = $isAdmin ? $allRoles : ['teacher'=>'Teacher','registrar'=>'Registrar','cashier'=>'Cashier','librarian'=>'Librarian','staff'=>'Staff'];
+        foreach($displayRoles as $key => $label) {
             $roleCounts[$key] = $staff->where('role', $key)->count();
         }
     @endphp
@@ -40,24 +42,24 @@
             </div>
             <div class="modern-stat-info">
                 <span class="modern-stat-value">{{ $staff->total() }}</span>
-                <span class="modern-stat-label">Total Staff</span>
+                <span class="modern-stat-label">{{ $isBranchPrincipal ? 'Branch Staff' : 'Total Staff' }}</span>
             </div>
         </div>
         <div class="modern-stat-card">
             <div class="modern-stat-icon modern-stat-icon-green">
-                <i class="fas fa-user-tie"></i>
+                <i class="fas fa-chalkboard-teacher"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ ($roleCounts['admin'] ?? 0) + ($roleCounts['general_manager'] ?? 0) }}</span>
-                <span class="modern-stat-label">Admin & GM</span>
+                <span class="modern-stat-value">{{ ($roleCounts['teacher'] ?? 0) }}</span>
+                <span class="modern-stat-label">Teachers</span>
             </div>
         </div>
         <div class="modern-stat-card">
             <div class="modern-stat-icon modern-stat-icon-purple">
-                <i class="fas fa-chalkboard-teacher"></i>
+                <i class="fas fa-user-tie"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ ($roleCounts['branch_principal'] ?? 0) + ($roleCounts['registrar'] ?? 0) }}</span>
+                <span class="modern-stat-value">{{ ($roleCounts['registrar'] ?? 0) + ($roleCounts['librarian'] ?? 0) }}</span>
                 <span class="modern-stat-label">Academic Staff</span>
             </div>
         </div>
@@ -66,8 +68,8 @@
                 <i class="fas fa-coins"></i>
             </div>
             <div class="modern-stat-info">
-                <span class="modern-stat-value">{{ ($roleCounts['finance'] ?? 0) + ($roleCounts['cashier'] ?? 0) + ($roleCounts['hr'] ?? 0) }}</span>
-                <span class="modern-stat-label">Finance & HR</span>
+                <span class="modern-stat-value">{{ ($roleCounts['cashier'] ?? 0) + ($roleCounts['staff'] ?? 0) }}</span>
+                <span class="modern-stat-label">Support Staff</span>
             </div>
         </div>
     </div>
@@ -91,7 +93,7 @@
         <div class="modern-filter-bar">
             <div class="modern-filter-pills">
                 <a href="{{ route('admin.staff.index') }}" class="modern-filter-pill {{ request()->missing('role') ? 'active' : '' }}">All</a>
-                @foreach($allRoles as $val => $label)
+                @foreach($displayRoles as $val => $label)
                 <a href="{{ route('admin.staff.index', ['role' => $val]) }}" class="modern-filter-pill {{ request('role') === $val ? 'active' : '' }}">{{ $label }}</a>
                 @endforeach
             </div>
