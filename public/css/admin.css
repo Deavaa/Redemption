@@ -1230,7 +1230,7 @@ html, body {
     background: #fff;
     border-top: 1px solid var(--border);
     box-shadow: 0 -2px 12px rgba(0,0,0,0.12);
-    z-index: 1000;
+    z-index: 900;
     padding: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -1420,7 +1420,9 @@ html, body {
         -webkit-tap-highlight-color: transparent;
     }
 
-    /* Better dropdown menus on mobile */
+    /* ===== DROPDOWN FIX: render above bottom nav on mobile ===== */
+    /* The bottom nav is z-index: 900, so dropdowns must be higher.
+       Using position:fixed breaks them out of any parent overflow/stacking context. */
     .admin-topbar {
         z-index: 1200 !important;
         overflow: visible !important;
@@ -1432,36 +1434,39 @@ html, body {
     }
     .topbar-icon-btn.dropdown,
     .topbar-dropdown.dropdown {
-        position: relative;
-        z-index: 1300;
+        position: static !important;
         overflow: visible !important;
     }
-    .dropdown-menu {
+    /* All dropdown menus on mobile: fixed position so they render above everything */
+    .topbar-right .dropdown-menu {
+        position: fixed !important;
+        z-index: 9999 !important;
         min-width: 200px;
         max-width: 90vw;
-        z-index: 9999 !important;
-        position: absolute !important;
     }
     .topbar-notif-dropdown {
         width: 300px !important;
         max-width: 90vw !important;
-        max-height: 350px !important;
-        position: absolute !important;
-        right: 0 !important;
-        left: auto !important;
+        max-height: 50vh !important;
+        position: fixed !important;
         z-index: 9999 !important;
     }
     .topbar-icon-dropdown {
-        position: absolute !important;
-        right: 0 !important;
-        left: auto !important;
+        position: fixed !important;
         z-index: 9999 !important;
     }
     .topbar-dropdown .dropdown-menu {
-        position: absolute !important;
-        right: 0 !important;
+        position: fixed !important;
+        right: auto !important;
         left: auto !important;
         z-index: 9999 !important;
+    }
+    /* Dropdown overlay backdrop to close on tap outside */
+    .dropdown-mobile-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        background: transparent;
     }
 
     /* Improve topbar on very small screens */

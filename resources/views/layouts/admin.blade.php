@@ -241,7 +241,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
-    <style>html,body{overflow-x:hidden!important;max-width:100vw!important;width:100%!important;}*{box-sizing:border-box;}.admin-wrapper,.admin-main,.admin-topbar,.admin-content{max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important;}</style>
+    <style>html,body{overflow-x:hidden!important;max-width:100vw!important;width:100%!important;}*{box-sizing:border-box;}.admin-wrapper,.admin-main,.admin-content{max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important;}.admin-topbar{max-width:100vw!important;overflow:visible!important;box-sizing:border-box!important;}</style>
     @stack('styles')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1652,61 +1652,139 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ===== MOBILE DROPDOWN FIX =====
-    // Bootstrap 5 dropdowns may not work on mobile WebView (touch events).
-    // This ensures clicking/tapping the toggle buttons opens dropdowns on mobile.
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-        document.querySelectorAll('.topbar-icon-btn.dropdown .topbar-icon-toggle, .topbar-dropdown.dropdown .topbar-avatar').forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                var dropdown = btn.closest('.dropdown');
-                if (!dropdown) return;
-                var menu = dropdown.querySelector('.dropdown-menu');
-                if (!menu) return;
+    // Bootstrap 5 dropdowns don't work properly on mobile WebView.
+    // On mobile (<=768px), we use position:fixed for dropdown menus so they
+    // render above the bottom navigation bar. This handler calculates the
+    // correct fixed position and manages open/close state manually.
+    var isMobile = function() { return window.innerWidth <= 768; };
 
-                // Close all other open dropdowns first
-                document.querySelectorAll('.dropdown-menu.show').forEach(function(openMenu) {
-                    if (openMenu !== menu) {
-                        openMenu.classList.remove('show');
-                        openMenu.closest('.dropdown')?.classList.remove('show');
-                    }
-                });
+    // Remove any existing backdrop
+    var dropdownBackdrop = document.getElementById('mobileDropdownBackdrop');
+    if (!dropdownBackdrop) {
+        dropdownBackdrop = document.createElement('div');
+        dropdownBackdrop.id = 'mobileDropdownBackdrop';
+        dropdownBackdrop.className = 'dropdown-mobile-backdrop';
+        dropdownBackdrop.style.display = 'none';
+        document.body.appendChild(dropdownBackdrop);
+    }
 
-                // Toggle this dropdown
-                var isOpen = menu.classList.contains('show');
-                if (isOpen) {
-                    menu.classList.remove('show');
-                    dropdown.classList.remove('show');
-                    btn.setAttribute('aria-expanded', 'false');
-                } else {
-                    menu.classList.add('show');
-                    dropdown.classList.add('show');
-                    btn.setAttribute('aria-expanded', 'true');
-                }
+    function closeAllMobileDropdowns() {
+        document.querySelectorAll('.topbar-right .dropdown-menu.show').forEach(function(menu) {
+            menu.classList.remove('show');
+            menu.style.position = '';
+            menu.style.top = '';
+            menu.style.left = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            var dd = menu.closest('.dropdown');
+            if (dd) dd.classList.remove('show');
+            var toggle = dd ? dd.querySelector('[data-bs-toggle="dropdown"]') : null;
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+        dropdownBackdrop.style.display = 'none';
+        // Show bottom nav again
+        var bottomNav = document.getElementById('mobileBottomNav');
+        if (bottomNav) bottomNav.style.display = '';
+    }
+
+    dropdownBackdrop.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeAllMobileDropdowns();
+    });
+
+    function openMobileDropdown(btn, menu) {
+        // Close any other open dropdown first
+        closeAllMobileDropdowns();
+
+        // Position the menu as fixed, anchored below the toggle button
+        var rect = btn.getBoundingClientRect();
+        var menuWidth = menu.offsetWidth || 200;
+        var menuHeight = menu.offsetHeight || 200;
+
+        // Position below the button
+        var top = rect.bottom + 4;
+        var left = rect.left;
+        var right = null;
+
+        // If menu would go off right edge, align to right of button
+        if (left + menuWidth > window.innerWidth - 8) {
+            left = rect.right - menuWidth;
+            if (left < 8) left = 8;
+        }
+
+        // If menu would go off bottom (near bottom nav), position above the button instead
+        if (top + menuHeight > window.innerHeight - 70) {
+            top = rect.top - menuHeight - 4;
+        }
+
+        // Ensure top is not negative
+        if (top < 8) top = 8;
+
+        menu.style.position = 'fixed';
+        menu.style.top = top + 'px';
+        menu.style.left = left + 'px';
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
+        menu.classList.add('show');
+
+        var dd = menu.closest('.dropdown');
+        if (dd) dd.classList.add('show');
+        btn.setAttribute('aria-expanded', 'true');
+
+        // Show backdrop and hide bottom nav while dropdown is open
+        dropdownBackdrop.style.display = 'block';
+        var bottomNav = document.getElementById('mobileBottomNav');
+        if (bottomNav) bottomNav.style.display = 'none';
+    }
+
+    // Attach click handlers to ALL dropdown toggle buttons in the topbar
+    document.querySelectorAll('.topbar-icon-btn.dropdown .topbar-icon-toggle, .topbar-dropdown.dropdown .topbar-avatar').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            var dropdown = btn.closest('.dropdown');
+            if (!dropdown) return;
+            var menu = dropdown.querySelector('.dropdown-menu');
+            if (!menu) return;
+
+            if (isMobile()) {
                 e.preventDefault();
                 e.stopPropagation();
-            });
-        });
 
-        // Close dropdown when tapping outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
-                    menu.classList.remove('show');
-                    menu.closest('.dropdown')?.classList.remove('show');
-                });
+                // Toggle
+                if (menu.classList.contains('show')) {
+                    closeAllMobileDropdowns();
+                } else {
+                    openMobileDropdown(btn, menu);
+                }
+            }
+            // On desktop, let Bootstrap handle it normally
+        });
+    });
+
+    // Close dropdown when tapping a dropdown item on mobile
+    document.querySelectorAll('.topbar-icon-dropdown .dropdown-item, .topbar-notif-dropdown .dropdown-item, .topbar-dropdown .dropdown-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+            if (isMobile()) {
+                // Allow navigation to happen, then close
+                setTimeout(function() { closeAllMobileDropdowns(); }, 100);
             }
         });
+    });
 
-        // Close dropdown when tapping a dropdown item
-        document.querySelectorAll('.topbar-icon-dropdown .dropdown-item, .topbar-notif-dropdown .dropdown-item, .topbar-dropdown .dropdown-item').forEach(function(item) {
-            item.addEventListener('click', function() {
-                var menu = item.closest('.dropdown-menu');
-                if (menu) {
-                    menu.classList.remove('show');
-                    menu.closest('.dropdown')?.classList.remove('show');
-                }
-            });
-        });
-    }
+    // Close dropdown when tapping outside (non-backdrop area) on mobile
+    document.addEventListener('click', function(e) {
+        if (!isMobile()) return;
+        if (!e.target.closest('.dropdown') && !e.target.closest('#mobileDropdownBackdrop')) {
+            closeAllMobileDropdowns();
+        }
+    });
+
+    // Also handle resize — close dropdowns when switching from mobile to desktop
+    window.addEventListener('resize', function() {
+        if (!isMobile()) {
+            closeAllMobileDropdowns();
+        }
+    });
 })();
 
 // Mobile Menu Sheet Toggle
