@@ -2,8 +2,8 @@
 @section('title', 'Chat')
 
 @section('content')
-<div class="modern-page">
-    <div class="modern-page-header">
+<div class="modern-page chat-full-bleed">
+    <div class="modern-page-header chat-page-header">
         <div class="modern-page-header-left">
             <nav aria-label="breadcrumb" class="modern-breadcrumb">
                 <ol>
@@ -20,15 +20,9 @@
             </nav>
         </div>
         <div class="modern-page-header-right">
-            <a href="{{ route($routePrefix . '.index') }}" class="btn-modern btn-modern-outline">
-                <i class="fas fa-arrow-left"></i> Back
+            <a href="{{ route($routePrefix . '.index') }}" class="btn-modern btn-modern-outline chat-back-btn">
+                <i class="fas fa-arrow-left"></i> <span>Back</span>
             </a>
-            <form method="POST" action="{{ route($routePrefix . '.destroy', $conversation->id) }}" onsubmit="return confirm('Delete this conversation?')">
-                @csrf @method('DELETE')
-                <button type="submit" class="btn-modern btn-modern-danger" style="margin-left:0.5rem">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
-            </form>
         </div>
     </div>
 
@@ -68,6 +62,9 @@
         <div class="chat-window">
             {{-- Header --}}
             <div class="chat-window-header">
+                <a href="{{ route($routePrefix . '.index') }}" class="chat-mobile-back" title="Back">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
                 <div class="chat-window-user">
                     <div class="chat-item-avatar">
                         @if($conversation->type === 'group')
@@ -178,9 +175,19 @@
 .chat-window { display: flex; flex-direction: column; }
 .chat-window-header {
     padding: 1rem 1.25rem; border-bottom: 1px solid #f0f0f0;
-    background: #fff; display: flex; align-items: center; justify-content: space-between;
+    background: #fff; display: flex; align-items: center; gap: 0.5rem;
 }
 .chat-window-user { display: flex; align-items: center; gap: 0.75rem; }
+.chat-mobile-back {
+    display: none;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--gray-50); border: 1px solid var(--border);
+    color: var(--gray-600);
+    align-items: center; justify-content: center;
+    text-decoration: none; font-size: 0.85rem; flex-shrink: 0;
+    transition: background 0.15s;
+}
+.chat-mobile-back:hover { background: var(--gray-100); color: var(--primary); }
 
 .chat-messages {
     flex: 1; overflow-y: auto; padding: 1.25rem; background: #f8f9fb;
@@ -226,12 +233,38 @@
     cursor: pointer; transition: transform 0.2s;
 }
 .chat-send-btn:hover { transform: scale(1.1); }
+
 @media (max-width: 768px) {
-    .chat-layout { grid-template-columns: 1fr; height: calc(100vh - 140px); }
+    .chat-page-header { display: none !important; }
+    .admin-content:has(.chat-layout),
+    .admin-main:has(.chat-layout) {
+        padding: 0 !important;
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+    }
+    .admin-main:has(.chat-layout)::after { display: none !important; }
+    .chat-layout {
+        grid-template-columns: 1fr;
+        height: calc(100vh - 56px - 56px - env(safe-area-inset-bottom, 0px));
+        min-height: 300px;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+    }
     .chat-sidebar { display: none; }
+    .chat-mobile-back { display: flex; }
+    .chat-window-header {
+        padding: 0.6rem 0.75rem;
+    }
+    .chat-window-header .chat-item-avatar {
+        width: 32px; height: 32px; font-size: 0.75rem; border-radius: 8px;
+    }
+    .chat-window-header strong { font-size: 0.88rem; }
     .chat-msg { max-width: 85%; }
+    .chat-messages { padding: 0.75rem; }
     .chat-input-area {
-        padding-bottom: calc(0.75rem + 60px + env(safe-area-inset-bottom, 0px));
+        padding: 0.5rem 0.75rem;
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
     }
 }
 </style>

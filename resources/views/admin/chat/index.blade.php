@@ -2,8 +2,8 @@
 @section('title', 'Chat')
 
 @section('content')
-<div class="modern-page">
-    <div class="modern-page-header">
+<div class="modern-page chat-full-bleed">
+    <div class="modern-page-header chat-page-header">
         <div class="modern-page-header-left">
             <nav aria-label="breadcrumb" class="modern-breadcrumb">
                 <ol>
@@ -197,8 +197,10 @@
 .chat-empty { text-align: center; padding: 3rem 1rem; color: var(--gray-400); }
 .chat-empty i { font-size: 2.5rem; margin-bottom: 0.5rem; }
 @media (max-width: 768px) {
-    .chat-layout { grid-template-columns: 1fr; height: auto; min-height: 400px; }
-    .chat-sidebar { max-height: 300px; }
+    .chat-page-header { display: none !important; }
+    .chat-layout { grid-template-columns: 1fr; height: calc(100vh - 56px - 56px - env(safe-area-inset-bottom, 0px)); min-height: 300px; }
+    .chat-sidebar { max-height: none; flex: 1; }
+    .chat-content { display: none; }
 }
 </style>
 @endpush

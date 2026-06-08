@@ -3,18 +3,14 @@
 
 @section('content')
 <div style="max-width:1200px;margin:0 auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem;">
+    <div class="chat-page-top-bar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem;">
         <div>
             <h4 style="font-size:18px;font-weight:700;color:var(--text-dark);margin:0;">
                 @if($conversation->type === 'group'){{ $conversation->title ?? 'Group Chat' }}@else{{ $conversation->otherParticipant?->name ?? 'Chat' }}@endif
             </h4>
         </div>
         <div style="display:flex;gap:0.5rem;">
-            <a href="{{ route('parent.chat.index') }}" class="btn-modern btn-modern-outline"><i class="fas fa-arrow-left"></i> Back</a>
-            <form method="POST" action="{{ route('parent.chat.destroy', $conversation->id) }}" onsubmit="return confirm('Delete this conversation?')">
-                @csrf @method('DELETE')
-                <button type="submit" class="btn-modern" style="background:var(--danger);color:#fff;border:none;padding:7px 14px;border-radius:var(--radius-sm);font-weight:600;font-size:12px;cursor:pointer;"><i class="fas fa-trash"></i> Delete</button>
-            </form>
+            <a href="{{ route('parent.chat.index') }}" class="btn-modern btn-modern-outline" style="padding:6px 12px;font-size:13px;"><i class="fas fa-arrow-left"></i> <span>Back</span></a>
         </div>
     </div>
 
@@ -46,6 +42,9 @@
         <div style="display:flex;flex-direction:column;">
             {{-- Header --}}
             <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--border);background:#fff;display:flex;align-items:center;gap:0.75rem;">
+                <a href="{{ route('parent.chat.index') }}" class="parent-chat-mobile-back" style="display:none;width:30px;height:30px;border-radius:8px;background:#f3f4f6;border:1px solid var(--border);color:var(--text-muted);align-items:center;justify-content:center;text-decoration:none;font-size:0.8rem;flex-shrink:0;" title="Back">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
                 <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex-shrink:0;">
                     @if($conversation->type === 'group')<i class="fas fa-users"></i>@else{{ strtoupper(substr($conversation->otherParticipant?->name ?? '?', 0, 1)) }}@endif
                 </div>
@@ -102,6 +101,12 @@
     </div>
 </div>
 
+<style>
+@media (max-width: 768px) {
+    .chat-page-top-bar { display: none !important; }
+    .parent-chat-mobile-back { display: flex !important; }
+}
+</style>
 <script>
 var chatMessages = document.getElementById('chatMessages');
 if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;

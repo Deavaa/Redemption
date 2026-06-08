@@ -1372,6 +1372,20 @@ html, body {
 
 @media (max-width: 768px) {
     .mobile-bottom-nav { display: block; }
+    /* Chat page full-bleed on mobile — override padding so chat input isn't hidden behind bottom nav */
+    .modern-page.chat-full-bleed {
+        margin: 0;
+        padding: 0;
+    }
+    .chat-full-bleed ~ .admin-content,
+    .admin-content:has(.chat-full-bleed) {
+        padding: 0 !important;
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+    }
+    .admin-main:has(.chat-full-bleed)::after {
+        display: none !important;
+    }
 }
 @media (min-width: 769px) {
     .mobile-bottom-nav { display: none !important; }
