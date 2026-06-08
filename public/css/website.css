@@ -281,6 +281,57 @@
         @media (max-width: 991px) {
             .hamburger-btn { display: block; }
             .navbar-collapse { display: none !important; }
+            .navbar {
+                width: 100% !important;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
+                box-sizing: border-box !important;
+            }
+            .navbar > .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+                box-sizing: border-box !important;
+                overflow-x: hidden !important;
+            }
+            .navbar-brand {
+                max-width: calc(100% - 60px);
+                flex-shrink: 1;
+            }
+            .navbar-brand .brand-name {
+                font-size: 1.1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .navbar-brand .brand-pre {
+                font-size: 0.6rem;
+            }
+            .navbar-brand img {
+                height: 36px !important;
+            }
+            .hamburger-btn {
+                flex-shrink: 0;
+                width: 44px;
+                height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 575px) {
+            .navbar > .container {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+            }
+            .navbar-brand .brand-name {
+                font-size: 1rem;
+            }
+            .navbar-brand img {
+                height: 32px !important;
+            }
         }
 
         /* ========== Page Hero Banner (for sub-pages) ========== */
@@ -646,6 +697,13 @@
             .section-header h2 {
                 font-size: 2rem;
             }
+
+            /* Force all containers to stay within viewport on mobile */
+            .container {
+                max-width: 100% !important;
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
         }
 
         @media (max-width: 575px) {
@@ -659,6 +717,12 @@
 
             .newsletter-form {
                 flex-direction: column;
+            }
+
+            /* Extra containment for very small screens */
+            .container {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
             }
         }
 
