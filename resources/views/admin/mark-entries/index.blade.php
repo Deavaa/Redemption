@@ -17,8 +17,9 @@
     overflow-x: hidden; box-sizing: border-box;
 }
 .me-page *, .me-page *::before, .me-page *::after {
-    max-width: 100% !important; box-sizing: border-box !important;
+    box-sizing: border-box !important;
 }
+/* Exclude the card slider from max-width constraint - it needs to be wider than viewport */
 .me-page > *, .me-page > div,
 .me-page .me-filter-card, .me-page .me-filter-summary,
 .me-page .me-global-status, .me-page .me-carousel-nav,
@@ -26,6 +27,15 @@
 .me-page .me-lock-banner, .me-page .me-empty, .me-page .me-loading {
     max-width: 100% !important; box-sizing: border-box !important;
     overflow-x: hidden !important;
+}
+/* Card slider and its direct children need to exceed viewport width for carousel */
+.me-page .me-card-slider,
+.me-card-slider {
+    max-width: none !important;
+    overflow: visible !important;
+}
+.me-card-slider .me-student-card {
+    max-width: 100% !important;
 }
 
 /* Filter Panel */
@@ -123,7 +133,7 @@
 }
 
 /* Card slider */
-.me-card-slider { display: flex; transition: transform 0.3s ease; will-change: transform; touch-action: pan-y; max-width: 100% !important; width: 100% !important; }
+.me-card-slider { display: flex; transition: transform 0.3s ease; will-change: transform; touch-action: pan-y; }
 
 /* Each student card fills the carousel viewport */
 .me-card-slider .me-student-card { min-width: 100%; max-width: 100%; flex-shrink: 0; width: 100%; }
@@ -319,14 +329,22 @@
     .me-filter-card, .me-filter-summary, .me-global-status,
     .me-carousel-nav, .me-cards-container, .me-mark-entry-area,
     .me-student-card, .me-sc-header, .me-sc-body, .me-sc-totals,
-    .me-card-slider, .me-sc-ca-grid, .me-sc-exam-grid,
+    .me-sc-ca-grid, .me-sc-exam-grid,
     .me-sc-field, .me-filter-grid, .me-filter-group {
         max-width: 100% !important; overflow-x: hidden !important;
         box-sizing: border-box !important; width: 100% !important;
     }
+    /* Card slider MUST NOT have max-width: 100% - it needs to be wider to hold all cards */
+    .me-card-slider {
+        max-width: none !important;
+        overflow: visible !important;
+        width: auto !important;
+    }
+    /* Cards container clips the overflow so only one card is visible */
+    .me-cards-container { overflow: hidden !important; max-height: calc(100vh - 280px); }
+    .me-cards-container .me-card-slider { max-width: none !important; }
     /* Card body can scroll horizontally for input grids */
     .me-sc-body { overflow-x: auto !important; width: 100% !important; }
-    .me-cards-container { max-height: calc(100vh - 280px); overflow-x: hidden !important; }
     .me-sc-header { padding: 3px 5px; gap: 4px; }
     .me-sc-body { padding: 3px 5px; }
     .me-sc-totals { padding: 3px 5px; }
