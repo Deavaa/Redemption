@@ -221,7 +221,7 @@
         justify-content: center;
         font-size: 1.3rem;
         box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
-        z-index: 900;
+        z-index: 950;
         text-decoration: none;
         transition: transform 0.2s, box-shadow 0.2s;
     }

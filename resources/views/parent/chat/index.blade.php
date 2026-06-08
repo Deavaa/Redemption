@@ -52,6 +52,11 @@
     </div>
 </div>
 
+{{-- Floating New Chat Button for Mobile --}}
+<a href="#" class="parent-chat-fab-new" onclick="event.preventDefault(); var modal = new bootstrap.Modal(document.getElementById('newChatModal')); modal.show();">
+    <i class="fas fa-plus"></i>
+</a>
+
 <div class="modal fade" id="newChatModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -89,6 +94,38 @@
     </div>
 </div>
 
+<style>
+/* Mobile: hide header button, show FAB */
+@media (max-width: 768px) {
+    .parent-chat-fab-new {
+        display: flex;
+        position: fixed;
+        bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+        right: 16px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--primary-hover, var(--primary)));
+        color: #fff;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
+        z-index: 900;
+        text-decoration: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .parent-chat-fab-new:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 24px rgba(67, 97, 238, 0.5);
+        color: #fff;
+    }
+}
+/* Hide FAB on desktop */
+@media (min-width: 769px) {
+    .parent-chat-fab-new { display: none; }
+}
+</style>
 <script>
 document.getElementById('chatType')?.addEventListener('change', function() {
     document.getElementById('groupTitleField').style.display = this.value === 'group' ? 'block' : 'none';

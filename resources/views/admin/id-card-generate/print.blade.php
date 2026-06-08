@@ -376,11 +376,11 @@
                     </div>
                     <div class="id-card-info">
                         <div class="id-card-info-row">
-                            <span class="id-card-info-label">{{ __('app.name') ?? 'Name' }}</span>
+                            <span class="id-card-info-label">Name</span>
                             <span class="id-card-info-value">{{ $student->full_name }}</span>
                         </div>
                         <div class="id-card-info-row">
-                            <span class="id-card-info-label">{{ __('app.student_id') ?? 'Student ID' }}</span>
+                            <span class="id-card-info-label">Student ID</span>
                             @php
                                 $displayStudentId = $student->user ? $student->user->id_number : null;
                                 if (empty($displayStudentId)) $displayStudentId = '-';
@@ -388,7 +388,7 @@
                             <span class="id-card-info-value" style="color:#c9a84c;font-size:0.72rem;">{{ $displayStudentId }}</span>
                         </div>
                         <div class="id-card-info-row">
-                            <span class="id-card-info-label">{{ __('app.roll_number') ?? 'Roll No' }}</span>
+                            <span class="id-card-info-label">Roll No</span>
                             @php
                                 $displayRoll = $student->roll_number ?? '-';
                                 if (str_contains(strtolower($displayRoll), 'auto')) $displayRoll = '-';
@@ -396,15 +396,15 @@
                             <span class="id-card-info-value">{{ $displayRoll }}</span>
                         </div>
                         <div class="id-card-info-row">
-                            <span class="id-card-info-label">{{ __('app.class_section') ?? 'Class/Sec' }}</span>
+                            <span class="id-card-info-label">Class/Sec</span>
                             <span class="id-card-info-value">{{ $student->classroom->name ?? '-' }} / {{ $student->section->name ?? '-' }}</span>
                         </div>
                         <div class="id-card-info-row">
-                            <span class="id-card-info-label">{{ __('app.gender') ?? 'Gender' }}</span>
+                            <span class="id-card-info-label">Gender</span>
                             <span class="id-card-info-value">{{ ucfirst($student->gender ?? '-') }}</span>
                         </div>
                         <div class="id-card-info-row">
-                            <span class="id-card-info-label">{{ __('app.card_number') ?? 'Card No' }}</span>
+                            <span class="id-card-info-label">Card No</span>
                             @php
                                 $displayCardNumber = $idCard->card_number ?? 'ID-' . str_pad($student->id, 5, '0', STR_PAD_LEFT);
                                 if (str_contains(strtolower($displayCardNumber), 'auto')) $displayCardNumber = 'ID-' . str_pad($student->id, 5, '0', STR_PAD_LEFT);
@@ -413,13 +413,13 @@
                         </div>
                         @if($student->guardian_phone)
                         <div class="id-card-info-row">
-                            <span class="id-card-info-label">{{ __('app.guardian') ?? 'Guardian' }}</span>
+                            <span class="id-card-info-label">Guardian</span>
                             <span class="id-card-info-value">{{ $student->guardian_phone }}</span>
                         </div>
                         @endif
                         @if($student->branch && $student->branch->address)
                         <div class="id-card-info-row branch-row">
-                            <span class="id-card-info-label">{{ __('app.branch') ?? 'Branch' }}</span>
+                            <span class="id-card-info-label">Branch</span>
                             <span class="id-card-info-value">{{ $student->branch->name }} - {{ $student->branch->address }}</span>
                         </div>
                         @endif

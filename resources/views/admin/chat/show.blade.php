@@ -250,7 +250,7 @@
     }
     .chat-layout {
         grid-template-columns: 1fr;
-        height: calc(100dvh - 56px - 5vh - 56px);
+        height: calc(100dvh - 56px - 56px - 5vh);
         min-height: 300px;
         border-radius: 0;
         border: none;
@@ -280,7 +280,7 @@
     .chat-msg { max-width: 85%; }
     .chat-input-area {
         padding: 0.5rem 0.75rem;
-        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px) + 5vh);
         flex-shrink: 0;
         border-top: 1px solid #f0f0f0;
         background: #fff;

@@ -254,21 +254,21 @@
                 </p>
 
                 <div class="cert-details">
-                    <div class="cert-detail-item"><strong>{{ __('app.admission_no') ?? 'Admission No' }}:</strong> {{ $student->admission_number }}</div>
-                    <div class="cert-detail-item"><strong>{{ __('app.roll_number') ?? 'Roll No' }}:</strong> {{ $student->roll_number }}</div>
-                    <div class="cert-detail-item"><strong>{{ __('app.classes') ?? 'Class' }}:</strong> {{ $student->classroom->name ?? '-' }}</div>
-                    <div class="cert-detail-item"><strong>{{ __('app.section') ?? 'Section' }}:</strong> {{ $student->section->name ?? '-' }}</div>
-                    <div class="cert-detail-item"><strong>{{ __('app.certificate_number') ?? 'Certificate No' }}:</strong> {{ $cert->certificate_number }}</div>
-                    <div class="cert-detail-item"><strong>{{ __('app.date') ?? 'Date' }}:</strong> {{ $cert->issue_date }}</div>
+                    <div class="cert-detail-item"><strong>Admission No:</strong> {{ $student->admission_number }}</div>
+                    <div class="cert-detail-item"><strong>Roll No:</strong> {{ $student->roll_number }}</div>
+                    <div class="cert-detail-item"><strong>Class:</strong> {{ $student->classroom->name ?? '-' }}</div>
+                    <div class="cert-detail-item"><strong>Section:</strong> {{ $student->section->name ?? '-' }}</div>
+                    <div class="cert-detail-item"><strong>Certificate No:</strong> {{ $cert->certificate_number }}</div>
+                    <div class="cert-detail-item"><strong>Date:</strong> {{ $cert->issue_date }}</div>
                 </div>
 
                 @if($cert->type === 'academic' && $marks->count() > 0)
                 <table class="cert-marks-table">
                     <thead>
                         <tr>
-                            <th>{{ __('app.subjects') ?? 'Subject' }}</th>
-                            <th>{{ __('app.marks') ?? 'Marks' }}</th>
-                            <th>{{ __('app.grade') ?? 'Grade' }}</th>
+                            <th>Subject</th>
+                            <th>Marks</th>
+                            <th>Grade</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -288,11 +288,11 @@
             <div class="cert-footer">
                 <div class="cert-signature">
                     <div class="cert-signature-line"></div>
-                    <span>{{ __('app.class_teacher') ?? 'Class Teacher' }}</span>
+                    <span>Class Teacher</span>
                 </div>
                 <div class="cert-signature">
                     <div class="cert-signature-line"></div>
-                    <span>{{ __('app.principal') ?? 'Principal' }}</span>
+                    <span>Principal</span>
                 </div>
             </div>
         </div>

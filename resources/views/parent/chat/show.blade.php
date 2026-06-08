@@ -105,6 +105,20 @@
 @media (max-width: 768px) {
     .chat-page-top-bar { display: none !important; }
     .parent-chat-mobile-back { display: flex !important; }
+    /* Make chat grid full height on mobile */
+    div[style*="grid-template-columns:280px"] {
+        grid-template-columns: 1fr !important;
+        height: calc(100dvh - 56px - 5vh) !important;
+        margin-bottom: 5vh;
+    }
+    /* Hide sidebar on mobile */
+    div[style*="border-right:1px solid var(--border);overflow-y:auto"] {
+        display: none !important;
+    }
+    /* Add bottom margin to input area */
+    form[enctype="multipart/form-data"] {
+        padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px) + 5vh) !important;
+    }
 }
 </style>
 <script>
