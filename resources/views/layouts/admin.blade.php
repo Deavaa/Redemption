@@ -1168,8 +1168,8 @@
             </div>
             <div class="topbar-right">
                 {{-- Language Switcher --}}
-                <div class="topbar-icon-btn dropdown">
-                    <button class="topbar-icon-toggle" data-bs-toggle="dropdown" title="{{ __('app.language') }}">
+                <div class="topbar-icon-btn dropdown" id="langDropdown">
+                    <button class="topbar-icon-toggle" type="button" title="{{ __('app.language') }}">
                         <i class="fas fa-globe"></i>
                         <span class="topbar-icon-badge lang-code">{{ strtoupper(app()->getLocale()) }}</span>
                     </button>
@@ -1219,8 +1219,8 @@
                     $latestNotifs = \App\Models\Notification::where('user_id', Auth::id())
                         ->orderByDesc('created_at')->limit(5)->get();
                 @endphp
-                <div class="topbar-icon-btn dropdown">
-                    <button class="topbar-icon-toggle" data-bs-toggle="dropdown" title="{{ __('app.notifications') }}">
+                <div class="topbar-icon-btn dropdown" id="notifDropdown">
+                    <button class="topbar-icon-toggle" type="button" title="{{ __('app.notifications') }}">
                         <i class="fas fa-bell"></i>
                         @if($notifUnread > 0)
                             <span class="topbar-icon-badge badge-danger">{{ $notifUnread > 99 ? '99+' : $notifUnread }}</span>
@@ -1269,8 +1269,8 @@
                 <a href="{{ url('/') }}" class="topbar-icon-btn topbar-icon-link hide-mobile-icon" target="_blank" title="{{ __('app.view_website') }}">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
-                <div class="topbar-dropdown dropdown">
-                    <button class="topbar-avatar" data-bs-toggle="dropdown">
+                <div class="topbar-dropdown dropdown" id="userDropdown">
+                    <button class="topbar-avatar" type="button">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
@@ -1290,6 +1290,21 @@
                 </div>
             </div>
         </nav>
+
+        {{-- Mobile Topbar Overlay Panel — replaces Bootstrap dropdown on mobile --}}
+        <div id="mobileTopbarPanel" class="mobile-topbar-panel" style="display:none;">
+            <div class="mobile-topbar-panel-backdrop" id="mobileTopbarPanelBackdrop"></div>
+            <div class="mobile-topbar-panel-content" id="mobileTopbarPanelContent">
+                <div class="mobile-topbar-panel-header">
+                    <span id="mobileTopbarPanelTitle">Menu</span>
+                    <button type="button" class="mobile-topbar-panel-close" id="mobileTopbarPanelClose">&times;</button>
+                </div>
+                <div class="mobile-topbar-panel-body" id="mobileTopbarPanelBody">
+                    {{-- Dropdown content gets injected here dynamically --}}
+                </div>
+            </div>
+        </div>
+
         <div class="admin-content">
             @if(session('success'))
                 <div class="global-alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
@@ -1651,217 +1666,159 @@ document.addEventListener('DOMContentLoaded', function() {
         }, delay);
     });
 
-    // ===== MOBILE DROPDOWN FIX =====
+    // ===== MOBILE TOPBAR DROPDOWN FIX =====
     // Bootstrap 5 dropdowns don't work on mobile WebView because:
     // 1. Touch/click events fire differently in WebView
     // 2. The bottom fixed nav covers dropdown menus
-    // Solution: On mobile, we completely bypass Bootstrap's dropdown and
-    // manage everything manually with position:fixed so menus appear above
-    // the bottom nav bar.
+    // 3. Overflow:hidden on parents clips dropdowns
+    // SOLUTION: On mobile, we completely bypass Bootstrap's dropdown
+    // and use a full-screen overlay panel instead. This is what native
+    // mobile apps do and it's 100% reliable on WebView.
     (function() {
-        var backdrop = document.getElementById('mobileDropdownBackdrop');
-        if (!backdrop) {
-            backdrop = document.createElement('div');
-            backdrop.id = 'mobileDropdownBackdrop';
-            backdrop.className = 'dropdown-mobile-backdrop';
-            document.body.appendChild(backdrop);
-        }
+        var panel = document.getElementById('mobileTopbarPanel');
+        var panelBackdrop = document.getElementById('mobileTopbarPanelBackdrop');
+        var panelContent = document.getElementById('mobileTopbarPanelContent');
+        var panelTitle = document.getElementById('mobileTopbarPanelTitle');
+        var panelBody = document.getElementById('mobileTopbarPanelBody');
+        var panelClose = document.getElementById('mobileTopbarPanelClose');
 
-        var activeMenu = null;
-        var activeToggle = null;
+        if (!panel) return;
 
         function isMobile() {
             return window.innerWidth <= 768;
         }
 
-        function closeMobileDropdown() {
-            if (activeMenu) {
-                activeMenu.classList.remove('show');
-                activeMenu.style.position = '';
-                activeMenu.style.top = '';
-                activeMenu.style.left = '';
-                activeMenu.style.right = '';
-                activeMenu.style.bottom = '';
-                activeMenu.style.display = '';
-                var dd = activeMenu.closest('.dropdown');
-                if (dd) dd.classList.remove('show');
-                if (activeToggle) activeToggle.setAttribute('aria-expanded', 'false');
-                activeMenu = null;
-                activeToggle = null;
-            }
-            backdrop.classList.remove('show');
+        function closePanel() {
+            panel.style.display = 'none';
+            panel.classList.remove('show');
+            document.body.style.overflow = '';
             // Restore bottom nav
             var bottomNav = document.getElementById('mobileBottomNav');
             if (bottomNav) bottomNav.style.display = '';
         }
 
-        function openMobileDropdown(toggleBtn, menu) {
-            // Close any already-open dropdown
-            closeMobileDropdown();
-
-            activeMenu = menu;
-            activeToggle = toggleBtn;
-
-            // Step 1: Show the menu temporarily to measure its size
-            // Use position:fixed at 0,0 off-screen first to measure
-            menu.style.position = 'fixed';
-            menu.style.top = '-9999px';
-            menu.style.left = '-9999px';
-            menu.style.display = 'block';
-            menu.classList.add('show');
-
-            var dd = menu.closest('.dropdown');
-            if (dd) dd.classList.add('show');
-            toggleBtn.setAttribute('aria-expanded', 'true');
-
-            // Step 2: Measure the menu
-            var menuRect = menu.getBoundingClientRect();
-            var menuW = menuRect.width || 200;
-            var menuH = menuRect.height || 200;
-
-            // Step 3: Get the toggle button position
-            var btnRect = toggleBtn.getBoundingClientRect();
-
-            // Step 4: Calculate position
-            var top = btnRect.bottom + 4;
-            var left = btnRect.left;
-
-            // Align to right edge if it would overflow right
-            if (left + menuW > window.innerWidth - 8) {
-                left = btnRect.right - menuW;
-            }
-            // Don't go off left edge
-            if (left < 4) left = 4;
-
-            // If menu would overlap bottom nav area, show above the button instead
-            if (top + menuH > window.innerHeight - 64) {
-                top = btnRect.top - menuH - 4;
-            }
-            // Don't go above the top of the screen
-            if (top < 4) top = 4;
-
-            // Step 5: Apply final position
-            menu.style.top = top + 'px';
-            menu.style.left = left + 'px';
-            menu.style.right = 'auto';
-            menu.style.bottom = 'auto';
-
-            // Show backdrop and hide bottom nav while dropdown is open
-            backdrop.classList.add('show');
+        function openPanel(title, contentHtml) {
+            panelTitle.textContent = title;
+            panelBody.innerHTML = contentHtml;
+            panel.style.display = 'block';
+            // Force reflow then add show class for animation
+            void panel.offsetHeight;
+            panel.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            // Hide bottom nav while panel is open
             var bottomNav = document.getElementById('mobileBottomNav');
             if (bottomNav) bottomNav.style.display = 'none';
         }
 
-        // Close on backdrop tap
-        backdrop.addEventListener('click', function(e) {
+        // Close panel events
+        panelClose.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            closeMobileDropdown();
+            closePanel();
+        });
+        panelBackdrop.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closePanel();
+        });
+        panelBackdrop.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closePanel();
         });
 
-        // Also close on touchstart on backdrop (for WebView)
-        backdrop.addEventListener('touchstart', function(e) {
+        // ===== Handle each topbar dropdown =====
+        // We use both click AND touchend handlers because:
+        // - Desktop browsers fire click
+        // - Some Android WebViews only fire touchend
+        // - Some fire both, so we use a flag to prevent double-firing
+
+        var panelJustOpened = false;
+
+        function handleDropdownToggle(e, title, menuSelector) {
+            if (!isMobile()) return; // Let Bootstrap handle on desktop
+            if (panelJustOpened) return; // Prevent double-fire
+
             e.preventDefault();
             e.stopPropagation();
-            closeMobileDropdown();
-        }, { passive: false });
+            e.stopImmediatePropagation();
 
-        // Find all dropdown toggles in the topbar
-        var dropdownToggles = document.querySelectorAll(
-            '.topbar-icon-btn.dropdown .topbar-icon-toggle, ' +
-            '.topbar-dropdown.dropdown .topbar-avatar'
-        );
+            var menu = document.querySelector(menuSelector);
+            if (menu) {
+                panelJustOpened = true;
+                openPanel(title, menu.innerHTML);
+                // Reset flag after 300ms to allow reopening
+                setTimeout(function() { panelJustOpened = false; }, 300);
+            }
+        }
 
-        dropdownToggles.forEach(function(btn) {
-            // Prevent Bootstrap from handling this dropdown on mobile
-            // We add our own handler that runs first
-            btn.addEventListener('click', function(e) {
-                if (!isMobile()) return; // Let Bootstrap handle on desktop
-
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation(); // Stop Bootstrap from also handling it
-
-                var dropdown = btn.closest('.dropdown');
-                if (!dropdown) return;
-                var menu = dropdown.querySelector('.dropdown-menu');
-                if (!menu) return;
-
-                // If this menu is already open, close it
-                if (activeMenu === menu) {
-                    closeMobileDropdown();
-                } else {
-                    openMobileDropdown(btn, menu);
-                }
-            }, true); // Use capture phase to run before Bootstrap
-
-            // Also handle touchend for WebView where click doesn't fire
-            btn.addEventListener('touchend', function(e) {
+        // Language dropdown
+        var langToggle = document.querySelector('#langDropdown .topbar-icon-toggle');
+        if (langToggle) {
+            langToggle.addEventListener('click', function(e) {
+                handleDropdownToggle(e, '{{ __("app.language") }}', '#langDropdown .dropdown-menu');
+            }, true);
+            langToggle.addEventListener('touchend', function(e) {
                 if (!isMobile()) return;
-
-                // Only handle if click didn't already fire
-                // (touchend + click both fire on some devices)
+                // Only fire if click didn't already fire (detail=0 means touch-only)
                 if (e.detail === 0) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    var dropdown = btn.closest('.dropdown');
-                    if (!dropdown) return;
-                    var menu = dropdown.querySelector('.dropdown-menu');
-                    if (!menu) return;
-
-                    if (activeMenu === menu) {
-                        closeMobileDropdown();
-                    } else {
-                        openMobileDropdown(btn, menu);
-                    }
+                    handleDropdownToggle(e, '{{ __("app.language") }}', '#langDropdown .dropdown-menu');
                 }
             }, { passive: false });
+        }
+
+        // Notifications dropdown
+        var notifToggle = document.querySelector('#notifDropdown .topbar-icon-toggle');
+        if (notifToggle) {
+            notifToggle.addEventListener('click', function(e) {
+                handleDropdownToggle(e, '{{ __("app.notifications") }}', '#notifDropdown .dropdown-menu');
+            }, true);
+            notifToggle.addEventListener('touchend', function(e) {
+                if (!isMobile()) return;
+                if (e.detail === 0) {
+                    handleDropdownToggle(e, '{{ __("app.notifications") }}', '#notifDropdown .dropdown-menu');
+                }
+            }, { passive: false });
+        }
+
+        // User profile dropdown
+        var userToggle = document.querySelector('#userDropdown .topbar-avatar');
+        if (userToggle) {
+            userToggle.addEventListener('click', function(e) {
+                handleDropdownToggle(e, '{{ Auth::user()->name }}', '#userDropdown .dropdown-menu');
+            }, true);
+            userToggle.addEventListener('touchend', function(e) {
+                if (!isMobile()) return;
+                if (e.detail === 0) {
+                    handleDropdownToggle(e, '{{ Auth::user()->name }}', '#userDropdown .dropdown-menu');
+                }
+            }, { passive: false });
+        }
+
+        // Close panel on resize to desktop
+        window.addEventListener('resize', function() {
+            if (!isMobile()) closePanel();
         });
 
-        // Close dropdown when clicking a dropdown item
-        document.querySelectorAll(
-            '.topbar-icon-dropdown .dropdown-item, ' +
-            '.topbar-notif-dropdown .dropdown-item, ' +
-            '.topbar-dropdown .dropdown-item'
-        ).forEach(function(item) {
-            item.addEventListener('click', function() {
-                if (isMobile()) {
-                    setTimeout(closeMobileDropdown, 50);
+        // ===== DESKTOP: Initialize Bootstrap dropdowns manually =====
+        // Since we removed data-bs-toggle="dropdown", we need to init them on desktop
+        function initDesktopDropdowns() {
+            // Destroy any existing instances first
+            document.querySelectorAll('#langDropdown, #notifDropdown, #userDropdown').forEach(function(dd) {
+                var toggle = dd.querySelector('.topbar-icon-toggle, .topbar-avatar');
+                if (toggle) {
+                    var instance = bootstrap.Dropdown.getInstance(toggle);
+                    if (instance) instance.dispose();
+                    // Only create on desktop
+                    if (!isMobile()) {
+                        new bootstrap.Dropdown(toggle);
+                    }
                 }
             });
-        });
-
-        // Close on outside click
-        document.addEventListener('click', function(e) {
-            if (!isMobile() || !activeMenu) return;
-            if (!e.target.closest('.dropdown') && !e.target.closest('.dropdown-mobile-backdrop')) {
-                closeMobileDropdown();
-            }
-        });
-
-        // Close on resize
+        }
+        initDesktopDropdowns();
         window.addEventListener('resize', function() {
-            if (!isMobile() && activeMenu) {
-                closeMobileDropdown();
-            }
-            // Reposition if still mobile and menu is open
-            if (isMobile() && activeMenu && activeToggle) {
-                var btnRect = activeToggle.getBoundingClientRect();
-                var menuRect = activeMenu.getBoundingClientRect();
-                var top = btnRect.bottom + 4;
-                var left = btnRect.left;
-                if (left + menuRect.width > window.innerWidth - 8) {
-                    left = btnRect.right - menuRect.width;
-                }
-                if (left < 4) left = 4;
-                if (top + menuRect.height > window.innerHeight - 64) {
-                    top = btnRect.top - menuRect.height - 4;
-                }
-                if (top < 4) top = 4;
-                activeMenu.style.top = top + 'px';
-                activeMenu.style.left = left + 'px';
-            }
+            initDesktopDropdowns();
         });
     })();
 })();
