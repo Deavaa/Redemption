@@ -232,7 +232,12 @@ Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '
 // the .htaccess routes ALL requests through index.php. Laravel needs to serve static
 // files (CSS, JS, images, fonts, etc.) from the public/ directory.
 // This route catches requests for common static file extensions and serves them.
-Route::get('/{path}', function ($path) {
+Route::get('/{path}', function ($path = null) {
+    // Fallback route: if no path, redirect to login
+    if (empty($path)) {
+        return redirect()->route('login');
+    }
+
     $publicPath = public_path($path);
 
     // Only serve if the file actually exists in public/
