@@ -22,6 +22,79 @@
         php_value session.cookie_lifetime 28800
     </IfModule>
 
+    # ── Browser Caching & Performance ──
+    # Enable GZIP compression for faster transfers
+    <IfModule mod_deflate.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+        AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+        AddOutputFilterByType DEFLATE application/json application/xml
+        AddOutputFilterByType DEFLATE image/svg+xml
+        # Don't compress images (already compressed)
+        SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png|webp|ico)$ no-gzip
+    </IfModule>
+
+    # Cache-Control headers for static assets
+    <IfModule mod_expires.c>
+        ExpiresActive On
+
+        # CSS and JS files - cache for 1 week
+        ExpiresByType text/css "access plus 1 week"
+        ExpiresByType application/javascript "access plus 1 week"
+        ExpiresByType application/x-javascript "access plus 1 week"
+
+        # Images - cache for 1 month
+        ExpiresByType image/jpeg "access plus 1 month"
+        ExpiresByType image/png "access plus 1 month"
+        ExpiresByType image/gif "access plus 1 month"
+        ExpiresByType image/webp "access plus 1 month"
+        ExpiresByType image/svg+xml "access plus 1 month"
+        ExpiresByType image/x-icon "access plus 1 month"
+
+        # Fonts - cache for 1 month
+        ExpiresByType font/woff2 "access plus 1 month"
+        ExpiresByType font/woff "access plus 1 month"
+        ExpiresByType application/font-woff2 "access plus 1 month"
+        ExpiresByType application/font-woff "access plus 1 month"
+
+        # HTML - short cache (dynamic content)
+        ExpiresByType text/html "access plus 0 seconds"
+    </IfModule>
+
+    # Cache-Control headers (fallback if mod_expires not available)
+    <IfModule mod_headers.c>
+        # CSS/JS - 1 week
+        <FilesMatch "\.(css|js)$">
+            Header set Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
+        </FilesMatch>
+
+        # Images - 1 month
+        <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico)$">
+            Header set Cache-Control "public, max-age=2592000, stale-while-revalidate=604800"
+        </FilesMatch>
+
+        # Fonts - 1 month
+        <FilesMatch "\.(woff|woff2|ttf|eot)$">
+            Header set Cache-Control "public, max-age=2592000"
+        </FilesMatch>
+
+        # APK files - 1 day
+        <FilesMatch "\.apk$">
+            Header set Cache-Control "public, max-age=86400"
+            Header set Content-Disposition "attachment"
+        </FilesMatch>
+
+        # HTML - no cache (dynamic Laravel pages)
+        <FilesMatch "\.(html|php)$">
+            Header set Cache-Control "no-cache, no-store, must-revalidate"
+            Header set Pragma "no-cache"
+        </FilesMatch>
+
+        # Security headers
+        Header set X-Content-Type-Options "nosniff"
+        Header set X-Frame-Options "SAMEORIGIN"
+        Header set Referrer-Policy "strict-origin-when-cross-origin"
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

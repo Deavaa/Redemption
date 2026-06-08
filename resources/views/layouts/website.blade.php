@@ -22,10 +22,13 @@
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
 
+    <!-- Preconnect for faster CDN loading -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
@@ -59,15 +62,19 @@
 
     <!-- ========== Elegant Dark Green Navbar ========== -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar">
-        <div class="container">
+        <div class="container-fluid nav-container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
                 @if(($settings['school_logo'] ?? '') && file_exists(public_path('storage/' . $settings['school_logo'])))
-                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;">
+                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;" loading="lazy">
                 @endif
                 <div>
                     <span class="brand-pre">{{ Str::beforeLast($settings['school_name'] ?? 'School', ' ') }}</span>
                     <span class="brand-name">{{ Str::afterLast($settings['school_name'] ?? 'School', ' ') }}</span>
                 </div>
+            </a>
+            <!-- Mobile Login Button (visible on mobile only) -->
+            <a href="{{ route('login') }}" class="mobile-login-pill" id="mobileLoginPill">
+                <i class="fas fa-sign-in-alt"></i>
             </a>
             <!-- Desktop nav -->
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -223,10 +230,10 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap 5 JS (deferred for performance) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 
-    <script src="{{ asset('js/website.js') }}"></script>
+    <script src="{{ asset('js/website.js') }}" defer></script>
     @stack('scripts')
 </body>
 </html>

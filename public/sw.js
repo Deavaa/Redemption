@@ -1,12 +1,22 @@
-// Redemption School Management System - Service Worker v2
+// Redemption School Management System - Service Worker v3
 // Provides offline capability, caching, and push notification support
+// Performance-optimized with stale-while-revalidate for static assets
 
-const CACHE_NAME = 'redemption-v2';
+const CACHE_NAME = 'redemption-v3';
 const STATIC_ASSETS = [
     './',
     './login',
     './manifest.json',
 ];
+
+// Cache durations (in seconds)
+const CACHE_DURATIONS = {
+    html: 0,        // Never cache HTML from SW (let browser handle)
+    css: 7 * 86400, // 1 week
+    js: 7 * 86400,  // 1 week
+    image: 30 * 86400, // 1 month
+    font: 30 * 86400,  // 1 month
+};
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -34,44 +44,62 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch event - network first, fallback to cache
+// Determine asset type from URL
+function getAssetType(url) {
+    if (url.match(/\.(css)$/)) return 'css';
+    if (url.match(/\.(js)$/)) return 'js';
+    if (url.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/)) return 'image';
+    if (url.match(/\.(woff|woff2|ttf|eot)$/)) return 'font';
+    return 'html';
+}
+
+// Check if URL is a CDN resource we want to cache
+function isCDNResource(url) {
+    return url.includes('cdn.jsdelivr.net') ||
+           url.includes('cdnjs.cloudflare.com') ||
+           url.includes('fonts.googleapis.com') ||
+           url.includes('fonts.gstatic.com') ||
+           url.includes('ui-avatars.com');
+}
+
+// Check if URL should be skipped (API calls, etc.)
+function shouldSkip(url) {
+    return url.includes('/api/') ||
+           url.includes('/admin/attendance-api/') ||
+           url.includes('/admin/transcript/api/') ||
+           url.includes('/admin/keepalive') ||
+           url.includes('/admin/session-diagnostic') ||
+           url.includes('/horizon/') ||
+           url.includes('/telescope/');
+}
+
+// Fetch event - performance-optimized caching strategies
 self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (event.request.method !== 'GET') return;
 
-    // Skip cross-origin requests (except CDN resources we want to cache)
-    if (!event.request.url.startsWith(self.location.origin)) {
-        // Allow caching of CDN resources (Bootstrap, Font Awesome, etc.)
-        if (event.request.url.includes('cdn.jsdelivr.net') || 
-            event.request.url.includes('cdnjs.cloudflare.com') ||
-            event.request.url.includes('fonts.googleapis.com') ||
-            event.request.url.includes('fonts.gstatic.com')) {
-            event.respondWith(
-                caches.match(event.request).then((cachedResponse) => {
-                    if (cachedResponse) return cachedResponse;
-                    return fetch(event.request).then((response) => {
-                        if (response.status === 200) {
-                            const responseClone = response.clone();
-                            caches.open(CACHE_NAME).then((cache) => {
-                                cache.put(event.request, responseClone);
-                            });
-                        }
-                        return response;
-                    }).catch(() => cachedResponse);
-                })
-            );
-        }
+    const url = event.request.url;
+
+    // Skip API and admin keepalive requests
+    if (shouldSkip(url)) return;
+
+    // Handle CDN resources with cache-first strategy
+    if (!url.startsWith(self.location.origin) && isCDNResource(url)) {
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    // Return cache, but update in background (stale-while-revalidate)
+                    fetchAndCache(event.request);
+                    return cachedResponse;
+                }
+                return fetchAndCache(event.request);
+            })
+        );
         return;
     }
 
-    // For API calls, always use network
-    if (event.request.url.includes('/api/') || 
-        event.request.url.includes('/admin/attendance-api/') || 
-        event.request.url.includes('/admin/transcript/api/') ||
-        event.request.url.includes('/admin/keepalive') ||
-        event.request.url.includes('/admin/session-diagnostic')) {
-        return;
-    }
+    // Skip cross-origin requests that aren't CDN
+    if (!url.startsWith(self.location.origin)) return;
 
     // For navigation requests (HTML pages), network first
     if (event.request.mode === 'navigate') {
@@ -95,20 +123,17 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // For static assets (CSS, JS, images), cache first, then network
-    if (event.request.url.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
+    // For static assets (CSS, JS, images, fonts), cache-first with background update
+    const assetType = getAssetType(url);
+    if (assetType !== 'html') {
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
-                if (cachedResponse) return cachedResponse;
-                return fetch(event.request).then((response) => {
-                    if (response.status === 200) {
-                        const responseClone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseClone);
-                        });
-                    }
-                    return response;
-                });
+                if (cachedResponse) {
+                    // Return cached version immediately, update in background
+                    fetchAndCache(event.request);
+                    return cachedResponse;
+                }
+                return fetchAndCache(event.request);
             })
         );
         return;
@@ -136,6 +161,21 @@ self.addEventListener('fetch', (event) => {
             })
     );
 });
+
+// Helper: fetch and cache a request
+function fetchAndCache(request) {
+    return fetch(request).then((response) => {
+        if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseClone);
+            });
+        }
+        return response;
+    }).catch(() => {
+        return caches.match(request);
+    });
+}
 
 // Push notification event
 self.addEventListener('push', (event) => {
@@ -204,6 +244,9 @@ self.addEventListener('sync', (event) => {
     if (event.tag === 'mark-entry-sync') {
         event.waitUntil(syncMarkEntryData());
     }
+    if (event.tag === 'data-sync') {
+        event.waitUntil(syncAllData());
+    }
 });
 
 async function syncAttendanceData() {
@@ -212,4 +255,10 @@ async function syncAttendanceData() {
 
 async function syncMarkEntryData() {
     // Get pending mark entries from IndexedDB and submit
+}
+
+async function syncAllData() {
+    // Sync all pending data when back online
+    await syncAttendanceData();
+    await syncMarkEntryData();
 }

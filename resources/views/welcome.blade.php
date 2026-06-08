@@ -32,10 +32,9 @@
     (function() {
         var navbar = document.getElementById('navbar');
         var tickerEl = document.getElementById('announcementTicker');
-        if (navbar && tickerEl) {
-            // Check if ticker will be shown (handled by ticker script below)
-            // Default to offset position
-            navbar.style.top = '36px';
+        if (navbar) {
+            // Start at top, the website.js will adjust if ticker is visible
+            navbar.style.top = '0';
         }
     })();
     </script>
@@ -101,6 +100,14 @@
                                             @if($slider->description ?? null)
                                                 <p>{{ $slider->description }}</p>
                                             @endif
+                                            <div class="hero-buttons">
+                                                <a href="{{ route('login') }}" class="btn btn-hero-primary">
+                                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                                </a>
+                                                <a href="{{ route('home') }}#about" class="btn btn-hero-secondary">
+                                                    <i class="fas fa-info-circle me-2"></i>Learn More
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -122,6 +129,14 @@
                                             </span>
                                             <h1>Empowering Minds, <span>Shaping Futures</span></h1>
                                             <p>{{ $settings['school_description'] }}</p>
+                                            <div class="hero-buttons">
+                                                <a href="{{ route('login') }}" class="btn btn-hero-primary">
+                                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                                </a>
+                                                <a href="#about" class="btn btn-hero-secondary">
+                                                    <i class="fas fa-info-circle me-2"></i>Learn More
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -142,6 +157,14 @@
                                             </span>
                                             <h1>Where Learning <span>Becomes Discovery</span></h1>
                                             <p>Our innovative curriculum combines academic rigor with creative exploration, preparing students to think critically and solve real-world problems with confidence.</p>
+                                            <div class="hero-buttons">
+                                                <a href="{{ route('login') }}" class="btn btn-hero-primary">
+                                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                                </a>
+                                                <a href="#programs" class="btn btn-hero-secondary">
+                                                    <i class="fas fa-graduation-cap me-2"></i>Programs
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -582,10 +605,15 @@
             </div>
             <div class="row g-4">
                 @forelse($teamMembers as $member)
+                    @php
+                        $memberPhoto = $member->photo && file_exists(public_path('storage/' . $member->photo)) 
+                            ? asset('storage/' . $member->photo) 
+                            : 'https://ui-avatars.com/api/?name=' . urlencode($member->name) . '&background=1B5E20&color=D4A017&size=200&font-size=0.4&bold=true';
+                    @endphp
                     <div class="col-lg-3 col-md-6">
                         <div class="team-card reveal">
                             <div class="team-avatar">
-                                <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}">
+                                <img src="{{ $memberPhoto }}" alt="{{ $member->name }}" loading="lazy">
                                 <div class="team-social-overlay">
                                     @if($member->email)
                                         <a href="mailto:{{ $member->email }}" title="Email"><i class="fas fa-envelope"></i></a>
