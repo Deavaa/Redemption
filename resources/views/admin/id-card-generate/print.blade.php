@@ -273,7 +273,7 @@
 <body>
     @php
         $logoUrl = \App\Models\Setting::getLogoUrl();
-        $schoolName = \App\Models\Setting::get('school_name', 'School of Redemption');
+        $schoolName = \App\Models\Setting::getLocalizedName();
         $schoolPhone = \App\Models\Setting::get('school_phone', '');
         $schoolEmail = \App\Models\Setting::get('school_email', '');
         $schoolAddress = \App\Models\Setting::get('school_address', '');

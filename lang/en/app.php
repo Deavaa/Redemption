@@ -96,6 +96,7 @@ return [
     'digital_library' => 'Digital Library',
 
     // Website Menu
+    'branch' => 'Branch',
     'branches' => 'Branches',
     'sliders' => 'Sliders',
     'gallery_images' => 'Gallery Images',

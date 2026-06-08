@@ -62,7 +62,7 @@
                             @elseif($setting->type === 'file')
                                 <div style="display:flex;align-items:center;gap:8px;">
                                     @if($setting->value)
-                                        <img src="{{ asset('storage/' . $setting->value) }}" alt="{{ $setting->key }}" style="width:40px;height:40px;object-fit:contain;border:1px solid var(--border);border-radius:4px;">
+                                        <img src="{{ \App\Models\Setting::getFileUrl($setting->key) }}" alt="{{ $setting->key }}" style="width:40px;height:40px;object-fit:contain;border:1px solid var(--border);border-radius:4px;">
                                     @endif
                                     <input type="file" data-setting-key="{{ $setting->key }}" class="web-content-file-upload" accept="image/*"
                                         style="font-size:12px;">

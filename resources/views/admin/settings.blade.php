@@ -765,7 +765,7 @@ document.querySelectorAll('.modern-toggle input[type="checkbox"]').forEach(cb =>
     }
 });
 
-// Logo preview
+// Logo preview with delayed auto-submit
 function previewLogo(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
@@ -776,23 +776,41 @@ function previewLogo(input) {
         }
         const reader = new FileReader();
         reader.onload = function(e) {
+            const preview = document.getElementById('logoPreview');
             const placeholder = document.getElementById('logoPlaceholder');
-            const img = document.getElementById('logoImg');
-            if (img) {
-                img.src = e.target.result;
+            const existingImg = document.getElementById('logoImg');
+
+            // Show preview image
+            if (existingImg) {
+                existingImg.src = e.target.result;
             } else if (placeholder) {
                 placeholder.innerHTML = '';
                 const newImg = document.createElement('img');
                 newImg.id = 'logoImg';
                 newImg.src = e.target.result;
-                newImg.alt = 'School Logo';
+                newImg.alt = 'School Logo Preview';
                 placeholder.parentElement.appendChild(newImg);
                 placeholder.remove();
             }
+
+            // Show uploading indicator
+            var uploadHint = document.querySelector('.logo-hint');
+            if (uploadHint) {
+                uploadHint.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading logo...';
+                uploadHint.style.color = '#4361ee';
+                uploadHint.style.fontWeight = '600';
+            }
+
+            // Delay submit slightly so the preview renders visually first
+            setTimeout(function() {
+                document.getElementById('logoForm').submit();
+            }, 500);
+        };
+        reader.onerror = function() {
+            alert('Error reading file. Please try again.');
+            input.value = '';
         };
         reader.readAsDataURL(file);
-        // Auto-submit logo form
-        document.getElementById('logoForm').submit();
     }
 }
 </script>

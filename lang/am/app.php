@@ -2,9 +2,9 @@
 
 return [
     // Brand
-    'brand_pre' => 'የ',
-    'brand_name' => 'ቤተ መጽሐፍት ትምህርት ቤት',
-    'school_name' => 'የመዳን ትምህርት ቤት',
+    'brand_pre' => 'ስኩል ኦፍ',
+    'brand_name' => 'ሪደምሽን',
+    'school_name' => 'ስኩል ኦፍ ሪደምሽን',
 
     // General
     'dashboard' => 'ዳሽቦርድ',
@@ -96,6 +96,7 @@ return [
     'digital_library' => 'ዲጂታል ቤተ-መጻሕፍት',
 
     // Website Menu
+    'branch' => 'ቅርንጫፍ',
     'branches' => 'ቅርንጫፎች',
     'sliders' => 'ስላይደሮች',
     'gallery_images' => 'የስዕል ማሳያ',

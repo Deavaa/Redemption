@@ -123,6 +123,7 @@
         </div>
         <div class="header-center">
             <div class="school-name">{{ \App\Models\Setting::get('school_name', 'School of Redemption') }}</div>
+            <div class="school-name-am" style="font-size:0.85rem;font-weight:600;color:#4338ca;margin-top:2px;">{{ \App\Models\Setting::get('school_name_am', 'ስኩል ኦፍ ሪደምሽን') }}</div>
             <div class="school-sub">{{ \App\Models\Setting::get('school_address', '') }} &bull; {{ \App\Models\Setting::get('school_phone', '') }} &bull; {{ \App\Models\Setting::get('school_email', '') }}</div>
             <div class="doc-title">Official Academic Transcript</div>
             <div class="doc-number">Certificate No: {{ $cert->certificate_number }} &bull; Issued: {{ $cert->issue_date->format('F d, Y') }}</div>

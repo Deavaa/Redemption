@@ -184,7 +184,7 @@
 <body>
     @php
         $logoUrl = \App\Models\Setting::getLogoUrl();
-        $schoolName = \App\Models\Setting::get('school_name', 'School of Redemption');
+        $schoolName = \App\Models\Setting::getLocalizedName();
         $hasLogo = !empty($logoUrl);
     @endphp
 

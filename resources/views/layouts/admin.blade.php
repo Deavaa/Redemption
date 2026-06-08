@@ -1169,7 +1169,7 @@
             <div class="topbar-right">
                 {{-- Language Switcher --}}
                 <div class="topbar-icon-btn dropdown" id="langDropdown">
-                    <button class="topbar-icon-toggle" type="button" title="{{ __('app.language') }}">
+                    <button class="topbar-icon-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" title="{{ __('app.language') }}">
                         <i class="fas fa-globe"></i>
                         <span class="topbar-icon-badge lang-code">{{ strtoupper(app()->getLocale()) }}</span>
                     </button>
@@ -1220,7 +1220,7 @@
                         ->orderByDesc('created_at')->limit(5)->get();
                 @endphp
                 <div class="topbar-icon-btn dropdown" id="notifDropdown">
-                    <button class="topbar-icon-toggle" type="button" title="{{ __('app.notifications') }}">
+                    <button class="topbar-icon-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" title="{{ __('app.notifications') }}">
                         <i class="fas fa-bell"></i>
                         @if($notifUnread > 0)
                             <span class="topbar-icon-badge badge-danger">{{ $notifUnread > 99 ? '99+' : $notifUnread }}</span>
@@ -1270,7 +1270,7 @@
                     <i class="fas fa-external-link-alt"></i>
                 </a>
                 <div class="topbar-dropdown dropdown" id="userDropdown">
-                    <button class="topbar-avatar" type="button">
+                    <button class="topbar-avatar" type="button" data-bs-toggle="dropdown">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
@@ -1666,18 +1666,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, delay);
     });
 
-    // ===== MOBILE TOPBAR DROPDOWN FIX =====
-    // Bootstrap 5 dropdowns don't work on mobile WebView because:
+    // ===== MOBILE TOPBAR OVERLAY PANEL =====
+    // On mobile/WebView, Bootstrap dropdowns don't work reliably because:
     // 1. Touch/click events fire differently in WebView
     // 2. The bottom fixed nav covers dropdown menus
     // 3. Overflow:hidden on parents clips dropdowns
-    // SOLUTION: On mobile, we completely bypass Bootstrap's dropdown
-    // and use a full-screen overlay panel instead. This is what native
-    // mobile apps do and it's 100% reliable on WebView.
+    // SOLUTION: On mobile, we intercept the toggle click BEFORE Bootstrap,
+    // prevent Bootstrap from opening its dropdown, and show a full-screen
+    // overlay panel instead. On desktop, Bootstrap handles everything natively.
     (function() {
         var panel = document.getElementById('mobileTopbarPanel');
         var panelBackdrop = document.getElementById('mobileTopbarPanelBackdrop');
-        var panelContent = document.getElementById('mobileTopbarPanelContent');
         var panelTitle = document.getElementById('mobileTopbarPanelTitle');
         var panelBody = document.getElementById('mobileTopbarPanelBody');
         var panelClose = document.getElementById('mobileTopbarPanelClose');
@@ -1685,14 +1684,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!panel) return;
 
         function isMobile() {
-            return window.innerWidth <= 768;
+            // Use multiple signals: narrow viewport OR touch-primary device OR WebView
+            var hasTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            var isNarrowViewport = window.innerWidth <= 768;
+            var isWebView = /wv|android.*browser/i.test(navigator.userAgent) && hasTouchScreen;
+            return isNarrowViewport || isWebView;
         }
 
         function closePanel() {
             panel.style.display = 'none';
             panel.classList.remove('show');
             document.body.style.overflow = '';
-            // Restore bottom nav
             var bottomNav = document.getElementById('mobileBottomNav');
             if (bottomNav) bottomNav.style.display = '';
         }
@@ -1701,11 +1703,9 @@ document.addEventListener('DOMContentLoaded', function() {
             panelTitle.textContent = title;
             panelBody.innerHTML = contentHtml;
             panel.style.display = 'block';
-            // Force reflow then add show class for animation
-            void panel.offsetHeight;
+            void panel.offsetHeight; // Force reflow
             panel.classList.add('show');
             document.body.style.overflow = 'hidden';
-            // Hide bottom nav while panel is open
             var bottomNav = document.getElementById('mobileBottomNav');
             if (bottomNav) bottomNav.style.display = 'none';
         }
@@ -1713,112 +1713,97 @@ document.addEventListener('DOMContentLoaded', function() {
         // Close panel events
         panelClose.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
             closePanel();
         });
         panelBackdrop.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            closePanel();
-        });
-        panelBackdrop.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
             closePanel();
         });
 
-        // ===== Handle each topbar dropdown =====
-        // We use both click AND touchend handlers because:
-        // - Desktop browsers fire click
-        // - Some Android WebViews only fire touchend
-        // - Some fire both, so we use a flag to prevent double-firing
+        // ===== MOBILE: Intercept Bootstrap dropdown toggles =====
+        // We listen in the CAPTURING phase (true) so we can intercept
+        // BEFORE Bootstrap's listener (which is in bubbling phase).
+        // On mobile only, we stop the event and show the overlay panel.
+        // On desktop, we let the event through to Bootstrap.
+
+        var dropdownConfig = [
+            { id: 'langDropdown', toggleSel: '.topbar-icon-toggle', menuSel: '.dropdown-menu', title: '{{ __("app.language") }}' },
+            { id: 'notifDropdown', toggleSel: '.topbar-icon-toggle', menuSel: '.dropdown-menu', title: '{{ __("app.notifications") }}' },
+            { id: 'userDropdown', toggleSel: '.topbar-avatar', menuSel: '.dropdown-menu', title: '{{ Auth::user()->name }}' }
+        ];
 
         var panelJustOpened = false;
 
-        function handleDropdownToggle(e, title, menuSelector) {
-            if (!isMobile()) return; // Let Bootstrap handle on desktop
-            if (panelJustOpened) return; // Prevent double-fire
+        dropdownConfig.forEach(function(cfg) {
+            var toggle = document.querySelector('#' + cfg.id + ' ' + cfg.toggleSel);
+            if (!toggle) return;
 
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+            // Intercept click in capturing phase — runs BEFORE Bootstrap
+            toggle.addEventListener('click', function(e) {
+                if (!isMobile()) return; // Let Bootstrap handle on desktop
 
-            var menu = document.querySelector(menuSelector);
-            if (menu) {
-                panelJustOpened = true;
-                openPanel(title, menu.innerHTML);
-                // Reset flag after 300ms to allow reopening
-                setTimeout(function() { panelJustOpened = false; }, 300);
-            }
-        }
+                // Prevent Bootstrap from opening its dropdown
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
 
-        // Language dropdown
-        var langToggle = document.querySelector('#langDropdown .topbar-icon-toggle');
-        if (langToggle) {
-            langToggle.addEventListener('click', function(e) {
-                handleDropdownToggle(e, '{{ __("app.language") }}', '#langDropdown .dropdown-menu');
-            }, true);
-            langToggle.addEventListener('touchend', function(e) {
+                if (panelJustOpened) return;
+
+                var menu = document.querySelector('#' + cfg.id + ' ' + cfg.menuSel);
+                if (menu) {
+                    panelJustOpened = true;
+                    // Close any open Bootstrap dropdown first
+                    var bsInstance = bootstrap.Dropdown.getInstance(toggle);
+                    if (bsInstance) bsInstance.hide();
+                    openPanel(cfg.title, menu.innerHTML);
+                    setTimeout(function() { panelJustOpened = false; }, 300);
+                }
+            }, true); // capturing phase
+
+            // Also handle touchend for WebViews that don't fire click properly
+            // Only intercept if the device is truly touch-primary AND mobile
+            toggle.addEventListener('touchend', function(e) {
                 if (!isMobile()) return;
-                // Only fire if click didn't already fire (detail=0 means touch-only)
-                if (e.detail === 0) {
-                    handleDropdownToggle(e, '{{ __("app.language") }}', '#langDropdown .dropdown-menu');
+                // Only intercept if click didn't already fire (detail=0 = touch-only)
+                // AND the screen is narrow (prevents accidental intercept on tablets)
+                if (e.detail === 0 && window.innerWidth <= 768) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    if (panelJustOpened) return;
+
+                    var menu = document.querySelector('#' + cfg.id + ' ' + cfg.menuSel);
+                    if (menu) {
+                        panelJustOpened = true;
+                        var bsInstance = bootstrap.Dropdown.getInstance(toggle);
+                        if (bsInstance) bsInstance.hide();
+                        openPanel(cfg.title, menu.innerHTML);
+                        setTimeout(function() { panelJustOpened = false; }, 300);
+                    }
                 }
             }, { passive: false });
-        }
-
-        // Notifications dropdown
-        var notifToggle = document.querySelector('#notifDropdown .topbar-icon-toggle');
-        if (notifToggle) {
-            notifToggle.addEventListener('click', function(e) {
-                handleDropdownToggle(e, '{{ __("app.notifications") }}', '#notifDropdown .dropdown-menu');
-            }, true);
-            notifToggle.addEventListener('touchend', function(e) {
-                if (!isMobile()) return;
-                if (e.detail === 0) {
-                    handleDropdownToggle(e, '{{ __("app.notifications") }}', '#notifDropdown .dropdown-menu');
-                }
-            }, { passive: false });
-        }
-
-        // User profile dropdown
-        var userToggle = document.querySelector('#userDropdown .topbar-avatar');
-        if (userToggle) {
-            userToggle.addEventListener('click', function(e) {
-                handleDropdownToggle(e, '{{ Auth::user()->name }}', '#userDropdown .dropdown-menu');
-            }, true);
-            userToggle.addEventListener('touchend', function(e) {
-                if (!isMobile()) return;
-                if (e.detail === 0) {
-                    handleDropdownToggle(e, '{{ Auth::user()->name }}', '#userDropdown .dropdown-menu');
-                }
-            }, { passive: false });
-        }
+        });
 
         // Close panel on resize to desktop
         window.addEventListener('resize', function() {
             if (!isMobile()) closePanel();
         });
 
-        // ===== DESKTOP: Initialize Bootstrap dropdowns manually =====
-        // Since we removed data-bs-toggle="dropdown", we need to init them on desktop
-        function initDesktopDropdowns() {
-            // Destroy any existing instances first
-            document.querySelectorAll('#langDropdown, #notifDropdown, #userDropdown').forEach(function(dd) {
-                var toggle = dd.querySelector('.topbar-icon-toggle, .topbar-avatar');
-                if (toggle) {
-                    var instance = bootstrap.Dropdown.getInstance(toggle);
-                    if (instance) instance.dispose();
-                    // Only create on desktop
-                    if (!isMobile()) {
-                        new bootstrap.Dropdown(toggle);
+        // ===== DESKTOP: Ensure Bootstrap dropdowns close when clicking outside =====
+        // Use Bootstrap's Dropdown API instead of manually toggling .show class
+        document.addEventListener('click', function(e) {
+            if (isMobile()) return;
+            // If click is outside all dropdowns, close any open ones using Bootstrap API
+            var isInsideDropdown = e.target.closest('#langDropdown, #notifDropdown, #userDropdown');
+            if (!isInsideDropdown) {
+                ['langDropdown', 'notifDropdown', 'userDropdown'].forEach(function(id) {
+                    var dropdownEl = document.querySelector('#' + id + ' [data-bs-toggle="dropdown"]');
+                    if (dropdownEl) {
+                        var bsInstance = bootstrap.Dropdown.getInstance(dropdownEl);
+                        if (bsInstance) bsInstance.hide();
                     }
-                }
-            });
-        }
-        initDesktopDropdowns();
-        window.addEventListener('resize', function() {
-            initDesktopDropdowns();
+                });
+            }
         });
     })();
 })();
@@ -1882,6 +1867,78 @@ function toggleMobileMenu() {
             setTimeout(function() { swipeIndicator.style.display = 'none'; }, 300);
         }, 3000);
     }
+})();
+
+// ===== PULL-TO-REFRESH for Mobile =====
+(function() {
+    var pullIndicator = document.getElementById('pullToRefreshIndicator');
+    if (!pullIndicator) {
+        // Create pull-to-refresh indicator element
+        pullIndicator = document.createElement('div');
+        pullIndicator.id = 'pullToRefreshIndicator';
+        pullIndicator.style.cssText = 'position:fixed;top:0;left:0;right:0;height:0;background:linear-gradient(135deg,#4361ee,#3a0ca3);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;z-index:9999;transition:height 0.2s ease;overflow:hidden;pointer-events:none;';
+        pullIndicator.innerHTML = '<i class="fas fa-sync-alt" style="margin-right:6px;"></i> <span id="ptrText">Pull to refresh</span>';
+        document.body.appendChild(pullIndicator);
+    }
+
+    var ptrText = document.getElementById('ptrText');
+    var startY = 0;
+    var pulling = false;
+    var threshold = 80;
+    var isScrolledToTop = function() {
+        return window.scrollY <= 0;
+    };
+
+    document.addEventListener('touchstart', function(e) {
+        if (window.innerWidth >= 769) return;
+        if (!isScrolledToTop()) return;
+        startY = e.touches[0].clientY;
+        pulling = false;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+        if (window.innerWidth >= 769) return;
+        if (startY === 0) return;
+        if (!isScrolledToTop() && !pulling) return;
+
+        var currentY = e.touches[0].clientY;
+        var diff = currentY - startY;
+
+        if (diff > 10 && isScrolledToTop()) {
+            pulling = true;
+            var height = Math.min(diff * 0.5, threshold);
+            pullIndicator.style.height = height + 'px';
+
+            if (height >= threshold) {
+                ptrText.textContent = 'Release to refresh';
+                pullIndicator.querySelector('i').classList.add('fa-spin');
+            } else {
+                ptrText.textContent = 'Pull to refresh';
+                pullIndicator.querySelector('i').classList.remove('fa-spin');
+            }
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+        if (window.innerWidth >= 769 || !pulling) return;
+
+        var currentHeight = parseInt(pullIndicator.style.height) || 0;
+
+        if (currentHeight >= threshold) {
+            // Trigger refresh
+            ptrText.textContent = 'Refreshing...';
+            pullIndicator.style.height = '40px';
+            pullIndicator.querySelector('i').classList.add('fa-spin');
+            setTimeout(function() {
+                window.location.reload();
+            }, 500);
+        } else {
+            // Cancel
+            pullIndicator.style.height = '0';
+        }
+        pulling = false;
+        startY = 0;
+    }, { passive: true });
 })();
 </script>
 <style>

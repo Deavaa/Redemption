@@ -12,6 +12,7 @@ class SettingsSeeder extends Seeder
         $settings = [
             // General
             ['key' => 'school_name', 'value' => 'School of Redemption', 'group' => 'general', 'type' => 'text', 'description' => 'The official name of the school displayed on the website'],
+            ['key' => 'school_name_am', 'value' => 'ስኩል ኦፍ ሪደምሽን', 'group' => 'general', 'type' => 'text', 'description' => 'School name in Amharic (የትምህርት ቤት ስም በአማርኛ)'],
             ['key' => 'school_tagline', 'value' => 'Excellence in Education', 'group' => 'general', 'type' => 'text', 'description' => 'School tagline or motto'],
             ['key' => 'school_description', 'value' => 'At School of Redemption, we nurture each student\'s potential through excellence in education, character development, and innovative learning methodologies that prepare them for tomorrow\'s challenges.', 'group' => 'general', 'type' => 'textarea', 'description' => 'Brief description for homepage and SEO'],
             ['key' => 'school_logo', 'value' => '', 'group' => 'appearance', 'type' => 'file', 'description' => 'School logo image (upload via Settings page)'],

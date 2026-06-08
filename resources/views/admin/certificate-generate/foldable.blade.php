@@ -134,6 +134,7 @@
     @php
         $logoUrl = \App\Models\Setting::getLogoUrl();
         $schoolName = \App\Models\Setting::get('school_name', 'School of Redemption');
+        $schoolNameAm = \App\Models\Setting::get('school_name_am', 'ስኩል ኦፍ ሪደምሽን');
 
         // Get ALL subjects assigned to this student's class
         $classId = $student->class_id ?? $student->classroom_id ?? null;
@@ -299,7 +300,7 @@
             <div class="front-top" style="position:relative;z-index:1;">
                 @if($logoUrl)<img src="{{ $logoUrl }}" class="front-logo" alt="Logo">@endif
                 <div class="front-school-name">{{ strtoupper($schoolName) }}</div>
-                <div class="front-school-name-am">የትምህርት ቤቱ ስም</div>
+                <div class="front-school-name-am">{{ $schoolNameAm }}</div>
                 <div class="front-line"></div>
                 <div class="front-academic-year">{{ $student->academicYear->name ?? date('Y') }}</div>
                 <div class="front-cert-title">Student Report Card</div>

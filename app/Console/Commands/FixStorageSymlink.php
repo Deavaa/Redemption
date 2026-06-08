@@ -61,7 +61,28 @@ class FixStorageSymlink extends Command
         // Fallback: copy files
         $this->info('Falling back to file copy...');
         if (!is_dir($publicStorage)) {
-            mkdir($publicStorage, 0755, true);
+            try {
+                // Ensure the parent directory (public/) exists and is writable
+                $parentDir = dirname($publicStorage);
+                if (!is_dir($parentDir)) {
+                    $this->warn('Parent directory does not exist: ' . $parentDir);
+                    $this->info('Attempting to create parent directory...');
+                    mkdir($parentDir, 0755, true);
+                }
+                if (!is_writable($parentDir)) {
+                    $this->error('Parent directory is not writable: ' . $parentDir);
+                    $this->warn('Try: chmod 755 ' . $parentDir . ' or run as administrator.');
+                    return 1;
+                }
+                mkdir($publicStorage, 0755, true);
+                $this->info('Created directory: ' . $publicStorage);
+            } catch (\Exception $e) {
+                $this->error('Cannot create directory: ' . $publicStorage);
+                $this->error('Error: ' . $e->getMessage());
+                $this->warn('Try creating it manually: mkdir -p ' . $publicStorage);
+                $this->warn('On Windows/XAMPP, ensure the public/ folder exists and Apache has write access.');
+                return 1;
+            }
         }
         $copied = $this->copyDirectory($storageAppPublic, $publicStorage);
         $this->info("✓ Copied {$copied} files to public/storage.");

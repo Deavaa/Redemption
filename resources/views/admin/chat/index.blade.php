@@ -87,6 +87,11 @@
     </div>
 </div>
 
+{{-- Floating New Chat Button for Mobile --}}
+<a href="#" class="chat-fab-new" onclick="event.preventDefault(); var modal = new bootstrap.Modal(document.getElementById('newChatModal')); modal.show();">
+    <i class="fas fa-plus"></i>
+</a>
+
 {{-- New Conversation Modal --}}
 <div class="modal fade" id="newChatModal" tabindex="-1">
     <div class="modal-dialog">
@@ -198,9 +203,37 @@
 .chat-empty i { font-size: 2.5rem; margin-bottom: 0.5rem; }
 @media (max-width: 768px) {
     .chat-page-header { display: none !important; }
-    .chat-layout { grid-template-columns: 1fr; height: calc(100vh - 56px - 56px - env(safe-area-inset-bottom, 0px)); min-height: 300px; }
+    .chat-layout { grid-template-columns: 1fr; height: calc(100dvh - 56px - 56px - 5vh); min-height: 300px; }
     .chat-sidebar { max-height: none; flex: 1; }
     .chat-content { display: none; }
+    /* Floating Action Button for New Chat */
+    .chat-fab-new {
+        display: flex;
+        position: fixed;
+        bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+        right: 16px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: #fff;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4);
+        z-index: 900;
+        text-decoration: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .chat-fab-new:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 24px rgba(67, 97, 238, 0.5);
+        color: #fff;
+    }
+}
+/* Hide FAB on desktop */
+@media (min-width: 769px) {
+    .chat-fab-new { display: none; }
 }
 </style>
 @endpush

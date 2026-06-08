@@ -135,15 +135,27 @@ class SettingController extends Controller
             $sourcePath = Storage::disk('public')->path($relativePath);
             $destinationPath = public_path('storage/' . $relativePath);
 
+            // Check if public/storage is a symlink — if so, the file is already accessible via the symlink
+            $publicStorage = public_path('storage');
+            if (is_link($publicStorage)) {
+                // Symlink exists and works — no need to copy, the symlink handles it
+                return;
+            }
+
             // Ensure the destination directory exists
             $destinationDir = dirname($destinationPath);
             if (!is_dir($destinationDir)) {
+                // Check if public/storage exists as a file (not directory) — remove it
+                if (file_exists($publicStorage) && !is_dir($publicStorage)) {
+                    @unlink($publicStorage);
+                }
                 mkdir($destinationDir, 0755, true);
             }
 
             // Copy the file if the source exists
             if (file_exists($sourcePath)) {
                 copy($sourcePath, $destinationPath);
+                chmod($destinationPath, 0644);
             }
         } catch (\Exception $e) {
             \Log::warning('Failed to copy logo to public storage fallback: ' . $e->getMessage());

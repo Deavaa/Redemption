@@ -244,16 +244,18 @@
     }
     .admin-main:has(.chat-layout)::after { display: none !important; }
     .modern-page.chat-full-bleed {
-        height: calc(100dvh - 56px - 56px);
-        overflow: hidden;
+        height: auto;
+        min-height: calc(100dvh - 56px);
+        overflow: visible;
     }
     .chat-layout {
         grid-template-columns: 1fr;
-        height: 100%;
-        min-height: 0;
+        height: calc(100dvh - 56px - 5vh - 56px);
+        min-height: 300px;
         border-radius: 0;
         border: none;
         box-shadow: none;
+        margin-bottom: 5vh;
     }
     .chat-sidebar { display: none; }
     .chat-mobile-back { display: flex; }
@@ -282,6 +284,9 @@
         flex-shrink: 0;
         border-top: 1px solid #f0f0f0;
         background: #fff;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
     }
 }
 </style>

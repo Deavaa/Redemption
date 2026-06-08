@@ -2,7 +2,7 @@
 // Provides offline capability, caching, and push notification support
 // Performance-optimized with stale-while-revalidate for static assets
 
-const CACHE_NAME = 'redemption-v3';
+const CACHE_NAME = 'redemption-v4';
 const STATIC_ASSETS = [
     './',
     './login',

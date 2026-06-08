@@ -195,16 +195,25 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Throwable $e) {}
 
         // ============================================================
-        // AUTO-CREATE sessions table if it doesn't exist (runs ONCE)
+        // SESSION DRIVER: Auto-create sessions table + DB health check
         // ============================================================
         // On cPanel/ByetHost, the user may not have run php artisan migrate.
-        // Without the sessions table, the database session driver silently
-        // fails, causing "session expired" loops. We auto-create it here.
-        // Uses a file flag to only check once instead of every request.
+        // Without the sessions table, the database session driver fails,
+        // causing "connection refused" or "session expired" errors.
+        //
+        // We do TWO things here:
+        // 1. AUTO-CREATE the sessions table if it doesn't exist (runs once,
+        //    tracked by a flag file).
+        // 2. CHECK DB CONNECTIVITY with a short file-based cache (1-minute
+        //    TTL). If the DB is unreachable, fall back to file sessions for
+        //    the next minute. This handles intermittent DB outages on shared
+        //    hosting where MySQL connections get dropped.
         // ============================================================
         try {
             $flagFile = storage_path('framework/sessions_table_created');
+
             if (!file_exists($flagFile)) {
+                // First run: try to create the sessions table
                 if (!\Schema::hasTable('sessions')) {
                     \Schema::create('sessions', function ($table) {
                         $table->string('id')->primary();
@@ -217,9 +226,36 @@ class AppServiceProvider extends ServiceProvider
                 }
                 @file_put_contents($flagFile, date('Y-m-d H:i:s'));
             }
+
+            // DB health check with 1-minute file cache.
+            // On shared hosting, MySQL can become temporarily unavailable
+            // (connection limit reached, server restart, etc.). If we detect
+            // this, switch to file sessions until the DB comes back.
+            $healthFile = storage_path('framework/db_health_' . date('YmdHi')); // changes every minute
+            if (!file_exists($healthFile)) {
+                try {
+                    \DB::connection()->getPdo();
+                    // DB is healthy — write health file so we skip the check
+                    // for the rest of this minute
+                    @file_put_contents($healthFile, 'ok');
+                } catch (\Throwable $dbError) {
+                    // DB is down — switch to file sessions
+                    \Log::warning('DB health check failed, falling back to file sessions: ' . $dbError->getMessage());
+                    config(['session.driver' => 'file']);
+
+                    // Clean up stale health files from previous minutes
+                    try {
+                        $staleFiles = glob(storage_path('framework/db_health_*'));
+                        foreach ($staleFiles as $f) {
+                            @unlink($f);
+                        }
+                    } catch (\Throwable $e) {}
+                }
+            }
         } catch (\Throwable $e) {
             // If we can't create the table (no DB connection, etc.),
             // fall back to file driver for this request
+            \Log::warning('Session setup failed, falling back to file driver: ' . $e->getMessage());
             try {
                 config(['session.driver' => 'file']);
             } catch (\Throwable $e2) {
