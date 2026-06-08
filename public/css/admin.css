@@ -1420,9 +1420,10 @@ html, body {
         -webkit-tap-highlight-color: transparent;
     }
 
-    /* ===== DROPDOWN FIX: render above bottom nav on mobile ===== */
-    /* The bottom nav is z-index: 900, so dropdowns must be higher.
-       Using position:fixed breaks them out of any parent overflow/stacking context. */
+    /* ===== DROPDOWN FIX: mobile dropdowns render above bottom nav ===== */
+    /* Bottom nav z-index is 900. Dropdown menus use z-index 9999 when shown.
+       Position:relative on parents so absolute dropdowns anchor correctly.
+       When JS opens a dropdown on mobile, it sets position:fixed inline. */
     .admin-topbar {
         z-index: 1200 !important;
         overflow: visible !important;
@@ -1434,31 +1435,23 @@ html, body {
     }
     .topbar-icon-btn.dropdown,
     .topbar-dropdown.dropdown {
-        position: static !important;
+        position: relative !important;
         overflow: visible !important;
     }
-    /* All dropdown menus on mobile: fixed position so they render above everything */
+    /* Dropdown menus on mobile: higher z-index to appear above bottom nav */
     .topbar-right .dropdown-menu {
-        position: fixed !important;
         z-index: 9999 !important;
-        min-width: 200px;
-        max-width: 90vw;
     }
     .topbar-notif-dropdown {
         width: 300px !important;
         max-width: 90vw !important;
         max-height: 50vh !important;
-        position: fixed !important;
         z-index: 9999 !important;
     }
     .topbar-icon-dropdown {
-        position: fixed !important;
         z-index: 9999 !important;
     }
     .topbar-dropdown .dropdown-menu {
-        position: fixed !important;
-        right: auto !important;
-        left: auto !important;
         z-index: 9999 !important;
     }
     /* Dropdown overlay backdrop to close on tap outside */
@@ -1467,6 +1460,10 @@ html, body {
         inset: 0;
         z-index: 9998;
         background: transparent;
+        display: none;
+    }
+    .dropdown-mobile-backdrop.show {
+        display: block;
     }
 
     /* Improve topbar on very small screens */
