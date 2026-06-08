@@ -90,10 +90,12 @@ class StudentController extends Controller
 
         // Load filter dropdown data
         $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         $sections = collect();
         if ($classFilter) {
-            $sections = Section::where('class_id', $classFilter)->orderBy('name')->get();
+            $sections = Section::where('class_id', $classFilter)
+                ->when($branchScope, fn($q) => $q->whereHas('classRoom', fn($cq) => $cq->where('branch_id', $branchScope)))
+                ->orderBy('name')->get();
         }
 
         return view('admin.Student.index', compact(
@@ -312,11 +314,12 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
-        $classrooms = $this->loadClassroomsWithFallback(null);
+        $branchScope = request()->attributes->get('branch_scope');
+        $classrooms = $this->loadClassroomsWithFallback($branchScope);
         $parents = ParentModel::orderBy('father_name')->get(['id', \DB::raw('father_name as name'), \DB::raw('father_phone as phone')]);
-        $branches = Branch::all();
+        $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::all();
         $academicYears = AcademicYear::all();
-        $sections = Section::all();
+        $sections = Section::when($branchScope, fn($q) => $q->whereHas('classRoom', fn($cq) => $cq->where('branch_id', $branchScope)))->get();
         if ($academicYears->isEmpty()) {
             AcademicYear::create(['name' => '2024-2025']);
             AcademicYear::create(['name' => '2025-2026']);
@@ -609,8 +612,14 @@ class StudentController extends Controller
      */
     public function inactive(Request $request)
     {
+        $branchScope = $request->attributes->get('branch_scope');
+
         $query = Student::with(['classroom', 'section', 'branch'])
             ->whereIn('status', ['inactive', 'transferred']);
+
+        if ($branchScope) {
+            $query->where('branch_id', $branchScope);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -621,9 +630,13 @@ class StudentController extends Controller
         }
 
         $students = $query->latest()->paginate(20);
-        $totalInactive = Student::where('status', 'inactive')->count();
-        $totalTransferred = Student::where('status', 'transferred')->count();
-        $canBeReadmitted = Student::whereIn('status', ['inactive', 'transferred'])->count();
+
+        $inactiveBaseQuery = Student::whereIn('status', ['inactive', 'transferred']);
+        if ($branchScope) $inactiveBaseQuery->where('branch_id', $branchScope);
+
+        $totalInactive = (clone $inactiveBaseQuery)->where('status', 'inactive')->count();
+        $totalTransferred = (clone $inactiveBaseQuery)->where('status', 'transferred')->count();
+        $canBeReadmitted = $inactiveBaseQuery->count();
 
         return view('admin.Student.inactive', compact('students', 'totalInactive', 'totalTransferred', 'canBeReadmitted'));
     }
@@ -639,7 +652,8 @@ class StudentController extends Controller
         }
 
         $student->load(['classroom', 'section', 'branch']);
-        $classrooms = $this->loadClassroomsWithFallback(null);
+        $branchScope = request()->attributes->get('branch_scope');
+        $classrooms = $this->loadClassroomsWithFallback($branchScope);
         $academicYears = AcademicYear::orderBy('id', 'desc')->get();
         if ($academicYears->isEmpty()) {
             AcademicYear::create(['name' => '2024-2025']);

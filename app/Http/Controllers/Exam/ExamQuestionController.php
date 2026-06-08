@@ -99,10 +99,11 @@ class ExamQuestionController extends Controller
         $revisionCount = (clone $baseQuery)->where('status', 'revision')->count();
 
         // Filter dropdowns
-        $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
-        $exams = Exam::orderByDesc('start_date')->limit(50)->get();
-        $branches = Branch::orderBy('name')->get();
+        $branchScope = $request->attributes->get('branch_scope');
+        $subjects = Subject::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
+        $exams = Exam::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderByDesc('start_date')->limit(50)->get();
+        $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::orderBy('name')->get();
 
         $canManage = $user->role === 'admin'
             || $user->hasRole('branch_principal')
@@ -123,13 +124,14 @@ class ExamQuestionController extends Controller
     public function create()
     {
         $user = auth()->user();
+        $branchScope = request()->attributes->get('branch_scope');
 
-        $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
-        $exams = Exam::orderByDesc('start_date')->get();
+        $subjects = Subject::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
+        $exams = Exam::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderByDesc('start_date')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $terms = Term::orderBy('id')->get();
-        $branches = Branch::orderBy('name')->get();
+        $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::orderBy('name')->get();
         $sections = collect();
 
         // Get teacher profile for auto-selection
@@ -272,12 +274,13 @@ class ExamQuestionController extends Controller
 
         $exam_question->load(['teacher', 'subject', 'classRoom', 'section', 'exam', 'academicYear', 'term', 'branch']);
 
-        $subjects = Subject::orderBy('name')->get();
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
-        $exams = Exam::orderByDesc('start_date')->get();
+        $branchScope = request()->attributes->get('branch_scope');
+        $subjects = Subject::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('name')->get();
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
+        $exams = Exam::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderByDesc('start_date')->get();
         $academicYears = AcademicYear::orderByDesc('id')->get();
         $terms = Term::orderBy('id')->get();
-        $branches = Branch::orderBy('name')->get();
+        $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::orderBy('name')->get();
         $sections = $exam_question->classRoom ? $exam_question->classRoom->sections : collect();
 
         $teacherProfile = $user->teacherProfile;

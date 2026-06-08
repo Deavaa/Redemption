@@ -13,9 +13,13 @@ class ClassroomController extends Controller
 {
     public function index()
     {
-        $classes = ClassRoom::with(["academicYear", "sections"])->orderBy("numeric_name")->orderBy("name")->paginate(10);
-        $totalClasses = ClassRoom::count();
-        $totalSections = \App\Models\Section::count();
+        $branchScope = request()->attributes->get('branch_scope');
+
+        $classes = ClassRoom::with(["academicYear", "sections"])
+            ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderBy("numeric_name")->orderBy("name")->paginate(10);
+        $totalClasses = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->count();
+        $totalSections = \App\Models\Section::when($branchScope, fn($q) => $q->whereHas('classRoom', fn($cq) => $cq->where('branch_id', $branchScope)))->count();
         $activeAcademicYear = \App\Models\AcademicYear::latest()->first();
 
         return view("admin.Classroom.index", compact("classes", "totalClasses", "totalSections", "activeAcademicYear"));
@@ -23,9 +27,10 @@ class ClassroomController extends Controller
 
     public function create()
     {
+        $branchScope = request()->attributes->get('branch_scope');
         $academicYears = AcademicYear::orderBy('name')->get();
-        $teachers = Teacher::orderBy('full_name')->get();
-        $branches = Branch::orderBy('name')->get();
+        $teachers = Teacher::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('full_name')->get();
+        $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::orderBy('name')->get();
         return view('admin.Classroom.create', compact('academicYears','teachers','branches'));
     }
 
@@ -68,10 +73,11 @@ class ClassroomController extends Controller
 
     public function edit($id)
     {
+        $branchScope = request()->attributes->get('branch_scope');
         $data = ClassRoom::with(['sections.teacher','academicYear','branch'])->findOrFail($id);
         $academicYears = AcademicYear::orderBy('name')->get();
-        $teachers = Teacher::orderBy('full_name')->get();
-        $branches = Branch::orderBy('name')->get();
+        $teachers = Teacher::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('full_name')->get();
+        $branches = $branchScope ? Branch::where('id', $branchScope)->get() : Branch::orderBy('name')->get();
 
         // If any section has a teacher_id that no longer exists in
         // the teachers table, clear it to prevent foreign key errors on save.

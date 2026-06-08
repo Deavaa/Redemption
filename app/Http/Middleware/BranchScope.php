@@ -24,7 +24,7 @@ class BranchScope
     /**
      * Roles that are branch-scoped (can only see their branch data).
      */
-    protected const BRANCH_SCOPED_ROLES = ['branch_principal', 'finance', 'hr', 'cashier', 'librarian', 'registrar'];
+    protected const BRANCH_SCOPED_ROLES = ['branch_principal', 'finance', 'hr', 'cashier', 'librarian', 'registrar', 'janitor', 'guard', 'nurse', 'secretary'];
 
     /**
      * Routes that branch principals CANNOT access (academic setup managed by admin/GM only).

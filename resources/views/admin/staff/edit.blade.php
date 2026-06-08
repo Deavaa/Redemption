@@ -396,7 +396,11 @@ document.addEventListener('DOMContentLoaded', function() {
         'hr': 'Manages staff, leaves, payroll, and employee assets',
         'cashier': 'Processes fee payments only',
         'librarian': 'Manages the digital library collection',
-        'staff': 'Basic access with limited permissions'
+        'janitor': 'Building maintenance and cleaning staff',
+        'guard': 'Campus security and access control',
+        'nurse': 'Student and staff health services',
+        'secretary': 'Administrative support and office management',
+        'staff': 'General staff with basic access'
     };
 
     function toggleBranchField() {

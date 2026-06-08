@@ -149,6 +149,10 @@
                                 'hr' => '#e11d48',
                                 'cashier' => '#ea580c',
                                 'librarian' => '#4f46e5',
+                                'janitor' => '#65a30d',
+                                'guard' => '#b45309',
+                                'nurse' => '#db2777',
+                                'secretary' => '#0284c7',
                                 'staff' => '#6b7280',
                             ];
                             $rc = $roleColors[$s->role] ?? '#6b7280';
@@ -227,7 +231,9 @@
                     $roleColors = [
                         'admin' => '#dc2626', 'teacher' => '#4361ee', 'general_manager' => '#7c3aed',
                         'branch_principal' => '#0891b2', 'registrar' => '#059669', 'finance' => '#d97706',
-                        'hr' => '#e11d48', 'cashier' => '#ea580c', 'librarian' => '#4f46e5', 'staff' => '#6b7280',
+                        'hr' => '#e11d48', 'cashier' => '#ea580c', 'librarian' => '#4f46e5',
+                        'janitor' => '#65a30d', 'guard' => '#b45309', 'nurse' => '#db2777', 'secretary' => '#0284c7',
+                        'staff' => '#6b7280',
                     ];
                     $rc = $roleColors[$s->role] ?? '#6b7280';
                 @endphp

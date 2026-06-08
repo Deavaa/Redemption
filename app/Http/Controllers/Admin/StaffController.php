@@ -26,13 +26,17 @@ class StaffController extends Controller
         'hr'                => 'HR Officer',
         'cashier'           => 'Cashier',
         'librarian'         => 'Librarian',
-        'staff'             => 'Staff',
+        'janitor'           => 'Janitor',
+        'guard'             => 'Guard',
+        'nurse'             => 'Nurse',
+        'secretary'         => 'Secretary',
+        'staff'             => 'Staff (Other)',
     ];
 
     /**
      * Roles that require a branch assignment.
      */
-    protected const BRANCH_ROLES = ['branch_principal', 'finance', 'hr', 'cashier', 'librarian', 'registrar'];
+    protected const BRANCH_ROLES = ['branch_principal', 'finance', 'hr', 'cashier', 'librarian', 'registrar', 'janitor', 'guard', 'nurse', 'secretary'];
 
     /**
      * Roles that ONLY admins can create/edit/delete.
@@ -50,7 +54,11 @@ class StaffController extends Controller
         'registrar'         => 'Registrar',
         'cashier'           => 'Cashier',
         'librarian'         => 'Librarian',
-        'staff'             => 'Staff',
+        'janitor'           => 'Janitor',
+        'guard'             => 'Guard',
+        'nurse'             => 'Nurse',
+        'secretary'         => 'Secretary',
+        'staff'             => 'Staff (Other)',
     ];
 
     public function index()
