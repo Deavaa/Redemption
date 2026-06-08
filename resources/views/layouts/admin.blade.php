@@ -237,7 +237,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
-    <style>html,body{overflow-x:hidden;max-width:100vw;width:100%;}</style>
+    <style>html,body{overflow-x:hidden!important;max-width:100vw!important;width:100%!important;}*{box-sizing:border-box;}.admin-wrapper,.admin-main,.admin-topbar,.admin-content{max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important;}</style>
     @stack('styles')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1258,11 +1258,11 @@
                 </div>
 
                 @if(in_array($menuLevel, ['full', 'general_manager']))
-                <a href="{{ route('admin.settings.index') }}" class="topbar-icon-btn topbar-icon-link" title="{{ __('app.settings') ?? 'Settings' }}">
+                <a href="{{ route('admin.settings.index') }}" class="topbar-icon-btn topbar-icon-link hide-mobile-icon" title="{{ __('app.settings') ?? 'Settings' }}">
                     <i class="fas fa-cog"></i>
                 </a>
                 @endif
-                <a href="{{ url('/') }}" class="topbar-icon-btn topbar-icon-link" target="_blank" title="{{ __('app.view_website') }}">
+                <a href="{{ url('/') }}" class="topbar-icon-btn topbar-icon-link hide-mobile-icon" target="_blank" title="{{ __('app.view_website') }}">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
                 <div class="topbar-dropdown dropdown">
@@ -1559,11 +1559,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.getElementById('sidebarToggle');
     const isMobile = () => window.innerWidth < 768;
 
+    var _sidebarJustOpened = false;
     function showSidebar(show) {
         if (!sidebar) return;
         if (show) {
             sidebar.classList.add('show');
             sidebar.removeAttribute('style');
+            _sidebarJustOpened = true;
+            // Prevent backdrop from immediately closing sidebar on same touch
+            setTimeout(function() { _sidebarJustOpened = false; }, 400);
         } else {
             sidebar.classList.remove('show');
         }
@@ -1592,7 +1596,11 @@ document.addEventListener('DOMContentLoaded', function() {
             showSidebar(!sidebar.classList.contains('show'));
         });
     }
-    if (backdrop) backdrop.addEventListener('click', () => showSidebar(false));
+    if (backdrop) backdrop.addEventListener('click', function(e) {
+        // Ignore click if sidebar was just opened (prevents auto-close from same touch)
+        if (_sidebarJustOpened) return;
+        showSidebar(false);
+    });
 
     // Close sidebar on non-submenu link click (mobile)
     document.querySelectorAll('.sidebar-menu a').forEach(link => {

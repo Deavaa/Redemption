@@ -881,16 +881,20 @@ html, body {
 
     /* Topbar mobile */
     .admin-topbar {
-        padding: 0 12px;
+        padding: 0 8px;
         height: 52px;
-        max-width: 100% !important;
-        width: 100% !important;
+        max-width: 100vw !important;
+        width: 100vw !important;
         box-sizing: border-box !important;
         overflow: visible !important;
         z-index: 1200;
+        position: sticky;
+        top: 0;
+        left: 0;
+        right: 0;
     }
     .topbar-breadcrumb { display: none; }
-    .topbar-left { gap: 8px; min-width: 0; }
+    .topbar-left { gap: 4px; min-width: 0; flex-shrink: 0; }
     .sidebar-toggle {
         width: 40px;
         height: 40px;
@@ -901,15 +905,21 @@ html, body {
         border-radius: var(--radius-sm);
         flex-shrink: 0;
     }
-    .topbar-right { gap: 4px; flex-shrink: 0; }
+    .topbar-right { gap: 2px; flex-shrink: 1; min-width: 0; overflow: visible !important; }
     .topbar-link,
     .topbar-icon-btn {
-        width: 38px;
-        height: 38px;
-    }
-    .topbar-avatar {
         width: 36px;
         height: 36px;
+        flex-shrink: 0;
+    }
+    .topbar-avatar {
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+    }
+    /* Hide settings and external link icons on mobile to prevent overflow */
+    .topbar-icon-link.hide-mobile-icon {
+        display: none !important;
     }
 
     /* Content area */
@@ -1191,8 +1201,10 @@ html, body {
     }
 
     /* Topbar adjustments */
-    .admin-topbar { padding: 0 10px; }
-    .topbar-right .topbar-icon-btn.hide-on-small { display: none; }
+    .admin-topbar { padding: 0 6px; }
+    .topbar-right .topbar-icon-btn.hide-on-small { display: none !important; }
+    .topbar-icon-link.hide-mobile-icon { display: none !important; }
+    .topbar-right { gap: 1px; }
 
     /* Better button spacing */
     .btn-modern {
