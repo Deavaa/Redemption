@@ -77,7 +77,7 @@ class TeamMemberController extends Controller
 
     /**
      * Copy a file from storage/app/public/ to public/storage/ as a fallback.
-     * This ensures images are accessible even when the symlink doesn't exist (XAMPP).
+     * This ensures images are accessible even when the symlink doesn't exist (XAMPP/cPanel).
      */
     private function copyToPublicStorage($relativePath)
     {
@@ -92,6 +92,8 @@ class TeamMemberController extends Controller
 
             if (file_exists($sourcePath)) {
                 copy($sourcePath, $destinationPath);
+                // Ensure the file is readable by web server
+                chmod($destinationPath, 0644);
             }
         } catch (\Exception $e) {
             \Log::warning('Failed to copy team photo to public storage fallback: ' . $e->getMessage());

@@ -23,7 +23,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.id-card-generate.generate') }}" target="_blank" id="idCardForm">
+    <form method="POST" action="{{ route('admin.id-card-generate.generate') }}" id="idCardForm">
         @csrf
 
         {{-- Filter: Class & Section (horizontal) --}}

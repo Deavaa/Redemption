@@ -84,6 +84,7 @@ class Setting extends Model
                     mkdir($destinationDir, 0755, true);
                 }
                 copy($sourcePath, $destinationPath);
+                chmod($destinationPath, 0644);
             }
         } catch (\Throwable $e) {
             \Log::warning('Setting::ensurePublicCopy failed for "' . $relativePath . '": ' . $e->getMessage());

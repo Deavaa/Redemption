@@ -111,7 +111,8 @@
                             <td>
                                 <div class="modern-cell-title">
                                     @if($item->photo)
-                                        <img src="{{ asset('storage/' . $item->photo) }}" alt="{{ $item->name }}" class="modern-avatar-sm" style="vertical-align:middle;margin-right:6px;border-radius:8px;object-fit:cover;">
+                                        <img src="{{ asset('storage/' . $item->photo) }}" alt="{{ $item->name }}" class="modern-avatar-sm" style="vertical-align:middle;margin-right:6px;border-radius:8px;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+                                        <span class="modern-avatar-placeholder" style="width:32px;height:32px;font-size:0.75rem;display:none;vertical-align:middle;margin-right:6px;">{{ strtoupper(substr($item->name ?? '?', 0, 1)) }}</span>
                                     @else
                                         <span class="modern-avatar-placeholder" style="width:32px;height:32px;font-size:0.75rem;display:inline-flex;vertical-align:middle;margin-right:6px;">{{ strtoupper(substr($item->name ?? '?', 0, 1)) }}</span>
                                     @endif

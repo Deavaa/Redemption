@@ -23,7 +23,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.certificate-generate.generate') }}" target="_blank" id="certGenForm">
+    <form method="POST" action="{{ route('admin.certificate-generate.generate') }}" id="certGenForm">
         @csrf
 
         {{-- Step 1: Select Class --}}

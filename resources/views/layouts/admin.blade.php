@@ -1291,20 +1291,6 @@
             </div>
         </nav>
 
-        {{-- Mobile Topbar Overlay Panel — replaces Bootstrap dropdown on mobile --}}
-        <div id="mobileTopbarPanel" class="mobile-topbar-panel" style="display:none;">
-            <div class="mobile-topbar-panel-backdrop" id="mobileTopbarPanelBackdrop"></div>
-            <div class="mobile-topbar-panel-content" id="mobileTopbarPanelContent">
-                <div class="mobile-topbar-panel-header">
-                    <span id="mobileTopbarPanelTitle">Menu</span>
-                    <button type="button" class="mobile-topbar-panel-close" id="mobileTopbarPanelClose">&times;</button>
-                </div>
-                <div class="mobile-topbar-panel-body" id="mobileTopbarPanelBody">
-                    {{-- Dropdown content gets injected here dynamically --}}
-                </div>
-            </div>
-        </div>
-
         <div class="admin-content">
             @if(session('success'))
                 <div class="global-alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
@@ -1320,6 +1306,20 @@
             @endif
 
             @yield('content')
+        </div>
+    </div>
+</div>
+
+{{-- Mobile Topbar Overlay Panel — OUTSIDE admin-wrapper to ensure proper fixed positioning --}}
+<div id="mobileTopbarPanel" class="mobile-topbar-panel" style="display:none;">
+    <div class="mobile-topbar-panel-backdrop" id="mobileTopbarPanelBackdrop"></div>
+    <div class="mobile-topbar-panel-content" id="mobileTopbarPanelContent">
+        <div class="mobile-topbar-panel-header">
+            <span id="mobileTopbarPanelTitle">Menu</span>
+            <button type="button" class="mobile-topbar-panel-close" id="mobileTopbarPanelClose">&times;</button>
+        </div>
+        <div class="mobile-topbar-panel-body" id="mobileTopbarPanelBody">
+            {{-- Dropdown content gets injected here dynamically --}}
         </div>
     </div>
 </div>

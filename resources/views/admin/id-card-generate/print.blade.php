@@ -315,7 +315,10 @@
         </defs>
     </svg>
 
-    <div class="no-print"><button onclick="window.print()">{{ __('app.print') ?? 'Print ID Cards' }}</button></div>
+    <div class="no-print" style="display:flex;align-items:center;justify-content:center;gap:12px;margin:20px 0;">
+        <a href="{{ route('admin.id-card-generate.index') }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;border:1px solid #ccc;color:#555;text-decoration:none;font-family:sans-serif;font-size:14px;transition:all 0.2s;">&larr; Back</a>
+        <button onclick="window.print()">{{ __('app.print') ?? 'Print ID Cards' }}</button>
+    </div>
 
     <div class="id-cards-grid">
         @foreach($students as $student)

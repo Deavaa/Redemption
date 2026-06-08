@@ -87,6 +87,7 @@
 </head>
 <body>
 <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Certificate</button>
+<a href="{{ route('admin.certificate-generate.index') }}" style="position:fixed;top:10px;right:130px;z-index:999;background:#555;color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:12px;text-decoration:none;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:all 0.2s;"><i class="fas fa-arrow-left"></i> Back</a>
 <div class="watermark">LEAVING CERTIFICATE</div>
 
 <div class="page">

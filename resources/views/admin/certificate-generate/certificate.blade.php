@@ -188,7 +188,10 @@
         $hasLogo = !empty($logoUrl);
     @endphp
 
-    <div class="no-print"><button onclick="window.print()">{{ __('app.print') ?? 'Print Certificate' }}</button></div>
+    <div class="no-print" style="display:flex;align-items:center;justify-content:center;gap:12px;">
+        <a href="{{ route('admin.certificate-generate.index') }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;border:1px solid #ccc;color:#555;text-decoration:none;font-family:sans-serif;font-size:14px;transition:all 0.2s;">&larr; Back</a>
+        <button onclick="window.print()">{{ __('app.print') ?? 'Print Certificate' }}</button>
+    </div>
 
     <div class="certificate">
         {{-- Double border frame --}}
@@ -227,7 +230,7 @@
             {{-- Header --}}
             <div class="cert-header">
                 @if($hasLogo)
-                    <img src="{{ $logoUrl }}" class="cert-header-logo" alt="Logo">
+                    <img src="{{ $logoUrl }}" class="cert-header-logo" alt="Logo" onerror="this.style.display='none';">
                 @endif
                 <h1>{{ strtoupper($schoolName) }}</h1>
                 <div class="cert-divider"></div>

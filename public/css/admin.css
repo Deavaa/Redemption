@@ -1376,12 +1376,14 @@ html, body {
     .modern-page.chat-full-bleed {
         margin: 0;
         padding: 0;
+        height: calc(100dvh - 56px - 56px);
+        overflow: hidden;
     }
     .chat-full-bleed ~ .admin-content,
     .admin-content:has(.chat-full-bleed) {
         padding: 0 !important;
         padding-bottom: 0 !important;
-        overflow: hidden !important;
+        overflow: visible !important;
     }
     .admin-main:has(.chat-full-bleed)::after {
         display: none !important;

@@ -44,7 +44,7 @@
             {{-- Photo Section --}}
             @if($item->photo)
             <div style="text-align:center;padding:2rem 1.5rem 0;">
-                <img src="{{ asset('storage/' . $item->photo) }}" alt="{{ $item->name }}" style="width:120px;height:120px;border-radius:16px;object-fit:cover;border:4px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                <img src="{{ asset('storage/' . $item->photo) }}" alt="{{ $item->name }}" style="width:120px;height:120px;border-radius:16px;object-fit:cover;border:4px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.08);" onerror="this.style.display='none';">
             </div>
             @endif
 
