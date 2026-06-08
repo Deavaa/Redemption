@@ -2,64 +2,52 @@
 # LARAVEL — REMOVE /public FROM URL (Root .htaccess)
 # ──────────────────────────────────────────────────────────────
 # Place this file in the PROJECT ROOT (same level as artisan, .env).
-# On XAMPP, this is inside htdocs/Redemption/.
+# On XAMPP, this is inside htdocs/redemption/.
 # On cPanel, this is inside public_html/ or a subdirectory.
 #
-# Static files (CSS, JS, images) are served from the public/
-# directory. Dynamic routes go through root index.php.
+# Strategy: Route all requests through root index.php.
+# Laravel's catch-all route in routes/web.php serves static
+# files from public/ via public_path(). Dynamic routes are
+# handled by Laravel's router normally.
 # ──────────────────────────────────────────────────────────────
 
-Options +FollowSymLinks +SymLinksIfOwnerMatch
 DirectoryIndex index.php
 Options -Indexes
+Options +FollowSymLinks
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
     # ── Allow /storage/ URLs (serves uploaded images, logos, files) ──
-    # /storage/X maps to /public/storage/X physically, and falls through
-    # to Laravel's MediaController route if the file doesn't exist.
-    # Do NOT block /storage/ here — it breaks ALL uploaded images.
+    # /storage/X rewrites to /public/storage/X
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^storage/(.*)$ public/storage/$1 [L]
 
     # ── Block direct access to sensitive directories ──
-    # Note: 'storage' is intentionally EXCLUDED from this list.
-    # The /storage/ URL path serves public uploads (logos, photos, etc.)
-    # and is NOT the same as the on-disk storage/ directory.
-    # Note: 'lang' is EXCLUDED — the /lang/{locale} route is used by
-    # the LanguageController for language switching. Blocking it causes 403.
+    # Note: 'storage' EXCLUDED — /storage/ URL serves public uploads.
+    # Note: 'lang' EXCLUDED — /lang/{locale} route for language switching.
+    # Note: 'public' EXCLUDED — needed for direct /public access fallback.
     RewriteRule ^(app|bootstrap|config|database|resources|routes|tests|vendor|deploy|node_modules)(/|$) - [F,L,NC]
 
     # ── Block direct access to sensitive files ──
-    RewriteRule ^(artisan|composer\.(json|lock)|package\.json|package-lock\.json|phpunit\.xml|vite\.config\.js|webpack\.mix\.js|\.env\.example|info\.php)(/|$) - [F,L,NC]
+    RewriteRule ^(artisan|composer\.(json|lock)|package\.json|package-lock\.json|phpunit\.xml|vite\.config\.js|webpack\.mix\.js|\.env\.example)(/|$) - [F,L,NC]
 
     # ── Handle Authorization Header ──
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # ── Serve static files from public/ directory ──
-    # When browser requests /Redemption/css/admin.css, Apache maps this to
-    # htdocs/Redemption/css/admin.css (which doesn't exist). We need to
-    # serve it from htdocs/Redemption/public/css/admin.css instead.
-    #
-    # %{REQUEST_FILENAME} = full filesystem path Apache resolved
-    #   e.g., C:/xampp/htdocs/Redemption/css/admin.css
-    # We construct the public/ version and check if it exists.
-    #
-    # Step 1: Extract the directory part of REQUEST_FILENAME
-    #   C:/xampp/htdocs/Redemption/css → C:/xampp/htdocs/Redemption
-    # Step 2: Append /public + the URL path part ($1)
-    #   C:/xampp/htdocs/Redemption/public/css/admin.css
-    # Step 3: If that file exists, rewrite to serve it
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*?)$ public/$1 [L]
+    # ── Serve existing files/directories directly ──
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
-    # ── Route remaining requests to root index.php ──
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(.*)$ index.php [L]
+    # ── Route everything else to root index.php ──
+    # Root index.php fixes SCRIPT_NAME for subdirectory hosting,
+    # then includes public/index.php to bootstrap Laravel.
+    # Laravel's catch-all route serves static files from public/
+    # via public_path(), and handles all dynamic routes normally.
+    RewriteRule ^ index.php [L]
 </IfModule>
 
 <FilesMatch "^\.env">
