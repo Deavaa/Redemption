@@ -329,7 +329,7 @@ a { text-decoration: none; color: inherit; }
     padding: 0 20px;
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: 1050;
     box-shadow: var(--shadow-sm);
 }
 
@@ -845,7 +845,9 @@ html, body {
     .admin-wrapper {
         max-width: 100% !important;
         overflow-x: hidden !important;
+        overflow-y: visible !important;
         width: 100% !important;
+        position: relative;
     }
     .admin-sidebar {
         transform: translateX(-100%);
@@ -863,8 +865,10 @@ html, body {
         margin-left: 0 !important;
         max-width: 100% !important;
         overflow-x: hidden !important;
+        overflow-y: visible !important;
         width: 100% !important;
         padding-bottom: 0;
+        position: relative;
     }
 
     /* Ensure the last content block can scroll above the bottom nav */
@@ -882,6 +886,8 @@ html, body {
         max-width: 100% !important;
         width: 100% !important;
         box-sizing: border-box !important;
+        overflow: visible !important;
+        z-index: 1200;
     }
     .topbar-breadcrumb { display: none; }
     .topbar-left { gap: 8px; min-width: 0; }
@@ -1403,10 +1409,26 @@ html, body {
     }
 
     /* Better dropdown menus on mobile */
+    .admin-topbar {
+        z-index: 1200 !important;
+        overflow: visible !important;
+    }
+    .topbar-right {
+        position: relative;
+        z-index: 1250;
+        overflow: visible !important;
+    }
+    .topbar-icon-btn.dropdown,
+    .topbar-dropdown.dropdown {
+        position: relative;
+        z-index: 1300;
+        overflow: visible !important;
+    }
     .dropdown-menu {
         min-width: 200px;
         max-width: 90vw;
-        z-index: 1200 !important;
+        z-index: 9999 !important;
+        position: absolute !important;
     }
     .topbar-notif-dropdown {
         width: 300px !important;
@@ -1415,18 +1437,19 @@ html, body {
         position: absolute !important;
         right: 0 !important;
         left: auto !important;
+        z-index: 9999 !important;
     }
     .topbar-icon-dropdown {
         position: absolute !important;
         right: 0 !important;
         left: auto !important;
+        z-index: 9999 !important;
     }
-    .topbar-right {
-        position: relative;
-        z-index: 1050;
-    }
-    .topbar-icon-btn.dropdown {
-        position: relative;
+    .topbar-dropdown .dropdown-menu {
+        position: absolute !important;
+        right: 0 !important;
+        left: auto !important;
+        z-index: 9999 !important;
     }
 
     /* Improve topbar on very small screens */
