@@ -364,7 +364,8 @@
                     </div>
                 </div>
 
-                {{-- System Info --}}
+                {{-- System Info — only for admin/super_admin/general_manager --}}
+                @if(!$isBranchScoped && in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']))
                 <div class="modern-card">
                     <div class="modern-card-header">
                         <div class="modern-card-header-left">
@@ -386,8 +387,8 @@
                                 <span class="modern-info-value">Laravel 12</span>
                             </div>
                             <div class="modern-info-row">
-                                <span class="modern-info-label">@if($isBranchScoped) Branch @else Branches @endif</span>
-                                <span class="modern-info-value">@if($isBranchScoped) {{ $branchName ?? 'My Branch' }} @else {{ $totalBranches }} @endif</span>
+                                <span class="modern-info-label">Branches</span>
+                                <span class="modern-info-value">{{ $totalBranches }}</span>
                             </div>
                             <div class="modern-info-row">
                                 <span class="modern-info-label">Students</span>
@@ -400,6 +401,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>
