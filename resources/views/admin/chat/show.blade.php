@@ -227,9 +227,12 @@
 }
 .chat-send-btn:hover { transform: scale(1.1); }
 @media (max-width: 768px) {
-    .chat-layout { grid-template-columns: 1fr; }
+    .chat-layout { grid-template-columns: 1fr; height: calc(100vh - 140px); }
     .chat-sidebar { display: none; }
     .chat-msg { max-width: 85%; }
+    .chat-input-area {
+        padding-bottom: calc(0.75rem + 60px + env(safe-area-inset-bottom, 0px));
+    }
 }
 </style>
 @endpush
