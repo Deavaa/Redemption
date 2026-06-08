@@ -21,6 +21,7 @@
 
         {{-- Compact Clickable Stats Grid --}}
         <div class="dash-stats-grid">
+            @if(!$isBranchScoped)
             <a href="{{ route('admin.branches.index') }}" class="dash-stat-card dash-stat-blue">
                 <div class="dash-stat-top">
                     <div class="dash-stat-icon"><i class="fas fa-building"></i></div>
@@ -29,6 +30,15 @@
                 <div class="dash-stat-value">{{ $totalBranches }}</div>
                 <div class="dash-stat-label">Branches</div>
             </a>
+            @else
+            <div class="dash-stat-card dash-stat-blue" style="cursor:default;">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-building"></i></div>
+                </div>
+                <div class="dash-stat-value" style="font-size:1rem;">{{ $branchName ?? 'My Branch' }}</div>
+                <div class="dash-stat-label">Your Branch</div>
+            </div>
+            @endif
             <a href="{{ route('admin.students.index') }}" class="dash-stat-card dash-stat-gold">
                 <div class="dash-stat-top">
                     <div class="dash-stat-icon"><i class="fas fa-user-graduate"></i></div>
@@ -71,6 +81,7 @@
                 <div class="dash-stat-value">{{ $totalSubjects }}</div>
                 <div class="dash-stat-label">Subjects</div>
             </a>
+            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'finance', 'cashier']))
             <a href="{{ route('admin.fee-payments.index') }}" class="dash-stat-card dash-stat-green">
                 <div class="dash-stat-top">
                     <div class="dash-stat-icon"><i class="fas fa-money-bill-wave"></i></div>
@@ -87,6 +98,8 @@
                 <div class="dash-stat-value" style="font-size:1.15rem;">{{ number_format($pendingFees, 0) }}</div>
                 <div class="dash-stat-label">Pending Fees</div>
             </a>
+            @endif
+            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']))
             <a href="{{ route('admin.chat.index') }}" class="dash-stat-card dash-stat-gold">
                 <div class="dash-stat-top">
                     <div class="dash-stat-icon"><i class="fas fa-envelope"></i></div>
@@ -95,9 +108,15 @@
                 <div class="dash-stat-value">{{ $unreadMessages }}</div>
                 <div class="dash-stat-label">Unread Messages</div>
             </a>
+            @endif
         </div>
 
         {{-- Quick Actions --}}
+        @php
+            $isAdminOrGM = in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']);
+            $isBranchPrincipal = Auth::user()->role === 'branch_principal';
+            $isTeacher = Auth::user()->role === 'teacher';
+        @endphp
         <div class="modern-card" style="margin-bottom: 1.25rem;">
             <div class="modern-card-header">
                 <div class="modern-card-header-left">
@@ -109,10 +128,13 @@
             </div>
             <div class="modern-card-body">
                 <div class="modern-quick-actions">
+                    @if($isAdminOrGM)
                     <a href="{{ route('admin.branches.create') }}" class="modern-quick-action-card">
                         <div class="modern-quick-action-icon modern-stat-icon-blue"><i class="fas fa-plus"></i></div>
                         <span class="modern-quick-action-label">Add Branch</span>
                     </a>
+                    @endif
+                    @if($isAdminOrGM || $isBranchPrincipal || $isTeacher)
                     <a href="{{ route('admin.teachers.create') }}" class="modern-quick-action-card">
                         <div class="modern-quick-action-icon modern-stat-icon-green"><i class="fas fa-plus"></i></div>
                         <span class="modern-quick-action-label">Add Teacher</span>
@@ -121,10 +143,14 @@
                         <div class="modern-quick-action-icon modern-stat-icon-gold"><i class="fas fa-plus"></i></div>
                         <span class="modern-quick-action-label">Add Student</span>
                     </a>
+                    @endif
+                    @if($isAdminOrGM || $isBranchPrincipal)
                     <a href="{{ route('admin.classrooms.create') }}" class="modern-quick-action-card">
                         <div class="modern-quick-action-icon modern-stat-icon-purple"><i class="fas fa-plus"></i></div>
                         <span class="modern-quick-action-label">Add Class</span>
                     </a>
+                    @endif
+                    @if($isAdminOrGM)
                     <a href="{{ route('admin.subjects.create') }}" class="modern-quick-action-card">
                         <div class="modern-quick-action-icon modern-stat-icon-blue"><i class="fas fa-plus"></i></div>
                         <span class="modern-quick-action-label">Add Subject</span>
@@ -137,6 +163,7 @@
                         <div class="modern-quick-action-icon modern-stat-icon-gold"><i class="fas fa-plus"></i></div>
                         <span class="modern-quick-action-label">New Term</span>
                     </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -166,6 +193,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @if(!$isBranchScoped)
                                 <tr>
                                     <td>
                                         <div class="modern-table-module">
@@ -183,6 +211,7 @@
                                     </td>
                                     <td><a href="{{ route('admin.branches.index') }}" class="btn-modern btn-modern-ghost" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Manage</a></td>
                                 </tr>
+                                @endif
                                 <tr>
                                     <td>
                                         <div class="modern-table-module">
@@ -357,8 +386,8 @@
                                 <span class="modern-info-value">Laravel 12</span>
                             </div>
                             <div class="modern-info-row">
-                                <span class="modern-info-label">Branches</span>
-                                <span class="modern-info-value">{{ $totalBranches }}</span>
+                                <span class="modern-info-label">@if($isBranchScoped) Branch @else Branches @endif</span>
+                                <span class="modern-info-value">@if($isBranchScoped) {{ $branchName ?? 'My Branch' }} @else {{ $totalBranches }} @endif</span>
                             </div>
                             <div class="modern-info-row">
                                 <span class="modern-info-label">Students</span>
