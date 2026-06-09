@@ -53,7 +53,9 @@ class HomeController extends Controller
             $sliderAlerts = SliderAlert::where('is_active', true)
                 ->orderBy('sort_order')
                 ->get();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Log::warning('SliderAlerts load failed: ' . $e->getMessage());
+        }
 
         $teamMembers = collect();
         try {
@@ -92,7 +94,18 @@ class HomeController extends Controller
         $latestNews = collect();
         try {
             $latestNews = \App\Models\News::visibleOnWebsite()->limit(3)->get();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Log::warning('News visibleOnWebsite failed: ' . $e->getMessage());
+            // Fallback: try simpler query without is_approved (column may not exist yet)
+            try {
+                $latestNews = \App\Models\News::where('is_active', true)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(3)
+                    ->get();
+            } catch (\Throwable $e2) {
+                \Log::warning('News fallback also failed: ' . $e2->getMessage());
+            }
+        }
 
         return view('welcome', compact('sliders', 'sliderAlerts', 'teamMembers', 'galleryImages', 'websiteVideos', 'galleryVideos', 'settings', 'latestNews'));
     }
