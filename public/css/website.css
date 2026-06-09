@@ -402,7 +402,7 @@
         /* ========== Page Hero Banner (for sub-pages) ========== */
         .page-hero {
             position: relative;
-            padding: 10rem 0 4rem;
+            padding: 5.5rem 0 2rem;
             background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.94) 0%, rgba(var(--primary-rgb), 0.78) 100%);
             color: var(--white);
             overflow: hidden;
@@ -433,9 +433,9 @@
         }
 
         .page-hero h1 {
-            font-size: 3rem;
+            font-size: 2rem;
             color: var(--white);
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             text-shadow: 0 2px 12px rgba(0,0,0,0.35);
         }
 
@@ -444,9 +444,9 @@
         }
 
         .page-hero p {
-            font-size: 1.15rem;
+            font-size: 0.95rem;
             color: rgba(255,255,255,0.85);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .page-hero .breadcrumb {
@@ -769,7 +769,7 @@
         /* ========== Responsive ========== */
         @media (max-width: 991px) {
             .page-hero h1 {
-                font-size: 2.25rem;
+                font-size: 1.65rem;
             }
 
             .section-header h2 {
@@ -786,7 +786,7 @@
 
         @media (max-width: 575px) {
             .page-hero h1 {
-                font-size: 1.85rem;
+                font-size: 1.4rem;
             }
 
             .section-header h2 {
