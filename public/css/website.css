@@ -402,22 +402,14 @@
         /* ========== Page Hero Banner (for sub-pages) ========== */
         .page-hero {
             position: relative;
-            padding: 4rem 0 1.5rem;
-            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.94) 0%, rgba(var(--primary-rgb), 0.78) 100%);
+            padding: 0.8rem 0 0.5rem;
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.98) 0%, rgba(var(--primary-rgb), 0.92) 100%);
             color: var(--white);
             overflow: hidden;
         }
 
         .page-hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: radial-gradient(rgba(217, 119, 6, 0.06) 1px, transparent 1px);
-            background-size: 30px 30px;
-            pointer-events: none;
+            display: none;
         }
 
         .page-hero::after {
@@ -425,10 +417,12 @@
         }
 
         .page-hero h1 {
-            font-size: 1.5rem;
+            font-size: 1rem;
             color: var(--white);
-            margin-bottom: 0.3rem;
-            text-shadow: 0 2px 12px rgba(0,0,0,0.35);
+            margin-bottom: 0.1rem;
+            text-shadow: none;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
         }
 
         .page-hero h1 span {
@@ -436,9 +430,9 @@
         }
 
         .page-hero p {
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.85);
-            margin-bottom: 0.3rem;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 0.1rem;
         }
 
         .page-hero .breadcrumb {
@@ -761,10 +755,10 @@
         /* ========== Responsive ========== */
         @media (max-width: 991px) {
             .page-hero h1 {
-                font-size: 1.35rem;
+                font-size: 0.95rem;
             }
             .page-hero {
-                padding: 3.5rem 0 1.2rem;
+                padding: 0.6rem 0 0.4rem;
             }
 
             .section-header h2 {
@@ -781,10 +775,10 @@
 
         @media (max-width: 575px) {
             .page-hero h1 {
-                font-size: 1.2rem;
+                font-size: 0.9rem;
             }
             .page-hero {
-                padding: 3rem 0 1rem;
+                padding: 0.5rem 0 0.3rem;
             }
 
             .section-header h2 {
