@@ -610,7 +610,7 @@ function filterTable() {
 
 function toggleAlert(id) {
     const token = document.querySelector('meta[name="csrf-token"]').content;
-    fetch('{{ route("admin.slider-alerts.toggle", ["slider_alert" => "ID_PLACEHOLDER"]) }}'.replace('ID_PLACEHOLDER', id), {
+    fetch(`{{ url('admin/slider-alerts') }}/${id}/toggle`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': token,
