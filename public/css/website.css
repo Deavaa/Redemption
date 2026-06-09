@@ -1,6 +1,6 @@
 };
-            --secondary-color: {{ $settings['secondary_color'] ?? '#D97706' }};
-            --primary-rgb: {{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }};
+            --secondary-color: #c9a84c;  /* overridden by inline :root in Blade layout */
+            --primary-rgb: 13, 13, 43;  /* #0d0d2b — overridden by inline :root in Blade layout */
             --primary-color: #0A0F1E;
             --teal: #0D9488;
             --teal-light: #14B8A6;
@@ -88,7 +88,7 @@
 
         /* ========== Elegant Deep Navy Navbar ========== */
         .navbar {
-            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 1);
+            background: rgba(var(--primary-rgb), 1);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-bottom: 2px solid rgba(217, 119, 6, 0.25);
@@ -98,7 +98,7 @@
 
         .navbar.scrolled {
             padding: 0.2rem 0;
-            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 1);
+            background: rgba(var(--primary-rgb), 1);
             backdrop-filter: blur(24px) saturate(200%);
             -webkit-backdrop-filter: blur(24px) saturate(200%);
             box-shadow: 0 4px 40px rgba(0,0,0,0.25);
@@ -127,7 +127,7 @@
         }
 
         .nav-link {
-            color: rgba(255,255,255,0.85) !important;
+            color: rgba(255,255,255,0.95) !important;
             font-weight: 500;
             margin: 0 0.5rem;
             position: relative;
@@ -403,7 +403,7 @@
         .page-hero {
             position: relative;
             padding: 10rem 0 4rem;
-            background: linear-gradient(135deg, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.94) 0%, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.78) 100%);
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.94) 0%, rgba(var(--primary-rgb), 0.78) 100%);
             color: var(--white);
             overflow: hidden;
         }
