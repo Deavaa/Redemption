@@ -1470,6 +1470,113 @@ a { text-decoration: none; color: inherit; }
     background: var(--primary-light);
 }
 
+/* ===== Mobile Menu Sheet (Quick Access) ===== */
+.mobile-menu-sheet-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1199;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.mobile-menu-sheet-backdrop.show {
+    display: block;
+    opacity: 1;
+}
+
+.mobile-menu-sheet {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    z-index: 1200;
+    max-height: 75vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.15);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mobile-menu-sheet.show {
+    display: block;
+    transform: translateY(0);
+}
+
+.mobile-menu-sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: #d1d5db;
+    border-radius: 2px;
+    margin: 10px auto 6px;
+}
+
+.mobile-menu-sheet-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 20px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.mobile-menu-sheet-links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 12px 12px 16px;
+}
+
+.mobile-menu-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #374151;
+    font-size: 0.72rem;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+.mobile-menu-link i {
+    font-size: 18px;
+    color: #6b7280;
+}
+.mobile-menu-link:active {
+    background: #f3f4f6;
+}
+
+/* Show mobile menu sheet only on mobile */
+@media (max-width: 768px) {
+    .mobile-menu-sheet {
+        display: none; /* hidden until .show is toggled */
+    }
+    .mobile-menu-sheet.show {
+        display: block;
+    }
+    .mobile-menu-sheet-backdrop {
+        display: none;
+    }
+    .mobile-menu-sheet-backdrop.show {
+        display: block;
+    }
+}
+
+/* Hide on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-sheet,
+    .mobile-menu-sheet-backdrop {
+        display: none !important;
+    }
+}
+
 
 /* ===== RESPONSIVE — TABLET ===== */
 @media (max-width: 1024px) {

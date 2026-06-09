@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Slider;
+use App\Models\SliderAlert;
 use App\Models\TeamMember;
 use App\Models\GalleryImage;
 use App\Models\GalleryVideo;
@@ -47,6 +48,13 @@ class HomeController extends Controller
                 ->get();
         } catch (\Throwable $e) {}
 
+        $sliderAlerts = collect();
+        try {
+            $sliderAlerts = SliderAlert::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+        } catch (\Throwable $e) {}
+
         $teamMembers = collect();
         try {
             $teamMembers = TeamMember::where('is_active', true)
@@ -86,7 +94,7 @@ class HomeController extends Controller
             $latestNews = \App\Models\News::visibleOnWebsite()->limit(3)->get();
         } catch (\Throwable $e) {}
 
-        return view('welcome', compact('sliders', 'teamMembers', 'galleryImages', 'websiteVideos', 'galleryVideos', 'settings', 'latestNews'));
+        return view('welcome', compact('sliders', 'sliderAlerts', 'teamMembers', 'galleryImages', 'websiteVideos', 'galleryVideos', 'settings', 'latestNews'));
     }
 
     /**

@@ -178,6 +178,51 @@ class WebContentController extends Controller
         return redirect()->route('admin.web-content.index')->with('success', "Program {$index} removed.");
     }
 
+    /**
+     * Remove a specific program slot by index and re-index remaining programs
+     */
+    public function removeSpecificProgram($index)
+    {
+        $programsCount = (int) Setting::get('programs_count', 4);
+
+        if ($programsCount <= 1) {
+            return redirect()->route('admin.web-content.index')->with('error', 'You must have at least 1 program.');
+        }
+
+        if ($index < 1 || $index > $programsCount) {
+            return redirect()->route('admin.web-content.index')->with('error', 'Invalid program index.');
+        }
+
+        // Collect data for programs after the one being removed
+        $programKeys = ['visible', 'image', 'tag', 'title', 'description'];
+
+        // Shift programs down: move program N+1 → N, N+2 → N+1, etc.
+        for ($i = $index; $i < $programsCount; $i++) {
+            $nextIndex = $i + 1;
+            foreach ($programKeys as $key) {
+                $nextValue = Setting::get("program_{$nextIndex}_{$key}", '');
+                Setting::updateOrCreate(
+                    ['key' => "program_{$i}_{$key}"],
+                    ['value' => $nextValue, 'group' => 'programs']
+                );
+            }
+        }
+
+        // Delete the last program (which is now a duplicate after shifting)
+        $lastIndex = $programsCount;
+        foreach ($programKeys as $key) {
+            Setting::where('key', "program_{$lastIndex}_{$key}")->delete();
+        }
+
+        // Update count
+        Setting::updateOrCreate(
+            ['key' => 'programs_count'],
+            ['value' => (string) ($programsCount - 1), 'group' => 'programs', 'type' => 'text', 'description' => 'Number of programs']
+        );
+
+        return redirect()->route('admin.web-content.index')->with('success', "Program {$index} removed successfully.");
+    }
+
     public function upload(Request $request)
     {
         $request->validate([

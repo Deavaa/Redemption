@@ -69,6 +69,37 @@
 
     <!-- ========== Hero Slider Section ========== -->
     <section class="hero-slider" id="home">
+        @if($sliderAlerts->count() > 0)
+        <!-- Alert Ticker Bar -->
+        <div class="slider-alert-bar">
+            <div class="slider-alert-left">
+                <div class="slider-alert-marquee">
+                    <div class="slider-alert-track">
+                        @foreach($sliderAlerts as $alert)
+                            <span class="slider-alert-item" style="background:{{ $alert->bg_color }};color:{{ $alert->text_color }};">
+                                <i class="fas {{ $alert->icon }}"></i>
+                                {{ $alert->message }}
+                            </span>
+                        @endforeach
+                        {{-- Duplicate for seamless loop --}}
+                        @foreach($sliderAlerts as $alert)
+                            <span class="slider-alert-item" style="background:{{ $alert->bg_color }};color:{{ $alert->text_color }};">
+                                <i class="fas {{ $alert->icon }}"></i>
+                                {{ $alert->message }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="slider-alert-right">
+                @php $firstAlert = $sliderAlerts->first(); @endphp
+                <span class="slider-alert-badge" style="background:{{ $firstAlert->bg_color }};color:{{ $firstAlert->text_color }};">
+                    <i class="fas {{ $firstAlert->icon }}"></i>
+                    {{ $firstAlert->message }}
+                </span>
+            </div>
+        </div>
+        @endif
         <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-pause="false">
             <div class="carousel-indicators">
                 @forelse($sliders as $index => $slider)
