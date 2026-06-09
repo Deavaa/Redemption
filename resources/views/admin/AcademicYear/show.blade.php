@@ -93,6 +93,24 @@
                     <div class="modern-detail-label"><i class="fas fa-user-graduate"></i> Students</div>
                     <div class="modern-detail-value">{{ $item->students->count() }} student(s)</div>
                 </div>
+                <div class="modern-detail-row">
+                    <div class="modern-detail-label"><i class="fas fa-chalkboard-teacher"></i> Teacher Assignments</div>
+                    <div class="modern-detail-value">{{ $item->teacherAssignments->count() }} assignment(s)</div>
+                </div>
+                @php
+                    $classIds = $item->classes->pluck('id');
+                    $sectionsAssigned = \App\Models\Section::whereIn('class_id', $classIds)->whereNotNull('teacher_id')->count();
+                    $sectionsTotal = \App\Models\Section::whereIn('class_id', $classIds)->count();
+                @endphp
+                <div class="modern-detail-row">
+                    <div class="modern-detail-label"><i class="fas fa-user-check"></i> Homeroom Teachers</div>
+                    <div class="modern-detail-value">
+                        {{ $sectionsAssigned }} / {{ $sectionsTotal }} sections assigned
+                        @if($sectionsTotal > 0 && $sectionsAssigned < $sectionsTotal)
+                            <a href="{{ route('admin.teacher-reassignment.index', ['academic_year_id' => $item->id]) }}" class="modern-link" style="margin-left:0.5rem;font-size:0.8rem;"><i class="fas fa-user-edit"></i> Reassign</a>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -101,6 +119,8 @@
                 <div class="modern-card-header-simple"><i class="fas fa-bolt"></i> Quick Actions</div>
                 <div class="modern-quick-actions">
                     <a href="{{ route('admin.academic-years.edit', $item->id) }}" class="modern-quick-action"><i class="fas fa-pen"></i><span>Edit Academic Year</span></a>
+                    <a href="{{ route('admin.academic-years.transition') }}" class="modern-quick-action"><i class="fas fa-exchange-alt"></i><span>Year Transition</span></a>
+                    <a href="{{ route('admin.teacher-reassignment.index', ['academic_year_id' => $item->id]) }}" class="modern-quick-action"><i class="fas fa-user-edit"></i><span>Teacher Reassignment</span></a>
                     <a href="{{ route('admin.academic-years.index') }}" class="modern-quick-action"><i class="fas fa-list"></i><span>All Academic Years</span></a>
                     <form method="POST" action="{{ route('admin.academic-years.destroy', $item->id) }}" onsubmit="return confirm('Are you sure you want to delete this academic year?')">
                         @csrf @method('DELETE')
