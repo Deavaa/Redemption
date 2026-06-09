@@ -43,60 +43,7 @@
 @section('content')
     <!-- ========== Hero Slider Section ========== -->
     <section class="hero-slider" id="home">
-        @if($sliderAlerts->count() > 0 || (isset($latestNews) && $latestNews->count() > 0))
-        <!-- Alert & News Ticker Bar -->
-        <div class="slider-alert-bar">
-            <div class="slider-alert-left">
-                <div class="slider-alert-marquee">
-                    <div class="slider-alert-track">
-                        @foreach($sliderAlerts as $alert)
-                            <span class="slider-alert-item" style="background:{{ $alert->bg_color }};color:{{ $alert->text_color }};">
-                                <i class="fas {{ $alert->icon }}"></i>
-                                {{ $alert->message }}
-                            </span>
-                        @endforeach
-                        @isset($latestNews)
-                            @foreach($latestNews as $newsItem)
-                                <span class="slider-alert-item slider-news-alert-item">
-                                    <i class="fas fa-newspaper"></i>
-                                    {{ $newsItem->title }}
-                                </span>
-                            @endforeach
-                        @endisset
-                        {{-- Duplicate for seamless loop --}}
-                        @foreach($sliderAlerts as $alert)
-                            <span class="slider-alert-item" style="background:{{ $alert->bg_color }};color:{{ $alert->text_color }};">
-                                <i class="fas {{ $alert->icon }}"></i>
-                                {{ $alert->message }}
-                            </span>
-                        @endforeach
-                        @isset($latestNews)
-                            @foreach($latestNews as $newsItem)
-                                <span class="slider-alert-item slider-news-alert-item">
-                                    <i class="fas fa-newspaper"></i>
-                                    {{ $newsItem->title }}
-                                </span>
-                            @endforeach
-                        @endisset
-                    </div>
-                </div>
-            </div>
-            <div class="slider-alert-right">
-                @if($sliderAlerts->count() > 0)
-                    @php $firstAlert = $sliderAlerts->first(); @endphp
-                    <span class="slider-alert-badge" style="background:{{ $firstAlert->bg_color }};color:{{ $firstAlert->text_color }};">
-                        <i class="fas {{ $firstAlert->icon }}"></i>
-                        {{ $firstAlert->message }}
-                    </span>
-                @else
-                    <span class="slider-alert-badge slider-news-alert-badge">
-                        <i class="fas fa-newspaper"></i>
-                        Latest News
-                    </span>
-                @endif
-            </div>
-        </div>
-        @endif
+
         <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-pause="false">
             <div class="carousel-indicators">
                 @forelse($sliders as $index => $slider)
@@ -234,41 +181,62 @@
             </button>
         </div>
 
-        <!-- News Overlay on Slider -->
-        @isset($latestNews)
-        @if($latestNews->count() > 0)
-        <div class="slider-news-overlay">
-            <div class="slider-news-overlay-inner">
-                <div class="slider-news-label">
-                    <i class="fas fa-newspaper"></i>
-                    <span>Latest News</span>
+        <!-- Bottom Overlay: Alerts (Left) + News (Right) -->
+        @if($sliderAlerts->count() > 0 || (isset($latestNews) && $latestNews->count() > 0))
+        <div class="slider-bottom-overlay">
+            <div class="slider-bottom-overlay-inner">
+                <!-- Left: Slider Alerts -->
+                @if($sliderAlerts->count() > 0)
+                <div class="slider-bottom-alerts">
+                    <div class="slider-bottom-label">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Alerts</span>
+                    </div>
+                    <div class="slider-bottom-alerts-list">
+                        @foreach($sliderAlerts as $alert)
+                            <span class="slider-bottom-alert-item" style="background:{{ $alert->bg_color }};color:{{ $alert->text_color }};">
+                                <i class="fas {{ $alert->icon }}"></i>
+                                {{ $alert->message }}
+                            </span>
+                        @endforeach
+                    </div>
                 </div>
-                <div class="slider-news-track-wrapper">
-                    <div class="slider-news-track">
+                @endif
+
+                <!-- Right: Latest News -->
+                @isset($latestNews)
+                @if($latestNews->count() > 0)
+                <div class="slider-bottom-news">
+                    <div class="slider-bottom-label">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Latest News</span>
+                    </div>
+                    <div class="slider-bottom-news-list">
                         @foreach($latestNews as $newsItem)
-                            <div class="slider-news-card">
+                            <div class="slider-bottom-news-card">
                                 @if($newsItem->image_path)
-                                    <img src="{{ asset('storage/' . $newsItem->image_path) }}" alt="{{ $newsItem->title }}" class="slider-news-thumb">
+                                    <img src="{{ asset('storage/' . $newsItem->image_path) }}" alt="{{ $newsItem->title }}" class="slider-bottom-news-thumb">
                                 @else
-                                    <div class="slider-news-icon">
+                                    <div class="slider-bottom-news-icon">
                                         <i class="fas fa-newspaper"></i>
                                     </div>
                                 @endif
-                                <div class="slider-news-body">
-                                    <span class="slider-news-date">{{ $newsItem->created_at->format('M d, Y') }}</span>
-                                    <h4 class="slider-news-title">{{ Str::limit($newsItem->title, 50) }}</h4>
+                                <div class="slider-bottom-news-body">
+                                    <span class="slider-bottom-news-date">{{ $newsItem->created_at->format('M d, Y') }}</span>
+                                    <h4 class="slider-bottom-news-title">{{ Str::limit($newsItem->title, 50) }}</h4>
                                     @if($newsItem->content)
-                                        <p class="slider-news-excerpt">{{ Str::limit(strip_tags($newsItem->content), 80) }}</p>
+                                        <p class="slider-bottom-news-excerpt">{{ Str::limit(strip_tags($newsItem->content), 80) }}</p>
                                     @endif
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 </div>
+                @endif
+                @endisset
             </div>
         </div>
         @endif
-        @endisset
     </section>
 
     <!-- ========== Animated Counters Section ========== -->
