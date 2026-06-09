@@ -67,7 +67,7 @@
         <div class="container-fluid nav-container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
                 @if($settings['school_logo'] ?? '')
-                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;" loading="lazy" onerror="this.style.display='none'">
+                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 36px; opacity: 0.9;" loading="lazy" onerror="this.style.display='none'">
                 @endif
                 <div>
                     <span class="brand-pre">{{ Str::beforeLast($settings['school_name'] ?? 'School', ' ') }}</span>
