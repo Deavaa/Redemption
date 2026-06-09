@@ -364,24 +364,38 @@
             </div>
             <div class="programs-scroll-wrapper reveal" id="programsScrollWrapper">
                 <div class="programs-scroll-track">
-                    @for ($i = 1; $i <= 4; $i++)
+                    @php
+                        $programsCount = (int) ($settings['programs_count'] ?? 4);
+                        $visiblePrograms = 0;
+                    @endphp
+                    @for ($i = 1; $i <= $programsCount; $i++)
                         @php
+                            $pVisible = ($settings["program_{$i}_visible"] ?? '1') === '1';
                             $pImage = $settings["program_{$i}_image"] ?? '';
                             $pTag = $settings["program_{$i}_tag"] ?? '';
                             $pTitle = $settings["program_{$i}_title"] ?? '';
                             $pDesc = $settings["program_{$i}_description"] ?? '';
                             $hasImage = !empty($pImage) && file_exists(public_path('storage/' . $pImage));
                         @endphp
-                        <div class="program-card">
-                            <div class="program-image" style="background-image: url('{{ $hasImage ? asset('storage/' . $pImage) : 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}')"></div>
-                            <div class="program-content">
-                                <span class="program-tag">{{ $pTag }}</span>
-                                <h4>{{ $pTitle }}</h4>
-                                <p>{{ $pDesc }}</p>
-                                <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                        @if($pVisible && !empty($pTitle))
+                            @php $visiblePrograms++; @endphp
+                            <div class="program-card">
+                                <div class="program-image" style="background-image: url('{{ $hasImage ? asset('storage/' . $pImage) : 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}')"></div>
+                                <div class="program-content">
+                                    <span class="program-tag">{{ $pTag }}</span>
+                                    <h4>{{ $pTitle }}</h4>
+                                    <p>{{ $pDesc }}</p>
+                                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                                </div>
                             </div>
-                        </div>
+                        @endif
                     @endfor
+                    @if($visiblePrograms === 0)
+                        <div style="text-align:center;padding:3rem;color:var(--text-light);">
+                            <i class="fas fa-graduation-cap" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:1rem;"></i>
+                            <p>No programs configured yet. Add programs via Admin → Web Content.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="programs-scroll-nav">

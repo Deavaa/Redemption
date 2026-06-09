@@ -13,20 +13,25 @@ class WebContentController extends Controller
      */
     protected static $defaultSettings = [
         // Programs
+        ['key' => 'programs_count', 'value' => '4', 'group' => 'programs', 'type' => 'text', 'description' => 'Number of programs'],
         ['key' => 'programs_section_title', 'value' => 'Pathways to Success', 'group' => 'programs', 'type' => 'text', 'description' => 'Programs section title'],
         ['key' => 'programs_section_subtitle', 'value' => 'Our comprehensive curriculum is designed to challenge and inspire students at every stage of their educational journey.', 'group' => 'programs', 'type' => 'textarea', 'description' => 'Programs section subtitle'],
+        ['key' => 'program_1_visible', 'value' => '1', 'group' => 'programs', 'type' => 'boolean', 'description' => 'Program 1 visible'],
         ['key' => 'program_1_image', 'value' => '', 'group' => 'programs', 'type' => 'file', 'description' => 'Program 1 image (upload)'],
         ['key' => 'program_1_tag', 'value' => 'Ages 3-5', 'group' => 'programs', 'type' => 'text', 'description' => 'Program 1 tag/label'],
         ['key' => 'program_1_title', 'value' => 'Early Childhood Education', 'group' => 'programs', 'type' => 'text', 'description' => 'Program 1 title'],
         ['key' => 'program_1_description', 'value' => 'A nurturing environment where young learners develop foundational skills through play-based learning and creative exploration.', 'group' => 'programs', 'type' => 'textarea', 'description' => 'Program 1 description'],
+        ['key' => 'program_2_visible', 'value' => '1', 'group' => 'programs', 'type' => 'boolean', 'description' => 'Program 2 visible'],
         ['key' => 'program_2_image', 'value' => '', 'group' => 'programs', 'type' => 'file', 'description' => 'Program 2 image (upload)'],
         ['key' => 'program_2_tag', 'value' => 'Grades 1-8', 'group' => 'programs', 'type' => 'text', 'description' => 'Program 2 tag/label'],
         ['key' => 'program_2_title', 'value' => 'Primary & Middle School', 'group' => 'programs', 'type' => 'text', 'description' => 'Program 2 title'],
         ['key' => 'program_2_description', 'value' => 'Building strong academic foundations while fostering curiosity, critical thinking, and social-emotional development.', 'group' => 'programs', 'type' => 'textarea', 'description' => 'Program 2 description'],
+        ['key' => 'program_3_visible', 'value' => '1', 'group' => 'programs', 'type' => 'boolean', 'description' => 'Program 3 visible'],
         ['key' => 'program_3_image', 'value' => '', 'group' => 'programs', 'type' => 'file', 'description' => 'Program 3 image (upload)'],
         ['key' => 'program_3_tag', 'value' => 'Grades 9-12', 'group' => 'programs', 'type' => 'text', 'description' => 'Program 3 tag/label'],
         ['key' => 'program_3_title', 'value' => 'High School', 'group' => 'programs', 'type' => 'text', 'description' => 'Program 3 title'],
         ['key' => 'program_3_description', 'value' => 'Rigorous college-preparatory curriculum with advanced placement courses and specialized tracks in sciences, arts, and humanities.', 'group' => 'programs', 'type' => 'textarea', 'description' => 'Program 3 description'],
+        ['key' => 'program_4_visible', 'value' => '1', 'group' => 'programs', 'type' => 'boolean', 'description' => 'Program 4 visible'],
         ['key' => 'program_4_image', 'value' => '', 'group' => 'programs', 'type' => 'file', 'description' => 'Program 4 image (upload)'],
         ['key' => 'program_4_tag', 'value' => 'All Ages', 'group' => 'programs', 'type' => 'text', 'description' => 'Program 4 tag/label'],
         ['key' => 'program_4_title', 'value' => 'Extracurricular Programs', 'group' => 'programs', 'type' => 'text', 'description' => 'Program 4 title'],
@@ -60,6 +65,31 @@ class WebContentController extends Controller
             );
         }
 
+        // Ensure visible toggles exist for all current programs
+        $programsCount = (int) Setting::get('programs_count', 4);
+        for ($i = 1; $i <= $programsCount; $i++) {
+            Setting::firstOrCreate(
+                ['key' => "program_{$i}_visible"],
+                ['value' => '1', 'group' => 'programs', 'type' => 'boolean', 'description' => "Program {$i} visible"]
+            );
+            Setting::firstOrCreate(
+                ['key' => "program_{$i}_image"],
+                ['value' => '', 'group' => 'programs', 'type' => 'file', 'description' => "Program {$i} image (upload)"]
+            );
+            Setting::firstOrCreate(
+                ['key' => "program_{$i}_tag"],
+                ['value' => '', 'group' => 'programs', 'type' => 'text', 'description' => "Program {$i} tag/label"]
+            );
+            Setting::firstOrCreate(
+                ['key' => "program_{$i}_title"],
+                ['value' => '', 'group' => 'programs', 'type' => 'text', 'description' => "Program {$i} title"]
+            );
+            Setting::firstOrCreate(
+                ['key' => "program_{$i}_description"],
+                ['value' => '', 'group' => 'programs', 'type' => 'textarea', 'description' => "Program {$i} description"]
+            );
+        }
+
         $groups = [
             'general' => Setting::where('group', 'general')->get(),
             'contact' => Setting::where('group', 'contact')->get(),
@@ -82,7 +112,10 @@ class WebContentController extends Controller
             'social' => 'Social Media Links',
             'appearance' => 'Appearance & Branding',
         ];
-        return view('admin.web-content.index', compact('groups', 'groupLabels'));
+
+        $programsCount = (int) Setting::get('programs_count', 4);
+
+        return view('admin.web-content.index', compact('groups', 'groupLabels', 'programsCount'));
     }
 
     public function update(Request $request)
@@ -97,6 +130,52 @@ class WebContentController extends Controller
             }
         }
         return redirect()->route('admin.web-content.index')->with('success', 'Web content updated successfully.');
+    }
+
+    /**
+     * Add a new program slot
+     */
+    public function addProgram()
+    {
+        $programsCount = (int) Setting::get('programs_count', 4);
+        $newIndex = $programsCount + 1;
+
+        // Create all settings for the new program
+        Setting::updateOrCreate(['key' => "program_{$newIndex}_visible"], ['value' => '1', 'group' => 'programs', 'type' => 'boolean', 'description' => "Program {$newIndex} visible"]);
+        Setting::updateOrCreate(['key' => "program_{$newIndex}_image"], ['value' => '', 'group' => 'programs', 'type' => 'file', 'description' => "Program {$newIndex} image (upload)"]);
+        Setting::updateOrCreate(['key' => "program_{$newIndex}_tag"], ['value' => '', 'group' => 'programs', 'type' => 'text', 'description' => "Program {$newIndex} tag/label"]);
+        Setting::updateOrCreate(['key' => "program_{$newIndex}_title"], ['value' => 'New Program', 'group' => 'programs', 'type' => 'text', 'description' => "Program {$newIndex} title"]);
+        Setting::updateOrCreate(['key' => "program_{$newIndex}_description"], ['value' => '', 'group' => 'programs', 'type' => 'textarea', 'description' => "Program {$newIndex} description"]);
+
+        // Update count
+        Setting::updateOrCreate(['key' => 'programs_count'], ['value' => (string) $newIndex, 'group' => 'programs', 'type' => 'text', 'description' => 'Number of programs']);
+
+        return redirect()->route('admin.web-content.index')->with('success', "Program {$newIndex} added. Edit the details below.");
+    }
+
+    /**
+     * Remove the last program slot
+     */
+    public function removeProgram()
+    {
+        $programsCount = (int) Setting::get('programs_count', 4);
+
+        if ($programsCount <= 1) {
+            return redirect()->route('admin.web-content.index')->with('error', 'You must have at least 1 program.');
+        }
+
+        // Delete all settings for the last program
+        $index = $programsCount;
+        Setting::where('key', "program_{$index}_visible")->delete();
+        Setting::where('key', "program_{$index}_image")->delete();
+        Setting::where('key', "program_{$index}_tag")->delete();
+        Setting::where('key', "program_{$index}_title")->delete();
+        Setting::where('key', "program_{$index}_description")->delete();
+
+        // Update count
+        Setting::updateOrCreate(['key' => 'programs_count'], ['value' => (string) ($programsCount - 1), 'group' => 'programs', 'type' => 'text', 'description' => 'Number of programs']);
+
+        return redirect()->route('admin.web-content.index')->with('success', "Program {$index} removed.");
     }
 
     public function upload(Request $request)

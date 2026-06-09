@@ -751,6 +751,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('web-content', [WebContentController::class, 'index'])->name('web-content.index')->middleware('permission:settings.view');
     Route::match(['post', 'put'], 'web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
     Route::post('web-content/upload', [WebContentController::class, 'upload'])->name('web-content.upload')->middleware('permission:settings.edit');
+    Route::post('web-content/add-program', [WebContentController::class, 'addProgram'])->name('web-content.add-program')->middleware('permission:settings.edit');
+    Route::post('web-content/remove-program', [WebContentController::class, 'removeProgram'])->name('web-content.remove-program')->middleware('permission:settings.edit');
 
     // Announcements
     Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index')->middleware('permission:calendar.view');
