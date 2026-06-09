@@ -1,4 +1,4 @@
-};
+        :root {
             --secondary-color: #c9a84c;  /* overridden by inline :root in Blade layout */
             --primary-rgb: 13, 13, 43;  /* #0d0d2b — overridden by inline :root in Blade layout */
             --primary-color: #0A0F1E;

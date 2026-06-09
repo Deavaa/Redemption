@@ -33,7 +33,7 @@ class NewsController extends Controller
 
         $data = $request->only(['title', 'content', 'is_active', 'show_until', 'priority']);
         $data['created_by'] = Auth::id();
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active'] = $request->boolean('is_active', false);
 
         // If admin/super_admin creates news, auto-approve it
         if (in_array(Auth::user()->role, ['admin', 'super_admin'])) {
@@ -76,7 +76,7 @@ class NewsController extends Controller
         ]);
 
         $data = $request->only(['title', 'content', 'is_active', 'show_until', 'priority']);
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active'] = $request->boolean('is_active', false);
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('news-images', 'public');

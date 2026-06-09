@@ -177,6 +177,31 @@
             flex-wrap: wrap;
         }
 
+        .hero-buttons-right {
+            justify-content: flex-end;
+        }
+
+        .btn-hero-small {
+            background: rgba(255,255,255,0.2);
+            color: var(--white);
+            padding: 0.35rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.4);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            letter-spacing: 0.5px;
+        }
+
+        .btn-hero-small:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(212, 160, 23, 0.4);
+        }
+
         .btn-hero-primary {
             background: var(--secondary-color);
             color: var(--primary-color);
