@@ -61,6 +61,7 @@ use App\Http\Controllers\Parent\ParentDashboardController;
 use App\Http\Controllers\Subject\SubjectController;
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
+use App\Http\Controllers\TeacherReassignment\TeacherReassignmentController;
 use App\Http\Controllers\TeamMember\TeamMemberController;
 use App\Http\Controllers\Telegram\TelegramController;
 use App\Http\Controllers\Term\TermController;
@@ -367,9 +368,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // ── Academic ──────────────────────────────────────────
     Route::resource('academic-years', AcademicYearController::class)->middleware('permission:academic_years.view');
+    Route::get('academic-years/transition', [AcademicYearController::class, 'transitionForm'])->name('academic-years.transition')->middleware('permission:academic_years.manage');
+    Route::post('academic-years/transition-preview', [AcademicYearController::class, 'transitionPreview'])->name('academic-years.transition-preview')->middleware('permission:academic_years.manage');
+    Route::post('academic-years/transition', [AcademicYearController::class, 'processTransition'])->name('academic-years.process-transition')->middleware('permission:academic_years.manage');
     Route::resource('terms', TermController::class)->middleware('permission:terms.view');
     Route::resource('exams', ExamController::class)->middleware('permission:exams.view');
     Route::resource('subjects', SubjectController::class)->middleware('permission:subjects.view');
+
+    // Teacher Reassignment (bulk reassign teachers for new academic year)
+    Route::get('teacher-reassignment', [TeacherReassignmentController::class, 'index'])->name('teacher-reassignment.index')->middleware('permission:teacher_assignments.view');
+    Route::post('teacher-reassignment/save-homeroom', [TeacherReassignmentController::class, 'saveHomeroomTeachers'])->name('teacher-reassignment.save-homeroom')->middleware('permission:teacher_assignments.manage');
+    Route::post('teacher-reassignment/save-subjects', [TeacherReassignmentController::class, 'saveSubjectTeachers'])->name('teacher-reassignment.save-subjects')->middleware('permission:teacher_assignments.manage');
+    Route::post('teacher-reassignment/clear-all', [TeacherReassignmentController::class, 'clearAllTeachers'])->name('teacher-reassignment.clear-all')->middleware('permission:teacher_assignments.manage');
     Route::resource('subject-assignments', SubjectAssignmentController::class)->middleware('permission:subject_assignments.view');
     Route::delete('subject-assignments/bulk-delete', [SubjectAssignmentController::class, 'bulkDelete'])->name('subject-assignments.bulk-delete')->middleware('permission:subject_assignments.delete');
     Route::get('subject-assignments/api/classes', [SubjectAssignmentController::class, 'apiClasses'])->name('subject-assignments.api.classes');
