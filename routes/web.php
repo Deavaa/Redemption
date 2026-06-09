@@ -276,7 +276,6 @@ Route::get('/{path}', function ($path = null) {
         ]);
     }
 
-    // File not found — let Laravel show 404
     abort(404);
 })->where('path', '.*')->fallback();
 
