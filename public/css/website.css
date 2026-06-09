@@ -1,7 +1,13 @@
 };
-            --secondary-color: {{ $settings['secondary_color'] ?? '#D4A017' }};
+            --secondary-color: {{ $settings['secondary_color'] ?? '#D97706' }};
             --primary-rgb: {{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }};
-            --accent-color: #2E7D32;
+            --primary-color: #0A0F1E;
+            --teal: #0D9488;
+            --teal-light: #14B8A6;
+            --accent-color: #0D9488;
+            --accent-light: #14B8A6;
+            --amber: #D97706;
+            --amber-light: #F59E0B;
             --text-dark: #1a1a2e;
             --text-light: #6c757d;
             --white: #ffffff;
@@ -42,7 +48,7 @@
         .cursor-dot {
             width: 8px;
             height: 8px;
-            background: var(--secondary-color);
+            background: var(--amber);
             border-radius: 50%;
             position: fixed;
             top: 0;
@@ -56,7 +62,7 @@
         .cursor-ring {
             width: 36px;
             height: 36px;
-            border: 2px solid rgba(212, 160, 23, 0.5);
+            border: 2px solid rgba(217, 119, 6, 0.5);
             border-radius: 50%;
             position: fixed;
             top: 0;
@@ -80,23 +86,23 @@
             }
         }
 
-        /* ========== Elegant Dark Green Navbar ========== */
+        /* ========== Elegant Deep Navy Navbar ========== */
         .navbar {
-            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.95);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-bottom: 2px solid rgba(212, 160, 23, 0.3);
+            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.92);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 2px solid rgba(217, 119, 6, 0.25);
             padding: 1rem 0;
-            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
         }
 
         .navbar.scrolled {
             padding: 0.5rem 0;
             background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.98);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
-            border-bottom-color: rgba(212, 160, 23, 0.5);
+            backdrop-filter: blur(24px) saturate(200%);
+            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            box-shadow: 0 4px 40px rgba(0,0,0,0.25);
+            border-bottom-color: rgba(13, 148, 136, 0.4);
         }
 
         .navbar-brand {
@@ -115,7 +121,7 @@
         }
 
         .navbar-brand .brand-name {
-            color: var(--secondary-color);
+            color: var(--amber);
             font-weight: 800;
             font-size: 1.3rem;
         }
@@ -125,11 +131,11 @@
             font-weight: 500;
             margin: 0 0.5rem;
             position: relative;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, transform 0.2s ease;
         }
 
         .nav-link:hover {
-            color: var(--secondary-color) !important;
+            color: var(--teal-light) !important;
         }
 
         .nav-link::after {
@@ -139,8 +145,8 @@
             left: 50%;
             width: 0;
             height: 2px;
-            background: linear-gradient(90deg, transparent, var(--secondary-color), transparent);
-            transition: all 0.3s ease;
+            background: linear-gradient(90deg, transparent, var(--teal), var(--teal-light), transparent);
+            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
             transform: translateX(-50%);
         }
 
@@ -149,26 +155,28 @@
         }
 
         .nav-link.active {
-            color: var(--secondary-color) !important;
+            color: var(--teal-light) !important;
         }
 
         .nav-link.active::after {
             width: 80%;
+            background: linear-gradient(90deg, transparent, var(--teal-light), transparent);
         }
 
         .btn-nav-portal {
-            background: var(--secondary-color);
+            background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
             color: var(--primary-color) !important;
             border-radius: 50px;
             padding: 0.5rem 1.5rem;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 2px 10px rgba(217, 119, 6, 0.3);
         }
 
         .btn-nav-portal:hover {
-            background: #E8B82E;
+            background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(212, 160, 23, 0.5);
+            box-shadow: 0 6px 20px rgba(217, 119, 6, 0.45);
         }
 
         /* ========== Mobile Drawer ========== */
@@ -178,11 +186,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             z-index: 1049;
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
         }
 
         .mobile-drawer-overlay.active {
@@ -197,7 +206,7 @@
             width: 300px;
             max-width: 85vw;
             height: 100vh;
-            background: var(--primary-color);
+            background: linear-gradient(180deg, var(--primary-color) 0%, #060A14 100%);
             z-index: 1050;
             transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
             padding: 2rem;
@@ -222,6 +231,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: color 0.2s ease;
+        }
+
+        .mobile-drawer-close:hover {
+            color: var(--teal-light);
         }
 
         .mobile-drawer .mobile-nav-links {
@@ -242,30 +256,33 @@
             padding: 0.75rem 1rem;
             display: block;
             border-radius: 12px;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
         }
 
         .mobile-drawer .mobile-nav-links a:hover,
         .mobile-drawer .mobile-nav-links a.active {
-            background: rgba(255,255,255,0.1);
-            color: var(--secondary-color);
+            background: rgba(13, 148, 136, 0.15);
+            color: var(--teal-light);
         }
 
         .mobile-drawer .mobile-login-btn {
             display: block;
             margin-top: 1.5rem;
-            background: var(--secondary-color);
+            background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
             color: var(--primary-color);
             text-align: center;
             padding: 0.75rem 1.5rem;
             border-radius: 50px;
             font-weight: 600;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 2px 10px rgba(217, 119, 6, 0.3);
         }
 
         .mobile-drawer .mobile-login-btn:hover {
-            background: #E8B82E;
+            background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
         }
 
         .hamburger-btn {
@@ -276,12 +293,17 @@
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0.5rem;
+            transition: color 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            color: var(--teal-light);
         }
 
         /* Mobile Login Pill - small login button always visible on mobile navbar */
         .mobile-login-pill {
             display: none;
-            background: var(--secondary-color);
+            background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
             color: var(--primary-color) !important;
             border-radius: 50px;
             padding: 6px 14px;
@@ -289,13 +311,15 @@
             font-weight: 700;
             text-decoration: none;
             flex-shrink: 0;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
             white-space: nowrap;
             line-height: 1;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
         }
         .mobile-login-pill:hover {
-            background: #E8B82E;
+            background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
             transform: scale(1.05);
+            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
         }
 
         @media (max-width: 991px) {
@@ -377,7 +401,7 @@
         .page-hero {
             position: relative;
             padding: 10rem 0 4rem;
-            background: linear-gradient(135deg, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.92) 0%, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.75) 100%);
+            background: linear-gradient(135deg, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.94) 0%, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.78) 100%);
             color: var(--white);
             overflow: hidden;
         }
@@ -389,7 +413,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: radial-gradient(rgba(212, 160, 23, 0.06) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(217, 119, 6, 0.06) 1px, transparent 1px);
             background-size: 30px 30px;
             pointer-events: none;
         }
@@ -400,7 +424,7 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: rgba(212, 160, 23, 0.3);
+            color: rgba(13, 148, 136, 0.35);
             font-size: 1.5rem;
             letter-spacing: 1rem;
             pointer-events: none;
@@ -410,11 +434,11 @@
             font-size: 3rem;
             color: var(--white);
             margin-bottom: 0.75rem;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 12px rgba(0,0,0,0.35);
         }
 
         .page-hero h1 span {
-            color: var(--secondary-color);
+            color: var(--amber-light);
         }
 
         .page-hero p {
@@ -436,11 +460,11 @@
         }
 
         .page-hero .breadcrumb-item a:hover {
-            color: var(--secondary-color);
+            color: var(--teal-light);
         }
 
         .page-hero .breadcrumb-item.active {
-            color: var(--secondary-color);
+            color: var(--amber);
         }
 
         .page-hero .breadcrumb-item + .breadcrumb-item::before {
@@ -455,8 +479,8 @@
 
         .section-badge {
             display: inline-block;
-            background: rgba(212, 160, 23, 0.1);
-            color: var(--secondary-color);
+            background: rgba(217, 119, 6, 0.1);
+            color: var(--amber);
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
             font-size: 0.85rem;
@@ -464,7 +488,13 @@
             margin-bottom: 1rem;
             letter-spacing: 1px;
             text-transform: uppercase;
-            border: 1px solid rgba(212, 160, 23, 0.2);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .section-badge:hover {
+            background: rgba(217, 119, 6, 0.18);
+            border-color: rgba(217, 119, 6, 0.35);
         }
 
         .section-header h2 {
@@ -479,8 +509,9 @@
             display: block;
             width: 60px;
             height: 2px;
-            background: var(--secondary-color);
+            background: linear-gradient(90deg, var(--teal), var(--amber));
             margin: 0.75rem auto 0;
+            border-radius: 2px;
         }
 
         .section-header p {
@@ -493,7 +524,7 @@
         .ornament-divider {
             text-align: center;
             margin: 2rem 0;
-            color: var(--secondary-color);
+            color: var(--amber);
             font-size: 1.2rem;
             letter-spacing: 0.5rem;
             opacity: 0.6;
@@ -504,17 +535,17 @@
             display: inline-block;
             width: 60px;
             height: 1px;
-            background: var(--secondary-color);
+            background: linear-gradient(90deg, transparent, var(--amber), transparent);
             vertical-align: middle;
             margin: 0 1rem;
         }
 
         /* ========== Footer (Elegant Layout) ========== */
         .footer {
-            background: linear-gradient(180deg, var(--primary-color) 0%, #0D3B12 100%);
+            background: linear-gradient(180deg, var(--primary-color) 0%, #060A14 100%);
             color: var(--white);
             padding: 4rem 0 2rem;
-            border-top: 3px solid rgba(212, 160, 23, 0.3);
+            border-top: 3px solid rgba(13, 148, 136, 0.3);
         }
 
         .footer-brand {
@@ -528,7 +559,7 @@
         }
 
         .footer-brand .brand-name {
-            color: var(--secondary-color);
+            color: var(--amber);
             font-weight: 700;
         }
 
@@ -557,14 +588,14 @@
         .footer-links a {
             color: rgba(255,255,255,0.7);
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
             font-size: 0.9rem;
             display: inline-flex;
             align-items: center;
         }
 
         .footer-links a:hover {
-            color: var(--secondary-color);
+            color: var(--teal-light);
             transform: translateX(4px);
         }
 
@@ -584,14 +615,15 @@
             align-items: center;
             justify-content: center;
             color: var(--white);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
         }
 
         .social-links a:hover {
-            background: var(--secondary-color);
-            color: var(--primary-color);
+            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
+            color: var(--white);
             transform: translateY(-3px);
-            border-color: var(--secondary-color);
+            border-color: var(--teal);
+            box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
         }
 
         /* Newsletter */
@@ -608,6 +640,7 @@
             padding: 0.65rem 1rem;
             color: var(--white);
             font-size: 0.9rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .newsletter-form input::placeholder {
@@ -616,28 +649,31 @@
 
         .newsletter-form input:focus {
             outline: none;
-            border-color: var(--secondary-color);
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
         }
 
         .newsletter-form button {
-            background: var(--secondary-color);
+            background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
             color: var(--primary-color);
             border: none;
             border-radius: 12px;
             padding: 0.65rem 1.25rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
             white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
         }
 
         .newsletter-form button:hover {
-            background: #E8B82E;
+            background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
             transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
         }
 
         .footer-bottom {
-            border-top: 1px solid rgba(212, 160, 23, 0.2);
+            border-top: 1px solid rgba(13, 148, 136, 0.2);
             padding-top: 2rem;
             margin-top: 3rem;
         }
@@ -654,8 +690,8 @@
             right: 2rem;
             width: 50px;
             height: 50px;
-            background: var(--secondary-color);
-            color: var(--primary-color);
+            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
+            color: var(--white);
             border: none;
             border-radius: 14px;
             font-size: 1.2rem;
@@ -664,8 +700,8 @@
             opacity: 0;
             visibility: hidden;
             transform: translateY(20px);
-            transition: all 0.4s ease;
-            box-shadow: 0 6px 20px rgba(212, 160, 23, 0.5);
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -678,8 +714,9 @@
         }
 
         .back-to-top:hover {
-            background: #E8B82E;
+            background: linear-gradient(135deg, var(--teal-light) 0%, #2DD4BF 100%);
             transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(13, 148, 136, 0.5);
         }
 
         /* ========== Scroll Reveal ========== */

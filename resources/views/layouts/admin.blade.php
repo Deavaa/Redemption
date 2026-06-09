@@ -114,58 +114,51 @@
             } catch(e) {}
         }
 
-        // ===== 4. GLOBAL AJAX 419 HANDLER — Auto-retry on CSRF token mismatch =====
-        // This is the KEY fix: when mark entry AJAX gets a 419 error,
-        // we automatically get a fresh CSRF token and retry the request.
-        jQuery(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
-            if (jqXHR.status === 419 && !sessionExpired) {
-                console.warn('[AJAX 419 Handler] CSRF token expired, refreshing and retrying...');
+        // ===== 4. GLOBAL FETCH 419 HANDLER — Auto-retry on CSRF token mismatch =====
+        // Intercepts all fetch() calls and retries on 419 errors.
+        (function() {
+            var originalFetch = window.fetch;
+            window.fetch = function(input, init) {
+                return originalFetch.apply(this, arguments).then(function(response) {
+                    if (response.status === 419 && !sessionExpired) {
+                        console.warn('[Fetch 419 Handler] CSRF token expired, refreshing and retrying...');
+                        return refreshCSRFViaFetch().then(function(newToken) {
+                            if (newToken && init && init.body) {
+                                var body = init.body;
+                                if (typeof body === 'string') {
+                                    body = body.replace(/_token=[^&]+/, '_token=' + encodeURIComponent(newToken));
+                                    init = Object.assign({}, init, { body: body, headers: Object.assign({}, init.headers, { 'X-CSRF-TOKEN': newToken }) });
+                                }
+                                console.log('[Fetch 419 Handler] Retrying request with fresh token...');
+                                return originalFetch.apply(this, [input, init]);
+                            }
+                            return response;
+                        }).catch(function() { return response; });
+                    }
+                    return response;
+                });
+            };
 
-                // Get a fresh CSRF token via keepalive
-                var refreshXhr = new XMLHttpRequest();
-                refreshXhr.open('GET', keepaliveUrl, false); // synchronous — we need the token before retrying
-                refreshXhr.setRequestHeader('Accept', 'application/json');
-                refreshXhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                refreshXhr.timeout = 10000;
-
-                try {
-                    refreshXhr.send();
-                    if (refreshXhr.status === 200) {
-                        var data = JSON.parse(refreshXhr.responseText);
+            function refreshCSRFViaFetch() {
+                return originalFetch(keepaliveUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(function(r) {
+                    if (r.status === 419 || r.status === 401) {
+                        handleSessionExpired('CSRF refresh via fetch failed (HTTP ' + r.status + ')');
+                        return null;
+                    }
+                    return r.json().then(function(data) {
                         if (data.csrf_token) {
                             updateCSRFToken(data.csrf_token);
-
-                            // Retry the original AJAX request with the new token
-                            if (ajaxSettings.type && ajaxSettings.url && ajaxSettings.data) {
-                                // Replace the old CSRF token in the data
-                                var newData = ajaxSettings.data;
-                                if (typeof newData === 'string') {
-                                    newData = newData.replace(/_token=[^&]+/, '_token=' + encodeURIComponent(data.csrf_token));
-                                }
-
-                                console.log('[AJAX 419 Handler] Retrying request with fresh token...');
-                                $.ajax({
-                                    type: ajaxSettings.type,
-                                    url: ajaxSettings.url,
-                                    data: newData,
-                                    dataType: ajaxSettings.dataType || 'json',
-                                    success: ajaxSettings.success,
-                                    error: function(retryJqXHR) {
-                                        if (retryJqXHR.status === 419 || retryJqXHR.status === 401) {
-                                            handleSessionExpired('Retry also failed (HTTP ' + retryJqXHR.status + ')');
-                                        }
-                                    }
-                                });
-                            }
+                            lastKeepaliveTime = Date.now();
+                            return data.csrf_token;
                         }
-                    } else if (refreshXhr.status === 419 || refreshXhr.status === 401) {
-                        handleSessionExpired('Token refresh failed (HTTP ' + refreshXhr.status + ')');
-                    }
-                } catch(e) {
-                    console.warn('[AJAX 419 Handler] Refresh failed:', e.message);
-                }
+                        return null;
+                    });
+                }).catch(function() { return null; });
             }
-        });
+        })();
 
         // ===== 5. SESSION EXPIRED HANDLER =====
         function handleSessionExpired(source) {
@@ -223,30 +216,31 @@
 
     {{-- PWA & Mobile Integration --}}
     <link rel="manifest" href="{{ route('app.manifest') }}">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#059669">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Redemption">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="msapplication-TileColor" content="#6366f1">
-    <meta name="msapplication-navbutton-color" content="#6366f1">
+    <meta name="msapplication-TileColor" content="#059669">
+    <meta name="msapplication-navbutton-color" content="#059669">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192x192.png') }}">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
     <style>html,body{overflow-x:hidden!important;max-width:100vw!important;width:100%!important;}*{box-sizing:border-box;}.admin-wrapper,.admin-main,.admin-content{max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important;}.admin-topbar{max-width:100vw!important;overflow:visible!important;box-sizing:border-box!important;}</style>
     @stack('styles')
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </head>
-<body>
+<body class="role-admin">
 <div class="admin-wrapper">
     <nav class="admin-sidebar" id="adminSidebar">
         <div class="sidebar-header">

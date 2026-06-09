@@ -1,0 +1,330 @@
+/* ============================================================================
+   SCHOOL OF REDEMPTION — Design Tokens v4.0
+   ============================================================================
+   A unified design system for all layouts: Admin, Student, Parent, Teacher,
+   Website, and Login. Every color, spacing, shadow, and transition is defined
+   here as a CSS custom property so that themes and role-based accents can be
+   switched by toggling a single class on a parent element.
+
+   Primary : Emerald 600      #059669  (vibrant, modern green)
+   Accent  : Amber 500        #F59E0B  (warm gold, excellence)
+   Sidebar : Slate 900        #0F172A  (professional dark navy)
+   Body BG : Slate 50         #F8FAFC  (clean, neutral)
+   Card BG : Pure White       #FFFFFF
+   Font    : Inter
+
+   USAGE
+   -----
+   Import this file BEFORE all other CSS files:
+     <link rel="stylesheet" href="{{ asset('css/design-tokens.css') }}">
+
+   Then reference tokens in your styles:
+     color: var(--color-primary);
+     padding: var(--spacing-4);
+     border-radius: var(--radius-md);
+     box-shadow: var(--shadow-md);
+
+   ROLE-BASED ACCENTS
+   -------------------
+   Add a class to <body> or any wrapper to switch the role accent:
+     .role-admin   → emerald  #059669
+     .role-student → teal     #0D9488
+     .role-parent  → amber    #D97706
+     .role-teacher → sky      #0284C7
+
+   ============================================================================ */
+
+:root {
+  /* -----------------------------------------------------------------------
+     1. COLORS — Primary Palette
+     ----------------------------------------------------------------------- */
+
+  /* Primary — Vibrant Emerald Green */
+  --color-primary:        #059669;
+  --color-primary-hover:  #047857;
+  --color-primary-light:  #ECFDF5;
+  --color-primary-dark:   #065F46;
+  --color-primary-50:     #ECFDF5;
+  --color-primary-100:    #D1FAE5;
+  --color-primary-200:    #A7F3D0;
+  --color-primary-300:    #6EE7B7;
+  --color-primary-400:    #34D399;
+  --color-primary-500:    #10B981;
+  --color-primary-600:    #059669;
+  --color-primary-700:    #047857;
+  --color-primary-800:    #065F46;
+  --color-primary-900:    #064E3B;
+
+  /* Accent — Warm Gold/Amber */
+  --color-accent:         #F59E0B;
+  --color-accent-hover:   #D97706;
+  --color-accent-light:   #FFFBEB;
+  --color-accent-50:      #FFFBEB;
+  --color-accent-100:     #FEF3C7;
+  --color-accent-200:     #FDE68A;
+  --color-accent-300:     #FCD34D;
+  --color-accent-400:     #FBBF24;
+  --color-accent-500:     #F59E0B;
+  --color-accent-600:     #D97706;
+
+  /* Semantic — Status Colors */
+  --color-success:        #16A34A;
+  --color-success-light:  #F0FDF4;
+  --color-warning:        #EAB308;
+  --color-warning-light:  #FEFCE8;
+  --color-danger:         #DC2626;
+  --color-danger-light:   #FEF2F2;
+  --color-info:           #2563EB;
+  --color-info-light:     #EFF6FF;
+
+  /* Sidebar — Professional Dark Navy (Slate 900) */
+  --color-sidebar-bg:     #0F172A;
+  --color-sidebar-hover:  #1E293B;
+  --color-sidebar-active: #334155;
+
+  /* Surfaces */
+  --color-body-bg:        #F8FAFC;
+  --color-card-bg:        #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+
+  /* Text */
+  --color-text-dark:      #0F172A;
+  --color-text:           #334155;
+  --color-text-muted:     #64748B;
+  --color-text-inverse:   #FFFFFF;
+
+  /* Borders */
+  --color-border:         #E2E8F0;
+  --color-border-light:   #F1F5F9;
+
+  /* -----------------------------------------------------------------------
+     2. ROLE-BASED ACCENT COLORS
+     ----------------------------------------------------------------------- */
+  --color-admin-accent:   #059669;
+  --color-student-accent: #0D9488;
+  --color-parent-accent:  #D97706;
+  --color-teacher-accent: #0284C7;
+
+  --role-accent:          var(--color-primary);
+  --role-accent-hover:    var(--color-primary-hover);
+  --role-accent-light:    var(--color-primary-light);
+
+  /* -----------------------------------------------------------------------
+     3. TYPOGRAPHY
+     ----------------------------------------------------------------------- */
+
+  /* Font Family */
+  --font-family:          'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                          Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue',
+                          Arial, sans-serif;
+  --font-family-mono:     'JetBrains Mono', 'Fira Code', 'Cascadia Code',
+                          Consols, 'Courier New', monospace;
+
+  /* Font Sizes */
+  --font-size-xs:         0.75rem;    /* 12px */
+  --font-size-sm:         0.875rem;   /* 14px */
+  --font-size-base:       1rem;       /* 16px */
+  --font-size-lg:         1.125rem;   /* 18px */
+  --font-size-xl:         1.25rem;    /* 20px */
+  --font-size-2xl:        1.5rem;     /* 24px */
+  --font-size-3xl:        1.875rem;   /* 30px */
+  --font-size-4xl:        2.25rem;    /* 36px */
+
+  /* Font Weights */
+  --font-weight-light:    300;
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --font-weight-extrabold:800;
+
+  /* Line Heights */
+  --line-height-none:     1;
+  --line-height-tight:    1.25;
+  --line-height-snug:     1.375;
+  --line-height-normal:   1.5;
+  --line-height-relaxed:  1.625;
+  --line-height-loose:    2;
+
+  /* Letter Spacing */
+  --letter-spacing-tight:  -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide:   0.025em;
+  --letter-spacing-wider:  0.05em;
+  --letter-spacing-widest: 0.1em;
+
+  /* -----------------------------------------------------------------------
+     4. SPACING — 4px base unit
+     ----------------------------------------------------------------------- */
+  --spacing-0:            0;
+  --spacing-0-5:          0.125rem;   /* 2px  */
+  --spacing-1:            0.25rem;    /* 4px  */
+  --spacing-1-5:          0.375rem;   /* 6px  */
+  --spacing-2:            0.5rem;     /* 8px  */
+  --spacing-2-5:          0.625rem;   /* 10px */
+  --spacing-3:            0.75rem;    /* 12px */
+  --spacing-3-5:          0.875rem;   /* 14px */
+  --spacing-4:            1rem;       /* 16px */
+  --spacing-5:            1.25rem;    /* 20px */
+  --spacing-6:            1.5rem;     /* 24px */
+  --spacing-7:            1.75rem;    /* 28px */
+  --spacing-8:            2rem;       /* 32px */
+  --spacing-9:            2.25rem;    /* 36px */
+  --spacing-10:           2.5rem;     /* 40px */
+  --spacing-11:           2.75rem;    /* 44px */
+  --spacing-12:           3rem;       /* 48px */
+  --spacing-14:           3.5rem;     /* 56px */
+  --spacing-16:           4rem;       /* 64px */
+
+  /* -----------------------------------------------------------------------
+     5. BORDER RADIUS
+     ----------------------------------------------------------------------- */
+  --radius-xs:            4px;
+  --radius-sm:            6px;
+  --radius-md:            10px;
+  --radius-lg:            14px;
+  --radius-xl:            20px;
+  --radius-2xl:           24px;
+  --radius-full:          9999px;
+
+  /* -----------------------------------------------------------------------
+     6. SHADOWS
+     ----------------------------------------------------------------------- */
+  --shadow-xs:            0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm:            0 1px 3px 0 rgba(0, 0, 0, 0.06),
+                          0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md:            0 4px 6px -1px rgba(0, 0, 0, 0.07),
+                          0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg:            0 10px 15px -3px rgba(0, 0, 0, 0.08),
+                          0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl:            0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                          0 8px 10px -6px rgba(0, 0, 0, 0.06);
+  --shadow-2xl:           0 25px 50px -12px rgba(0, 0, 0, 0.15);
+
+  /* Colored shadow variants */
+  --shadow-primary-sm:    0 1px 3px 0 rgba(5, 150, 105, 0.15);
+  --shadow-primary-md:    0 4px 8px -1px rgba(5, 150, 105, 0.2),
+                          0 2px 4px -2px rgba(5, 150, 105, 0.1);
+  --shadow-primary-lg:    0 10px 20px -3px rgba(5, 150, 105, 0.25),
+                          0 4px 6px -4px rgba(5, 150, 105, 0.1);
+  --shadow-accent-sm:     0 1px 3px 0 rgba(245, 158, 11, 0.15);
+  --shadow-accent-md:     0 4px 8px -1px rgba(245, 158, 11, 0.2),
+                          0 2px 4px -2px rgba(245, 158, 11, 0.1);
+
+  /* -----------------------------------------------------------------------
+     7. TRANSITIONS
+     ----------------------------------------------------------------------- */
+  --transition-fast:      150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal:    250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:      350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring:    400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Common transition presets */
+  --transition-colors:    color 150ms ease, background-color 150ms ease,
+                          border-color 150ms ease;
+  --transition-opacity:   opacity 200ms ease;
+  --transition-transform: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-shadow:    box-shadow 250ms ease;
+  --transition-all:       all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* -----------------------------------------------------------------------
+     8. Z-INDEX SCALE
+     ----------------------------------------------------------------------- */
+  --z-dropdown:           1000;
+  --z-sticky:             1020;
+  --z-fixed:              1030;
+  --z-modal-backdrop:     1040;
+  --z-modal:              1050;
+  --z-popover:            1060;
+  --z-tooltip:            1070;
+  --z-toast:              1080;
+
+  /* -----------------------------------------------------------------------
+     9. LAYOUT CONSTANTS
+     ----------------------------------------------------------------------- */
+  --sidebar-width:        260px;
+  --sidebar-collapsed:    72px;
+  --header-height:        64px;
+  --footer-height:        48px;
+  --content-max-width:    1280px;
+  --mobile-breakpoint:    768px;
+
+  /* -----------------------------------------------------------------------
+     10. FOCUS RING
+     ----------------------------------------------------------------------- */
+  --focus-ring:           0 0 0 3px rgba(5, 150, 105, 0.3);
+  --focus-ring-accent:    0 0 0 3px rgba(245, 158, 11, 0.3);
+}
+
+
+/* ==========================================================================
+   ROLE-BASED ACCENT OVERRIDES
+   ========================================================================== */
+
+/* Admin — Vibrant Emerald */
+.role-admin {
+  --role-accent:       #059669;
+  --role-accent-hover: #047857;
+  --role-accent-light: #ECFDF5;
+}
+
+/* Student — Teal */
+.role-student {
+  --role-accent:       #0D9488;
+  --role-accent-hover: #0F766E;
+  --role-accent-light: #F0FDFA;
+}
+
+/* Parent — Amber */
+.role-parent {
+  --role-accent:       #D97706;
+  --role-accent-hover: #B45309;
+  --role-accent-light: #FFFBEB;
+}
+
+/* Teacher — Sky Blue */
+.role-teacher {
+  --role-accent:       #0284C7;
+  --role-accent-hover: #0369A1;
+  --role-accent-light: #F0F9FF;
+}
+
+
+/* ==========================================================================
+   DARK MODE — Override Layer
+   ========================================================================== */
+
+[data-theme="dark"],
+.dark {
+  --color-body-bg:        #0F172A;
+  --color-card-bg:        #1E293B;
+  --color-surface-raised: #334155;
+  --color-text-dark:      #F8FAFC;
+  --color-text:           #CBD5E1;
+  --color-text-muted:     #94A3B8;
+  --color-text-inverse:   #0F172A;
+  --color-border:         #334155;
+  --color-border-light:   #1E293B;
+  --color-sidebar-bg:     #020617;
+  --color-sidebar-hover:  #0F172A;
+  --color-sidebar-active: #1E293B;
+
+  --shadow-xs:            0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm:            0 1px 3px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md:            0 4px 6px -1px rgba(0, 0, 0, 0.4),
+                          0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg:            0 10px 15px -3px rgba(0, 0, 0, 0.45),
+                          0 4px 6px -4px rgba(0, 0, 0, 0.35);
+  --shadow-xl:            0 20px 25px -5px rgba(0, 0, 0, 0.5),
+                          0 8px 10px -6px rgba(0, 0, 0, 0.4);
+
+  --color-primary-light:  #064E3B;
+  --color-accent-light:   #78350F;
+  --color-success-light:  #14532D;
+  --color-warning-light:  #713F12;
+  --color-danger-light:   #7F1D1D;
+  --color-info-light:     #1E3A5F;
+
+  --focus-ring:           0 0 0 3px rgba(52, 211, 153, 0.35);
+  --focus-ring-accent:    0 0 0 3px rgba(252, 211, 77, 0.35);
+}

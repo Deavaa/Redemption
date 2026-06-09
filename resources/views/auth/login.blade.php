@@ -9,45 +9,136 @@
 
     {{-- PWA & Mobile Integration --}}
     <link rel="manifest" href="{{ route('app.manifest') }}">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#059669">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Redemption">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="msapplication-TileColor" content="#6366f1">
+    <meta name="msapplication-TileColor" content="#059669">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192x192.png') }}">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/portal.css') }}" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ===== Login Page — Emerald & Gold Glassmorphism ===== */
+
+        /* ===== Keyframe Animations ===== */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes floatShape1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -40px) scale(1.05); }
+            66% { transform: translate(-20px, 25px) scale(0.95); }
+        }
+
+        @keyframes floatShape2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-35px, 30px) scale(0.97); }
+            66% { transform: translate(25px, -20px) scale(1.03); }
+        }
+
+        @keyframes floatShape3 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(15px, -35px) rotate(180deg); }
+        }
+
+        /* ===== Base ===== */
         body {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            font-family: Segoe UI, Tahoma, sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #059669 50%, #065F46 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
+            font-family: var(--font-family);
+            position: relative;
+            overflow: hidden;
         }
 
+        /* Geometric dot pattern overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Floating decorative shape 1 */
+        body::after {
+            content: '';
+            position: absolute;
+            top: -120px; right: -120px;
+            width: 420px; height: 420px;
+            border-radius: 50%;
+            background: rgba(4, 120, 87, 0.12);
+            animation: floatShape1 22s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== Login Box — Glassmorphism ===== */
         .login-box {
-            background: #fff;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, .3);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.3), 0 0 50px rgba(4, 120, 87, 0.08);
             width: 400px;
             max-width: 90%;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.8s ease-out both;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            bottom: -140px; left: -140px;
+            width: 360px; height: 360px;
+            border-radius: 50%;
+            background: rgba(6, 95, 70, 0.07);
+            animation: floatShape2 28s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .login-box::after {
+            content: '';
+            position: absolute;
+            top: -60px; left: -80px;
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            background: rgba(12, 31, 23, 0.06);
+            animation: floatShape3 18s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
         }
 
         .login-box h2 {
             text-align: center;
-            color: #2c3e50;
+            color: var(--color-sidebar-bg);
             margin-bottom: 5px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
         }
 
         .login-box p {
@@ -60,139 +151,119 @@
         .login-box .icon {
             text-align: center;
             font-size: 50px;
-            color: #3498db;
+            color: var(--color-primary);
             margin-bottom: 15px;
         }
 
-        .form-group {
-            margin-bottom: 18px;
-        }
-
+        /* ===== Form Inputs ===== */
+        .form-group { margin-bottom: 18px; }
         .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #555;
-            font-size: 14px;
+            display: block; font-weight: 600;
+            margin-bottom: 6px; color: #444; font-size: 14px;
         }
-
         .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 15px;
-            transition: border .3s;
+            width: 100%; padding: 14px 16px;
+            border: 1.5px solid #dde1e7;
+            border-radius: 10px; font-size: 15px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.7); color: #333;
         }
-
         .form-group input:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, .15);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-light);
+            background: #fff;
         }
+        .form-group input::placeholder { color: #aab; }
 
+        /* ===== Login Button ===== */
         .btn-login {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #3498db, #2c3e50);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity .3s;
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+            color: #fff; border: none; border-radius: 10px;
+            font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease;
+            letter-spacing: 0.3px;
         }
-
         .btn-login:hover {
-            opacity: .9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(4, 120, 87, 0.35);
+        }
+        .btn-login:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 4px 16px rgba(4, 120, 87, 0.25);
         }
 
+        /* ===== Alerts ===== */
         .alert {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 14px;
+            background: #f8d7da; color: #721c24;
+            padding: 10px 15px; border-radius: 8px;
+            margin-bottom: 15px; font-size: 14px;
         }
-
         .alert-success {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 14px;
+            background: #d1fae5; color: #065f46;
+            padding: 10px 15px; border-radius: 8px;
+            margin-bottom: 15px; font-size: 14px;
         }
 
+        /* ===== Language Switcher ===== */
         .lang-switcher {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 6px;
-            z-index: 10;
+            position: absolute; top: 20px; right: 20px;
+            display: flex; gap: 6px; z-index: 10;
         }
-
         .lang-switcher a {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.15);
-            color: #fff;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all .2s;
-            backdrop-filter: blur(4px);
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 8px 14px; border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff; text-decoration: none;
+            font-size: 13px; font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
-
         .lang-switcher a:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(4, 120, 87, 0.25);
+            border-color: rgba(4, 120, 87, 0.4);
         }
-
         .lang-switcher a.active {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(4, 120, 87, 0.3);
+            border-color: rgba(4, 120, 87, 0.5);
             font-weight: 700;
         }
+        .lang-switcher a i { font-size: 12px; }
 
-        .lang-switcher a i {
-            font-size: 12px;
-        }
-
+        /* ===== Links ===== */
         .forgot-link {
-            display: block;
-            text-align: center;
-            margin-top: 15px;
-            color: #3498db;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: color .2s;
+            display: block; text-align: center;
+            margin-top: 15px; color: var(--color-primary);
+            text-decoration: none; font-size: 14px; font-weight: 500;
+            transition: all 0.3s ease;
         }
-
         .forgot-link:hover {
-            color: #2c3e50;
+            color: var(--color-primary-hover);
             text-decoration: underline;
         }
-
         .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            color: #6c757d;
-            text-decoration: none;
-            font-size: 13px;
-            margin-bottom: 15px;
-            transition: color .2s;
+            display: inline-flex; align-items: center; gap: 4px;
+            color: #6c757d; text-decoration: none;
+            font-size: 13px; margin-bottom: 15px;
+            transition: color 0.3s ease;
         }
+        .back-link:hover { color: var(--color-primary); }
 
-        .back-link:hover {
-            color: #2c3e50;
+        /* ===== Mobile App Button ===== */
+        .login-box > a[style] {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover)) !important;
+            border-radius: 10px !important;
+            transition: all 0.3s ease !important;
         }
+        .login-box > a[style]:hover {
+            opacity: 0.9 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(4, 120, 87, 0.3);
+        }
+        .login-box > a[style]:active { transform: translateY(0) scale(0.98); }
     </style>
 </head>
 

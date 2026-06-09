@@ -15,7 +15,7 @@
 
     {{-- PWA & Mobile Integration --}}
     <link rel="manifest" href="{{ route('app.manifest') }}">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#059669">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Redemption">
@@ -32,6 +32,7 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -50,6 +51,7 @@
             --nav-height: 80px;
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/design-tokens.css') }}">
     <link rel="stylesheet" href="{{ asset('css/website.css') }}">
     @stack('styles')
 </head>
