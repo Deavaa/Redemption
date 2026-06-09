@@ -1,7 +1,7 @@
 /* ========== Slider Alert Bar ========== */
         .slider-alert-bar {
             position: absolute;
-            top: 0;
+            top: 70px;
             left: 0;
             right: 0;
             z-index: 100;
