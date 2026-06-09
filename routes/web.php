@@ -51,6 +51,7 @@ use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Section\SectionController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\WebContentController;
+use App\Http\Controllers\Slider\SliderAlertController;
 use App\Http\Controllers\Slider\SliderController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Student\StudentCommentController;
@@ -545,6 +546,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // ── Website ───────────────────────────────────────────
     Route::resource('sliders', SliderController::class)->middleware('permission:sliders.view');
+    Route::resource('slider-alerts', SliderAlertController::class)->middleware('permission:sliders.view');
+    Route::post('slider-alerts/{sliderAlert}/toggle', [SliderAlertController::class, 'toggle'])->name('slider-alerts.toggle')->middleware('permission:sliders.view');
     Route::resource('gallery-images', GalleryImageController::class)->middleware('permission:gallery.view');
     Route::resource('gallery-videos', GalleryVideoController::class)->middleware('permission:gallery.view');
     Route::resource('branches', BranchController::class)->middleware('permission:branches.view');
@@ -752,6 +755,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('web-content/upload', [WebContentController::class, 'upload'])->name('web-content.upload')->middleware('permission:settings.edit');
     Route::post('web-content/add-program', [WebContentController::class, 'addProgram'])->name('web-content.add-program')->middleware('permission:settings.edit');
     Route::post('web-content/remove-program', [WebContentController::class, 'removeProgram'])->name('web-content.remove-program')->middleware('permission:settings.edit');
+    Route::post('web-content/remove-program/{index}', [WebContentController::class, 'removeSpecificProgram'])->name('web-content.remove-specific-program')->middleware('permission:settings.edit');
 
     // Announcements
     Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index')->middleware('permission:calendar.view');

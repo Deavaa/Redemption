@@ -21,6 +21,8 @@
     <meta name="apple-mobile-web-app-title" content="Redemption">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ isset($settings['school_logo']) && $settings['school_logo'] ? asset('storage/' . $settings['school_logo']) : asset('icons/icon-192x192.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ isset($settings['school_logo']) && $settings['school_logo'] ? asset('storage/' . $settings['school_logo']) : asset('icons/icon-192x192.png') }}">
 
     <!-- Preconnect for faster CDN loading -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
