@@ -41,34 +41,9 @@
 @endsection
 
 @section('content')
-    {{-- Latest News Banner --}}
-    @isset($latestNews)
-    @if($latestNews->count() > 0)
-    <div style="background:linear-gradient(135deg,#0D3B12 0%,#1B5E20 100%);color:#fff;padding:12px 0;position:relative;z-index:100">
-        <div class="container">
-            <div class="d-flex align-items-center gap-3">
-                <span style="font-weight:700;font-size:.75rem;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:4px;white-space:nowrap;flex-shrink:0"><i class="fas fa-newspaper me-1"></i>NEWS</span>
-                <div style="overflow:hidden;flex:1">
-                    <div style="display:flex;gap:40px;animation:newsScroll 30s linear infinite;white-space:nowrap">
-                        @foreach($latestNews as $newsItem)
-                            <span style="font-size:.9rem;font-weight:500">
-                                <strong>{{ $newsItem->title }}</strong>
-                                @if($newsItem->content)<span style="opacity:.8"> — {{ Str::limit(strip_tags($newsItem->content), 120) }}</span>@endif
-                            </span>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <style>
-    @keyframes newsScroll { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
-    </style>
-    @endif
-    @endisset
-
     <!-- ========== Hero Slider Section ========== -->
     <section class="hero-slider" id="home">
+
         <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-pause="false">
             <div class="carousel-indicators">
                 @forelse($sliders as $index => $slider)
@@ -100,12 +75,9 @@
                                             @if($slider->description ?? null)
                                                 <p>{{ $slider->description }}</p>
                                             @endif
-                                            <div class="hero-buttons">
-                                                <a href="{{ route('login') }}" class="btn btn-hero-primary">
-                                                    <i class="fas fa-sign-in-alt me-2"></i>Login
-                                                </a>
-                                                <a href="{{ route('home') }}#about" class="btn btn-hero-secondary">
-                                                    <i class="fas fa-info-circle me-2"></i>Learn More
+                                            <div class="hero-buttons hero-buttons-right">
+                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
+                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
                                                 </a>
                                             </div>
                                         </div>
@@ -129,12 +101,9 @@
                                             </span>
                                             <h1>Empowering Minds, <span>Shaping Futures</span></h1>
                                             <p>{{ $settings['school_description'] }}</p>
-                                            <div class="hero-buttons">
-                                                <a href="{{ route('login') }}" class="btn btn-hero-primary">
-                                                    <i class="fas fa-sign-in-alt me-2"></i>Login
-                                                </a>
-                                                <a href="#about" class="btn btn-hero-secondary">
-                                                    <i class="fas fa-info-circle me-2"></i>Learn More
+                                            <div class="hero-buttons hero-buttons-right">
+                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
+                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
                                                 </a>
                                             </div>
                                         </div>
@@ -157,12 +126,9 @@
                                             </span>
                                             <h1>Where Learning <span>Becomes Discovery</span></h1>
                                             <p>Our innovative curriculum combines academic rigor with creative exploration, preparing students to think critically and solve real-world problems with confidence.</p>
-                                            <div class="hero-buttons">
-                                                <a href="{{ route('login') }}" class="btn btn-hero-primary">
-                                                    <i class="fas fa-sign-in-alt me-2"></i>Login
-                                                </a>
-                                                <a href="#programs" class="btn btn-hero-secondary">
-                                                    <i class="fas fa-graduation-cap me-2"></i>Programs
+                                            <div class="hero-buttons hero-buttons-right">
+                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
+                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
                                                 </a>
                                             </div>
                                         </div>
@@ -214,7 +180,127 @@
                 <span class="carousel-control-next-icon"></span>
             </button>
         </div>
+
+        <!-- Bottom Overlay: Alerts (Left) + News (Right) -->
+        @if($sliderAlerts->count() > 0)
+        <div class="slider-bottom-overlay">
+            <div class="slider-bottom-overlay-inner">
+                <!-- Left: Slider Alerts -->
+                <div class="slider-bottom-alerts">
+                    <div class="slider-bottom-label">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Alerts</span>
+                    </div>
+                    <div class="slider-bottom-alerts-list">
+                        @foreach($sliderAlerts as $alert)
+                            <span class="slider-bottom-alert-item" style="background:{{ $alert->bg_color }};color:{{ $alert->text_color }};">
+                                <i class="fas {{ $alert->icon }}"></i>
+                                {{ $alert->message }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     </section>
+
+    <!-- ========== News Splash Screen ========== -->
+    @isset($latestNews)
+    @if($latestNews->count() > 0)
+    <div class="news-splash" id="newsSplash">
+        <div class="news-splash-backdrop" id="newsSplashBackdrop"></div>
+        <div class="news-splash-modal">
+            <button class="news-splash-close" id="newsSplashClose" aria-label="Close news">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="news-splash-header">
+                <div class="news-splash-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h2>Latest News</h2>
+                <p>Stay updated with the latest from our school</p>
+            </div>
+            <div class="news-splash-grid">
+                @foreach($latestNews as $newsItem)
+                    <div class="news-splash-card">
+                        @if($newsItem->image_path)
+                            <div class="news-splash-card-img">
+                                <img src="{{ asset('storage/' . $newsItem->image_path) }}" alt="{{ $newsItem->title }}">
+                            </div>
+                        @else
+                            <div class="news-splash-card-img news-splash-card-placeholder">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                        @endif
+                        <div class="news-splash-card-body">
+                            <span class="news-splash-card-date">{{ $newsItem->created_at->format('M d, Y') }}</span>
+                            <h3>{{ $newsItem->title }}</h3>
+                            @if($newsItem->content)
+                                <p>{{ Str::limit(strip_tags($newsItem->content), 120) }}</p>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    <style>
+    .news-splash { position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all 0.4s ease; }
+    .news-splash.active { opacity:1;visibility:visible; }
+    .news-splash-backdrop { position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
+    .news-splash-modal { position:relative;background:linear-gradient(145deg,#0d0d2b 0%,#1a1a3e 100%);border:1px solid rgba(212,160,23,0.3);border-radius:24px;padding:2rem;max-width:800px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.5),0 0 40px rgba(212,160,23,0.1);transform:scale(0.9) translateY(20px);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); }
+    .news-splash.active .news-splash-modal { transform:scale(1) translateY(0); }
+    .news-splash-close { position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.3s ease;z-index:2; }
+    .news-splash-close:hover { background:rgba(212,160,23,0.3);border-color:rgba(212,160,23,0.5);transform:rotate(90deg); }
+    .news-splash-header { text-align:center;margin-bottom:2rem; }
+    .news-splash-icon { width:64px;height:64px;background:rgba(212,160,23,0.15);border:2px solid rgba(212,160,23,0.4);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem; }
+    .news-splash-icon i { font-size:1.5rem;color:#D4A017; }
+    .news-splash-header h2 { color:#fff;font-family:'Playfair Display',serif;font-size:1.8rem;margin-bottom:0.5rem; }
+    .news-splash-header p { color:rgba(255,255,255,0.6);font-size:0.9rem;margin:0; }
+    .news-splash-grid { display:grid;grid-template-columns:1fr;gap:1.25rem; }
+    .news-splash-card { display:flex;gap:1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;transition:all 0.3s ease;cursor:pointer; }
+    .news-splash-card:hover { background:rgba(255,255,255,0.1);border-color:rgba(212,160,23,0.4);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3); }
+    .news-splash-card-img { width:120px;min-height:100px;flex-shrink:0;overflow:hidden; }
+    .news-splash-card-img img { width:100%;height:100%;object-fit:cover; }
+    .news-splash-card-placeholder { display:flex;align-items:center;justify-content:center;background:rgba(212,160,23,0.1); }
+    .news-splash-card-placeholder i { font-size:2rem;color:rgba(212,160,23,0.5); }
+    .news-splash-card-body { flex:1;padding:1rem 1rem 1rem 0;min-width:0; }
+    .news-splash-card-date { font-size:0.72rem;color:rgba(212,160,23,0.8);font-weight:600;text-transform:uppercase;letter-spacing:0.5px; }
+    .news-splash-card-body h3 { color:#fff;font-size:1rem;margin:0.3rem 0 0.5rem;line-height:1.3; }
+    .news-splash-card-body p { color:rgba(255,255,255,0.6);font-size:0.82rem;margin:0;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+    @media(max-width:768px) {
+        .news-splash-modal { padding:1.5rem;border-radius:20px; }
+        .news-splash-header h2 { font-size:1.4rem; }
+        .news-splash-card { flex-direction:column; }
+        .news-splash-card-img { width:100%;min-height:140px; }
+        .news-splash-card-body { padding:1rem; }
+    }
+    </style>
+    <script>
+    (function(){
+        var splash = document.getElementById('newsSplash');
+        var closeBtn = document.getElementById('newsSplashClose');
+        var backdrop = document.getElementById('newsSplashBackdrop');
+        // Show splash after 2 seconds
+        setTimeout(function(){
+            if(splash && !sessionStorage.getItem('news_splash_dismissed')){
+                splash.classList.add('active');
+            }
+        }, 2000);
+        function closeSplash(){
+            splash.classList.remove('active');
+            sessionStorage.setItem('news_splash_dismissed', '1');
+        }
+        if(closeBtn) closeBtn.addEventListener('click', closeSplash);
+        if(backdrop) backdrop.addEventListener('click', closeSplash);
+        document.addEventListener('keydown', function(e){
+            if(e.key === 'Escape') closeSplash();
+        });
+    })();
+    </script>
+    @endif
+    @endisset
 
     <!-- ========== Animated Counters Section ========== -->
     <section class="counters-section section-divider-top" id="counters">
@@ -373,24 +459,38 @@
             </div>
             <div class="programs-scroll-wrapper reveal" id="programsScrollWrapper">
                 <div class="programs-scroll-track">
-                    @for ($i = 1; $i <= 4; $i++)
+                    @php
+                        $programsCount = (int) ($settings['programs_count'] ?? 4);
+                        $visiblePrograms = 0;
+                    @endphp
+                    @for ($i = 1; $i <= $programsCount; $i++)
                         @php
+                            $pVisible = ($settings["program_{$i}_visible"] ?? '1') === '1';
                             $pImage = $settings["program_{$i}_image"] ?? '';
                             $pTag = $settings["program_{$i}_tag"] ?? '';
                             $pTitle = $settings["program_{$i}_title"] ?? '';
                             $pDesc = $settings["program_{$i}_description"] ?? '';
                             $hasImage = !empty($pImage) && file_exists(public_path('storage/' . $pImage));
                         @endphp
-                        <div class="program-card">
-                            <div class="program-image" style="background-image: url('{{ $hasImage ? asset('storage/' . $pImage) : 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}')"></div>
-                            <div class="program-content">
-                                <span class="program-tag">{{ $pTag }}</span>
-                                <h4>{{ $pTitle }}</h4>
-                                <p>{{ $pDesc }}</p>
-                                <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                        @if($pVisible && !empty($pTitle))
+                            @php $visiblePrograms++; @endphp
+                            <div class="program-card">
+                                <div class="program-image" style="background-image: url('{{ $hasImage ? asset('storage/' . $pImage) : 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}')"></div>
+                                <div class="program-content">
+                                    <span class="program-tag">{{ $pTag }}</span>
+                                    <h4>{{ $pTitle }}</h4>
+                                    <p>{{ $pDesc }}</p>
+                                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                                </div>
                             </div>
-                        </div>
+                        @endif
                     @endfor
+                    @if($visiblePrograms === 0)
+                        <div style="text-align:center;padding:3rem;color:var(--text-light);">
+                            <i class="fas fa-graduation-cap" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:1rem;"></i>
+                            <p>No programs configured yet. Add programs via Admin → Web Content.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="programs-scroll-nav">

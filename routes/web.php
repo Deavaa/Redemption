@@ -51,6 +51,7 @@ use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Section\SectionController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\WebContentController;
+use App\Http\Controllers\Slider\SliderAlertController;
 use App\Http\Controllers\Slider\SliderController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Student\StudentCommentController;
@@ -60,6 +61,7 @@ use App\Http\Controllers\Parent\ParentDashboardController;
 use App\Http\Controllers\Subject\SubjectController;
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
+use App\Http\Controllers\TeacherReassignment\TeacherReassignmentController;
 use App\Http\Controllers\TeamMember\TeamMemberController;
 use App\Http\Controllers\Telegram\TelegramController;
 use App\Http\Controllers\Term\TermController;
@@ -372,9 +374,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // ── Academic ──────────────────────────────────────────
     Route::resource('academic-years', AcademicYearController::class)->middleware('permission:academic_years.view');
+    Route::get('academic-years/transition', [AcademicYearController::class, 'transitionForm'])->name('academic-years.transition')->middleware('permission:academic_years.manage');
+    Route::post('academic-years/transition-preview', [AcademicYearController::class, 'transitionPreview'])->name('academic-years.transition-preview')->middleware('permission:academic_years.manage');
+    Route::post('academic-years/transition', [AcademicYearController::class, 'processTransition'])->name('academic-years.process-transition')->middleware('permission:academic_years.manage');
     Route::resource('terms', TermController::class)->middleware('permission:terms.view');
     Route::resource('exams', ExamController::class)->middleware('permission:exams.view');
     Route::resource('subjects', SubjectController::class)->middleware('permission:subjects.view');
+
+    // Teacher Reassignment (bulk reassign teachers for new academic year)
+    Route::get('teacher-reassignment', [TeacherReassignmentController::class, 'index'])->name('teacher-reassignment.index')->middleware('permission:teacher_assignments.view');
+    Route::post('teacher-reassignment/save-homeroom', [TeacherReassignmentController::class, 'saveHomeroomTeachers'])->name('teacher-reassignment.save-homeroom')->middleware('permission:teacher_assignments.manage');
+    Route::post('teacher-reassignment/save-subjects', [TeacherReassignmentController::class, 'saveSubjectTeachers'])->name('teacher-reassignment.save-subjects')->middleware('permission:teacher_assignments.manage');
+    Route::post('teacher-reassignment/clear-all', [TeacherReassignmentController::class, 'clearAllTeachers'])->name('teacher-reassignment.clear-all')->middleware('permission:teacher_assignments.manage');
     Route::resource('subject-assignments', SubjectAssignmentController::class)->middleware('permission:subject_assignments.view');
     Route::delete('subject-assignments/bulk-delete', [SubjectAssignmentController::class, 'bulkDelete'])->name('subject-assignments.bulk-delete')->middleware('permission:subject_assignments.delete');
     Route::get('subject-assignments/api/classes', [SubjectAssignmentController::class, 'apiClasses'])->name('subject-assignments.api.classes');
@@ -552,10 +563,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // ── Website ───────────────────────────────────────────
     Route::resource('sliders', SliderController::class)->middleware('permission:sliders.view');
+    Route::resource('slider-alerts', SliderAlertController::class)->middleware('permission:sliders.view');
+    Route::post('slider-alerts/{sliderAlert}/toggle', [SliderAlertController::class, 'toggle'])->name('slider-alerts.toggle')->middleware('permission:sliders.view');
     Route::resource('gallery-images', GalleryImageController::class)->middleware('permission:gallery.view');
     Route::resource('gallery-videos', GalleryVideoController::class)->middleware('permission:gallery.view');
     Route::resource('branches', BranchController::class)->middleware('permission:branches.view');
     Route::resource('contact-messages', ContactMessageController::class)->middleware('permission:contact_messages.view');
+    // News custom routes (MUST be before resource to avoid {news} parameter conflict)
+    Route::post('news/{news}/approve', [NewsController::class, 'approve'])->name('news.approve')->middleware('permission:news.manage');
+    Route::post('news/{news}/reject', [NewsController::class, 'reject'])->name('news.reject')->middleware('permission:news.manage');
     Route::resource('news', NewsController::class)->middleware('permission:news.manage');
 
     // ── Classes & Sections ─────────────────────────────────
@@ -754,6 +770,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('web-content', [WebContentController::class, 'index'])->name('web-content.index')->middleware('permission:settings.view');
     Route::match(['post', 'put'], 'web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
     Route::post('web-content/upload', [WebContentController::class, 'upload'])->name('web-content.upload')->middleware('permission:settings.edit');
+    Route::post('web-content/add-program', [WebContentController::class, 'addProgram'])->name('web-content.add-program')->middleware('permission:settings.edit');
+    Route::post('web-content/remove-program', [WebContentController::class, 'removeProgram'])->name('web-content.remove-program')->middleware('permission:settings.edit');
+    Route::post('web-content/remove-program/{index}', [WebContentController::class, 'removeSpecificProgram'])->name('web-content.remove-specific-program')->middleware('permission:settings.edit');
 
     // Announcements
     Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index')->middleware('permission:calendar.view');
