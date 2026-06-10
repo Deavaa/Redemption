@@ -15,7 +15,7 @@
 
     {{-- PWA & Mobile Integration --}}
     <link rel="manifest" href="{{ route('app.manifest') }}">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#047857">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Redemption">
@@ -50,6 +50,7 @@
             --nav-height: 80px;
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/design-tokens.css') }}">
     <link rel="stylesheet" href="{{ asset('css/website.css') }}">
     @stack('styles')
 </head>

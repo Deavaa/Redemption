@@ -126,11 +126,17 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Password Reset (self-service)
+// Password Reset (self-service — security question based)
 Route::get('/password/forgot', [AuthController::class, 'showForgotPassword'])->name('password.forgot');
 Route::post('/password/forgot', [AuthController::class, 'submitForgotPassword'])->name('password.forgot.submit');
 Route::post('/password/verify-security', [AuthController::class, 'verifySecurityAnswer'])->name('password.verify.security');
 Route::post('/password/reset', [AuthController::class, 'submitResetPassword'])->name('password.reset.submit');
+
+// Password Reset (email-based with token)
+Route::get('/password/email', [AuthController::class, 'showLinkRequestForm'])->name('password.email');
+Route::post('/password/email', [AuthController::class, 'sendResetLinkEmail'])->name('password.email.send');
+Route::get('/password/reset/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('/password/reset-with-token', [AuthController::class, 'resetPasswordWithToken'])->name('password.reset.token');
 
 // Telegram webhook (public)
 Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
