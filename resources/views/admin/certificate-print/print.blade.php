@@ -330,79 +330,112 @@
     const SHEET_H_MM = 210;
 
     // ========== TERM-KEY DATA FROM SERVER ==========
-    const termKeys = {{ json_encode($termKeys) }};
-    const termNames = {{ json_encode($termNames) }};
-    const subjectRows = {{ json_encode($subjectRows) }};
-    const termSummaries = {{ json_encode($termSummaries) }};
-    const annualSummary = {{ json_encode($annualSummary) }};
+    const termKeys = {{ json_encode($termKeys) }} || [];
+    const termNames = {{ json_encode($termNames) }} || {};
+    const subjectRows = {{ json_encode($subjectRows) }} || [];
+    const termSummaries = {{ json_encode($termSummaries) }} || {};
+    const annualSummary = {{ json_encode($annualSummary) }} || {};
 
     // ========== SUBJECT TABLE HTML ==========
     function buildSubjectTable(fontSize) {
         // Build dynamic column headers based on available terms
-        let colCount = 2 + termKeys.length + 1; // # + Subject + terms + Annual Avg
-        let subjectWidth = Math.max(25, 50 - termKeys.length * 8);
-        let termColWidth = Math.floor((65 - subjectWidth) / (termKeys.length + 1));
+        // Fallback: if no terms, use a single "Total" column
+        let numTermCols = termKeys.length > 0 ? termKeys.length : 1;
+        let colCount = 2 + numTermCols + 1; // # + Subject + terms + Annual Avg
+        let subjectWidth = Math.max(25, 50 - numTermCols * 8);
+        let termColWidth = numTermCols > 0 ? Math.floor((65 - subjectWidth) / (numTermCols + 1)) : 15;
 
         let html = '<table style="width:100%;font-size:' + fontSize + 'pt;">';
         // Header row
         html += '<tr><th style="width:5%;">#</th><th style="width:' + subjectWidth + '%;">Subject</th>';
-        termKeys.forEach(function(key) {
-            html += '<th style="width:' + termColWidth + '%;">' + (termNames[key] || key) + '</th>';
-        });
+        if (termKeys.length > 0) {
+            termKeys.forEach(function(key) {
+                html += '<th style="width:' + termColWidth + '%;">' + (termNames[key] || key) + '</th>';
+            });
+        } else {
+            html += '<th style="width:' + termColWidth + '%;">Total</th>';
+        }
         html += '<th style="width:' + termColWidth + '%;">Annual Avg</th>';
         html += '</tr>';
 
         // Subject rows
-        subjectRows.forEach(function(row, i) {
-            html += '<tr>';
-            html += '<td>' + (i + 1) + '</td>';
-            html += '<td>' + (row.subject || 'Unknown') + '</td>';
-            termKeys.forEach(function(key) {
-                let val = row[key];
-                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+        if (subjectRows.length > 0) {
+            subjectRows.forEach(function(row, i) {
+                html += '<tr>';
+                html += '<td>' + (i + 1) + '</td>';
+                html += '<td>' + (row.subject || 'Unknown') + '</td>';
+                if (termKeys.length > 0) {
+                    termKeys.forEach(function(key) {
+                        let val = row[key];
+                        html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+                    });
+                } else {
+                    // No terms — show grand_total from annualAvg
+                    let val = row.annualAvg;
+                    html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+                }
+                html += '<td style="text-align:center;font-weight:600;">' + (row.annualAvg !== null && row.annualAvg !== undefined ? row.annualAvg : '—') + '</td>';
+                html += '</tr>';
             });
-            html += '<td style="text-align:center;font-weight:600;">' + (row.annualAvg !== null && row.annualAvg !== undefined ? row.annualAvg : '—') + '</td>';
-            html += '</tr>';
-        });
+        } else {
+            // No subject data — show placeholder row
+            html += '<tr><td>1</td><td colspan="' + (numTermCols + 2) + '" style="text-align:center;color:#999;">No marks recorded</td></tr>';
+        }
 
         // Summary rows after subjects
         // Conduct row
         html += '<tr style="font-weight:600;background:#f0f0f0;">';
         html += '<td colspan="2">Conduct</td>';
-        termKeys.forEach(function(key) {
-            let val = termSummaries[key]?.conduct;
-            html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-        });
+        if (termKeys.length > 0) {
+            termKeys.forEach(function(key) {
+                let val = termSummaries[key] ? termSummaries[key].conduct : null;
+                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+            });
+        } else {
+            html += '<td style="text-align:center;">' + (annualSummary.conduct !== null && annualSummary.conduct !== undefined ? annualSummary.conduct : '—') + '</td>';
+        }
         html += '<td style="text-align:center;">' + (annualSummary.conduct !== null && annualSummary.conduct !== undefined ? annualSummary.conduct : '—') + '</td>';
         html += '</tr>';
 
         // Total row
         html += '<tr style="font-weight:600;background:#f0f0f0;">';
         html += '<td colspan="2">Total</td>';
-        termKeys.forEach(function(key) {
-            let val = termSummaries[key]?.total;
-            html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-        });
+        if (termKeys.length > 0) {
+            termKeys.forEach(function(key) {
+                let val = termSummaries[key] ? termSummaries[key].total : null;
+                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+            });
+        } else {
+            html += '<td style="text-align:center;">' + (annualSummary.total !== null && annualSummary.total !== undefined ? annualSummary.total : '—') + '</td>';
+        }
         html += '<td style="text-align:center;">' + (annualSummary.total !== null && annualSummary.total !== undefined ? annualSummary.total : '—') + '</td>';
         html += '</tr>';
 
         // Average row
         html += '<tr style="font-weight:600;background:#f0f0f0;">';
         html += '<td colspan="2">Average</td>';
-        termKeys.forEach(function(key) {
-            let val = termSummaries[key]?.average;
-            html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-        });
+        if (termKeys.length > 0) {
+            termKeys.forEach(function(key) {
+                let val = termSummaries[key] ? termSummaries[key].average : null;
+                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+            });
+        } else {
+            html += '<td style="text-align:center;">' + (annualSummary.average !== null && annualSummary.average !== undefined ? annualSummary.average : '—') + '</td>';
+        }
         html += '<td style="text-align:center;">' + (annualSummary.average !== null && annualSummary.average !== undefined ? annualSummary.average : '—') + '</td>';
         html += '</tr>';
 
         // Rank row
         html += '<tr style="font-weight:600;background:#f0f0f0;">';
         html += '<td colspan="2">Rank</td>';
-        termKeys.forEach(function(key) {
-            let val = termSummaries[key]?.rank;
-            html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-        });
+        if (termKeys.length > 0) {
+            termKeys.forEach(function(key) {
+                let val = termSummaries[key] ? termSummaries[key].rank : null;
+                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+            });
+        } else {
+            html += '<td style="text-align:center;">' + (annualSummary.rank !== null && annualSummary.rank !== undefined ? annualSummary.rank : '—') + '</td>';
+        }
         html += '<td style="text-align:center;">' + (annualSummary.rank !== null && annualSummary.rank !== undefined ? annualSummary.rank : '—') + '</td>';
         html += '</tr>';
 

@@ -165,6 +165,19 @@ class CertificatePrintController extends Controller
         }
 
         // ========== TERM-BASED MARKS ==========
+        // Initialize defaults
+        $termMarks = [];
+        $termKeys  = [];
+        $termNames = [];
+        $subjectRows = [];
+        $termSummaries = [];
+        $annualSummary = [
+            'conduct' => null,
+            'total'   => null,
+            'average' => 0,
+            'rank'    => null,
+        ];
+
         // Get all terms for the academic year, ordered by term_number
         $terms = collect();
         if ($academicYear) {
@@ -181,9 +194,6 @@ class CertificatePrintController extends Controller
         $allMarks = $allMarks->get();
 
         // Build term-keyed marks collections (term1, term2, etc.)
-        $termMarks = [];      // [termKey => collection of marks]
-        $termKeys  = [];      // ['term1', 'term2']
-        $termNames = [];      // ['Term 1', 'Term 2']
 
         foreach ($terms as $idx => $term) {
             $key = 'term' . ($idx + 1);
@@ -207,7 +217,6 @@ class CertificatePrintController extends Controller
 
         // Build subject rows: each subject has grand_total per term + annual average
         $subjectIds = $allMarks->pluck('subject_id')->unique()->sort()->values();
-        $subjectRows = [];
 
         foreach ($subjectIds as $subjectId) {
             $subjectName = $allMarks->first(fn($m) => $m->subject_id == $subjectId)?->subject?->name ?? 'Unknown';
@@ -232,7 +241,6 @@ class CertificatePrintController extends Controller
         }
 
         // Compute summary per term: conduct, total, average, rank
-        $termSummaries = [];
         foreach ($termKeys as $key) {
             $tm = $termMarks[$key] ?? collect();
             $total = $tm->sum('grand_total');
@@ -284,7 +292,7 @@ class CertificatePrintController extends Controller
             'schoolLogo', 'templateType', 'templateLabel', 'numericName', 'stream',
             'conduct', 'handwriting', 'creativity',
             'homeroomTeacherName', 'homeroomComment',
-            'termKeys', 'termNames', 'termMarks', 'subjectRows',
+            'termKeys', 'termNames', 'subjectRows',
             'termSummaries', 'annualSummary'
         ));
     }
