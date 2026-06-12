@@ -135,18 +135,6 @@ class CertificatePrintController extends Controller
         // Allow manual override
         $templateType = $r->template_type ?: self::detectTemplateType($numericName, $stream);
 
-        // Get marks
-        $marksQuery = MarkEntry::with('subject')->where('student_id', $student->id);
-        if ($academicYear) {
-            $marksQuery->where('academic_year_id', $academicYear->id);
-        }
-        $marks = $marksQuery->orderBy('subject_id')->get();
-
-        $totalMarks = $marks->sum('grand_total');
-        $totalPossible = $marks->count() * 100;
-        $average = $marks->count() > 0 ? round($totalMarks / $marks->count(), 1) : 0;
-        $rank = $this->calculateRank($student, $academicYear);
-
         // School info (always use the general school name, not branch)
         $schoolName    = Setting::getLocalizedName();
         $schoolAddress = Setting::get('school_address', '');
@@ -156,11 +144,6 @@ class CertificatePrintController extends Controller
         // Template info
         $templateTypes = self::getTemplateTypes();
         $templateLabel = $templateTypes[$templateType]['label'] ?? 'Certificate';
-
-        // Conduct / handwriting / creativity from marks (averaged)
-        $conduct     = $marks->whereNotNull('conduct')->count() > 0 ? round($marks->whereNotNull('conduct')->avg('conduct'), 0) : null;
-        $handwriting = $marks->whereNotNull('handwriting')->count() > 0 ? round($marks->whereNotNull('handwriting')->avg('handwriting'), 0) : null;
-        $creativity  = $marks->whereNotNull('creativity')->count() > 0 ? round($marks->whereNotNull('creativity')->avg('creativity'), 0) : null;
 
         // Homeroom teacher info (from section's teacher_id)
         $homeroomTeacher = $student->section?->teacher;
@@ -181,12 +164,128 @@ class CertificatePrintController extends Controller
             $homeroomComment = $student->teacher_comments ?? '';
         }
 
+        // ========== TERM-BASED MARKS ==========
+        // Get all terms for the academic year, ordered by term_number
+        $terms = collect();
+        if ($academicYear) {
+            $terms = \App\Models\Term::where('academic_year_id', $academicYear->id)
+                ->orderBy('term_number')
+                ->get();
+        }
+
+        // Get all marks for the student in this academic year
+        $allMarks = MarkEntry::with(['subject', 'term'])->where('student_id', $student->id);
+        if ($academicYear) {
+            $allMarks->where('academic_year_id', $academicYear->id);
+        }
+        $allMarks = $allMarks->get();
+
+        // Build term-keyed marks collections (term1, term2, etc.)
+        $termMarks = [];      // [termKey => collection of marks]
+        $termKeys  = [];      // ['term1', 'term2']
+        $termNames = [];      // ['Term 1', 'Term 2']
+
+        foreach ($terms as $idx => $term) {
+            $key = 'term' . ($idx + 1);
+            $termKeys[] = $key;
+            $termNames[$key] = $term->name ?: ('Term ' . ($idx + 1));
+            $termMarks[$key] = $allMarks->filter(fn($m) => $m->term_id == $term->id);
+        }
+
+        // If no terms found but marks exist, group by term_id
+        if ($terms->isEmpty() && $allMarks->isNotEmpty()) {
+            $grouped = $allMarks->groupBy('term_id');
+            $idx = 0;
+            foreach ($grouped as $termId => $group) {
+                $idx++;
+                $key = 'term' . $idx;
+                $termKeys[] = $key;
+                $termNames[$key] = 'Term ' . $idx;
+                $termMarks[$key] = $group;
+            }
+        }
+
+        // Build subject rows: each subject has grand_total per term + annual average
+        $subjectIds = $allMarks->pluck('subject_id')->unique()->sort()->values();
+        $subjectRows = [];
+
+        foreach ($subjectIds as $subjectId) {
+            $subjectName = $allMarks->first(fn($m) => $m->subject_id == $subjectId)?->subject?->name ?? 'Unknown';
+            $row = ['subject' => $subjectName];
+
+            $termTotals = [];
+            foreach ($termKeys as $key) {
+                $mark = $termMarks[$key]->first(fn($m) => $m->subject_id == $subjectId);
+                $total = $mark?->grand_total;
+                $row[$key] = $total;
+                if ($total !== null) {
+                    $termTotals[] = $total;
+                }
+            }
+
+            // Annual average = average of available term totals
+            $row['annualAvg'] = count($termTotals) > 0
+                ? round(array_sum($termTotals) / count($termTotals), 1)
+                : null;
+
+            $subjectRows[] = $row;
+        }
+
+        // Compute summary per term: conduct, total, average, rank
+        $termSummaries = [];
+        foreach ($termKeys as $key) {
+            $tm = $termMarks[$key] ?? collect();
+            $total = $tm->sum('grand_total');
+            $count = $tm->count();
+            $avg = $count > 0 ? round($total / $count, 1) : 0;
+            $conductVal = $tm->whereNotNull('conduct')->count() > 0
+                ? round($tm->whereNotNull('conduct')->avg('conduct'), 0)
+                : null;
+
+            $termSummaries[$key] = [
+                'conduct' => $conductVal,
+                'total'   => $count > 0 ? $total : null,
+                'average' => $avg,
+                'rank'    => $this->calculateRankForTerm($student, $academicYear, $tm->first()?->term_id),
+            ];
+        }
+
+        // Annual summary (average of term summaries)
+        $validAverages = [];
+        $validTotals   = [];
+        $validConducts = [];
+        foreach ($termKeys as $key) {
+            if ($termSummaries[$key]['average'] > 0) $validAverages[] = $termSummaries[$key]['average'];
+            if ($termSummaries[$key]['total'] !== null) $validTotals[] = $termSummaries[$key]['total'];
+            if ($termSummaries[$key]['conduct'] !== null) $validConducts[] = $termSummaries[$key]['conduct'];
+        }
+        $annualSummary = [
+            'conduct' => count($validConducts) > 0 ? round(array_sum($validConducts) / count($validConducts), 0) : null,
+            'total'   => count($validTotals) > 0 ? array_sum($validTotals) : null,
+            'average' => count($validAverages) > 0 ? round(array_sum($validAverages) / count($validAverages), 1) : 0,
+            'rank'    => $this->calculateRank($student, $academicYear),
+        ];
+
+        // Legacy single-term variables for backward compatibility
+        $marks        = $allMarks;
+        $totalMarks   = $annualSummary['total'] ?? 0;
+        $totalPossible = $subjectIds->count() * 100;
+        $average      = $annualSummary['average'];
+        $rank         = $annualSummary['rank'];
+        $conduct      = $annualSummary['conduct'];
+        $handwriting  = $allMarks->whereNotNull('handwriting')->count() > 0
+            ? round($allMarks->whereNotNull('handwriting')->avg('handwriting'), 0) : null;
+        $creativity   = $allMarks->whereNotNull('creativity')->count() > 0
+            ? round($allMarks->whereNotNull('creativity')->avg('creativity'), 0) : null;
+
         return view('admin.certificate-print.print', compact(
             'student', 'academicYear', 'marks', 'totalMarks', 'totalPossible',
             'average', 'rank', 'schoolName', 'schoolAddress', 'schoolPhone',
             'schoolLogo', 'templateType', 'templateLabel', 'numericName', 'stream',
             'conduct', 'handwriting', 'creativity',
-            'homeroomTeacherName', 'homeroomComment'
+            'homeroomTeacherName', 'homeroomComment',
+            'termKeys', 'termNames', 'termMarks', 'subjectRows',
+            'termSummaries', 'annualSummary'
         ));
     }
 
@@ -209,6 +308,45 @@ class CertificatePrintController extends Controller
         foreach ($classStudents as $sid) {
             $avg = MarkEntry::where('student_id', $sid)
                 ->where('academic_year_id', $academicYear->id)
+                ->avg('grand_total');
+            if ($avg !== null) {
+                $averages[$sid] = round($avg, 2);
+            }
+        }
+
+        arsort($averages);
+
+        $rank = 1;
+        foreach ($averages as $sid => $avg) {
+            if ($sid == $student->id) {
+                return $rank;
+            }
+            $rank++;
+        }
+
+        return null;
+    }
+
+    private function calculateRankForTerm(Student $student, ?AcademicYear $academicYear, ?int $termId): ?int
+    {
+        if (!$academicYear || !$student->class_id || !$termId) {
+            return null;
+        }
+
+        $classStudents = Student::where('class_id', $student->class_id)
+            ->where('academic_year_id', $academicYear->id)
+            ->active()
+            ->pluck('id');
+
+        if ($classStudents->isEmpty()) {
+            return null;
+        }
+
+        $averages = [];
+        foreach ($classStudents as $sid) {
+            $avg = MarkEntry::where('student_id', $sid)
+                ->where('academic_year_id', $academicYear->id)
+                ->where('term_id', $termId)
                 ->avg('grand_total');
             if ($avg !== null) {
                 $averages[$sid] = round($avg, 2);

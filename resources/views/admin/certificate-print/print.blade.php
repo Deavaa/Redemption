@@ -329,21 +329,83 @@
     const SHEET_W_MM = 297;
     const SHEET_H_MM = 210;
 
+    // ========== TERM-KEY DATA FROM SERVER ==========
+    const termKeys = {{ json_encode($termKeys) }};
+    const termNames = {{ json_encode($termNames) }};
+    const subjectRows = {{ json_encode($subjectRows) }};
+    const termSummaries = {{ json_encode($termSummaries) }};
+    const annualSummary = {{ json_encode($annualSummary) }};
+
     // ========== SUBJECT TABLE HTML ==========
     function buildSubjectTable(fontSize) {
+        // Build dynamic column headers based on available terms
+        let colCount = 2 + termKeys.length + 1; // # + Subject + terms + Annual Avg
+        let subjectWidth = Math.max(25, 50 - termKeys.length * 8);
+        let termColWidth = Math.floor((65 - subjectWidth) / (termKeys.length + 1));
+
         let html = '<table style="width:100%;font-size:' + fontSize + 'pt;">';
-        html += '<tr><th style="width:5%;">#</th><th style="width:40%;">Subject</th><th style="width:12%;">CA</th><th style="width:12%;">Exam</th><th style="width:12%;">Total</th><th style="width:10%;">Grade</th><th style="width:9%;">Rank</th></tr>';
-        @foreach($marks as $i => $m)
+        // Header row
+        html += '<tr><th style="width:5%;">#</th><th style="width:' + subjectWidth + '%;">Subject</th>';
+        termKeys.forEach(function(key) {
+            html += '<th style="width:' + termColWidth + '%;">' + (termNames[key] || key) + '</th>';
+        });
+        html += '<th style="width:' + termColWidth + '%;">Annual Avg</th>';
+        html += '</tr>';
+
+        // Subject rows
+        subjectRows.forEach(function(row, i) {
             html += '<tr>';
-            html += '<td>{{ $i + 1 }}</td>';
-            html += '<td>{{ addslashes($m->subject?->name ?? "Unknown") }}</td>';
-            html += '<td>{{ $m->ca_total ?? "—" }}</td>';
-            html += '<td>{{ $m->exam_total ?? "—" }}</td>';
-            html += '<td style="font-weight:600;">{{ $m->grand_total ?? "—" }}</td>';
-            html += '<td>{{ $m->grade ?? "—" }}</td>';
-            html += '<td>—</td>';
+            html += '<td>' + (i + 1) + '</td>';
+            html += '<td>' + (row.subject || 'Unknown') + '</td>';
+            termKeys.forEach(function(key) {
+                let val = row[key];
+                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+            });
+            html += '<td style="text-align:center;font-weight:600;">' + (row.annualAvg !== null && row.annualAvg !== undefined ? row.annualAvg : '—') + '</td>';
             html += '</tr>';
-        @endforeach
+        });
+
+        // Summary rows after subjects
+        // Conduct row
+        html += '<tr style="font-weight:600;background:#f0f0f0;">';
+        html += '<td colspan="2">Conduct</td>';
+        termKeys.forEach(function(key) {
+            let val = termSummaries[key]?.conduct;
+            html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+        });
+        html += '<td style="text-align:center;">' + (annualSummary.conduct !== null && annualSummary.conduct !== undefined ? annualSummary.conduct : '—') + '</td>';
+        html += '</tr>';
+
+        // Total row
+        html += '<tr style="font-weight:600;background:#f0f0f0;">';
+        html += '<td colspan="2">Total</td>';
+        termKeys.forEach(function(key) {
+            let val = termSummaries[key]?.total;
+            html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+        });
+        html += '<td style="text-align:center;">' + (annualSummary.total !== null && annualSummary.total !== undefined ? annualSummary.total : '—') + '</td>';
+        html += '</tr>';
+
+        // Average row
+        html += '<tr style="font-weight:600;background:#f0f0f0;">';
+        html += '<td colspan="2">Average</td>';
+        termKeys.forEach(function(key) {
+            let val = termSummaries[key]?.average;
+            html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+        });
+        html += '<td style="text-align:center;">' + (annualSummary.average !== null && annualSummary.average !== undefined ? annualSummary.average : '—') + '</td>';
+        html += '</tr>';
+
+        // Rank row
+        html += '<tr style="font-weight:600;background:#f0f0f0;">';
+        html += '<td colspan="2">Rank</td>';
+        termKeys.forEach(function(key) {
+            let val = termSummaries[key]?.rank;
+            html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+        });
+        html += '<td style="text-align:center;">' + (annualSummary.rank !== null && annualSummary.rank !== undefined ? annualSummary.rank : '—') + '</td>';
+        html += '</tr>';
+
         html += '</table>';
         return html;
     }
@@ -360,6 +422,7 @@
 
     // ========== FIELD DEFINITIONS — PAGE 1 & PAGE 2 PER TEMPLATE ==========
     // Coordinates in mm (landscape: 297mm × 210mm)
+    // Page 2 subjectsTable now includes Conduct/Total/Average/Rank summary rows inside the table
     const fieldConfigs = {
         kg: {
             page1: [
@@ -371,15 +434,11 @@
                 { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 100, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 100, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 120, fontSize: 11, weight: 400, align: 'center' },
-                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60,  y: 140, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'handwriting',   label: 'Handwriting',    text: 'Handwriting: {{ $handwriting ?? "—" }}', x: 210, y: 140, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'homeroomTeacher', label: 'Homeroom Teacher', text: 'Homeroom Teacher: {{ addslashes($homeroomTeacherName) }}', x: 148.5, y: 165, fontSize: 11, weight: 600, align: 'center' },
             ],
             page2: [
-                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 20, y: 10, fontSize: 9, weight: 400 },
-                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 155, fontSize: 12, weight: 700, align: 'left' },
-                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 155, fontSize: 12, weight: 700, align: 'center' },
-                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 155, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'subjectsTable', label: 'Subjects Table (incl. Conduct/Total/Avg/Rank)', type: 'table', x: 20, y: 10, fontSize: 9, weight: 400 },
                 { id: 'homeroomComment', label: 'Homeroom Comment', text: '{{ addslashes($homeroomComment) }}', x: 148.5, y: 175, fontSize: 10, weight: 400, align: 'center' },
                 { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 60,  y: 195, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 195, fontSize: 11, weight: 400, align: 'left' },
@@ -395,15 +454,11 @@
                 { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 100, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 100, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 120, fontSize: 11, weight: 400, align: 'center' },
-                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60,  y: 140, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'handwriting',   label: 'Handwriting',    text: 'Handwriting: {{ $handwriting ?? "—" }}', x: 210, y: 140, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'homeroomTeacher', label: 'Homeroom Teacher', text: 'Homeroom Teacher: {{ addslashes($homeroomTeacherName) }}', x: 148.5, y: 165, fontSize: 11, weight: 600, align: 'center' },
             ],
             page2: [
-                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 20, y: 10, fontSize: 9, weight: 400 },
-                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 155, fontSize: 12, weight: 700, align: 'left' },
-                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 155, fontSize: 12, weight: 700, align: 'center' },
-                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 155, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'subjectsTable', label: 'Subjects Table (incl. Conduct/Total/Avg/Rank)', type: 'table', x: 20, y: 10, fontSize: 9, weight: 400 },
                 { id: 'homeroomComment', label: 'Homeroom Comment', text: '{{ addslashes($homeroomComment) }}', x: 148.5, y: 175, fontSize: 10, weight: 400, align: 'center' },
                 { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 60,  y: 195, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 195, fontSize: 11, weight: 400, align: 'left' },
@@ -419,14 +474,10 @@
                 { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 100, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 100, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 120, fontSize: 11, weight: 400, align: 'center' },
-                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60,  y: 140, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'homeroomTeacher', label: 'Homeroom Teacher', text: 'Homeroom Teacher: {{ addslashes($homeroomTeacherName) }}', x: 148.5, y: 160, fontSize: 11, weight: 600, align: 'center' },
             ],
             page2: [
-                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 20, y: 10, fontSize: 9, weight: 400 },
-                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 150, fontSize: 12, weight: 700, align: 'left' },
-                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 150, fontSize: 12, weight: 700, align: 'center' },
-                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'subjectsTable', label: 'Subjects Table (incl. Conduct/Total/Avg/Rank)', type: 'table', x: 20, y: 10, fontSize: 9, weight: 400 },
                 { id: 'homeroomComment', label: 'Homeroom Comment', text: '{{ addslashes($homeroomComment) }}', x: 148.5, y: 170, fontSize: 10, weight: 400, align: 'center' },
                 { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 60,  y: 190, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 190, fontSize: 11, weight: 400, align: 'left' },
@@ -442,14 +493,10 @@
                 { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 96, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 96, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 115, fontSize: 11, weight: 400, align: 'center' },
-                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60, y: 135, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'homeroomTeacher', label: 'Homeroom Teacher', text: 'Homeroom Teacher: {{ addslashes($homeroomTeacherName) }}', x: 148.5, y: 155, fontSize: 11, weight: 600, align: 'center' },
             ],
             page2: [
-                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 15, y: 10, fontSize: 9, weight: 400 },
-                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 145, fontSize: 12, weight: 700, align: 'left' },
-                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 145, fontSize: 12, weight: 700, align: 'center' },
-                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 145, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'subjectsTable', label: 'Subjects Table (incl. Conduct/Total/Avg/Rank)', type: 'table', x: 15, y: 10, fontSize: 9, weight: 400 },
                 { id: 'homeroomComment', label: 'Homeroom Comment', text: '{{ addslashes($homeroomComment) }}', x: 148.5, y: 165, fontSize: 10, weight: 400, align: 'center' },
                 { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 60,  y: 185, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 185, fontSize: 11, weight: 400, align: 'left' },
@@ -465,14 +512,10 @@
                 { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 96, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 96, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 115, fontSize: 11, weight: 400, align: 'center' },
-                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60, y: 135, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'homeroomTeacher', label: 'Homeroom Teacher', text: 'Homeroom Teacher: {{ addslashes($homeroomTeacherName) }}', x: 148.5, y: 155, fontSize: 11, weight: 600, align: 'center' },
             ],
             page2: [
-                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
-                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 145, fontSize: 12, weight: 700, align: 'left' },
-                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 145, fontSize: 12, weight: 700, align: 'center' },
-                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 145, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'subjectsTable', label: 'Subjects Table (incl. Conduct/Total/Avg/Rank)', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
                 { id: 'homeroomComment', label: 'Homeroom Comment', text: '{{ addslashes($homeroomComment) }}', x: 148.5, y: 165, fontSize: 10, weight: 400, align: 'center' },
                 { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 60,  y: 185, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 185, fontSize: 11, weight: 400, align: 'left' },
@@ -489,14 +532,10 @@
                 { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 93, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'streamName',    label: 'Stream',         text: 'Natural Science',                     x: 148.5, y: 111, fontSize: 13, weight: 700, align: 'center' },
                 { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 128, fontSize: 11, weight: 400, align: 'center' },
-                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60, y: 148, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'homeroomTeacher', label: 'Homeroom Teacher', text: 'Homeroom Teacher: {{ addslashes($homeroomTeacherName) }}', x: 148.5, y: 168, fontSize: 11, weight: 600, align: 'center' },
             ],
             page2: [
-                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
-                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 145, fontSize: 12, weight: 700, align: 'left' },
-                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 145, fontSize: 12, weight: 700, align: 'center' },
-                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 145, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'subjectsTable', label: 'Subjects Table (incl. Conduct/Total/Avg/Rank)', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
                 { id: 'homeroomComment', label: 'Homeroom Comment', text: '{{ addslashes($homeroomComment) }}', x: 148.5, y: 165, fontSize: 10, weight: 400, align: 'center' },
                 { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 60,  y: 185, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 185, fontSize: 11, weight: 400, align: 'left' },
@@ -513,14 +552,10 @@
                 { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 93, fontSize: 12, weight: 600, align: 'left' },
                 { id: 'streamName',    label: 'Stream',         text: 'Social Science',                      x: 148.5, y: 111, fontSize: 13, weight: 700, align: 'center' },
                 { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 128, fontSize: 11, weight: 400, align: 'center' },
-                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60, y: 148, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'homeroomTeacher', label: 'Homeroom Teacher', text: 'Homeroom Teacher: {{ addslashes($homeroomTeacherName) }}', x: 148.5, y: 168, fontSize: 11, weight: 600, align: 'center' },
             ],
             page2: [
-                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
-                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 145, fontSize: 12, weight: 700, align: 'left' },
-                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 145, fontSize: 12, weight: 700, align: 'center' },
-                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 145, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'subjectsTable', label: 'Subjects Table (incl. Conduct/Total/Avg/Rank)', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
                 { id: 'homeroomComment', label: 'Homeroom Comment', text: '{{ addslashes($homeroomComment) }}', x: 148.5, y: 165, fontSize: 10, weight: 400, align: 'center' },
                 { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 60,  y: 185, fontSize: 11, weight: 400, align: 'left' },
                 { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 185, fontSize: 11, weight: 400, align: 'left' },
