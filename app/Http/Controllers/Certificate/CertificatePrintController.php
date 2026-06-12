@@ -146,17 +146,11 @@ class CertificatePrintController extends Controller
         $average = $marks->count() > 0 ? round($totalMarks / $marks->count(), 1) : 0;
         $rank = $this->calculateRank($student, $academicYear);
 
-        // School info
+        // School info (always use the general school name, not branch)
         $schoolName    = Setting::getLocalizedName();
         $schoolAddress = Setting::get('school_address', '');
         $schoolPhone   = Setting::get('school_phone', '');
         $schoolLogo    = Setting::getLogoUrl();
-
-        // Branch info
-        $branch        = $student->branch;
-        $branchName    = $branch ? $branch->name : $schoolName;
-        $branchAddress = $branch ? $branch->address : $schoolAddress;
-        $branchPhone   = $branch ? $branch->phone : $schoolPhone;
 
         // Template info
         $templateTypes = self::getTemplateTypes();
@@ -170,8 +164,7 @@ class CertificatePrintController extends Controller
         return view('admin.certificate-print.print', compact(
             'student', 'academicYear', 'marks', 'totalMarks', 'totalPossible',
             'average', 'rank', 'schoolName', 'schoolAddress', 'schoolPhone',
-            'schoolLogo', 'branchName', 'branchAddress', 'branchPhone',
-            'templateType', 'templateLabel', 'numericName', 'stream',
+            'schoolLogo', 'templateType', 'templateLabel', 'numericName', 'stream',
             'conduct', 'handwriting', 'creativity'
         ));
     }

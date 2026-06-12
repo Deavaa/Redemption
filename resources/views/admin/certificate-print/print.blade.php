@@ -81,20 +81,44 @@
             font-weight: 600;
         }
 
+        .page-tab {
+            padding: 4px 14px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #94a3b8;
+            transition: all .15s;
+        }
+        .page-tab.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+
         /* ========== CERTIFICATE SHEET ========== */
         .cert-workspace {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             padding: 20px;
+            gap: 30px;
         }
 
         .cert-sheet {
-            width: 210mm;
-            height: 297mm;
+            width: 297mm;
+            height: 210mm;
             position: relative;
             background: #fff;
             box-shadow: 0 4px 24px rgba(0,0,0,.4);
             overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .page-label {
+            position: absolute;
+            top: -22px;
+            left: 0;
+            font-size: 0.7rem;
+            color: #64748b;
+            font-weight: 600;
         }
 
         /* ========== DRAGGABLE FIELDS ========== */
@@ -126,6 +150,14 @@
             font-size: inherit;
             color: #111;
         }
+        .cert-field-table th {
+            border: 1px solid #999;
+            padding: 2px 5px;
+            font-size: inherit;
+            color: #111;
+            background: #f0f0f0;
+            font-weight: 700;
+        }
 
         /* ========== GRID / MARGINS ========== */
         .cert-sheet.show-grid {
@@ -137,7 +169,7 @@
         .cert-sheet.show-margins::before {
             content: '';
             position: absolute;
-            top: 10mm; left: 15mm; right: 15mm; bottom: 15mm;
+            top: 10mm; left: 15mm; right: 15mm; bottom: 10mm;
             border: 1px dashed rgba(0,150,0,.3);
             pointer-events: none;
             z-index: 0;
@@ -182,18 +214,21 @@
         @media print {
             body { background: #fff; }
             .control-panel, .template-panel, .no-print { display: none !important; }
-            .cert-workspace { padding: 0; }
+            .cert-workspace { padding: 0; gap: 0; }
             .cert-sheet {
                 box-shadow: none;
-                width: 210mm;
-                height: 297mm;
+                width: 297mm;
+                height: 210mm;
+                page-break-after: always;
             }
+            .cert-sheet:last-child { page-break-after: avoid; }
             .cert-field, .cert-field-table {
                 outline: none !important;
                 background: transparent !important;
             }
+            .page-label { display: none !important; }
             @page {
-                size: A4;
+                size: A4 landscape;
                 margin: 0;
             }
         }
@@ -218,7 +253,10 @@
         </div>
     </div>
     <div class="control-row">
-        <span class="control-label">Field:</span>
+        <span class="control-label">Page:</span>
+        <button class="page-tab active" data-page="1" onclick="switchPage(1)">Page 1</button>
+        <button class="page-tab" data-page="2" onclick="switchPage(2)">Page 2</button>
+        <span class="control-label" style="margin-left:12px;">Field:</span>
         <select id="fieldSelector" class="control-select" onchange="selectField(this.value)">
             <option value="">-- Select --</option>
         </select>
@@ -240,18 +278,27 @@
             <button onclick="setAlign('right')" class="control-btn" title="Align Right">➡</button>
         </div>
         <div style="margin-left:8px;display:flex;gap:3px;">
-            <button onclick="nudgeField(-1,0)" class="control-btn" title="← Left">◀</button>
-            <button onclick="nudgeField(1,0)" class="control-btn" title="→ Right">▶</button>
-            <button onclick="nudgeField(0,-1)" class="control-btn" title="↑ Up">▲</button>
-            <button onclick="nudgeField(0,1)" class="control-btn" title="↓ Down">▼</button>
+            <button onclick="nudgeField(-1,0)" class="control-btn" title="← Left (Shift=10mm)">◀</button>
+            <button onclick="nudgeField(1,0)" class="control-btn" title="→ Right (Shift=10mm)">▶</button>
+            <button onclick="nudgeField(0,-1)" class="control-btn" title="↑ Up (Shift=10mm)">▲</button>
+            <button onclick="nudgeField(0,1)" class="control-btn" title="↓ Down (Shift=10mm)">▼</button>
         </div>
     </div>
 </div>
 
-{{-- CERTIFICATE SHEET --}}
+{{-- CERTIFICATE SHEETS — TWO LANDSCAPE PAGES --}}
 <div class="cert-workspace">
-    <div class="cert-sheet" id="certSheet">
-        {{-- Fields will be injected by JavaScript based on template type --}}
+    <div style="position:relative;">
+        <span class="page-label no-print">Page 1 — Student Info</span>
+        <div class="cert-sheet" id="certSheet1">
+            {{-- Page 1 fields injected by JS --}}
+        </div>
+    </div>
+    <div style="position:relative;">
+        <span class="page-label no-print">Page 2 — Results</span>
+        <div class="cert-sheet" id="certSheet2">
+            {{-- Page 2 fields injected by JS --}}
+        </div>
     </div>
 </div>
 
@@ -264,7 +311,7 @@
         <button onclick="resetPositions()" class="control-btn danger">Reset Default</button>
     </div>
     <div class="template-list" id="templateList">
-        {{-- Saved templates will be rendered here --}}
+        {{-- Saved templates rendered here --}}
     </div>
 </div>
 
@@ -275,136 +322,17 @@
     const STORAGE_KEY = 'certPrint_positions_' + TEMPLATE_TYPE;
     const TEMPLATES_KEY = 'certPrint_templates_' + TEMPLATE_TYPE;
 
-    // Sheet dimensions in px (A4 at 96dpi)
-    const SHEET = document.getElementById('certSheet');
-    let SHEET_W = SHEET.offsetWidth;
-    let SHEET_H = SHEET.offsetHeight;
+    const SHEET1 = document.getElementById('certSheet1');
+    const SHEET2 = document.getElementById('certSheet2');
 
-    // ========== FIELD DEFINITIONS PER TEMPLATE TYPE ==========
-    const fieldConfigs = {
-        kg: [
-            { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($branchName) }}',       x: 105, y: 30,  fontSize: 16, weight: 700, align: 'center' },
-            { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($branchAddress) }}',    x: 105, y: 50,  fontSize: 10, weight: 400, align: 'center' },
-            { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}', x: 105, y: 120, fontSize: 18, weight: 700, align: 'center' },
-            { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 105, y: 155, fontSize: 13, weight: 600, align: 'center' },
-            { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 105, y: 175, fontSize: 13, weight: 600, align: 'center' },
-            { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 105, y: 200, fontSize: 12, weight: 400, align: 'center' },
-            { id: 'conduct',       label: 'Conduct',        text: '{{ $conduct ?? "—" }}',       x: 80,  y: 240, fontSize: 12, weight: 400, align: 'center' },
-            { id: 'handwriting',   label: 'Handwriting',    text: '{{ $handwriting ?? "—" }}',   x: 130, y: 240, fontSize: 12, weight: 400, align: 'center' },
-            { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}', x: 105, y: 280, fontSize: 11, weight: 400, align: 'center' },
-        ],
-        'g1-2': [
-            { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($branchName) }}',          x: 105, y: 30,  fontSize: 16, weight: 700, align: 'center' },
-            { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($branchAddress) }}',       x: 105, y: 50,  fontSize: 10, weight: 400, align: 'center' },
-            { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}',  x: 105, y: 110, fontSize: 18, weight: 700, align: 'center' },
-            { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 60, y: 145, fontSize: 12, weight: 400, align: 'left' },
-            { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 150, y: 145, fontSize: 12, weight: 400, align: 'left' },
-            { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 170, fontSize: 13, weight: 600, align: 'left' },
-            { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 150, y: 170, fontSize: 13, weight: 600, align: 'left' },
-            { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 105, y: 195, fontSize: 12, weight: 400, align: 'center' },
-            { id: 'avgMarks',      label: 'Average',        text: '{{ $average }}',       x: 60,  y: 230, fontSize: 14, weight: 700, align: 'left' },
-            { id: 'rank',          label: 'Rank',           text: '{{ $rank ? $rank : "—" }}', x: 150, y: 230, fontSize: 14, weight: 700, align: 'left' },
-            { id: 'conduct',       label: 'Conduct',        text: '{{ $conduct ?? "—" }}',       x: 60,  y: 260, fontSize: 12, weight: 400, align: 'left' },
-            { id: 'handwriting',   label: 'Handwriting',    text: '{{ $handwriting ?? "—" }}',   x: 150, y: 260, fontSize: 12, weight: 400, align: 'left' },
-            { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}', x: 105, y: 290, fontSize: 11, weight: 400, align: 'center' },
-        ],
-        'g3-6': [
-            { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($branchName) }}',          x: 105, y: 25,  fontSize: 16, weight: 700, align: 'center' },
-            { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($branchAddress) }}',       x: 105, y: 45,  fontSize: 10, weight: 400, align: 'center' },
-            { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}',  x: 105, y: 90,  fontSize: 18, weight: 700, align: 'center' },
-            { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 50, y: 120, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 155, y: 120, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 50, y: 145, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 155, y: 145, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 105, y: 170, fontSize: 11, weight: 400, align: 'center' },
-            { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 20, y: 200, fontSize: 9, weight: 400 },
-            { id: 'totalMarks',    label: 'Total Marks',    text: '{{ $totalMarks }} / {{ $totalPossible }}', x: 50, y: 260, fontSize: 13, weight: 700, align: 'left' },
-            { id: 'avgMarks',      label: 'Average',        text: '{{ $average }}',       x: 105, y: 260, fontSize: 13, weight: 700, align: 'center' },
-            { id: 'rank',          label: 'Rank',           text: '{{ $rank ? $rank : "—" }}', x: 155, y: 260, fontSize: 13, weight: 700, align: 'left' },
-            { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}', x: 105, y: 290, fontSize: 11, weight: 400, align: 'center' },
-        ],
-        'g7-8': [
-            { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($branchName) }}',          x: 105, y: 25,  fontSize: 16, weight: 700, align: 'center' },
-            { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($branchAddress) }}',       x: 105, y: 45,  fontSize: 10, weight: 400, align: 'center' },
-            { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}',  x: 105, y: 85,  fontSize: 18, weight: 700, align: 'center' },
-            { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 50, y: 115, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 155, y: 115, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 50, y: 140, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 155, y: 140, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 105, y: 165, fontSize: 11, weight: 400, align: 'center' },
-            { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 15, y: 195, fontSize: 9, weight: 400 },
-            { id: 'totalMarks',    label: 'Total Marks',    text: '{{ $totalMarks }} / {{ $totalPossible }}', x: 40, y: 258, fontSize: 12, weight: 700, align: 'left' },
-            { id: 'avgMarks',      label: 'Average',        text: '{{ $average }}',       x: 105, y: 258, fontSize: 12, weight: 700, align: 'center' },
-            { id: 'rank',          label: 'Rank',           text: '{{ $rank ? $rank : "—" }}', x: 165, y: 258, fontSize: 12, weight: 700, align: 'left' },
-            { id: 'conduct',       label: 'Conduct',        text: '{{ $conduct ?? "—" }}',       x: 40,  y: 278, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}', x: 105, y: 290, fontSize: 11, weight: 400, align: 'center' },
-        ],
-        'g9-10': [
-            { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($branchName) }}',          x: 105, y: 25,  fontSize: 16, weight: 700, align: 'center' },
-            { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($branchAddress) }}',       x: 105, y: 45,  fontSize: 10, weight: 400, align: 'center' },
-            { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}',  x: 105, y: 80,  fontSize: 18, weight: 700, align: 'center' },
-            { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 50, y: 110, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 155, y: 110, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 50, y: 135, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 155, y: 135, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 105, y: 160, fontSize: 11, weight: 400, align: 'center' },
-            { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 15, y: 190, fontSize: 8, weight: 400 },
-            { id: 'totalMarks',    label: 'Total Marks',    text: '{{ $totalMarks }} / {{ $totalPossible }}', x: 40, y: 252, fontSize: 12, weight: 700, align: 'left' },
-            { id: 'avgMarks',      label: 'Average',        text: '{{ $average }}',       x: 105, y: 252, fontSize: 12, weight: 700, align: 'center' },
-            { id: 'rank',          label: 'Rank',           text: '{{ $rank ? $rank : "—" }}', x: 165, y: 252, fontSize: 12, weight: 700, align: 'left' },
-            { id: 'conduct',       label: 'Conduct',        text: '{{ $conduct ?? "—" }}',       x: 40,  y: 272, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}', x: 105, y: 290, fontSize: 11, weight: 400, align: 'center' },
-        ],
-        'g11-12-nat': [
-            { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($branchName) }}',          x: 105, y: 25,  fontSize: 16, weight: 700, align: 'center' },
-            { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($branchAddress) }}',       x: 105, y: 45,  fontSize: 10, weight: 400, align: 'center' },
-            { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}',  x: 105, y: 78,  fontSize: 18, weight: 700, align: 'center' },
-            { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 50, y: 108, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 155, y: 108, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 50, y: 132, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 155, y: 132, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'streamName',    label: 'Stream',         text: 'Natural Science',                        x: 105, y: 152, fontSize: 12, weight: 600, align: 'center' },
-            { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 105, y: 172, fontSize: 11, weight: 400, align: 'center' },
-            { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 15, y: 195, fontSize: 8, weight: 400 },
-            { id: 'totalMarks',    label: 'Total Marks',    text: '{{ $totalMarks }} / {{ $totalPossible }}', x: 40, y: 250, fontSize: 12, weight: 700, align: 'left' },
-            { id: 'avgMarks',      label: 'Average',        text: '{{ $average }}',       x: 105, y: 250, fontSize: 12, weight: 700, align: 'center' },
-            { id: 'rank',          label: 'Rank',           text: '{{ $rank ? $rank : "—" }}', x: 165, y: 250, fontSize: 12, weight: 700, align: 'left' },
-            { id: 'conduct',       label: 'Conduct',        text: '{{ $conduct ?? "—" }}',       x: 40,  y: 270, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}', x: 105, y: 290, fontSize: 11, weight: 400, align: 'center' },
-        ],
-        'g11-12-social': [
-            { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($branchName) }}',          x: 105, y: 25,  fontSize: 16, weight: 700, align: 'center' },
-            { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($branchAddress) }}',       x: 105, y: 45,  fontSize: 10, weight: 400, align: 'center' },
-            { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}',  x: 105, y: 78,  fontSize: 18, weight: 700, align: 'center' },
-            { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 50, y: 108, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 155, y: 108, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 50, y: 132, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 155, y: 132, fontSize: 12, weight: 600, align: 'left' },
-            { id: 'streamName',    label: 'Stream',         text: 'Social Science',                         x: 105, y: 152, fontSize: 12, weight: 600, align: 'center' },
-            { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 105, y: 172, fontSize: 11, weight: 400, align: 'center' },
-            { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 15, y: 195, fontSize: 8, weight: 400 },
-            { id: 'totalMarks',    label: 'Total Marks',    text: '{{ $totalMarks }} / {{ $totalPossible }}', x: 40, y: 250, fontSize: 12, weight: 700, align: 'left' },
-            { id: 'avgMarks',      label: 'Average',        text: '{{ $average }}',       x: 105, y: 250, fontSize: 12, weight: 700, align: 'center' },
-            { id: 'rank',          label: 'Rank',           text: '{{ $rank ? $rank : "—" }}', x: 165, y: 250, fontSize: 12, weight: 700, align: 'left' },
-            { id: 'conduct',       label: 'Conduct',        text: '{{ $conduct ?? "—" }}',       x: 40,  y: 270, fontSize: 11, weight: 400, align: 'left' },
-            { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}', x: 105, y: 290, fontSize: 11, weight: 400, align: 'center' },
-        ],
-    };
+    // Landscape A4: 297mm wide × 210mm tall
+    const SHEET_W_MM = 297;
+    const SHEET_H_MM = 210;
 
-    // Subject table HTML per template
-    const subjectTableHTML = {
-        kg: null, // No subject table for KG
-        'g1-2': null, // No subject table for G1-2
-        'g3-6': buildSubjectTable(9),
-        'g7-8': buildSubjectTable(9),
-        'g9-10': buildSubjectTable(9),
-        'g11-12-nat': buildSubjectTable(9),
-        'g11-12-social': buildSubjectTable(9),
-    };
-
+    // ========== SUBJECT TABLE HTML ==========
     function buildSubjectTable(fontSize) {
         let html = '<table style="width:100%;font-size:' + fontSize + 'pt;">';
-        html += '<tr style="background:#f0f0f0;font-weight:700;"><td style="width:5%;">#</td><td style="width:45%;">Subject</td><td style="width:15%;">CA</td><td style="width:15%;">Exam</td><td style="width:20%;">Total</td></tr>';
+        html += '<tr><th style="width:5%;">#</th><th style="width:40%;">Subject</th><th style="width:12%;">CA</th><th style="width:12%;">Exam</th><th style="width:12%;">Total</th><th style="width:10%;">Grade</th><th style="width:9%;">Rank</th></tr>';
         @foreach($marks as $i => $m)
             html += '<tr>';
             html += '<td>{{ $i + 1 }}</td>';
@@ -412,53 +340,215 @@
             html += '<td>{{ $m->ca_total ?? "—" }}</td>';
             html += '<td>{{ $m->exam_total ?? "—" }}</td>';
             html += '<td style="font-weight:600;">{{ $m->grand_total ?? "—" }}</td>';
+            html += '<td>{{ $m->grade ?? "—" }}</td>';
+            html += '<td>—</td>';
             html += '</tr>';
         @endforeach
         html += '</table>';
         return html;
     }
 
+    const subjectTableHTML = {
+        kg: null,
+        'g1-2': null,
+        'g3-6': buildSubjectTable(9),
+        'g7-8': buildSubjectTable(9),
+        'g9-10': buildSubjectTable(9),
+        'g11-12-nat': buildSubjectTable(8),
+        'g11-12-social': buildSubjectTable(8),
+    };
+
+    // ========== FIELD DEFINITIONS — PAGE 1 & PAGE 2 PER TEMPLATE ==========
+    // Coordinates in mm (landscape: 297mm × 210mm)
+    const fieldConfigs = {
+        kg: {
+            page1: [
+                { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($schoolName) }}',       x: 148.5, y: 20,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($schoolAddress) }}',    x: 148.5, y: 35,  fontSize: 10, weight: 400, align: 'center' },
+                { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}', x: 148.5, y: 70,  fontSize: 20, weight: 700, align: 'center' },
+                { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 80, y: 100, fontSize: 13, weight: 600, align: 'left' },
+                { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 100, fontSize: 13, weight: 600, align: 'left' },
+                { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 125, fontSize: 12, weight: 400, align: 'center' },
+                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 80,  y: 150, fontSize: 12, weight: 400, align: 'left' },
+                { id: 'handwriting',   label: 'Handwriting',    text: 'Handwriting: {{ $handwriting ?? "—" }}', x: 210, y: 150, fontSize: 12, weight: 400, align: 'left' },
+            ],
+            page2: [
+                { id: 'dateField',  label: 'Date',  text: '{{ now()->format("d/m/Y") }}',  x: 148.5, y: 80,  fontSize: 12, weight: 400, align: 'center' },
+                { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 80, y: 160, fontSize: 11, weight: 400, align: 'center' },
+                { id: 'teacherSignature',  label: 'Teacher Signature',  text: '_______________________', x: 210, y: 160, fontSize: 11, weight: 400, align: 'center' },
+            ]
+        },
+        'g1-2': {
+            page1: [
+                { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($schoolName) }}',       x: 148.5, y: 20,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($schoolAddress) }}',    x: 148.5, y: 35,  fontSize: 10, weight: 400, align: 'center' },
+                { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}', x: 148.5, y: 65,  fontSize: 20, weight: 700, align: 'center' },
+                { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 80, y: 95, fontSize: 12, weight: 400, align: 'left' },
+                { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 210, y: 95, fontSize: 12, weight: 400, align: 'left' },
+                { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 80, y: 115, fontSize: 13, weight: 600, align: 'left' },
+                { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 115, fontSize: 13, weight: 600, align: 'left' },
+                { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 140, fontSize: 12, weight: 400, align: 'center' },
+                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',       x: 80,  y: 165, fontSize: 14, weight: 700, align: 'left' },
+                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 210, y: 165, fontSize: 14, weight: 700, align: 'left' },
+                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 80,  y: 185, fontSize: 12, weight: 400, align: 'left' },
+                { id: 'handwriting',   label: 'Handwriting',    text: 'Handwriting: {{ $handwriting ?? "—" }}', x: 210, y: 185, fontSize: 12, weight: 400, align: 'left' },
+            ],
+            page2: [
+                { id: 'dateField',  label: 'Date',  text: '{{ now()->format("d/m/Y") }}',  x: 148.5, y: 80,  fontSize: 12, weight: 400, align: 'center' },
+                { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 80, y: 160, fontSize: 11, weight: 400, align: 'center' },
+                { id: 'teacherSignature',  label: 'Teacher Signature',  text: '_______________________', x: 210, y: 160, fontSize: 11, weight: 400, align: 'center' },
+            ]
+        },
+        'g3-6': {
+            page1: [
+                { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($schoolName) }}',       x: 148.5, y: 18,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($schoolAddress) }}',    x: 148.5, y: 33,  fontSize: 10, weight: 400, align: 'center' },
+                { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}', x: 148.5, y: 58,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 60, y: 82, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 210, y: 82, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 100, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 100, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 120, fontSize: 11, weight: 400, align: 'center' },
+            ],
+            page2: [
+                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 20, y: 15, fontSize: 9, weight: 400 },
+                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 155, fontSize: 13, weight: 700, align: 'left' },
+                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 155, fontSize: 13, weight: 700, align: 'center' },
+                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 155, fontSize: 13, weight: 700, align: 'left' },
+                { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 80,  y: 185, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 185, fontSize: 11, weight: 400, align: 'left' },
+            ]
+        },
+        'g7-8': {
+            page1: [
+                { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($schoolName) }}',       x: 148.5, y: 18,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($schoolAddress) }}',    x: 148.5, y: 33,  fontSize: 10, weight: 400, align: 'center' },
+                { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}', x: 148.5, y: 58,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 60, y: 82, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 210, y: 82, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 100, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 100, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 120, fontSize: 11, weight: 400, align: 'center' },
+                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60, y: 140, fontSize: 11, weight: 400, align: 'left' },
+            ],
+            page2: [
+                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 15, y: 10, fontSize: 9, weight: 400 },
+                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 150, fontSize: 12, weight: 700, align: 'center' },
+                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 80,  y: 180, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 180, fontSize: 11, weight: 400, align: 'left' },
+            ]
+        },
+        'g9-10': {
+            page1: [
+                { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($schoolName) }}',       x: 148.5, y: 18,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($schoolAddress) }}',    x: 148.5, y: 33,  fontSize: 10, weight: 400, align: 'center' },
+                { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}', x: 148.5, y: 58,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 60, y: 82, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 210, y: 82, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 100, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 100, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 120, fontSize: 11, weight: 400, align: 'center' },
+                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60, y: 140, fontSize: 11, weight: 400, align: 'left' },
+            ],
+            page2: [
+                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
+                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 150, fontSize: 12, weight: 700, align: 'center' },
+                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 80,  y: 180, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 180, fontSize: 11, weight: 400, align: 'left' },
+            ]
+        },
+        'g11-12-nat': {
+            page1: [
+                { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($schoolName) }}',       x: 148.5, y: 18,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($schoolAddress) }}',    x: 148.5, y: 33,  fontSize: 10, weight: 400, align: 'center' },
+                { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}', x: 148.5, y: 55,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 60, y: 78, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 210, y: 78, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 96, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 96, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'streamName',    label: 'Stream',         text: 'Natural Science',                     x: 148.5, y: 114, fontSize: 13, weight: 700, align: 'center' },
+                { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 132, fontSize: 11, weight: 400, align: 'center' },
+                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60, y: 150, fontSize: 11, weight: 400, align: 'left' },
+            ],
+            page2: [
+                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
+                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 150, fontSize: 12, weight: 700, align: 'center' },
+                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 80,  y: 180, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 180, fontSize: 11, weight: 400, align: 'left' },
+            ]
+        },
+        'g11-12-social': {
+            page1: [
+                { id: 'schoolName',    label: 'School Name',    text: '{{ addslashes($schoolName) }}',       x: 148.5, y: 18,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'schoolAddress', label: 'School Address', text: '{{ addslashes($schoolAddress) }}',    x: 148.5, y: 33,  fontSize: 10, weight: 400, align: 'center' },
+                { id: 'studentName',   label: 'Student Name',   text: '{{ addslashes($student->full_name) }}', x: 148.5, y: 55,  fontSize: 18, weight: 700, align: 'center' },
+                { id: 'admissionNo',   label: 'Admission No',   text: '{{ addslashes($student->admission_number ?? "") }}', x: 60, y: 78, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'rollNo',        label: 'Roll No',        text: '{{ addslashes($student->roll_number ?? "") }}', x: 210, y: 78, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'className',     label: 'Class',          text: '{{ addslashes($student->classroom?->name ?? "") }}', x: 60, y: 96, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'sectionName',   label: 'Section',        text: '{{ addslashes($student->section?->name ?? "") }}',   x: 210, y: 96, fontSize: 12, weight: 600, align: 'left' },
+                { id: 'streamName',    label: 'Stream',         text: 'Social Science',                      x: 148.5, y: 114, fontSize: 13, weight: 700, align: 'center' },
+                { id: 'academicYear',  label: 'Academic Year',  text: '{{ addslashes($academicYear?->name ?? "") }}',       x: 148.5, y: 132, fontSize: 11, weight: 400, align: 'center' },
+                { id: 'conduct',       label: 'Conduct',        text: 'Conduct: {{ $conduct ?? "—" }}',     x: 60, y: 150, fontSize: 11, weight: 400, align: 'left' },
+            ],
+            page2: [
+                { id: 'subjectsTable', label: 'Subjects Table', type: 'table', x: 10, y: 10, fontSize: 8, weight: 400 },
+                { id: 'totalMarks',    label: 'Total Marks',    text: 'Total: {{ $totalMarks }} / {{ $totalPossible }}', x: 60,  y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'avgMarks',      label: 'Average',        text: 'Average: {{ $average }}',   x: 148.5, y: 150, fontSize: 12, weight: 700, align: 'center' },
+                { id: 'rank',          label: 'Rank',           text: 'Rank: {{ $rank ? $rank : "—" }}', x: 235, y: 150, fontSize: 12, weight: 700, align: 'left' },
+                { id: 'dateField',     label: 'Date',           text: '{{ now()->format("d/m/Y") }}',  x: 80,  y: 180, fontSize: 11, weight: 400, align: 'left' },
+                { id: 'principalSignature', label: 'Principal Signature', text: '_______________________', x: 210, y: 180, fontSize: 11, weight: 400, align: 'left' },
+            ]
+        },
+    };
+
     // ========== STATE ==========
-    let fields = {};
+    let fields = {};       // { fieldId: { ...fieldConfig, page: 1|2 } }
     let selectedFieldId = null;
     let isDragging = false;
     let dragOffset = { x: 0, y: 0 };
+    let activePage = 1;
 
-    // ========== LOAD SAVED POSITIONS OR USE DEFAULTS ==========
+    // ========== LOAD POSITIONS ==========
     function loadPositions() {
         const config = fieldConfigs[TEMPLATE_TYPE] || fieldConfigs['g3-6'];
         const saved = localStorage.getItem(STORAGE_KEY);
 
+        let savedData = null;
         if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                config.forEach(f => {
-                    fields[f.id] = {
-                        ...f,
-                        x: parsed[f.id]?.x ?? f.x,
-                        y: parsed[f.id]?.y ?? f.y,
-                        fontSize: parsed[f.id]?.fontSize ?? f.fontSize,
-                        weight: parsed[f.id]?.weight ?? f.weight,
-                        align: parsed[f.id]?.align ?? f.align,
-                    };
-                });
-                return;
-            } catch (e) {}
+            try { savedData = JSON.parse(saved); } catch(e) {}
         }
 
-        // Use defaults
-        config.forEach(f => {
-            fields[f.id] = { ...f };
+        ['page1', 'page2'].forEach(pageKey => {
+            const pageNum = pageKey === 'page1' ? 1 : 2;
+            (config[pageKey] || []).forEach(f => {
+                const savedField = savedData ? savedData[f.id] : null;
+                fields[f.id] = {
+                    ...f,
+                    page: pageNum,
+                    x: savedField?.x ?? f.x,
+                    y: savedField?.y ?? f.y,
+                    fontSize: savedField?.fontSize ?? f.fontSize,
+                    weight: savedField?.weight ?? f.weight,
+                    align: savedField?.align ?? f.align,
+                };
+            });
         });
     }
 
     // ========== RENDER FIELDS ==========
     function renderFields() {
-        const sheet = document.getElementById('certSheet');
-        // Remove existing fields
-        sheet.querySelectorAll('.cert-field, .cert-field-table').forEach(el => el.remove());
+        SHEET1.querySelectorAll('.cert-field, .cert-field-table').forEach(el => el.remove());
+        SHEET2.querySelectorAll('.cert-field, .cert-field-table').forEach(el => el.remove());
 
         Object.values(fields).forEach(f => {
+            const targetSheet = f.page === 1 ? SHEET1 : SHEET2;
+
             if (f.type === 'table') {
                 const tableHTML = subjectTableHTML[TEMPLATE_TYPE];
                 if (!tableHTML) return;
@@ -473,7 +563,7 @@
                 el.innerHTML = tableHTML;
                 el.addEventListener('mousedown', startDrag);
                 el.addEventListener('touchstart', startDragTouch, { passive: false });
-                sheet.appendChild(el);
+                targetSheet.appendChild(el);
             } else {
                 const el = document.createElement('div');
                 el.className = 'cert-field';
@@ -487,36 +577,67 @@
                 el.style.color = '#111';
                 el.textContent = f.text;
                 if (f.align === 'center') {
-                    el.style.width = '180mm';
+                    el.style.width = '260mm';
                     el.style.transform = 'translateX(-50%)';
-                    el.style.marginLeft = '15mm';
+                    el.style.marginLeft = '18.5mm';
                 }
                 el.addEventListener('mousedown', startDrag);
                 el.addEventListener('touchstart', startDragTouch, { passive: false });
-                sheet.appendChild(el);
+                targetSheet.appendChild(el);
             }
         });
 
         populateFieldSelector();
     }
 
+    // ========== PAGE SWITCHING ==========
+    window.switchPage = function(pageNum) {
+        activePage = pageNum;
+        document.querySelectorAll('.page-tab').forEach(t => {
+            t.classList.toggle('active', parseInt(t.dataset.page) === pageNum);
+        });
+        // Scroll to the active page
+        const target = pageNum === 1 ? SHEET1 : SHEET2;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
     // ========== FIELD SELECTOR ==========
     function populateFieldSelector() {
         const sel = document.getElementById('fieldSelector');
+        const prevVal = sel.value;
         sel.innerHTML = '<option value="">-- Select --</option>';
+
+        const optGroup1 = document.createElement('optgroup');
+        optGroup1.label = 'Page 1 — Student Info';
+        const optGroup2 = document.createElement('optgroup');
+        optGroup2.label = 'Page 2 — Results';
+
         Object.values(fields).forEach(f => {
             const opt = document.createElement('option');
             opt.value = f.id;
             opt.textContent = f.label;
-            sel.appendChild(opt);
+            (f.page === 1 ? optGroup1 : optGroup2).appendChild(opt);
         });
+
+        sel.appendChild(optGroup1);
+        sel.appendChild(optGroup2);
+
+        if (prevVal) sel.value = prevVal;
     }
 
     // ========== DRAG ==========
+    function getSheetForField(fieldId) {
+        return fields[fieldId]?.page === 1 ? SHEET1 : SHEET2;
+    }
+
     function startDrag(e) {
         e.preventDefault();
         const fieldId = e.currentTarget.dataset.fieldId;
         selectField(fieldId);
+
+        // Switch to the page this field is on
+        const f = fields[fieldId];
+        if (f) switchPage(f.page);
 
         isDragging = true;
         const el = e.currentTarget;
@@ -526,14 +647,14 @@
 
         function onMove(ev) {
             if (!isDragging) return;
-            const sheetRect = document.getElementById('certSheet').getBoundingClientRect();
+            const sheet = getSheetForField(fieldId);
+            const sheetRect = sheet.getBoundingClientRect();
             let newX = ev.clientX - sheetRect.left - dragOffset.x;
             let newY = ev.clientY - sheetRect.top - dragOffset.y;
 
-            // Convert px to mm
-            const pxPerMm = sheetRect.width / 210;
-            const xMm = Math.max(0, Math.min(210, newX / pxPerMm));
-            const yMm = Math.max(0, Math.min(297, newY / pxPerMm));
+            const pxPerMm = sheetRect.width / SHEET_W_MM;
+            const xMm = Math.max(0, Math.min(SHEET_W_MM, newX / pxPerMm));
+            const yMm = Math.max(0, Math.min(SHEET_H_MM, newY / pxPerMm));
 
             fields[fieldId].x = Math.round(xMm * 10) / 10;
             fields[fieldId].y = Math.round(yMm * 10) / 10;
@@ -564,6 +685,9 @@
         const fieldId = e.currentTarget.dataset.fieldId;
         selectField(fieldId);
 
+        const f = fields[fieldId];
+        if (f) switchPage(f.page);
+
         isDragging = true;
         const el = e.currentTarget;
         const rect = el.getBoundingClientRect();
@@ -573,13 +697,14 @@
         function onMove(ev) {
             if (!isDragging) return;
             const t = ev.touches[0];
-            const sheetRect = document.getElementById('certSheet').getBoundingClientRect();
+            const sheet = getSheetForField(fieldId);
+            const sheetRect = sheet.getBoundingClientRect();
             let newX = t.clientX - sheetRect.left - dragOffset.x;
             let newY = t.clientY - sheetRect.top - dragOffset.y;
 
-            const pxPerMm = sheetRect.width / 210;
-            const xMm = Math.max(0, Math.min(210, newX / pxPerMm));
-            const yMm = Math.max(0, Math.min(297, newY / pxPerMm));
+            const pxPerMm = sheetRect.width / SHEET_W_MM;
+            const xMm = Math.max(0, Math.min(SHEET_W_MM, newX / pxPerMm));
+            const yMm = Math.max(0, Math.min(SHEET_H_MM, newY / pxPerMm));
 
             fields[fieldId].x = Math.round(xMm * 10) / 10;
             fields[fieldId].y = Math.round(yMm * 10) / 10;
@@ -606,7 +731,6 @@
 
     // ========== SELECT FIELD ==========
     window.selectField = function(fieldId) {
-        // Deselect previous
         document.querySelectorAll('.cert-field.selected, .cert-field-table.selected').forEach(el => el.classList.remove('selected'));
 
         selectedFieldId = fieldId;
@@ -621,6 +745,7 @@
             document.getElementById('fieldY').value = f.y;
             document.getElementById('fieldFontSize').value = f.fontSize;
             document.getElementById('fieldWeight').value = f.weight;
+            switchPage(f.page);
         }
     };
 
@@ -669,9 +794,9 @@
         if (el) {
             el.style.textAlign = align;
             if (align === 'center') {
-                el.style.width = '180mm';
+                el.style.width = '260mm';
                 el.style.transform = 'translateX(-50%)';
-                el.style.marginLeft = '15mm';
+                el.style.marginLeft = '18.5mm';
             } else {
                 el.style.width = '';
                 el.style.transform = '';
@@ -687,9 +812,9 @@
         const f = fields[selectedFieldId];
         if (!f) return;
 
-        const step = event?.shiftKey ? 10 : 1; // mm
-        f.x = Math.max(0, Math.min(210, f.x + dx * step));
-        f.y = Math.max(0, Math.min(297, f.y + dy * step));
+        const step = event?.shiftKey ? 10 : 1;
+        f.x = Math.max(0, Math.min(SHEET_W_MM, f.x + dx * step));
+        f.y = Math.max(0, Math.min(SHEET_H_MM, f.y + dy * step));
 
         const el = document.getElementById('field-' + selectedFieldId);
         if (el) {
@@ -703,12 +828,13 @@
 
     // ========== GRID / MARGINS ==========
     window.toggleGrid = function() {
-        SHEET.classList.toggle('show-grid');
+        SHEET1.classList.toggle('show-grid');
+        SHEET2.classList.toggle('show-grid');
         document.getElementById('gridBtn').classList.toggle('active');
     };
-
     window.toggleMargins = function() {
-        SHEET.classList.toggle('show-margins');
+        SHEET1.classList.toggle('show-margins');
+        SHEET2.classList.toggle('show-margins');
         document.getElementById('marginBtn').classList.toggle('active');
     };
 
@@ -716,7 +842,7 @@
     function savePositions() {
         const data = {};
         Object.values(fields).forEach(f => {
-            data[f.id] = { x: f.x, y: f.y, fontSize: f.fontSize, weight: f.weight, align: f.align };
+            data[f.id] = { x: f.x, y: f.y, fontSize: f.fontSize, weight: f.weight, align: f.align, page: f.page };
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
@@ -737,7 +863,7 @@
         const templates = JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '{}');
         templates[name] = {};
         Object.values(fields).forEach(f => {
-            templates[name][f.id] = { x: f.x, y: f.y, fontSize: f.fontSize, weight: f.weight, align: f.align };
+            templates[name][f.id] = { x: f.x, y: f.y, fontSize: f.fontSize, weight: f.weight, align: f.align, page: f.page };
         });
         localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
         document.getElementById('templateName').value = '';
@@ -756,6 +882,7 @@
                 fields[id].fontSize = tpl[id].fontSize;
                 fields[id].weight = tpl[id].weight;
                 fields[id].align = tpl[id].align;
+                if (tpl[id].page) fields[id].page = tpl[id].page;
             }
         });
         renderFields();
@@ -790,10 +917,9 @@
         });
     }
 
-    // Make deleteTemplate available globally
     window.deleteTemplate = deleteTemplate;
 
-    // ========== KEYBOARD SHORTCUTS ==========
+    // ========== KEYBOARD ==========
     document.addEventListener('keydown', function(e) {
         if (!selectedFieldId) return;
         if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
@@ -811,8 +937,7 @@
     renderFields();
     renderTemplates();
 
-    // Select first field
-    const firstField = Object.values(fields)[0];
+    const firstField = Object.values(fields).find(f => f.page === 1);
     if (firstField) selectField(firstField.id);
 
 })();
