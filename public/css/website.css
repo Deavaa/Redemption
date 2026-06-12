@@ -1,6 +1,6 @@
-        :root {
-            --secondary-color: #c9a84c;  /* overridden by inline :root in Blade layout */
-            --primary-rgb: 13, 13, 43;  /* #0d0d2b — overridden by inline :root in Blade layout */
+};
+            --secondary-color: {{ $settings['secondary_color'] ?? '#D97706' }};
+            --primary-rgb: {{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }};
             --primary-color: #0A0F1E;
             --teal: #0D9488;
             --teal-light: #14B8A6;
@@ -88,17 +88,17 @@
 
         /* ========== Elegant Deep Navy Navbar ========== */
         .navbar {
-            background: rgba(var(--primary-rgb), 1);
+            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.92);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-bottom: 2px solid rgba(217, 119, 6, 0.25);
-            padding: 0.35rem 0;
+            padding: 1rem 0;
             transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
         }
 
         .navbar.scrolled {
-            padding: 0.2rem 0;
-            background: rgba(var(--primary-rgb), 1);
+            padding: 0.5rem 0;
+            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.98);
             backdrop-filter: blur(24px) saturate(200%);
             -webkit-backdrop-filter: blur(24px) saturate(200%);
             box-shadow: 0 4px 40px rgba(0,0,0,0.25);
@@ -127,7 +127,7 @@
         }
 
         .nav-link {
-            color: rgba(255,255,255,0.95) !important;
+            color: rgba(255,255,255,0.85) !important;
             font-weight: 500;
             margin: 0 0.5rem;
             position: relative;
@@ -167,18 +167,16 @@
             background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
             color: var(--primary-color) !important;
             border-radius: 50px;
-            padding: 0.25rem 0.85rem;
-            font-size: 0.78rem;
+            padding: 0.5rem 1.5rem;
             font-weight: 600;
             transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
-            letter-spacing: 0.3px;
+            box-shadow: 0 2px 10px rgba(217, 119, 6, 0.3);
         }
 
         .btn-nav-portal:hover {
             background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(217, 119, 6, 0.45);
         }
 
         /* ========== Mobile Drawer ========== */
@@ -362,7 +360,7 @@
                 font-size: 0.6rem;
             }
             .navbar-brand img {
-                height: 30px !important;
+                height: 36px !important;
             }
             .hamburger-btn {
                 flex-shrink: 0;
@@ -391,7 +389,7 @@
                 font-size: 1rem;
             }
             .navbar-brand img {
-                height: 28px !important;
+                height: 32px !important;
             }
             .mobile-login-pill {
                 padding: 5px 10px;
@@ -402,27 +400,41 @@
         /* ========== Page Hero Banner (for sub-pages) ========== */
         .page-hero {
             position: relative;
-            padding: 0.8rem 0 0.5rem;
-            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.98) 0%, rgba(var(--primary-rgb), 0.92) 100%);
+            padding: 10rem 0 4rem;
+            background: linear-gradient(135deg, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.94) 0%, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.78) 100%);
             color: var(--white);
             overflow: hidden;
         }
 
         .page-hero::before {
-            display: none;
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(rgba(217, 119, 6, 0.06) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
         }
 
         .page-hero::after {
-            display: none;
+            content: '✦';
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(13, 148, 136, 0.35);
+            font-size: 1.5rem;
+            letter-spacing: 1rem;
+            pointer-events: none;
         }
 
         .page-hero h1 {
-            font-size: 1rem;
+            font-size: 3rem;
             color: var(--white);
-            margin-bottom: 0.1rem;
-            text-shadow: none;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.35);
         }
 
         .page-hero h1 span {
@@ -430,9 +442,9 @@
         }
 
         .page-hero p {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 0.1rem;
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 1rem;
         }
 
         .page-hero .breadcrumb {
@@ -755,10 +767,7 @@
         /* ========== Responsive ========== */
         @media (max-width: 991px) {
             .page-hero h1 {
-                font-size: 0.95rem;
-            }
-            .page-hero {
-                padding: 0.6rem 0 0.4rem;
+                font-size: 2.25rem;
             }
 
             .section-header h2 {
@@ -775,10 +784,7 @@
 
         @media (max-width: 575px) {
             .page-hero h1 {
-                font-size: 0.9rem;
-            }
-            .page-hero {
-                padding: 0.5rem 0 0.3rem;
+                font-size: 1.85rem;
             }
 
             .section-header h2 {

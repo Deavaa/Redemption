@@ -5,8 +5,8 @@
     "start_url": "/school-of-redemption/public/admin",
     "display": "standalone",
     "orientation": "portrait-primary",
-    "background_color": "#0F172A",
-    "theme_color": "#059669",
+    "background_color": "#0C1F17",
+    "theme_color": "#047857",
     "scope": "/school-of-redemption/public/",
     "icons": [
         {

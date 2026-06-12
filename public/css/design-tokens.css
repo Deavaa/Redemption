@@ -1,22 +1,22 @@
 /* ============================================================================
-   SCHOOL OF REDEMPTION — Design Tokens v4.0
+   SCHOOL OF REDEMPTION — Design Tokens
    ============================================================================
    A unified design system for all layouts: Admin, Student, Parent, Teacher,
    Website, and Login. Every color, spacing, shadow, and transition is defined
    here as a CSS custom property so that themes and role-based accents can be
    switched by toggling a single class on a parent element.
 
-   Primary : Emerald 600      #059669  (vibrant, modern green)
-   Accent  : Amber 500        #F59E0B  (warm gold, excellence)
-   Sidebar : Slate 900        #0F172A  (professional dark navy)
-   Body BG : Slate 50         #F8FAFC  (clean, neutral)
-   Card BG : Pure White       #FFFFFF
+   Primary : Deep Emerald Green  #047857  (growth, education, Ethiopia's green)
+   Accent  : Warm Gold           #D97706  (excellence, achievement)
+   Sidebar : Very Dark Green     #0C1F17  (elegant, premium)
+   Body BG : Subtle Green Tint   #F8FAF9
+   Card BG : Pure White          #FFFFFF
    Font    : Inter
 
    USAGE
    -----
    Import this file BEFORE all other CSS files:
-     <link rel="stylesheet" href="{{ asset('css/design-tokens.css') }}">
+     @import url('/css/design-tokens.css');
 
    Then reference tokens in your styles:
      color: var(--color-primary);
@@ -27,7 +27,7 @@
    ROLE-BASED ACCENTS
    -------------------
    Add a class to <body> or any wrapper to switch the role accent:
-     .role-admin   → emerald  #059669
+     .role-admin   → emerald  #047857
      .role-student → teal     #0D9488
      .role-parent  → amber    #D97706
      .role-teacher → sky      #0284C7
@@ -39,33 +39,16 @@
      1. COLORS — Primary Palette
      ----------------------------------------------------------------------- */
 
-  /* Primary — Vibrant Emerald Green */
-  --color-primary:        #059669;
-  --color-primary-hover:  #047857;
+  /* Primary — Deep Emerald Green */
+  --color-primary:        #047857;
+  --color-primary-hover:  #036B4A;
   --color-primary-light:  #ECFDF5;
   --color-primary-dark:   #065F46;
-  --color-primary-50:     #ECFDF5;
-  --color-primary-100:    #D1FAE5;
-  --color-primary-200:    #A7F3D0;
-  --color-primary-300:    #6EE7B7;
-  --color-primary-400:    #34D399;
-  --color-primary-500:    #10B981;
-  --color-primary-600:    #059669;
-  --color-primary-700:    #047857;
-  --color-primary-800:    #065F46;
-  --color-primary-900:    #064E3B;
 
-  /* Accent — Warm Gold/Amber */
-  --color-accent:         #F59E0B;
-  --color-accent-hover:   #D97706;
+  /* Accent — Warm Gold */
+  --color-accent:         #D97706;
+  --color-accent-hover:   #B45309;
   --color-accent-light:   #FFFBEB;
-  --color-accent-50:      #FFFBEB;
-  --color-accent-100:     #FEF3C7;
-  --color-accent-200:     #FDE68A;
-  --color-accent-300:     #FCD34D;
-  --color-accent-400:     #FBBF24;
-  --color-accent-500:     #F59E0B;
-  --color-accent-600:     #D97706;
 
   /* Semantic — Status Colors */
   --color-success:        #16A34A;
@@ -77,30 +60,33 @@
   --color-info:           #2563EB;
   --color-info-light:     #EFF6FF;
 
-  /* Sidebar — Professional Dark Navy (Slate 900) */
-  --color-sidebar-bg:     #0F172A;
-  --color-sidebar-hover:  #1E293B;
-  --color-sidebar-active: #334155;
+  /* Sidebar — Very Dark Green-Black */
+  --color-sidebar-bg:     #0C1F17;
+  --color-sidebar-hover:  #132E22;
+  --color-sidebar-active: #1A3F2E;
 
   /* Surfaces */
-  --color-body-bg:        #F8FAFC;
+  --color-body-bg:        #F8FAF9;
   --color-card-bg:        #FFFFFF;
-  --color-surface-raised: #FFFFFF;
 
   /* Text */
-  --color-text-dark:      #0F172A;
-  --color-text:           #334155;
-  --color-text-muted:     #64748B;
+  --color-text-dark:      #111827;
+  --color-text:           #374151;
+  --color-text-muted:     #6B7280;
   --color-text-inverse:   #FFFFFF;
 
   /* Borders */
-  --color-border:         #E2E8F0;
-  --color-border-light:   #F1F5F9;
+  --color-border:         #E5E7EB;
+  --color-border-light:   #F3F4F6;
 
   /* -----------------------------------------------------------------------
      2. ROLE-BASED ACCENT COLORS
+     -----------------------------------------------------------------------
+     --role-accent is the dynamic accent driven by the role class.
+     By default it matches --color-primary (admin / general).
+     Role classes override this value below.
      ----------------------------------------------------------------------- */
-  --color-admin-accent:   #059669;
+  --color-admin-accent:   #047857;
   --color-student-accent: #0D9488;
   --color-parent-accent:  #D97706;
   --color-teacher-accent: #0284C7;
@@ -118,7 +104,7 @@
                           Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue',
                           Arial, sans-serif;
   --font-family-mono:     'JetBrains Mono', 'Fira Code', 'Cascadia Code',
-                          Consols, 'Courier New', monospace;
+                          Consolas, 'Courier New', monospace;
 
   /* Font Sizes */
   --font-size-xs:         0.75rem;    /* 12px */
@@ -179,53 +165,45 @@
   /* -----------------------------------------------------------------------
      5. BORDER RADIUS
      ----------------------------------------------------------------------- */
-  --radius-xs:            4px;
   --radius-sm:            6px;
   --radius-md:            10px;
   --radius-lg:            14px;
   --radius-xl:            20px;
-  --radius-2xl:           24px;
   --radius-full:          9999px;
 
   /* -----------------------------------------------------------------------
      6. SHADOWS
      ----------------------------------------------------------------------- */
-  --shadow-xs:            0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm:            0 1px 3px 0 rgba(0, 0, 0, 0.06),
-                          0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-sm:            0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md:            0 4px 6px -1px rgba(0, 0, 0, 0.07),
                           0 2px 4px -2px rgba(0, 0, 0, 0.05);
   --shadow-lg:            0 10px 15px -3px rgba(0, 0, 0, 0.08),
                           0 4px 6px -4px rgba(0, 0, 0, 0.04);
   --shadow-xl:            0 20px 25px -5px rgba(0, 0, 0, 0.1),
                           0 8px 10px -6px rgba(0, 0, 0, 0.06);
-  --shadow-2xl:           0 25px 50px -12px rgba(0, 0, 0, 0.15);
 
-  /* Colored shadow variants */
-  --shadow-primary-sm:    0 1px 3px 0 rgba(5, 150, 105, 0.15);
-  --shadow-primary-md:    0 4px 8px -1px rgba(5, 150, 105, 0.2),
-                          0 2px 4px -2px rgba(5, 150, 105, 0.1);
-  --shadow-primary-lg:    0 10px 20px -3px rgba(5, 150, 105, 0.25),
-                          0 4px 6px -4px rgba(5, 150, 105, 0.1);
-  --shadow-accent-sm:     0 1px 3px 0 rgba(245, 158, 11, 0.15);
-  --shadow-accent-md:     0 4px 8px -1px rgba(245, 158, 11, 0.2),
-                          0 2px 4px -2px rgba(245, 158, 11, 0.1);
+  /* Colored shadow variants (use with primary / accent) */
+  --shadow-primary-sm:    0 1px 3px 0 rgba(4, 120, 87, 0.15);
+  --shadow-primary-md:    0 4px 6px -1px rgba(4, 120, 87, 0.2),
+                          0 2px 4px -2px rgba(4, 120, 87, 0.1);
+  --shadow-accent-sm:     0 1px 3px 0 rgba(217, 119, 6, 0.15);
+  --shadow-accent-md:     0 4px 6px -1px rgba(217, 119, 6, 0.2),
+                          0 2px 4px -2px rgba(217, 119, 6, 0.1);
 
   /* -----------------------------------------------------------------------
      7. TRANSITIONS
      ----------------------------------------------------------------------- */
-  --transition-fast:      150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal:    250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow:      350ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-spring:    400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-fast:      150ms ease;
+  --transition-normal:    250ms ease;
+  --transition-slow:      350ms ease;
 
   /* Common transition presets */
   --transition-colors:    color 150ms ease, background-color 150ms ease,
                           border-color 150ms ease;
-  --transition-opacity:   opacity 200ms ease;
-  --transition-transform: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-opacity:   opacity 150ms ease;
+  --transition-transform: transform 250ms ease;
   --transition-shadow:    box-shadow 250ms ease;
-  --transition-all:       all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-all:       all 250ms ease;
 
   /* -----------------------------------------------------------------------
      8. Z-INDEX SCALE
@@ -252,19 +230,23 @@
   /* -----------------------------------------------------------------------
      10. FOCUS RING
      ----------------------------------------------------------------------- */
-  --focus-ring:           0 0 0 3px rgba(5, 150, 105, 0.3);
-  --focus-ring-accent:    0 0 0 3px rgba(245, 158, 11, 0.3);
+  --focus-ring:           0 0 0 3px rgba(4, 120, 87, 0.35);
+  --focus-ring-accent:    0 0 0 3px rgba(217, 119, 6, 0.35);
 }
 
 
 /* ==========================================================================
    ROLE-BASED ACCENT OVERRIDES
+   ==========================================================================
+   Apply one of these classes to <body>, <html>, or any wrapper element to
+   switch the --role-accent family of tokens. All components that reference
+   --role-accent will automatically adapt.
    ========================================================================== */
 
-/* Admin — Vibrant Emerald */
+/* Admin — Deep Emerald */
 .role-admin {
-  --role-accent:       #059669;
-  --role-accent-hover: #047857;
+  --role-accent:       #047857;
+  --role-accent-hover: #036B4A;
   --role-accent-light: #ECFDF5;
 }
 
@@ -291,32 +273,33 @@
 
 
 /* ==========================================================================
-   DARK MODE — Override Layer
+   DARK MODE — Optional Override Layer
+   ==========================================================================
+   When [data-theme="dark"] or .dark is applied, these tokens override the
+   root defaults. Extend as needed per layout.
    ========================================================================== */
 
 [data-theme="dark"],
 .dark {
-  --color-body-bg:        #0F172A;
-  --color-card-bg:        #1E293B;
-  --color-surface-raised: #334155;
-  --color-text-dark:      #F8FAFC;
-  --color-text:           #CBD5E1;
-  --color-text-muted:     #94A3B8;
-  --color-text-inverse:   #0F172A;
-  --color-border:         #334155;
-  --color-border-light:   #1E293B;
-  --color-sidebar-bg:     #020617;
-  --color-sidebar-hover:  #0F172A;
-  --color-sidebar-active: #1E293B;
+  --color-body-bg:        #0F1A15;
+  --color-card-bg:        #1A2B23;
+  --color-text-dark:      #F9FAFB;
+  --color-text:           #D1D5DB;
+  --color-text-muted:     #9CA3AF;
+  --color-text-inverse:   #111827;
+  --color-border:         #2D3E35;
+  --color-border-light:   #243529;
+  --color-sidebar-bg:     #091510;
+  --color-sidebar-hover:  #0F2018;
+  --color-sidebar-active: #152E22;
 
-  --shadow-xs:            0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm:            0 1px 3px 0 rgba(0, 0, 0, 0.35);
-  --shadow-md:            0 4px 6px -1px rgba(0, 0, 0, 0.4),
-                          0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg:            0 10px 15px -3px rgba(0, 0, 0, 0.45),
-                          0 4px 6px -4px rgba(0, 0, 0, 0.35);
-  --shadow-xl:            0 20px 25px -5px rgba(0, 0, 0, 0.5),
-                          0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-sm:            0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md:            0 4px 6px -1px rgba(0, 0, 0, 0.35),
+                          0 2px 4px -2px rgba(0, 0, 0, 0.25);
+  --shadow-lg:            0 10px 15px -3px rgba(0, 0, 0, 0.4),
+                          0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl:            0 20px 25px -5px rgba(0, 0, 0, 0.45),
+                          0 8px 10px -6px rgba(0, 0, 0, 0.35);
 
   --color-primary-light:  #064E3B;
   --color-accent-light:   #78350F;
@@ -328,3 +311,27 @@
   --focus-ring:           0 0 0 3px rgba(52, 211, 153, 0.35);
   --focus-ring-accent:    0 0 0 3px rgba(252, 211, 77, 0.35);
 }
+
+
+/* ==========================================================================
+   BREAKPOINTS (Documentation Only)
+   ==========================================================================
+   These values are NOT available as CSS custom properties because media
+   queries cannot reference variables. They are documented here so that
+   developers and designers stay aligned on the responsive grid.
+
+   Token Name       Value       Typical Device
+   ---------------  ----------  -------------------------------------------
+   --bp-sm          640px       Small phones (landscape), large phones
+   --bp-md          768px       Tablets (portrait)
+   --bp-lg          1024px      Tablets (landscape), small laptops
+   --bp-xl          1280px      Desktops
+   --bp-2xl         1536px      Large desktops, wide screens
+
+   Usage in CSS:
+     @media (min-width: 640px)  { /* sm+ */ }
+     @media (min-width: 768px)  { /* md+ */ }
+     @media (min-width: 1024px) { /* lg+ */ }
+     @media (min-width: 1280px) { /* xl+ */ }
+     @media (min-width: 1536px) { /* 2xl+ */ }
+   ========================================================================== */

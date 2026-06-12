@@ -8,7 +8,7 @@
 
     {{-- PWA & Mobile Integration --}}
     <link rel="manifest" href="{{ route('app.manifest') }}">
-    <meta name="theme-color" content="#D97706">
+    <meta name="theme-color" content="#ea580c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Redemption">
@@ -18,7 +18,6 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
     <link href="{{ asset('css/portal.css') }}" rel="stylesheet">
@@ -30,10 +29,10 @@
         --color-body-bg: #faf7f5;
     }
     .parent-sidebar {
-        background: linear-gradient(180deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+        background: #1c1917;
     }
     .parent-sidebar .sidebar-brand-icon {
-        background: linear-gradient(135deg, #D97706, #F59E0B);
+        background: linear-gradient(135deg, #ea580c, #f59e0b);
     }
     .parent-sidebar .sidebar-brand-pre {
         color: rgba(255,255,255,0.65);
@@ -48,9 +47,9 @@
         color: rgba(255,255,255,0.95);
     }
     .parent-sidebar .sidebar-menu > li.active > a.active {
-        background: rgba(217,119,6,0.2);
+        background: rgba(234,88,12,0.25);
         color: #fff;
-        border-left-color: #F59E0B;
+        border-left-color: #ea580c;
     }
     .parent-sidebar .sidebar-menu .menu-header {
         color: rgba(255,255,255,0.3);
@@ -62,37 +61,37 @@
         background: rgba(255,255,255,0.06);
     }
     .parent-sidebar .sidebar-menu .collapse li a.active {
-        background: rgba(217,119,6,0.2);
-        border-left-color: #F59E0B;
+        background: rgba(234,88,12,0.25);
+        border-left-color: #ea580c;
         color: #fff;
     }
     .parent-sidebar .sidebar-menu .collapse li a.active i {
-        color: #F59E0B;
+        color: #ea580c;
     }
     .parent-sidebar .sidebar-footer-avatar {
-        background: linear-gradient(135deg, #D97706, #F59E0B);
+        background: linear-gradient(135deg, #ea580c, #f59e0b);
     }
     .parent-sidebar .sidebar-menu-wrap {
         scrollbar-color: rgba(255,255,255,0.1) transparent;
     }
     .topbar-avatar {
-        background: linear-gradient(135deg, #D97706, #F59E0B);
+        background: linear-gradient(135deg, #ea580c, #f59e0b);
     }
-    .topbar-avatar:hover { box-shadow: 0 0 0 3px rgba(217,119,6,0.1); }
+    .topbar-avatar:hover { box-shadow: 0 0 0 3px rgba(234,88,12,0.1); }
     .child-avatar {
-        background: linear-gradient(135deg, #D97706, #F59E0B);
+        background: linear-gradient(135deg, #ea580c, #f59e0b);
     }
     .child-card-footer a {
-        color: #D97706; background: rgba(217,119,6,0.1);
+        color: #ea580c; background: rgba(234,88,12,0.1);
     }
     .child-card-footer a:hover {
-        background: #D97706; color: #fff;
+        background: #ea580c; color: #fff;
     }
     .modern-table tbody tr:hover td { background: #fefce8; }
     .trend-bar {
-        background: linear-gradient(90deg, #D97706, #F59E0B);
+        background: linear-gradient(90deg, #ea580c, #f59e0b);
     }
-    .stat-icon.orange { background: rgba(217,119,6,0.1); color: #D97706; }
+    .stat-icon.orange { background: rgba(234,88,12,0.1); color: #ea580c; }
     /* Parent-specific class aliases */
     .parent-wrapper { display: flex; min-height: 100vh; }
     .parent-main { flex: 1; margin-left: var(--sidebar-width, 260px); min-height: 100vh; display: flex; flex-direction: column; }

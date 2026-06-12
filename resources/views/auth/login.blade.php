@@ -9,12 +9,12 @@
 
     {{-- PWA & Mobile Integration --}}
     <link rel="manifest" href="{{ route('app.manifest') }}">
-    <meta name="theme-color" content="#059669">
+    <meta name="theme-color" content="#047857">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Redemption">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="msapplication-TileColor" content="#059669">
+    <meta name="msapplication-TileColor" content="#047857">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192x192.png') }}">
 
@@ -61,7 +61,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0F172A 0%, #059669 50%, #065F46 100%);
+            background: linear-gradient(135deg, #0C1F17 0%, #047857 50%, #065F46 100%);
             background-size: 200% 200%;
             animation: gradientShift 15s ease infinite;
             font-family: var(--font-family);
@@ -290,8 +290,46 @@
             <div class="alert-success">{{ session('reset_success') }}</div>
         @endif
 
-        {{-- FORGOT PASSWORD FORM --}}
-        @if (session('show_reset_form'))
+        {{-- EMAIL RESET: Link sent confirmation --}}
+        @if (session('reset_link_sent'))
+            <p style="margin-bottom:15px;">Check Your Email</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            <div class="alert-success" style="text-align:center;">
+                <i class="bi bi-envelope-check" style="font-size:24px;color:#047857;display:block;margin-bottom:8px;"></i>
+                We've sent a password reset link to <strong>{{ session('reset_email_sent') }}</strong>.<br>
+                <small style="color:#666;">Check your inbox and spam folder. The link expires in {{ config('auth.passwords.users.expire', 60) }} minutes.</small>
+            </div>
+
+        {{-- EMAIL RESET: New password form (from email link) --}}
+        @elseif(session('show_email_reset'))
+            <p style="margin-bottom:15px;">Set New Password</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            @if ($errors->any())
+                <div class="alert">{{ $errors->first() }}</div>
+            @endif
+            <form method="POST" action="{{ route('password.reset.token') }}">
+                @csrf
+                <input type="hidden" name="token" value="{{ session('reset_token') }}">
+                <input type="hidden" name="email" value="{{ session('reset_email') }}">
+                <div class="form-group">
+                    <label><i class="bi bi-person"></i> Account</label>
+                    <input type="text" value="{{ session('reset_user_name') }}" disabled
+                        style="background:#f9fafb;color:#6c757d;">
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-lock"></i> New Password</label>
+                    <input type="password" name="password" required placeholder="Enter new password" minlength="4" autofocus>
+                </div>
+                <div class="form-group">
+                    <label><i class="bi bi-lock-fill"></i> Confirm Password</label>
+                    <input type="password" name="password_confirmation" required placeholder="Confirm new password"
+                        minlength="4">
+                </div>
+                <button type="submit" class="btn-login"><i class="bi bi-check-circle"></i> Reset Password</button>
+            </form>
+
+        {{-- SECURITY QUESTION FORM --}}
+        @elseif(session('show_reset_form'))
             <p style="margin-bottom:15px;">Reset your password</p>
             <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
             @if ($errors->any())
@@ -334,7 +372,32 @@
                 <button type="submit" class="btn-login"><i class="bi bi-shield-check"></i> Verify</button>
             </form>
 
-            {{-- FORGOT PASSWORD - EMAIL FORM --}}
+            {{-- EMAIL-BASED FORGOT PASSWORD FORM --}}
+        @elseif(session('show_email_forgot'))
+            <p style="margin-bottom:15px;">Reset via Email</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            @if ($errors->any())
+                <div class="alert">{{ $errors->first() }}</div>
+            @endif
+            <div style="text-align:center;margin-bottom:16px;">
+                <i class="bi bi-envelope" style="font-size:32px;color:var(--color-primary);"></i>
+                <p style="font-size:13px;color:#666;margin-top:8px;">Enter your email address and we'll send you a password reset link.</p>
+            </div>
+            <form method="POST" action="{{ route('password.email.send') }}">
+                @csrf
+                <div class="form-group">
+                    <label><i class="bi bi-envelope"></i> Email Address</label>
+                    <input type="email" name="email" required autofocus placeholder="Enter your email address">
+                </div>
+                <button type="submit" class="btn-login"><i class="bi bi-send"></i> Send Reset Link</button>
+            </form>
+            <div style="text-align:center;margin-top:12px;">
+                <a href="{{ route('password.forgot') }}" style="color:var(--color-primary);font-size:13px;text-decoration:none;">
+                    <i class="bi bi-shield-lock"></i> Reset using security question instead
+                </a>
+            </div>
+
+            {{-- FORGOT PASSWORD - FIND ACCOUNT FORM (security question) --}}
         @elseif(session('show_forgot'))
             <p style="margin-bottom:15px;">Find your account</p>
             <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
@@ -349,6 +412,11 @@
                 </div>
                 <button type="submit" class="btn-login"><i class="bi bi-search"></i> Find Account</button>
             </form>
+            <div style="text-align:center;margin-top:12px;">
+                <a href="{{ route('password.email') }}" style="color:var(--color-primary);font-size:13px;text-decoration:none;">
+                    <i class="bi bi-envelope"></i> Reset via email instead
+                </a>
+            </div>
 
             {{-- DEFAULT LOGIN FORM --}}
         @else
@@ -379,7 +447,7 @@
                 <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right"></i>
                     {{ __('app.login') }}</button>
             </form>
-            <a href="{{ route('password.forgot') }}" class="forgot-link"><i class="bi bi-key"></i> Forgot
+            <a href="{{ route('password.email') }}" class="forgot-link"><i class="bi bi-key"></i> Forgot
                 Password?</a>
         @endif
         <a href="{{ route('app.download') }}" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;padding:10px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;text-decoration:none;font-size:13px;font-weight:600;transition:opacity .2s;">

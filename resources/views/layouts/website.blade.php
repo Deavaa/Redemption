@@ -15,14 +15,12 @@
 
     {{-- PWA & Mobile Integration --}}
     <link rel="manifest" href="{{ route('app.manifest') }}">
-    <meta name="theme-color" content="#059669">
+    <meta name="theme-color" content="#047857">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Redemption">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ isset($settings['school_logo']) && $settings['school_logo'] ? asset('storage/' . $settings['school_logo']) : asset('icons/icon-192x192.png') }}">
-    <link rel="icon" type="image/x-icon" href="{{ isset($settings['school_logo']) && $settings['school_logo'] ? asset('storage/' . $settings['school_logo']) : asset('icons/icon-192x192.png') }}">
 
     <!-- Preconnect for faster CDN loading -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -34,7 +32,6 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -69,7 +66,7 @@
         <div class="container-fluid nav-container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
                 @if($settings['school_logo'] ?? '')
-                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 36px; opacity: 0.9;" loading="lazy" onerror="this.style.display='none'">
+                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;" loading="lazy" onerror="this.style.display='none'">
                 @endif
                 <div>
                     <span class="brand-pre">{{ Str::beforeLast($settings['school_name'] ?? 'School', ' ') }}</span>
