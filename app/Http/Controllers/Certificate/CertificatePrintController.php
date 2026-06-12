@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\ClassRoom;
 use App\Models\AcademicYear;
 use App\Models\MarkEntry;
+use App\Models\StudentComment;
 use App\Models\Branch;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -122,7 +123,7 @@ class CertificatePrintController extends Controller
             'template_type'    => 'nullable|string',
         ]);
 
-        $student = Student::with(['classroom', 'section', 'branch'])->findOrFail($r->student_id);
+        $student = Student::with(['classroom', 'section.teacher', 'branch'])->findOrFail($r->student_id);
         $academicYear = $r->academic_year_id
             ? AcademicYear::find($r->academic_year_id)
             : AcademicYear::where('is_current', true)->first();
@@ -161,11 +162,31 @@ class CertificatePrintController extends Controller
         $handwriting = $marks->whereNotNull('handwriting')->count() > 0 ? round($marks->whereNotNull('handwriting')->avg('handwriting'), 0) : null;
         $creativity  = $marks->whereNotNull('creativity')->count() > 0 ? round($marks->whereNotNull('creativity')->avg('creativity'), 0) : null;
 
+        // Homeroom teacher info (from section's teacher_id)
+        $homeroomTeacher = $student->section?->teacher;
+        $homeroomTeacherName = $homeroomTeacher?->full_name ?? '';
+
+        // Homeroom teacher comment — try StudentComment first, then fall back to teacher_comments column
+        $homeroomComment = '';
+        if ($academicYear) {
+            $reportComment = StudentComment::where('student_id', $student->id)
+                ->where('academic_year_id', $academicYear->id)
+                ->where('is_report_comment', true)
+                ->whereIn('comment_type', ['general', 'academic', 'progress'])
+                ->orderBy('created_at', 'desc')
+                ->first();
+            $homeroomComment = $reportComment?->comment ?? '';
+        }
+        if (empty($homeroomComment)) {
+            $homeroomComment = $student->teacher_comments ?? '';
+        }
+
         return view('admin.certificate-print.print', compact(
             'student', 'academicYear', 'marks', 'totalMarks', 'totalPossible',
             'average', 'rank', 'schoolName', 'schoolAddress', 'schoolPhone',
             'schoolLogo', 'templateType', 'templateLabel', 'numericName', 'stream',
-            'conduct', 'handwriting', 'creativity'
+            'conduct', 'handwriting', 'creativity',
+            'homeroomTeacherName', 'homeroomComment'
         ));
     }
 
