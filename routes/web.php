@@ -13,6 +13,7 @@ use App\Http\Controllers\CalendarEvent\AnnouncementController;
 use App\Http\Controllers\CalendarEvent\CalendarEventController;
 use App\Http\Controllers\Certificate\CertificateController;
 use App\Http\Controllers\Certificate\CertificateGenerateController;
+use App\Http\Controllers\Certificate\CertificatePrintController;
 use App\Http\Controllers\Certificate\TranscriptController;
 use App\Http\Controllers\Certificate\LeavingCertificateController;
 use App\Http\Controllers\Chat\ChatController;
@@ -494,6 +495,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('leaving-certificate', [LeavingCertificateController::class, 'index'])->name('leaving-certificate.index')->middleware('permission:certificates.generate');
     Route::post('leaving-certificate/generate', [LeavingCertificateController::class, 'generate'])->name('leaving-certificate.generate')->middleware('permission:certificates.generate');
     Route::get('leaving-certificate/api/students', [LeavingCertificateController::class, 'getStudents'])->name('leaving-certificate.students');
+
+    // Certificate Print on Pre-printed
+    Route::get('certificate-print', [CertificatePrintController::class, 'index'])->name('certificate-print.index')->middleware('permission:certificates.generate');
+    Route::post('certificate-print', [CertificatePrintController::class, 'print'])->name('certificate-print.print')->middleware('permission:certificates.generate');
+    Route::get('certificate-print/api/students', [CertificatePrintController::class, 'getStudents'])->name('certificate-print.students');
 
     // ── People ────────────────────────────────────────────
     // NOTE: Static sub-routes MUST come BEFORE Route::resource to avoid {student} parameter matching
