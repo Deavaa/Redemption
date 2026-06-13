@@ -219,6 +219,88 @@
             </div>
         </div>
 
+        {{-- Safe Exam Browser Settings --}}
+        <div class="modern-card" style="margin-bottom:1.25rem">
+            <div class="modern-card-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+                <div class="modern-card-header-left">
+                    <i class="fas fa-shield-alt" style="color:#fff"></i>
+                    <span class="modern-card-title" style="color:#fff">Safe Exam Browser Settings</span>
+                </div>
+                <div class="modern-card-header-right">
+                    <span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.7rem">Optional</span>
+                </div>
+            </div>
+            <div style="padding:1.5rem">
+                <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:0.85rem;color:#6d28d9">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <strong>Safe Exam Browser (SEB)</strong> is a lockdown browser that prevents cheating during assessments.
+                    When enabled, students must open the assessment in SEB which blocks other apps, copy/paste, and screen capture.
+                    <a href="https://safeexambrowser.org/" target="_blank" style="color:#4f46e5;text-decoration:underline">Learn more about SEB</a>
+                </div>
+
+                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem">
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">SEB Mode</label>
+                        <select name="seb_mode" id="sebMode" class="modern-input modern-select" style="padding-left:0.75rem">
+                            @foreach(\App\Models\AssessmentQuestion::sebModeOptions() as $value => $label)
+                            <option value="{{ $value }}" {{ old('seb_mode', 'none') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <div style="font-size:0.72rem;color:#6b7280;margin-top:3px">"Required" = students MUST use SEB to access this question</div>
+                    </div>
+                    <div class="modern-form-group" id="sebBrowserViewGroup" style="display:none">
+                        <label class="modern-form-label">Browser View</label>
+                        <select name="seb_browser_view_mode" class="modern-input modern-select" style="padding-left:0.75rem">
+                            @foreach(\App\Models\AssessmentQuestion::sebBrowserViewModeOptions() as $value => $label)
+                            <option value="{{ $value }}" {{ old('seb_browser_view_mode', 1) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div id="sebAdvancedSettings" style="display:none;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb">
+                    <h6 style="font-size:0.85rem;font-weight:600;margin-bottom:1rem;color:#4f46e5"><i class="fas fa-cog me-1"></i> Advanced SEB Settings</h6>
+                    <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
+                        <div class="modern-form-group">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+                                <input type="checkbox" name="seb_allow_quit" value="1" {{ old('seb_allow_quit') ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#6366f1">
+                                <span style="font-size:0.85rem">Allow quitting SEB</span>
+                            </label>
+                            <div style="font-size:0.7rem;color:#9ca3af">If unchecked, student cannot exit SEB without finishing</div>
+                        </div>
+                        <div class="modern-form-group">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+                                <input type="checkbox" name="seb_show_taskbar" value="1" {{ old('seb_show_taskbar', true) ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#6366f1">
+                                <span style="font-size:0.85rem">Show SEB taskbar</span>
+                            </label>
+                        </div>
+                        <div class="modern-form-group">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+                                <input type="checkbox" name="seb_show_time" value="1" {{ old('seb_show_time', true) ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#6366f1">
+                                <span style="font-size:0.85rem">Show clock in taskbar</span>
+                            </label>
+                        </div>
+                        <div class="modern-form-group">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+                                <input type="checkbox" name="seb_allow_spell_check" value="1" {{ old('seb_allow_spell_check') ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#6366f1">
+                                <span style="font-size:0.85rem">Allow spell checking</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modern-form-group" style="margin-top:1rem">
+                        <label class="modern-form-label">Quit Password (optional)</label>
+                        <input type="text" name="seb_quit_password" class="modern-input" style="padding-left:0.75rem;max-width:300px" value="{{ old('seb_quit_password') }}" placeholder="Password to quit SEB">
+                        <div style="font-size:0.7rem;color:#9ca3af;margin-top:3px">If set, students need this password to exit SEB during the exam</div>
+                    </div>
+                    <div class="modern-form-group" style="margin-top:1rem">
+                        <label class="modern-form-label">Additional Allowed URLs (one per line)</label>
+                        <textarea name="seb_allowed_urls_text" class="modern-input modern-textarea" rows="3" placeholder="https://example.com&#10;https://dictionary.com">{{ old('seb_allowed_urls_text') }}</textarea>
+                        <div style="font-size:0.7rem;color:#9ca3af;margin-top:3px">URLs students can access during the exam (in addition to this assessment). One URL per line.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Submit --}}
         <div class="modern-card">
             <div style="padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center">
@@ -272,6 +354,20 @@ $(function() {
     }
     $('#questionType').on('change', toggleQuestionType);
     toggleQuestionType();
+
+    // ── SEB Mode toggle ────────────────────────────────
+    function toggleSebSettings() {
+        var mode = $('#sebMode').val();
+        if (mode === 'none') {
+            $('#sebBrowserViewGroup').hide();
+            $('#sebAdvancedSettings').hide();
+        } else {
+            $('#sebBrowserViewGroup').show();
+            $('#sebAdvancedSettings').show();
+        }
+    }
+    $('#sebMode').on('change', toggleSebSettings);
+    toggleSebSettings();
 
     // ── MCQ Options management ──────────────────────────────
     $('#addOptionBtn').on('click', function() {

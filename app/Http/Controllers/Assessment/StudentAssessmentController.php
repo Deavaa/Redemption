@@ -149,7 +149,7 @@ class StudentAssessmentController extends Controller
 
     // ── Show a single question for answering ─────────────────
 
-    public function showQuestion($questionId)
+    public function showQuestion(Request $request, $questionId)
     {
         $student = $this->getStudent();
         if (!$student) {
@@ -160,6 +160,21 @@ class StudentAssessmentController extends Controller
             ->with(['options', 'subject', 'classroom'])
             ->where('class_id', $student->class_id)
             ->findOrFail($questionId);
+
+        // ── Safe Exam Browser check ──
+        // If SEB is required, verify the request comes from SEB
+        if ($question->isSebRequired()) {
+            $sebVerified = $request->session()->get('seb_verified_questions', []);
+            $isSeb = $this->isSafeExamBrowserRequest($request, $question);
+
+            if (!$isSeb && !isset($sebVerified[$questionId])) {
+                return redirect()->route('student.assessment.seb-required', $questionId);
+            }
+
+            // Mark session as SEB-verified for this question
+            $sebVerified[$questionId] = ['verified_at' => time(), 'config_key' => $question->seb_config_key];
+            $request->session()->put('seb_verified_questions', $sebVerified);
+        }
 
         // Check if student already answered
         $previousAnswer = AssessmentAnswer::where('student_id', $student->id)
@@ -314,5 +329,42 @@ class StudentAssessmentController extends Controller
         return view('student.assessment.progress', compact(
             'student', 'overallStats', 'subjectProgress', 'recentActivity'
         ));
+    }
+
+    // ── Safe Exam Browser Detection ────────────────────────────
+
+    /**
+     * Check if the current request comes from Safe Exam Browser.
+     * SEB sends specific HTTP headers and includes "SEB" in the user agent.
+     */
+    private function isSafeExamBrowserRequest(Request $request, AssessmentQuestion $question): bool
+    {
+        // Check SEB-specific HTTP headers (most secure verification)
+        $requestHash = $request->header('X-SafeExamBrowser-RequestHash');
+        $configKeyHash = $request->header('X-SafeExamBrowser-ConfigKeyHash');
+
+        if ($requestHash && $question->seb_config_key) {
+            $expectedHash = base64_encode(
+                hash_hmac('sha256', $request->fullUrl(), $question->seb_config_key, true)
+            );
+            if (hash_equals($expectedHash, $requestHash)) {
+                return true;
+            }
+        }
+
+        if ($configKeyHash && $question->seb_config_key) {
+            $expectedConfigHash = hash('sha256', $question->seb_config_key);
+            if (hash_equals($expectedConfigHash, $configKeyHash)) {
+                return true;
+            }
+        }
+
+        // Check SEB user agent (fallback — less secure but reliable)
+        $userAgent = $request->header('User-Agent', '');
+        if (preg_match('/SEB/i', $userAgent)) {
+            return true;
+        }
+
+        return false;
     }
 }

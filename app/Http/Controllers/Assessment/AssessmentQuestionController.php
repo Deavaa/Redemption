@@ -115,9 +115,32 @@ class AssessmentQuestionController extends Controller
             'options.*.is_correct' => 'boolean',
             // True/False
             'correct_tf' => 'required_if:question_type,true_false|in:true,false',
+            // Safe Exam Browser
+            'seb_mode' => 'nullable|in:none,optional,required',
+            'seb_browser_view_mode' => 'nullable|integer|in:0,1,2',
+            'seb_allow_quit' => 'nullable|boolean',
+            'seb_quit_password' => 'nullable|string|max:255',
+            'seb_show_taskbar' => 'nullable|boolean',
+            'seb_show_time' => 'nullable|boolean',
+            'seb_allow_spell_check' => 'nullable|boolean',
+            'seb_allowed_urls_text' => 'nullable|string|max:5000',
         ]);
 
         $activeAy = AcademicYear::where('is_current', true)->first();
+
+        // Parse SEB allowed URLs from textarea
+        $sebAllowedUrls = null;
+        if ($request->filled('seb_allowed_urls_text')) {
+            $urls = array_filter(array_map('trim', explode("\n", $request->seb_allowed_urls_text)));
+            $sebAllowedUrls = !empty($urls) ? $urls : null;
+        }
+
+        // Generate SEB config key if SEB mode is enabled
+        $sebConfigKey = null;
+        $sebMode = $request->input('seb_mode', 'none');
+        if (in_array($sebMode, ['optional', 'required'])) {
+            $sebConfigKey = bin2hex(random_bytes(32));
+        }
 
         // Questions are class-level — apply to ALL branches and ALL sections
         $question = AssessmentQuestion::create([
@@ -137,6 +160,16 @@ class AssessmentQuestionController extends Controller
             'topic' => $validated['topic'] ?? null,
             'marks' => $validated['marks'] ?? 1,
             'is_active' => $request->boolean('is_active', true),
+            // SEB fields
+            'seb_mode' => $sebMode,
+            'seb_config_key' => $sebConfigKey,
+            'seb_browser_view_mode' => $request->input('seb_browser_view_mode', 1),
+            'seb_allow_quit' => $request->boolean('seb_allow_quit', false),
+            'seb_quit_password' => $request->input('seb_quit_password'),
+            'seb_show_taskbar' => $request->boolean('seb_show_taskbar', true),
+            'seb_show_time' => $request->boolean('seb_show_time', true),
+            'seb_allow_spell_check' => $request->boolean('seb_allow_spell_check', false),
+            'seb_allowed_urls' => $sebAllowedUrls,
         ]);
 
         // Create options based on question type
@@ -252,7 +285,32 @@ class AssessmentQuestionController extends Controller
             'options.*.option_label' => 'required_with:options|string|max:1',
             'options.*.is_correct' => 'boolean',
             'correct_tf' => 'required_if:question_type,true_false|in:true,false',
+            // Safe Exam Browser
+            'seb_mode' => 'nullable|in:none,optional,required',
+            'seb_browser_view_mode' => 'nullable|integer|in:0,1,2',
+            'seb_allow_quit' => 'nullable|boolean',
+            'seb_quit_password' => 'nullable|string|max:255',
+            'seb_show_taskbar' => 'nullable|boolean',
+            'seb_show_time' => 'nullable|boolean',
+            'seb_allow_spell_check' => 'nullable|boolean',
+            'seb_allowed_urls_text' => 'nullable|string|max:5000',
         ]);
+
+        // Parse SEB allowed URLs
+        $sebAllowedUrls = null;
+        if ($request->filled('seb_allowed_urls_text')) {
+            $urls = array_filter(array_map('trim', explode("\n", $request->seb_allowed_urls_text)));
+            $sebAllowedUrls = !empty($urls) ? $urls : null;
+        }
+
+        // Generate SEB config key if SEB mode is being enabled for the first time
+        $sebMode = $request->input('seb_mode', 'none');
+        $sebConfigKey = $assessment_question->seb_config_key;
+        if (in_array($sebMode, ['optional', 'required']) && !$sebConfigKey) {
+            $sebConfigKey = bin2hex(random_bytes(32));
+        } elseif ($sebMode === 'none') {
+            $sebConfigKey = null;
+        }
 
         $assessment_question->update([
             'title' => $validated['title'] ?? null,
@@ -269,6 +327,16 @@ class AssessmentQuestionController extends Controller
             'explanation' => $validated['explanation'] ?? null,
             'worked_out_solution' => $validated['worked_out_solution'] ?? null,
             'is_active' => $request->boolean('is_active', true),
+            // SEB fields
+            'seb_mode' => $sebMode,
+            'seb_config_key' => $sebConfigKey,
+            'seb_browser_view_mode' => $request->input('seb_browser_view_mode', 1),
+            'seb_allow_quit' => $request->boolean('seb_allow_quit', false),
+            'seb_quit_password' => $request->input('seb_quit_password'),
+            'seb_show_taskbar' => $request->boolean('seb_show_taskbar', true),
+            'seb_show_time' => $request->boolean('seb_show_time', true),
+            'seb_allow_spell_check' => $request->boolean('seb_allow_spell_check', false),
+            'seb_allowed_urls' => $sebAllowedUrls,
         ]);
 
         // Sync options

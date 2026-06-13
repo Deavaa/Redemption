@@ -93,6 +93,7 @@ use App\Http\Controllers\Exam\ExamQuestionController;
 use App\Http\Controllers\Assessment\AssessmentQuestionController;
 use App\Http\Controllers\ContentNote\SubjectContentNoteController;
 use App\Http\Controllers\Assessment\StudentAssessmentController;
+use App\Http\Controllers\Assessment\SebConfigController;
 use App\Http\Controllers\Student\TeacherReviewController as StudentTeacherReviewController;
 use App\Http\Controllers\Admin\TeacherReviewController as AdminTeacherReviewController;
 use App\Http\Controllers\Enrollment\EnrollmentController;
@@ -888,6 +889,9 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->gro
     Route::post('assessment/question/{questionId}', [StudentAssessmentController::class, 'submitAnswer'])->name('assessment.submit');
     Route::get('assessment/question/{questionId}/retake', [StudentAssessmentController::class, 'retakeQuestion'])->name('assessment.retake');
     Route::get('assessment/progress', [StudentAssessmentController::class, 'progress'])->name('assessment.progress');
+    // Safe Exam Browser routes
+    Route::get('assessment/question/{questionId}/seb-required', [SebConfigController::class, 'sebRequired'])->name('assessment.seb-required');
+    Route::get('assessment/question/{questionId}/seb-config', [SebConfigController::class, 'downloadConfig'])->name('assessment.seb-config');
 
     // Teacher Review
     Route::get('teacher-review', [StudentTeacherReviewController::class, 'index'])->name('teacher-review.index');
