@@ -329,129 +329,111 @@
     const SHEET_W_MM = 297;
     const SHEET_H_MM = 210;
 
-    // ========== TERM-KEY DATA FROM SERVER ==========
-    const termKeys = {{ json_encode($termKeys) }} || [];
-    const termNames = {{ json_encode($termNames) }} || {};
-    const subjectRows = {{ json_encode($subjectRows) }} || [];
-    const termSummaries = {{ json_encode($termSummaries) }} || {};
-    const annualSummary = {{ json_encode($annualSummary) }} || {};
+    // ========== SUBJECT TABLE HTML (built by PHP, injected as JS string) ==========
+    @php
+        $numTerms = count($termKeys);
+        $numTermCols = $numTerms > 0 ? $numTerms : 1;
+        $subjectWidth = max(25, 50 - $numTermCols * 8);
+        $termColWidth = floor((65 - $subjectWidth) / ($numTermCols + 1));
+        $tableFontSizeMap = ['kg' => 9, 'g1-2' => 9, 'g3-6' => 9, 'g7-8' => 9, 'g9-10' => 9, 'g11-12-nat' => 8, 'g11-12-social' => 8];
+        $tableFontSize = $tableFontSizeMap[$templateType] ?? 9;
 
-    // ========== SUBJECT TABLE HTML ==========
-    function buildSubjectTable(fontSize) {
-        // Build dynamic column headers based on available terms
-        // Fallback: if no terms, use a single "Total" column
-        let numTermCols = termKeys.length > 0 ? termKeys.length : 1;
-        let colCount = 2 + numTermCols + 1; // # + Subject + terms + Annual Avg
-        let subjectWidth = Math.max(25, 50 - numTermCols * 8);
-        let termColWidth = numTermCols > 0 ? Math.floor((65 - subjectWidth) / (numTermCols + 1)) : 15;
-
-        let html = '<table style="width:100%;font-size:' + fontSize + 'pt;">';
+        // Build the entire subject table as HTML string in PHP
+        $tableHTML = '<table style="width:100%;font-size:' . $tableFontSize . 'pt;">';
         // Header row
-        html += '<tr><th style="width:5%;">#</th><th style="width:' + subjectWidth + '%;">Subject</th>';
-        if (termKeys.length > 0) {
-            termKeys.forEach(function(key) {
-                html += '<th style="width:' + termColWidth + '%;">' + (termNames[key] || key) + '</th>';
-            });
+        $tableHTML .= '<tr><th style="width:5%;">#</th><th style="width:' . $subjectWidth . '%;">Subject</th>';
+        if ($numTerms > 0) {
+            foreach ($termKeys as $key) {
+                $tableHTML .= '<th style="width:' . $termColWidth . '%;">' . e($termNames[$key] ?? $key) . '</th>';
+            }
         } else {
-            html += '<th style="width:' + termColWidth + '%;">Total</th>';
+            $tableHTML .= '<th style="width:' . $termColWidth . '%;">Total</th>';
         }
-        html += '<th style="width:' + termColWidth + '%;">Annual Avg</th>';
-        html += '</tr>';
+        $tableHTML .= '<th style="width:' . $termColWidth . '%;">Annual Avg</th></tr>';
 
         // Subject rows
-        if (subjectRows.length > 0) {
-            subjectRows.forEach(function(row, i) {
-                html += '<tr>';
-                html += '<td>' + (i + 1) + '</td>';
-                html += '<td>' + (row.subject || 'Unknown') + '</td>';
-                if (termKeys.length > 0) {
-                    termKeys.forEach(function(key) {
-                        let val = row[key];
-                        html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-                    });
+        if (!empty($subjectRows)) {
+            foreach ($subjectRows as $i => $row) {
+                $tableHTML .= '<tr>';
+                $tableHTML .= '<td>' . ($i + 1) . '</td>';
+                $tableHTML .= '<td>' . e($row['subject'] ?? 'Unknown') . '</td>';
+                if ($numTerms > 0) {
+                    foreach ($termKeys as $key) {
+                        $val = $row[$key] ?? null;
+                        $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
+                    }
                 } else {
-                    // No terms — show grand_total from annualAvg
-                    let val = row.annualAvg;
-                    html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
+                    $val = $row['annualAvg'] ?? null;
+                    $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
                 }
-                html += '<td style="text-align:center;font-weight:600;">' + (row.annualAvg !== null && row.annualAvg !== undefined ? row.annualAvg : '—') + '</td>';
-                html += '</tr>';
-            });
+                $avgVal = $row['annualAvg'] ?? null;
+                $tableHTML .= '<td style="text-align:center;font-weight:600;">' . ($avgVal !== null ? e($avgVal) : '—') . '</td>';
+                $tableHTML .= '</tr>';
+            }
         } else {
-            // No subject data — show placeholder row
-            html += '<tr><td>1</td><td colspan="' + (numTermCols + 2) + '" style="text-align:center;color:#999;">No marks recorded</td></tr>';
+            $tableHTML .= '<tr><td>1</td><td colspan="' . ($numTermCols + 2) . '" style="text-align:center;color:#999;">No marks recorded</td></tr>';
         }
 
-        // Summary rows after subjects
         // Conduct row
-        html += '<tr style="font-weight:600;background:#f0f0f0;">';
-        html += '<td colspan="2">Conduct</td>';
-        if (termKeys.length > 0) {
-            termKeys.forEach(function(key) {
-                let val = termSummaries[key] ? termSummaries[key].conduct : null;
-                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-            });
+        $tableHTML .= '<tr style="font-weight:600;background:#f0f0f0;"><td colspan="2">Conduct</td>';
+        if ($numTerms > 0) {
+            foreach ($termKeys as $key) {
+                $val = $termSummaries[$key]['conduct'] ?? null;
+                $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
+            }
         } else {
-            html += '<td style="text-align:center;">' + (annualSummary.conduct !== null && annualSummary.conduct !== undefined ? annualSummary.conduct : '—') + '</td>';
+            $val = $annualSummary['conduct'] ?? null;
+            $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
         }
-        html += '<td style="text-align:center;">' + (annualSummary.conduct !== null && annualSummary.conduct !== undefined ? annualSummary.conduct : '—') + '</td>';
-        html += '</tr>';
+        $aVal = $annualSummary['conduct'] ?? null;
+        $tableHTML .= '<td style="text-align:center;">' . ($aVal !== null ? e($aVal) : '—') . '</td></tr>';
 
         // Total row
-        html += '<tr style="font-weight:600;background:#f0f0f0;">';
-        html += '<td colspan="2">Total</td>';
-        if (termKeys.length > 0) {
-            termKeys.forEach(function(key) {
-                let val = termSummaries[key] ? termSummaries[key].total : null;
-                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-            });
+        $tableHTML .= '<tr style="font-weight:600;background:#f0f0f0;"><td colspan="2">Total</td>';
+        if ($numTerms > 0) {
+            foreach ($termKeys as $key) {
+                $val = $termSummaries[$key]['total'] ?? null;
+                $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
+            }
         } else {
-            html += '<td style="text-align:center;">' + (annualSummary.total !== null && annualSummary.total !== undefined ? annualSummary.total : '—') + '</td>';
+            $val = $annualSummary['total'] ?? null;
+            $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
         }
-        html += '<td style="text-align:center;">' + (annualSummary.total !== null && annualSummary.total !== undefined ? annualSummary.total : '—') + '</td>';
-        html += '</tr>';
+        $aVal = $annualSummary['total'] ?? null;
+        $tableHTML .= '<td style="text-align:center;">' . ($aVal !== null ? e($aVal) : '—') . '</td></tr>';
 
         // Average row
-        html += '<tr style="font-weight:600;background:#f0f0f0;">';
-        html += '<td colspan="2">Average</td>';
-        if (termKeys.length > 0) {
-            termKeys.forEach(function(key) {
-                let val = termSummaries[key] ? termSummaries[key].average : null;
-                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-            });
+        $tableHTML .= '<tr style="font-weight:600;background:#f0f0f0;"><td colspan="2">Average</td>';
+        if ($numTerms > 0) {
+            foreach ($termKeys as $key) {
+                $val = $termSummaries[$key]['average'] ?? null;
+                $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
+            }
         } else {
-            html += '<td style="text-align:center;">' + (annualSummary.average !== null && annualSummary.average !== undefined ? annualSummary.average : '—') + '</td>';
+            $val = $annualSummary['average'] ?? 0;
+            $tableHTML .= '<td style="text-align:center;">' . ($val > 0 ? e($val) : '—') . '</td>';
         }
-        html += '<td style="text-align:center;">' + (annualSummary.average !== null && annualSummary.average !== undefined ? annualSummary.average : '—') + '</td>';
-        html += '</tr>';
+        $aVal = $annualSummary['average'] ?? 0;
+        $tableHTML .= '<td style="text-align:center;">' . ($aVal > 0 ? e($aVal) : '—') . '</td></tr>';
 
         // Rank row
-        html += '<tr style="font-weight:600;background:#f0f0f0;">';
-        html += '<td colspan="2">Rank</td>';
-        if (termKeys.length > 0) {
-            termKeys.forEach(function(key) {
-                let val = termSummaries[key] ? termSummaries[key].rank : null;
-                html += '<td style="text-align:center;">' + (val !== null && val !== undefined ? val : '—') + '</td>';
-            });
+        $tableHTML .= '<tr style="font-weight:600;background:#f0f0f0;"><td colspan="2">Rank</td>';
+        if ($numTerms > 0) {
+            foreach ($termKeys as $key) {
+                $val = $termSummaries[$key]['rank'] ?? null;
+                $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
+            }
         } else {
-            html += '<td style="text-align:center;">' + (annualSummary.rank !== null && annualSummary.rank !== undefined ? annualSummary.rank : '—') + '</td>';
+            $val = $annualSummary['rank'] ?? null;
+            $tableHTML .= '<td style="text-align:center;">' . ($val !== null ? e($val) : '—') . '</td>';
         }
-        html += '<td style="text-align:center;">' + (annualSummary.rank !== null && annualSummary.rank !== undefined ? annualSummary.rank : '—') + '</td>';
-        html += '</tr>';
+        $aVal = $annualSummary['rank'] ?? null;
+        $tableHTML .= '<td style="text-align:center;">' . ($aVal !== null ? e($aVal) : '—') . '</td></tr>';
 
-        html += '</table>';
-        return html;
-    }
+        $tableHTML .= '</table>';
+    @endphp
 
-    const subjectTableHTML = {
-        kg: buildSubjectTable(9),
-        'g1-2': buildSubjectTable(9),
-        'g3-6': buildSubjectTable(9),
-        'g7-8': buildSubjectTable(9),
-        'g9-10': buildSubjectTable(9),
-        'g11-12-nat': buildSubjectTable(8),
-        'g11-12-social': buildSubjectTable(8),
-    };
+    const subjectTableHTML = {!! json_encode($tableHTML) !!};
 
     // ========== FIELD DEFINITIONS — PAGE 1 & PAGE 2 PER TEMPLATE ==========
     // Coordinates in mm (landscape: 297mm × 210mm)
@@ -639,8 +621,7 @@
             const targetSheet = f.page === 1 ? SHEET1 : SHEET2;
 
             if (f.type === 'table') {
-                const tableHTML = subjectTableHTML[TEMPLATE_TYPE];
-                if (!tableHTML) return;
+                if (!subjectTableHTML) return;
 
                 const el = document.createElement('div');
                 el.className = 'cert-field-table';
@@ -649,7 +630,7 @@
                 el.style.left = f.x + 'mm';
                 el.style.top = f.y + 'mm';
                 el.style.fontSize = f.fontSize + 'pt';
-                el.innerHTML = tableHTML;
+                el.innerHTML = subjectTableHTML;
                 el.addEventListener('mousedown', startDrag);
                 el.addEventListener('touchstart', startDragTouch, { passive: false });
                 targetSheet.appendChild(el);
