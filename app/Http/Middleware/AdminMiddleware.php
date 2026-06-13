@@ -30,9 +30,12 @@ class AdminMiddleware
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
             // For non-AJAX requests, redirect to login with the current URL as the intended destination.
-            // Use the REQUEST URI (relative path) instead of full URL to avoid APP_URL host mismatch.
-            // The AuthController's validateRedirectUrl() will handle it correctly as a relative path.
-            return redirect()->route('login')->withIntended($request->getRequestUri());
+            // Use path() (relative to app root) instead of getRequestUri() (which includes subdirectory)
+            // to avoid the double-path 404 bug where /redemption/admin/... becomes /redemption/redemption/admin/...
+            // getRequestUri() returns "/redemption/admin/..." but redirect()->intended() prepends the
+            // base URL (http://localhost/redemption) again, causing duplication.
+            // path() returns "admin/..." without the subdirectory prefix, which is correct.
+            return redirect()->route('login')->withIntended('/' . $request->path());
         }
 
         // Inactive users cannot access the panel

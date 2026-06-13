@@ -517,6 +517,22 @@ class AuthController extends Controller
             if (!str_starts_with($url, '/')) {
                 return null;
             }
+
+            // ── SAFETY NET: Strip the subdirectory base path if present ──
+            // If the relative path starts with the APP_URL's path prefix
+            // (e.g., /redemption/admin/... when APP_URL=http://localhost/redemption),
+            // strip the prefix to avoid double-path when redirect()->intended()
+            // prepends the base URL again.
+            // Example: /redemption/admin/certificate-print → /admin/certificate-print
+            $appUrlPath = rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?: '', '/');
+            if ($appUrlPath && $appUrlPath !== '/' && str_starts_with($url, $appUrlPath . '/')) {
+                $url = substr($url, strlen($appUrlPath));
+                // Ensure it still starts with /
+                if (!str_starts_with($url, '/')) {
+                    $url = '/' . $url;
+                }
+            }
+
             return $url;
         }
 
@@ -554,7 +570,15 @@ class AuthController extends Controller
 
         // Convert full URL to relative path for maximum compatibility
         // This avoids the double-path 404 bug with redirect()->away()
+        // Also strip the subdirectory base path if present to prevent duplication
         $relativePath = $redirectPath;
+        $appUrlPath = rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?: '', '/');
+        if ($appUrlPath && $appUrlPath !== '/' && str_starts_with($relativePath, $appUrlPath . '/')) {
+            $relativePath = substr($relativePath, strlen($appUrlPath));
+            if (!str_starts_with($relativePath, '/')) {
+                $relativePath = '/' . $relativePath;
+            }
+        }
         if (isset($parsed['query'])) {
             $relativePath .= '?' . $parsed['query'];
         }

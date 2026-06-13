@@ -20,7 +20,9 @@ class StudentMiddleware
             if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
-            return redirect()->route('login')->withIntended($request->getRequestUri());
+            // Use path() (relative to app root) instead of getRequestUri() (which includes subdirectory)
+            // to avoid the double-path 404 bug where /redemption/student/... becomes /redemption/redemption/student/...
+            return redirect()->route('login')->withIntended('/' . $request->path());
         }
 
         if (isset($user->is_active) && !$user->is_active) {

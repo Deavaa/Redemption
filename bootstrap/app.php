@@ -69,7 +69,9 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             // For all other pages, redirect to login with the intended URL preserved
-            $intended = $request->getRequestUri();
+            // Use path() instead of getRequestUri() to avoid the double-path bug
+            // (getRequestUri() includes the subdirectory prefix which gets doubled by Laravel's URL generator)
+            $intended = '/' . $request->path();
             // Don't store login URL as intended
             if ($intended !== '/login' && !str_ends_with($intended, '/login')) {
                 session(['url.intended' => $intended]);

@@ -500,18 +500,21 @@ window.addEventListener('beforeprint', function(e) {
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1a1a2e;color:#fca5a5;font-family:sans-serif;text-align:center;"><div><h1>Printing is Disabled</h1><p>This content is protected by copyright.</p></div></div>';
 });
 
-// Detect developer tools (basic detection)
+// Detect developer tools (basic detection) — reduced interval to save CPU
 (function() {
-    const threshold = 160;
-    const check = function() {
-        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+    var threshold = 160;
+    var check = function() {
+        var widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        var heightThreshold = window.outerHeight - window.innerHeight > threshold;
         if (widthThreshold || heightThreshold) {
             document.body.style.opacity = '0.1';
             setTimeout(function() { document.body.style.opacity = '1'; }, 1000);
         }
     };
-    setInterval(check, 1000);
+    // Check every 5 seconds instead of every 1 second to reduce CPU usage
+    setInterval(check, 5000);
+    // Also check on window resize (more efficient than constant polling)
+    window.addEventListener('resize', check, { passive: true });
 })();
 
 // Prevent browser download bar / save dialog for PDF content

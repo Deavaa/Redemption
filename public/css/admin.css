@@ -2253,7 +2253,11 @@ html, body {
     .mobile-bottom-nav { display: none !important; }
     .mobile-menu-sheet,
     .mobile-menu-sheet-backdrop { display: none !important; }
-    .mobile-topbar-panel { display: none !important; }
+    /* NOTE: .mobile-topbar-panel is NOT hidden with !important on desktop because
+       Capacitor/WebView apps may have viewport > 768px but still need the overlay panel.
+       The panel is display:none by default and only shown via JavaScript when isMobile()
+       returns true (which includes Capacitor/WebView/PWA detection). */
+    .mobile-topbar-panel:not(.show) { display: none; }
 }
 
 

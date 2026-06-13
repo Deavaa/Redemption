@@ -10,8 +10,8 @@
         var keepaliveUrl = '{{ route("admin.keepalive") }}';
         var sessionExpired = false;
         var lastKeepaliveTime = Date.now();
-        var KEEPALIVE_INTERVAL = 45 * 1000;  // 45 seconds — frequent enough to prevent expiry
-        var ACTIVITY_THRESHOLD = 15 * 1000;  // 15 seconds of activity before triggering keepalive
+        var KEEPALIVE_INTERVAL = 60 * 1000;  // 60 seconds — balanced between reliability and resource usage
+        var ACTIVITY_THRESHOLD = 30 * 1000;  // 30 seconds of inactivity before activity-driven keepalive
 
         // ===== 1. GLOBAL CSRF TOKEN HELPERS =====
         window.getGlobalCSRFToken = function() {
@@ -35,7 +35,7 @@
                 xhr.open('GET', keepaliveUrl, true);
                 xhr.setRequestHeader('Accept', 'application/json');
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                xhr.timeout = 15000; // 15 second timeout
+                xhr.timeout = 8000; // 8 second timeout (reduced from 15s to prevent accumulation)
 
                 xhr.onload = function() {
                     if (sessionExpired) return;
@@ -115,27 +115,28 @@
         }
 
         // ===== 4. GLOBAL FETCH 419 HANDLER — Auto-retry on CSRF token mismatch =====
-        // Intercepts all fetch() calls and retries on 419 errors.
+        // Only intercepts fetch() calls that return 419 status. Uses a lightweight
+        // check to minimize overhead on successful requests.
         (function() {
             var originalFetch = window.fetch;
             window.fetch = function(input, init) {
                 return originalFetch.apply(this, arguments).then(function(response) {
-                    if (response.status === 419 && !sessionExpired) {
-                        console.warn('[Fetch 419 Handler] CSRF token expired, refreshing and retrying...');
-                        return refreshCSRFViaFetch().then(function(newToken) {
-                            if (newToken && init && init.body) {
-                                var body = init.body;
-                                if (typeof body === 'string') {
-                                    body = body.replace(/_token=[^&]+/, '_token=' + encodeURIComponent(newToken));
-                                    init = Object.assign({}, init, { body: body, headers: Object.assign({}, init.headers, { 'X-CSRF-TOKEN': newToken }) });
-                                }
-                                console.log('[Fetch 419 Handler] Retrying request with fresh token...');
-                                return originalFetch.apply(this, [input, init]);
+                    // Only process 419 errors — successful requests pass through with zero overhead
+                    if (response.status !== 419 || sessionExpired) return response;
+
+                    console.warn('[Fetch 419 Handler] CSRF token expired, refreshing and retrying...');
+                    return refreshCSRFViaFetch().then(function(newToken) {
+                        if (newToken && init && init.body) {
+                            var body = init.body;
+                            if (typeof body === 'string') {
+                                body = body.replace(/_token=[^&]+/, '_token=' + encodeURIComponent(newToken));
+                                init = Object.assign({}, init, { body: body, headers: Object.assign({}, init.headers, { 'X-CSRF-TOKEN': newToken }) });
                             }
-                            return response;
-                        }).catch(function() { return response; });
-                    }
-                    return response;
+                            console.log('[Fetch 419 Handler] Retrying request with fresh token...');
+                            return originalFetch.apply(this, [input, init]);
+                        }
+                        return response;
+                    }).catch(function() { return response; });
                 });
             };
 
@@ -175,13 +176,23 @@
 
             alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
 
-            // Use RELATIVE PATH (pathname) instead of full URL for the redirect parameter.
-            // This avoids the APP_URL host mismatch bug where the server's APP_URL
-            // doesn't match the live domain (e.g. APP_URL=localhost but site is
-            // schoolofredemption.net). The AuthController now converts full URLs
-            // to relative paths anyway, so sending a relative path directly is
-            // simpler and more reliable across XAMPP, live servers, and mobile WebView.
-            var returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            // Use RELATIVE PATH (app-root-relative, without subdirectory prefix) instead of
+            // full URL for the redirect parameter.
+            // window.location.pathname includes the subdirectory (e.g., /redemption/admin/...)
+            // which would cause the double-path bug when redirect()->intended() prepends the
+            // base URL again. We strip the base path from APP_URL to get the app-root-relative path.
+            var basePath = '';
+            try {
+                var appUrl = '{{ config("app.url") }}';
+                var parsed = new URL(appUrl);
+                basePath = parsed.pathname.replace(/\/$/, '');
+            } catch(e) {}
+            var currentPath = window.location.pathname + window.location.search;
+            // Strip the subdirectory prefix if present (e.g., /redemption/admin/... → /admin/...)
+            if (basePath && currentPath.startsWith(basePath + '/')) {
+                currentPath = currentPath.substring(basePath.length) || '/';
+            }
+            var returnUrl = encodeURIComponent(currentPath);
             window.location.href = loginUrl + '?redirect=' + returnUrl;
         }
 
@@ -193,11 +204,18 @@
         }
 
         // ===== 7. ACTIVITY-DRIVEN KEEPALIVE =====
+        // Throttle activity checks to avoid excessive CPU usage.
+        // Only check once per ACTIVITY_THRESHOLD period, not on every single event.
+        var lastActivityCheck = 0;
         var activityEvents = ['input', 'click', 'keydown', 'touchstart'];
         activityEvents.forEach(function(evtName) {
             document.addEventListener(evtName, function() {
                 if (sessionExpired) return;
-                var elapsed = Date.now() - lastKeepaliveTime;
+                var now = Date.now();
+                // Throttle: only check once per ACTIVITY_THRESHOLD period
+                if (now - lastActivityCheck < ACTIVITY_THRESHOLD) return;
+                lastActivityCheck = now;
+                var elapsed = now - lastKeepaliveTime;
                 if (elapsed > ACTIVITY_THRESHOLD) {
                     fireKeepalive();
                 }
@@ -1678,16 +1696,22 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!panel) return;
 
         function isMobile() {
-            // Use multiple signals: narrow viewport OR touch-primary device OR WebView
+            // Use multiple signals: narrow viewport OR touch-primary device OR WebView/Capacitor
             var hasTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
             var isNarrowViewport = window.innerWidth <= 768;
+            // Detect Capacitor/WebView: modern Android WebView may not contain 'wv' in UA.
+            // Capacitor apps set window.Capacitor or have specific UA patterns.
             var isWebView = /wv|android.*browser/i.test(navigator.userAgent) && hasTouchScreen;
-            return isNarrowViewport || isWebView;
+            var isCapacitor = !!(window.Capacitor || (window.webkit && window.webkit.messageHandlers));
+            // Also check for standalone PWA mode (display: standalone)
+            var isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                               window.navigator.standalone === true;
+            return isNarrowViewport || isWebView || isCapacitor || (isStandalone && hasTouchScreen);
         }
 
         function closePanel() {
-            panel.style.display = 'none';
             panel.classList.remove('show');
+            panel.style.display = 'none';
             document.body.style.overflow = '';
             var bottomNav = document.getElementById('mobileBottomNav');
             if (bottomNav) bottomNav.style.display = '';
@@ -1755,12 +1779,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }, true); // capturing phase
 
             // Also handle touchend for WebViews that don't fire click properly
-            // Only intercept if the device is truly touch-primary AND mobile
             toggle.addEventListener('touchend', function(e) {
                 if (!isMobile()) return;
                 // Only intercept if click didn't already fire (detail=0 = touch-only)
-                // AND the screen is narrow (prevents accidental intercept on tablets)
-                if (e.detail === 0 && window.innerWidth <= 768) {
+                // Removed the window.innerWidth <= 768 check since isMobile() already
+                // handles Capacitor/WebView detection regardless of viewport width
+                if (e.detail === 0) {
                     e.preventDefault();
                     e.stopPropagation();
 
@@ -1777,6 +1801,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, { passive: false });
         });
+
+        // ===== FALLBACK: If Bootstrap opens a dropdown on mobile, override with overlay panel =====
+        // On some WebViews, the capturing phase click handler above may not fire
+        // (e.g., if Bootstrap uses touch events internally). This MutationObserver
+        // detects when Bootstrap adds .show to a dropdown and immediately replaces
+        // it with the overlay panel on mobile devices.
+        try {
+            var dropdownParents = document.querySelectorAll('#notifDropdown, #userDropdown, #langDropdown');
+            dropdownParents.forEach(function(parent) {
+                var observer = new MutationObserver(function(mutations) {
+                    if (!isMobile()) return;
+                    mutations.forEach(function(m) {
+                        if (m.type === 'attributes' && m.attributeName === 'class') {
+                            var target = m.target;
+                            // If Bootstrap just added .show class to a dropdown
+                            if (target.classList.contains('show')) {
+                                var menu = target.querySelector('.dropdown-menu');
+                                var toggleEl = target.querySelector('[data-bs-toggle="dropdown"]');
+                                if (menu && toggleEl) {
+                                    // Find the config for this dropdown
+                                    var cfg = dropdownConfig.find(function(c) { return c.id === target.id; });
+                                    var title = cfg ? cfg.title : 'Menu';
+
+                                    // Close the Bootstrap dropdown immediately
+                                    var bsInstance = bootstrap.Dropdown.getInstance(toggleEl);
+                                    if (bsInstance) bsInstance.hide();
+                                    else {
+                                        target.classList.remove('show');
+                                        var ddMenu = target.querySelector('.dropdown-menu');
+                                        if (ddMenu) ddMenu.classList.remove('show');
+                                    }
+
+                                    // Show the overlay panel instead
+                                    if (!panelJustOpened) {
+                                        panelJustOpened = true;
+                                        openPanel(title, menu.innerHTML);
+                                        setTimeout(function() { panelJustOpened = false; }, 300);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+                observer.observe(parent, { attributes: true, subtree: true, attributeFilter: ['class'] });
+            });
+        } catch(e) {
+            // MutationObserver not supported — graceful fallback
+        }
 
         // Close panel on resize to desktop
         window.addEventListener('resize', function() {
