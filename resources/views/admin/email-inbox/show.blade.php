@@ -50,9 +50,14 @@
     <div class="modern-card" style="margin-bottom:1.25rem;">
         <div style="padding:1.5rem 2rem;">
             @if($email_message->body_html)
-            <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1.25rem;overflow:auto;">
-                {!! $email_message->body_html !!}
-            </div>
+            {{-- SECURITY: Render untrusted email HTML inside a sandboxed iframe so any
+                embedded <script> or event-handler attributes cannot reach the admin
+                session. srcdoc + sandbox="" (no allow-scripts) blocks all JS. --}}
+            <iframe srcdoc="{{ htmlspecialchars($email_message->body_html, ENT_QUOTES|ENT_HTML5, 'UTF-8') }}"
+                    sandbox=""
+                    style="border:1px solid #e5e7eb;border-radius:8px;width:100%;min-height:400px;background:#fff;"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"></iframe>
             @else
             <div style="white-space:pre-wrap;font-size:0.9rem;color:#374151;line-height:1.7;">
                 {{ $email_message->body_text ?: 'No content available.' }}

@@ -70,7 +70,7 @@
                                                 </span>
                                             @endif
                                             @if($slider->subtitle)
-                                                <h1>{!! $slider->subtitle !!}</h1>
+                                                <h1>{{ $slider->subtitle }}</h1>
                                             @endif
                                             @if($slider->description ?? null)
                                                 <p>{{ $slider->description }}</p>
