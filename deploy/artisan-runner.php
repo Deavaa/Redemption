@@ -2,73 +2,32 @@
 
 /**
  * ================================================================
- * ARTISAN WEB RUNNER for Shared Hosting
+ * ARTISAN WEB RUNNER — DISABLED FOR SECURITY
  * ================================================================
- * This script allows you to run Artisan commands via the browser
- * when you don't have SSH access on shared hosting.
  *
- * USAGE: https://yoursite.com/artisan-runner.php?cmd=migrate
- * 
- * SECURITY: DELETE THIS FILE after setup! Or rename it to something
- * only you know.
+ * This file used to allow running `php artisan migrate:fresh`, `db:seed`,
+ * `key:generate`, and other destructive commands via a simple URL with a
+ * hardcoded secret (`CHANGE_THIS_SECRET_12345`). If the secret was not
+ * changed (very common), anyone with the URL could wipe the database,
+ * invalidate all encrypted data, or take the site offline.
+ *
+ * The file is now disabled. To re-enable temporarily on a trusted host:
+ *   1. Rename this file to something unique (e.g. `deploy/run-XYZ.php`).
+ *   2. Move the secret to an environment variable or external file that
+ *      is NOT checked into git.
+ *   3. Wrap the runner in `auth` + `admin` middleware (route it through
+ *      Laravel instead of being a standalone PHP file).
+ *   4. Remove `migrate:fresh`, `key:generate`, and `db:seed` from the
+ *      allow-list unless absolutely necessary.
+ *
+ * Recommended alternatives:
+ *   - Use `php artisan` over SSH when possible.
+ *   - Use Laravel Forge / Envoyer / Ploi deployment hooks.
+ *   - For cPanel shared hosting: use the cron-job runner with a one-time
+ *     trigger and a randomly-named flag file.
  * ================================================================
  */
 
-// Only allow specific safe commands
-$allowedCommands = [
-    'migrate'           => ['migrate', '--force'],
-    'migrate:fresh'     => ['migrate:fresh', '--force'],
-    'migrate:status'    => ['migrate:status'],
-    'migrate:rollback'  => ['migrate:rollback', '--force'],
-    'config:cache'      => ['config:cache'],
-    'config:clear'      => ['config:clear'],
-    'cache:clear'       => ['cache:clear'],
-    'route:cache'       => ['route:cache'],
-    'route:clear'       => ['route:clear'],
-    'view:cache'        => ['view:cache'],
-    'view:clear'        => ['view:clear'],
-    'storage:link'      => ['storage:link'],
-    'key:generate'      => ['key:generate', '--force'],
-    'db:seed'           => ['db:seed', '--force'],
-    'optimize'          => ['optimize'],
-    'optimize:clear'    => ['optimize:clear'],
-    'up'                => ['up'],
-    'down'              => ['down'],
-    'env'               => ['env'],
-];
-
-// Simple access protection - change this secret!
-$secret = 'CHANGE_THIS_SECRET_12345';
-
-// Check secret
-if (!isset($_GET['secret']) || $_GET['secret'] !== $secret) {
-    http_response_code(403);
-    echo '<h1>403 Forbidden</h1><p>Access denied. Provide ?secret=YOUR_SECRET parameter.</p>';
-    exit;
-}
-
-// Get command
-$cmd = $_GET['cmd'] ?? 'env';
-
-if (!isset($allowedCommands[$cmd])) {
-    echo "<h1>Invalid Command</h1>";
-    echo "<p>Allowed commands: " . implode(', ', array_keys($allowedCommands)) . "</p>";
-    exit;
-}
-
-// Run the Artisan command
-echo "<h1>Running: php artisan " . implode(' ', $allowedCommands[$cmd]) . "</h1>";
-echo "<pre>";
-
-// Change to the Laravel root directory (one level up from public)
-chdir(dirname(__DIR__));
-
-// Capture output
-$command = escapeshellcmd('php ' . __DIR__ . '/../artisan ' . implode(' ', $allowedCommands[$cmd]));
-$output = shell_exec($command . ' 2>&1');
-
-echo htmlspecialchars($output ?? 'No output');
-echo "</pre>";
-
-echo "<hr><p><a href='?secret={$secret}&cmd=env'>Back to env</a></p>";
-echo "<p><small style='color:red;'>⚠️ DELETE THIS FILE AFTER SETUP for security!</small></p>";
+http_response_code(404);
+echo '<h1>404 Not Found</h1>';
+exit;

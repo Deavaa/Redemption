@@ -25,7 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
             'admin/keepalive',  // Keepalive must work even with stale CSRF token
-            'admin/session-diagnostic',  // Diagnostic must always work
+            // SECURITY: 'admin/session-diagnostic' was previously CSRF-excluded.
+            // It exposes session IDs, handler class, and DB row counts. It is
+            // still routed but now requires a valid CSRF token like all other
+            // admin POST routes. If you need to test it via curl, fetch the
+            // CSRF token from the page first.
         ]);
         $middleware->alias([
             'admin' => AdminMiddleware::class,

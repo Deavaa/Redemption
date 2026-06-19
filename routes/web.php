@@ -121,118 +121,34 @@ Route::get('/mobile-app/download/apk', [AppController::class, 'downloadApk'])->n
 Route::get('/mobile-app/download/training-apk', [AppController::class, 'downloadTrainingApk'])->name('app.download.training_apk');
 
 // Public Contact Form
-Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store');
+Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store')->middleware('throttle:10,1');
 
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Password Reset (self-service — security question based)
 Route::get('/password/forgot', [AuthController::class, 'showForgotPassword'])->name('password.forgot');
-Route::post('/password/forgot', [AuthController::class, 'submitForgotPassword'])->name('password.forgot.submit');
-Route::post('/password/verify-security', [AuthController::class, 'verifySecurityAnswer'])->name('password.verify.security');
-Route::post('/password/reset', [AuthController::class, 'submitResetPassword'])->name('password.reset.submit');
+Route::post('/password/forgot', [AuthController::class, 'submitForgotPassword'])->name('password.forgot.submit')->middleware('throttle:5,1');
+Route::post('/password/verify-security', [AuthController::class, 'verifySecurityAnswer'])->name('password.verify.security')->middleware('throttle:5,1');
+Route::post('/password/reset', [AuthController::class, 'submitResetPassword'])->name('password.reset.submit')->middleware('throttle:5,1');
 
 // Password Reset (email-based with token)
 Route::get('/password/email', [AuthController::class, 'showLinkRequestForm'])->name('password.email');
-Route::post('/password/email', [AuthController::class, 'sendResetLinkEmail'])->name('password.email.send');
+Route::post('/password/email', [AuthController::class, 'sendResetLinkEmail'])->name('password.email.send')->middleware('throttle:3,1');
 Route::get('/password/reset/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
-Route::post('/password/reset-with-token', [AuthController::class, 'resetPasswordWithToken'])->name('password.reset.token');
+Route::post('/password/reset-with-token', [AuthController::class, 'resetPasswordWithToken'])->name('password.reset.token')->middleware('throttle:5,1');
 
 // Telegram webhook (public)
 Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 
-// Public session test — NO auth required, tests if sessions work at all
-Route::get('/session-test', function () {
-    $request = request();
-    $session = $request->session();
-
-    // Write a test value
-    $session->put('_test_value', 'session_works_' . time());
-    $session->save();
-
-    // Read it back
-    $testValue = $session->get('_test_value');
-
-    $handler = $session->getHandler();
-
-    $result = [
-        'status' => $testValue === 'session_works_' . substr($testValue, -10) ? 'OK' : 'FAIL',
-        'test_write_read' => $testValue,
-        'session_id' => $session->getId(),
-        'driver' => config('session.driver'),
-        'cookie_name' => config('session.cookie'),
-        'lifetime' => config('session.lifetime'),
-        'lottery' => config('session.lottery'),
-        'handler_class' => get_class($handler),
-        'php_gc_maxlifetime' => ini_get('session.gc_maxlifetime'),
-        'php_gc_probability' => ini_get('session.gc_probability'),
-        'php_gc_divisor' => ini_get('session.gc_divisor'),
-        'encrypt' => config('session.encrypt'),
-        'same_site' => config('session.same_site'),
-        'secure' => config('session.secure'),
-    ];
-
-    // Add driver-specific diagnostics
-    if (config('session.driver') === 'database') {
-        try {
-            $dbSession = \DB::table('sessions')->where('id', $session->getId())->first();
-            $result['db_session_found'] = $dbSession ? true : false;
-            $result['db_session_last_activity'] = $dbSession ? $dbSession->last_activity : null;
-            $result['db_session_user_id'] = $dbSession ? $dbSession->user_id : null;
-            $result['db_total_sessions'] = \DB::table('sessions')->count();
-        } catch (\Throwable $e) {
-            $result['db_error'] = $e->getMessage();
-        }
-    } else {
-        $result['session_path'] = config('session.files');
-        $result['session_path_writable'] = is_writable(config('session.files', storage_path('framework/sessions')));
-    }
-
-    return response()->json($result, 200, [], JSON_PRETTY_PRINT);
-});
-
-// URL Diagnostic — helps verify URL generation works correctly in subdirectory
-Route::get('/url-test', function () {
-    $appUrl = config('app.url');
-    $assetUrl = config('app.asset_url');
-
-    // Get key server variables
-    $serverVars = [
-        'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'] ?? null,
-        'SCRIPT_FILENAME' => $_SERVER['SCRIPT_FILENAME'] ?? null,
-        'DOCUMENT_ROOT' => $_SERVER['DOCUMENT_ROOT'] ?? null,
-        'REQUEST_URI' => $_SERVER['REQUEST_URI'] ?? null,
-        'HTTP_HOST' => $_SERVER['HTTP_HOST'] ?? null,
-    ];
-
-    // Test URL generation
-    $urlTests = [
-        'route_login' => route('login'),
-        'route_admin_dashboard' => route('admin.dashboard'),
-        'url_to_login' => url('/login'),
-        'url_to_root' => url('/'),
-        'asset_css' => asset('css/app.css'),
-    ];
-
-    // Get request base path info
-    $request = request();
-    $basePath = $request->getBasePath();
-    $baseUrl = $request->getBaseUrl();
-
-    return response()->json([
-        'config_app_url' => $appUrl,
-        'config_asset_url' => $assetUrl,
-        'server_vars' => $serverVars,
-        'request_base_path' => $basePath,
-        'request_base_url' => $baseUrl,
-        'url_tests' => $urlTests,
-        'forced_root_url' => app('url')->getRequest()->getUri(),
-    ], 200, [], JSON_PRETTY_PRINT);
-});
+// ── SECURITY: Public diagnostic endpoints (/session-test, /url-test) were removed.
+// They leaked server variables, session IDs, DB row counts, and config values to
+// unauthenticated visitors. If you need to debug sessions/URLs, use `php artisan tinker`
+// or temporarily re-add the routes inside an auth+admin middleware group.
 
 // Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
 Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
@@ -397,10 +313,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('mark-entries/api/terms', [MarkEntryController::class, 'apiTerms'])->name('mark-entries.api.terms');
     Route::get('mark-entries/api/classes', [MarkEntryController::class, 'apiClasses'])->name('mark-entries.api.classes');
     Route::get('mark-entries/api/sections', [MarkEntryController::class, 'apiSections'])->name('mark-entries.api.sections');
-    Route::get('mark-entries/api/subjects', [MarkEntryController::class, 'apiSubjects'])->name('mark-entries.api.subjects');
-    Route::get('mark-entries/api/students', [MarkEntryController::class, 'apiStudents'])->name('mark-entries.api.students');
-    Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students');
-    Route::post('mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save');
+    Route::get('mark-entries/api/subjects', [MarkEntryController::class, 'apiSubjects'])->name('mark-entries.api.subjects')->middleware('permission:mark_entries.view');
+    Route::get('mark-entries/api/students', [MarkEntryController::class, 'apiStudents'])->name('mark-entries.api.students')->middleware('permission:mark_entries.view');
+    Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students')->middleware('permission:mark_entries.view');
+    Route::post('mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save')->middleware('permission:mark_entries.manage');
     Route::get('mark-entries/api/check-lock', [MarkEntryLockController::class, 'apiCheckLock'])->name('mark-entries.api.check-lock');
     Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
 
@@ -504,7 +420,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // ── People ────────────────────────────────────────────
     // NOTE: Static sub-routes MUST come BEFORE Route::resource to avoid {student} parameter matching
-    Route::get('students/generate-ids', [StudentController::class, 'generateIds'])->name('students.generateIds');
+    Route::get('students/generate-ids', [StudentController::class, 'generateIds'])->name('students.generateIds')->middleware('permission:students.manage');
     Route::get('students/bulk-create', [StudentController::class, 'bulkCreate'])->name('students.bulk-create')->middleware('permission:students.manage');
     Route::get('students/download-template', [StudentController::class, 'downloadTemplate'])->name('students.download-template')->middleware('permission:students.manage');
     Route::post('students/upload-students', [StudentController::class, 'uploadStudents'])->name('students.upload-students')->middleware('permission:students.manage');
@@ -525,16 +441,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('students/{student}/transfer', [StudentController::class, 'transfer'])->name('students.transfer-store')->middleware('permission:students.manage');
 
     // ── Student Comments ──────────────────────────────────
-    Route::get('students/{student}/comments', [StudentCommentController::class, 'index'])->name('students.comments.index');
-    Route::post('students/{student}/comments', [StudentCommentController::class, 'store'])->name('students.comments.store');
-    Route::put('students/{student}/comments/{comment}', [StudentCommentController::class, 'update'])->name('students.comments.update');
-    Route::delete('students/{student}/comments/{comment}', [StudentCommentController::class, 'destroy'])->name('students.comments.destroy');
-    Route::get('students/{student}/report-comments', [StudentCommentController::class, 'reportComments'])->name('students.comments.report');
+    Route::get('students/{student}/comments', [StudentCommentController::class, 'index'])->name('students.comments.index')->middleware('permission:students.view');
+    Route::post('students/{student}/comments', [StudentCommentController::class, 'store'])->name('students.comments.store')->middleware('permission:students.manage');
+    Route::put('students/{student}/comments/{comment}', [StudentCommentController::class, 'update'])->name('students.comments.update')->middleware('permission:students.manage');
+    Route::delete('students/{student}/comments/{comment}', [StudentCommentController::class, 'destroy'])->name('students.comments.destroy')->middleware('permission:students.manage');
+    Route::get('students/{student}/report-comments', [StudentCommentController::class, 'reportComments'])->name('students.comments.report')->middleware('permission:students.view');
 
     // ── Parent Search & Add ───────────────────────────────
-    Route::get('parents/search', [ParentController::class, 'search'])->name('parents.search');
-    Route::post('parents/add', [ParentController::class, 'store'])->name('parents.add');
-    Route::post('parents/link-student', [ParentController::class, 'linkToStudent'])->name('parents.link-student');
+    Route::get('parents/search', [ParentController::class, 'search'])->name('parents.search')->middleware('permission:parents.view');
+    Route::post('parents/add', [ParentController::class, 'store'])->name('parents.add')->middleware('permission:parents.manage');
+    Route::post('parents/link-student', [ParentController::class, 'linkToStudent'])->name('parents.link-student')->middleware('permission:parents.manage');
     Route::get('teachers/{teacher}/transfer', [TeacherController::class, 'transferForm'])->name('teachers.transfer')->middleware('permission:teachers.manage');
     Route::post('teachers/{teacher}/transfer', [TeacherController::class, 'transfer'])->name('teachers.transfer-store')->middleware('permission:teachers.manage');
     Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');
@@ -787,7 +703,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::delete('announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy')->middleware('permission:calendar.manage');
 
     // Media Upload (admin)
-    Route::post('media/upload', [MediaController::class, 'upload'])->name('media.upload');
+    Route::post('media/upload', [MediaController::class, 'upload'])->name('media.upload')->middleware('permission:settings.edit');
 
     // Report Document Exchange
     Route::get('report-exchange', [ReportExchangeController::class, 'index'])->name('report-exchange.index')->middleware('permission:settings.view');
