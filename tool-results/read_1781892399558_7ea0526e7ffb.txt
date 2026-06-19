@@ -1,0 +1,1346 @@
+     1→# Redemption — Multi-Agent Worklog
+     2→
+     3→This file is the shared coordination log for all sub-agents working on the
+     4→`/home/z/my-project/Redemption` Laravel project. Every agent MUST read this
+     5→file before starting and MUST append their findings at the end using the
+     6→standard template.
+     7→
+     8→---
+     9→Task ID: 2-d
+    10→Agent: Explore (website + CSS/JS audit)
+    11→Task: Audit public-facing website views and assets for modernization
+    12→
+    13→Work Log:
+    14→- Audited 10 view files (home, about, contact, team, gallery, app/download, welcome, layouts/website, partials/logo, errors/403, errors/419)
+    15→- Audited 4 CSS files (website.css, homepage.css, design-tokens.css, modern-components.css)
+    16→- Audited 3 JS files (website.js, homepage.js, pwa-install.js) + manifest.json + sw.js
+    17→- Audited routes/web.php public section + HomeController + AppController
+    18→- Found 38 modernization opportunities and 22 concrete bugs/issues
+    19→
+    20→Stage Summary:
+    21→
+    22→==============================================================================
+    23→0. CRITICAL FINDINGS (read first)
+    24→==============================================================================
+    25→
+    26→🔴 CRITICAL BUG #1 — `public/css/website.css` IS BROKEN AT LINE 1
+    27→   The file starts with `};` (orphaned closing brace) and then declares CSS
+    28→   custom properties WITHOUT a `:root {` opener. Line 2 contains literal
+    29→   Blade syntax `{{ $settings['secondary_color'] ?? '#D97706' }}` and
+    30→   `{{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}` which is served as
+    31→   raw text because Blade does NOT process static files in /public/.
+    32→   Impact:
+    33→   - The entire `:root` block in website.css is dropped by the browser
+    34→     (invalid selector + orphan declarations).
+    35→   - EVERY rule that references `rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, …)`
+    36→     is also dropped — this includes `.navbar`, `.navbar.scrolled`,
+    37→     `.page-hero`, and several others. The navbar background, page-hero
+    38→     gradient, and mobile-drawer gradient are ALL unstyled on the live site.
+    39→   - The layout's inline `<style>` block (in layouts/website.blade.php)
+    40→     DOES define `--primary-color`, `--secondary-color`, `--primary-rgb`
+    41→     correctly via Blade, so those tokens still resolve — but every
+    42→     website.css rule that re-uses Blade `{{ }}` placeholders is dead.
+    43→   Fix: rewrite website.css as a plain static CSS file (no Blade). Either
+    44→   hardcode the default color values or rely solely on `var(--primary-color)`
+    45→   / `var(--primary-rgb)` set by the layout's inline :root block.
+    46→
+    47→🔴 CRITICAL BUG #2 — TWO CONFLICTING LAYOUTS, NEITHER CONSISTENT
+    48→   The project has TWO layout templates for public pages:
+    49→   (a) `layouts/website.blade.php`  — used by welcome, about, contact, team,
+    50→       gallery. Green + gold theme. Loads Bootstrap 5 + Font Awesome 6.5.1 +
+    51→       Montserrat/Playfair fonts + design-tokens.css + website.css (broken).
+    52→       NO i18n (all strings hardcoded English). NO language switcher.
+    53→   (b) `layouts/app.blade.php`      — used ONLY by `home.blade.php` (the
+    54→       emergency fallback homepage). Navy + amber theme. Self-contained
+    55→       inline CSS (no Bootstrap). Uses `__('app.*')` translation keys
+    56→       throughout. HAS a language switcher dropdown. Modern, polished,
+    57→       fully internationalized — but never rolled out to the main pages.
+    58→   `home.blade.php` (fallback) uses Bootstrap classes (`.row`, `.col-md-4`,
+    59→   `.card`, `.btn-gold`, `.gold-text`, `.hero`, `.stitle`) that are NOT
+    60→   defined anywhere — `layouts/app.blade.php` doesn't load Bootstrap, so
+    61→   the fallback homepage renders COMPLETELY UNSTYLED.
+    62→   Fix: pick ONE layout, consolidate. `layouts/app.blade.php` is the more
+    63→   modern, i18n-ready foundation — recommend extending it to all public
+    64→   pages and deleting `layouts/website.blade.php` + `website.css`.
+    65→
+    66→🔴 CRITICAL BUG #3 — `app/download.blade.php` IS A THIRD, OFF-BRAND THEME
+    67→   The download page is a 906-line standalone HTML file (no @extends) with
+    68→   its own complete inline `<style>` block using an INDIGO (#6366f1) +
+    69→   dark-navy (#0f172a) palette, Inter font, and its own navbar/footer.
+    70→   It does NOT match the green/gold website theme at all. Users clicking
+    71→   "Get App" in the website navbar are jarringly transported to a page
+    72→   that looks like a different product.
+    73→   Also: `<meta name="theme-color" content="#6366f1">` here vs.
+    74→   `#047857` in website layout — browsers will show different
+    75→   status-bar colors depending on the page.
+    76→
+    77→🔴 CRITICAL BUG #4 — NO i18n ON THE PUBLIC WEBSITE
+    78→   `lang/en/app.php` and `lang/am/app.php` already define keys for
+    79→   `home`, `about`, `gallery`, `contact`, `team`, `quick_links`,
+    80→   `programs`, `contact_us`, `all_rights_reserved`, `footer_about`,
+    81→   `login`, `school_name`, `brand_pre`, `brand_name`, etc. — but NONE of
+    82→   the public views use `__('app.*')`. Every string is hardcoded English.
+    83→   The Amharic locale exists but switching to it changes nothing on the
+    84→   public site. (Only `layouts/app.blade.php` uses the translations —
+    85→   see Bug #2.) The `lang.switch` route exists and works, but is useless
+    86→   for public visitors.
+    87→
+    88→==============================================================================
+    89→1. PER-VIEW AUDIT
+    90→==============================================================================
+    91→
+    92→──────────────────────────────────────────────────────────────────────────────
+    93→1.1  resources/views/welcome.blade.php  (916 lines — PRIMARY HOMEPAGE)
+    94→──────────────────────────────────────────────────────────────────────────────
+    95→Structure:
+    96→  @extends('layouts.website') + @push('styles') homepage.css
+    97→  Sections: announcement ticker bar (before-nav), hero carousel slider
+    98→  with 3 default Unsplash fallback slides, slider-bottom alerts overlay,
+    99→  news splash modal (auto-opens after 2s, sessionStorage-dismissed),
+   100→  animated counters section, features/"Why Choose Us" (6 cards from
+   101→  settings wcu_1..6), about split-layout, programs horizontal scroll,
+   102→  gallery masonry (6 images), video section (YouTube modal), team
+   103→  (4 cards), CTA "Visit Us in Person", contact form + info cards.
+   104→  @push('scripts') homepage.js
+   105→
+   106→Visual/UI style:
+   107→  - Framework: Bootstrap 5.3.3 (CDN) + Font Awesome 6.5.1 + Google Fonts
+   108→    (Playfair Display + Montserrat). NO Tailwind.
+   109→  - Uses CSS variables from layout's inline :root (--primary-color,
+   110→    --secondary-color, --primary-rgb, --text-light, --white, --light-bg).
+   111→    Does NOT use design-tokens.css variables (--color-primary, etc.).
+   112→  - Palette: green primary (--primary-color from settings, default
+   113→    #1B5E20) + gold secondary (#D4A017 from settings) + white/light-bg.
+   114→    BUT website.css tries to override --primary-color to #0A0F1E (navy)
+   115→    — see Bug #1; the override is dropped because the :root block is
+   116→    broken, so green actually wins.
+   117→  - Typography: Playfair Display for headings (h1-h6), Montserrat for
+   118→    body. Both loaded from Google Fonts.
+   119→  - Layout patterns: full-height hero carousel (100vh), glassmorphic
+   120→    feature cards with gradient border on hover, horizontal-scroll
+   121→    program cards with snap, CSS columns masonry gallery, two-column
+   122→    contact form.
+   123→  - Mobile responsiveness: yes — multiple @media (max-width: 991px),
+   124→    (max-width: 768px), (max-width: 575px) blocks in homepage.css.
+   125→    Viewport meta present in layout.
+   126→
+   127→Modernization opportunities:
+   128→  - Replace inline `style="font-family:'Montserrat',sans-serif;…"` on
+   129→    every form label (lines 834, 838, 842, 846, 856) with a utility
+   130→    class `.form-label` styled in CSS.
+   131→  - Hero carousel is heavy (3 full-screen images + Bootstrap carousel
+   132→    JS). Consider a single static hero with a CSS gradient overlay +
+   133→    animated CTAs for faster LCP.
+   134→  - News splash modal auto-opens after 2s on EVERY visit (session-only
+   135→    dismissal) — intrusive; replace with a dismissible toast or move
+   136→    to a dedicated /news page.
+   137→  - Add `loading="lazy"` to ALL `<img>` (most have it, but team
+   138→    section line 716 has it; verify all). Add `width`/`height`
+   139→    attributes to prevent CLS.
+   140→  - Add `decoding="async"` to images.
+   141→  - Add `aria-label` to carousel controls (currently only has
+   142→    `carousel-control-prev-icon` spans with no text).
+   143→  - Replace `onclick="openVideoModal('…')"` (line 579, 624, 660) with
+   144→    addEventListener in homepage.js — current approach pollutes global
+   145→    scope and is CSP-unsafe.
+   146→  - Add `rel="noopener noreferrer"` to external YouTube links.
+   147→  - Add `<meta name="description">` (layout has it but welcome doesn't
+   148→    override; the layout's description is just school_name + tagline).
+   149→  - Add JSON-LD structured data (School / EducationalOrganization
+   150→    schema) for SEO.
+   151→  - The hero's only CTA is "Login" — should be "Apply Now" /
+   152→    "Discover More" / "Visit Campus" for a marketing site.
+   153→  - Add a sticky CTA bar on mobile ("Apply Now" / "Call Us").
+   154→  - Add scroll-spy to highlight active nav section.
+   155→  - Add dark-mode toggle (design-tokens.css already has dark-mode
+   156→    overrides but no toggle UI exists).
+   157→
+   158→Bugs/issues:
+   159→  - Line 153: `$settings['university_acceptance']` is a string like
+   160→    "98%"; `preg_replace('/[^0-9]/', '', …)` extracts "98". OK but
+   161→    fragile — if setting is empty string, preg_replace returns "" and
+   162→    (int)"" === 0, counter shows 0%. Controller provides default "98%".
+   163→  - Line 463: `$settings['programs_count']` is NOT in the controller's
+   164→    `getWebsiteSettings()` defaults list — view falls back to `?? 4`.
+   165→    Should be added to defaults for consistency.
+   166→  - Line 422: about image fallback uses external Unsplash URL
+   167→    (external dependency; will break offline / if Unsplash blocks).
+   168→  - Lines 92, 117, 142, 478, 521-551: external Unsplash image URLs as
+   169→    fallbacks — same external-dependency issue.
+   170→  - Line 736-796: empty-state team cards use external Unsplash photos
+   171→    and fake names ("Dr. Sarah Johnson", "Prof. Michael Chen", etc.)
+   172→    — these are placeholder/dummy data that should be removed or
+   173→    replaced with a "No team members yet" empty state.
+   174→  - Line 811: `<a href="tel:{{ preg_replace('/[^0-9+]/', '', …) }}">`
+   175→    — OK, but if `school_phone` is empty, the `tel:` link is broken.
+   176→  - Line 442: `<a href="#contact">Discover More</a>` — anchor link,
+   177→    relies on homepage.js smooth-scroll. OK.
+   178→  - Line 808: `<a href="#contact">Find Our Campus</a>` — same.
+   179→  - Inline `<style>` block for news splash (lines 248-279) and inline
+   180→    `<script>` (lines 280-301) — should be extracted to a partial or
+   181→    homepage.js.
+   182→  - Inline `<style>` for ticker (lines 20-29) + inline `<script>`
+   183→    (lines 30-40) — should be extracted.
+   184→  - The announcement ticker fetches `/api/public/announcements` on
+   185→    every page load (homepage.js line 154) — no caching, adds latency.
+   186→
+   187→──────────────────────────────────────────────────────────────────────────────
+   188→1.2  resources/views/home.blade.php  (50 lines — FALLBACK HOMEPAGE)
+   189→──────────────────────────────────────────────────────────────────────────────
+   190→Structure:
+   191→  @extends('layouts.app') — the OTHER layout (navy/amber, i18n).
+   192→  Sections: hero ("Welcome to School of Redemption" + Discover More btn),
+   193→  "Why Choose Us" 3-card grid, "Our Programs" 4-card grid, stats band
+   194→  (1500+ / 120+ / 25+ / 98%), final CTA "Ready to Join Our Family?".
+   195→
+   196→Visual/UI style:
+   197→  - Framework: expects Bootstrap (uses `.container`, `.row`, `.col-md-4`,
+   198→    `.card`, `.btn`, `.fas`) BUT `layouts/app.blade.php` does NOT load
+   199→    Bootstrap — only Font Awesome + Google Fonts (Inter + Playfair).
+   200→  - Uses custom classes `.hero`, `.btn-gold`, `.gold-text`, `.section`,
+   201→    `.stitle`, `.bg-light` — NONE of these are defined in layouts.app's
+   202→    inline CSS. `.bg-light` is Bootstrap (not loaded). So the page is
+   203→    almost entirely UNSTYLED.
+   204→  - Layout patterns: would be hero + card grids + stats band IF Bootstrap
+   205→    were loaded.
+   206→  - Mobile: viewport meta in layout; no specific @media in this view.
+   207→
+   208→Modernization opportunities:
+   209→  - This file is only used as an emergency fallback when welcome.blade.php
+   210→    throws. Recommend EITHER:
+   211→    (a) Delete it and make the emergency fallback a plain-text page
+   212→        (the controller already has `renderEmergencyHomepage` for that).
+   213→    (b) Rewrite it to use the same layout + design tokens as welcome.
+   214→  - All stats are hardcoded ("1500+", "120+", "25+", "98%") — should
+   215→    come from settings.
+   216→  - All text is hardcoded English — no `__()` calls (unlike the rest of
+   217→    layouts/app which IS internationalized).
+   218→
+   219→Bugs/issues:
+   220→  - Extends `layouts.app` which doesn't load Bootstrap → broken layout.
+   221→  - Uses `url('about')` and `url('contact')` instead of `route('about')`
+   222→    / `route('contact')` — works but not idiomatic.
+   223→  - `<i class="fas fa-arrow-right ms-2">` — `ms-2` is a Bootstrap
+   224→    spacing utility (not loaded), so no margin.
+   225→  - Inline `style="background:linear-gradient(135deg,#1E90FF,#1565C0);
+   226→    color:#fff;text-align:center"` (line 39) — hardcoded blue gradient
+   227→    that doesn't match the green/gold brand.
+   228→  - Inline `style="font-family:'Playfair Display',serif"` (line 47).
+   229→
+   230→──────────────────────────────────────────────────────────────────────────────
+   231→1.3  resources/views/about.blade.php  (188 lines)
+   232→──────────────────────────────────────────────────────────────────────────────
+   233→Structure:
+   234→  @extends('layouts.website'). Sections: page-hero with breadcrumb,
+   235→  mission & vision split-layout (text + image), about-counters section
+   236→  (4 animated stats on green background with radial dot pattern), core
+   237→  values 4-card grid. @push('scripts') inline IIFE for counter animation.
+   238→
+   239→Visual/UI style:
+   240→  - Framework: Bootstrap 5 (via layout) + Font Awesome + design tokens.
+   241→  - Uses CSS vars: --primary-color, --secondary-color, --white,
+   242→    --light-bg, --text-light. Does NOT use design-tokens.css vars
+   243→    (--color-primary etc.).
+   244→  - Palette: green primary + gold secondary (consistent with layout).
+   245→  - Typography: Playfair Display for stat numbers, Montserrat for body.
+   246→  - Layout: split 2-col (col-lg-6), 4-col stat grid, 4-col card grid.
+   247→  - Mobile: relies on layout's @media queries; no view-specific ones.
+   248→
+   249→Modernization opportunities:
+   250→  - MASSIVE inline-style pollution: nearly every element has
+   251→    `style="padding:5rem 0;background:var(--white);"` etc. (lines 21,
+   252→    45, 55, 56, 59, 62, 66-68, 70, 73, 77-79, 81, 84, 87-89, 91, 94,
+   253→    103, 112, 119, 126, 133, …). Extract to utility classes
+   254→    (`.section-pad`, `.bg-white`, `.bg-light`, `.text-center`).
+   255→  - The 4 stat cards are 100% duplicated markup (lines 54-97) — extract
+   256→    to a Blade partial or @foreach loop.
+   257→  - Counter animation is duplicated between about.blade.php (inline)
+   258→    and website.js (`.counter` observer). Consolidate into website.js.
+   259→  - Add `loading="lazy"` to about_image (line 34, 36).
+   260→  - Add `width`/`height` to prevent CLS.
+   261→  - Fallback Unsplash image (line 36) — external dependency.
+   262→  - Add `aria-label` to social icons (already done in layout's footer).
+   263→  - Breadcrumb uses Bootstrap `.breadcrumb` — OK.
+   264→  - Add scroll-triggered reveal (`class="reveal"`) — already has
+   265→    `reveal-left`/`reveal-right` on some elements but the observer is
+   266→    in website.js which IS loaded. Good.
+   267→
+   268→Bugs/issues:
+   269→  - Line 34: `alt="About {{ $settings['school_name'] ?? 'our school' }}"`
+   270→    — OK, has alt text.
+   271→  - Line 36: Unsplash fallback image — external dependency.
+   272→  - Inline `<script>` (lines 145-186) duplicates the counter animation
+   273→    logic from website.js — if both run on the same element, double
+   274→    animation. Here it targets `.about-counter-item h3` (different
+   275→    selector), so no conflict, but it's still code duplication.
+   276→  - Hardcoded English: "Our Mission", "A Legacy of Academic Excellence",
+   277→    "Our Vision", "Numbers That Speak", "Our Impact", "Students
+   278→    Enrolled", "Years of Experience", "Academic Programs", "Success
+   279→    Rate", "Core Values", "What We Stand For", "Excellence", "Integrity",
+   280→    "Innovation", "Service" — none use `__()`.
+   281→
+   282→──────────────────────────────────────────────────────────────────────────────
+   283→1.4  resources/views/contact.blade.php  (278 lines)
+   284→──────────────────────────────────────────────────────────────────────────────
+   285→Structure:
+   286→  @extends('layouts.website'). @push('styles') inline <style> for
+   287→  branch-card / branch-map. Sections: page-hero, contact info cards
+   288→  (address/phone/email/hours) + social links, contact form (CSRF
+   289→  included), campuses/branches map section (Google Maps iframe or GPS
+   290→  embed).
+   291→
+   292→Visual/UI style:
+   293→  - Framework: Bootstrap 5 + Font Awesome + design tokens.
+   294→  - Uses CSS vars: --primary-color, --secondary-color, --white,
+   295→    --text-light, --text-muted, --light-bg.
+   296→  - Palette: green + gold (consistent).
+   297→  - Typography: Montserrat for headings (inline style overrides).
+   298→  - Layout: 2-col (col-lg-5 info + col-lg-7 form), responsive branch
+   299→    grid (col-lg-4/6/8 based on count).
+   300→  - Mobile: inline @media in view-level CSS? No — relies on Bootstrap
+   301→    grid + layout media queries.
+   302→
+   303→Modernization opportunities:
+   304→  - Extract inline `<style>` (lines 6-100) to a `contact.css` or merge
+   305→    into website.css.
+   306→  - Inline styles on every form label: `style="font-weight:500;
+   307→    font-size:0.9rem;"` (lines 182, 186, 190, 194, 198) — extract to
+   308→    `.form-label` class.
+   309→  - Inline style on submit button: `style="padding:0.75rem 2rem;"`
+   310→    (line 202) — unnecessary; `.btn-hero-primary` already has padding.
+   311→  - Add `aria-required="true"` to required fields (currently only
+   312→    `required` attribute).
+   313→  - Add `autocomplete` attributes (`name`, `email`, `tel`) to inputs.
+   314→  - Add `<fieldset>`/`<legend>` around the form for a11y.
+   315→  - Add form validation feedback (Bootstrap `.invalid-feedback`).
+   316→  - Add a loading state on submit (disable button, show spinner).
+   317→  - Branch cards: add `loading="lazy"` to iframe (already has it — good).
+   318→  - Add `referrer-policy` to iframe (already has it — good).
+   319→  - Replace `@isset($branches)` with `@if(isset($branches) && $branches->count())`.
+   320→
+   321→Bugs/issues:
+   322→  - ✅ CSRF is present: `@csrf` on line 179. Good.
+   323→  - ✅ Form action uses `route('contact.store')`. Good.
+   324→  - Line 230: `<iframe src="{{ $branch->map_embed_url }}">` —
+   325→    `map_embed_url` is user-editable admin input; if it contains
+   326→    `javascript:` or a malicious URL, this is an XSS vector. Should
+   327→    validate/escape. (Blade `{{ }}` escapes, so the src attribute is
+   328→    safe from attribute injection, but the URL itself could be a
+   329→    phishing page.)
+   330→  - Hardcoded English throughout — no `__()`.
+   331→  - Line 152: "Mon - Fri: 8:00 AM - 5:00 PM" hardcoded — but
+   332→    welcome.blade.php says "7:30 AM - 4:00 PM". Inconsistent hours.
+   333→  - Line 264: Google Maps directions link uses `&` unescaped in URL
+   334→    (`?api=1&destination=…`) — should be `&amp;` in HTML, but Blade/
+   335→    browsers handle it. Minor.
+   336→  - Branch card column width logic (line 226) is clever but fragile:
+   337→    `$branches->count() === 1 ? '8 offset-lg-2' : (count === 2 ? '6' : '4')`
+   338→    — if there are 5+ branches, all get col-lg-4 (3 per row), which
+   339→    leaves an uneven last row. Acceptable.
+   340→
+   341→──────────────────────────────────────────────────────────────────────────────
+   342→1.5  resources/views/team.blade.php  (249 lines)
+   343→──────────────────────────────────────────────────────────────────────────────
+   344→Structure:
+   345→  @extends('layouts.website'). @push('styles') inline <style> for
+   346→  team-card / team-avatar / team-social-overlay. Sections: page-hero,
+   347→  team grid (4 cols). @else branch with 4 hardcoded placeholder members
+   348→  (Unsplash photos + fake names) when no $teamMembers.
+   349→
+   350→Visual/UI style:
+   351→  - Framework: Bootstrap 5 + Font Awesome + design tokens.
+   352→  - Palette: green + gold. Avatar has gold border on hover.
+   353→  - Layout: 4-col grid (col-lg-3 col-md-6).
+   354→  - Mobile: inline `@media (max-width: 575px)` shrinks avatar.
+   355→
+   356→Modernization opportunities:
+   357→  - Extract inline `<style>` to website.css or a team partial.
+   358→  - The placeholder team members (lines 182-244) use FAKE names
+   359→    ("School Principal", "Vice Principal", "Head of Student Affairs",
+   360→    "Athletics Director") and Unsplash stock photos — these are
+   361→    misleading. Replace with a proper empty state ("No team members
+   362→    yet. Check back soon.").
+   363→  - Add `loading="lazy"` to avatar images (line 160, 187, 201, 216, 232).
+   364→  - Add `width`/`height` to avatars to prevent CLS.
+   365→  - `onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"`
+   366→    (line 160) — inline JS fallback to show initial letter; works but
+   367→    fragile. Better: use `<picture>` or a JS observer in website.js.
+   368→  - Add `aria-label` to email/phone social links (currently
+   369→    `title="Email"` / `title="Call"` — title attribute is not a good
+   370→    a11y mechanism; use `aria-label`).
+   371→
+   372→Bugs/issues:
+   373→  - Line 60: `.team-avatar-initial { color: var(--primary); }` — but
+   374→    `--primary` is NOT defined anywhere (the layout defines
+   375→    `--primary-color`, not `--primary`). So the initial letter has no
+   376→    explicit color → inherits. BUG.
+   377→  - Hardcoded English: "Our Team", "Meet the dedicated leaders…",
+   378→    "Leadership Team", "Meet Our Educators", "Our dedicated team…".
+   379→  - Line 161: `substr($member->name, 0, 1)` — if name is empty, returns
+   380→    empty string. Edge case.
+   381→
+   382→──────────────────────────────────────────────────────────────────────────────
+   383→1.6  resources/views/gallery.blade.php  (518 lines)
+   384→──────────────────────────────────────────────────────────────────────────────
+   385→Structure:
+   386→  @extends('layouts.website'). @push('styles') large inline <style>
+   387→  (lines 6-327) for gallery-hero, video-highlights, photo-gallery
+   388→  masonry, lightbox, pagination. Sections: compact gallery-hero,
+   389→  video highlights (YouTube iframes from VideoLibrary + GalleryVideo),
+   390→  photo gallery masonry (4-col CSS columns), lightbox overlay,
+   391→  pagination. @push('scripts') inline lightbox JS.
+   392→
+   393→Visual/UI style:
+   394→  - Framework: Bootstrap 5 + Font Awesome + design tokens.
+   395→  - Uses CSS vars: --primary-color, --primary-rgb, --secondary-color,
+   396→    --white, --light-bg, --text-light, --text-dark, --text-muted.
+   397→  - Palette: green + gold (consistent).
+   398→  - Layout: 4-col masonry (CSS columns), responsive to 3/2/2 cols.
+   399→  - Mobile: inline @media (max-width: 1199px/991px/575px).
+   400→
+   401→Modernization opportunities:
+   402→  - The gallery-hero (lines 8-63) overrides the standard .page-hero
+   403→    with a COMPACT version (font-size: 1rem, padding: 0.8rem) — this is
+   404→    a deliberate design choice but looks odd next to other pages' hero.
+   405→    Standardize on .page-hero.
+   406→  - Extract inline <style> (320+ lines) to a `gallery.css`.
+   407→  - Lightbox: add keyboard navigation (left/right arrows), swipe
+   408→    gestures on mobile, image counter ("3 of 12"), preloading.
+   409→  - Add `loading="lazy"` to gallery images (line 432 has it — good).
+   410→  - Add `decoding="async"`.
+   411→  - Masonry uses CSS `columns` which causes reading-order issues
+   412→    (left-to-right then top-to-bottom). Consider CSS Grid masonry or
+   413→    JS-based masonry for better ordering.
+   414→  - Video iframes load immediately (no lazy loading) — use `loading=
+   415→    "lazy"` or facades (click-to-play thumbnail).
+   416→  - Pagination uses Bootstrap `.pagination` with custom styling — OK.
+   417→
+   418→Bugs/issues:
+   419→  - Line 11: `rgba(var(--primary-rgb), 0.98)` — depends on
+   420→    `--primary-rgb` being defined (it is, in layout's inline :root).
+   421→    OK.
+   422→  - Line 388: inline `@php` regex to extract YouTube ID from URL —
+   423→    duplicated from welcome.blade.php line 654. Extract to a helper
+   424→    or Blade component.
+   425→  - `openLightbox(this)` is a global function (line 479) — pollutes
+   426→    global scope, CSP-unsafe. Move to addEventListener.
+   427→  - Line 432: `file_exists(public_path('storage/' . $image->image_path))`
+   428→    — disk I/O on every render; cache the result or trust the DB.
+   429→  - Hardcoded English: "Our Gallery", "Explore moments…", "Video
+   430→    Highlights", "Watch Our Stories", "Photo Gallery", "Campus Life &
+   431→    Moments", "No Photos Yet", "Check back soon…", "Map not available".
+   432→  - Line 458: `$galleryImages->withQueryString()->links()` — uses
+   433→    Laravel pagination. The view `vendor/pagination/default.blade.php`
+   434→    exists. OK.
+   435→
+   436→──────────────────────────────────────────────────────────────────────────────
+   437→1.7  resources/views/app/download.blade.php  (906 lines)
+   438→──────────────────────────────────────────────────────────────────────────────
+   439→Structure:
+   440→  STANDALONE HTML (no @extends). <head> with PWA manifest + theme-color
+   441→  + Bootstrap 5.3.0 + Font Awesome 6.4.0 + Inter font. Inline <style>
+   442→  (lines 25-555) — 530 lines of CSS for :root vars, navbar, hero, install
+   443→  cards, features grid, FAQ, footer, PWA install banner. Body: app-nav,
+   444→  hero (icon + h1 + badges), detection banner, install section (training
+   445→  app banner + Android card + iOS card), features grid (9 cards), FAQ
+   446→  (5 items), footer, PWA install banner, inline <script> (SW register +
+   447→  beforeinstallprompt + platform detection).
+   448→
+   449→Visual/UI style:
+   450→  - Framework: Bootstrap 5.3.0 + Font Awesome 6.4.0 (OLDER versions
+   451→    than the website's 5.3.3 / 6.5.1 — version drift).
+   452→  - Palette: INDIGO (#6366f1) + dark navy (#0f172a) + accent amber
+   453→    (#f59e0b) + green (#10b981) + blue (#3b82f6). COMPLETELY DIFFERENT
+   454→    from the website's green + gold.
+   455→  - Typography: Inter only (no Playfair Display).
+   456→  - Layout: centered hero, 2-col install cards, 3-col features grid,
+   457→    stacked FAQ.
+   458→  - Mobile: `@media (max-width: 640px)` for install grid; otherwise
+   459→    relies on Bootstrap.
+   460→
+   461→Modernization opportunities:
+   462→  - This page should be REBUILT to extend `layouts.website` (or the
+   463→    consolidated layout) so it shares the navbar, footer, and brand.
+   464→  - Replace the indigo palette with the website's green + gold.
+   465→  - Move the 530-line inline <style> to `public/css/download.css`.
+   466→  - Move the inline <script> to `public/js/download.js`.
+   467→  - The 9 feature cards (lines 697-742) have inline `style="background:
+   468→    #d1fae5;color:#10b981;"` etc. — extract to CSS classes
+   469→    (`.feature-icon.green`, `.feature-icon.blue`, …).
+   470→  - FAQ uses `onclick="this.parentElement.classList.toggle('open')"`
+   471→    (lines 749, 757, 765, 773, 781) — should use `<details>`/`<summary>`
+   472→    for native a11y, or addEventListener.
+   473→  - Add `aria-expanded` to FAQ buttons.
+   474→  - Add structured data (FAQPage schema) for SEO.
+   475→  - The "Download APK (8 MB)" label (line 641) is hardcoded — should
+   476→    reflect actual file size.
+   477→  - The iOS instructions (lines 662-679) are correct but could use
+   478→    visual icons/screenshots.
+   479→  - Add a QR code for desktop-to-mobile install.
+   480→
+   481→Bugs/issues:
+   482→  - Theme-color mismatch: `#6366f1` here vs `#047857` in
+   483→    website.blade.php (and `#059669` in layouts/app.blade.php).
+   484→    THREE different theme-colors across the app.
+   485→  - Bootstrap version drift: 5.3.0 here vs 5.3.3 in website layout.
+   486→  - Font Awesome version drift: 6.4.0 here vs 6.5.1 in website layout.
+   487→  - Line 18: `<link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">`
+   488→    — OK.
+   489→  - Line 19: `<link rel="icon" type="image/png" sizes="192x192" href="…">`
+   490→    — only one favicon size declared; website layout doesn't declare
+   491→    any `<link rel="icon">` (relies on /favicon.ico). Inconsistent.
+   492→  - Line 815: `navigator.serviceWorker.register('{{ asset("sw.js") }}',
+   493→    { scope: '/' })` — scope '/' may fail if the app is in a
+   494→    subdirectory (the SW can only control its own directory + below).
+   495→    The dynamic manifest uses `url('/')` for scope, which may or may
+   496→    not match.
+   497→  - Line 826: `let deferredPrompt = null;` — uses `let` at top level
+   498→    (not in a module) → still pollutes global scope.
+   499→  - Line 863: `window.location.href = '{{ url("/login") }}';` —
+   500→    hardcoded Blade in inline JS; works but fragile.
+   501→  - Line 805: `onclick="installPWA()"` and `onclick="dismissBanner()"`
+   502→    — global function calls, CSP-unsafe.
+   503→  - Line 599: inline `style="background:linear-gradient(135deg,rgba(99,102,241,0.15)…"`
+   504→    — heavy inline style.
+   505→  - Hardcoded English throughout — no `__()`.
+   506→  - Line 81: `AppController::download()` does
+   507→    `Setting::pluck('value', 'key')->toArray()` — if settings table
+   508→    doesn't exist, throws and 500s. Should be wrapped in try-catch
+   509→    like HomeController does.
+   510→
+   511→──────────────────────────────────────────────────────────────────────────────
+   512→1.8  resources/views/welcome.blade.php  — covered in §1.1 above.
+   513→──────────────────────────────────────────────────────────────────────────────
+   514→
+   515→──────────────────────────────────────────────────────────────────────────────
+   516→1.9  resources/views/layouts/website.blade.php  (240 lines)
+   517→──────────────────────────────────────────────────────────────────────────────
+   518→Structure:
+   519→  Full HTML shell. <head>: CSRF meta, viewport, description, title,
+   520→  PWA manifest link, theme-color #047857, apple-mobile-web-app metas,
+   521→  preconnect to CDNs, Bootstrap 5.3.3, Font Awesome 6.5.1, Google
+   522→  Fonts (Playfair Display + Montserrat), inline :root with Blade-
+   523→  computed --primary-color/--secondary-color/--primary-rgb, then
+   524→  design-tokens.css + website.css + @stack('styles'). <body>: custom
+   525→  cursor divs, @yield('before-nav'), fixed-top navbar with brand +
+   526→  desktop nav links + mobile-login-pill + hamburger, mobile drawer
+   527→  overlay + drawer, @yield('after-nav'), <main>@yield('content'),
+   528→  footer (4 cols: brand+social, quick links, programs, newsletter),
+   529→  footer-bottom (copyright + privacy/terms links), back-to-top button,
+   530→  Bootstrap 5.3.3 bundle JS (deferred), website.js (deferred),
+   531→  @stack('scripts').
+   532→
+   533→Visual/UI style:
+   534→  - Framework: Bootstrap 5.3.3 + Font Awesome 6.5.1 + custom CSS.
+   535→  - Palette: green primary (from settings, default #1B5E20) + gold
+   536→    secondary (default #D4A017). Inline :root overrides for these.
+   537→  - Typography: Playfair Display for headings, Montserrat for body.
+   538→  - Layout: fixed navbar (80px), max-width container, 4-col footer.
+   539→  - Mobile: hamburger → right-side drawer; multiple @media in
+   540→    website.css (broken) and homepage.css.
+   541→
+   542→Modernization opportunities:
+   543→  - Consolidate with layouts/app.blade.php (which has i18n + language
+   544→    switcher). Pick ONE layout.
+   545→  - Add language switcher dropdown (layouts.app has the pattern).
+   546→  - Replace custom cursor (`.cursor-dot` / `.cursor-ring`) — it's a
+   547→    gimmick that hurts UX (hides the native cursor, adds JS overhead,
+   548→    confusing on forms). Remove or make opt-in.
+   549→  - Add a sticky CTA bar on mobile.
+   550→  - Add `aria-current="page"` to active nav links (currently uses
+   551→    `.active` class only).
+   552→  - Add a skip-to-content link for a11y (`<a href="#main"
+   553→    class="skip-link">Skip to content</a>`).
+   554→  - Add `<meta name="theme-color" media="(prefers-color-scheme:
+   555→    light)">` and dark variant.
+   556→  - Newsletter form (line 212) is DEAD (`onsubmit="event.preventDefault();"`
+   557→    with no backend) — either wire it up or remove it.
+   558→  - Replace inline `style="margin-top:8px;background:#6366f1;"` on
+   559→    mobile "Get the App" button (line 138) with a CSS class.
+   560→  - Preload the hero image / font-display: swap (already using
+   561→    display=swap in the Google Fonts URL — good).
+   562→  - Add `<link rel="preload" as="image">` for the hero background.
+   563→  - Add Open Graph + Twitter Card meta tags for social sharing.
+   564→  - Add `<link rel="canonical">`.
+   565→
+   566→Bugs/issues:
+   567→  - Line 8: `<html lang="en">` — hardcoded; should be
+   568→    `{{ app()->getLocale() }}` (layouts/app.blade.php does this
+   569→    correctly).
+   570→  - Line 18: `<meta name="theme-color" content="#047857">` — but the
+   571→    dynamic manifest from AppController returns `theme_color: #6366f1`.
+   572→    MISMATCH between layout theme-color and manifest theme-color.
+   573→  - Line 53-54: loads design-tokens.css then website.css. But
+   574→    website.css is broken (Bug #1) — its :root block is dropped.
+   575→  - Line 65: `<nav class="navbar navbar-dark fixed-top" id="navbar">`
+   576→    — Bootstrap navbar-dark, but the custom .navbar background
+   577→    (`rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.92)`)
+   578→    is in website.css which is broken → navbar may render with NO
+   579→    background color (transparent), making text unreadable over hero.
+   580→  - Line 69: logo `<img>` has `onerror="this.style.display='none'"`
+   581→    — inline JS, CSP-unsafe.
+   582→  - Line 138: `style="margin-top:8px;background:#6366f1;"` — hardcoded
+   583→    indigo on a green/gold page.
+   584→  - Line 158: footer logo also has `onerror="this.style.display='none'"`.
+   585→  - Line 212: newsletter form is dead (no action, no backend).
+   586→  - Line 221-223: "Privacy Policy" and "Terms of Service" links both
+   587→    point to `route('home')` — misleading/broken. Either create those
+   588→    pages or remove the links.
+   589→  - Line 235: `<script src="…bootstrap.bundle.min.js" defer>` — good
+   590→    (deferred). But Bootstrap is loaded as a CDN script (not via Vite)
+   591→    — version drift risk.
+   592→  - NO `<meta name="csrf-token">` on the website layout? Actually
+   593→    line 10 has it: `<meta name="csrf-token" content="{{ csrf_token() }}">`
+   594→    — good. But the contact form in welcome.blade.php uses `@csrf`
+   595→    which works without the meta. The meta is for AJAX.
+   596→  - NO service worker registration in website layout — SW is only
+   597→    registered in download.blade.php. So PWA offline support is NOT
+   598→    available on the main website pages.
+   599→  - NO `pwa-install.js` loaded — that file is dead code (only loaded
+   600→    by admin layout).
+   601→
+   602→──────────────────────────────────────────────────────────────────────────────
+   603→1.10  resources/views/partials/logo.blade.php  (3 lines)
+   604→──────────────────────────────────────────────────────────────────────────────
+   605→Structure: A single `@php` block that calls `Setting::getLogoUrl()` and
+   606→stores it in `$logoUrl`. Does NOT actually render anything. Appears to
+   607→be an unfinished partial — it sets a variable but doesn't output an
+   608→`<img>` tag. Probably intended to be `@include('partials.logo')` from
+   609→other views, but no view includes it (verified via grep).
+   610→
+   611→Bugs/issues:
+   612→  - Dead code — not included anywhere.
+   613→  - Doesn't render anything — incomplete.
+   614→  - Recommend deletion or completion.
+   615→
+   616→──────────────────────────────────────────────────────────────────────────────
+   617→1.11  resources/views/errors/403.blade.php  (102 lines)
+   618→──────────────────────────────────────────────────────────────────────────────
+   619→Structure: Standalone HTML (no @extends). Inline <style> with flat-UI
+   620→red/blue/gray theme. Body: centered card with lock emoji, "403" code,
+   621→"Access Denied" title, error message, conditional teacher notice,
+   622→"Back to Dashboard" + "Go Back" buttons (auth) or "Go to Login" (guest).
+   623→
+   624→Visual/UI style:
+   625→  - Framework: NONE (no Bootstrap, no Font Awesome — uses emoji 🔒 and
+   626→    HTML entities).
+   627→  - Palette: red #e74c3c, blue #3498db/#2980b9, gray #95a5a6/#7f8c8d,
+   628→    background gradient #f5f7fa→#c3cfe2. COMPLETELY OFF-BRAND (flat-UI
+   629→    2014 era).
+   630→  - Typography: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif.
+   631→  - Layout: centered card, max-width 500px.
+   632→  - Mobile: viewport meta present; no @media.
+   633→
+   634→Modernization opportunities:
+   635→  - Rebuild to extend `layouts.website` (or a minimal error layout)
+   636→    so it shares the brand.
+   637→  - Use Font Awesome icons (already loaded by layout) instead of emoji.
+   638→  - Use design-tokens.css colors.
+   639→  - Add a search/sitemap link.
+   640→  - Add `aria-live="assertive"` for screen readers.
+   641→
+   642→Bugs/issues:
+   643→  - Line 87: `{{ $exception->getMessage() }}` — assumes `$exception`
+   644→    is passed. Laravel's default 4xx error pages DO receive
+   645→    `$exception`. OK.
+   646→  - Line 90: `auth()->user()->role === 'teacher'` — assumes User has
+   647→    a `role` property. OK if the model has it.
+   648→  - Line 95: `route('admin.dashboard')` — assumes route exists. OK.
+   649→  - Line 96: `javascript:history.back()` — CSP-unsafe in some
+   650→    configs; better to use a real back link or `<a href="#" onclick="history.back();return false;">`.
+   651→  - Hardcoded English: "Access Denied", "Back to Dashboard", "Go
+   652→    Back", "Go to Login", "Only home room teachers have this access."
+   653→    — no `__()`.
+   654→
+   655→──────────────────────────────────────────────────────────────────────────────
+   656→1.12  resources/views/errors/419.blade.php  (90 lines)
+   657→──────────────────────────────────────────────────────────────────────────────
+   658→Structure: Standalone HTML (no @extends). Inline <style> with
+   659→blue-gradient theme. Body: message box with clock emoji ⏰, "Session
+   660→Expired" h2, message, "Go to Login Now" link, countdown "Redirecting
+   661→in X seconds...". Inline <script> for countdown + redirect.
+   662→
+   663→Visual/UI style:
+   664→  - Framework: NONE.
+   665→  - Palette: gradient #2c3e50→#3498db (off-brand), accent #f39c12.
+   666→  - Typography: Segoe UI, Tahoma, sans-serif.
+   667→  - Layout: centered card, max-width 400px.
+   668→  - Mobile: viewport meta; no @media.
+   669→
+   670→Modernization opportunities:
+   671→  - Same as 403 — rebuild on brand layout.
+   672→  - Use design tokens.
+   673→  - Add a "Reload page" button (sometimes 419 is transient).
+   674→
+   675→Bugs/issues:
+   676→  - Line 72: `var loginUrl = '{{ route("login") }}';` — Blade-in-JS,
+   677→    works but fragile (if route contains a quote, breaks). Use a data
+   678→    attribute instead.
+   679→  - Line 75-78: appends `?redirect=…` to login URL — good for UX.
+   680→  - Hardcoded English: "Session Expired", "Your session has expired
+   681→    due to inactivity…", "Go to Login Now", "Redirecting in X
+   682→    seconds...".
+   683→
+   684→==============================================================================
+   685→2. CSS FILE AUDIT
+   686→==============================================================================
+   687→
+   688→──────────────────────────────────────────────────────────────────────────────
+   689→2.1  public/css/design-tokens.css  (337 lines)
+   690→──────────────────────────────────────────────────────────────────────────────
+   691→Summary: A well-structured design-system foundation. Defines:
+   692→  - Color palette: primary emerald #047857, accent gold #D97706, sidebar
+   693→    dark green #0C1F17, body bg #F8FAF9, card bg #FFFFFF, semantic
+   694→    colors (success/warning/danger/info), role-based accent variants
+   695→    (admin/student/parent/teacher).
+   696→  - Typography: Inter font family, sizes xs→4xl, weights light→extrabold,
+   697→    line heights, letter spacing.
+   698→  - Spacing: 4px-base scale (0 → 16 = 0 → 64px).
+   699→  - Border radius: sm 6px → full 9999px.
+   700→  - Shadows: sm/md/lg/xl + colored variants.
+   701→  - Transitions: fast/normal/slow + presets.
+   702→  - Z-index scale (dropdown 1000 → toast 1080).
+   703→  - Layout constants (sidebar width, header height, etc.).
+   704→  - Focus ring.
+   705→  - Role-accent override classes (.role-admin, .role-student, …).
+   706→  - Dark-mode overrides ([data-theme="dark"], .dark).
+   707→  - Breakpoint documentation (comments only).
+   708→
+   709→Quality: HIGH. Well-commented, consistent naming, no duplicates.
+   710→Issues:
+   711→  - NOT actually used by the public website views. The website layout
+   712→    loads it (`<link rel="stylesheet" href="…/design-tokens.css">`)
+   713→    BUT none of the website CSS (website.css, homepage.css, inline
+   714→    styles) reference `--color-primary` etc. — they all use the
+   715→    layout's inline `--primary-color`/`--secondary-color` tokens
+   716→    instead. So design-tokens.css is loaded but IGNORED on the
+   717→    website. Wasted HTTP request + missed opportunity.
+   718→  - Modernization: refactor website.css + homepage.css to USE these
+   719→    tokens. Replace `--primary-color` (layout inline) with
+   720→    `--color-primary` (design-tokens). Replace `--secondary-color`
+   721→    with `--color-accent`. Etc.
+   722→
+   723→──────────────────────────────────────────────────────────────────────────────
+   724→2.2  public/css/website.css  (823 lines) — BROKEN, see Bug #1
+   725→──────────────────────────────────────────────────────────────────────────────
+   726→Summary: Intended to style the website layout shell (navbar, mobile
+   727→drawer, page-hero, section-header, footer, newsletter, back-to-top,
+   728→scroll-reveal animations). Contains:
+   729→  - :root block (BROKEN — missing `:root {` opener, line 1 is `};`,
+   730→    line 2 contains Blade `{{ }}` syntax that's served as raw text).
+   731→  - Global reset, body font (Montserrat), heading font (Playfair).
+   732→  - Custom cursor (.cursor-dot, .cursor-ring).
+   733→  - Navbar (.navbar with broken `rgba({{ $primaryR }}, …)` background,
+   734→    .navbar.scrolled, .navbar-brand, .nav-link with hover underline,
+   735→    .btn-nav-portal, .mobile-login-pill).
+   736→  - Mobile drawer (.mobile-drawer, .mobile-drawer-overlay,
+   737→    .mobile-drawer-close, .mobile-nav-links, .mobile-login-btn,
+   738→    .hamburger-btn).
+   739→  - @media (max-width: 991px) and (max-width: 575px) for navbar.
+   740→  - Page hero (.page-hero with broken `rgba({{ $primaryR }}, …)`
+   741→    gradient, .page-hero h1/p/breadcrumb).
+   742→  - Section header (.section-header, .section-badge).
+   743→  - Ornamental divider.
+   744→  - Footer (.footer, .footer-brand, .footer-links, .social-links,
+   745→    .newsletter-form, .footer-bottom).
+   746→  - Back-to-top button.
+   747→  - Scroll reveal (.reveal, .reveal-left, .reveal-right, .reveal-scale,
+   748→    .revealed).
+   749→  - Responsive @media blocks.
+   750→  - fadeInUp animation + delay-1..4 classes.
+   751→
+   752→Duplicates (vs homepage.css):
+   753→  - .footer, .footer-brand, .footer-links, .social-links,
+   754→    .newsletter-form, .footer-bottom — DUPLICATED in homepage.css
+   755→    (with slightly different values, e.g. website.css uses
+   756→    var(--teal) for social hover, homepage.css uses var(--secondary-color)).
+   757→  - .section-header, .section-badge — DUPLICATED.
+   758→  - .back-to-top — DUPLICATED (website.css: teal bg; homepage.css:
+   759→    gold bg).
+   760→  - .reveal, .reveal-left, .reveal-right, .reveal-scale, .revealed —
+   761→    DUPLICATED.
+   762→  - @keyframes fadeInUp, .animate-fade-up, .delay-1..4 — DUPLICATED.
+   763→  - This means on the homepage (which loads BOTH website.css and
+   764→    homepage.css), there are TWO conflicting definitions of these
+   765→    classes. homepage.css loads second (via @push('styles') after
+   766→    website.css in <head>), so homepage.css wins. On OTHER pages
+   767→    (about/contact/team/gallery), only website.css loads.
+   768→
+   769→Dead CSS:
+   770→  - .ornament-divider (defined but never used in any view).
+   771→  - .cursor-dot / .cursor-ring (used by layout but should be removed).
+   772→  - Various delay classes if no element uses them.
+   773→
+   774→Bugs:
+   775→  - Line 1: `};` — orphaned closing brace. INVALID CSS.
+   776→  - Line 2: `{{ $settings['secondary_color'] ?? '#D97706' }}` —
+   777→    Blade syntax in a static .css file. Served as raw text. INVALID.
+   778→  - Lines 3, 110, 116, 124, 405: `{{ $primaryR }}`, `{{ $primaryG }}`,
+   779→    `{{ $primaryB }}` — same Blade-in-static-CSS bug. Causes the
+   780→    .navbar background, .navbar.scrolled background, .page-hero
+   781→    background, and .mobile-drawer gradient to be DROPPED.
+   782→  - Line 4: `--primary-color: #0A0F1E;` — would override the layout's
+   783→    green primary with navy, BUT this declaration is inside the
+   784→    broken :root block, so it's also dropped. (Lucky accident —
+   785→    green wins.)
+   786→  - Indentation: every line has 8 leading spaces (was copy-pasted
+   787→    from a <style> block). Cosmetic but bloats the file.
+   788→
+   789→──────────────────────────────────────────────────────────────────────────────
+   790→2.3  public/css/homepage.css  (1559 lines)
+   791→──────────────────────────────────────────────────────────────────────────────
+   792→Summary: Styles the welcome.blade.php homepage. Contains:
+   793→  - Slider bottom overlay (alerts).
+   794→  - Hero slider (full-height carousel, hero-slide, hero-overlay,
+   795→    hero-dot-grid, carousel controls, indicators, hero-content,
+   796→    hero-badge, hero-text-reveal animation, hero h1/p/buttons/stats).
+   797→  - Section dividers (clip-path).
+   798→  - Section header + badge (DUPLICATED from website.css).
+   799→  - Animated counters section.
+   800→  - Features (glassmorphic feature-card with gradient border on hover
+   801→    via mask-composite).
+   802→  - About split layout (image + badge + text + features list).
+   803→  - Programs horizontal scroll (scroll-snap, program-card, program-
+   804→    image, program-content, program-tag, program-link, scroll nav).
+   805→  - Gallery masonry (3-col CSS columns).
+   806→  - Video section (video-card, video-thumb, video-play-btn,
+   807→    video-modal-overlay).
+   808→  - Team (team-card, team-avatar, team-social-overlay) — DUPLICATED
+   809→    in team.blade.php inline <style>.
+   810→  - CTA (animated gradient background).
+   811→  - Contact (contact-form-wrapper, contact-info-cards).
+   812→  - Footer, newsletter, back-to-top, scroll-reveal — ALL DUPLICATED
+   813→    from website.css.
+   814→  - Responsive @media blocks.
+   815→  - fadeInUp animation + delays — DUPLICATED.
+   816→
+   817→Duplicates:
+   818→  - ~400 lines are duplicates of website.css (footer, back-to-top,
+   819→    reveal, section-header, fadeInUp, etc.).
+   820→  - team-card/team-avatar/team-social-overlay are duplicated in
+   821→    team.blade.php's inline <style> (~120 lines).
+   822→
+   823→Dead CSS:
+   824→  - Possibly .section-divider-bottom (used? welcome has
+   825→    section-divider-top only).
+   826→
+   827→Issues:
+   828→  - Massive duplication with website.css — should be consolidated.
+   829→  - Uses var(--secondary-color) and var(--primary-color) which come
+   830→    from the layout's inline :root (NOT from design-tokens.css).
+   831→  - All lines have 8 leading spaces (copy-paste artifact).
+   832→
+   833→──────────────────────────────────────────────────────────────────────────────
+   834→2.4  public/css/modern-components.css  (1190 lines) — NOT used by website
+   835→──────────────────────────────────────────────────────────────────────────────
+   836→Summary: A comprehensive component library for ADMIN CRUD views
+   837→(.modern-page, .modern-page-header, .modern-breadcrumb, .modern-stats-row,
+   838→.modern-stat-card, .modern-card, .modern-badge, .modern-toggle,
+   839→.modern-search-box, .modern-table, .modern-btn, .modern-form, .modern-empty,
+   840→.modern-tabs, .modern-modal, .modern-toast, etc.). Uses design-tokens.css
+   841→variables (--color-primary, --color-card-bg, --radius-lg, --shadow-md, etc.).
+   842→
+   843→Relevance to website audit: NONE. This file is loaded only by
+   844→layouts/admin.blade.php and one student view. It is NOT loaded by any
+   845→public website view. Mentioned here for completeness only.
+   846→
+   847→Quality: HIGH. Well-organized, uses design tokens properly, good a11y
+   848→(focus states, aria where needed). Could serve as a MODEL for the
+   849→website redesign — the same token-based approach should be applied to
+   850→public-facing CSS.
+   851→
+   852→==============================================================================
+   853→3. JS FILE AUDIT
+   854→==============================================================================
+   855→
+   856→──────────────────────────────────────────────────────────────────────────────
+   857→3.1  public/js/website.js  (304 lines)
+   858→──────────────────────────────────────────────────────────────────────────────
+   859→Functionality:
+   860→  - Navbar scroll shrink + position fix (adjusts top when announcement
+   861→    ticker is visible).
+   862→  - Hamburger button visibility enforcement on mobile.
+   863→  - Scroll reveal IntersectionObserver (.reveal/.reveal-left/etc.).
+   864→  - Mobile drawer open/close (hamburger, overlay, close btn, ESC key,
+   865→    link click closes).
+   866→  - Back-to-top button show/hide + smooth scroll.
+   867→  - Custom cursor (desktop only, mousemove + rAF ring follow, hover
+   868→    scale on interactive elements).
+   869→  - Counter animation IntersectionObserver (.counter[data-target]).
+   870→  - Image lazy-loading fallback (only for browsers without native
+   871→    `loading="lazy"`).
+   872→  - Pull-to-refresh for mobile PWA (creates a #pullToRefreshIndicator
+   873→    div, touch handlers).
+   874→
+   875→Quality: Reasonable. Uses IIFEs for scope isolation. Uses `var`
+   876→(old-style but consistent). Uses `{ passive: true }` on touch/scroll
+   877→listeners (good for perf).
+   878→
+   879→Global namespace pollution:
+   880→  - All IIFEs → no global vars leaked. ✅
+   881→  - BUT relies on DOM IDs (#navbar, #hamburgerBtn, #mobileDrawer,
+   882→    #mobileDrawerOverlay, #mobileDrawerClose, #backToTop, #cursorDot,
+   883→    #cursorRing, #announcementTicker). If any ID changes in the
+   884→    layout, JS silently bails.
+   885→
+   886→Deprecated APIs: None.
+   887→
+   888→Bugs/issues:
+   889→  - Line 252-255: pull-to-refresh indicator is created on EVERY page
+   890→    (even desktop) and appended to <body>, even though touch handlers
+   891→    bail on `window.innerWidth >= 769`. Wasteful DOM node on desktop.
+   892→  - Line 30-34: hamburger button visibility is force-set via inline
+   893→    `style.display/visibility/opacity` — overrides CSS. Fragile.
+   894→  - No error handling around IntersectionObserver (line 56) — if
+   895→    IntersectionObserver is unsupported (very old browsers), the
+   896→    `.reveal` elements stay at opacity:0 (invisible). Should add a
+   897→    fallback that adds `.revealed` to all.
+   898→  - Custom cursor: `mix-blend-mode: difference` on .cursor-dot
+   899→    (website.css line 60) — cool effect but can make the cursor
+   900→    invisible over certain backgrounds. Also, hiding the native
+   901→    cursor is bad UX. Recommend removal.
+   902→
+   903→──────────────────────────────────────────────────────────────────────────────
+   904→3.2  public/js/homepage.js  (195 lines)
+   905→──────────────────────────────────────────────────────────────────────────────
+   906→Functionality:
+   907→  - Smooth scroll for anchor links (`a[href^="#"]`) with 80px offset
+   908→    + close mobile drawer.
+   909→  - Counter animation (DUPLICATED from website.js — both observe
+   910→    `.counter[data-target]`).
+   911→  - Video modal (openVideoModal global function, close on btn/overlay/
+   912→    ESC).
+   913→  - Programs horizontal scroll nav (left/right buttons, scrollBy 360px).
+   914→  - Hero parallax (scroll listener, backgroundPositionY shift).
+   915→  - Announcement ticker (fetch /api/public/announcements, build HTML,
+   916→    duplicate content for infinite scroll, set animationDuration based
+   917→    on width).
+   918→
+   919→Quality: Mixed. The first block (smooth scroll, lines 1-20) is NOT
+   920→wrapped in an IIFE — it runs immediately and pollutes global scope
+   921→with the `anchor` variable in a loop. The rest uses IIFEs.
+   922→
+   923→Global namespace pollution:
+   924→  - `openVideoModal` (line 62) — global function, called from
+   925→    `onclick="openVideoModal('…')"` in welcome.blade.php. CSP-unsafe.
+   926→  - Smooth-scroll block (lines 1-20) — no IIFE; `anchor` leaks.
+   927→
+   928→Deprecated APIs: None.
+   929→
+   930→Bugs/issues:
+   931→  - Counter animation is DUPLICATED between website.js and homepage.js.
+   932→    On the homepage, BOTH run — website.js observer and homepage.js
+   933→    observer both observe `.counter`. Whichever fires first wins;
+   934→    the second's `unobserve` is a no-op. Wasteful. Consolidate.
+   935→  - Line 154: `fetch('/api/public/announcements', …)` — hardcoded
+   936→    URL (not via `url()` or route). Breaks if app is in a subdirectory.
+   937→    Should be `fetch('{{ route("api.public.announcements") }}', …)`
+   938→    or use a data attribute.
+   939→  - Line 177: `trackEl.scrollWidth` is read BEFORE the content is
+   940→    rendered (right after setting innerHTML). May return 0 in some
+   941→    browsers. Should wrap in `requestAnimationFrame`.
+   942→  - Line 178: `trackEl.parentElement.offsetWidth` — assumes parent
+   943→    has explicit width. OK in flex container.
+   944→  - Hero parallax (line 116-127): scroll listener without throttle/
+   945→    debounce — can jank on low-end devices. Use rAF.
+   946→  - No `DOMContentLoaded` wrapper — script is loaded at bottom of
+   947→    page (via @push('scripts')), so DOM is ready. OK.
+   948→
+   949→──────────────────────────────────────────────────────────────────────────────
+   950→3.3  public/js/pwa-install.js  (109 lines) — DEAD CODE on website
+   951→──────────────────────────────────────────────────────────────────────────────
+   952→Functionality:
+   953→  - Listens for `beforeinstallprompt`, shows a toast after 5s delay
+   954→    (if not dismissed in last 7 days, not in standalone mode).
+   955→  - Handles install button click → `deferredPrompt.prompt()`.
+   956→  - Tracks `appinstalled` event → success toast.
+   957→
+   958→Relevance to website: NONE. This file is loaded only by
+   959→layouts/admin.blade.php. It is NOT loaded by layouts/website.blade.php
+   960→or app/download.blade.php (which has its own inline PWA install logic).
+   961→DEAD CODE for the public website.
+   962→
+   963→Quality: Clean. IIFE, `'use strict'`, localStorage/sessionStorage for
+   964→state, proper event listeners. Could be reused on the website if
+   965→wired in.
+   966→
+   967→Issues:
+   968→  - Heavy use of inline `style="…"` in the injected toast HTML —
+   969→    should use CSS classes.
+   970→  - Injects a `<style>` element for `@keyframes slideInUp` on every
+   971→    run — should be in a CSS file.
+   972→
+   973→==============================================================================
+   974→4. PWA AUDIT (manifest.json + sw.js)
+   975→==============================================================================
+   976→
+   977→──────────────────────────────────────────────────────────────────────────────
+   978→4.1  public/manifest.json  (83 lines) — STATIC, likely unused
+   979→──────────────────────────────────────────────────────────────────────────────
+   980→Status: A static manifest.json exists at /public/manifest.json, BUT
+   981→the website layout and download page both link to the DYNAMIC manifest
+   982→at `/manifest.webmanifest` (route('app.manifest') →
+   983→AppController::manifest()). So this static file is likely NOT served
+   984→to browsers (it's shadowed by the dynamic route).
+   985→
+   986→Content:
+   987→  - name: "Redemption - School Management System"
+   988→  - short_name: "Redemption"
+   989→  - start_url: "/school-of-redemption/public/admin"  ← HARDCODED
+   990→    SUBDIRECTORY PATH. Wrong for production, wrong for any non-
+   991→    /school-of-redemption/public/ deployment.
+   992→  - scope: "/school-of-redemption/public/"  ← same hardcoded path.
+   993→  - theme_color: #047857 (emerald) — matches website layout but NOT
+   994→    the dynamic manifest (#6366f1 indigo).
+   995→  - background_color: #0C1F17 (dark green) — matches design-tokens
+   996→    sidebar color.
+   997→  - display: standalone, orientation: portrait-primary.
+   998→  - icons: 8 sizes (72, 96, 128, 144, 152, 192, 384, 512), all with
+   999→    `/school-of-redemption/public/icons/…` hardcoded paths.
+  1000→  - shortcuts: Mark Entry, Attendance, Students — all admin URLs.
+  1001→  - categories: education, productivity.
+  1002→  - prefer_related_applications: false.
+  1003→
+  1004→Bugs:
+  1005→  - All paths hardcoded to `/school-of-redemption/public/…` — only
+  1006→    correct for one specific XAMPP subdirectory install. Breaks
+  1007→    everywhere else.
+  1008→  - start_url points to /admin (admin dashboard) — should be /login
+  1009→    or / for a public PWA.
+  1010→  - theme_color #047857 mismatches the dynamic manifest's #6366f1.
+  1011→  - No `screenshots` array (the dynamic manifest has one).
+  1012→  - No `id` field (recommended by Chrome).
+  1013→  - Shortcut URLs are admin-only — a public PWA user wouldn't have
+  1014→    access.
+  1015→
+  1016→Recommendation: DELETE this static file. The dynamic
+  1017→AppController::manifest() is the source of truth and handles paths
+  1018→correctly via `url('/')` and `asset()`. BUT fix the dynamic manifest's
+  1019→theme_color to match the website (#047857 emerald, not #6366f1 indigo)
+  1020→and add `screenshots` for richer install UI.
+  1021→
+  1022→──────────────────────────────────────────────────────────────────────────────
+  1023→4.2  public/sw.js  (264 lines) — Service Worker v3 (CACHE_NAME redemption-v4)
+  1024→──────────────────────────────────────────────────────────────────────────────
+  1025→Functionality:
+  1026→  - Install: caches static assets (./, ./login, ./manifest.json).
+  1027→  - Activate: deletes old caches, claims clients.
+  1028→  - Fetch handler:
+  1029→    * Skips non-GET, API/keepalive/horizon/telescope requests.
+  1030→    * CDN resources (jsdelivr, cdnjs, google fonts, ui-avatars):
+  1031→      cache-first with background revalidate (stale-while-revalidate).
+  1032→    * Navigation requests: network-first, fallback to cache, then
+  1033→      fallback to './login'.
+  1034→    * Static assets (CSS/JS/images/fonts): cache-first with background
+  1035→      revalidate.
+  1036→    * Default: network-first, fallback to cache, then 503.
+  1037→  - Push notification handler (title, body, icon, badge, vibrate,
+  1038→    actions: open/dismiss).
+  1039→  - Notification click handler (focuses existing /admin client or
+  1040→    opens new window).
+  1041→  - Background sync handlers (attendance-sync, mark-entry-sync,
+  1042→    data-sync) — STUB functions (empty bodies).
+  1043→
+  1044→Caching strategy issues:
+  1045→  - CACHE_DURATIONS object (lines 13-19) is DEFINED but NEVER USED.
+  1046→    Dead code. (The actual caching is immediate, no TTL-based
+  1047→    eviction.)
+  1048→  - No cache size limit — cache grows unbounded. Should add a
+  1049→    periodic cleanup.
+  1050→  - No version-busting for HTML cache — but HTML is network-first, so
+  1051→    OK.
+  1052→  - The `fetchAndCache` helper (line 166) catches errors and returns
+  1053→    `caches.match(request)` — but if the request was never cached,
+  1054→    this returns `undefined`, which becomes the response → browser
+  1055→    error. Should return a `new Response('Offline', {status:503})`
+  1056→    fallback (as the default branch does).
+  1057→  - Push notification icon: `./icons/icon-192x192.png` — relative
+  1058→    path, depends on SW scope. OK if scope is '/'.
+  1059→
+  1060→Bugs:
+  1061→  - Line 5: `CACHE_NAME = 'redemption-v4'` — version comment says v3,
+  1062→    cache name says v4. Minor inconsistency.
+  1063→  - Background sync functions are EMPTY (lines 252-264) — registered
+  1064→    but do nothing. Dead code or TODO.
+  1065→  - SW is registered ONLY in app/download.blade.php (line 813-822),
+  1066→    NOT in layouts/website.blade.php. So the SW is NOT active on the
+  1067→    main public website (home, about, contact, team, gallery). PWA
+  1068→    offline support is therefore only available after visiting the
+  1069→    download page. SHOULD register SW in the website layout.
+  1070→  - SW scope is `{ scope: '/' }` (download.blade.php line 815) — if
+  1071→    the app is in a subdirectory, this fails (SW can only control
+  1072→    its own directory + below). The dynamic manifest uses `url('/')`
+  1073→    for scope, which is correct. Mismatch.
+  1074→  - No `message` event handler for `SKIP_WAITING` — the SW calls
+  1075→    `self.skipWaiting()` on install, which forces immediate activation,
+  1076→    potentially breaking in-flight requests. Should prompt the user
+  1077→    to reload instead.
+  1078→
+  1079→==============================================================================
+  1080→5. ROUTES AUDIT (public/website section of routes/web.php)
+  1081→==============================================================================
+  1082→
+  1083→Public routes (lines 107-146):
+  1084→  GET  /                          → HomeController@index         → name('home')         → view('welcome')
+  1085→  GET  /gallery                   → HomeController@gallery       → name('gallery')      → view('gallery')
+  1086→  GET  /about                     → HomeController@about         → name('about')        → view('about')
+  1087→  GET  /contact                   → HomeController@contact       → name('contact')      → view('contact')
+  1088→  GET  /team                      → HomeController@team          → name('team')         → view('team')
+  1089→  GET  /manifest.webmanifest      → AppController@manifest       → name('app.manifest') → JSON
+  1090→  GET  /mobile-app                → AppController@download       → name('app.download') → view('app.download')
+  1091→  GET  /mobile-app/download/apk   → AppController@downloadApk    → name('app.download.apk')
+  1092→  GET  /mobile-app/download/training-apk → AppController@downloadTrainingApk → name('app.download.training_apk')
+  1093→  POST contact                    → ContactMessageController@store → name('contact.store')
+  1094→  GET  lang/{locale}              → LanguageController@switch    → name('lang.switch')
+  1095→  GET  /login                     → AuthController@showLogin     → name('login')
+  1096→  POST /login                     → AuthController@login
+  1097→  POST /logout                    → AuthController@logout        → name('logout')
+  1098→  GET  /password/forgot|email|reset/{token}  (password reset flows)
+  1099→  POST /password/*
+  1100→  POST telegram/webhook          → TelegramController@webhook
+  1101→  GET  /session-test              → closure (diagnostic JSON)
+  1102→  GET  /url-test                  → closure (diagnostic JSON)
+  1103→  GET  storage/{path}             → MediaController@serve (storage fallback)
+  1104→  GET  /{path}                    → closure (static file fallback for subdirectory hosting)
+  1105→
+  1106→API route (routes/api.php):
+  1107→  GET  /api/public/announcements  → CalendarEventController@apiAnnouncements  (used by ticker)
+  1108→
+  1109→Data passed to views (HomeController):
+  1110→  - welcome: sliders, sliderAlerts, teamMembers, galleryImages,
+  1111→    websiteVideos, galleryVideos, settings, latestNews  ✅ all used
+  1112→  - gallery: galleryImages (paginated), websiteVideos (paginated),
+  1113→    galleryVideos (collection), settings  ✅ all used
+  1114→  - about: settings  ✅
+  1115→  - contact: settings, branches  ✅
+  1116→  - team: settings, teamMembers  ✅
+  1117→  - app.download: settings (via Setting::pluck, NOT via getWebsiteSettings) ⚠️
+  1118→
+  1119→Route/view data issues:
+  1120→  - ⚠️ AppController::download() does `Setting::pluck('value', 'key')->toArray()`
+  1121→    — NOT wrapped in try-catch. If the settings table doesn't exist
+  1122→    (fresh install), this throws and 500s the download page. Should
+  1123→    use HomeController@getWebsiteSettings() pattern. (Note: the
+  1124→    download view doesn't actually USE $settings, so this is a latent
+  1125→    bug only.)
+  1126→  - ⚠️ welcome.blade.php references $settings['programs_count'] (line 463)
+  1127→    which is NOT in HomeController's defaults. View falls back to `?? 4`.
+  1128→    Should be added to defaults.
+  1129→  - ✅ All other $settings keys used in views are present in defaults.
+  1130→
+  1131→Missing routes (linked from views but no route):
+  1132→  - "Privacy Policy" link (website.blade.php line 221) → points to
+  1133→    route('home') — no /privacy-policy route exists.
+  1134→  - "Terms of Service" link (line 223) → points to route('home') —
+  1135→    no /terms route exists.
+  1136→  - Footer "Programs" links (line 202-205) → point to route('home').#programs
+  1137→    anchor — works but not ideal.
+  1138→  - welcome.blade.php line 442: `<a href="#contact">Discover More</a>`
+  1139→    — anchor to #contact section on the SAME page. OK.
+  1140→  - welcome.blade.php line 808: `<a href="#contact">Find Our Campus</a>`
+  1141→    — same. OK.
+  1142→  - team.blade.php placeholder social links (lines 189, 205, 221, 237,
+  1143→    738-740, 754-756, 770-772, 786-788): `href="#"` — dead links.
+  1144→  - layouts/app.blade.php footer social links (lines 575-578):
+  1145→    `href="#"` — dead links.
+  1146→  - layouts/app.blade.php footer "Programs", "Calendar", "Results"
+  1147→    (lines 597, 599, 600): `href="#"` — dead links.
+  1148→  - welcome.blade.php line 483: `<a href="#" class="program-link">Learn More</a>`
+  1149→    — dead link.
+  1150→
+  1151→Untranslated strings: ALL public view strings are hardcoded English.
+  1152→See Bug #4. The lang/en/app.php and lang/am/app.php files have the
+  1153→keys ready (home, about, gallery, contact, team, quick_links,
+  1154→programs, contact_us, all_rights_reserved, footer_about, login,
+  1155→school_name, brand_pre, brand_name) but views don't call `__()`.
+  1156→
+  1157→==============================================================================
+  1158→6. SUMMARY OF MODERNIZATION OPPORTUNITIES (38 total)
+  1159→==============================================================================
+  1160→
+  1161→HIGH PRIORITY (blocking):
+  1162→  1.  Fix website.css line 1 corruption (rewrite as static CSS, no Blade).
+  1163→  2.  Consolidate layouts/website.blade.php + layouts/app.blade.php into
+  1164→      ONE layout (recommend extending layouts/app which has i18n).
+  1165→  3.  Rebuild app/download.blade.php to extend the website layout (share
+  1166→      navbar/footer/brand).
+  1167→  4.  Wire i18n into ALL public views (use __('app.*') keys; lang files
+  1168→      already exist).
+  1169→  5.  Register service worker in the website layout (not just download page).
+  1170→  6.  Delete static manifest.json; fix dynamic manifest theme_color to
+  1171→      #047857 (emerald) to match website.
+  1172→  7.  Fix `<html lang="en">` → `{{ app()->getLocale() }}` in website layout.
+  1173→  8.  Fix theme-color mismatches across layouts (#047857 vs #6366f1 vs
+  1174→      #059669).
+  1175→
+  1176→MEDIUM PRIORITY (UX/consistency):
+  1177→  9.  Refactor website.css + homepage.css to use design-tokens.css
+  1178→      variables (--color-primary, --color-accent) instead of layout
+  1179→      inline :root tokens.
+  1180→  10. Remove ~400 lines of duplicate CSS between website.css and
+  1181→      homepage.css (footer, back-to-top, reveal, section-header,
+  1182→      fadeInUp).
+  1183→  11. Extract inline <style> blocks from about/contact/team/gallery/
+  1184→      welcome/download into dedicated CSS files or merge into website.css.
+  1185→  12. Extract inline <script> blocks into JS files.
+  1186→  13. Replace `onclick="..."` inline handlers with addEventListener
+  1187→      (openVideoModal, openLightbox, installPWA, dismissBanner, FAQ
+  1188→      toggle).
+  1189→  14. Remove custom cursor (.cursor-dot/.cursor-ring) — bad UX.
+  1190→  15. Remove or wire up the dead newsletter form.
+  1191→  16. Remove or fix "Privacy Policy"/"Terms of Service" dead links.
+  1192→  17. Replace fake placeholder team members (welcome + team) with a
+  1193→      proper empty state.
+  1194→  18. Replace external Unsplash fallback images with local placeholders
+  1195→      (about, team, welcome hero, gallery).
+  1196→  19. Consolidate counter animation (duplicated in website.js +
+  1197→      homepage.js + about.blade.php inline).
+  1198→  20. Add Open Graph + Twitter Card meta tags.
+  1199→  21. Add JSON-LD structured data (EducationalOrganization, FAQPage).
+  1200→  22. Add `<link rel="canonical">`.
+  1201→  23. Add skip-to-content link for a11y.
+  1202→  24. Add `aria-current="page"` to active nav links.
+  1203→  25. Add `aria-label` / `aria-expanded` to interactive elements
+  1204→      (FAQ, carousel controls, hamburger).
+  1205→  26. Add `autocomplete` attributes to form inputs.
+  1206→  27. Add `width`/`height` to images (prevent CLS).
+  1207→  28. Add `decoding="async"` to images.
+  1208→  29. Add `loading="lazy"` to all non-hero images + iframes.
+  1209→  30. Use `<details>`/`<summary>` for FAQ instead of JS toggle.
+  1210→  31. Add keyboard navigation to lightbox (left/right arrows).
+  1211→  32. Add dark-mode toggle UI (design-tokens.css already has dark
+  1212→      overrides).
+  1213→
+  1214→LOW PRIORITY (polish):
+  1215→  33. Add a sticky mobile CTA bar ("Apply Now" / "Call Us").
+  1216→  34. Add scroll-spy to highlight active nav section.
+  1217→  35. Add a QR code on the download page for desktop-to-mobile install.
+  1218→  36. Replace hero carousel with a single static hero (faster LCP).
+  1219→  37. Move news splash modal to a dedicated /news page or make it a
+  1220→      dismissible toast.
+  1221→  38. Add cache size limit + TTL eviction to sw.js.
+  1222→
+  1223→==============================================================================
+  1224→7. SUMMARY OF BUGS/ISSUES (22 total)
+  1225→==============================================================================
+  1226→
+  1227→CRITICAL (5):
+  1228→  B1. website.css line 1 starts with `};` + contains Blade `{{ }}` syntax
+  1229→      → :root block dropped + .navbar/.page-hero/.mobile-drawer
+  1230→      backgrounds dropped. Navbar likely transparent over hero.
+  1231→  B2. Two conflicting layouts (layouts.website green/gold no-i18n vs
+  1232→      layouts.app navy/amber i18n). home.blade.php fallback uses
+  1233→      layouts.app but expects Bootstrap (not loaded) → unstyled.
+  1234→  B3. app/download.blade.php is a 3rd standalone theme (indigo) —
+  1235→      jarring brand break.
+  1236→  B4. No i18n on public website despite lang files existing.
+  1237→  B5. Service worker NOT registered on website pages (only on
+  1238→      download page) → PWA offline not available publicly.
+  1239→
+  1240→HIGH (8):
+  1241→  B6. Static manifest.json has hardcoded `/school-of-redemption/public/`
+  1242→      paths (wrong for production). Dynamic manifest shadows it but
+  1243→      has wrong theme_color (#6366f1 vs #047857).
+  1244→  B7. `<html lang="en">` hardcoded in website layout (should use locale).
+  1245→  B8. theme-color mismatch: #047857 (website) vs #6366f1 (download)
+  1246→      vs #059669 (layouts.app).
+  1247→  B9. team.blade.php line 60: `var(--primary)` is undefined (layout
+  1248→      defines `--primary-color`, not `--primary`).
+  1249→  B10. AppController::download() calls Setting::pluck() without
+  1250→       try-catch → 500 if settings table missing.
+  1251→  B11. welcome.blade.php uses $settings['programs_count'] which is
+  1252→       not in HomeController defaults (falls back to 4).
+  1253→  B12. Newsletter form (website layout line 212) is dead —
+  1254→       `onsubmit="event.preventDefault();"` with no backend.
+  1255→  B13. "Privacy Policy" + "Terms of Service" links point to
+  1256→       route('home') — misleading.
+  1257→
+  1258→MEDIUM (6):
+  1259→  B14. homepage.js fetch('/api/public/announcements') uses hardcoded
+  1260→       URL — breaks in subdirectory deployments.
+  1261→  B15. Counter animation duplicated in website.js + homepage.js +
+  1262→       about.blade.php inline — both observers fire on homepage.
+  1263→  B16. openVideoModal / openLightbox / installPWA / dismissBanner are
+  1264→       global functions (CSP-unsafe onclick handlers).
+  1265→  B17. sw.js CACHE_DURATIONS object defined but never used (dead code).
+  1266→  B18. sw.js background-sync handlers are empty stubs.
+  1267→  B19. pwa-install.js is dead code on the website (only loaded by admin).
+  1268→
+  1269→LOW (3):
+  1270→  B20. Multiple external Unsplash image dependencies (about, team,
+  1271→       welcome hero/gallery fallbacks).
+  1272→  B21. Fake placeholder team member data (welcome + team views).
+  1273→  B22. contact.blade.php "Office Hours" says "8:00 AM - 5:00 PM" but
+  1274→       welcome.blade.php says "7:30 AM - 4:00 PM" — inconsistent.
+  1275→
+  1276→==============================================================================
+  1277→8. RECOMMENDED REDESIGN APPROACH (blueprint for next agent)
+  1278→==============================================================================
+  1279→
+  1280→Given the user's goal ("modernize the website part use modern template"),
+  1281→the recommended approach is:
+  1282→
+  1283→1. Adopt `layouts/app.blade.php` as the SINGLE public layout.
+  1284→   - It already has: i18n (`__()` calls), language switcher, modern
+  1285→     navy+amber palette, sticky navbar, 4-col footer, Inter font.
+  1286→   - Add: design-tokens.css link, Bootstrap 5 (or refactor to utility-
+  1287→     first CSS), Font Awesome 6.5.1, @stack('styles')/@stack('scripts'),
+  1288→     service worker registration, PWA manifest link, theme-color meta.
+  1289→
+  1290→2. Rewrite all public views to extend `layouts.app`:
+  1291→   - welcome.blade.php → keep the rich sections but use design-tokens
+  1292→     classes (--color-primary, --color-accent, --radius-xl, --shadow-lg).
+  1293→   - about/contact/team/gallery → simple page-hero + content sections.
+  1294→   - app/download.blade.php → extend layout, keep the install steps
+  1295→     but use brand colors.
+  1296→   - errors/403.blade.php, 419.blade.php → minimal branded error pages.
+  1297→
+  1298→3. Consolidate CSS:
+  1299→   - Delete website.css (broken) and homepage.css.
+  1300→   - Create a new `public/css/website.css` that uses design-tokens.css
+  1301→     variables exclusively (no Blade `{{ }}`, no inline :root overrides).
+  1302→   - Move page-specific styles (gallery lightbox, team avatar overlay,
+  1303→     contact branch cards) into the new website.css or per-page CSS
+  1304→     files that are @push'd.
+  1305→
+  1306→4. Consolidate JS:
+  1307→   - Keep website.js (navbar, drawer, reveal, back-to-top, counters).
+  1308→   - Merge homepage.js (smooth scroll, video modal, programs scroll,
+  1309→     ticker) into website.js OR keep as a separate page-specific file.
+  1310→   - Remove custom cursor code.
+  1311→   - Wrap ALL code in IIFEs/modules; remove global function leaks.
+  1312→   - Add SW registration to the layout (not per-page).
+  1313→
+  1314→5. Wire i18n:
+  1315→   - Replace ALL hardcoded English in views with `__('app.*')` calls.
+  1316→   - Add missing keys to lang/en/app.php and lang/am/app.php (e.g.,
+  1317→     'why_choose_us', 'our_programs', 'send_message', 'get_in_touch',
+  1318→     'our_campuses', 'find_us', 'get_directions', 'video_highlights',
+  1319→     'photo_gallery', 'no_photos_yet', 'session_expired', 'access_denied',
+  1320→     'download_app', 'install', 'frequently_asked_questions', etc.).
+  1321→   - Add a language switcher to the website navbar (copy from
+  1322→     layouts/app.blade.php).
+  1323→
+  1324→6. Fix PWA:
+  1325→   - Delete static manifest.json.
+  1326→   - Fix dynamic manifest theme_color to #047857 (emerald).
+  1327→   - Register SW in the consolidated layout.
+  1328→   - Add pwa-install.js to the layout (reuse the admin's PWA install
+  1329→     toast).
+  1330→
+  1331→7. Fix accessibility:
+  1332→   - Add skip-to-content link.
+  1333→   - Add aria-current/aria-label/aria-expanded where needed.
+  1334→   - Ensure focus-visible styles on all interactive elements.
+  1335→   - Use semantic HTML (`<details>` for FAQ, `<dialog>` for modals).
+  1336→
+  1337→8. Performance:
+  1338→   - Lazy-load all non-hero images.
+  1339→   - Add width/height to images.
+  1340→   - Preload hero image + critical fonts.
+  1341→   - Consider replacing Bootstrap with a lighter utility CSS (Tailwind
+  1342→     or custom) to reduce CSS payload.
+  1343→
+  1344→This audit provides the complete blueprint. The next agent (Build/Modify)
+  1345→can proceed to implement the redesign using this report as the spec.
+  1346→

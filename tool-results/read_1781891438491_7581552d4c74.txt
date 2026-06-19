@@ -1,0 +1,907 @@
+     1→<!DOCTYPE html>
+     2→<html lang="{{ app()->getLocale() }}">
+     3→<head>
+     4→    <meta name="csrf-token" content="{{ csrf_token() }}">
+     5→    <meta charset="UTF-8">
+     6→    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     7→    <title>Download App - School of Redemption</title>
+     8→
+     9→    {{-- PWA & Mobile Integration --}}
+    10→    <link rel="manifest" href="{{ route('app.manifest') }}">
+    11→    <meta name="theme-color" content="#6366f1">
+    12→    <meta name="apple-mobile-web-app-capable" content="yes">
+    13→    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    14→    <meta name="apple-mobile-web-app-title" content="Redemption">
+    15→    <meta name="mobile-web-app-capable" content="yes">
+    16→    <meta name="msapplication-TileColor" content="#6366f1">
+    17→    <meta name="msapplication-navbutton-color" content="#6366f1">
+    18→    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    19→    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192x192.png') }}">
+    20→
+    21→    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    22→    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    23→    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    24→
+    25→    <style>
+    26→        :root {
+    27→            --primary: #6366f1;
+    28→            --primary-dark: #4f46e5;
+    29→            --primary-light: #e0e7ff;
+    30→            --accent: #f59e0b;
+    31→            --accent-light: #fef3c7;
+    32→            --dark: #0f172a;
+    33→            --dark-800: #1e293b;
+    34→            --dark-600: #475569;
+    35→            --gray: #94a3b8;
+    36→            --gray-light: #f1f5f9;
+    37→            --green: #10b981;
+    38→            --green-light: #d1fae5;
+    39→            --blue: #3b82f6;
+    40→            --blue-light: #dbeafe;
+    41→        }
+    42→
+    43→        * { margin: 0; padding: 0; box-sizing: border-box; }
+    44→        
+    45→        body {
+    46→            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    47→            background: var(--dark);
+    48→            color: #fff;
+    49→            min-height: 100vh;
+    50→            overflow-x: hidden;
+    51→        }
+    52→
+    53→        /* ===== NAVBAR ===== */
+    54→        .app-nav {
+    55→            background: rgba(15, 23, 42, 0.95);
+    56→            backdrop-filter: blur(12px);
+    57→            border-bottom: 1px solid rgba(255,255,255,0.06);
+    58→            padding: 12px 0;
+    59→            position: sticky;
+    60→            top: 0;
+    61→            z-index: 100;
+    62→        }
+    63→        .app-nav-inner {
+    64→            max-width: 1100px;
+    65→            margin: 0 auto;
+    66→            padding: 0 20px;
+    67→            display: flex;
+    68→            align-items: center;
+    69→            justify-content: space-between;
+    70→        }
+    71→        .app-nav-brand {
+    72→            display: flex;
+    73→            align-items: center;
+    74→            gap: 10px;
+    75→            text-decoration: none;
+    76→            color: #fff;
+    77→        }
+    78→        .app-nav-brand:hover { color: #fff; }
+    79→        .app-nav-icon {
+    80→            width: 36px;
+    81→            height: 36px;
+    82→            background: var(--primary);
+    83→            border-radius: 10px;
+    84→            display: flex;
+    85→            align-items: center;
+    86→            justify-content: center;
+    87→            font-size: 16px;
+    88→            color: #fff;
+    89→        }
+    90→        .app-nav-text {
+    91→            font-weight: 700;
+    92→            font-size: 16px;
+    93→            letter-spacing: -0.3px;
+    94→        }
+    95→        .app-nav-text span { color: var(--primary); }
+    96→        .btn-nav-login {
+    97→            display: inline-flex;
+    98→            align-items: center;
+    99→            gap: 6px;
+   100→            padding: 8px 20px;
+   101→            border-radius: 8px;
+   102→            background: var(--primary);
+   103→            color: #fff;
+   104→            font-weight: 600;
+   105→            font-size: 13px;
+   106→            text-decoration: none;
+   107→            transition: all 0.2s;
+   108→            border: none;
+   109→            cursor: pointer;
+   110→        }
+   111→        .btn-nav-login:hover {
+   112→            background: var(--primary-dark);
+   113→            color: #fff;
+   114→            transform: translateY(-1px);
+   115→            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+   116→        }
+   117→
+   118→        /* ===== HERO ===== */
+   119→        .hero {
+   120→            text-align: center;
+   121→            padding: 60px 20px 40px;
+   122→            position: relative;
+   123→        }
+   124→        .hero::before {
+   125→            content: '';
+   126→            position: absolute;
+   127→            top: -100px;
+   128→            left: 50%;
+   129→            transform: translateX(-50%);
+   130→            width: 600px;
+   131→            height: 600px;
+   132→            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+   133→            pointer-events: none;
+   134→        }
+   135→        .hero-icon-wrap {
+   136→            position: relative;
+   137→            display: inline-block;
+   138→            margin-bottom: 24px;
+   139→        }
+   140→        .hero-icon {
+   141→            width: 100px;
+   142→            height: 100px;
+   143→            border-radius: 26px;
+   144→            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+   145→            display: flex;
+   146→            align-items: center;
+   147→            justify-content: center;
+   148→            font-size: 42px;
+   149→            color: #fff;
+   150→            box-shadow: 0 16px 48px rgba(99, 102, 241, 0.35);
+   151→            position: relative;
+   152→            z-index: 1;
+   153→        }
+   154→        .hero-icon-ring {
+   155→            position: absolute;
+   156→            top: -8px;
+   157→            left: -8px;
+   158→            right: -8px;
+   159→            bottom: -8px;
+   160→            border-radius: 30px;
+   161→            border: 2px solid rgba(99, 102, 241, 0.25);
+   162→            animation: pulse-ring 2s ease-out infinite;
+   163→        }
+   164→        @keyframes pulse-ring {
+   165→            0% { transform: scale(1); opacity: 1; }
+   166→            100% { transform: scale(1.15); opacity: 0; }
+   167→        }
+   168→        .hero h1 {
+   169→            font-size: 2.2rem;
+   170→            font-weight: 900;
+   171→            letter-spacing: -0.5px;
+   172→            margin-bottom: 12px;
+   173→            line-height: 1.2;
+   174→        }
+   175→        .hero h1 span { color: var(--primary); }
+   176→        .hero p {
+   177→            font-size: 1.05rem;
+   178→            color: var(--gray);
+   179→            max-width: 500px;
+   180→            margin: 0 auto;
+   181→            line-height: 1.6;
+   182→        }
+   183→        .hero-badges {
+   184→            display: flex;
+   185→            gap: 8px;
+   186→            justify-content: center;
+   187→            margin-top: 20px;
+   188→            flex-wrap: wrap;
+   189→        }
+   190→        .hero-badge {
+   191→            display: inline-flex;
+   192→            align-items: center;
+   193→            gap: 5px;
+   194→            padding: 5px 12px;
+   195→            border-radius: 20px;
+   196→            font-size: 12px;
+   197→            font-weight: 600;
+   198→            background: rgba(255,255,255,0.06);
+   199→            border: 1px solid rgba(255,255,255,0.08);
+   200→            color: var(--gray);
+   201→        }
+   202→        .hero-badge i { font-size: 10px; }
+   203→        .hero-badge.free { color: var(--green); border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.08); }
+   204→        .hero-badge.secure { color: var(--blue); border-color: rgba(59,130,246,0.2); background: rgba(59,130,246,0.08); }
+   205→
+   206→        /* ===== INSTALL CARDS ===== */
+   207→        .install-section {
+   208→            max-width: 800px;
+   209→            margin: 0 auto;
+   210→            padding: 0 20px 40px;
+   211→        }
+   212→        .install-grid {
+   213→            display: grid;
+   214→            grid-template-columns: 1fr 1fr;
+   215→            gap: 20px;
+   216→        }
+   217→        @media (max-width: 640px) {
+   218→            .install-grid { grid-template-columns: 1fr; }
+   219→        }
+   220→        .install-card {
+   221→            background: var(--dark-800);
+   222→            border-radius: 20px;
+   223→            padding: 32px 28px;
+   224→            border: 1px solid rgba(255,255,255,0.06);
+   225→            position: relative;
+   226→            overflow: hidden;
+   227→            transition: transform 0.2s, box-shadow 0.2s;
+   228→        }
+   229→        .install-card:hover {
+   230→            transform: translateY(-2px);
+   231→            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+   232→        }
+   233→        .install-card::before {
+   234→            content: '';
+   235→            position: absolute;
+   236→            top: 0;
+   237→            left: 0;
+   238→            right: 0;
+   239→            height: 3px;
+   240→        }
+   241→        .install-card.android::before {
+   242→            background: linear-gradient(90deg, #3DDC84, #00C853);
+   243→        }
+   244→        .install-card.ios::before {
+   245→            background: linear-gradient(90deg, #007AFF, #5856D6);
+   246→        }
+   247→        .install-card-icon {
+   248→            width: 56px;
+   249→            height: 56px;
+   250→            border-radius: 16px;
+   251→            display: flex;
+   252→            align-items: center;
+   253→            justify-content: center;
+   254→            font-size: 24px;
+   255→            margin-bottom: 16px;
+   256→        }
+   257→        .install-card.android .install-card-icon {
+   258→            background: rgba(61, 220, 132, 0.12);
+   259→            color: #3DDC84;
+   260→        }
+   261→        .install-card.ios .install-card-icon {
+   262→            background: rgba(0, 122, 255, 0.12);
+   263→            color: #007AFF;
+   264→        }
+   265→        .install-card h3 {
+   266→            font-size: 18px;
+   267→            font-weight: 700;
+   268→            margin-bottom: 4px;
+   269→        }
+   270→        .install-card .subtitle {
+   271→            font-size: 13px;
+   272→            color: var(--gray);
+   273→            margin-bottom: 20px;
+   274→        }
+   275→        .install-steps {
+   276→            list-style: none;
+   277→            padding: 0;
+   278→            margin: 0 0 24px;
+   279→        }
+   280→        .install-steps li {
+   281→            display: flex;
+   282→            gap: 12px;
+   283→            padding: 10px 0;
+   284→            border-bottom: 1px solid rgba(255,255,255,0.04);
+   285→            font-size: 14px;
+   286→            line-height: 1.5;
+   287→            color: #cbd5e1;
+   288→        }
+   289→        .install-steps li:last-child { border-bottom: none; }
+   290→        .step-num {
+   291→            width: 24px;
+   292→            height: 24px;
+   293→            border-radius: 50%;
+   294→            display: flex;
+   295→            align-items: center;
+   296→            justify-content: center;
+   297→            font-size: 11px;
+   298→            font-weight: 700;
+   299→            flex-shrink: 0;
+   300→            margin-top: 1px;
+   301→        }
+   302→        .android .step-num {
+   303→            background: rgba(61, 220, 132, 0.15);
+   304→            color: #3DDC84;
+   305→        }
+   306→        .ios .step-num {
+   307→            background: rgba(0, 122, 255, 0.15);
+   308→            color: #007AFF;
+   309→        }
+   310→        .install-steps li i {
+   311→            font-size: 12px;
+   312→            margin: 0 2px;
+   313→            opacity: 0.5;
+   314→        }
+   315→        .btn-install {
+   316→            display: flex;
+   317→            align-items: center;
+   318→            justify-content: center;
+   319→            gap: 8px;
+   320→            width: 100%;
+   321→            padding: 14px;
+   322→            border-radius: 14px;
+   323→            font-weight: 700;
+   324→            font-size: 15px;
+   325→            cursor: pointer;
+   326→            border: none;
+   327→            transition: all 0.2s;
+   328→            text-decoration: none;
+   329→        }
+   330→        .btn-install:hover { transform: translateY(-1px); }
+   331→        .btn-install.android-btn {
+   332→            background: linear-gradient(135deg, #3DDC84, #00C853);
+   333→            color: #0f172a;
+   334→            box-shadow: 0 4px 16px rgba(61, 220, 132, 0.3);
+   335→        }
+   336→        .btn-install.android-btn:hover {
+   337→            box-shadow: 0 6px 24px rgba(61, 220, 132, 0.4);
+   338→        }
+   339→        .btn-install.ios-btn {
+   340→            background: linear-gradient(135deg, #007AFF, #5856D6);
+   341→            color: #fff;
+   342→            box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+   343→        }
+   344→        .btn-install.ios-btn:hover {
+   345→            box-shadow: 0 6px 24px rgba(0, 122, 255, 0.4);
+   346→        }
+   347→        .btn-install:disabled {
+   348→            opacity: 0.5;
+   349→            cursor: not-allowed;
+   350→            transform: none !important;
+   351→        }
+   352→
+   353→        /* ===== FEATURES ===== */
+   354→        .features-section {
+   355→            max-width: 900px;
+   356→            margin: 0 auto;
+   357→            padding: 40px 20px;
+   358→        }
+   359→        .features-header {
+   360→            text-align: center;
+   361→            margin-bottom: 36px;
+   362→        }
+   363→        .features-header h2 {
+   364→            font-size: 1.6rem;
+   365→            font-weight: 800;
+   366→            margin-bottom: 8px;
+   367→        }
+   368→        .features-header p {
+   369→            color: var(--gray);
+   370→            font-size: 14px;
+   371→        }
+   372→        .features-grid {
+   373→            display: grid;
+   374→            grid-template-columns: repeat(3, 1fr);
+   375→            gap: 16px;
+   376→        }
+   377→        @media (max-width: 768px) {
+   378→            .features-grid { grid-template-columns: repeat(2, 1fr); }
+   379→        }
+   380→        @media (max-width: 480px) {
+   381→            .features-grid { grid-template-columns: 1fr; }
+   382→        }
+   383→        .feature-card {
+   384→            background: var(--dark-800);
+   385→            border-radius: 16px;
+   386→            padding: 24px;
+   387→            border: 1px solid rgba(255,255,255,0.05);
+   388→            transition: all 0.2s;
+   389→        }
+   390→        .feature-card:hover {
+   391→            border-color: rgba(99, 102, 241, 0.2);
+   392→            transform: translateY(-2px);
+   393→        }
+   394→        .feature-icon {
+   395→            width: 44px;
+   396→            height: 44px;
+   397→            border-radius: 12px;
+   398→            display: flex;
+   399→            align-items: center;
+   400→            justify-content: center;
+   401→            font-size: 18px;
+   402→            margin-bottom: 14px;
+   403→            background: var(--primary-light);
+   404→            color: var(--primary);
+   405→        }
+   406→        .feature-card h4 {
+   407→            font-size: 14px;
+   408→            font-weight: 700;
+   409→            margin-bottom: 4px;
+   410→        }
+   411→        .feature-card p {
+   412→            font-size: 12px;
+   413→            color: var(--gray);
+   414→            line-height: 1.5;
+   415→        }
+   416→
+   417→        /* ===== FAQ ===== */
+   418→        .faq-section {
+   419→            max-width: 700px;
+   420→            margin: 0 auto;
+   421→            padding: 20px 20px 60px;
+   422→        }
+   423→        .faq-section h2 {
+   424→            text-align: center;
+   425→            font-size: 1.6rem;
+   426→            font-weight: 800;
+   427→            margin-bottom: 28px;
+   428→        }
+   429→        .faq-item {
+   430→            background: var(--dark-800);
+   431→            border-radius: 12px;
+   432→            margin-bottom: 10px;
+   433→            border: 1px solid rgba(255,255,255,0.05);
+   434→            overflow: hidden;
+   435→        }
+   436→        .faq-question {
+   437→            padding: 16px 20px;
+   438→            font-size: 14px;
+   439→            font-weight: 600;
+   440→            cursor: pointer;
+   441→            display: flex;
+   442→            align-items: center;
+   443→            justify-content: space-between;
+   444→            color: #e2e8f0;
+   445→            transition: color 0.2s;
+   446→        }
+   447→        .faq-question:hover { color: var(--primary); }
+   448→        .faq-question i {
+   449→            font-size: 12px;
+   450→            transition: transform 0.2s;
+   451→            color: var(--gray);
+   452→        }
+   453→        .faq-item.open .faq-question i { transform: rotate(180deg); color: var(--primary); }
+   454→        .faq-answer {
+   455→            padding: 0 20px;
+   456→            max-height: 0;
+   457→            overflow: hidden;
+   458→            transition: all 0.3s ease;
+   459→            font-size: 13px;
+   460→            color: var(--gray);
+   461→            line-height: 1.6;
+   462→        }
+   463→        .faq-item.open .faq-answer {
+   464→            padding: 0 20px 16px;
+   465→            max-height: 200px;
+   466→        }
+   467→
+   468→        /* ===== FOOTER ===== */
+   469→        .app-footer {
+   470→            text-align: center;
+   471→            padding: 20px;
+   472→            border-top: 1px solid rgba(255,255,255,0.06);
+   473→            color: var(--gray);
+   474→            font-size: 13px;
+   475→        }
+   476→        .app-footer a {
+   477→            color: var(--primary);
+   478→            text-decoration: none;
+   479→        }
+   480→        .app-footer a:hover { text-decoration: underline; }
+   481→
+   482→        /* ===== INSTALL BANNER (shown when PWA install is available) ===== */
+   483→        .pwa-install-banner {
+   484→            position: fixed;
+   485→            bottom: 0;
+   486→            left: 0;
+   487→            right: 0;
+   488→            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+   489→            color: #fff;
+   490→            padding: 14px 20px;
+   491→            display: flex;
+   492→            align-items: center;
+   493→            justify-content: space-between;
+   494→            z-index: 1000;
+   495→            box-shadow: 0 -4px 20px rgba(99, 102, 241, 0.4);
+   496→            transform: translateY(100%);
+   497→            transition: transform 0.3s ease;
+   498→        }
+   499→        .pwa-install-banner.show {
+   500→            transform: translateY(0);
+   501→        }
+   502→        .pwa-install-banner-text {
+   503→            display: flex;
+   504→            align-items: center;
+   505→            gap: 12px;
+   506→        }
+   507→        .pwa-install-banner-text i { font-size: 20px; }
+   508→        .pwa-install-banner-text div { font-size: 14px; font-weight: 600; }
+   509→        .pwa-install-banner-text small { font-size: 11px; opacity: 0.8; display: block; }
+   510→        .btn-install-banner {
+   511→            padding: 8px 20px;
+   512→            border-radius: 8px;
+   513→            background: #fff;
+   514→            color: var(--primary);
+   515→            font-weight: 700;
+   516→            font-size: 13px;
+   517→            border: none;
+   518→            cursor: pointer;
+   519→            transition: all 0.2s;
+   520→            white-space: nowrap;
+   521→        }
+   522→        .btn-install-banner:hover {
+   523→            background: #f0f0ff;
+   524→            transform: scale(1.02);
+   525→        }
+   526→        .btn-dismiss-banner {
+   527→            background: none;
+   528→            border: none;
+   529→            color: rgba(255,255,255,0.6);
+   530→            font-size: 16px;
+   531→            cursor: pointer;
+   532→            padding: 4px 8px;
+   533→            margin-left: 8px;
+   534→        }
+   535→
+   536→        /* ===== DETECTION BANNER (for non-PWA browsers) ===== */
+   537→        .detect-banner {
+   538→            max-width: 800px;
+   539→            margin: 0 auto 20px;
+   540→            padding: 0 20px;
+   541→        }
+   542→        .detect-banner-inner {
+   543→            background: rgba(99, 102, 241, 0.1);
+   544→            border: 1px solid rgba(99, 102, 241, 0.2);
+   545→            border-radius: 12px;
+   546→            padding: 14px 18px;
+   547→            display: flex;
+   548→            align-items: center;
+   549→            gap: 10px;
+   550→            font-size: 13px;
+   551→            color: #a5b4fc;
+   552→        }
+   553→        .detect-banner-inner i { font-size: 16px; color: var(--primary); }
+   554→        .detect-banner-inner strong { color: #fff; }
+   555→    </style>
+   556→</head>
+   557→<body>
+   558→
+   559→{{-- NAVBAR --}}
+   560→<nav class="app-nav">
+   561→    <div class="app-nav-inner">
+   562→        <a href="{{ url('/') }}" class="app-nav-brand">
+   563→            <div class="app-nav-icon"><i class="fas fa-graduation-cap"></i></div>
+   564→            <div class="app-nav-text">School of <span>Redemption</span></div>
+   565→        </a>
+   566→        <a href="{{ route('login') }}" class="btn-nav-login">
+   567→            <i class="fas fa-sign-in-alt"></i> Login
+   568→        </a>
+   569→    </div>
+   570→</nav>
+   571→
+   572→{{-- HERO --}}
+   573→<section class="hero">
+   574→    <div class="hero-icon-wrap">
+   575→        <div class="hero-icon"><i class="fas fa-graduation-cap"></i></div>
+   576→        <div class="hero-icon-ring"></div>
+   577→    </div>
+   578→    <h1>Get the <span>Redemption</span> App</h1>
+   579→    <p>Install the School of Redemption app on your phone for instant access to marks, attendance, finance, and everything you need.</p>
+   580→    <div class="hero-badges">
+   581→        <span class="hero-badge free"><i class="fas fa-check-circle"></i> Free</span>
+   582→        <span class="hero-badge secure"><i class="fas fa-shield-alt"></i> Secure</span>
+   583→        <span class="hero-badge"><i class="fas fa-bolt"></i> Fast</span>
+   584→        <span class="hero-badge"><i class="fas fa-wifi"></i> Works Offline</span>
+   585→    </div>
+   586→</section>
+   587→
+   588→{{-- DETECTION BANNER --}}
+   589→<div class="detect-banner" id="detectBanner" style="display:none;">
+   590→    <div class="detect-banner-inner">
+   591→        <i class="fas fa-info-circle"></i>
+   592→        <span id="detectText"></span>
+   593→    </div>
+   594→</div>
+   595→
+   596→{{-- INSTALL CARDS --}}
+   597→<section class="install-section">
+   598→    {{-- TRAINING APP BANNER --}}
+   599→    <div style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1));border:1px solid rgba(99,102,241,0.25);border-radius:16px;padding:24px 28px;margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+   600→        <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#1a237e,#6366f1);display:flex;align-items:center;justify-content:center;font-size:24px;color:#ffc107;flex-shrink:0;">
+   601→            <i class="fas fa-book-open"></i>
+   602→        </div>
+   603→        <div style="flex:1;min-width:200px;">
+   604→            <h3 style="font-size:18px;font-weight:700;margin:0 0 4px;">Redemption Training App</h3>
+   605→            <p style="font-size:13px;color:var(--gray);margin:0 0 12px;">Dedicated training app for accessing courses and learning materials on the go.</p>
+   606→            <a href="{{ route('app.download.training_apk') }}" class="btn-install android-btn" style="width:auto;display:inline-flex;padding:10px 24px;font-size:14px;">
+   607→                <i class="fas fa-download"></i> Download Training APK
+   608→            </a>
+   609→        </div>
+   610→    </div>
+   611→
+   612→    <div class="install-grid">
+   613→        {{-- ANDROID --}}
+   614→        <div class="install-card android">
+   615→            <div class="install-card-icon"><i class="fab fa-android"></i></div>
+   616→            <h3>For Android</h3>
+   617→            <p class="subtitle">Download & install the native app</p>
+   618→            <ul class="install-steps">
+   619→                <li>
+   620→                    <span class="step-num">1</span>
+   621→                    <span>Tap <strong>"Download APK"</strong> below to download the app</span>
+   622→                </li>
+   623→                <li>
+   624→                    <span class="step-num">2</span>
+   625→                    <span>Open the downloaded <strong>.apk</strong> file from your notification bar or Downloads folder</span>
+   626→                </li>
+   627→                <li>
+   628→                    <span class="step-num">3</span>
+   629→                    <span>If you see <strong>"Install blocked"</strong>, go to Settings &rarr; allow from this source</span>
+   630→                </li>
+   631→                <li>
+   632→                    <span class="step-num">4</span>
+   633→                    <span>If Google Play Protect warns you, tap <strong>"Install anyway"</strong> (this app is safe)</span>
+   634→                </li>
+   635→                <li>
+   636→                    <span class="step-num">5</span>
+   637→                    <span>Tap <strong>"Install"</strong> then <strong>"Open"</strong> to launch the app</span>
+   638→                </li>
+   639→            </ul>
+   640→            <a href="{{ route('app.download.apk') }}" class="btn-install android-btn">
+   641→                <i class="fas fa-download"></i> Download APK (8 MB)
+   642→            </a>
+   643→            <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 14px;margin-top:14px;">
+   644→                <small style="color:#fbbf24;font-size:12px;font-weight:600;display:block;margin-bottom:4px;"><i class="fas fa-exclamation-triangle"></i> Troubleshooting</small>
+   645→                <small style="color:#d1d5db;font-size:11px;line-height:1.5;display:block;">
+   646→                    If you get <strong>"App not installed"</strong>:<br>
+   647→                    1. Uninstall any previous version of the app first<br>
+   648→                    2. Go to Settings &rarr; Security &rarr; disable "Scan apps with Play Protect" temporarily<br>
+   649→                    3. Try installing again, then re-enable Play Protect
+   650→                </small>
+   651→            </div>
+   652→            <div style="text-align:center;margin-top:12px;">
+   653→                <small style="color:var(--gray);font-size:11px;">Alternative: Open schoolofredemption.net/login in Chrome &rarr; Menu &rarr; "Install app"</small>
+   654→            </div>
+   655→        </div>
+   656→
+   657→        {{-- iPHONE / iOS --}}
+   658→        <div class="install-card ios">
+   659→            <div class="install-card-icon"><i class="fab fa-apple"></i></div>
+   660→            <h3>For iPhone & iPad</h3>
+   661→            <p class="subtitle">Add to Home Screen from Safari</p>
+   662→            <ul class="install-steps">
+   663→                <li>
+   664→                    <span class="step-num">1</span>
+   665→                    <span>Open <strong>schoolofredemption.net/login</strong> in <strong>Safari</strong> browser</span>
+   666→                </li>
+   667→                <li>
+   668→                    <span class="step-num">2</span>
+   669→                    <span>Tap the <i class="fas fa-share-alt"></i> Share button at the bottom</span>
+   670→                </li>
+   671→                <li>
+   672→                    <span class="step-num">3</span>
+   673→                    <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+   674→                </li>
+   675→                <li>
+   676→                    <span class="step-num">4</span>
+   677→                    <span>Tap <strong>"Add"</strong> in the top right corner</span>
+   678→                </li>
+   679→            </ul>
+   680→            <a href="{{ url('/login') }}" class="btn-install ios-btn">
+   681→                <i class="fas fa-external-link-alt"></i> Open in Safari
+   682→            </a>
+   683→            <div style="text-align:center;margin-top:12px;">
+   684→                <small style="color:var(--gray);font-size:11px;">iOS native app coming soon to the App Store</small>
+   685→            </div>
+   686→        </div>
+   687→    </div>
+   688→</section>
+   689→
+   690→{{-- FEATURES --}}
+   691→<section class="features-section">
+   692→    <div class="features-header">
+   693→        <h2>Everything You Need</h2>
+   694→        <p>Full access to all school management features right from your phone</p>
+   695→    </div>
+   696→    <div class="features-grid">
+   697→        <div class="feature-card">
+   698→            <div class="feature-icon"><i class="fas fa-pen-alt"></i></div>
+   699→            <h4>Mark Entry</h4>
+   700→            <p>Enter and manage student marks quickly with auto-save</p>
+   701→        </div>
+   702→        <div class="feature-card">
+   703→            <div class="feature-icon" style="background:#d1fae5;color:#10b981;"><i class="fas fa-clipboard-check"></i></div>
+   704→            <h4>Attendance</h4>
+   705→            <p>Take attendance digitally with instant sync</p>
+   706→        </div>
+   707→        <div class="feature-card">
+   708→            <div class="feature-icon" style="background:#dbeafe;color:#3b82f6;"><i class="fas fa-chart-line"></i></div>
+   709→            <h4>Performance</h4>
+   710→            <p>Track student progress with detailed analytics</p>
+   711→        </div>
+   712→        <div class="feature-card">
+   713→            <div class="feature-icon" style="background:#fef3c7;color:#f59e0b;"><i class="fas fa-wallet"></i></div>
+   714→            <h4>Fee Management</h4>
+   715→            <p>View and manage fee payments and records</p>
+   716→        </div>
+   717→        <div class="feature-card">
+   718→            <div class="feature-icon" style="background:#fce7f3;color:#ec4899;"><i class="fas fa-user-graduate"></i></div>
+   719→            <h4>Student Portal</h4>
+   720→            <p>Students can view marks, progress, and fees</p>
+   721→        </div>
+   722→        <div class="feature-card">
+   723→            <div class="feature-icon" style="background:#e0e7ff;color:#6366f1;"><i class="fas fa-comments"></i></div>
+   724→            <h4>Communication</h4>
+   725→            <p>Chat, announcements, and calendar in one place</p>
+   726→        </div>
+   727→        <div class="feature-card">
+   728→            <div class="feature-icon" style="background:#d1fae5;color:#059669;"><i class="fas fa-file-alt"></i></div>
+   729→            <h4>Report Cards</h4>
+   730→            <p>Generate and view report cards instantly</p>
+   731→        </div>
+   732→        <div class="feature-card">
+   733→            <div class="feature-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-id-badge"></i></div>
+   734→            <h4>ID Cards & Certificates</h4>
+   735→            <p>Generate ID cards and certificates on the go</p>
+   736→        </div>
+   737→        <div class="feature-card">
+   738→            <div class="feature-icon" style="background:#fee2e2;color:#ef4444;"><i class="fas fa-bell"></i></div>
+   739→            <h4>Notifications</h4>
+   740→            <p>Get push notifications for important updates</p>
+   741→        </div>
+   742→    </div>
+   743→</section>
+   744→
+   745→{{-- FAQ --}}
+   746→<section class="faq-section">
+   747→    <h2>Frequently Asked Questions</h2>
+   748→    <div class="faq-item open">
+   749→        <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+   750→            Is the app free? <i class="fas fa-chevron-down"></i>
+   751→        </div>
+   752→        <div class="faq-answer">
+   753→            Yes, the School of Redemption app is completely free. There are no in-app purchases or subscriptions required. Simply install it from your browser and log in with your school account.
+   754→        </div>
+   755→    </div>
+   756→    <div class="faq-item">
+   757→        <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+   758→            Does it work offline? <i class="fas fa-chevron-down"></i>
+   759→        </div>
+   760→        <div class="faq-answer">
+   761→            The app caches key pages for faster loading. However, since the app requires real-time data (marks, attendance, etc.), an internet connection is needed for most features. Previously loaded pages may be viewable offline.
+   762→        </div>
+   763→    </div>
+   764→    <div class="faq-item">
+   765→        <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+   766→            Is my data secure? <i class="fas fa-chevron-down"></i>
+   767→        </div>
+   768→        <div class="faq-answer">
+   769→            Absolutely. The app uses the same security measures as the website, including encrypted connections (HTTPS), secure authentication, and role-based access control. Your data is protected at all times.
+   770→        </div>
+   771→    </div>
+   772→    <div class="faq-item">
+   773→        <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+   774→            Will I get updates automatically? <i class="fas fa-chevron-down"></i>
+   775→        </div>
+   776→        <div class="faq-answer">
+   777→            Yes! Since the app is a Progressive Web App (PWA), it updates automatically whenever you open it. There's no need to visit an app store or manually download updates. You always have the latest version.
+   778→        </div>
+   779→    </div>
+   780→    <div class="faq-item">
+   781→        <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+   782→            Can I use it on my computer too? <i class="fas fa-chevron-down"></i>
+   783→        </div>
+   784→        <div class="faq-answer">
+   785→            Yes, you can install the app on desktop Chrome and Edge browsers too. It works the same way — just click the install icon in the browser address bar or use the menu to install it as a desktop application.
+   786→        </div>
+   787→    </div>
+   788→</section>
+   789→
+   790→{{-- FOOTER --}}
+   791→<footer class="app-footer">
+   792→    &copy; {{ date('Y') }} School of Redemption. All rights reserved. <a href="{{ url('/') }}">Visit Website</a>
+   793→</footer>
+   794→
+   795→{{-- PWA INSTALL BANNER --}}
+   796→<div class="pwa-install-banner" id="pwaInstallBanner">
+   797→    <div class="pwa-install-banner-text">
+   798→        <i class="fas fa-mobile-alt"></i>
+   799→        <div>
+   800→            Install Redemption App
+   801→            <small>Quick access from your home screen</small>
+   802→        </div>
+   803→    </div>
+   804→    <div style="display:flex;align-items:center;gap:4px;">
+   805→        <button class="btn-install-banner" onclick="installPWA()">Install</button>
+   806→        <button class="btn-dismiss-banner" onclick="dismissBanner()"><i class="fas fa-times"></i></button>
+   807→    </div>
+   808→</div>
+   809→
+   810→{{-- SERVICE WORKER REGISTRATION --}}
+   811→<script>
+   812→    // Register service worker
+   813→    if ('serviceWorker' in navigator) {
+   814→        window.addEventListener('load', function() {
+   815→            navigator.serviceWorker.register('{{ asset("sw.js") }}', { scope: '/' })
+   816→                .then(function(registration) {
+   817→                    console.log('[PWA] Service Worker registered:', registration.scope);
+   818→                })
+   819→                .catch(function(error) {
+   820→                    console.log('[PWA] Service Worker registration failed:', error);
+   821→                });
+   822→        });
+   823→    }
+   824→
+   825→    // PWA Install Prompt
+   826→    let deferredPrompt = null;
+   827→
+   828→    window.addEventListener('beforeinstallprompt', (e) => {
+   829→        e.preventDefault();
+   830→        deferredPrompt = e;
+   831→        
+   832→        // Show the install banner
+   833→        const banner = document.getElementById('pwaInstallBanner');
+   834→        if (banner) banner.classList.add('show');
+   835→        
+   836→        // Enable the Android install button
+   837→        const androidBtn = document.getElementById('androidInstallBtn');
+   838→        if (androidBtn) androidBtn.disabled = false;
+   839→        
+   840→        // Show detection banner
+   841→        const detectBanner = document.getElementById('detectBanner');
+   842→        const detectText = document.getElementById('detectText');
+   843→        if (detectBanner && detectText) {
+   844→            detectText.innerHTML = 'Great! Your browser supports app installation. <strong>Click "Install Now"</strong> below or use the banner at the bottom.';
+   845→            detectBanner.style.display = 'block';
+   846→        }
+   847→    });
+   848→
+   849→    function installPWA() {
+   850→        if (deferredPrompt) {
+   851→            deferredPrompt.prompt();
+   852→            deferredPrompt.userChoice.then((choiceResult) => {
+   853→                if (choiceResult.outcome === 'accepted') {
+   854→                    console.log('[PWA] User accepted the install prompt');
+   855→                    dismissBanner();
+   856→                } else {
+   857→                    console.log('[PWA] User dismissed the install prompt');
+   858→                }
+   859→                deferredPrompt = null;
+   860→            });
+   861→        } else {
+   862→            // Fallback: direct to login page so they can install from there
+   863→            window.location.href = '{{ url("/login") }}';
+   864→        }
+   865→    }
+   866→
+   867→    function dismissBanner() {
+   868→        const banner = document.getElementById('pwaInstallBanner');
+   869→        if (banner) banner.classList.remove('show');
+   870→    }
+   871→
+   872→    // Detect platform
+   873→    document.addEventListener('DOMContentLoaded', function() {
+   874→        const detectBanner = document.getElementById('detectBanner');
+   875→        const detectText = document.getElementById('detectText');
+   876→        
+   877→        if (!detectBanner || !detectText) return;
+   878→        
+   879→        const ua = navigator.userAgent;
+   880→        const isAndroid = /Android/i.test(ua);
+   881→        const isIOS = /iPhone|iPad|iPod/i.test(ua);
+   882→        const isSafari = /Safari/i.test(ua) && !/Chrome/i.test(ua);
+   883→        const isChrome = /Chrome/i.test(ua);
+   884→        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+   885→        
+   886→        if (isStandalone) {
+   887→            detectText.innerHTML = 'You\'re already using the <strong>Redemption App</strong>! Enjoy the full experience.';
+   888→            detectBanner.style.display = 'block';
+   889→        } else if (isIOS && isSafari) {
+   890→            detectText.innerHTML = 'You\'re on iPhone/iPad. Use the <strong>Share button <i class="fas fa-share-alt"></i></strong> below, then tap <strong>"Add to Home Screen"</strong>.';
+   891→            detectBanner.style.display = 'block';
+   892→        } else if (isAndroid && isChrome) {
+   893→            // beforeinstallprompt will handle this
+   894→            if (!deferredPrompt) {
+   895→                detectText.innerHTML = 'Open this page in <strong>Chrome</strong> and tap the menu <i class="fas fa-ellipsis-v"></i> to install the app.';
+   896→                detectBanner.style.display = 'block';
+   897→            }
+   898→        } else if (isIOS && !isSafari) {
+   899→            detectText.innerHTML = 'For the best experience on iPhone, please open this page in <strong>Safari browser</strong>.';
+   900→            detectBanner.style.display = 'block';
+   901→        }
+   902→    });
+   903→</script>
+   904→
+   905→</body>
+   906→</html>
+   907→

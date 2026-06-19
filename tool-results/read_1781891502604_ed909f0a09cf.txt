@@ -1,0 +1,825 @@
+     1→};
+     2→            --secondary-color: {{ $settings['secondary_color'] ?? '#D97706' }};
+     3→            --primary-rgb: {{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }};
+     4→            --primary-color: #0A0F1E;
+     5→            --teal: #0D9488;
+     6→            --teal-light: #14B8A6;
+     7→            --accent-color: #0D9488;
+     8→            --accent-light: #14B8A6;
+     9→            --amber: #D97706;
+    10→            --amber-light: #F59E0B;
+    11→            --text-dark: #1a1a2e;
+    12→            --text-light: #6c757d;
+    13→            --white: #ffffff;
+    14→            --light-bg: #f8f9fa;
+    15→            --glass-bg: rgba(255,255,255,0.08);
+    16→            --glass-border: rgba(255,255,255,0.18);
+    17→            --glass-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    18→            --nav-height: 80px;
+    19→        }
+    20→
+    21→        * {
+    22→            margin: 0;
+    23→            padding: 0;
+    24→            box-sizing: border-box;
+    25→        }
+    26→
+    27→        html {
+    28→            scroll-behavior: smooth;
+    29→        }
+    30→
+    31→        body {
+    32→            font-family: 'Montserrat', sans-serif;
+    33→            color: var(--text-dark);
+    34→            line-height: 1.6;
+    35→            overflow-x: hidden;
+    36→        }
+    37→
+    38→        h1, h2, h3, h4, h5, h6 {
+    39→            font-family: 'Playfair Display', serif;
+    40→            font-weight: 700;
+    41→        }
+    42→
+    43→        h1, h2 {
+    44→            letter-spacing: 0.5px;
+    45→        }
+    46→
+    47→        /* ========== Custom Cursor ========== */
+    48→        .cursor-dot {
+    49→            width: 8px;
+    50→            height: 8px;
+    51→            background: var(--amber);
+    52→            border-radius: 50%;
+    53→            position: fixed;
+    54→            top: 0;
+    55→            left: 0;
+    56→            pointer-events: none;
+    57→            z-index: 99999;
+    58→            transition: transform 0.1s ease;
+    59→            mix-blend-mode: difference;
+    60→        }
+    61→
+    62→        .cursor-ring {
+    63→            width: 36px;
+    64→            height: 36px;
+    65→            border: 2px solid rgba(217, 119, 6, 0.5);
+    66→            border-radius: 50%;
+    67→            position: fixed;
+    68→            top: 0;
+    69→            left: 0;
+    70→            pointer-events: none;
+    71→            z-index: 99998;
+    72→            transition: transform 0.15s ease, width 0.2s, height 0.2s, border-color 0.2s;
+    73→        }
+    74→
+    75→        @media (max-width: 991px) {
+    76→            .cursor-dot, .cursor-ring { display: none !important; }
+    77→        }
+    78→
+    79→        @media (prefers-reduced-motion: reduce) {
+    80→            .cursor-dot, .cursor-ring { display: none !important; }
+    81→            *, *::before, *::after {
+    82→                animation-duration: 0.01ms !important;
+    83→                animation-iteration-count: 1 !important;
+    84→                transition-duration: 0.01ms !important;
+    85→                scroll-behavior: auto !important;
+    86→            }
+    87→        }
+    88→
+    89→        /* ========== Elegant Deep Navy Navbar ========== */
+    90→        .navbar {
+    91→            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.92);
+    92→            backdrop-filter: blur(20px) saturate(180%);
+    93→            -webkit-backdrop-filter: blur(20px) saturate(180%);
+    94→            border-bottom: 2px solid rgba(217, 119, 6, 0.25);
+    95→            padding: 1rem 0;
+    96→            transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+    97→        }
+    98→
+    99→        .navbar.scrolled {
+   100→            padding: 0.5rem 0;
+   101→            background: rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.98);
+   102→            backdrop-filter: blur(24px) saturate(200%);
+   103→            -webkit-backdrop-filter: blur(24px) saturate(200%);
+   104→            box-shadow: 0 4px 40px rgba(0,0,0,0.25);
+   105→            border-bottom-color: rgba(13, 148, 136, 0.4);
+   106→        }
+   107→
+   108→        .navbar-brand {
+   109→            font-family: 'Playfair Display', serif;
+   110→            font-weight: 700;
+   111→            line-height: 1;
+   112→        }
+   113→
+   114→        .navbar-brand .brand-pre {
+   115→            color: rgba(255,255,255,0.8);
+   116→            font-weight: 400;
+   117→            font-size: 0.7rem;
+   118→            display: block;
+   119→            line-height: 1.1;
+   120→            letter-spacing: 1px;
+   121→        }
+   122→
+   123→        .navbar-brand .brand-name {
+   124→            color: var(--amber);
+   125→            font-weight: 800;
+   126→            font-size: 1.3rem;
+   127→        }
+   128→
+   129→        .nav-link {
+   130→            color: rgba(255,255,255,0.85) !important;
+   131→            font-weight: 500;
+   132→            margin: 0 0.5rem;
+   133→            position: relative;
+   134→            transition: color 0.3s ease, transform 0.2s ease;
+   135→        }
+   136→
+   137→        .nav-link:hover {
+   138→            color: var(--teal-light) !important;
+   139→        }
+   140→
+   141→        .nav-link::after {
+   142→            content: '';
+   143→            position: absolute;
+   144→            bottom: 0;
+   145→            left: 50%;
+   146→            width: 0;
+   147→            height: 2px;
+   148→            background: linear-gradient(90deg, transparent, var(--teal), var(--teal-light), transparent);
+   149→            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+   150→            transform: translateX(-50%);
+   151→        }
+   152→
+   153→        .nav-link:hover::after {
+   154→            width: 80%;
+   155→        }
+   156→
+   157→        .nav-link.active {
+   158→            color: var(--teal-light) !important;
+   159→        }
+   160→
+   161→        .nav-link.active::after {
+   162→            width: 80%;
+   163→            background: linear-gradient(90deg, transparent, var(--teal-light), transparent);
+   164→        }
+   165→
+   166→        .btn-nav-portal {
+   167→            background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
+   168→            color: var(--primary-color) !important;
+   169→            border-radius: 50px;
+   170→            padding: 0.5rem 1.5rem;
+   171→            font-weight: 600;
+   172→            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+   173→            box-shadow: 0 2px 10px rgba(217, 119, 6, 0.3);
+   174→        }
+   175→
+   176→        .btn-nav-portal:hover {
+   177→            background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
+   178→            transform: translateY(-2px);
+   179→            box-shadow: 0 6px 20px rgba(217, 119, 6, 0.45);
+   180→        }
+   181→
+   182→        /* ========== Mobile Drawer ========== */
+   183→        .mobile-drawer-overlay {
+   184→            position: fixed;
+   185→            top: 0;
+   186→            left: 0;
+   187→            right: 0;
+   188→            bottom: 0;
+   189→            background: rgba(0,0,0,0.6);
+   190→            z-index: 1049;
+   191→            opacity: 0;
+   192→            visibility: hidden;
+   193→            transition: all 0.3s ease;
+   194→            backdrop-filter: blur(4px);
+   195→        }
+   196→
+   197→        .mobile-drawer-overlay.active {
+   198→            opacity: 1;
+   199→            visibility: visible;
+   200→        }
+   201→
+   202→        .mobile-drawer {
+   203→            position: fixed;
+   204→            top: 0;
+   205→            right: -320px;
+   206→            width: 300px;
+   207→            max-width: 85vw;
+   208→            height: 100vh;
+   209→            background: linear-gradient(180deg, var(--primary-color) 0%, #060A14 100%);
+   210→            z-index: 1050;
+   211→            transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
+   212→            padding: 2rem;
+   213→            overflow-y: auto;
+   214→        }
+   215→
+   216→        .mobile-drawer.active {
+   217→            right: 0;
+   218→        }
+   219→
+   220→        .mobile-drawer-close {
+   221→            background: none;
+   222→            border: none;
+   223→            color: var(--white);
+   224→            font-size: 1.5rem;
+   225→            position: absolute;
+   226→            top: 1rem;
+   227→            right: 1rem;
+   228→            cursor: pointer;
+   229→            width: 40px;
+   230→            height: 40px;
+   231→            display: flex;
+   232→            align-items: center;
+   233→            justify-content: center;
+   234→            transition: color 0.2s ease;
+   235→        }
+   236→
+   237→        .mobile-drawer-close:hover {
+   238→            color: var(--teal-light);
+   239→        }
+   240→
+   241→        .mobile-drawer .mobile-nav-links {
+   242→            list-style: none;
+   243→            padding: 0;
+   244→            margin-top: 3rem;
+   245→        }
+   246→
+   247→        .mobile-drawer .mobile-nav-links li {
+   248→            margin-bottom: 0.25rem;
+   249→        }
+   250→
+   251→        .mobile-drawer .mobile-nav-links a {
+   252→            color: rgba(255,255,255,0.85);
+   253→            text-decoration: none;
+   254→            font-size: 1.1rem;
+   255→            font-weight: 500;
+   256→            padding: 0.75rem 1rem;
+   257→            display: block;
+   258→            border-radius: 12px;
+   259→            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+   260→        }
+   261→
+   262→        .mobile-drawer .mobile-nav-links a:hover,
+   263→        .mobile-drawer .mobile-nav-links a.active {
+   264→            background: rgba(13, 148, 136, 0.15);
+   265→            color: var(--teal-light);
+   266→        }
+   267→
+   268→        .mobile-drawer .mobile-login-btn {
+   269→            display: block;
+   270→            margin-top: 1.5rem;
+   271→            background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
+   272→            color: var(--primary-color);
+   273→            text-align: center;
+   274→            padding: 0.75rem 1.5rem;
+   275→            border-radius: 50px;
+   276→            font-weight: 600;
+   277→            text-decoration: none;
+   278→            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+   279→            box-shadow: 0 2px 10px rgba(217, 119, 6, 0.3);
+   280→        }
+   281→
+   282→        .mobile-drawer .mobile-login-btn:hover {
+   283→            background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
+   284→            transform: translateY(-2px);
+   285→            box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+   286→        }
+   287→
+   288→        .hamburger-btn {
+   289→            display: none;
+   290→            background: none;
+   291→            border: none;
+   292→            color: var(--white);
+   293→            font-size: 1.5rem;
+   294→            cursor: pointer;
+   295→            padding: 0.5rem;
+   296→            transition: color 0.2s ease;
+   297→        }
+   298→
+   299→        .hamburger-btn:hover {
+   300→            color: var(--teal-light);
+   301→        }
+   302→
+   303→        /* Mobile Login Pill - small login button always visible on mobile navbar */
+   304→        .mobile-login-pill {
+   305→            display: none;
+   306→            background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
+   307→            color: var(--primary-color) !important;
+   308→            border-radius: 50px;
+   309→            padding: 6px 14px;
+   310→            font-size: 0.8rem;
+   311→            font-weight: 700;
+   312→            text-decoration: none;
+   313→            flex-shrink: 0;
+   314→            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+   315→            white-space: nowrap;
+   316→            line-height: 1;
+   317→            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+   318→        }
+   319→        .mobile-login-pill:hover {
+   320→            background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
+   321→            transform: scale(1.05);
+   322→            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+   323→        }
+   324→
+   325→        @media (max-width: 991px) {
+   326→            .hamburger-btn { display: flex; }
+   327→            .mobile-login-pill { display: inline-flex; align-items: center; gap: 4px; }
+   328→            .navbar-collapse { display: none !important; }
+   329→            .navbar {
+   330→                width: 100% !important;
+   331→                max-width: 100vw !important;
+   332→                overflow-x: hidden !important;
+   333→                box-sizing: border-box !important;
+   334→            }
+   335→            .navbar > .nav-container,
+   336→            .navbar > .container,
+   337→            .navbar > .container-fluid {
+   338→                max-width: 100% !important;
+   339→                width: 100% !important;
+   340→                padding-left: 10px !important;
+   341→                padding-right: 10px !important;
+   342→                box-sizing: border-box !important;
+   343→                overflow-x: hidden !important;
+   344→                display: flex !important;
+   345→                align-items: center !important;
+   346→                gap: 6px;
+   347→            }
+   348→            .navbar-brand {
+   349→                max-width: calc(100% - 120px);
+   350→                flex-shrink: 1;
+   351→                min-width: 0;
+   352→            }
+   353→            .navbar-brand .brand-name {
+   354→                font-size: 1.1rem;
+   355→                white-space: nowrap;
+   356→                overflow: hidden;
+   357→                text-overflow: ellipsis;
+   358→            }
+   359→            .navbar-brand .brand-pre {
+   360→                font-size: 0.6rem;
+   361→            }
+   362→            .navbar-brand img {
+   363→                height: 36px !important;
+   364→            }
+   365→            .hamburger-btn {
+   366→                flex-shrink: 0;
+   367→                width: 44px;
+   368→                height: 44px;
+   369→                display: flex;
+   370→                align-items: center;
+   371→                justify-content: center;
+   372→                order: 99; /* Always last */
+   373→                z-index: 10;
+   374→                position: relative;
+   375→            }
+   376→        }
+   377→
+   378→        @media (max-width: 575px) {
+   379→            .navbar > .nav-container,
+   380→            .navbar > .container,
+   381→            .navbar > .container-fluid {
+   382→                padding-left: 8px !important;
+   383→                padding-right: 8px !important;
+   384→            }
+   385→            .navbar-brand {
+   386→                max-width: calc(100% - 110px);
+   387→            }
+   388→            .navbar-brand .brand-name {
+   389→                font-size: 1rem;
+   390→            }
+   391→            .navbar-brand img {
+   392→                height: 32px !important;
+   393→            }
+   394→            .mobile-login-pill {
+   395→                padding: 5px 10px;
+   396→                font-size: 0.75rem;
+   397→            }
+   398→        }
+   399→
+   400→        /* ========== Page Hero Banner (for sub-pages) ========== */
+   401→        .page-hero {
+   402→            position: relative;
+   403→            padding: 10rem 0 4rem;
+   404→            background: linear-gradient(135deg, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.94) 0%, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.78) 100%);
+   405→            color: var(--white);
+   406→            overflow: hidden;
+   407→        }
+   408→
+   409→        .page-hero::before {
+   410→            content: '';
+   411→            position: absolute;
+   412→            top: 0;
+   413→            left: 0;
+   414→            right: 0;
+   415→            bottom: 0;
+   416→            background-image: radial-gradient(rgba(217, 119, 6, 0.06) 1px, transparent 1px);
+   417→            background-size: 30px 30px;
+   418→            pointer-events: none;
+   419→        }
+   420→
+   421→        .page-hero::after {
+   422→            content: '✦';
+   423→            position: absolute;
+   424→            bottom: 20px;
+   425→            left: 50%;
+   426→            transform: translateX(-50%);
+   427→            color: rgba(13, 148, 136, 0.35);
+   428→            font-size: 1.5rem;
+   429→            letter-spacing: 1rem;
+   430→            pointer-events: none;
+   431→        }
+   432→
+   433→        .page-hero h1 {
+   434→            font-size: 3rem;
+   435→            color: var(--white);
+   436→            margin-bottom: 0.75rem;
+   437→            text-shadow: 0 2px 12px rgba(0,0,0,0.35);
+   438→        }
+   439→
+   440→        .page-hero h1 span {
+   441→            color: var(--amber-light);
+   442→        }
+   443→
+   444→        .page-hero p {
+   445→            font-size: 1.15rem;
+   446→            color: rgba(255,255,255,0.85);
+   447→            margin-bottom: 1rem;
+   448→        }
+   449→
+   450→        .page-hero .breadcrumb {
+   451→            background: none;
+   452→            padding: 0;
+   453→            margin: 0;
+   454→        }
+   455→
+   456→        .page-hero .breadcrumb-item a {
+   457→            color: rgba(255,255,255,0.7);
+   458→            text-decoration: none;
+   459→            transition: color 0.3s ease;
+   460→        }
+   461→
+   462→        .page-hero .breadcrumb-item a:hover {
+   463→            color: var(--teal-light);
+   464→        }
+   465→
+   466→        .page-hero .breadcrumb-item.active {
+   467→            color: var(--amber);
+   468→        }
+   469→
+   470→        .page-hero .breadcrumb-item + .breadcrumb-item::before {
+   471→            color: rgba(255,255,255,0.5);
+   472→        }
+   473→
+   474→        /* ========== Section Headers ========== */
+   475→        .section-header {
+   476→            text-align: center;
+   477→            margin-bottom: 4rem;
+   478→        }
+   479→
+   480→        .section-badge {
+   481→            display: inline-block;
+   482→            background: rgba(217, 119, 6, 0.1);
+   483→            color: var(--amber);
+   484→            padding: 0.5rem 1.5rem;
+   485→            border-radius: 50px;
+   486→            font-size: 0.85rem;
+   487→            font-weight: 600;
+   488→            margin-bottom: 1rem;
+   489→            letter-spacing: 1px;
+   490→            text-transform: uppercase;
+   491→            border: 1px solid rgba(217, 119, 6, 0.2);
+   492→            transition: all 0.3s ease;
+   493→        }
+   494→
+   495→        .section-badge:hover {
+   496→            background: rgba(217, 119, 6, 0.18);
+   497→            border-color: rgba(217, 119, 6, 0.35);
+   498→        }
+   499→
+   500→        .section-header h2 {
+   501→            font-size: 2.5rem;
+   502→            color: var(--primary-color);
+   503→            margin-bottom: 1rem;
+   504→            letter-spacing: 0.5px;
+   505→        }
+   506→
+   507→        .section-header h2::after {
+   508→            content: '';
+   509→            display: block;
+   510→            width: 60px;
+   511→            height: 2px;
+   512→            background: linear-gradient(90deg, var(--teal), var(--amber));
+   513→            margin: 0.75rem auto 0;
+   514→            border-radius: 2px;
+   515→        }
+   516→
+   517→        .section-header p {
+   518→            color: var(--text-light);
+   519→            max-width: 600px;
+   520→            margin: 0 auto;
+   521→        }
+   522→
+   523→        /* ========== Ornamental Divider ========== */
+   524→        .ornament-divider {
+   525→            text-align: center;
+   526→            margin: 2rem 0;
+   527→            color: var(--amber);
+   528→            font-size: 1.2rem;
+   529→            letter-spacing: 0.5rem;
+   530→            opacity: 0.6;
+   531→        }
+   532→        .ornament-divider::before,
+   533→        .ornament-divider::after {
+   534→            content: '';
+   535→            display: inline-block;
+   536→            width: 60px;
+   537→            height: 1px;
+   538→            background: linear-gradient(90deg, transparent, var(--amber), transparent);
+   539→            vertical-align: middle;
+   540→            margin: 0 1rem;
+   541→        }
+   542→
+   543→        /* ========== Footer (Elegant Layout) ========== */
+   544→        .footer {
+   545→            background: linear-gradient(180deg, var(--primary-color) 0%, #060A14 100%);
+   546→            color: var(--white);
+   547→            padding: 4rem 0 2rem;
+   548→            border-top: 3px solid rgba(13, 148, 136, 0.3);
+   549→        }
+   550→
+   551→        .footer-brand {
+   552→            font-family: 'Playfair Display', serif;
+   553→            font-size: 1.5rem;
+   554→            margin-bottom: 1rem;
+   555→        }
+   556→
+   557→        .footer-brand .brand-pre {
+   558→            font-weight: 400;
+   559→        }
+   560→
+   561→        .footer-brand .brand-name {
+   562→            color: var(--amber);
+   563→            font-weight: 700;
+   564→        }
+   565→
+   566→        .footer p {
+   567→            color: rgba(255,255,255,0.7);
+   568→            font-size: 0.9rem;
+   569→        }
+   570→
+   571→        .footer h5 {
+   572→            color: var(--white);
+   573→            font-size: 1rem;
+   574→            margin-bottom: 1.5rem;
+   575→            font-family: 'Montserrat', sans-serif;
+   576→            font-weight: 600;
+   577→        }
+   578→
+   579→        .footer-links {
+   580→            list-style: none;
+   581→            padding: 0;
+   582→        }
+   583→
+   584→        .footer-links li {
+   585→            margin-bottom: 0.75rem;
+   586→        }
+   587→
+   588→        .footer-links a {
+   589→            color: rgba(255,255,255,0.7);
+   590→            text-decoration: none;
+   591→            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+   592→            font-size: 0.9rem;
+   593→            display: inline-flex;
+   594→            align-items: center;
+   595→        }
+   596→
+   597→        .footer-links a:hover {
+   598→            color: var(--teal-light);
+   599→            transform: translateX(4px);
+   600→        }
+   601→
+   602→        .social-links {
+   603→            display: flex;
+   604→            gap: 0.75rem;
+   605→            margin-top: 1rem;
+   606→        }
+   607→
+   608→        .social-links a {
+   609→            width: 40px;
+   610→            height: 40px;
+   611→            background: rgba(255,255,255,0.08);
+   612→            border: 1px solid rgba(255,255,255,0.1);
+   613→            border-radius: 12px;
+   614→            display: flex;
+   615→            align-items: center;
+   616→            justify-content: center;
+   617→            color: var(--white);
+   618→            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+   619→        }
+   620→
+   621→        .social-links a:hover {
+   622→            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
+   623→            color: var(--white);
+   624→            transform: translateY(-3px);
+   625→            border-color: var(--teal);
+   626→            box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+   627→        }
+   628→
+   629→        /* Newsletter */
+   630→        .newsletter-form {
+   631→            display: flex;
+   632→            gap: 0.5rem;
+   633→        }
+   634→
+   635→        .newsletter-form input {
+   636→            flex: 1;
+   637→            background: rgba(255,255,255,0.08);
+   638→            border: 1px solid rgba(255,255,255,0.15);
+   639→            border-radius: 12px;
+   640→            padding: 0.65rem 1rem;
+   641→            color: var(--white);
+   642→            font-size: 0.9rem;
+   643→            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+   644→        }
+   645→
+   646→        .newsletter-form input::placeholder {
+   647→            color: rgba(255,255,255,0.4);
+   648→        }
+   649→
+   650→        .newsletter-form input:focus {
+   651→            outline: none;
+   652→            border-color: var(--teal);
+   653→            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+   654→        }
+   655→
+   656→        .newsletter-form button {
+   657→            background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
+   658→            color: var(--primary-color);
+   659→            border: none;
+   660→            border-radius: 12px;
+   661→            padding: 0.65rem 1.25rem;
+   662→            font-weight: 600;
+   663→            cursor: pointer;
+   664→            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+   665→            white-space: nowrap;
+   666→            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+   667→        }
+   668→
+   669→        .newsletter-form button:hover {
+   670→            background: linear-gradient(135deg, var(--amber-light) 0%, #FBBF24 100%);
+   671→            transform: translateY(-2px);
+   672→            box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
+   673→        }
+   674→
+   675→        .footer-bottom {
+   676→            border-top: 1px solid rgba(13, 148, 136, 0.2);
+   677→            padding-top: 2rem;
+   678→            margin-top: 3rem;
+   679→        }
+   680→
+   681→        .footer-bottom p {
+   682→            margin: 0;
+   683→            font-size: 0.85rem;
+   684→        }
+   685→
+   686→        /* ========== Back to Top Button ========== */
+   687→        .back-to-top {
+   688→            position: fixed;
+   689→            bottom: 2rem;
+   690→            right: 2rem;
+   691→            width: 50px;
+   692→            height: 50px;
+   693→            background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
+   694→            color: var(--white);
+   695→            border: none;
+   696→            border-radius: 14px;
+   697→            font-size: 1.2rem;
+   698→            cursor: pointer;
+   699→            z-index: 999;
+   700→            opacity: 0;
+   701→            visibility: hidden;
+   702→            transform: translateY(20px);
+   703→            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+   704→            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+   705→            display: flex;
+   706→            align-items: center;
+   707→            justify-content: center;
+   708→        }
+   709→
+   710→        .back-to-top.visible {
+   711→            opacity: 1;
+   712→            visibility: visible;
+   713→            transform: translateY(0);
+   714→        }
+   715→
+   716→        .back-to-top:hover {
+   717→            background: linear-gradient(135deg, var(--teal-light) 0%, #2DD4BF 100%);
+   718→            transform: translateY(-3px);
+   719→            box-shadow: 0 8px 24px rgba(13, 148, 136, 0.5);
+   720→        }
+   721→
+   722→        /* ========== Scroll Reveal ========== */
+   723→        .reveal {
+   724→            opacity: 0;
+   725→            transform: translateY(40px);
+   726→            transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+   727→        }
+   728→
+   729→        .reveal.revealed {
+   730→            opacity: 1;
+   731→            transform: translateY(0);
+   732→        }
+   733→
+   734→        .reveal-left {
+   735→            opacity: 0;
+   736→            transform: translateX(-40px);
+   737→            transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+   738→        }
+   739→
+   740→        .reveal-left.revealed {
+   741→            opacity: 1;
+   742→            transform: translateX(0);
+   743→        }
+   744→
+   745→        .reveal-right {
+   746→            opacity: 0;
+   747→            transform: translateX(40px);
+   748→            transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+   749→        }
+   750→
+   751→        .reveal-right.revealed {
+   752→            opacity: 1;
+   753→            transform: translateX(0);
+   754→        }
+   755→
+   756→        .reveal-scale {
+   757→            opacity: 0;
+   758→            transform: scale(0.9);
+   759→            transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+   760→        }
+   761→
+   762→        .reveal-scale.revealed {
+   763→            opacity: 1;
+   764→            transform: scale(1);
+   765→        }
+   766→
+   767→        /* ========== Responsive ========== */
+   768→        @media (max-width: 991px) {
+   769→            .page-hero h1 {
+   770→                font-size: 2.25rem;
+   771→            }
+   772→
+   773→            .section-header h2 {
+   774→                font-size: 2rem;
+   775→            }
+   776→
+   777→            /* Force all containers to stay within viewport on mobile */
+   778→            .container {
+   779→                max-width: 100% !important;
+   780→                padding-left: 12px !important;
+   781→                padding-right: 12px !important;
+   782→            }
+   783→        }
+   784→
+   785→        @media (max-width: 575px) {
+   786→            .page-hero h1 {
+   787→                font-size: 1.85rem;
+   788→            }
+   789→
+   790→            .section-header h2 {
+   791→                font-size: 1.75rem;
+   792→            }
+   793→
+   794→            .newsletter-form {
+   795→                flex-direction: column;
+   796→            }
+   797→
+   798→            /* Extra containment for very small screens */
+   799→            .container {
+   800→                padding-left: 8px !important;
+   801→                padding-right: 8px !important;
+   802→            }
+   803→        }
+   804→
+   805→        /* ========== Animations ========== */
+   806→        @keyframes fadeInUp {
+   807→            from {
+   808→                opacity: 0;
+   809→                transform: translateY(30px);
+   810→            }
+   811→            to {
+   812→                opacity: 1;
+   813→                transform: translateY(0);
+   814→            }
+   815→        }
+   816→
+   817→        .animate-fade-up {
+   818→            animation: fadeInUp 0.6s ease forwards;
+   819→        }
+   820→
+   821→        .delay-1 { animation-delay: 0.1s; }
+   822→        .delay-2 { animation-delay: 0.2s; }
+   823→        .delay-3 { animation-delay: 0.3s; }
+
+[showing lines 1-823 of 824; use offset=824 with limit to continue reading]

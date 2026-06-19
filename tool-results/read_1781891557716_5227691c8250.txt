@@ -1,0 +1,793 @@
+     1→<?php
+     2→namespace App\Http\Controllers\Admin;
+     3→use App\Http\Controllers\Controller;
+     4→use App\Models\AcademicYear;
+     5→use App\Models\Branch;
+     6→use App\Models\Term;
+     7→use App\Models\ClassRoom;
+     8→use App\Models\Section;
+     9→use App\Models\Subject;
+    10→use App\Models\TeacherAssignment;
+    11→use App\Models\Student;
+    12→use App\Models\MarkEntry;
+    13→use App\Models\MarkEntryConfig;
+    14→use App\Models\MarkEntryLock;
+    15→use App\Models\MarkEntryPermission;
+    16→use App\Models\MarkEntryDisallowal;
+    17→use App\Models\Teacher;
+    18→use Illuminate\Http\Request;
+    19→use Illuminate\Support\Facades\DB;
+    20→use Illuminate\Support\Facades\Log;
+    21→class MarkEntryController extends Controller
+    22→{
+    23→    /**
+    24→     * Resolve the logged-in user's Teacher record.
+    25→     * Tries user_id FK first, then falls back to email match.
+    26→     * Returns null for non-teacher users or if no Teacher record found.
+    27→     */
+    28→    private function getTeacherForUser()
+    29→    {
+    30→        $user = auth()->user();
+    31→        if (!$user || $user->role !== 'teacher') return null;
+    32→
+    33→        // Try user_id FK first
+    34→        $teacher = Teacher::where('user_id', $user->id)->first();
+    35→        if (!$teacher) {
+    36→            // Fall back to email match (legacy)
+    37→            $teacher = Teacher::where('email', $user->email)->first();
+    38→        }
+    39→        return $teacher;
+    40→    }
+    41→
+    42→    public function index(Request $request) {
+    43→        $academicYears = AcademicYear::orderBy('id','desc')->get();
+    44→        $currentAy = $academicYears->first();
+    45→        $terms = $currentAy ? Term::where('academic_year_id', $currentAy->id)->orderBy('id','asc')->get() : collect();
+    46→        $currentTerm = $terms->first();
+    47→
+    48→        // ── Branch scope: principals only see their branch ──
+    49→        $branchScope = $request->attributes->get('branch_scope');
+    50→        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+    51→        if ($branchScope) {
+    52→            $branches = $branches->where('id', $branchScope);
+    53→        }
+    54→        $userBranchId = auth()->user()->branch_id;
+    55→
+    56→        // Teacher-scoped filtering
+    57→        $isTeacher = false;
+    58→        $teacherAssignments = collect();
+    59→        $teacher = $this->getTeacherForUser();
+    60→
+    61→        // ── Load classes for server-side dropdown population ──
+    62→        $classes = collect();
+    63→
+    64→        if ($teacher) {
+    65→            $isTeacher = true;
+    66→
+    67→            // Auto-select current academic year and active term for teachers
+    68→            $activeAy = AcademicYear::where('is_current', true)->first();
+    69→            if ($activeAy) {
+    70→                $currentAy = $activeAy;
+    71→                $academicYears = collect([$activeAy]); // Only show active AY for teachers
+    72→                $activeTerm = Term::where('academic_year_id', $activeAy->id)->where('is_active', true)->first();
+    73→                if ($activeTerm) {
+    74→                    $currentTerm = $activeTerm;
+    75→                    $terms = collect([$activeTerm]); // Only show active term for teachers
+    76→                }
+    77→            }
+    78→
+    79→            // Only show sections from teacher's assignments + homeroom sections
+    80→            $assignmentSectionIds = $teacher->assignments()->pluck('section_id')->filter()->unique();
+    81→            $homeroomSectionIds = $teacher->sections()->pluck('id');
+    82→            $sectionIds = $assignmentSectionIds->merge($homeroomSectionIds)->unique();
+    83→
+    84→            // Also include sections where teacher is assigned to a class (section_id is null on assignment)
+    85→            $assignmentClassIds = $teacher->assignments()->pluck('class_id')->unique();
+    86→            $homeroomClassIds = $teacher->classRooms()->pluck('id');
+    87→            $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
+    88→
+    89→            // Load teacher-scoped classes for dropdown (also filter by branch if scoped)
+    90→            $classes = ClassRoom::whereIn('id', $classIds)
+    91→                ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+    92→                ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+    93→
+    94→            $sections = Section::with('classRoom')
+    95→                ->where(function($q) use ($sectionIds, $classIds) {
+    96→                    $q->whereIn('id', $sectionIds)
+    97→                      ->orWhereIn('class_id', $classIds);
+    98→                })
+    99→                ->when($branchScope, function($q) use ($branchScope) {
+   100→                    $q->whereHas('classRoom', fn($cq) => $cq->where('branch_id', $branchScope));
+   101→                })
+   102→                ->orderBy('class_id','asc')
+   103→                ->orderBy('name','asc')
+   104→                ->get();
+   105→
+   106→            $teacherAssignments = $teacher->assignments()
+   107→                ->with(['classRoom', 'section', 'subject'])
+   108→                ->get()
+   109→                ->map(function($a) {
+   110→                    return [
+   111→                        'id' => $a->id,
+   112→                        'teacher_id' => $a->teacher_id,
+   113→                        'class_id' => $a->class_id,
+   114→                        'class_name' => $a->classRoom ? $a->classRoom->name : null,
+   115→                        'section_id' => $a->section_id,
+   116→                        'section_name' => $a->section ? $a->section->name : null,
+   117→                        'subject_id' => $a->subject_id,
+   118→                        'subject_name' => $a->subject ? $a->subject->name : null,
+   119→                        'academic_year_id' => $a->academic_year_id,
+   120→                        'is_homeroom' => false,
+   121→                    ];
+   122→                });
+   123→
+   124→            // Mark homeroom assignments + add homeroom classes/sections that may not have subject assignments
+   125→            $homeroomClassIds = $teacher->classRooms()->pluck('id');
+   126→            $homeroomSectionIds = $teacher->sections()->pluck('id');
+   127→
+   128→            $teacherAssignments = $teacherAssignments->map(function($a) use ($homeroomClassIds, $homeroomSectionIds) {
+   129→                if ($homeroomSectionIds->contains($a['section_id']) || $homeroomClassIds->contains($a['class_id'])) {
+   130→                    $a['is_homeroom'] = true;
+   131→                }
+   132→                return $a;
+   133→            });
+   134→
+   135→            // Add homeroom classes/sections that aren't already in assignments
+   136→            $existingKeys = $teacherAssignments->map(function($a) {
+   137→                return $a['class_id'] . '_' . $a['section_id'] . '_' . $a['subject_id'];
+   138→            })->toArray();
+   139→
+   140→            foreach ($teacher->classRooms as $hrClass) {
+   141→                foreach ($teacher->sections->where('class_id', $hrClass->id) as $hrSection) {
+   142→                    $key = $hrClass->id . '_' . $hrSection->id . '_null';
+   143→                    if (!in_array($key, $existingKeys)) {
+   144→                        $teacherAssignments->push([
+   145→                            'id' => null,
+   146→                            'teacher_id' => $teacher->id,
+   147→                            'class_id' => $hrClass->id,
+   148→                            'class_name' => $hrClass->name,
+   149→                            'section_id' => $hrSection->id,
+   150→                            'section_name' => $hrSection->name,
+   151→                            'subject_id' => null,
+   152→                            'subject_name' => null,
+   153→                            'academic_year_id' => null,
+   154→                            'is_homeroom' => true,
+   155→                        ]);
+   156→                    }
+   157→                }
+   158→            }
+   159→        } else {
+   160→            // Admin: load classes for the current academic year (with fallback), filtered by branch scope
+   161→            $classes = ClassRoom::where('academic_year_id', $currentAy?->id)
+   162→                ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+   163→                ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+   164→            if ($classes->isEmpty()) {
+   165→                $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+   166→                    ->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+   167→            }
+   168→            $sections = Section::with('classRoom')
+   169→                ->when($branchScope, function($q) use ($branchScope) {
+   170→                    $q->whereHas('classRoom', fn($cq) => $cq->where('branch_id', $branchScope));
+   171→                })
+   172→                ->orderBy('class_id','asc')->orderBy('name','asc')->get();
+   173→        }
+   174→
+   175→        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'classes', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments', 'branches', 'branchScope', 'userBranchId'));
+   176→    }
+   177→
+   178→    public function apiClasses(Request $request) {
+   179→        $ayId = $request->query('academic_year_id');
+   180→        $branchId = $request->query('branch_id');
+   181→        $teacher = $this->getTeacherForUser();
+   182→
+   183→        // Branch scope: principals only see their branch classes
+   184→        $branchScope = $request->attributes->get('branch_scope');
+   185→        $effectiveBranchId = $branchScope ?? $branchId;
+   186→
+   187→        // Default to current academic year if none provided
+   188→        if (!$ayId) {
+   189→            $currentAy = AcademicYear::where('is_current', true)->first()
+   190→                ?? AcademicYear::orderBy('id', 'desc')->first();
+   191→            $ayId = $currentAy?->id;
+   192→        }
+   193→
+   194→        if ($teacher) {
+   195→            // Only return classes from teacher's assignments + homeroom classes
+   196→            $assignmentClassIds = $teacher->assignments()->pluck('class_id')->unique();
+   197→            $homeroomClassIds = $teacher->classRooms()->pluck('id');
+   198→            $classIds = $assignmentClassIds->merge($homeroomClassIds)->unique();
+   199→
+   200→            $query = ClassRoom::whereIn('id', $classIds);
+   201→            if ($ayId) {
+   202→                $query->where('academic_year_id', $ayId);
+   203→            }
+   204→            if ($effectiveBranchId) {
+   205→                $query->where('branch_id', $effectiveBranchId);
+   206→            }
+   207→            $classes = $query->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+   208→
+   209→            // Fallback: if no classes found for this AY, show all teacher classes
+   210→            if ($classes->isEmpty()) {
+   211→                $fallbackQuery = ClassRoom::whereIn('id', $classIds);
+   212→                if ($effectiveBranchId) {
+   213→                    $fallbackQuery->where('branch_id', $effectiveBranchId);
+   214→                }
+   215→                $classes = $fallbackQuery->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+   216→            }
+   217→
+   218→            return response()->json($classes);
+   219→        }
+   220→
+   221→        $query = ClassRoom::query();
+   222→        if ($ayId) {
+   223→            $query->where('academic_year_id', $ayId);
+   224→        }
+   225→        if ($effectiveBranchId) {
+   226→            $query->where('branch_id', $effectiveBranchId);
+   227→        }
+   228→        $classes = $query->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+   229→
+   230→        // Fallback: if no classes for this AY, show all classes for the branch
+   231→        if ($classes->isEmpty() && $ayId) {
+   232→            $fallbackQuery = ClassRoom::query();
+   233→            if ($effectiveBranchId) {
+   234→                $fallbackQuery->where('branch_id', $effectiveBranchId);
+   235→            }
+   236→            $classes = $fallbackQuery->orderBy('numeric_name','asc')->orderBy('name','asc')->get(['id','name','branch_id']);
+   237→        }
+   238→
+   239→        return response()->json($classes);
+   240→    }
+   241→
+   242→    public function apiBranches(Request $request) {
+   243→        $academicYearId = $request->get('academic_year_id');
+   244→
+   245→        // Branch scope: principals only see their branch
+   246→        $branchScope = $request->attributes->get('branch_scope');
+   247→
+   248→        if ($branchScope) {
+   249→            return response()->json(Branch::where('id', $branchScope)->where('is_active', true)->get());
+   250→        }
+   251→
+   252→        $branches = Branch::where('is_active', true)
+   253→            ->when($academicYearId, function ($q) use ($academicYearId) {
+   254→                $q->whereHas('classes', function ($q2) use ($academicYearId) {
+   255→                    $q2->where('academic_year_id', $academicYearId);
+   256→                });
+   257→            })
+   258→            ->orderBy('name')
+   259→            ->get();
+   260→
+   261→        return response()->json($branches);
+   262→    }
+   263→
+   264→    public function apiTerms(Request $request) {
+   265→        $ayId = $request->query('academic_year_id');
+   266→        if (!$ayId) return response()->json([]);
+   267→        return response()->json(Term::where('academic_year_id',$ayId)->orderBy('id','asc')->get(['id','name']));
+   268→    }
+   269→
+   270→    public function apiSections(Request $request) {
+   271→        $classId = $request->query('class_id');
+   272→        $classGrade = $request->query('class_grade');
+   273→        $teacher = $this->getTeacherForUser();
+   274→
+   275→        if ($classId) {
+   276→            $query = Section::where('class_id',$classId);
+   277→
+   278→            if ($teacher) {
+   279→                // Only return sections from teacher's assignments for this class
+   280→                // + sections where they are homeroom teacher
+   281→                $assignmentSectionIds = $teacher->assignments()
+   282→                    ->where('class_id', $classId)
+   283→                    ->pluck('section_id')
+   284→                    ->filter()
+   285→                    ->unique();
+   286→                $homeroomSectionIds = $teacher->sections()
+   287→                    ->where('class_id', $classId)
+   288→                    ->pluck('id');
+   289→
+   290→                $allowedSectionIds = $assignmentSectionIds->merge($homeroomSectionIds)->unique();
+   291→
+   292→                // If teacher has assignments with null section_id for this class, they can see all sections
+   293→                $hasNullSectionAssignment = $teacher->assignments()
+   294→                    ->where('class_id', $classId)
+   295→                    ->whereNull('section_id')
+   296→                    ->exists();
+   297→
+   298→                if (!$hasNullSectionAssignment) {
+   299→                    $query->whereIn('id', $allowedSectionIds);
+   300→                }
+   301→                // If they have null-section assignment, they see all sections in that class
+   302→            }
+   303→
+   304→            return response()->json($query->orderBy('name','asc')->get(['id','name']));
+   305→        }
+   306→
+   307→        if ($classGrade) {
+   308→            $sections = Student::where('class_grade',$classGrade)
+   309→                ->whereNotNull('section')
+   310→                ->where('section','<>','')
+   311→                ->distinct()
+   312→                ->orderBy('section','asc')
+   313→                ->pluck('section');
+   314→            return response()->json($sections);
+   315→        }
+   316→
+   317→        return response()->json([]);
+   318→    }
+   319→
+   320→    public function apiSubjects(Request $request) {
+   321→        $classId = $request->query('class_id');
+   322→        $sectionId = $request->query('section_id');
+   323→        $ayId = $request->query('academic_year_id');
+   324→        if (!$classId) return response()->json([]);
+   325→
+   326→        $teacher = $this->getTeacherForUser();
+   327→
+   328→        $query = TeacherAssignment::with('subject')->where('class_id', $classId);
+   329→
+   330→        // Filter by section: show section-specific + class-wide (null section) assignments
+   331→        if ($sectionId) {
+   332→            $query->where(function($q) use ($sectionId) {
+   333→                $q->where('section_id', $sectionId)->orWhereNull('section_id');
+   334→            });
+   335→        }
+   336→        // If no section_id provided, show all subjects for the class
+   337→
+   338→        // Filter by academic year: show AY-specific + no-AY assignments
+   339→        if ($ayId) {
+   340→            $query->where(function($q) use ($ayId) {
+   341→                $q->whereNull('academic_year_id')->orWhere('academic_year_id', $ayId);
+   342→            });
+   343→        }
+   344→
+   345→        if ($teacher) {
+   346→            // Only return subjects assigned to this teacher for the class+section
+   347→            // OR if teacher is homeroom for this class/section, show all subjects
+   348→            $isHomeroomClass = $classId ? $teacher->classRooms()->where('id', $classId)->exists() : false;
+   349→            $isHomeroomSection = $sectionId ? $teacher->sections()->where('id', $sectionId)->exists() : false;
+   350→
+   351→            if (!$isHomeroomClass && !$isHomeroomSection) {
+   352→                // Not homeroom — only show their own assigned subjects
+   353→                $query->where('teacher_id', $teacher->id);
+   354→            }
+   355→            // If homeroom, show all subjects (no additional filter)
+   356→        }
+   357→
+   358→        $assignments = $query->get();
+   359→        $subjects = $assignments->map(function($a) {
+   360→            $subj = $a->subject;
+   361→            if (!$subj) return null;
+   362→            return ['id'=>$subj->id,'name'=>$subj->name,'code'=>$subj->code??'','type'=>strtolower($subj->type??''),'priority'=>$subj->priority??0,'is_core'=>is_null($a->section_id)];
+   363→        })->filter();
+   364→        return response()->json($subjects->sortBy('priority')->unique('id')->values());
+   365→    }
+   366→
+   367→    public function apiStudents(Request $request) {
+   368→        $classId = $request->get('class_id');
+   369→        $sectionId = $request->get('section_id');
+   370→        $ayId = $request->get('academic_year_id');
+   371→
+   372→        // Try enrollment-based lookup first
+   373→        if ($classId && $sectionId) {
+   374→            $ayId = $ayId ?: (AcademicYear::where('is_current', true)->value('id') ?? AcademicYear::max('id'));
+   375→
+   376→            $enrolledStudentIds = \App\Models\StudentEnrollment::where('academic_year_id', $ayId)
+   377→                ->where('class_id', $classId)
+   378→                ->where('section_id', $sectionId)
+   379→                ->where('status', 'enrolled')
+   380→                ->pluck('student_id');
+   381→
+   382→            if ($enrolledStudentIds->isNotEmpty()) {
+   383→                $query = Student::whereIn('id', $enrolledStudentIds)->where('status', 'active');
+   384→            } else {
+   385→                // Fallback: direct student table lookup
+   386→                $query = Student::where('class_id', $classId)->where('section_id', $sectionId)->where('status', 'active');
+   387→            }
+   388→        } else {
+   389→            $query = Student::where('status', 'active');
+   390→
+   391→            if ($request->filled('class_id')) {
+   392→                $query->where('class_id', $request->class_id);
+   393→            }
+   394→            if ($request->filled('section_id')) {
+   395→                $query->where('section_id', $request->section_id);
+   396→            }
+   397→        }
+   398→
+   399→        if ($request->filled('class_grade')) {
+   400→            $query->where('class_grade', $request->class_grade);
+   401→        }
+   402→        if ($request->filled('section')) {
+   403→            $query->where('section', $request->section);
+   404→        }
+   405→
+   406→        // Sort alphabetically by full_name
+   407→        $students = $query->orderBy('full_name', 'asc')->get();
+   408→
+   409→        $subjectId = $request->get('subject_id');
+   410→        $ayId = $request->get('academic_year_id');
+   411→        $termId = $request->get('term_id');
+   412→        $marks = [];
+   413→
+   414→        if ($subjectId) {
+   415→            $mq = MarkEntry::where('subject_id', $subjectId);
+   416→            if ($ayId) $mq->where('academic_year_id', $ayId);
+   417→            if ($termId) $mq->where('term_id', $termId);
+   418→            foreach ($mq->get() as $m) {
+   419→                $marks[$m->student_id] = $m;
+   420→            }
+   421→        }
+   422→
+   423→        $studentsData = [];
+   424→        $marksData = [];
+   425→
+   426→        foreach ($students as $student) {
+   427→            $studentsData[] = [
+   428→                'id' => $student->id,
+   429→                'full_name' => $student->full_name,
+   430→                'admission_number' => $student->admission_number,
+   431→                'roll_number' => $student->roll_number,
+   432→                'class_grade' => $student->class_grade,
+   433→                'section' => $student->section,
+   434→            ];
+   435→
+   436→            if (isset($marks[$student->id])) {
+   437→                $marksData[$student->id] = $marks[$student->id]->only([
+   438→                    'ca1','ca2','ca3','ca4','ca5','ca6','ca7','ca8','ca9','ca10',
+   439→                    'conduct','handwriting','creativity','test1','test2','mid_term','final_exam'
+   440→                ]);
+   441→            }
+   442→        }
+   443→
+   444→        return response()->json(['students' => $studentsData, 'marks' => $marksData]);
+   445→    }
+   446→
+   447→    public function apiLoadStudents(Request $request) {
+   448→        $ayId=$request->query('academic_year_id'); $termId=$request->query('term_id');
+   449→        $classId=$request->query('class_id'); $sectionId=$request->query('section_id'); $subjectId=$request->query('subject_id');
+   450→        if (!$ayId||!$termId||!$classId||!$sectionId||!$subjectId) return response()->json(['error'=>'All filters required'],400);
+   451→
+   452→        // First try: find students via enrollment records (enrollment-based lookup)
+   453→        $enrolledStudentIds = \App\Models\StudentEnrollment::where('academic_year_id', $ayId)
+   454→            ->where('class_id', $classId)
+   455→            ->where('section_id', $sectionId)
+   456→            ->where('status', 'enrolled')
+   457→            ->pluck('student_id');
+   458→
+   459→        if ($enrolledStudentIds->isNotEmpty()) {
+   460→            $students = Student::whereIn('id', $enrolledStudentIds)
+   461→                ->where('status', 'active')
+   462→                ->orderBy('full_name', 'asc')
+   463→                ->select('id as student_id', 'full_name as student_name', 'roll_number', 'gender')
+   464→                ->get();
+   465→        } else {
+   466→            // Fallback: direct student table lookup (for legacy data without enrollment records)
+   467→            $students = Student::where('class_id', $classId)
+   468→                ->where('section_id', $sectionId)
+   469→                ->where('status', 'active')
+   470→                ->orderBy('full_name', 'asc')
+   471→                ->select('id as student_id', 'full_name as student_name', 'roll_number', 'gender')
+   472→                ->get();
+   473→        }
+   474→        $existingMarks = MarkEntry::where('academic_year_id',$ayId)->where('term_id',$termId)
+   475→            ->where('class_id',$classId)->where('section_id',$sectionId)->where('subject_id',$subjectId)->get()->keyBy('student_id');
+   476→        $markFields = MarkEntry::getMarkFields();
+   477→        // Build CA and exam field lists from config
+   478→        $caFields = [];
+   479→        $examFields = [];
+   480→        foreach ($markFields as $field) {
+   481→            $cat = $field['category'] ?? 'ca';
+   482→            if ($cat === 'ca' || $cat === 'extra_ca') {
+   483→                $caFields[] = $field['col'];
+   484→            } elseif ($cat === 'exam') {
+   485→                $examFields[] = $field['col'];
+   486→            }
+   487→        }
+   488→        $caWeight = MarkEntryConfig::getCaWeight();
+   489→        $examWeight = MarkEntryConfig::getExamWeight();
+   490→        $precision = MarkEntryConfig::getRoundingPrecision();
+   491→        // Calculate CA raw total from field max values
+   492→        $caRawTotal = 0;
+   493→        foreach ($markFields as $field) {
+   494→            $cat = $field['category'] ?? 'ca';
+   495→            if ($cat === 'ca' || $cat === 'extra_ca') {
+   496→                $caRawTotal += $field['max'];
+   497→            }
+   498→        }
+   499→        $rows = [];
+   500→        foreach ($students as $s) {
+   501→            $mark = $existingMarks->get($s->student_id);
+   502→            $row = ['student_id'=>$s->student_id,'student_name'=>$s->student_name??'Unknown','roll_number'=>$s->roll_number,'gender'=>$s->gender];
+   503→            foreach ($markFields as $field) { $col=$field['col']; $row[$col]=$mark?floatval($mark->$col):null; }
+   504→            // Recalculate totals from raw fields (don't trust stored values)
+   505→            if ($mark) {
+   506→                $caRaw = 0;
+   507→                foreach ($caFields as $f) { $caRaw += floatval($mark->$f ?? 0); }
+   508→                $examRaw = 0;
+   509→                foreach ($examFields as $f) { $examRaw += floatval($mark->$f ?? 0); }
+   510→                $row['ca_total'] = $caRawTotal > 0 ? round(($caRaw / $caRawTotal) * $caWeight, $precision) : 0;
+   511→                $row['exam_total'] = min($examRaw, $examWeight);
+   512→                $row['grand_total'] = round($row['ca_total'] + $row['exam_total'], $precision);
+   513→            } else {
+   514→                $row['ca_total'] = 0;
+   515→                $row['exam_total'] = 0;
+   516→                $row['grand_total'] = 0;
+   517→            }
+   518→            $rows[]=$row;
+   519→        }
+   520→        $subject=Subject::find($subjectId); $term=Term::find($termId); $class=ClassRoom::find($classId); $section=Section::find($sectionId);
+   521→        return response()->json(['students'=>$rows,'markFields'=>$markFields,
+   522→            'subject'=>$subject?$subject->name:'','term'=>$term?$term->name:'',
+   523→            'class'=>$class?$class->name:'','section'=>$section?$section->name:'']);
+   524→    }
+   525→
+   526→    public function apiSave(Request $request) {
+   527→        // Relaxed validation — auto-save sends minimal data
+   528→        $request->validate([
+   529→            'student_id' => 'required',
+   530→            'subject_id' => 'required',
+   531→            'term_id' => 'required',
+   532→        ]);
+   533→
+   534→        // Touch session to keep it alive during mark entry
+   535→        $request->session()->put('_last_mark_save', time());
+   536→        // Force-save session to database immediately (critical for database driver)
+   537→        $request->session()->save();
+   538→
+   539→        $studentId = $request->input('student_id');
+   540→        $subjectId = $request->input('subject_id');
+   541→        $ayId = $request->input('academic_year_id') ?: null;
+   542→        $termId = $request->input('term_id');
+   543→
+   544→        // ── Authorization check for teachers ──
+   545→        $teacher = $this->getTeacherForUser();
+   546→        if ($teacher) {
+   547→            $classId = $request->input('class_id');
+   548→            $sectionId = $request->input('section_id');
+   549→
+   550→            // Resolve class_id from class_grade if needed
+   551→            if (empty($classId) && $request->filled('class_grade')) {
+   552→                $classRoom = ClassRoom::where('name', $request->input('class_grade'))->first();
+   553→                if ($classRoom) $classId = $classRoom->id;
+   554→            }
+   555→            // Resolve section_id from section if needed
+   556→            if (empty($sectionId) && $request->filled('section') && !empty($classId)) {
+   557→                $sectionModel = Section::where('class_id', $classId)
+   558→                    ->where('name', $request->input('section'))->first();
+   559→                if ($sectionModel) $sectionId = $sectionModel->id;
+   560→            }
+   561→
+   562→            // Check if teacher is assigned to this class+section+subject
+   563→            $isAssigned = TeacherAssignment::where('teacher_id', $teacher->id)
+   564→                ->where('class_id', $classId)
+   565→                ->where('subject_id', $subjectId)
+   566→                ->where(function($q) use ($sectionId) {
+   567→                    $q->where('section_id', $sectionId)->orWhereNull('section_id');
+   568→                })
+   569→                ->exists();
+   570→
+   571→            // Or check if teacher is homeroom for this class or section
+   572→            $isHomeroomClass = !empty($classId) && $teacher->classRooms()->where('id', $classId)->exists();
+   573→            $isHomeroomSection = !empty($sectionId) && $teacher->sections()->where('id', $sectionId)->exists();
+   574→
+   575→            if (!$isAssigned && !$isHomeroomClass && !$isHomeroomSection) {
+   576→                return response()->json([
+   577→                    'success' => false,
+   578→                    'error' => 'You are not authorized to enter marks for this class/section/subject.',
+   579→                ], 403);
+   580→            }
+   581→
+   582→            // ── Disallowal check: branch principal can disallow specific teachers ──
+   583→            $effectiveAyId = $ayId;
+   584→            $effectiveTermId = $termId;
+   585→            if (!$effectiveAyId) {
+   586→                $activeAy = AcademicYear::where('is_current', true)->first();
+   587→                $effectiveAyId = $activeAy?->id;
+   588→            }
+   589→            if (!$effectiveTermId && $effectiveAyId) {
+   590→                $activeTerm = Term::where('academic_year_id', $effectiveAyId)->where('is_active', true)->first();
+   591→                $effectiveTermId = $activeTerm?->id;
+   592→            }
+   593→
+   594→            $isDisallowed = MarkEntryDisallowal::isDisallowed(
+   595→                $teacher->id,
+   596→                $classId,
+   597→                $sectionId,
+   598→                $subjectId,
+   599→                $effectiveAyId,
+   600→                $effectiveTermId
+   601→            );
+   602→
+   603→            if ($isDisallowed) {
+   604→                return response()->json([
+   605→                    'success' => false,
+   606→                    'error' => 'Your mark entry permission has been restricted for this class/section/subject. Contact your branch principal for assistance.',
+   607→                    'is_disallowed' => true,
+   608→                ], 403);
+   609→            }
+   610→        }
+   611→
+   612→        // ── Mark Entry Lock & Permission Check ──
+   613→        $user = auth()->user();
+   614→        $isAdmin = $user && in_array($user->role, ['admin', 'super_admin']);
+   615→
+   616→        if (!$isAdmin) {
+   617→            // Resolve class_id for lock check
+   618→            $lockClassId = $request->input('class_id');
+   619→            if (empty($lockClassId) && $request->filled('class_grade')) {
+   620→                $cr = ClassRoom::where('name', $request->input('class_grade'))->first();
+   621→                if ($cr) $lockClassId = $cr->id;
+   622→            }
+   623→            // Get branch_id from the class
+   624→            $branchId = null;
+   625→            if ($lockClassId) {
+   626→                $classModel = ClassRoom::find($lockClassId);
+   627→                if ($classModel) $branchId = $classModel->branch_id;
+   628→            }
+   629→            // Fallback: use user's branch
+   630→            if (!$branchId && $user) {
+   631→                $branchId = $user->branch_id;
+   632→            }
+   633→
+   634→            $isLocked = $branchId && $ayId && $termId && MarkEntryLock::isLocked($branchId, $ayId, $termId);
+   635→
+   636→            if ($isLocked) {
+   637→                // Mark entry is locked — check if teacher has special permission
+   638→                $hasPermission = false;
+   639→                if ($teacher) {
+   640→                    $hasPermission = MarkEntryPermission::hasPermission(
+   641→                        $teacher->id, $studentId, $subjectId, $ayId, $termId
+   642→                    );
+   643→                }
+   644→
+   645→                if (!$hasPermission) {
+   646→                    return response()->json([
+   647→                        'success' => false,
+   648→                        'error' => 'Mark entry is locked for this term. You do not have permission to edit these marks.',
+   649→                        'is_locked' => true,
+   650→                    ], 403);
+   651→                }
+   652→            }
+   653→        }
+   654→
+   655→        // Collect only the mark fields that were actually sent (from config)
+   656→        $markFieldNames = array_map(function($f) { return $f['col']; }, MarkEntry::getMarkFields());
+   657→        $data = [];
+   658→        $data['student_id'] = $studentId;
+   659→        $data['subject_id'] = $subjectId;
+   660→        $data['academic_year_id'] = $ayId;
+   661→        $data['term_id'] = $termId;
+   662→
+   663→        // Copy explicit fields from request
+   664→        foreach (['class_id','section_id','class_grade','section','exam_id','grade','remarks'] as $f) {
+   665→            if ($request->has($f)) {
+   666→                $data[$f] = $request->input($f) ?: null;
+   667→            }
+   668→        }
+   669→
+   670→        // Resolve class_id and section_id from class_grade/section if not provided
+   671→        if (empty($data['class_id']) && !empty($data['class_grade'])) {
+   672→            $classRoom = ClassRoom::where('name', $data['class_grade'])->first();
+   673→            if ($classRoom) {
+   674→                $data['class_id'] = $classRoom->id;
+   675→            }
+   676→        }
+   677→        if (empty($data['section_id']) && !empty($data['section']) && !empty($data['class_id'])) {
+   678→            $sectionModel = Section::where('class_id', $data['class_id'])
+   679→                ->where('name', $data['section'])->first();
+   680→            if ($sectionModel) {
+   681→                $data['section_id'] = $sectionModel->id;
+   682→            }
+   683→        }
+   684→
+   685→        // Set teacher_id — use user_id FK first, then email fallback
+   686→        $teacherId = null;
+   687→        if (auth()->check()) {
+   688→            $t = Teacher::where('user_id', auth()->user()->id)->first();
+   689→            if (!$t) {
+   690→                $t = Teacher::where('email', auth()->user()->email)->first();
+   691→            }
+   692→            if ($t) {
+   693→                $teacherId = $t->id;
+   694→            }
+   695→        }
+   696→        $data['teacher_id'] = $teacherId;
+   697→
+   698→        // ── Load existing record FIRST so calcTotals has complete data ──
+   699→        $existingQuery = MarkEntry::where('student_id', $studentId)
+   700→            ->where('subject_id', $subjectId)
+   701→            ->where('term_id', $termId);
+   702→        if (!empty($ayId)) {
+   703→            $existingQuery->where('academic_year_id', $ayId);
+   704→        } else {
+   705→            $existingQuery->whereNull('academic_year_id');
+   706→        }
+   707→        $existing = $existingQuery->first();
+   708→
+   709→        // Seed $data with existing values so calcTotals works with ALL fields
+   710→        if ($existing) {
+   711→            foreach ($markFieldNames as $f) {
+   712→                if (!isset($data[$f])) {
+   713→                    $data[$f] = $existing->$f;
+   714→                }
+   715→            }
+   716→        }
+   717→
+   718→        // Handle single-field auto-save (mark_key + mark_value) — override the one field
+   719→        if ($request->filled('mark_key') && $request->has('mark_value')) {
+   720→            $markKey = $request->mark_key;
+   721→            $markValue = $request->mark_value;
+   722→            $data[$markKey] = ($markValue === '' || $markValue === null) ? null : $markValue;
+   723→        } else {
+   724→            // Full save — copy all mark fields from request
+   725→            foreach ($markFieldNames as $f) {
+   726→                if ($request->has($f)) {
+   727→                    $val = $request->input($f);
+   728→                    $data[$f] = ($val === '' || $val === null) ? null : $val;
+   729→                }
+   730→            }
+   731→        }
+   732→
+   733→        // Calculate totals — now $data has ALL mark fields, not just the changed one
+   734→        $data = MarkEntry::calcTotals($data);
+   735→
+   736→        // Set marks_obtained = grand_total for backward compatibility (column is NOT NULL in original migration)
+   737→        $data['marks_obtained'] = $data['grand_total'] ?? 0;
+   738→
+   739→        try {
+   740→            // $existing was already loaded above (before calcTotals)
+   741→            if ($existing) {
+   742→                // Only update the fields we actually have data for
+   743→                $updateData = array_filter($data, function($value, $key) use ($markFieldNames) {
+   744→                    // Always update these core fields
+   745→                    if (in_array($key, ['student_id','subject_id','academic_year_id','term_id',
+   746→                        'class_id','section_id','teacher_id','marks_obtained',
+   747→                        'ca_total','exam_total','grand_total'])) return true;
+   748→                    // Update mark fields only if they were explicitly set
+   749→                    if (in_array($key, $markFieldNames)) return true;
+   750→                    // Update other fields like class_grade, section, etc.
+   751→                    if (in_array($key, ['class_grade','section','exam_id','grade','remarks'])) return true;
+   752→                    return false;
+   753→                }, ARRAY_FILTER_USE_BOTH);
+   754→
+   755→                $existing->update($updateData);
+   756→                $entry = $existing->fresh();
+   757→            } else {
+   758→                // Set defaults for required fields on create
+   759→                if (!isset($data['marks_obtained'])) $data['marks_obtained'] = 0;
+   760→                $entry = MarkEntry::create($data);
+   761→            }
+   762→        } catch (\Illuminate\Database\QueryException $e) {
+   763→            Log::error('MarkEntry save error: ' . $e->getMessage(), [
+   764→                'data' => $data,
+   765→                'trace' => $e->getTraceAsString()
+   766→            ]);
+   767→            return response()->json([
+   768→                'success' => false,
+   769→                'error' => 'Database error: ' . $e->getMessage(),
+   770→            ], 500);
+   771→        } catch (\Throwable $e) {
+   772→            Log::error('MarkEntry save exception: ' . $e->getMessage(), [
+   773→                'class' => get_class($e),
+   774→                'data' => $data
+   775→            ]);
+   776→            return response()->json([
+   777→                'success' => false,
+   778→                'error' => 'Error: ' . $e->getMessage(),
+   779→            ], 500);
+   780→        }
+   781→
+   782→        return response()->json([
+   783→            'success' => true,
+   784→            'entry' => $entry,
+   785→            'ca_total' => $entry->ca_total,
+   786→            'exam_total' => $entry->exam_total,
+   787→            'grand_total' => $entry->grand_total,
+   788→            'grade' => $entry->grade ?? null,
+   789→            'csrf_token' => csrf_token(),  // Fresh token — prevents 419 on next save
+   790→        ]);
+   791→    }
+   792→}
+   793→

@@ -1,0 +1,402 @@
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php:1246:                                    <form method="POST" action="{{ route('admin.notifications.markAllRead') }}" style="display:inline">@csrf
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php-1247-                                        <button type="submit" class="btn btn-link p-0 text-primary" style="font-size:11px;text-decoration:none;">{{ __('app.mark_all_read') }}</button>
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php-1248-                                    </form>
+--
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php:1297:                            <form method="POST" action="{{ route('logout') }}">@csrf
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php-1298-                                <button class="dropdown-item text-danger"><i class="fas fa-sign-out-alt me-2"></i>{{ __('app.logout') }}</button>
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php-1299-                            </form>
+--
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php:1556:<form id="logoutForm" method="POST" action="{{ route('logout') }}" style="display:none">@csrf</form>
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php-1557-<script>
+/home/z/my-project/Redemption/resources/views/layouts/admin.blade.php-1558-// Global user context for branch principal locking
+--
+/home/z/my-project/Redemption/resources/views/layouts/website.blade.php:212:                    <form class="newsletter-form" onsubmit="event.preventDefault();">
+/home/z/my-project/Redemption/resources/views/layouts/website.blade.php-213-                        <input type="email" placeholder="Your email address">
+/home/z/my-project/Redemption/resources/views/layouts/website.blade.php-214-                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+--
+/home/z/my-project/Redemption/resources/views/contact.blade.php:178:                        <form method="POST" action="{{ route('contact.store') }}">
+/home/z/my-project/Redemption/resources/views/contact.blade.php-179-                            @csrf
+/home/z/my-project/Redemption/resources/views/contact.blade.php-180-                            <div class="row g-3">
+--
+/home/z/my-project/Redemption/resources/views/parent/chat/show.blade.php:89:            <form method="POST" action="{{ route('parent.chat.send', $conversation->id) }}" style="padding:0.65rem 1rem;border-top:1px solid var(--border);background:#fff;display:flex;align-items:center;gap:0.5rem;" enctype="multipart/form-data">
+/home/z/my-project/Redemption/resources/views/parent/chat/show.blade.php-90-                @csrf
+/home/z/my-project/Redemption/resources/views/parent/chat/show.blade.php-91-                <label style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-muted);cursor:pointer;flex-shrink:0;" title="Attach file">
+--
+/home/z/my-project/Redemption/resources/views/parent/chat/index.blade.php:63:            <form method="POST" action="{{ route('parent.chat.store') }}">
+/home/z/my-project/Redemption/resources/views/parent/chat/index.blade.php-64-                @csrf
+/home/z/my-project/Redemption/resources/views/parent/chat/index.blade.php-65-                <div class="modal-header"><h5 class="modal-title">New Conversation</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+--
+/home/z/my-project/Redemption/resources/views/parent/layout.blade.php:312:                            <form method="POST" action="{{ route('logout') }}">@csrf
+/home/z/my-project/Redemption/resources/views/parent/layout.blade.php-313-                                <button class="dropdown-item text-danger"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
+/home/z/my-project/Redemption/resources/views/parent/layout.blade.php-314-                            </form>
+--
+/home/z/my-project/Redemption/resources/views/parent/marks.blade.php:42:        <form method="GET" action="{{ route('parent.child.marks', $student->id) }}" class="filter-bar" style="margin-bottom:0;">
+/home/z/my-project/Redemption/resources/views/parent/marks.blade.php-43-            <div style="display:flex; align-items:center; gap:8px;">
+/home/z/my-project/Redemption/resources/views/parent/marks.blade.php-44-                <label style="font-size:12px; font-weight:600; color:var(--text-dark); white-space:nowrap;">
+--
+/home/z/my-project/Redemption/resources/views/admin/certificate-print/index.blade.php:24:    <form method="POST" action="{{ route('admin.certificate-print.print') }}" id="certPrintForm" target="_blank">
+/home/z/my-project/Redemption/resources/views/admin/certificate-print/index.blade.php-25-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/certificate-print/index.blade.php-26-
+--
+/home/z/my-project/Redemption/resources/views/admin/attendance/report.blade.php:68:            <form method="GET" action="{{ route('admin.attendance.report') }}" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+/home/z/my-project/Redemption/resources/views/admin/attendance/report.blade.php-69-                <div style="display:flex;flex-direction:column;">
+/home/z/my-project/Redemption/resources/views/admin/attendance/report.blade.php-70-                    <label style="font-size:9px;font-weight:600;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase;">From</label>
+--
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php:163:                <form method="POST" action="{{ route('admin.content-notes.toggle-shared', $note->id) }}" style="display:inline">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php-164-                    @csrf @method('PATCH')
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php-165-                    <button type="submit" class="btn-modern {{ $note->is_shared ? 'btn-modern-outline' : 'btn-modern-success' }}" style="font-size:0.85rem">
+--
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php:169:                <form method="POST" action="{{ route('admin.content-notes.toggle-active', $note->id) }}" style="display:inline">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php-170-                    @csrf @method('PATCH')
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php-171-                    <button type="submit" class="btn-modern btn-modern-outline" style="font-size:0.85rem">
+--
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php:178:                <form method="POST" action="{{ route('admin.content-notes.destroy', $note->id) }}" style="display:inline" onsubmit="return confirm('Delete this note permanently?')">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php-179-                    @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/content-notes/show.blade.php-180-                    <button type="submit" class="btn-modern btn-modern-danger"><i class="fas fa-trash"></i> Delete</button>
+--
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php:42:            <form method="GET" action="{{ route('admin.attendance-delegation.index') }}" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php-43-                <div style="display:flex;flex-direction:column;min-width:150px;">
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php-44-                    <label style="font-size:9px;font-weight:600;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase;">Date</label>
+--
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php:78:                    <form method="POST" action="{{ route('admin.attendance-delegation.store') }}">
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php-79-                        @csrf
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php-80-                        <input type="hidden" name="date" value="{{ $date }}">
+--
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php:173:                                        <form method="POST" action="{{ route('admin.attendance-delegation.revoke', $d->id) }}" style="display:inline"
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php-174-                                            onsubmit="return confirm('Revoke this delegation? The teacher will no longer be able to take attendance.')">
+/home/z/my-project/Redemption/resources/views/admin/attendance/delegation.blade.php-175-                                            @csrf @method('POST')
+--
+/home/z/my-project/Redemption/resources/views/admin/content-notes/edit.blade.php:43:    <form method="POST" action="{{ route('admin.content-notes.update', $content_note->id) }}" id="noteForm">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/edit.blade.php-44-        @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/content-notes/edit.blade.php-45-
+--
+/home/z/my-project/Redemption/resources/views/admin/attendance/edit.blade.php:25:    <form method="POST" action="{{ route('admin.attendance.update') }}" id="attendanceEditForm">
+/home/z/my-project/Redemption/resources/views/admin/attendance/edit.blade.php-26-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/attendance/edit.blade.php-27-        @method('PUT')
+--
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php:74:            <form method="GET" action="{{ route('admin.content-notes.index') }}" id="filterForm">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php-75-                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0.75rem">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php-76-                    <div class="modern-form-group">
+--
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php:198:                                <form method="POST" action="{{ route('admin.content-notes.toggle-shared', $note->id) }}" style="display:inline">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php-199-                                    @csrf @method('PATCH')
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php-200-                                    <button type="submit" class="modern-btn-icon" style="background:{{ $note->is_shared ? '#fef3c7' : '#d1fae5' }};color:{{ $note->is_shared ? '#92400e' : '#065f46' }}" title="{{ $note->is_shared ? 'Unshare' : 'Share' }}">
+--
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php:204:                                <form method="POST" action="{{ route('admin.content-notes.destroy', $note->id) }}" style="display:inline" onsubmit="return confirm('Delete this note?')">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php-205-                                    @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/content-notes/index.blade.php-206-                                    <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete"><i class="fas fa-trash"></i></button>
+--
+/home/z/my-project/Redemption/resources/views/admin/report-card/index.blade.php:50:                <form method="POST" action="{{ route('admin.report-card.generate') }}" id="rcForm">
+/home/z/my-project/Redemption/resources/views/admin/report-card/index.blade.php-51-                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/report-card/index.blade.php-52-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+--
+/home/z/my-project/Redemption/resources/views/admin/attendance/index.blade.php:96:            <form method="GET" action="{{ route('admin.attendance.index') }}" class="att-filter-form">
+/home/z/my-project/Redemption/resources/views/admin/attendance/index.blade.php-97-                <div class="att-filter-group">
+/home/z/my-project/Redemption/resources/views/admin/attendance/index.blade.php-98-                    <label class="att-filter-label">Date</label>
+--
+/home/z/my-project/Redemption/resources/views/admin/content-notes/create.blade.php:46:    <form method="POST" action="{{ route('admin.content-notes.store') }}" id="noteForm">
+/home/z/my-project/Redemption/resources/views/admin/content-notes/create.blade.php-47-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/content-notes/create.blade.php-48-
+--
+/home/z/my-project/Redemption/resources/views/admin/attendance/create.blade.php:49:            <form method="GET" action="{{ route('admin.attendance.create') }}" id="filterForm" class="att-filter-form">
+/home/z/my-project/Redemption/resources/views/admin/attendance/create.blade.php-50-                <div class="att-filter-group">
+/home/z/my-project/Redemption/resources/views/admin/attendance/create.blade.php-51-                    <label class="att-filter-label">Date</label>
+--
+/home/z/my-project/Redemption/resources/views/admin/attendance/create.blade.php:104:    <form method="POST" action="{{ route('admin.attendance.store') }}" id="attendanceForm">
+/home/z/my-project/Redemption/resources/views/admin/attendance/create.blade.php-105-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/attendance/create.blade.php-106-        @method('POST')
+--
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/index.blade.php:191:            <form method="GET" action="{{ route('admin.mark-entry-permissions.index') }}">
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/index.blade.php-192-                <div class="mep-filter-grid">
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/index.blade.php-193-                    <div class="mep-filter-group">
+--
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/index.blade.php:310:                                                <form method="POST" action="{{ route('admin.mark-entry-permissions.revoke', $permission->id) }}" class="mep-revoke-form" onsubmit="return confirm('Are you sure you want to revoke this permission? The teacher will no longer be able to edit marks for this student.')">
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/index.blade.php-311-                                                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/index.blade.php-312-                                                    @method('DELETE')
+--
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/edit.blade.php:9:<form method="POST" action="{{route('admin.performance-reports.update',$data->id)}}">
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/edit.blade.php-10-@csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/edit.blade.php-11-<div class="mb-3"><label class="form-label">Student Id</label><input type="text" name="student_id" class="form-control" value="{{$data->student_id ?? ''}}" required></div>
+--
+/home/z/my-project/Redemption/resources/views/admin/staff/edit.blade.php:27:        <form method="POST" action="{{ route('admin.staff.update', ['staff' => $user->id]) }}">@csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/staff/edit.blade.php-28-            {{-- Personal Info Section --}}
+/home/z/my-project/Redemption/resources/views/admin/staff/edit.blade.php-29-            <div class="modern-form-section">
+--
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/index.blade.php:145:                                    <form method="POST" action="{{ route('admin.performance-reports.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this report?')">
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/index.blade.php-146-                                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/index.blade.php-147-                                        <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
+--
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/show.blade.php:70:                    <form method="POST" action="{{ route('admin.email-inbox.update-category', $email_message->id) }}" style="display:flex;gap:0.5rem;">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/show.blade.php-71-                        @csrf
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/show.blade.php-72-                        <select name="category" class="modern-input modern-select" style="padding-left:0.75rem;flex:1;">
+--
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/show.blade.php:84:                    <form method="POST" action="{{ route('admin.email-inbox.assign', $email_message->id) }}" style="display:flex;gap:0.5rem;">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/show.blade.php-85-                        @csrf
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/show.blade.php-86-                        <input type="text" name="notes" class="modern-input" style="padding-left:0.75rem;flex:1;" placeholder="Add notes..." value="{{ $email_message->notes }}">
+--
+/home/z/my-project/Redemption/resources/views/admin/staff/index.blade.php:212:                                    <form method="POST" action="{{ route('admin.staff.destroy', ['staff' => $s->id]) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
+/home/z/my-project/Redemption/resources/views/admin/staff/index.blade.php-213-                                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/staff/index.blade.php-214-                                        <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
+--
+/home/z/my-project/Redemption/resources/views/admin/staff/index.blade.php:256:                            <form method="POST" action="{{ route('admin.staff.destroy', ['staff' => $s->id]) }}" style="display:inline" onsubmit="return confirm('Remove this staff member?')">
+/home/z/my-project/Redemption/resources/views/admin/staff/index.blade.php-257-                                @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/staff/index.blade.php-258-                                <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
+--
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/create.blade.php:27:        <form method="POST" action="{{ route('admin.performance-reports.store') }}">
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/create.blade.php-28-            @csrf
+/home/z/my-project/Redemption/resources/views/admin/PerformanceReport/create.blade.php-29-
+--
+/home/z/my-project/Redemption/resources/views/admin/staff/create.blade.php:27:        <form method="POST" action="{{ route('admin.staff.store') }}">@csrf
+/home/z/my-project/Redemption/resources/views/admin/staff/create.blade.php-28-            {{-- Personal Info Section --}}
+/home/z/my-project/Redemption/resources/views/admin/staff/create.blade.php-29-            <div class="modern-form-section">
+--
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php:76:                <form method="POST" action="{{ route('admin.email-inbox.settings.store') }}">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php-77-                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php-78-                    <div class="modern-form-grid">
+--
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php:169:                                <form method="POST" action="{{ route('admin.email-inbox.test', $inbox->id) }}" style="display:inline">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php-170-                                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php-171-                                    <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;" title="Test Connection">
+--
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php:175:                                <form method="POST" action="{{ route('admin.email-inbox.sync', $inbox->id) }}" style="display:inline">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php-176-                                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php-177-                                    <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;" title="Sync Now">
+--
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php:181:                                <form method="POST" action="{{ route('admin.email-inbox.settings.destroy', $inbox->id) }}" style="display:inline" onsubmit="return confirm('Delete this inbox configuration?')">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php-182-                                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/settings.blade.php-183-                                    @method('DELETE')
+--
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/print.blade.php:385:            <form method="GET" action="{{ route('admin.calendar.print') }}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/print.blade.php-386-                <label for="ay">Academic Year:</label>
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/print.blade.php-387-                <select name="academic_year_id" id="ay">
+--
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/index.blade.php:16:            <form method="POST" action="{{ route('admin.email-inbox.sync', $inbox->id) }}" style="display:inline">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/index.blade.php-17-                @csrf
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/index.blade.php-18-                <button type="submit" class="btn-modern btn-modern-outline" title="Sync: {{ $inbox->email_address }}">
+--
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/index.blade.php:68:            <form method="GET" action="{{ route('admin.email-inbox.index') }}" id="filterForm">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/index.blade.php-69-                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem">
+/home/z/my-project/Redemption/resources/views/admin/email-inbox/index.blade.php-70-                    <div class="modern-form-group">
+--
+/home/z/my-project/Redemption/resources/views/admin/performance-analysis/index.blade.php:85:        <form method="POST" action="{{ route('admin.performance-analysis.generate') }}">
+/home/z/my-project/Redemption/resources/views/admin/performance-analysis/index.blade.php-86-            @csrf
+/home/z/my-project/Redemption/resources/views/admin/performance-analysis/index.blade.php-87-            <div class="pa-card-body">
+--
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/index.blade.php:119:                    <form method="POST" action="{{ route('admin.calendar.store') }}" id="eventForm">
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/index.blade.php-120-                        @csrf
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/index.blade.php-121-                        <div class="cal-form-group">
+--
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/index.blade.php:241:        <form method="POST" action="{{ route('admin.calendar.store') }}" id="quickAddForm">
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/index.blade.php-242-            @csrf
+/home/z/my-project/Redemption/resources/views/admin/CalendarEvent/index.blade.php-243-            <div class="cal-modal-body">
+--
+/home/z/my-project/Redemption/resources/views/admin/Section/edit.blade.php:27:        <form method="POST" action="{{ route('admin.sections.update', $section->id) }}">
+/home/z/my-project/Redemption/resources/views/admin/Section/edit.blade.php-28-            @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/Section/edit.blade.php-29-
+--
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/show.blade.php:116:                        <form method="POST" action="{{ route('admin.employee-assets.destroy', $item->id) }}" onsubmit="return confirm('Are you sure you want to delete this asset?')">
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/show.blade.php-117-                            @csrf
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/show.blade.php-118-                            @method('DELETE')
+--
+/home/z/my-project/Redemption/resources/views/admin/Section/index.blade.php:134:                                    <form method="POST" action="{{ route('admin.sections.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this section?')">
+/home/z/my-project/Redemption/resources/views/admin/Section/index.blade.php-135-                                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/Section/index.blade.php-136-                                        <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
+--
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/report.blade.php:56:            <form method="GET" id="filterForm">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/report.blade.php-57-                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/report.blade.php-58-                    <div class="modern-form-group">
+--
+/home/z/my-project/Redemption/resources/views/admin/Section/create.blade.php:27:        <form method="POST" action="{{ route('admin.sections.store') }}">
+/home/z/my-project/Redemption/resources/views/admin/Section/create.blade.php-28-            @csrf
+/home/z/my-project/Redemption/resources/views/admin/Section/create.blade.php-29-
+--
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/edit.blade.php:23:    <form method="POST" action="{{ route('admin.employee-assets.update', $item->id) }}" enctype="multipart/form-data">
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/edit.blade.php-24-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/edit.blade.php-25-        @method('PUT')
+--
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/edit.blade.php:47:    <form method="POST" action="{{ route('admin.assessment-questions.update', $assessment_question->id) }}" id="questionForm">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/edit.blade.php-48-        @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/edit.blade.php-49-
+--
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/index.blade.php:126:                                    <form method="POST" action="{{ route('admin.employee-assets.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this asset?')">
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/index.blade.php-127-                                        @csrf
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/index.blade.php-128-                                        @method('DELETE')
+--
+/home/z/my-project/Redemption/resources/views/admin/Slider/show.blade.php:125:                    <form method="POST" action="{{ route('admin.sliders.destroy', $item->id) }}" onsubmit="return confirm('Are you sure you want to delete this slider? This action cannot be undone.')">
+/home/z/my-project/Redemption/resources/views/admin/Slider/show.blade.php-126-                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/Slider/show.blade.php-127-                        <button type="submit" class="modern-quick-action modern-quick-action-danger">
+--
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php:68:            <form method="GET" action="{{ route('admin.assessment-questions.index') }}" id="filterForm">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php-69-                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0.75rem">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php-70-                    <div class="modern-form-group">
+--
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php:189:                                <form method="POST" action="{{ route('admin.assessment-questions.toggle-active', $q->id) }}" style="display:inline">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php-190-                                    @csrf @method('PATCH')
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php-191-                                    <button type="submit" class="modern-btn-icon" style="background:{{ $q->is_active ? '#fef3c7' : '#d1fae5' }};color:{{ $q->is_active ? '#92400e' : '#065f46' }}" title="{{ $q->is_active ? 'Deactivate' : 'Activate' }}">
+--
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php:195:                                <form method="POST" action="{{ route('admin.assessment-questions.destroy', $q->id) }}" style="display:inline" onsubmit="return confirm('Delete this question?')">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php-196-                                    @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/index.blade.php-197-                                    <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete"><i class="fas fa-trash"></i></button>
+--
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/create.blade.php:31:    <form method="POST" action="{{ route('admin.employee-assets.store') }}" enctype="multipart/form-data">
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/create.blade.php-32-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/EmployeeAsset/create.blade.php-33-
+--
+/home/z/my-project/Redemption/resources/views/admin/Slider/edit.blade.php:27:        <form method="POST" action="{{ route('admin.sliders.update', $item->id) }}" enctype="multipart/form-data">
+/home/z/my-project/Redemption/resources/views/admin/Slider/edit.blade.php-28-            @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/Slider/edit.blade.php-29-
+--
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/create.blade.php:48:    <form method="POST" action="{{ route('admin.assessment-questions.store') }}" id="questionForm">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/create.blade.php-49-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/create.blade.php-50-
+--
+/home/z/my-project/Redemption/resources/views/admin/Slider/index.blade.php:143:                                    <form method="POST" action="{{ route('admin.sliders.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this slider?')">
+/home/z/my-project/Redemption/resources/views/admin/Slider/index.blade.php-144-                                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/Slider/index.blade.php-145-                                        <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
+--
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/bulk-create.blade.php:61:            <form method="POST" action="{{ route('admin.assessment-questions.bulk-import') }}" enctype="multipart/form-data" id="importForm">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/bulk-create.blade.php-62-                @csrf
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/bulk-create.blade.php-63-                <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
+--
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/bulk-create.blade.php:106:    <form method="POST" action="{{ route('admin.assessment-questions.bulk-store') }}" id="bulkForm">
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/bulk-create.blade.php-107-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/assessment-questions/bulk-create.blade.php-108-
+--
+/home/z/my-project/Redemption/resources/views/admin/Slider/create.blade.php:27:        <form method="POST" action="{{ route('admin.sliders.store') }}" enctype="multipart/form-data">
+/home/z/my-project/Redemption/resources/views/admin/Slider/create.blade.php-28-            @csrf
+/home/z/my-project/Redemption/resources/views/admin/Slider/create.blade.php-29-
+--
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php:23:            <form method="POST" action="{{ route('admin.announcements.store') }}" style="padding:16px 20px;">
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-24-                @csrf
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-25-                <div style="margin-bottom:12px;">
+--
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php:75:                            <form method="POST" action="{{ route('admin.announcements.send-telegram', $event->id) }}">
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-76-                                @csrf
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-77-                                <button type="submit" class="btn-modern btn-modern-sm" style="padding:4px 8px;font-size:10px;background:#0088cc;color:#fff;border:none;border-radius:4px;cursor:pointer;" title="Send to Telegram"><i class="fab fa-telegram"></i></button>
+--
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php:79:                            <form method="POST" action="{{ route('admin.announcements.destroy', $event->id) }}">
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-80-                                @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-81-                                <button type="submit" class="btn-modern btn-modern-sm" style="padding:4px 8px;font-size:10px;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i></button>
+--
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php:110:                    <form method="POST" action="{{ route('admin.announcements.destroy', $announcement->id) }}">
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-111-                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-112-                        <button type="submit" class="btn-modern btn-modern-sm" style="padding:4px 10px;font-size:11px;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i> Delete</button>
+--
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php:138:                            <form method="POST" action="{{ route('admin.announcements.destroy', $announcement->id) }}" style="display:inline;">
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-139-                                @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/announcements/index.blade.php-140-                                <button type="submit" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:12px;"><i class="fas fa-trash"></i></button>
+--
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/show.blade.php:200:                    <form method="POST" action="{{ route('admin.parents.destroy', $item->id) }}" onsubmit="return confirm('Are you sure you want to delete this parent? This action cannot be undone.')">
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/show.blade.php-201-                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/show.blade.php-202-                        <button type="submit" class="modern-quick-action modern-quick-action-danger">
+--
+/home/z/my-project/Redemption/resources/views/admin/Certificate/show.blade.php:147:                    <form method="POST" action="{{ route('admin.certificates.destroy', $item->id) }}" onsubmit="return confirm('Are you sure you want to delete this certificate? This action cannot be undone.')">
+/home/z/my-project/Redemption/resources/views/admin/Certificate/show.blade.php-148-                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/Certificate/show.blade.php-149-                        <button type="submit" class="modern-quick-action modern-quick-action-danger">
+--
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/edit.blade.php:7:        <form method="POST" action="{{ route('admin.subject-assignments.update', $assignment) }}">@csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/edit.blade.php-8-            <div class="row g-3">
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/edit.blade.php-9-                <div class="col-md-6"><label class="form-label fw-semibold">Academic Year</label><select name="academic_year_id" class="form-select" required><option value="">-- Select --</option>@foreach($academicYears as $ay)<option value="{{ $ay->id }}" {{ $assignment->academic_year_id == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>@endforeach</select></div>
+--
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/edit.blade.php:28:        <form method="POST" action="{{ route('admin.parents.update', $item->id) }}">
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/edit.blade.php-29-            @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/edit.blade.php-30-
+--
+/home/z/my-project/Redemption/resources/views/admin/Certificate/edit.blade.php:28:        <form method="POST" action="{{ route('admin.certificates.update', $item->id) }}">
+/home/z/my-project/Redemption/resources/views/admin/Certificate/edit.blade.php-29-            @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/Certificate/edit.blade.php-30-
+--
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/index.blade.php:17:    <form method="GET" action="{{ route('admin.subject-assignments.index') }}"><div class="card mb-3"><div class="card-body py-3"><div class="row g-2 align-items-end">
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/index.blade.php-18-        <div class="col-md-4"><label class="form-label fw-semibold small">Academic Year</label><select name="academic_year_id" class="form-select form-select-sm"><option value="">All Years</option>@foreach($academicYears as $ay)<option value="{{ $ay->id }}" {{ request('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>@endforeach</select></div>
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/index.blade.php-19-        <div class="col-md-4"><label class="form-label fw-semibold small">Class</label><select name="class_id" class="form-select form-select-sm"><option value="">All Classes</option>@foreach($classes as $c)<option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach</select></div>
+--
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/index.blade.php:22:    <form method="POST" action="{{ route('admin.subject-assignments.bulk-delete') }}" id="bulkForm">@csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/index.blade.php-23-
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/index.blade.php-24-    {{-- Bulk Delete Toolbar --}}
+--
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/index.blade.php:128:                                    <form method="POST" action="{{ route('admin.parents.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this parent?')">
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/index.blade.php-129-                                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/index.blade.php-130-                                        <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
+--
+/home/z/my-project/Redemption/resources/views/admin/Certificate/index.blade.php:148:                                    <form method="POST" action="{{ route('admin.certificates.destroy', $item->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this certificate?')">
+/home/z/my-project/Redemption/resources/views/admin/Certificate/index.blade.php-149-                                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/Certificate/index.blade.php-150-                                        <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete">
+--
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/create.blade.php:12:    <form method="POST" action="{{ route('admin.subject-assignments.store') }}">@csrf
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/create.blade.php-13-    <div class="row g-4">
+/home/z/my-project/Redemption/resources/views/admin/subject-assignments/create.blade.php-14-        <div class="col-lg-7">
+--
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/create.blade.php:28:        <form method="POST" action="{{ route('admin.parents.store') }}">
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/create.blade.php-29-            @csrf
+/home/z/my-project/Redemption/resources/views/admin/ParentModel/create.blade.php-30-
+--
+/home/z/my-project/Redemption/resources/views/admin/roles/users.blade.php:57:    <form method="POST" action="{{ route('admin.roles.assign-users', $role) }}">
+/home/z/my-project/Redemption/resources/views/admin/roles/users.blade.php-58-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/roles/users.blade.php-59-
+--
+/home/z/my-project/Redemption/resources/views/admin/Certificate/create.blade.php:28:        <form method="POST" action="{{ route('admin.certificates.store') }}">
+/home/z/my-project/Redemption/resources/views/admin/Certificate/create.blade.php-29-            @csrf
+/home/z/my-project/Redemption/resources/views/admin/Certificate/create.blade.php-30-
+--
+/home/z/my-project/Redemption/resources/views/admin/roles/edit.blade.php:64:    <form method="POST" action="{{ route('admin.roles.update', $role) }}">
+/home/z/my-project/Redemption/resources/views/admin/roles/edit.blade.php-65-        @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/roles/edit.blade.php-66-
+--
+/home/z/my-project/Redemption/resources/views/admin/news/edit.blade.php:13:            <form method="POST" action="{{ route('admin.news.update', $news) }}" enctype="multipart/form-data">
+/home/z/my-project/Redemption/resources/views/admin/news/edit.blade.php-14-                @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/news/edit.blade.php-15-                <div class="mb-3">
+--
+/home/z/my-project/Redemption/resources/views/admin/roles/index.blade.php:144:                <form method="POST" action="{{ route('admin.roles.destroy', $role) }}" style="display:inline" onsubmit="return confirm('Delete this role?')">
+/home/z/my-project/Redemption/resources/views/admin/roles/index.blade.php-145-                    @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/roles/index.blade.php-146-                    <button type="submit" class="rp-btn rp-btn-danger" style="font-size:.78rem;padding:.4rem .85rem"><i class="fas fa-trash"></i> Delete</button>
+--
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/edit.blade.php:19:                <form method="POST" action="{{ route('admin.club-follow-up-configs.update', $clubFollowUpConfig->id) }}">
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/edit.blade.php-20-                    @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/edit.blade.php-21-                    <div class="modern-form-grid">
+--
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/create.blade.php:159:    <form method="POST" action="{{ route('admin.mark-entry-permissions.store') }}" id="permissionForm">
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/create.blade.php-160-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/mark_entry_permissions/create.blade.php-161-
+--
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/index.blade.php:63:            <form method="GET" action="{{ route('admin.club-follow-up-configs.index') }}" id="filterForm">
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/index.blade.php-64-                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem">
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/index.blade.php-65-                    <div class="modern-form-group">
+--
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/index.blade.php:143:                                <form method="POST" action="{{ route('admin.club-follow-up-configs.destroy', $config->id) }}" style="display:inline" onsubmit="return confirm('Delete this configuration?')">
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/index.blade.php-144-                                    @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/index.blade.php-145-                                    <button type="submit" class="modern-btn-icon modern-btn-delete" title="Delete"><i class="fas fa-trash"></i></button>
+--
+/home/z/my-project/Redemption/resources/views/admin/roles/create.blade.php:65:    <form method="POST" action="{{ route('admin.roles.store') }}">
+/home/z/my-project/Redemption/resources/views/admin/roles/create.blade.php-66-        @csrf
+/home/z/my-project/Redemption/resources/views/admin/roles/create.blade.php-67-
+--
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/create.blade.php:19:                <form method="POST" action="{{ route('admin.club-follow-up-configs.store') }}">
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/create.blade.php-20-                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/club-follow-up-configs/create.blade.php-21-                    <div class="modern-form-grid">
+--
+/home/z/my-project/Redemption/resources/views/admin/mark-locks/index.blade.php:338:                <form id="lockForm" method="POST" action="{{ route('admin.mark-locks.lock') }}">
+/home/z/my-project/Redemption/resources/views/admin/mark-locks/index.blade.php-339-                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/mark-locks/index.blade.php-340-                    <input type="hidden" name="branch_id" id="lockBranchId" value="{{ $selectedBranch ?? '' }}">
+--
+/home/z/my-project/Redemption/resources/views/admin/mark-locks/index.blade.php:369:                <form id="unlockForm" method="POST" action="{{ route('admin.mark-locks.unlock') }}">
+/home/z/my-project/Redemption/resources/views/admin/mark-locks/index.blade.php-370-                    @csrf
+/home/z/my-project/Redemption/resources/views/admin/mark-locks/index.blade.php-371-                    <input type="hidden" name="branch_id" id="unlockBranchId" value="{{ $selectedBranch ?? '' }}">
+--
+/home/z/my-project/Redemption/resources/views/admin/mark-permissions/index.blade.php:50:            <form method="GET" action="{{ route('admin.mark-permissions.index') }}">
+/home/z/my-project/Redemption/resources/views/admin/mark-permissions/index.blade.php-51-                <div class="modern-form-grid modern-form-grid-3" style="padding: 1.25rem 1.5rem;">
+/home/z/my-project/Redemption/resources/views/admin/mark-permissions/index.blade.php-52-                    <div class="modern-form-group">
+--
+/home/z/my-project/Redemption/resources/views/admin/mark-permissions/index.blade.php:187:                                        <form method="POST" action="{{ route('admin.mark-permissions.revoke', $permission->id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to revoke this permission? The teacher will no longer be able to edit marks for this student.')">
+/home/z/my-project/Redemption/resources/views/admin/mark-permissions/index.blade.php-188-                                            @csrf @method('PATCH')
+/home/z/my-project/Redemption/resources/views/admin/mark-permissions/index.blade.php-189-                                            <button type="submit" class="modern-btn-icon modern-btn-delete" title="Revoke Permission">
+--
+/home/z/my-project/Redemption/resources/views/admin/FinanceStatement/edit.blade.php:28:        <form method="POST" action="{{ route('admin.finance-statements.update', $item->id) }}">
+/home/z/my-project/Redemption/resources/views/admin/FinanceStatement/edit.blade.php-29-            @csrf @method('PUT')
+/home/z/my-project/Redemption/resources/views/admin/FinanceStatement/edit.blade.php-30-
+--
+/home/z/my-project/Redemption/resources/views/admin/Branch/show.blade.php:155:                    <form method="POST" action="{{ route('admin.branches.destroy', $item->id) }}" onsubmit="return confirm('Are you sure you want to delete this branch? This action cannot be undone.')">
+/home/z/my-project/Redemption/resources/views/admin/Branch/show.blade.php-156-                        @csrf @method('DELETE')
+/home/z/my-project/Redemption/resources/views/admin/Branch/show.blade.php-157-                        <button type="submit" class="modern-quick-action modern-quick-action-danger">
+--
+
+[Showing results with pagination = limit: 400]

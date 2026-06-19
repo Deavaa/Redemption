@@ -1,0 +1,202 @@
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:95:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:166:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:218:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:243:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:271:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:299:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:331:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:370:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:406:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:428:            return redirect()->route('student.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:439:            return redirect()->route('parent.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:459:                return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/PermissionMiddleware.php:471:                return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:230:        return redirect()->route('login')->with('show_forgot', true);
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:258:            return redirect()->route('login')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:265:        return redirect()->route('login')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:288:            return redirect()->route('login')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:295:        return redirect()->route('login')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:319:        return redirect()->route('login')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:330:        return redirect()->route('login')->with('show_email_forgot', true);
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:364:        return redirect()->route('login')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:377:            return redirect()->route('password.forgot')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:387:            return redirect()->route('password.forgot')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:395:            return redirect()->route('password.forgot')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:401:        return redirect()->route('login')
+/home/z/my-project/Redemption/app/Http/Controllers/AuthController.php:453:        return redirect()->route('login')
+/home/z/my-project/Redemption/app/Http/Controllers/Section/SectionController.php:47:        return redirect()->route('admin.sections.index')->with('success','Section created successfully');
+/home/z/my-project/Redemption/app/Http/Controllers/Section/SectionController.php:81:        return redirect()->route('admin.sections.index')->with('success','Section updated successfully');
+/home/z/my-project/Redemption/app/Http/Middleware/AdminMiddleware.php:38:            return redirect()->route('login')->withIntended('/' . $request->path());
+/home/z/my-project/Redemption/app/Http/Middleware/BranchScope.php:116:                    return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Middleware/BranchScope.php:133:                return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Controllers/Slider/SliderAlertController.php:55:        return redirect()->route('admin.slider-alerts.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Slider/SliderAlertController.php:87:        return redirect()->route('admin.slider-alerts.index')
+/home/z/my-project/Redemption/app/Http/Middleware/StudentMiddleware.php:25:            return redirect()->route('login')->withIntended('/' . $request->path());
+/home/z/my-project/Redemption/app/Http/Controllers/Term/TermController.php:41:        return redirect()->route('admin.terms.index')->with('success', 'Term created.');
+/home/z/my-project/Redemption/app/Http/Controllers/Term/TermController.php:73:        return redirect()->route('admin.terms.index')->with('success', 'Term updated.');
+/home/z/my-project/Redemption/app/Http/Middleware/ParentMiddleware.php:25:            return redirect()->route('login')->withIntended('/' . $request->path());
+/home/z/my-project/Redemption/app/Http/Controllers/Club/ClubFollowUpConfigController.php:83:        return redirect()->route('admin.club-follow-up-configs.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Club/ClubFollowUpConfigController.php:119:        return redirect()->route('admin.club-follow-up-configs.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Department/DepartmentController.php:37:        return redirect()->route('admin.departments.index')->with('success', 'Department created successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Department/DepartmentController.php:65:        return redirect()->route('admin.departments.index')->with('success', 'Department updated successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Department/DepartmentController.php:71:        return redirect()->route('admin.departments.index')->with('success', 'Department deleted.');
+/home/z/my-project/Redemption/app/Http/Controllers/Certificate/TranscriptController.php:41:        return redirect()->route('admin.transcript.index');
+/home/z/my-project/Redemption/app/Http/Controllers/Teacher/TeacherController.php:181:            return redirect()->route('admin.teachers.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Teacher/TeacherController.php:349:        return redirect()->route('admin.teachers.index')->with('success', 'Teacher deleted successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Teacher/TeacherController.php:397:        return redirect()->route('admin.teachers.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Setting/SettingController.php:47:        return redirect()->route('admin.settings.index')->with('success', 'Setting added successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Setting/WebContentController.php:132:        return redirect()->route('admin.web-content.index')->with('success', 'Web content updated successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Setting/WebContentController.php:153:        return redirect()->route('admin.web-content.index')->with('success', "Program {$newIndex} added. Edit the details below.");
+/home/z/my-project/Redemption/app/Http/Controllers/Setting/WebContentController.php:164:            return redirect()->route('admin.web-content.index')->with('error', 'You must have at least 1 program.');
+/home/z/my-project/Redemption/app/Http/Controllers/Setting/WebContentController.php:178:        return redirect()->route('admin.web-content.index')->with('success', "Program {$index} removed.");
+/home/z/my-project/Redemption/app/Http/Controllers/Setting/WebContentController.php:189:            return redirect()->route('admin.web-content.index')->with('error', 'You must have at least 1 program.');
+/home/z/my-project/Redemption/app/Http/Controllers/Setting/WebContentController.php:193:            return redirect()->route('admin.web-content.index')->with('error', 'Invalid program index.');
+/home/z/my-project/Redemption/app/Http/Controllers/Setting/WebContentController.php:223:        return redirect()->route('admin.web-content.index')->with('success', "Program {$index} removed successfully.");
+/home/z/my-project/Redemption/app/Http/Controllers/LessonPlan/LessonPlanController.php:193:        return redirect()->route('admin.lesson-plans.index')
+/home/z/my-project/Redemption/app/Http/Controllers/LessonPlan/LessonPlanController.php:290:        return redirect()->route('admin.lesson-plans.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Exam/ExamController.php:71:            return redirect()->route('admin.exams.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Exam/ExamController.php:137:            return redirect()->route('admin.exams.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Exam/ExamQuestionController.php:218:            return redirect()->route('admin.exam-questions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Exam/ExamQuestionController.php:352:            return redirect()->route('admin.exam-questions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Exam/ExamQuestionController.php:379:        return redirect()->route('admin.exam-questions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/TeacherEvaluation/TeacherEvaluationController.php:92:        return redirect()->route('admin.teacher-evaluations.index')->with('success', 'Teacher evaluation recorded successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/TeacherEvaluation/TeacherEvaluationController.php:137:        return redirect()->route('admin.teacher-evaluations.index')->with('success', 'Evaluation updated successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/TeacherEvaluation/TeacherEvaluationController.php:143:        return redirect()->route('admin.teacher-evaluations.index')->with('success', 'Evaluation deleted.');
+/home/z/my-project/Redemption/app/Http/Controllers/Attendance/AttendanceController.php:135:                return redirect()->route('admin.attendance.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Attendance/AttendanceController.php:150:                return redirect()->route('admin.attendance.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Attendance/AttendanceController.php:258:                    return redirect()->route('admin.attendance.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Attendance/AttendanceController.php:309:            return redirect()->route('admin.attendance.index')
+/home/z/my-project/Redemption/app/Http/Controllers/ExamQuestion/ExamQuestionController.php:133:        return redirect()->route('admin.exam-questions.index')->with('success', $message);
+/home/z/my-project/Redemption/app/Http/Controllers/ExamQuestion/ExamQuestionController.php:216:        return redirect()->route('admin.exam-questions.index')->with('success', $message);
+/home/z/my-project/Redemption/app/Http/Controllers/ExamQuestion/ExamQuestionController.php:226:        return redirect()->route('admin.exam-questions.index')->with('success', 'Exam question deleted.');
+/home/z/my-project/Redemption/app/Http/Controllers/ExamQuestion/ExamQuestionController.php:247:        return redirect()->route('admin.exam-questions.index')->with('success', 'Exam question submitted for department head review.');
+/home/z/my-project/Redemption/app/Http/Controllers/ExamQuestion/ExamQuestionController.php:269:            return redirect()->route('admin.exam-questions.index')->with('success', 'Exam question approved and forwarded to principal.');
+/home/z/my-project/Redemption/app/Http/Controllers/ExamQuestion/ExamQuestionController.php:277:            return redirect()->route('admin.exam-questions.index')->with('success', 'Exam question rejected.');
+/home/z/my-project/Redemption/app/Http/Controllers/ExamQuestion/ExamQuestionController.php:300:            return redirect()->route('admin.exam-questions.index')->with('success', 'Exam question approved by principal.');
+/home/z/my-project/Redemption/app/Http/Controllers/ExamQuestion/ExamQuestionController.php:308:            return redirect()->route('admin.exam-questions.index')->with('success', 'Exam question rejected by principal.');
+/home/z/my-project/Redemption/app/Http/Controllers/Enrollment/EnrollmentController.php:238:        return redirect()->route('admin.enrollments.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Enrollment/EnrollmentController.php:318:        return redirect()->route('admin.enrollments.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Enrollment/EnrollmentController.php:328:        return redirect()->route('admin.enrollments.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Enrollment/EnrollmentController.php:471:            return redirect()->route('admin.enrollments.bulk-enroll')
+/home/z/my-project/Redemption/app/Http/Controllers/Enrollment/EnrollmentController.php:554:        return redirect()->route('admin.enrollments.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Enrollment/EnrollmentController.php:756:            return redirect()->route('admin.enrollments.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Enrollment/EnrollmentController.php:778:            return redirect()->route('admin.enrollments.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Enrollment/EnrollmentController.php:848:        return redirect()->route('admin.enrollments.index')
+/home/z/my-project/Redemption/app/Http/Controllers/ContentNote/SubjectContentNoteController.php:176:        return redirect()->route('admin.content-notes.index')
+/home/z/my-project/Redemption/app/Http/Controllers/ContentNote/SubjectContentNoteController.php:279:        return redirect()->route('admin.content-notes.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Fee/FeeController.php:77:        return redirect()->route('admin.fees.index')->with('success', 'Fee created successfully');
+/home/z/my-project/Redemption/app/Http/Controllers/Fee/FeeController.php:122:        return redirect()->route('admin.fees.index')->with('success', 'Fee updated successfully');
+/home/z/my-project/Redemption/app/Http/Controllers/Stock/StockController.php:102:        return redirect()->route('admin.stock.index')->with('success', __('Stock item created successfully'));
+/home/z/my-project/Redemption/app/Http/Controllers/Stock/StockController.php:143:        return redirect()->route('admin.stock.index')->with('success', __('Stock item updated successfully'));
+/home/z/my-project/Redemption/app/Http/Controllers/Stock/StockController.php:195:        return redirect()->route('admin.stock.index')->with('success', __('Stock added successfully. :qty :unit of :item', [
+/home/z/my-project/Redemption/app/Http/Controllers/Stock/StockController.php:259:        return redirect()->route('admin.stock.index')->with('success', __('Stock issued successfully. :qty :unit of :item', [
+/home/z/my-project/Redemption/app/Http/Controllers/TeacherEfficiency/TeacherEfficiencyAssessmentController.php:135:        return redirect()->route('admin.teacher-efficiency.index')
+/home/z/my-project/Redemption/app/Http/Controllers/TeacherEfficiency/TeacherEfficiencyAssessmentController.php:216:        return redirect()->route('admin.teacher-efficiency.index')
+/home/z/my-project/Redemption/app/Http/Controllers/TeacherEfficiency/TeacherEfficiencyAssessmentController.php:223:            return redirect()->route('admin.teacher-efficiency.index')
+/home/z/my-project/Redemption/app/Http/Controllers/TeacherEfficiency/TeacherEfficiencyAssessmentController.php:229:        return redirect()->route('admin.teacher-efficiency.index')
+/home/z/my-project/Redemption/app/Http/Controllers/ReportExchange/ReportExchangeController.php:231:            return redirect()->route('admin.report-exchange.index')
+/home/z/my-project/Redemption/app/Http/Controllers/ReportExchange/ReportExchangeController.php:340:            return redirect()->route('admin.report-exchange.index')
+/home/z/my-project/Redemption/app/Http/Controllers/ReportExchange/ReportExchangeController.php:357:        return redirect()->route('admin.report-exchange.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Telegram/TelegramController.php:41:        return redirect()->route('admin.telegram.index')->with('success', 'Telegram settings updated.');
+/home/z/my-project/Redemption/app/Http/Controllers/Telegram/TelegramController.php:60:        return redirect()->route('admin.telegram.index')->with('success', 'Branch Telegram settings updated.');
+/home/z/my-project/Redemption/app/Http/Controllers/Telegram/TelegramController.php:163:            return redirect()->route('admin.telegram.send')->with('success', "Message sent to {$sentCount} target(s) successfully.");
+/home/z/my-project/Redemption/app/Http/Controllers/Telegram/TelegramController.php:165:            return redirect()->route('admin.telegram.send')->with('success', "Message sent to {$sentCount} target(s), but some failed: " . implode('; ', $errors));
+/home/z/my-project/Redemption/app/Http/Controllers/Student/TeacherReviewController.php:35:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Student/TeacherReviewController.php:92:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Student/TeacherReviewController.php:108:            return redirect()->route('student.teacher-review.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/TeacherReviewController.php:127:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Student/TeacherReviewController.php:147:            return redirect()->route('student.teacher-review.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/TeacherReviewController.php:163:        return redirect()->route('student.teacher-review.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:306:        return redirect()->route('admin.students.index')->with('success', 'Student enrolled successfully!');
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:464:        return redirect()->route('admin.students.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:650:            return redirect()->route('admin.students.inactive')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:729:        return redirect()->route('admin.students.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:807:        return redirect()->route('admin.students.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:868:        return redirect()->route('admin.students.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:1139:            return redirect()->route('admin.students.bulk-create')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:1173:            $redirect = redirect()->route('admin.students.bulk-create')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:1178:            $redirect = redirect()->route('admin.students.bulk-create')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:1187:            $redirect = redirect()->route('admin.students.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:1574:            return redirect()->route('admin.students.bulk-create')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:1608:            $redirect = redirect()->route('admin.students.bulk-create')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:1613:            $redirect = redirect()->route('admin.students.bulk-create')
+/home/z/my-project/Redemption/app/Http/Controllers/Student/StudentController.php:1622:            $redirect = redirect()->route('admin.students.bulk-create')
+/home/z/my-project/Redemption/app/Http/Controllers/Library/LibraryBookController.php:124:        return redirect()->route('admin.library.index')->with('success', 'Book uploaded successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Library/LibraryBookController.php:238:        return redirect()->route('admin.library.index')->with('success', 'Book updated successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Library/VideoLibraryController.php:127:        return redirect()->route('admin.video-library.index')->with('success', 'Video added successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Library/VideoLibraryController.php:215:        return redirect()->route('admin.video-library.index')->with('success', 'Video updated successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Subject/SubjectController.php:49:        return redirect()->route('admin.subjects.index')->with('success', 'Subject created successfully');
+/home/z/my-project/Redemption/app/Http/Controllers/Subject/SubjectController.php:80:        return redirect()->route('admin.subjects.index')->with('success', 'Subject updated successfully');
+/home/z/my-project/Redemption/app/Http/Controllers/PerformanceReport/PerformanceAnalysisController.php:36:            return redirect()->route('admin.performance-analysis.index');
+/home/z/my-project/Redemption/app/Http/Controllers/Branch/BranchController.php:44:        return redirect()->route('admin.branches.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Branch/BranchController.php:81:        return redirect()->route('admin.branches.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Classroom/ClassroomController.php:65:            return redirect()->route('admin.classrooms.index')->with('success','Class created with sections');
+/home/z/my-project/Redemption/app/Http/Controllers/Classroom/ClassroomController.php:137:            return redirect()->route('admin.classrooms.index')->with('success','Class updated with sections');
+/home/z/my-project/Redemption/app/Http/Controllers/Classroom/ClassroomController.php:151:        return redirect()->route('admin.classrooms.index')->with('success','Deleted');
+/home/z/my-project/Redemption/app/Http/Controllers/CalendarEvent/AnnouncementController.php:58:        return redirect()->route('admin.announcements.index')->with('success', 'Announcement created' . ($r->boolean('send_telegram') ? ' and sent to Telegram' : '') . '.');
+/home/z/my-project/Redemption/app/Http/Controllers/CalendarEvent/CalendarEventController.php:198:            return redirect()->route('admin.calendar.index')
+/home/z/my-project/Redemption/app/Http/Controllers/CalendarEvent/CalendarEventController.php:285:        return redirect()->route('admin.calendar.index')->with('success', implode(' ', $statusParts));
+/home/z/my-project/Redemption/app/Http/Controllers/CalendarEvent/CalendarEventController.php:297:            return redirect()->route('admin.calendar.index')
+/home/z/my-project/Redemption/app/Http/Controllers/CalendarEvent/CalendarEventController.php:352:        return redirect()->route('admin.calendar.index')->with('success', implode(' ', $statusParts));
+/home/z/my-project/Redemption/app/Http/Controllers/News/NewsController.php:59:        return redirect()->route('admin.news.index')->with('success', $msg);
+/home/z/my-project/Redemption/app/Http/Controllers/News/NewsController.php:88:        return redirect()->route('admin.news.index')->with('success', 'News item updated successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/News/NewsController.php:104:        return redirect()->route('admin.news.index')->with('success', 'News item approved and published.');
+/home/z/my-project/Redemption/app/Http/Controllers/News/NewsController.php:120:        return redirect()->route('admin.news.index')->with('success', 'News item rejected and deactivated.');
+/home/z/my-project/Redemption/app/Http/Controllers/News/NewsController.php:126:        return redirect()->route('admin.news.index')->with('success', 'News item deleted.');
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/AssessmentQuestionController.php:203:        return redirect()->route('admin.assessment-questions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/AssessmentQuestionController.php:374:        return redirect()->route('admin.assessment-questions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/AssessmentQuestionController.php:458:        return redirect()->route('admin.assessment-questions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/AssessmentQuestionController.php:649:        return redirect()->route('admin.assessment-questions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/StudentAssessmentController.php:36:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/StudentAssessmentController.php:98:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/StudentAssessmentController.php:156:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/StudentAssessmentController.php:196:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/StudentAssessmentController.php:258:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Assessment/StudentAssessmentController.php:279:            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/SubjectAssignmentController.php:51:        return redirect()->route('admin.subject-assignments.index')->with('success',$msg);
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/SubjectAssignmentController.php:69:        return redirect()->route('admin.subject-assignments.index')->with('success','Assignment updated.');
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/SubjectAssignmentController.php:71:    public function destroy(TeacherAssignment $subject_assignment) { $subject_assignment->delete(); return redirect()->route('admin.subject-assignments.index')->with('success','Assignment removed.'); }
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/SubjectAssignmentController.php:74:        if (!empty($ids)) { TeacherAssignment::whereIn('id',$ids)->delete(); return redirect()->route('admin.subject-assignments.index')->with('success',count($ids).' deleted.'); }
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/SubjectAssignmentController.php:75:        return redirect()->route('admin.subject-assignments.index');
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/MarkEntryPermissionController.php:128:        return redirect()->route('admin.mark-entry-permissions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/MarkEntryPermissionController.php:223:        return redirect()->route('admin.mark-entry-permissions.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:72:            return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:110:            return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:148:            return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:224:        return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:237:            return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:243:            return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:249:            return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:289:            return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:297:            return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:303:            return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:359:        return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:371:            return redirect()->route('admin.dashboard')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:379:            return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:385:            return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:391:            return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:397:            return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/StaffController.php:403:        return redirect()->route('admin.staff.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/ProfileController.php:45:        return redirect()->route('admin.profile')->with('success', 'Password changed successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/Training/TrainingController.php:84:        return redirect()->route('admin.trainings.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Training/TrainingController.php:138:        return redirect()->route('admin.trainings.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/PromotionController.php:292:        return redirect()->route('admin.promotion.settings')
+/home/z/my-project/Redemption/app/Http/Controllers/Admin/PromotionController.php:323:        return redirect()->route('admin.promotion.grade-scales')
+/home/z/my-project/Redemption/app/Http/Controllers/System/SystemModuleController.php:36:        return redirect()->route('admin.system-modules.index')
+/home/z/my-project/Redemption/app/Http/Controllers/System/SystemModuleController.php:53:        return redirect()->route('admin.system-modules.index')
+/home/z/my-project/Redemption/app/Http/Controllers/ClassAsset/ClassAssetController.php:56:        return redirect()->route('admin.class-assets.index')->with('success', 'Asset added successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/ClassAsset/ClassAssetController.php:87:        return redirect()->route('admin.class-assets.index')->with('success', 'Asset updated successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/ClassAsset/ClassAssetController.php:93:        return redirect()->route('admin.class-assets.index')->with('success', 'Asset deleted successfully.');
+/home/z/my-project/Redemption/app/Http/Controllers/MarkSheet/ReportCardController.php:42:            return redirect()->route('admin.report-card.index');
+/home/z/my-project/Redemption/app/Http/Controllers/MarkSheet/MarkSheetFullController.php:80:            return redirect()->route('admin.mark-sheet-full.index');
+/home/z/my-project/Redemption/app/Http/Controllers/MarkSheet/MarkSheetFullController.php:102:                return redirect()->route('admin.mark-sheet-full.index')
+/home/z/my-project/Redemption/app/Http/Controllers/AcademicYear/AcademicYearController.php:27:        return redirect()->route('admin.academic-years.index')->with('success','Created');
+/home/z/my-project/Redemption/app/Http/Controllers/AcademicYear/AcademicYearController.php:50:        return redirect()->route('admin.academic-years.index')->with('success','Updated');
+/home/z/my-project/Redemption/app/Http/Controllers/AcademicYear/AcademicYearController.php:59:        return redirect()->route('admin.academic-years.index')->with('success','Deleted');
+/home/z/my-project/Redemption/app/Http/Controllers/AcademicYear/AcademicYearController.php:126:            return redirect()->route('admin.academic-years.transition')
+/home/z/my-project/Redemption/app/Http/Controllers/MarkSheet/MarkSheetController.php:102:                return redirect()->route('admin.mark-sheet.index')
+/home/z/my-project/Redemption/app/Http/Controllers/MarkSheet/MarkRosterController.php:87:            return redirect()->route('admin.mark-roster.index');
+/home/z/my-project/Redemption/app/Http/Controllers/MarkSheet/MarkRosterController.php:126:                return redirect()->route('admin.mark-roster.index')
+/home/z/my-project/Redemption/app/Http/Controllers/Role/RoleController.php:60:        return redirect()->route('admin.roles.index')
+
+[Showing results with pagination = limit: 200]
