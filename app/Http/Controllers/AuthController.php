@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Password;
 use App\Models\User;
 use App\Notifications\AdminResetPasswordNotification;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\URL;
 
@@ -88,11 +89,11 @@ class AuthController extends Controller
 
         $login = $r->login;
         $password = $r->password;
-        Log::debug('AuthController@login attempt', [
-            'login' => $login,
+        // SECURITY: Do NOT log PII (login identifier) or CSRF token.
+        // These were previously written to laravel.log which is a leak risk.
+        Log::info('AuthController@login attempt', [
             'remember' => $r->boolean('remember'),
-            'session_id' => $r->session()->getId(),
-            'csrf_token' => $r->input('_token'),
+            'ip' => $r->ip(),
         ]);
         
         // Normalize phone number: strip country code (+251, 251), remove spaces/dashes
@@ -305,7 +306,7 @@ class AuthController extends Controller
     {
         $r->validate([
             'email' => 'required|email',
-            'password' => 'required|min:4|confirmed',
+            'password' => ['required', 'confirmed', PasswordRule::min(8)->mixedCase()->numbers()->symbols()],
         ]);
 
         $user = User::where('email', $r->email)->first();
@@ -314,7 +315,10 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['password' => 'Account not found.']);
         }
 
-        $user->update(['password' => Hash::make($r->password)]);
+        // NOTE: User model casts 'password' as 'hashed', so we pass the plain
+        // password — Laravel will hash it on assignment. Do NOT call Hash::make()
+        // here, that would double-hash and make login impossible.
+        $user->update(['password' => $r->password]);
 
         return redirect()->route('login')
             ->with('reset_success', 'Password reset successfully! You can now log in with your new password.');
@@ -413,7 +417,7 @@ class AuthController extends Controller
         $r->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:4|confirmed',
+            'password' => ['required', 'confirmed', PasswordRule::min(8)->mixedCase()->numbers()->symbols()],
         ]);
 
         // Verify token
@@ -442,8 +446,8 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['password' => 'Account not found.']);
         }
 
-        // Update password
-        $user->update(['password' => Hash::make($r->password)]);
+        // Update password — model cast handles hashing
+        $user->update(['password' => $r->password]);
 
         // Delete used token
         \DB::table('password_reset_tokens')->where('email', $r->email)->delete();

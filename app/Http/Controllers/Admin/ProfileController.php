@@ -27,7 +27,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'password' => 'required|string|min:4|confirmed',
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
         ]);
 
         $user = auth()->user();
@@ -37,9 +37,9 @@ class ProfileController extends Controller
             return back()->withErrors(['current_password' => 'The current password is incorrect.']);
         }
 
-        // Update password
+        // Update password — User model cast handles hashing.
         $user->update([
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
         ]);
 
         return redirect()->route('admin.profile')->with('success', 'Password changed successfully.');
@@ -57,9 +57,12 @@ class ProfileController extends Controller
 
         $targetUser = User::findOrFail($request->user_id);
         $defaultPassword = (new EmployeeIdService())->getDefaultPassword();
-        $targetUser->update(['password' => Hash::make($defaultPassword)]);
+        // Rely on model cast for hashing.
+        $targetUser->update(['password' => $defaultPassword]);
 
-        return redirect()->back()->with('success', "Password for {$targetUser->name} has been reset to default: {$defaultPassword}");
+        // Avoid echoing the actual password back in the flash message.
+        // Admins can see the default password convention in the user-access page.
+        return redirect()->back()->with('success', "Password for {$targetUser->name} has been reset to the default password. Please communicate it to the user securely.");
     }
 
     /**
