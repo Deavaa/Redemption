@@ -17,7 +17,7 @@ class AcademicYearController extends Controller
     }
     public function store(Request $request)
     {
-        $input = $request->all();
+        $input = $this->validateAcademicYear($request);
         if (!empty($input['is_current'])) {
             AcademicYear::where('is_current', 1)->update(['is_current' => 0]);
         } else {
@@ -40,7 +40,7 @@ class AcademicYearController extends Controller
     public function update(Request $request, $id)
     {
         $item = AcademicYear::findOrFail($id);
-        $input = $request->all();
+        $input = $this->validateAcademicYear($request);
         if (!empty($input['is_current'])) {
             AcademicYear::where('is_current', 1)->where('id', '!=', $id)->update(['is_current' => 0]);
         } else {
@@ -48,6 +48,20 @@ class AcademicYearController extends Controller
         }
         $item->update($input);
         return redirect()->route('admin.academic-years.index')->with('success','Updated');
+    }
+
+    /**
+     * Validate academic year input and return only the safe fields.
+     * Replaces $request->all() which previously trusted any input.
+     */
+    private function validateAcademicYear(Request $request): array
+    {
+        return $request->validate([
+            'name' => 'required|string|max:100',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'is_current' => 'sometimes|boolean',
+        ]);
     }
     public function destroy($id)
     {

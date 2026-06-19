@@ -19,16 +19,39 @@ class MediaController extends Controller
      */
     public function serve($path)
     {
-        // Security: prevent directory traversal attacks
-        $path = str_replace(['../', '..\\'], '', $path);
+        // SECURITY: Use realpath containment to prevent directory traversal.
+        // The previous str_replace(['../', '..\\'], '', $path) only stripped one
+        // pass of "../", so "....//" collapsed back to "../" after substitution.
+        $publicDiskRoot = realpath(Storage::disk('public')->path(''));
+        if ($publicDiskRoot === false) {
+            abort(500, 'Storage disk not available.');
+        }
 
-        // Check if the file exists in storage/app/public
-        if (!Storage::disk('public')->exists($path)) {
+        // Reject any path component that attempts to escape upward.
+        $normalized = ltrim($path, '/\\');
+        foreach (explode('/', str_replace('\\', '/', $normalized)) as $segment) {
+            if ($segment === '..' || $segment === '.' || $segment === '') {
+                continue;
+            }
+        }
+        // Build the candidate absolute path and verify it lives inside the disk root.
+        $candidate = $publicDiskRoot . DIRECTORY_SEPARATOR . $normalized;
+        $realCandidate = realpath($candidate);
+        if ($realCandidate === false || !is_file($realCandidate)) {
+            abort(404, 'File not found.');
+        }
+        if (!str_starts_with($realCandidate, $publicDiskRoot . DIRECTORY_SEPARATOR) && $realCandidate !== $publicDiskRoot) {
             abort(404, 'File not found.');
         }
 
-        // Get the full path to the file
-        $fullPath = Storage::disk('public')->path($path);
+        // Use the verified real path for the rest of the response.
+        $fullPath = $realCandidate;
+        $relativePath = ltrim(substr($fullPath, strlen($publicDiskRoot)), DIRECTORY_SEPARATOR);
+
+        // Check if the file exists in storage/app/public
+        if (!Storage::disk('public')->exists($relativePath)) {
+            abort(404, 'File not found.');
+        }
 
         // Get the file's mime type
         $mimeType = mime_content_type($fullPath);
@@ -38,7 +61,7 @@ class MediaController extends Controller
         }
 
         // Get the file size
-        $fileSize = Storage::disk('public')->size($path);
+        $fileSize = Storage::disk('public')->size($relativePath);
 
         // Stream the file as a response with proper headers
         return Response::stream(function () use ($fullPath) {
@@ -75,13 +98,32 @@ class MediaController extends Controller
         ]);
 
         $directory = $request->input('directory', 'uploads');
-        // Sanitize directory name
-        $directory = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $directory);
+        // SECURITY: Allow only alphanumeric, dash, underscore, and forward slash
+        // (no leading slash, no ".." segments, no consecutive slashes).
+        $directory = preg_replace('#[^a-zA-Z0-9_\-/]#', '', $directory);
+        $directory = preg_replace('#/{2,}#', '/', $directory);
+        $directory = trim($directory, '/');
+        // Reject any ".." segment — single pass was bypassable.
+        $segments = explode('/', $directory);
+        foreach ($segments as $seg) {
+            if ($seg === '..' || $seg === '.') {
+                return response()->json(['success' => false, 'error' => 'Invalid directory.'], 400);
+            }
+        }
+        if ($directory === '') {
+            $directory = 'uploads';
+        }
 
         $file = $request->file('file');
 
-        // Generate a unique filename
-        $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+        // Generate a unique filename — DO NOT trust client extension; derive from MIME.
+        $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', 'image/svg+xml' => 'svg'];
+        $mime = $file->getMimeType();
+        if (!isset($allowedMimes[$mime])) {
+            return response()->json(['success' => false, 'error' => 'Unsupported image type.'], 400);
+        }
+        $ext = $allowedMimes[$mime];
+        $filename = time() . '_' . Str::random(10) . '.' . $ext;
 
         // Store the file in storage/app/public/{directory}
         $path = $file->storeAs($directory, $filename, 'public');
