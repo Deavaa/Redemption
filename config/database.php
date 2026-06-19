@@ -49,7 +49,16 @@ return [
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
+            // SECURITY/RELIABILITY: Default to the project's actual database
+            // name, NOT 'laravel'. The stock Laravel skeleton ships with
+            // 'laravel' as the fallback, which means a missing DB_DATABASE
+            // env var (e.g. .env truncated, config:cache run with wrong env,
+            // or first-run before .env exists) silently tries to connect to
+            // a non-existent 'laravel' database and throws
+            // "SQLSTATE[HY000] [1049] Unknown database 'laravel'".
+            // Defaulting to 'school_of_redemption' matches .env.example and
+            // gives a much clearer error if the database truly is missing.
+            'database' => env('DB_DATABASE', 'school_of_redemption'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
@@ -69,7 +78,7 @@ return [
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
+            'database' => env('DB_DATABASE', 'school_of_redemption'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
