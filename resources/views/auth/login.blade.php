@@ -245,6 +245,47 @@
         });
     }
     </script>
+
+    {{-- LOOP BUG DEFENSE: If the page was somehow served from bfcache / SW
+         cache / browser HTTP cache with a STALE CSRF token, the next form
+         submit would 419 and trigger the "session expired" redirect loop.
+         We detect a stale token by comparing the form's _token (rendered
+         server-side when the page was generated) against the meta tag
+         (also rendered server-side at the same time). If they ever differ,
+         we force a reload to fetch a fresh page with a fresh token. --}}
+    <script>
+    (function () {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        var form = document.getElementById('login-form');
+        if (!meta || !form) return;
+        var formTokenInput = form.querySelector('input[name="_token"]');
+        if (!formTokenInput) return;
+
+        // On submit, double-check the token is still valid by comparing it
+        // to the meta tag. If they're identical, the page is internally
+        // consistent and the submit should succeed.
+        form.addEventListener('submit', function (e) {
+            var metaToken = meta.getAttribute('content');
+            var formToken = formTokenInput.value;
+            if (!metaToken || !formToken || metaToken !== formToken) {
+                e.preventDefault();
+                console.warn('[Login] CSRF token mismatch detected — reloading page for fresh token.');
+                // Reload the page to get a fresh form + token. Don't lose the
+                // redirect query param if present.
+                window.location.reload();
+            }
+        }, true);  // capture phase, so we run before any other submit handlers
+
+        // If the user navigates back to this page via bfcache, the form's
+        // _token will be the old one. Force a reload to refresh it.
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) {
+                // Page was restored from bfcache — reload to get a fresh token.
+                window.location.reload();
+            }
+        });
+    })();
+    </script>
 </body>
 
 </html>

@@ -1,11 +1,16 @@
-// Redemption School Management System - Service Worker v3
-// Provides offline capability, caching, and push notification support
-// Performance-optimized with stale-while-revalidate for static assets
+// Redemption School Management System - Service Worker v4
+// v4: Stop caching /login and / — those pages contain a session-specific
+// CSRF token, and serving them from cache caused the login-loop bug.
+// Provides offline capability, caching, and push notification support.
+// Performance-optimized with stale-while-revalidate for static assets.
 
-const CACHE_NAME = 'redemption-v4';
+const CACHE_NAME = 'redemption-v5';
+// NOTE: Do NOT cache /login or / here. They are Blade-rendered HTML pages
+// whose <form> contains a session-specific CSRF token. Serving a cached
+// copy would give the user a STALE token, which then fails CSRF on POST
+// /login and triggers the "session expired" loop. Only the manifest is
+// safe to pre-cache.
 const STATIC_ASSETS = [
-    './',
-    './login',
     './manifest.webmanifest',
 ];
 
@@ -101,12 +106,22 @@ self.addEventListener('fetch', (event) => {
     // Skip cross-origin requests that aren't CDN
     if (!url.startsWith(self.location.origin)) return;
 
-    // For navigation requests (HTML pages), network first
+    // For navigation requests (HTML pages), network first.
+    // SECURITY: Never serve /login or / from cache — they contain a
+    // session-specific CSRF token in the form HTML. A cached copy would
+    // have a stale token and cause the login-POST "session expired" loop.
     if (event.request.mode === 'navigate') {
+        const requestUrl = new URL(event.request.url);
+        const path = requestUrl.pathname;
+        const isLoginOrRoot = path === '/' || path === '/login' ||
+                              path.endsWith('/login') || path.endsWith('/');
+
         event.respondWith(
             fetch(event.request)
                 .then((response) => {
-                    if (response.status === 200) {
+                    if (response.status === 200 && !isLoginOrRoot) {
+                        // Cache other navigation responses (admin pages, etc.)
+                        // but NOT /login or / — those must always be fresh.
                         const responseClone = response.clone();
                         caches.open(CACHE_NAME).then((cache) => {
                             cache.put(event.request, responseClone);
@@ -115,8 +130,32 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 })
                 .catch(() => {
+                    // Offline fallback:
+                    // - For /login or /, do NOT serve cache. Return a clear
+                    //   offline message so the user knows to reconnect.
+                    //   Serving a stale login form would loop them on CSRF
+                    //   mismatch once they're back online.
+                    // - For other pages, try the cache as a fallback.
+                    if (isLoginOrRoot) {
+                        return new Response(
+                            '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+                            '<title>Offline</title></head><body style="font-family:sans-serif;' +
+                            'display:flex;align-items:center;justify-content:center;min-height:100vh;' +
+                            'margin:0;background:#0C1F17;color:#fff;text-align:center;padding:2rem;">' +
+                            '<div><h1 style="color:#D97706;">You are offline</h1>' +
+                            '<p>Please check your internet connection and try again.</p>' +
+                            '<button onclick="location.reload()" style="margin-top:1rem;padding:10px 20px;' +
+                            'border:none;border-radius:8px;background:#047857;color:#fff;cursor:pointer;' +
+                            'font-size:14px;">Retry</button></div></body></html>',
+                            { status: 503, statusText: 'Service Unavailable',
+                              headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+                        );
+                    }
                     return caches.match(event.request).then((cachedResponse) => {
-                        return cachedResponse || caches.match('./login');
+                        return cachedResponse || new Response('Offline', {
+                            status: 503,
+                            statusText: 'Service Unavailable'
+                        });
                     });
                 })
         );

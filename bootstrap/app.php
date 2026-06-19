@@ -51,10 +51,26 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // ── Handle CSRF token mismatches (419 Page Expired) ──
-        // Instead of showing a generic "Page Expired" error, redirect back
-        // to the login page with a user-friendly message. This fixes the
-        // "session expired after re-login" bug where the user gets stuck
-        // in a loop after their session expires.
+        //
+        // LOOP BUG FIX (was: user could not log back in after session expiry):
+        //
+        // The previous implementation redirected POST /login → GET /login on
+        // CSRF mismatch. That redirect is itself a navigation, and on a flaky
+        // network (or with a cached page, or with a session that was GC'd
+        // between the GET and POST) the user could end up submitting the form
+        // with ANOTHER stale token, which would trigger ANOTHER redirect to
+        // /login — an infinite "Your session expired" loop.
+        //
+        // New behavior:
+        //   • For the login POST specifically, we do NOT redirect. We:
+        //       1. Force-invalidate the stale session and regenerate a new ID.
+        //       2. Render the auth.login view directly with a brand-new CSRF
+        //          token and a one-shot "Your session expired, please try
+        //          again" message. The user immediately sees a working form
+        //          and their next submit is guaranteed to have a valid token.
+        //   • For all other routes, we keep the redirect-to-login behavior
+        //     (with url.intended preserved) since those aren't susceptible to
+        //     the same loop.
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
             // For AJAX/JSON requests, return a JSON error
             if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
@@ -64,12 +80,32 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 419);
             }
 
-            // For the login POST specifically, redirect back to login with a message
-            // (instead of showing the 419 error page)
+            // ── Login POST: render login view directly (NO redirect) ──
+            // This breaks the previous infinite-loop bug where the redirect
+            // itself triggered another CSRF mismatch.
             if ($request->is('login') || $request->is('/login')) {
-                return redirect()->route('login')
-                    ->with('error', 'Your session expired. Please try logging in again.')
-                    ->withInput($request->except('password', '_token'));
+                try {
+                    // Destroy the stale session and start a clean one so the
+                    // form below gets a brand-new _token that will match on
+                    // the next POST.
+                    $request->session()->invalidate();
+                    $request->session()->regenerate();
+                    $request->session()->regenerateToken();
+                    $request->session()->save();
+                } catch (\Throwable $sessionError) {
+                    // Last resort — keep going, the view will still render.
+                }
+
+                return response()
+                    ->view('auth.login', [
+                        // Preserve the login identifier so the user doesn't
+                        // have to retype their email/ID.
+                        'login' => $request->input('login', ''),
+                    ])
+                    ->with('error', 'Your previous session expired. Please sign in again.')
+                    ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
+                    ->header('Pragma', 'no-cache')
+                    ->header('Expires', '0');
             }
 
             // For all other pages, redirect to login with the intended URL preserved

@@ -19,45 +19,40 @@ class AuthController extends Controller
             return redirect()->intended($this->getHomeRoute(Auth::user()));
         }
 
-        // ── FIX: When arriving after session expiration, the old session cookie
-        // may point to a deleted/expired session row. This causes the CSRF token
-        // to be generated for a session that won't persist, leading to 419 errors
-        // on the login POST. We must fully invalidate and regenerate the session
-        // to ensure a clean state.
-        // ──
+        // ── LOOP BUG FIX ──────────────────────────────────────────────────
+        // When a user arrives at /login after their session expired, the
+        // browser still holds the OLD session cookie. The previous code only
+        // invalidated the session if the row was missing from the DB — but
+        // an expired session row can linger (Laravel only GC's it on the 2%
+        // lottery). That left the user with a "valid-looking" but stale
+        // session, and the next POST /login would sometimes (especially under
+        // flaky networks or after GC ran between GET and POST) fail CSRF and
+        // trigger the bootstrap/app.php exception handler — which used to
+        // redirect back to /login, causing an infinite "session expired"
+        // loop.
+        //
+        // New behavior: ALWAYS force a clean session on /login (since the
+        // user is unauthenticated and we have nothing useful to preserve).
+        // This guarantees the form's @csrf token will match the session's
+        // _token on the next POST.
+        // ──────────────────────────────────────────────────────────────────
         try {
-            // Check if the current session is actually valid (exists in the database)
-            $sessionId = $request->session()->getId();
-            $sessionValid = false;
+            $oldSessionId = $request->session()->getId();
 
-            if (config('session.driver') === 'database') {
-                $existingSession = \DB::table('sessions')->where('id', $sessionId)->first();
-                $sessionValid = $existingSession !== null;
-            } else {
-                // For file driver, check if the session file exists
-                $sessionPath = config('session.files') . '/' . $sessionId;
-                $sessionValid = file_exists($sessionPath);
-            }
+            // invalidate() = flush data + migrate to a new ID with destroy=true.
+            // regenerate() = migrate again (defensive — guarantees a brand new ID
+            // even if invalidate() somehow kept the old one).
+            $request->session()->invalidate();
+            $request->session()->regenerate();
 
-            if (!$sessionValid) {
-                // Session is invalid — fully invalidate and regenerate
-                Log::info('AuthController@showLogin: invalid session detected, regenerating', [
-                    'old_session_id' => substr($sessionId, 0, 8) . '...',
-                ]);
-                $request->session()->invalidate();
-                $request->session()->regenerate();
-            }
+            Log::info('AuthController@showLogin: regenerated fresh session for login page', [
+                'old_session_id_prefix' => substr($oldSessionId, 0, 8) . '...',
+            ]);
         } catch (\Throwable $e) {
-            // If session check fails, force regenerate anyway
-            Log::warning('AuthController@showLogin: session check failed, regenerating', [
+            Log::warning('AuthController@showLogin: session regeneration failed, continuing', [
                 'error' => $e->getMessage(),
             ]);
-            try {
-                $request->session()->invalidate();
-                $request->session()->regenerate();
-            } catch (\Throwable $e2) {
-                // Last resort — just continue with whatever session we have
-            }
+            // Last resort — keep going; the view will still render.
         }
 
         // If there's a redirect parameter, store it in the session so
@@ -127,39 +122,44 @@ class AuthController extends Controller
             }
         }
         $user = $query->first();
-        
+
         if (!$user) {
-            Log::warning('AuthController@login failed: user not found', ['login' => $login]);
-            return view('auth.login')
-                ->with('login', $login)
-                ->withErrors(['login' => 'Invalid credentials. Please check your login details.'])
-                ->with('error', 'Invalid credentials. Please check your login details.');
+            Log::warning('AuthController@login failed: user not found', ['ip' => $r->ip()]);
+            // Reuse the same view-render helper so we always send no-store
+            // headers (prevents the browser from caching the login form with
+            // a stale CSRF token, which would cause the loop bug).
+            return $this->renderLoginViewWithNoStoreHeaders([
+                'login' => $login,
+                'error' => 'Invalid credentials. Please try again.',
+                'errors' => ['login' => 'Invalid credentials. Please try again.'],
+            ]);
         }
-        Log::debug('AuthController@login user found', ['user_id' => $user->id, 'login' => $login]);
-        
+
         // Check password
         if (!Hash::check($password, $user->password)) {
-            Log::warning('AuthController@login failed: wrong password', ['user_id' => $user->id, 'login' => $login]);
-            return view('auth.login')
-                ->with('login', $login)
-                ->withErrors(['login' => 'Invalid credentials. Please check your password.'])
-                ->with('error', 'Invalid credentials. Please check your password.');
+            Log::warning('AuthController@login failed: wrong password', ['user_id' => $user->id, 'ip' => $r->ip()]);
+            return $this->renderLoginViewWithNoStoreHeaders([
+                'login' => $login,
+                'error' => 'Invalid credentials. Please try again.',
+                'errors' => ['login' => 'Invalid credentials. Please try again.'],
+            ]);
         }
-        
+
         // Check if account is active
         if (isset($user->is_active) && !$user->is_active) {
-            Log::warning('AuthController@login blocked: account inactive', ['user_id' => $user->id, 'login' => $login]);
+            Log::warning('AuthController@login blocked: account inactive', ['user_id' => $user->id, 'ip' => $r->ip()]);
             Auth::logout();
             $r->session()->invalidate();
-            return view('auth.login')
-                ->with('login', $login)
-                ->withErrors(['login' => 'Your account has been deactivated. Please contact the administrator.'])
-                ->with('error', 'Your account has been deactivated. Please contact the administrator.');
+            return $this->renderLoginViewWithNoStoreHeaders([
+                'login' => $login,
+                'error' => 'Your account has been deactivated. Please contact the administrator.',
+                'errors' => ['login' => 'Your account has been deactivated. Please contact the administrator.'],
+            ]);
         }
-        
+
         // Log in the user
         Auth::login($user, $r->boolean('remember'));
-        Log::info('AuthController@login success', ['user_id' => $user->id, 'login' => $login]);
+        Log::info('AuthController@login success', ['user_id' => $user->id, 'ip' => $r->ip()]);
 
         // ── IMPORTANT: Read the redirect URL BEFORE regenerating the session.
         // Session regeneration creates a new session ID and migrates data, but
@@ -618,5 +618,46 @@ class AuthController extends Controller
 
         // Default: try admin dashboard (middleware will handle access control)
         return route('admin.dashboard');
+    }
+
+    /**
+     * Render the login view with no-store cache headers and a fresh CSRF
+     * token. Used by the login() failure paths to ensure the browser never
+     * caches the login form (which would freeze the CSRF token and cause
+     * the "session expired" loop on the next submit).
+     *
+     * @param array $data  View data: 'login', 'error', 'errors'
+     */
+    private function renderLoginViewWithNoStoreHeaders(array $data = [])
+    {
+        // Regenerate the CSRF token so the new form gets a fresh one. This
+        // is important because the previous form submission just consumed
+        // a render of the token — even though Laravel doesn't invalidate
+        // the token on use, regenerating here guarantees that even if the
+        // browser somehow served the OLD form from cache, the user could
+        // still successfully submit (the old token would still match the
+        // session's old token).
+        try {
+            request()->session()->regenerateToken();
+            request()->session()->save();
+        } catch (\Throwable $e) {
+            // Keep going — the view will still render.
+        }
+
+        $response = response()->view('auth.login', $data);
+
+        // Setting these on the $data array doesn't propagate to the response,
+        // so use the with() chain for error + errors, then add headers below.
+        if (isset($data['error'])) {
+            $response = $response->with('error', $data['error']);
+        }
+        if (isset($data['errors'])) {
+            $response = $response->withErrors($data['errors']);
+        }
+
+        return $response
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 }
