@@ -6,7 +6,7 @@ const CACHE_NAME = 'redemption-v4';
 const STATIC_ASSETS = [
     './',
     './login',
-    './manifest.json',
+    './manifest.webmanifest',
 ];
 
 // Cache durations (in seconds)

@@ -1,2 +1,25 @@
+# School of Redemption — robots.txt
+# Public website content is crawlable; authenticated areas are disallowed.
+
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /student
+Disallow: /parent
+Disallow: /login
+Disallow: /logout
+Disallow: /password
+Disallow: /storage
+Disallow: /telegram
+Disallow: /keepalive
+Disallow: /session-diagnostic
+
+# Allow the public homepage and marketing pages
+Allow: /$
+Allow: /about
+Allow: /gallery
+Allow: /contact
+Allow: /team
+Allow: /mobile-app
+
+# Sitemap (add once a sitemap route exists)
+# Sitemap: https://example.com/sitemap.xml
