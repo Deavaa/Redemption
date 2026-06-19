@@ -124,13 +124,27 @@
 /* Mark entry area */
 .me-mark-entry-area { display: flex; flex-direction: column; max-width: 100% !important; overflow-x: hidden !important; }
 
-/* Cards container */
+/* Cards container — overflow-y: auto so tall student cards can scroll
+   vertically inside this container, while position: sticky on the card
+   header keeps the student name visible at the top of the container.
+   Previously overflow: hidden, which clipped the bottom of tall cards
+   and meant teachers couldn't reach the exam inputs at the bottom. */
 .me-cards-container {
-    overflow: hidden; position: relative; border-radius: 6px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative; border-radius: 6px;
     max-height: calc(100vh - 260px); min-height: 200px;
     max-width: 100% !important; box-sizing: border-box !important;
     width: 100% !important;
+    /* Smooth scrolling on touch devices */
+    -webkit-overflow-scrolling: touch;
+    /* Subtle scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
 }
+.me-cards-container::-webkit-scrollbar { width: 6px; }
+.me-cards-container::-webkit-scrollbar-track { background: transparent; }
+.me-cards-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
 /* Card slider */
 .me-card-slider { display: flex; transition: transform 0.3s ease; will-change: transform; touch-action: pan-y; }
@@ -142,29 +156,47 @@
 .me-student-card {
     background: #fff; border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    border: 1px solid #eee; overflow: hidden;
+    border: 1px solid #eee;
+    /* IMPORTANT: do NOT use overflow: hidden here. Sticky positioning
+       (on .me-sc-header below) is broken when any ancestor has
+       overflow: hidden/auto/scroll. We use border-radius clipping
+       via the header's own rounded top corners instead. */
+    overflow: visible;
     transition: box-shadow 0.15s, border-color 0.15s;
     max-width: 100% !important; width: 100% !important; box-sizing: border-box !important;
 }
 .me-student-card:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-color: #ddd; }
 .me-student-card.card-active { border-color: #4361ee; box-shadow: 0 2px 8px rgba(67,97,238,0.1); }
 
-/* Card Header */
+/* Card Header — STICKY so the student name + roll number stay visible
+   while the teacher scrolls down to fill in CA / exam marks. This was
+   a top user complaint: when filling the bottom-of-card exam inputs,
+   teachers could no longer see whose marks they were entering.
+   position: sticky with top: 0 pins it inside .me-student-card. */
 .me-sc-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
     display: flex; align-items: center; gap: 6px;
-    padding: 4px 8px; background: #fafbfc;
-    border-bottom: 1px solid #eee;
+    padding: 8px 12px; background: #fafbfc;
+    border-bottom: 2px solid #4361ee;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+/* Slightly stronger header treatment when the card is the active one */
+.me-student-card.card-active .me-sc-header {
+    background: linear-gradient(135deg, #f0f4ff 0%, #fafbfc 100%);
 }
 .me-sc-avatar {
-    width: 22px; height: 22px; border-radius: 4px;
+    width: 32px; height: 32px; border-radius: 6px;
     background: linear-gradient(135deg, #4361ee, #818cf8); color: #fff;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.55rem; font-weight: 700; flex-shrink: 0;
+    font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
 }
-.me-sc-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
-.me-sc-name { font-weight: 700; font-size: 0.72rem; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.me-sc-roll { font-size: 0.6rem; color: #9ca3af; font-weight: 500; }
-.me-sc-number { font-size: 0.58rem; font-weight: 700; color: #6b7280; background: #f3f4f6; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+.me-sc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.me-sc-name { font-weight: 700; font-size: 0.85rem; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+.me-sc-roll { font-size: 0.7rem; color: #6b7280; font-weight: 500; }
+.me-sc-number { font-size: 0.65rem; font-weight: 700; color: #4361ee; background: #e0e7ff; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
 
 /* Card Body — CRITICAL: overflow-x auto allows grid to scroll if needed */
 .me-sc-body { padding: 4px 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -333,13 +365,16 @@
         max-width: 100% !important; overflow-x: hidden !important;
         box-sizing: border-box !important;
     }
-    /* Student cards: must NOT have width: 100% relative to slider — they use min-width for flex sizing */
+    /* Student cards: must NOT have width: 100% relative to slider — they use min-width for flex sizing.
+       IMPORTANT: do not set overflow: hidden here — it would break
+       position: sticky on the .me-sc-header child element. */
     .me-student-card {
         min-width: 100% !important;
         max-width: 100% !important;
         flex-shrink: 0 !important;
         box-sizing: border-box !important;
         overflow-x: hidden !important;
+        overflow-y: visible !important;
     }
     .me-sc-header, .me-sc-totals {
         max-width: 100% !important;
@@ -353,8 +388,18 @@
         width: auto !important;
         display: flex !important;
     }
-    /* Cards container clips the overflow so only one card is visible */
-    .me-cards-container { overflow: hidden !important; max-height: calc(100vh - 280px); width: 100% !important; }
+    /* Cards container clips the horizontal overflow (so only one card is
+       visible at a time) but allows vertical scrolling (so the bottom of
+       a tall student card is reachable). Combined with the sticky card
+       header, this means the student name stays pinned while the teacher
+       scrolls down to fill in exam marks. */
+    .me-cards-container {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        max-height: calc(100vh - 280px);
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+    }
     .me-cards-container .me-card-slider { max-width: none !important; }
     /* Card body can scroll horizontally for input grids */
     .me-sc-body { overflow-x: auto !important; width: 100% !important; }
