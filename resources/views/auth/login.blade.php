@@ -23,443 +23,223 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
     <link href="{{ asset('css/portal.css') }}" rel="stylesheet">
-    <style>
-        /* ===== Login Page — Emerald & Gold Glassmorphism ===== */
-
-        /* ===== Keyframe Animations ===== */
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes floatShape1 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -40px) scale(1.05); }
-            66% { transform: translate(-20px, 25px) scale(0.95); }
-        }
-
-        @keyframes floatShape2 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(-35px, 30px) scale(0.97); }
-            66% { transform: translate(25px, -20px) scale(1.03); }
-        }
-
-        @keyframes floatShape3 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(15px, -35px) rotate(180deg); }
-        }
-
-        /* ===== Base ===== */
-        body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #0C1F17 0%, #047857 50%, #065F46 100%);
-            background-size: 200% 200%;
-            animation: gradientShift 15s ease infinite;
-            font-family: var(--font-family);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Geometric dot pattern overlay */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 28px 28px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Floating decorative shape 1 */
-        body::after {
-            content: '';
-            position: absolute;
-            top: -120px; right: -120px;
-            width: 420px; height: 420px;
-            border-radius: 50%;
-            background: rgba(4, 120, 87, 0.12);
-            animation: floatShape1 22s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* ===== Login Box — Glassmorphism ===== */
-        .login-box {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 40px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.3), 0 0 50px rgba(4, 120, 87, 0.08);
-            width: 400px;
-            max-width: 90%;
-            position: relative;
-            z-index: 1;
-            animation: fadeInUp 0.8s ease-out both;
-        }
-
-        .login-box::before {
-            content: '';
-            position: absolute;
-            bottom: -140px; left: -140px;
-            width: 360px; height: 360px;
-            border-radius: 50%;
-            background: rgba(6, 95, 70, 0.07);
-            animation: floatShape2 28s ease-in-out infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .login-box::after {
-            content: '';
-            position: absolute;
-            top: -60px; left: -80px;
-            width: 180px; height: 180px;
-            border-radius: 50%;
-            background: rgba(12, 31, 23, 0.06);
-            animation: floatShape3 18s ease-in-out infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .login-box h2 {
-            text-align: center;
-            color: var(--color-sidebar-bg);
-            margin-bottom: 5px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-
-        .login-box p {
-            text-align: center;
-            color: #888;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-
-        .login-box .icon {
-            text-align: center;
-            font-size: 50px;
-            color: var(--color-primary);
-            margin-bottom: 15px;
-        }
-
-        /* ===== Form Inputs ===== */
-        .form-group { margin-bottom: 18px; }
-        .form-group label {
-            display: block; font-weight: 600;
-            margin-bottom: 6px; color: #444; font-size: 14px;
-        }
-        .form-group input {
-            width: 100%; padding: 14px 16px;
-            border: 1.5px solid #dde1e7;
-            border-radius: 10px; font-size: 15px;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.7); color: #333;
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px var(--color-primary-light);
-            background: #fff;
-        }
-        .form-group input::placeholder { color: #aab; }
-
-        /* ===== Login Button ===== */
-        .btn-login {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-            color: #fff; border: none; border-radius: 10px;
-            font-size: 16px; font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease;
-            letter-spacing: 0.3px;
-        }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px rgba(4, 120, 87, 0.35);
-        }
-        .btn-login:active {
-            transform: translateY(0) scale(0.98);
-            box-shadow: 0 4px 16px rgba(4, 120, 87, 0.25);
-        }
-
-        /* ===== Alerts ===== */
-        .alert {
-            background: #f8d7da; color: #721c24;
-            padding: 10px 15px; border-radius: 8px;
-            margin-bottom: 15px; font-size: 14px;
-        }
-        .alert-success {
-            background: #d1fae5; color: #065f46;
-            padding: 10px 15px; border-radius: 8px;
-            margin-bottom: 15px; font-size: 14px;
-        }
-
-        /* ===== Language Switcher ===== */
-        .lang-switcher {
-            position: absolute; top: 20px; right: 20px;
-            display: flex; gap: 6px; z-index: 10;
-        }
-        .lang-switcher a {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 8px 14px; border-radius: 8px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff; text-decoration: none;
-            font-size: 13px; font-weight: 500;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        .lang-switcher a:hover {
-            background: rgba(4, 120, 87, 0.25);
-            border-color: rgba(4, 120, 87, 0.4);
-        }
-        .lang-switcher a.active {
-            background: rgba(4, 120, 87, 0.3);
-            border-color: rgba(4, 120, 87, 0.5);
-            font-weight: 700;
-        }
-        .lang-switcher a i { font-size: 12px; }
-
-        /* ===== Links ===== */
-        .forgot-link {
-            display: block; text-align: center;
-            margin-top: 15px; color: var(--color-primary);
-            text-decoration: none; font-size: 14px; font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        .forgot-link:hover {
-            color: var(--color-primary-hover);
-            text-decoration: underline;
-        }
-        .back-link {
-            display: inline-flex; align-items: center; gap: 4px;
-            color: #6c757d; text-decoration: none;
-            font-size: 13px; margin-bottom: 15px;
-            transition: color 0.3s ease;
-        }
-        .back-link:hover { color: var(--color-primary); }
-
-        /* ===== Mobile App Button ===== */
-        .login-box > a[style] {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover)) !important;
-            border-radius: 10px !important;
-            transition: all 0.3s ease !important;
-        }
-        .login-box > a[style]:hover {
-            opacity: 0.9 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(4, 120, 87, 0.3);
-        }
-        .login-box > a[style]:active { transform: translateY(0) scale(0.98); }
-    </style>
+    {{-- Auth page styles extracted to a dedicated stylesheet for maintainability --}}
+    <link href="{{ asset('css/auth.css') }}" rel="stylesheet">
 </head>
 
 <body>
+    {{-- Skip link for keyboard / screen-reader users --}}
+    <a href="#login-form" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" onfocus="this.style.cssText='position:absolute;left:8px;top:8px;width:auto;height:auto;padding:8px 16px;background:#047857;color:#fff;border-radius:6px;z-index:100;'">{{ __('app.skip_to_login') }}</a>
+
     {{-- Language Switcher --}}
-    <div class="lang-switcher">
+    <nav class="lang-switcher" aria-label="{{ __('app.language') }}">
         @foreach (config('app.available_locales') as $code => $name)
-            <a href="{{ route('lang.switch', $code) }}" class="{{ app()->getLocale() === $code ? 'active' : '' }}">
-                <i class="fas fa-globe"></i>
+            <a href="{{ route('lang.switch', $code) }}"
+               class="{{ app()->getLocale() === $code ? 'active' : '' }}"
+               aria-current="{{ app()->getLocale() === $code ? 'true' : 'false' }}"
+               lang="{{ $code }}">
+                <i class="fas fa-globe" aria-hidden="true"></i>
                 {{ strtoupper($code) }}
             </a>
         @endforeach
-    </div>
+    </nav>
 
-    <div class="login-box">
-        <div class="icon"><i class="bi bi-mortarboard-fill"></i></div>
+    <main class="login-box">
+        <div class="icon" aria-hidden="true"><i class="bi bi-mortarboard-fill"></i></div>
         <h2>{{ __('app.school_name') }}</h2>
 
         @if (session('status'))
-            <div class="alert-success">{{ session('status') }}</div>
+            <div class="alert-success" role="status">{{ session('status') }}</div>
         @endif
 
         @if (session('reset_success'))
-            <div class="alert-success">{{ session('reset_success') }}</div>
+            <div class="alert-success" role="status">{{ session('reset_success') }}</div>
         @endif
 
         {{-- EMAIL RESET: Link sent confirmation --}}
         @if (session('reset_link_sent'))
-            <p style="margin-bottom:15px;">Check Your Email</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            <p style="margin-bottom:15px;">{{ __('app.check_your_email') }}</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
             <div class="alert-success" style="text-align:center;">
-                <i class="bi bi-envelope-check" style="font-size:24px;color:#047857;display:block;margin-bottom:8px;"></i>
-                We've sent a password reset link to <strong>{{ session('reset_email_sent') }}</strong>.<br>
-                <small style="color:#666;">Check your inbox and spam folder. The link expires in {{ config('auth.passwords.users.expire', 60) }} minutes.</small>
+                <i class="bi bi-envelope-check" style="font-size:24px;color:#047857;display:block;margin-bottom:8px;" aria-hidden="true"></i>
+                {!! __('app.reset_link_sent_text', ['email' => '<strong>' . e(session('reset_email_sent')) . '</strong>']) !!}<br>
+                <small style="color:#666;">{{ __('app.reset_link_expiry', ['minutes' => config('auth.passwords.users.expire', 60)]) }}</small>
             </div>
 
         {{-- EMAIL RESET: New password form (from email link) --}}
         @elseif(session('show_email_reset'))
-            <p style="margin-bottom:15px;">Set New Password</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            <p style="margin-bottom:15px;">{{ __('app.set_new_password') }}</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
             @if ($errors->any())
-                <div class="alert">{{ $errors->first() }}</div>
+                <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <form method="POST" action="{{ route('password.reset.token') }}">
                 @csrf
                 <input type="hidden" name="token" value="{{ session('reset_token') }}">
                 <input type="hidden" name="email" value="{{ session('reset_email') }}">
                 <div class="form-group">
-                    <label><i class="bi bi-person"></i> Account</label>
-                    <input type="text" value="{{ session('reset_user_name') }}" disabled
-                        style="background:#f9fafb;color:#6c757d;">
+                    <label for="reset-account"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.account') }}</label>
+                    <input type="text" id="reset-account" value="{{ session('reset_user_name') }}" disabled
+                        style="background:#f9fafb;color:#6c757d;" autocomplete="username">
                 </div>
                 <div class="form-group">
-                    <label><i class="bi bi-lock"></i> New Password</label>
-                    <input type="password" name="password" required placeholder="Enter new password" minlength="4" autofocus>
+                    <label for="reset-password"><i class="bi bi-lock" aria-hidden="true"></i> {{ __('app.new_password') }}</label>
+                    <input type="password" id="reset-password" name="password" required
+                        placeholder="{{ __('app.enter_new_password') }}"
+                        minlength="8" autocomplete="new-password" autofocus
+                        aria-describedby="reset-password-help">
+                    <small id="reset-password-help" class="helper-text">{{ __('app.password_requirements') }}</small>
                 </div>
                 <div class="form-group">
-                    <label><i class="bi bi-lock-fill"></i> Confirm Password</label>
-                    <input type="password" name="password_confirmation" required placeholder="Confirm new password"
-                        minlength="4">
+                    <label for="reset-password-confirm"><i class="bi bi-lock-fill" aria-hidden="true"></i> {{ __('app.confirm_password') }}</label>
+                    <input type="password" id="reset-password-confirm" name="password_confirmation" required
+                        placeholder="{{ __('app.confirm_new_password') }}"
+                        minlength="8" autocomplete="new-password">
                 </div>
-                <button type="submit" class="btn-login"><i class="bi bi-check-circle"></i> Reset Password</button>
+                <button type="submit" class="btn-login"><i class="bi bi-check-circle" aria-hidden="true"></i> {{ __('app.reset_password') }}</button>
             </form>
 
-        {{-- SECURITY QUESTION FORM --}}
+        {{-- SECURITY QUESTION RESET FORM --}}
         @elseif(session('show_reset_form'))
-            <p style="margin-bottom:15px;">Reset your password</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            <p style="margin-bottom:15px;">{{ __('app.reset_your_password') }}</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
             @if ($errors->any())
-                <div class="alert">{{ $errors->first() }}</div>
+                <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <form method="POST" action="{{ route('password.reset.submit') }}">
                 @csrf
                 <input type="hidden" name="email" value="{{ session('reset_email') }}">
                 <div class="form-group">
-                    <label><i class="bi bi-person"></i> Account</label>
-                    <input type="text" value="{{ session('reset_user_name') }}" disabled
-                        style="background:#f9fafb;color:#6c757d;">
+                    <label for="security-account"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.account') }}</label>
+                    <input type="text" id="security-account" value="{{ session('reset_user_name') }}" disabled
+                        style="background:#f9fafb;color:#6c757d;" autocomplete="username">
                 </div>
                 <div class="form-group">
-                    <label><i class="bi bi-lock"></i> New Password</label>
-                    <input type="password" name="password" required placeholder="Enter new password" minlength="4">
+                    <label for="security-password"><i class="bi bi-lock" aria-hidden="true"></i> {{ __('app.new_password') }}</label>
+                    <input type="password" id="security-password" name="password" required
+                        placeholder="{{ __('app.enter_new_password') }}"
+                        minlength="8" autocomplete="new-password"
+                        aria-describedby="security-password-help">
+                    <small id="security-password-help" class="helper-text">{{ __('app.password_requirements') }}</small>
                 </div>
                 <div class="form-group">
-                    <label><i class="bi bi-lock-fill"></i> Confirm Password</label>
-                    <input type="password" name="password_confirmation" required placeholder="Confirm new password"
-                        minlength="4">
+                    <label for="security-password-confirm"><i class="bi bi-lock-fill" aria-hidden="true"></i> {{ __('app.confirm_password') }}</label>
+                    <input type="password" id="security-password-confirm" name="password_confirmation" required
+                        placeholder="{{ __('app.confirm_new_password') }}"
+                        minlength="8" autocomplete="new-password">
                 </div>
-                <button type="submit" class="btn-login"><i class="bi bi-check-circle"></i> Reset Password</button>
+                <button type="submit" class="btn-login"><i class="bi bi-check-circle" aria-hidden="true"></i> {{ __('app.reset_password') }}</button>
             </form>
 
-            {{-- SECURITY QUESTION FORM --}}
+        {{-- SECURITY QUESTION FORM --}}
         @elseif(session('show_security'))
-            <p style="margin-bottom:15px;">Verify your identity</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            <p style="margin-bottom:15px;">{{ __('app.verify_your_identity') }}</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
             @if ($errors->any())
-                <div class="alert">{{ $errors->first() }}</div>
+                <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <form method="POST" action="{{ route('password.verify.security') }}">
                 @csrf
                 <input type="hidden" name="email" value="{{ session('security_email') }}">
                 <div class="form-group">
-                    <label><i class="bi bi-shield-lock"></i> {{ session('security_question') }}</label>
-                    <input type="text" name="security_answer" required placeholder="Your answer" autofocus>
+                    <label for="security-answer-input"><i class="bi bi-shield-lock" aria-hidden="true"></i> {{ session('security_question') }}</label>
+                    <input type="text" id="security-answer-input" name="security_answer" required
+                        placeholder="{{ __('app.your_answer') }}" autocomplete="off" autofocus>
                 </div>
-                <button type="submit" class="btn-login"><i class="bi bi-shield-check"></i> Verify</button>
+                <button type="submit" class="btn-login"><i class="bi bi-shield-check" aria-hidden="true"></i> {{ __('app.verify') }}</button>
             </form>
 
-            {{-- EMAIL-BASED FORGOT PASSWORD FORM --}}
+        {{-- EMAIL-BASED FORGOT PASSWORD FORM --}}
         @elseif(session('show_email_forgot'))
-            <p style="margin-bottom:15px;">Reset via Email</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            <p style="margin-bottom:15px;">{{ __('app.reset_via_email') }}</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
             @if ($errors->any())
-                <div class="alert">{{ $errors->first() }}</div>
+                <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <div style="text-align:center;margin-bottom:16px;">
-                <i class="bi bi-envelope" style="font-size:32px;color:var(--color-primary);"></i>
-                <p style="font-size:13px;color:#666;margin-top:8px;">Enter your email address and we'll send you a password reset link.</p>
+                <i class="bi bi-envelope" style="font-size:32px;color:var(--color-primary);" aria-hidden="true"></i>
+                <p style="font-size:13px;color:#666;margin-top:8px;">{{ __('app.reset_email_instructions') }}</p>
             </div>
             <form method="POST" action="{{ route('password.email.send') }}">
                 @csrf
                 <div class="form-group">
-                    <label><i class="bi bi-envelope"></i> Email Address</label>
-                    <input type="email" name="email" required autofocus placeholder="Enter your email address">
+                    <label for="email-forgot-input"><i class="bi bi-envelope" aria-hidden="true"></i> {{ __('app.email_address') }}</label>
+                    <input type="email" id="email-forgot-input" name="email" required autofocus
+                        placeholder="{{ __('app.enter_your_email') }}" autocomplete="email">
                 </div>
-                <button type="submit" class="btn-login"><i class="bi bi-send"></i> Send Reset Link</button>
+                <button type="submit" class="btn-login"><i class="bi bi-send" aria-hidden="true"></i> {{ __('app.send_reset_link') }}</button>
             </form>
             <div style="text-align:center;margin-top:12px;">
                 <a href="{{ route('password.forgot') }}" style="color:var(--color-primary);font-size:13px;text-decoration:none;">
-                    <i class="bi bi-shield-lock"></i> Reset using security question instead
+                    <i class="bi bi-shield-lock" aria-hidden="true"></i> {{ __('app.reset_via_security_question') }}
                 </a>
             </div>
 
-            {{-- FORGOT PASSWORD - FIND ACCOUNT FORM (security question) --}}
+        {{-- FORGOT PASSWORD - FIND ACCOUNT FORM (security question) --}}
         @elseif(session('show_forgot'))
-            <p style="margin-bottom:15px;">Find your account</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Login</a>
+            <p style="margin-bottom:15px;">{{ __('app.find_your_account') }}</p>
+            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
             @if ($errors->any())
-                <div class="alert">{{ $errors->first() }}</div>
+                <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <form method="POST" action="{{ route('password.forgot.submit') }}">
                 @csrf
                 <div class="form-group">
-                    <label><i class="bi bi-person"></i> Email / ID Number</label>
-                    <input type="text" name="login" required autofocus placeholder="Enter your email or ID number">
+                    <label for="find-account-input"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.email_or_id_number') }}</label>
+                    <input type="text" id="find-account-input" name="login" required autofocus
+                        placeholder="{{ __('app.enter_email_or_id') }}" autocomplete="username">
                 </div>
-                <button type="submit" class="btn-login"><i class="bi bi-search"></i> Find Account</button>
+                <button type="submit" class="btn-login"><i class="bi bi-search" aria-hidden="true"></i> {{ __('app.find_account') }}</button>
             </form>
             <div style="text-align:center;margin-top:12px;">
                 <a href="{{ route('password.email') }}" style="color:var(--color-primary);font-size:13px;text-decoration:none;">
-                    <i class="bi bi-envelope"></i> Reset via email instead
+                    <i class="bi bi-envelope" aria-hidden="true"></i> {{ __('app.reset_via_email_instead') }}
                 </a>
             </div>
 
-            {{-- DEFAULT LOGIN FORM --}}
+        {{-- DEFAULT LOGIN FORM --}}
         @else
             <p>{{ __('app.sign_in') }}</p>
             @if (session('error'))
-                <div class="alert">{{ session('error') }}</div>
+                <div class="alert" role="alert">{{ session('error') }}</div>
             @endif
             @if ($errors->any())
-                <div class="alert">{{ $errors->first('login') ?: ($errors->first('email') ?: $errors->first()) }}
-                </div>
+                <div class="alert" role="alert">{{ $errors->first('login') ?: ($errors->first('email') ?: $errors->first()) }}</div>
             @endif
-            <form method="POST" action="{{ route('login') }}">
+            <form id="login-form" method="POST" action="{{ route('login') }}">
                 @csrf
                 @if (request('redirect'))
                     <input type="hidden" name="redirect" value="{{ request('redirect') }}">
                 @endif
                 <div class="form-group">
-                    <label><i class="bi bi-person"></i> {{ __('app.email_id_phone') }}</label>
-                    <input type="text" name="login" value="{{ old('login', $login ?? '') }}" required autofocus
-                        placeholder="Student ID / Employee ID / Email / Phone (0900000000)">
-                    <small style="color:#888;font-size:11px;display:block;margin-top:4px;">Students: use your Student ID
-                        (e.g. STD-2025-00001) with default password <strong>123456</strong></small>
+                    <label for="login-input"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.email_id_phone') }}</label>
+                    <input type="text" id="login-input" name="login"
+                        value="{{ old('login', $login ?? '') }}" required autofocus
+                        placeholder="{{ __('app.login_placeholder') }}"
+                        autocomplete="username" autocapitalize="none">
+                    <small class="helper-text">{{ __('app.login_helper') }}</small>
                 </div>
                 <div class="form-group">
-                    <label><i class="bi bi-lock"></i> {{ __('app.password') }}</label>
-                    <input type="password" name="password" required placeholder="{{ __('app.enter_password') }}">
+                    <label for="password-input"><i class="bi bi-lock" aria-hidden="true"></i> {{ __('app.password') }}</label>
+                    <input type="password" id="password-input" name="password" required
+                        placeholder="{{ __('app.enter_password') }}"
+                        autocomplete="current-password">
                 </div>
-                <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right"></i>
+                <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
                     {{ __('app.login') }}</button>
             </form>
-            <a href="{{ route('password.email') }}" class="forgot-link"><i class="bi bi-key"></i> Forgot
-                Password?</a>
+            <a href="{{ route('password.email') }}" class="forgot-link"><i class="bi bi-key" aria-hidden="true"></i> {{ __('app.forgot_password') }}</a>
         @endif
-        <a href="{{ route('app.download') }}" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;padding:10px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;text-decoration:none;font-size:13px;font-weight:600;transition:opacity .2s;">
-            <i class="bi bi-phone"></i> Download Mobile App
+        <a href="{{ route('app.download') }}" class="app-download-link">
+            <i class="bi bi-phone" aria-hidden="true"></i> {{ __('app.download_mobile_app') }}
         </a>
-    </div>
+    </main>
 
     {{-- PWA Service Worker Registration --}}
     <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('{{ asset('sw.js') }}', { scope: '/' })
+            navigator.serviceWorker.register(@json(asset('sw.js')), { scope: '/' })
                 .then(function(reg) { console.log('[PWA] SW registered:', reg.scope); })
                 .catch(function(err) { console.log('[PWA] SW registration failed:', err); });
         });
