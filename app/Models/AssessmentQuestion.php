@@ -25,6 +25,13 @@ class AssessmentQuestion extends Model
         'seb_allowed_urls',
     ];
 
+    // SEB secrets — never leak to JSON/array responses.
+    protected $hidden = [
+        'seb_config_key',
+        'seb_quit_password',
+        'seb_exam_keys',
+    ];
+
     protected $casts = [
         'is_active' => 'boolean',
         'seb_allow_quit' => 'boolean',

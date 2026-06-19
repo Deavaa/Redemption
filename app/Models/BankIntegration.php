@@ -26,6 +26,14 @@ class BankIntegration extends Model
         'notes',
     ];
 
+    // Sensitive fields — never expose in JSON/array responses or logs.
+    protected $hidden = [
+        'api_key',
+        'api_secret',
+        'account_number',
+        'merchant_id',
+    ];
+
     protected $casts = [
         'is_active' => 'boolean',
     ];

@@ -25,6 +25,12 @@ class EmailInboxSetting extends Model
         'last_synced_at',
     ];
 
+    // Sensitive credentials — never expose in JSON/array responses.
+    protected $hidden = [
+        'imap_password',
+        'imap_username',
+    ];
+
     protected $casts = [
         'is_active' => 'boolean',
         'imap_port' => 'integer',
