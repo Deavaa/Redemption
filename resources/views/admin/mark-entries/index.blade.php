@@ -28,14 +28,23 @@
     max-width: 100% !important; box-sizing: border-box !important;
     overflow-x: hidden !important;
 }
-/* Card slider and its direct children need to exceed viewport width for carousel */
+/* Card slider and its direct children — single-card show/hide model.
+   Slider is display:block, cards are display:none except .card-active.
+   No transform, no flex layout, so position:sticky on .me-sc-header
+   works correctly inside the scroll container. */
 .me-page .me-card-slider,
 .me-card-slider {
-    max-width: none !important;
+    max-width: 100% !important;
     overflow: visible !important;
+    width: 100% !important;
+    display: block !important;
 }
 .me-card-slider .me-student-card {
     max-width: 100% !important;
+    display: none;
+}
+.me-card-slider .me-student-card.card-active {
+    display: block;
 }
 
 /* Filter Panel */
@@ -146,11 +155,22 @@
 .me-cards-container::-webkit-scrollbar-track { background: transparent; }
 .me-cards-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-/* Card slider */
-.me-card-slider { display: flex; transition: transform 0.3s ease; will-change: transform; touch-action: pan-y; }
-
-/* Each student card fills the carousel viewport */
-.me-card-slider .me-student-card { min-width: 100%; max-width: 100%; flex-shrink: 0; width: 100%; }
+/* Card slider
+   ────────────────────────────────────────────────────────────────────
+   PREVIOUSLY: used `transform: translateX(-N*100%)` to slide cards.
+   PROBLEM: any ancestor with `transform` set becomes a NEW CONTAINING
+   BLOCK for descendant `position: sticky` elements (CSS spec). This
+   silently broke the sticky student-name header — the teacher scrolled
+   down to enter exam marks and the name disappeared, exactly the
+   complaint we got.
+   FIX: don't slide via transform. Just show one card at a time
+   (display: block on the active card, display: none on the rest).
+   No transform on the slider ⇒ sticky works correctly. We keep the
+   `touch-action: pan-y` hint so vertical scrolling inside a card still
+   feels natural on touch devices. */
+.me-card-slider { display: block; touch-action: pan-y; }
+.me-card-slider .me-student-card { display: none; min-width: 100%; max-width: 100%; width: 100%; }
+.me-card-slider .me-student-card.card-active { display: block; }
 
 /* Student Card */
 .me-student-card {
@@ -172,20 +192,31 @@
    while the teacher scrolls down to fill in CA / exam marks. This was
    a top user complaint: when filling the bottom-of-card exam inputs,
    teachers could no longer see whose marks they were entering.
-   position: sticky with top: 0 pins it inside .me-student-card. */
+
+   position: sticky with top: 0 pins it inside .me-cards-container
+   (which has overflow-y: auto and is the scroll container).
+
+   IMPORTANT: this only works because the slider no longer uses
+   `transform: translateX()` to slide cards. CSS spec: any ancestor
+   with `transform` set becomes the containing block for descendant
+   `position: sticky` elements, breaking the stickiness. */
 .me-sc-header {
     position: sticky;
     top: 0;
-    z-index: 5;
+    z-index: 10;
     display: flex; align-items: center; gap: 6px;
-    padding: 8px 12px; background: #fafbfc;
+    padding: 10px 14px; background: rgba(255, 255, 255, 0.96);
     border-bottom: 2px solid #4361ee;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    /* Strong shadow so the header is visually distinct from card body
+       when the user scrolls — confirms the sticky is actually working. */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 /* Slightly stronger header treatment when the card is the active one */
 .me-student-card.card-active .me-sc-header {
-    background: linear-gradient(135deg, #f0f4ff 0%, #fafbfc 100%);
+    background: linear-gradient(135deg, rgba(240, 244, 255, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
+    border-bottom-color: #1d4ed8;
 }
 .me-sc-avatar {
     width: 32px; height: 32px; border-radius: 6px;
@@ -381,12 +412,14 @@
         box-sizing: border-box !important;
         overflow-x: hidden !important;
     }
-    /* Card slider MUST NOT have max-width: 100% - it needs to be wider to hold all cards */
+    /* Card slider: now uses display:block + show/hide on .card-active.
+       Previously was display:flex with transform:translateX — but
+       transform breaks position:sticky on the student-name header. */
     .me-card-slider {
-        max-width: none !important;
+        max-width: 100% !important;
         overflow: visible !important;
-        width: auto !important;
-        display: flex !important;
+        width: 100% !important;
+        display: block !important;
     }
     /* Cards container clips the horizontal overflow (so only one card is
        visible at a time) but allows vertical scrolling (so the bottom of
@@ -403,7 +436,8 @@
     .me-cards-container .me-card-slider { max-width: none !important; }
     /* Card body can scroll horizontally for input grids */
     .me-sc-body { overflow-x: auto !important; width: 100% !important; }
-    .me-sc-header { padding: 3px 5px; gap: 4px; }
+    /* Mobile padding tweak — keep sticky positioning intact */
+    .me-sc-header { padding: 6px 8px; gap: 4px; }
     .me-sc-body { padding: 3px 5px; }
     .me-sc-totals { padding: 3px 5px; }
     .me-sc-field-input { font-size: 0.72rem; padding: 2px 1px; max-width: 100% !important; }
@@ -1802,22 +1836,35 @@
 
         currentStudentIndex = index;
 
-        // Slide the slider
-        var offset = -index * 100;
-        if (animate === false) {
-            cardSlider.style.transition = 'none';
-            cardSlider.style.transform = 'translateX(' + offset + '%)';
-            // Force reflow then restore transition
-            cardSlider.offsetHeight; // eslint-disable-line no-unused-expressions
-            cardSlider.style.transition = '';
-        } else {
-            cardSlider.style.transform = 'translateX(' + offset + '%)';
-        }
-
-        // Update active card highlight
+        // ── Switch the visible card ───────────────────────────────────
+        // PREVIOUSLY: cardSlider.style.transform = 'translateX(' + offset + '%)';
+        // That `transform` made the slider a new containing block and broke
+        // `position: sticky` on the student-name header inside the card.
+        // Now we just toggle .card-active (CSS uses display:block / none).
         document.querySelectorAll('.me-student-card.card-active').forEach(function(c) { c.classList.remove('card-active'); });
         var activeCard = cardSlider.querySelector('.me-student-card[data-student-index="' + index + '"]');
-        if (activeCard) activeCard.classList.add('card-active');
+        if (activeCard) {
+            activeCard.classList.add('card-active');
+            // When a new card becomes visible, scroll the cards-container
+            // back to the top so the teacher sees the student name first
+            // (not the exam inputs they were filling for the previous student).
+            try {
+                var container = activeCard.closest('.me-cards-container');
+                if (container) container.scrollTop = 0;
+            } catch(e) {}
+            // Refocus the first empty input on the newly shown card so the
+            // teacher can immediately start typing marks without an extra click.
+            try {
+                var firstInput = activeCard.querySelector('.me-sc-field-input:not(.input-saved):not(:disabled)');
+                // Don't auto-focus on touch devices — it would pop the
+                // on-screen keyboard and block the carousel navigation.
+                if (firstInput && !('ontouchstart' in window)) {
+                    // Defer focus to next frame so the display:none → display:block
+                    // transition has fully applied.
+                    setTimeout(function() { firstInput.focus({ preventScroll: true }); }, 0);
+                }
+            } catch(e) {}
+        }
 
         updateCarouselNav();
     }
@@ -1937,34 +1984,31 @@
         // Determine if this is a horizontal swipe
         if (!isSwiping && Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
             isSwiping = true;
+            // Prevent vertical scroll while horizontally swiping so the
+            // swipe gesture is captured cleanly. (passive:true on this
+            // listener means we can't actually call e.preventDefault here,
+            // but setting isSwiping lets touchend know what to do.)
         }
-
-        if (isSwiping) {
-            // Live drag effect
-            var baseOffset = -currentStudentIndex * 100;
-            var containerWidth = cardsContainer.offsetWidth;
-            var dragPercent = (diffX / containerWidth) * 100;
-            cardSlider.style.transition = 'none';
-            cardSlider.style.transform = 'translateX(' + (baseOffset + dragPercent) + '%)';
-        }
+        // No live-drag visual: we used to apply translateX during the swipe,
+        // but that requires `transform` on the slider, which breaks
+        // `position: sticky` on the student-name header (CSS spec: any
+        // ancestor with transform becomes the containing block for sticky).
+        // Instead, we just detect the swipe direction and switch cards on
+        // touchend. The visual feedback is the natural scroll-snap when
+        // the next card pops into view.
     }, { passive: true });
 
     cardsContainer.addEventListener('touchend', function(e) {
         if (!isSwiping) return;
         isSwiping = false;
 
-        // Restore transition
-        cardSlider.style.transition = '';
-
         var diffX = touchCurrentX - touchStartX;
         if (diffX > swipeThreshold) {
             navigatePrev();
         } else if (diffX < -swipeThreshold) {
             navigateNext();
-        } else {
-            // Snap back to current
-            showStudent(currentStudentIndex);
         }
+        // No snap-back call needed — we never visually moved the slider.
     }, { passive: true });
 
     // ========== KEYBOARD NAVIGATION ==========
