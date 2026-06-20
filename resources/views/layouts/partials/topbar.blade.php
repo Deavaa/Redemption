@@ -239,7 +239,7 @@
         <a href="{{ route('admin.chat.index') }}" class="topbar-icon-btn" title="{{ __('app.chat') }}">
             <i class="fas fa-comment-dots"></i>
             @if(($chatUnread ?? 0) > 0)
-                <span class="badge-dot">{{ $chatUnread > 99 ? '99+' : $chatUnread }}</span>
+                <span class="badge-dot">{{ ($chatUnread ?? 0) > 99 ? '99+' : ($chatUnread ?? 0) }}</span>
             @endif
         </a>
 
@@ -260,7 +260,7 @@
                     aria-label="{{ __('app.notifications') }}">
                 <i class="fas fa-bell"></i>
                 @if(($notifUnread ?? 0) > 0)
-                    <span class="badge-dot">{{ $notifUnread > 99 ? '99+' : $notifUnread }}</span>
+                    <span class="badge-dot">{{ ($notifUnread ?? 0) > 99 ? '99+' : ($notifUnread ?? 0) }}</span>
                 @endif
             </button>
             <ul class="dropdown-menu dropdown-menu-end" style="min-width:320px;max-width:90vw;">
@@ -315,7 +315,7 @@
         {{-- User dropdown --}}
         <div class="dropdown">
             <button class="topbar-dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <div class="topbar-dropdown-avatar">{{ $authUser ? strtoupper(substr($authUser->name, 0, 1)) : '?' }}</div>
+                <div class="topbar-dropdown-avatar">{{ ($authUser ?? null) ? strtoupper(substr($authUser->name, 0, 1)) : '?' }}</div>
                 <span class="topbar-dropdown-name d-none d-md-inline">{{ $authUser?->name ?? 'Guest' }}</span>
                 <i class="fas fa-chevron-down topbar-dropdown-chevron d-none d-md-inline"></i>
             </button>
