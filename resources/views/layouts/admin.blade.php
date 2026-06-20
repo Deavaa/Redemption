@@ -252,9 +252,9 @@
     {{-- Bootstrap Icons — needed by subject-assignments and other views that use bi bi-* classes --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/design-tokens.css') }}?v=2" rel="stylesheet">
+    <link href="{{ asset('css/admin.css') }}?v=2" rel="stylesheet">
+    <link href="{{ asset('css/modern-components.css') }}?v=2" rel="stylesheet">
     <style>
         html, body { overflow-x: hidden; max-width: 100vw; width: 100%; box-sizing: border-box; }
         .admin-wrapper, .admin-main, .admin-content { max-width: 100%; box-sizing: border-box; }
