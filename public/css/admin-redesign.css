@@ -556,16 +556,22 @@
     border-top: 1px solid var(--color-border-light);
 }
 
-/* Stat card (dashboard KPI) — COMPACT */
+/* Stat card (dashboard KPI) — COMPACT HORIZONTAL LAYOUT
+   User asked for cards to be "as small as possible". Switched to a
+   horizontal flex layout: icon on the left, label+value on the right.
+   Padding reduced to 10×14px, icon to 36×36, value to 20px. */
 .stat-card {
     background: var(--color-card-bg);
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border-light);
-    padding: var(--spacing-3);
+    padding: 10px 14px;
     box-shadow: var(--shadow-sm);
     transition: box-shadow var(--transition-normal), transform var(--transition-normal);
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 .stat-card::before {
     content: '';
@@ -579,34 +585,51 @@
     transform: translateY(-1px);
 }
 .stat-card-icon {
-    width: 32px; height: 32px;
+    width: 36px; height: 36px;
+    flex-shrink: 0;
     border-radius: var(--radius-sm);
     background: var(--role-accent-light, var(--color-primary-light));
     color: var(--role-accent, var(--color-primary));
     display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-    margin-bottom: var(--spacing-2);
+    font-size: 15px;
+    margin: 0;
+}
+.stat-card-body {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    line-height: 1.1;
 }
 .stat-card-label {
     font-size: 10px; font-weight: 700;
     color: var(--color-text-muted);
-    text-transform: uppercase; letter-spacing: 0.05em;
-    margin: 0 0 2px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 0;
 }
 .stat-card-value {
-    font-size: 22px; font-weight: 800;
+    font-size: 20px; font-weight: 800;
     color: var(--color-text-dark);
     letter-spacing: -0.02em;
-    line-height: 1;
+    line-height: 1.1;
+    margin-top: 2px;
 }
 .stat-card-trend {
     margin-top: 4px;
-    font-size: 11px; font-weight: 600;
+    font-size: 10px; font-weight: 600;
     display: inline-flex; align-items: center; gap: 3px;
 }
 .stat-card-trend.up { color: var(--color-success); }
 .stat-card-trend.down { color: var(--color-danger); }
 .stat-card-trend.flat { color: var(--color-text-muted); }
+
+/* Compact card variant for general information cards */
+.modern-card.compact,
+.card-modern.compact { padding: 0; }
+.modern-card.compact .modern-card-header,
+.card-modern.compact .modern-card-header { padding: 8px 12px; }
+.modern-card.compact .modern-card-body,
+.card-modern.compact .modern-card-body { padding: 10px 12px; }
+.modern-card.compact .modern-card-title,
+.card-modern.compact .modern-card-title { font-size: 13px; }
 
 /* ==========================================================================
    5. BUTTONS — Refreshed
@@ -838,8 +861,9 @@
 @media (max-width: 767px) {
     .admin-content { padding: var(--spacing-3); }
     .page-header-title { font-size: 18px; }
-    .stat-card { padding: var(--spacing-4); }
-    .stat-card-value { font-size: 24px; }
+    .stat-card { padding: 8px 12px; }
+    .stat-card-value { font-size: 18px; }
+    .stat-card-icon { width: 32px; height: 32px; font-size: 13px; }
     .modern-card-body { padding: var(--spacing-4); }
     .topbar-breadcrumb { font-size: 13px; }
     .topbar-breadcrumb .breadcrumb-sep { display: none; }

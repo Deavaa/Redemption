@@ -140,11 +140,14 @@
                 return;
             }
 
-            closeBtn.addEventListener('click', function() {
-                tickerEl.style.display = 'none';
-                if (navbar) navbar.style.top = '0';
-                sessionStorage.setItem('ticker_dismissed', '1');
-            });
+            // Defensive: closeBtn may be missing on some page variants.
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    tickerEl.style.display = 'none';
+                    if (navbar) navbar.style.top = '0';
+                    sessionStorage.setItem('ticker_dismissed', '1');
+                });
+            }
 
             var categoryLabels = {
                 'holiday': 'Holiday', 'exam': 'Exam', 'event': 'Event',

@@ -121,6 +121,35 @@
             <a href="{{ route('admin.students.inactive') }}" class="btn-modern btn-modern-outline" style="font-size:0.78rem;padding:0.4rem 0.9rem;">
                 <i class="fas fa-user-clock"></i> Inactive
             </a>
+            {{-- Export buttons — uses /api/export/students endpoint. Pass
+                 current filter params so the export matches what's on screen. --}}
+            @php
+                $exportQuery = http_build_query(array_filter([
+                    'branch_id' => request('branch_id'),
+                    'class_id' => request('class_id'),
+                    'section_id' => request('section_id'),
+                    'search' => request('search'),
+                    'format' => '',
+                ]));
+            @endphp
+            <div class="dropdown d-inline-block">
+                <button class="btn-modern btn-modern-outline dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false"
+                        style="font-size:0.78rem;padding:0.4rem 0.9rem;">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width:180px;">
+                    <li><h6 class="dropdown-header"><i class="fas fa-file-pdf me-1"></i>PDF</h6></li>
+                    <li><a class="dropdown-item" href="{{ url('/api/export/students') }}?{{ str_replace('format=', 'format=pdf', $exportQuery) }}" target="_blank">
+                        <i class="fas fa-print me-2"></i>Print / Save as PDF
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header"><i class="fas fa-file-excel me-1"></i>Excel / CSV</h6></li>
+                    <li><a class="dropdown-item" href="{{ url('/api/export/students') }}?{{ str_replace('format=', 'format=csv', $exportQuery) }}">
+                        <i class="fas fa-file-csv me-2"></i>Download CSV
+                    </a></li>
+                </ul>
+            </div>
         </div>
     </div>
 

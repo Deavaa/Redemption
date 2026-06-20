@@ -28,7 +28,7 @@
         <button type="submit" class="btn btn-danger btn-sm" id="bulkDeleteBtn" disabled onclick="return confirm('Delete all selected assignments?')">
             <i class="bi bi-trash me-1"></i> Delete Selected
         </button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllChecks()">Cancel</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllChecks()"><i class="bi bi-x-circle me-1"></i>Cancel</button>
     </div>
 
     @if($assignments->count() > 0)
@@ -49,7 +49,7 @@
         </tr>@endforeach</tbody></table>
     </div></div></div>
     @else
-    <div class="card"><div class="card-body text-center py-5"><i class="bi bi-link-45deg display-1 text-muted"></i><h5 class="mt-3 text-muted">No Subject Assignments Yet</h5><a href="{{ route('admin.subject-assignments.create') }}" class="btn btn-primary mt-2">Assign First Subject</a></div></div>
+    <div class="card"><div class="card-body text-center py-5"><i class="bi bi-link-45deg display-1 text-muted"></i><h5 class="mt-3 text-muted">No Subject Assignments Yet</h5><a href="{{ route('admin.subject-assignments.create') }}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-1"></i>Assign First Subject</a></div></div>
     @endif
     </form>
 </div>

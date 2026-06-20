@@ -221,31 +221,37 @@
     border-bottom-color: #1d4ed8;
 }
 
-/* In-header navigation buttons (flank the student name) */
+/* In-header navigation buttons (flank the student name)
+   Larger and more prominent than the original — they're the primary
+   way teachers navigate between students now that the standalone
+   carousel-nav row above is hidden. */
 .me-sc-nav-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px; flex-shrink: 0;
-    border-radius: var(--radius-md, 8px);
-    border: 1px solid #e5e7eb;
+    width: 44px; height: 44px; flex-shrink: 0;
+    border-radius: var(--radius-md, 10px);
+    border: 1.5px solid #e5e7eb;
     background: #fff;
     color: #1a1a2e;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     transition: all 0.15s ease;
     padding: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 .me-sc-nav-btn:hover:not(:disabled) {
-    background: #f0f4ff;
+    background: linear-gradient(135deg, #4361ee 0%, #818cf8 100%);
     border-color: #4361ee;
-    color: #4361ee;
-    transform: scale(1.05);
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
 }
 .me-sc-nav-btn:active:not(:disabled) {
     transform: scale(0.95);
 }
 .me-sc-nav-btn:disabled {
-    opacity: 0.35;
+    opacity: 0.3;
     cursor: not-allowed;
+    background: #f9fafb;
 }
 .me-sc-nav-btn:focus-visible {
     outline: 2px solid #4361ee;
@@ -638,8 +644,14 @@
             </div>
         </div>
 
-        {{-- Carousel Navigation Bar --}}
-        <div class="me-carousel-nav" id="carouselNav">
+        {{-- Carousel Navigation Bar — HIDDEN.
+            The prev/next nav buttons now live INSIDE the sticky card header,
+            flanking the student name (see .me-sc-nav-btn in CSS and the
+            renderAllCards() function). The standalone nav row below is kept
+            in the DOM for backward compat with any JS that references
+            #btnPrevStudent / #btnNextStudent / #currentStudentNum, but is
+            hidden via CSS (display:none) to avoid duplication. --}}
+        <div class="me-carousel-nav d-none" id="carouselNav" aria-hidden="true">
             <button type="button" class="me-carousel-nav-btn" id="btnPrevStudent" disabled>
                 <i class="fas fa-chevron-left"></i> Prev
             </button>

@@ -47,41 +47,51 @@
         </div>
 
         {{-- New stat-card row (uses .stat-card from admin-redesign.css) --}}
-        <div class="row g-3 mb-4">
+        <div class="row g-2 mb-3">
             <div class="col-6 col-md-3 col-xl-2">
                 <a href="{{ route('admin.students.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
                     <div class="stat-card-icon"><i class="fas fa-user-graduate"></i></div>
-                    <div class="stat-card-label">Students</div>
-                    <div class="stat-card-value">{{ $totalStudents }}</div>
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Students</div>
+                        <div class="stat-card-value">{{ $totalStudents }}</div>
+                    </div>
                 </a>
             </div>
             <div class="col-6 col-md-3 col-xl-2">
                 <a href="{{ route('admin.teachers.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
                     <div class="stat-card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                    <div class="stat-card-label">Teachers</div>
-                    <div class="stat-card-value">{{ $totalTeachers }}</div>
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Teachers</div>
+                        <div class="stat-card-value">{{ $totalTeachers }}</div>
+                    </div>
                 </a>
             </div>
             <div class="col-6 col-md-3 col-xl-2">
                 <a href="{{ route('admin.classrooms.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
                     <div class="stat-card-icon"><i class="fas fa-chalkboard"></i></div>
-                    <div class="stat-card-label">Classes</div>
-                    <div class="stat-card-value">{{ $totalClasses }}</div>
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Classes</div>
+                        <div class="stat-card-value">{{ $totalClasses }}</div>
+                    </div>
                 </a>
             </div>
             <div class="col-6 col-md-3 col-xl-2">
                 <a href="{{ route('admin.subjects.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
                     <div class="stat-card-icon"><i class="fas fa-book"></i></div>
-                    <div class="stat-card-label">Subjects</div>
-                    <div class="stat-card-value">{{ $totalSubjects }}</div>
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Subjects</div>
+                        <div class="stat-card-value">{{ $totalSubjects }}</div>
+                    </div>
                 </a>
             </div>
             @if(!$isBranchScoped)
             <div class="col-6 col-md-3 col-xl-2">
                 <a href="{{ route('admin.branches.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
                     <div class="stat-card-icon"><i class="fas fa-building"></i></div>
-                    <div class="stat-card-label">Branches</div>
-                    <div class="stat-card-value">{{ $totalBranches }}</div>
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Branches</div>
+                        <div class="stat-card-value">{{ $totalBranches }}</div>
+                    </div>
                 </a>
             </div>
             @endif
@@ -91,8 +101,10 @@
                     <div class="stat-card-icon" style="background:var(--color-success-light);color:var(--color-success);">
                         <i class="fas fa-money-bill-wave"></i>
                     </div>
-                    <div class="stat-card-label">Fee Collected</div>
-                    <div class="stat-card-value" style="font-size:20px;">{{ number_format($totalFeeCollected, 0) }}</div>
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Fee Collected</div>
+                        <div class="stat-card-value" style="font-size:16px;">{{ number_format($totalFeeCollected, 0) }}</div>
+                    </div>
                 </a>
             </div>
             @endif

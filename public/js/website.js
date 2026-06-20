@@ -256,6 +256,11 @@
     }
 
     var ptrText = document.getElementById('ptrText');
+    // Defensive: if ptrText is missing for any reason, fall back to textContent
+    // of the pullIndicator itself so the touchend handler doesn't throw.
+    function setPtrText(text) {
+        if (ptrText) ptrText.textContent = text;
+    }
     var startY = 0;
     var pulling = false;
     var threshold = 80;
@@ -278,11 +283,11 @@
             var height = Math.min(diff * 0.5, threshold);
             pullIndicator.style.height = height + 'px';
             if (height >= threshold) {
-                ptrText.textContent = 'Release to refresh';
-                pullIndicator.querySelector('i').classList.add('fa-spin');
+                setPtrText('Release to refresh');
+                pullIndicator.querySelector('i')?.classList.add('fa-spin');
             } else {
-                ptrText.textContent = 'Pull to refresh';
-                pullIndicator.querySelector('i').classList.remove('fa-spin');
+                setPtrText('Pull to refresh');
+                pullIndicator.querySelector('i')?.classList.remove('fa-spin');
             }
         }
     }, { passive: true });
@@ -291,9 +296,9 @@
         if (window.innerWidth >= 769 || !pulling) return;
         var currentHeight = parseInt(pullIndicator.style.height) || 0;
         if (currentHeight >= threshold) {
-            ptrText.textContent = 'Refreshing...';
+            setPtrText('Refreshing...');
             pullIndicator.style.height = '40px';
-            pullIndicator.querySelector('i').classList.add('fa-spin');
+            pullIndicator.querySelector('i')?.classList.add('fa-spin');
             setTimeout(function() { window.location.reload(); }, 500);
         } else {
             pullIndicator.style.height = '0';

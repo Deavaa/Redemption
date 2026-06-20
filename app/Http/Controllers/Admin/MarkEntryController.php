@@ -45,7 +45,15 @@ class MarkEntryController extends Controller
         $terms = $currentAy ? Term::where('academic_year_id', $currentAy->id)->orderBy('id','asc')->get() : collect();
         $currentTerm = $terms->first();
 
-        // ── Branch scope: principals only see their branch ──
+        // ── Branch scope ──
+        // Branch principals are restricted to their own branch (via the
+        // branch-scope middleware). Admins / general managers see all.
+        // Teachers now ALSO see all branches by default (per user request)
+        // — they can pick any branch from the dropdown. Their per-class /
+        // per-section access is still filtered by their teacher assignments
+        // (see the $teacher logic below), so this does NOT give them data
+        // they shouldn't see — it just lets them pick which branch's
+        // classes/sections to browse in the dropdowns.
         $branchScope = $request->attributes->get('branch_scope');
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
         if ($branchScope) {
@@ -53,19 +61,10 @@ class MarkEntryController extends Controller
         }
         $userBranchId = auth()->user()->branch_id;
 
-        // ── Teacher branch restriction ──
-        // Teachers should only see their OWN branch's data on mark entry.
-        // They don't get an "All Branches" option — only their assigned
-        // branch. If a teacher has no branch_id, fall back to showing all
-        // branches (edge case: legacy teacher record without branch).
+        // Kept for backward compat with the view (which still references it
+        // to decide whether to disable the branch dropdown). Always false
+        // now — teachers are no longer hard-restricted to their own branch.
         $isTeacherBranchScoped = false;
-        if (auth()->user()->role === 'teacher' && $userBranchId) {
-            $isTeacherBranchScoped = true;
-            $branches = $branches->where('id', $userBranchId);
-            // Also set branchScope so downstream queries (classes, sections,
-            // students, mark-entry-lock checks) are filtered to this branch.
-            $branchScope = $userBranchId;
-        }
 
         // Teacher-scoped filtering
         $isTeacher = false;
