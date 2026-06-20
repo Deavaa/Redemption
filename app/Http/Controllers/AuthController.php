@@ -630,13 +630,7 @@ class AuthController extends Controller
      */
     private function renderLoginViewWithNoStoreHeaders(array $data = [])
     {
-        // Regenerate the CSRF token so the new form gets a fresh one. This
-        // is important because the previous form submission just consumed
-        // a render of the token — even though Laravel doesn't invalidate
-        // the token on use, regenerating here guarantees that even if the
-        // browser somehow served the OLD form from cache, the user could
-        // still successfully submit (the old token would still match the
-        // session's old token).
+        // Regenerate the CSRF token so the new form gets a fresh one.
         try {
             request()->session()->regenerateToken();
             request()->session()->save();
@@ -644,18 +638,25 @@ class AuthController extends Controller
             // Keep going — the view will still render.
         }
 
-        $response = response()->view('auth.login', $data);
-
-        // Setting these on the $data array doesn't propagate to the response,
-        // so use the with() chain for error + errors, then add headers below.
+        // Flash error/errors to the session so the view can pick them up
+        // via session('error') and $errors->any(). We can't use ->with()
+        // on a Response object (only RedirectResponse has that method).
         if (isset($data['error'])) {
-            $response = $response->with('error', $data['error']);
+            try {
+                request()->session()->flash('error', $data['error']);
+            } catch (\Throwable $e) {}
         }
         if (isset($data['errors'])) {
-            $response = $response->withErrors($data['errors']);
+            try {
+                request()->session()->flash('errors', $data['errors']);
+            } catch (\Throwable $e) {}
         }
 
-        return $response
+        // Pass the remaining data (like 'login') directly to the view.
+        $viewData = $data;
+        unset($viewData['error'], $viewData['errors']);
+
+        return response()->view('auth.login', $viewData)
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
