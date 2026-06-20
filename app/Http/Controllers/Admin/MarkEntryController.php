@@ -53,6 +53,20 @@ class MarkEntryController extends Controller
         }
         $userBranchId = auth()->user()->branch_id;
 
+        // ── Teacher branch restriction ──
+        // Teachers should only see their OWN branch's data on mark entry.
+        // They don't get an "All Branches" option — only their assigned
+        // branch. If a teacher has no branch_id, fall back to showing all
+        // branches (edge case: legacy teacher record without branch).
+        $isTeacherBranchScoped = false;
+        if (auth()->user()->role === 'teacher' && $userBranchId) {
+            $isTeacherBranchScoped = true;
+            $branches = $branches->where('id', $userBranchId);
+            // Also set branchScope so downstream queries (classes, sections,
+            // students, mark-entry-lock checks) are filtered to this branch.
+            $branchScope = $userBranchId;
+        }
+
         // Teacher-scoped filtering
         $isTeacher = false;
         $teacherAssignments = collect();
@@ -172,7 +186,7 @@ class MarkEntryController extends Controller
                 ->orderBy('class_id','asc')->orderBy('name','asc')->get();
         }
 
-        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'classes', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments', 'branches', 'branchScope', 'userBranchId'));
+        return view('admin.mark-entries.index', compact('academicYears', 'terms', 'sections', 'classes', 'currentAy', 'currentTerm', 'isTeacher', 'teacherAssignments', 'branches', 'branchScope', 'userBranchId', 'isTeacherBranchScoped'));
     }
 
     public function apiClasses(Request $request) {

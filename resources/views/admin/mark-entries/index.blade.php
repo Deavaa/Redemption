@@ -199,24 +199,57 @@
    IMPORTANT: this only works because the slider no longer uses
    `transform: translateX()` to slide cards. CSS spec: any ancestor
    with `transform` set becomes the containing block for descendant
-   `position: sticky` elements, breaking the stickiness. */
+   `position: sticky` elements, breaking the stickiness.
+
+   LAYOUT: [◀ Prev] [avatar] [Name + Roll] [#N] [Next ▶]
+   The Prev/Next buttons flank the student name so the teacher can
+   navigate students without scrolling back up to the carousel nav bar. */
 .me-sc-header {
     position: sticky;
     top: 0;
     z-index: 10;
     display: flex; align-items: center; gap: 6px;
-    padding: 10px 14px; background: rgba(255, 255, 255, 0.96);
+    padding: 8px 12px; background: rgba(255, 255, 255, 0.96);
     border-bottom: 2px solid #4361ee;
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
-    /* Strong shadow so the header is visually distinct from card body
-       when the user scrolls — confirms the sticky is actually working. */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 /* Slightly stronger header treatment when the card is the active one */
 .me-student-card.card-active .me-sc-header {
     background: linear-gradient(135deg, rgba(240, 244, 255, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
     border-bottom-color: #1d4ed8;
+}
+
+/* In-header navigation buttons (flank the student name) */
+.me-sc-nav-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; flex-shrink: 0;
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #1a1a2e;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+.me-sc-nav-btn:hover:not(:disabled) {
+    background: #f0f4ff;
+    border-color: #4361ee;
+    color: #4361ee;
+    transform: scale(1.05);
+}
+.me-sc-nav-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+.me-sc-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.me-sc-nav-btn:focus-visible {
+    outline: 2px solid #4361ee;
+    outline-offset: 2px;
 }
 .me-sc-avatar {
     width: 32px; height: 32px; border-radius: 6px;
@@ -513,14 +546,21 @@
                 </div>
                 <div class="me-filter-group">
                     <label class="me-filter-label" for="filterBranch">Branch</label>
-                    <select id="filterBranch" class="me-filter-select" name="branch_id" {{ $branchScope ? 'disabled' : '' }}>
-                        <option value="">-- All Branches --</option>
-                        @foreach ($branches as $branch)
-                            <option value="{{ $branch->id }}" {{ $userBranchId && $userBranchId == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
-                        @endforeach
+                    <select id="filterBranch" class="me-filter-select" name="branch_id" {{ ($branchScope || $isTeacherBranchScoped) ? 'disabled' : '' }}>
+                        {{-- Teachers only see their own branch (no "All" option) --}}
+                        @if($isTeacherBranchScoped)
+                            @foreach ($branches as $branch)
+                                <option value="{{ $branch->id }}" selected>{{ $branch->name }}</option>
+                            @endforeach
+                        @else
+                            <option value="">-- All Branches --</option>
+                            @foreach ($branches as $branch)
+                                <option value="{{ $branch->id }}" {{ $userBranchId && $userBranchId == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                            @endforeach
+                        @endif
                     </select>
-                    @if($branchScope)
-                        <input type="hidden" name="branch_id" value="{{ $branchScope }}">
+                    @if($branchScope || $isTeacherBranchScoped)
+                        <input type="hidden" name="branch_id" value="{{ $branchScope ?? $userBranchId }}">
                     @endif
                 </div>
                 <div class="me-filter-group">
@@ -1533,14 +1573,25 @@
 
             html += '<div class="me-student-card" id="card_' + s.id + '" data-student-index="' + idx + '">';
 
-            // Card Header
+            // Card Header — STICKY with inline prev/next nav buttons
+            // Layout: [◀ Prev] [avatar] [Name + Roll] [#N] [Next ▶]
             html += '<div class="me-sc-header">';
+            // Prev button (disabled if first student)
+            html += '<button type="button" class="me-sc-nav-btn me-sc-nav-prev" data-student-index="' + idx + '"'
+                + (idx === 0 ? ' disabled' : '')
+                + ' title="Previous student (←)" aria-label="Previous student">'
+                + '<i class="fas fa-chevron-left"></i></button>';
             html += '<div class="me-sc-avatar">' + escapeHtml(initials) + '</div>';
             html += '<div class="me-sc-info">';
             html += '<div class="me-sc-name">' + escapeHtml(s.student_name) + '</div>';
             html += '<div class="me-sc-roll">' + (s.roll_number ? 'Roll: ' + escapeHtml(s.roll_number) : '') + '</div>';
             html += '</div>';
             html += '<span class="me-sc-number">#' + (idx + 1) + '</span>';
+            // Next button (disabled if last student)
+            html += '<button type="button" class="me-sc-nav-btn me-sc-nav-next" data-student-index="' + idx + '"'
+                + (idx === students.length - 1 ? ' disabled' : '')
+                + ' title="Next student (→)" aria-label="Next student">'
+                + '<i class="fas fa-chevron-right"></i></button>';
             html += '</div>';
 
             // Card Body
@@ -1941,9 +1992,26 @@
         }
     });
 
-    // Prev/Next button handlers
+    // Prev/Next button handlers (top carousel nav bar)
     btnPrevStudent.addEventListener('click', function() { navigatePrev(); });
     btnNextStudent.addEventListener('click', function() { navigateNext(); });
+
+    // In-header prev/next button handlers (flank the student name in the
+    // sticky header — these are generated dynamically per card, so we use
+    // event delegation on the card slider).
+    if (cardSlider) {
+        cardSlider.addEventListener('click', function(e) {
+            var prevBtn = e.target.closest('.me-sc-nav-prev');
+            var nextBtn = e.target.closest('.me-sc-nav-next');
+            if (prevBtn && !prevBtn.disabled) {
+                flushPendingSaves();
+                navigatePrev();
+            } else if (nextBtn && !nextBtn.disabled) {
+                flushPendingSaves();
+                navigateNext();
+            }
+        });
+    }
 
     // Flush any pending debounced saves for current student before navigating
     function flushPendingSaves() {
