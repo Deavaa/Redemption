@@ -22,17 +22,14 @@
 
 /* ==========================================================================
    1. SIDEBAR — Modernized, consolidated, with menu search
-   ========================================================================== */
+   ==========================================================================
+   NOTE: admin.css already defines .admin-sidebar with position:fixed,
+   left:0, top:0, bottom:0, z-index:100, display:flex, flex-direction:column.
+   We DO NOT redefine those here — only add visual enhancements on top.
+   Redefining .admin-sidebar without position:fixed would break the layout
+   (sidebar would become a flex item in .admin-wrapper and push the main
+   content to a separate column). */
 
-.admin-sidebar {
-    background: var(--color-sidebar-bg);
-    background-image: linear-gradient(180deg, #0C1F17 0%, #0A1812 100%);
-    width: var(--sidebar-width);
-    box-shadow: 2px 0 24px rgba(0, 0, 0, 0.18);
-    transition: transform var(--transition-normal), width var(--transition-normal);
-}
-
-/* Brand header — cleaner spacing */
 .admin-sidebar .sidebar-header {
     padding: 18px 20px 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
