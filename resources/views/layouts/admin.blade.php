@@ -270,15 +270,15 @@
             </a>
         </div>
         @php
-            $isTeacher = Auth::user()?->role ?? '' === 'teacher';
+            $isTeacher = (Auth::user()?->role ?? '') === 'teacher';
             $isAdmin = in_array(Auth::user()?->role ?? '', ['admin', 'super_admin']);
-            $isBranchPrincipal = Auth::user()?->role ?? '' === 'branch_principal';
-            $isGeneralManager = Auth::user()?->role ?? '' === 'general_manager';
-            $isLibrarian = Auth::user()?->role ?? '' === 'librarian';
-            $isCashier = Auth::user()?->role ?? '' === 'cashier';
-            $isRegistrar = Auth::user()?->role ?? '' === 'registrar';
-            $isFinance = Auth::user()?->role ?? '' === 'finance';
-            $isHR = Auth::user()?->role ?? '' === 'hr';
+            $isBranchPrincipal = (Auth::user()?->role ?? '') === 'branch_principal';
+            $isGeneralManager = (Auth::user()?->role ?? '') === 'general_manager';
+            $isLibrarian = (Auth::user()?->role ?? '') === 'librarian';
+            $isCashier = (Auth::user()?->role ?? '') === 'cashier';
+            $isRegistrar = (Auth::user()?->role ?? '') === 'registrar';
+            $isFinance = (Auth::user()?->role ?? '') === 'finance';
+            $isHR = (Auth::user()?->role ?? '') === 'hr';
 
             // Menu level determines which sidebar sections are shown
             $menuLevel = 'full'; // default for admin/super_admin
