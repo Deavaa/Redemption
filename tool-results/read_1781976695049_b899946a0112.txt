@@ -1,0 +1,441 @@
+     1→@extends('layouts.admin')
+     2→
+     3→@section('title', 'Create Assessment Question')
+     4→
+     5→@section('content')
+     6→<div class="modern-page">
+     7→    <div class="modern-page-header">
+     8→        <div class="modern-page-header-left">
+     9→            <nav class="modern-breadcrumb"><ol>
+    10→                <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
+    11→                <li><a href="{{ route('admin.assessment-questions.index') }}">Self-Assessment</a></li>
+    12→                <li class="active">Create Question</li>
+    13→            </ol></nav>
+    14→            <h1 class="modern-page-title">Create Assessment Question</h1>
+    15→            <p class="modern-page-subtitle">Add a self-assessment question with explanation for students</p>
+    16→        </div>
+    17→        <div class="modern-page-header-right">
+    18→            <a href="{{ route('admin.assessment-questions.index') }}" class="btn-modern btn-modern-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+    19→        </div>
+    20→    </div>
+    21→
+    22→    {{-- Session error messages --}}
+    23→    @if(session('error'))
+    24→    <div class="modern-alert modern-alert-danger" style="margin-bottom:1rem">
+    25→        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+    26→        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    27→    </div>
+    28→    @endif
+    29→
+    30→    {{-- Validation error summary --}}
+    31→    @if($errors->any())
+    32→    <div class="modern-alert modern-alert-danger" style="margin-bottom:1rem">
+    33→        <div style="display:flex;align-items:flex-start;gap:0.75rem">
+    34→            <i class="fas fa-exclamation-triangle" style="margin-top:2px;font-size:1.1rem"></i>
+    35→            <div>
+    36→                <strong>Please fix the following errors:</strong>
+    37→                <ul style="margin:0.5rem 0 0 1.25rem;font-size:0.85rem">
+    38→                    @foreach($errors->all() as $error)
+    39→                    <li>{{ $error }}</li>
+    40→                    @endforeach
+    41→                </ul>
+    42→            </div>
+    43→        </div>
+    44→        <button class="modern-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    45→    </div>
+    46→    @endif
+    47→
+    48→    <form method="POST" action="{{ route('admin.assessment-questions.store') }}" id="questionForm">
+    49→        @csrf
+    50→
+    51→        {{-- Question Details --}}
+    52→        <div class="modern-card" style="margin-bottom:1.25rem">
+    53→            <div class="modern-card-header">
+    54→                <div class="modern-card-header-left">
+    55→                    <i class="fas fa-info-circle" style="color:#4361ee"></i>
+    56→                    <span class="modern-card-title">Question Details</span>
+    57→                </div>
+    58→            </div>
+    59→            <div style="padding:1.5rem">
+    60→                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
+    61→                    <div class="modern-form-group">
+    62→                        <label class="modern-form-label">Subject <span class="modern-required">*</span></label>
+    63→                        <select name="subject_id" class="modern-input modern-select @error('subject_id') is-invalid @enderror" style="padding-left:0.75rem" required>
+    64→                            <option value="">Select Subject</option>
+    65→                            @foreach($subjects as $subject)
+    66→                            <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
+    67→                            @endforeach
+    68→                        </select>
+    69→                        @error('subject_id')<span class="modern-form-error">{{ $message }}</span>@enderror
+    70→                    </div>
+    71→                    <div class="modern-form-group">
+    72→                        <label class="modern-form-label">Class <span class="modern-required">*</span></label>
+    73→                        <select name="class_id" id="classSelect" class="modern-input modern-select @error('class_id') is-invalid @enderror" style="padding-left:0.75rem" required>
+    74→                            <option value="">Select Class</option>
+    75→                            @foreach($classes as $class)
+    76→                            <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+    77→                            @endforeach
+    78→                        </select>
+    79→                        @error('class_id')<span class="modern-form-error">{{ $message }}</span>@enderror
+    80→                    </div>
+    81→                    <div class="modern-form-group">
+    82→                        <label class="modern-form-label">Applies To</label>
+    83→                        <div class="modern-input" style="padding-left:0.75rem;display:flex;align-items:center;gap:6px;color:#059669;font-weight:500;background:#ecfdf5;border:1px solid #a7f3d0">
+    84→                            <i class="fas fa-globe"></i> All Branches &amp; Sections
+    85→                        </div>
+    86→                        <div style="font-size:0.72rem;color:#6b7280;margin-top:3px">Questions are class-level and visible to all students in this class</div>
+    87→                    </div>
+    88→                    <div class="modern-form-group">
+    89→                        <label class="modern-form-label">Question Type <span class="modern-required">*</span></label>
+    90→                        <select name="question_type" id="questionType" class="modern-input modern-select" style="padding-left:0.75rem" required>
+    91→                            <option value="multiple_choice" {{ old('question_type') === 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
+    92→                            <option value="true_false" {{ old('question_type') === 'true_false' ? 'selected' : '' }}>True / False</option>
+    93→                            <option value="short_answer" {{ old('question_type') === 'short_answer' ? 'selected' : '' }}>Short Answer</option>
+    94→                        </select>
+    95→                    </div>
+    96→                    <div class="modern-form-group">
+    97→                        <label class="modern-form-label">Difficulty <span class="modern-required">*</span></label>
+    98→                        <select name="difficulty" class="modern-input modern-select" style="padding-left:0.75rem" required>
+    99→                            <option value="easy" {{ old('difficulty') === 'easy' ? 'selected' : '' }}>Easy</option>
+   100→                            <option value="medium" {{ old('difficulty') === 'medium' ? 'selected' : '' }}>Medium</option>
+   101→                            <option value="hard" {{ old('difficulty') === 'hard' ? 'selected' : '' }}>Hard</option>
+   102→                        </select>
+   103→                    </div>
+   104→                    <div class="modern-form-group">
+   105→                        <label class="modern-form-label">Marks</label>
+   106→                        <input type="number" name="marks" class="modern-input" style="padding-left:0.75rem" value="{{ old('marks', 1) }}" min="1" max="100">
+   107→                    </div>
+   108→                    <div class="modern-form-group">
+   109→                        <label class="modern-form-label">Title (Optional)</label>
+   110→                        <input type="text" name="title" class="modern-input" style="padding-left:0.75rem" value="{{ old('title') }}" placeholder="Short title for this question">
+   111→                    </div>
+   112→                    <div class="modern-form-group">
+   113→                        <label class="modern-form-label">Topic / Chapter</label>
+   114→                        <input type="text" name="topic" class="modern-input" style="padding-left:0.75rem" value="{{ old('topic') }}" placeholder="e.g. Chapter 3 - Algebra">
+   115→                    </div>
+   116→                </div>
+   117→            </div>
+   118→        </div>
+   119→
+   120→        {{-- Question Text --}}
+   121→        <div class="modern-card" style="margin-bottom:1.25rem">
+   122→            <div class="modern-card-header">
+   123→                <div class="modern-card-header-left">
+   124→                    <i class="fas fa-question-circle" style="color:#7c3aed"></i>
+   125→                    <span class="modern-card-title">Question Text <span class="modern-required">*</span></span>
+   126→                </div>
+   127→            </div>
+   128→            <div style="padding:1.5rem">
+   129→                <div class="modern-form-group">
+   130→                    <textarea name="question_text" class="modern-input modern-textarea @error('question_text') is-invalid @enderror" rows="4" required placeholder="Enter your question here...">{{ old('question_text') }}</textarea>
+   131→                    @error('question_text')<span class="modern-form-error">{{ $message }}</span>@enderror
+   132→                </div>
+   133→                <div class="modern-form-group" style="margin-top:1rem">
+   134→                    <label class="modern-form-label">Hint (shown before answering)</label>
+   135→                    <textarea name="hint" class="modern-input modern-textarea" rows="2" placeholder="Optional hint to help students think...">{{ old('hint') }}</textarea>
+   136→                </div>
+   137→            </div>
+   138→        </div>
+   139→
+   140→        {{-- MCQ Options --}}
+   141→        <div class="modern-card" style="margin-bottom:1.25rem" id="optionsCard">
+   142→            <div class="modern-card-header">
+   143→                <div class="modern-card-header-left">
+   144→                    <i class="fas fa-list-ol" style="color:#4361ee"></i>
+   145→                    <span class="modern-card-title">Answer Options</span>
+   146→                </div>
+   147→                <div class="modern-card-header-right">
+   148→                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" id="addOptionBtn"><i class="fas fa-plus"></i> Add Option</button>
+   149→                </div>
+   150→            </div>
+   151→            <div style="padding:1.5rem" id="optionsContainer">
+   152→                <p style="font-size:0.82rem;color:#6b7280;margin-bottom:0.75rem">Fill in at least 2 options. Leave extra options blank — they will be ignored. Mark the correct answer by checking the "Correct" checkbox.</p>
+   153→                @php
+   154→                    $oldOptions = old('options', [
+   155→                        ['option_text' => '', 'option_label' => 'A', 'is_correct' => false],
+   156→                        ['option_text' => '', 'option_label' => 'B', 'is_correct' => false],
+   157→                        ['option_text' => '', 'option_label' => 'C', 'is_correct' => false],
+   158→                        ['option_text' => '', 'option_label' => 'D', 'is_correct' => false],
+   159→                    ]);
+   160→                @endphp
+   161→                @foreach($oldOptions as $idx => $opt)
+   162→                <div class="option-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
+   163→                    <input type="text" name="options[{{ $idx }}][option_label]" class="modern-input" style="width:45px;text-align:center;padding-left:4px" value="{{ $opt['option_label'] ?? chr(65 + $idx) }}" readonly>
+   164→                    <input type="text" name="options[{{ $idx }}][option_text]" class="modern-input" style="flex:1;padding-left:0.75rem" value="{{ $opt['option_text'] ?? '' }}" placeholder="Option {{ $opt['option_label'] ?? chr(65 + $idx) }} (leave blank to skip)">
+   165→                    <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;white-space:nowrap;cursor:pointer">
+   166→                        <input type="checkbox" name="options[{{ $idx }}][is_correct]" class="is-correct-check" value="1" {{ !empty($opt['is_correct']) ? 'checked' : '' }}>
+   167→                        Correct
+   168→                    </label>
+   169→                    <button type="button" class="modern-btn-icon modern-btn-delete remove-option-btn" title="Remove" style="width:32px;height:32px"><i class="fas fa-times"></i></button>
+   170→                </div>
+   171→                @endforeach
+   172→                @error('options')<span class="modern-form-error">{{ $message }}</span>@enderror
+   173→            </div>
+   174→        </div>
+   175→
+   176→        {{-- T/F Card --}}
+   177→        <div class="modern-card" style="margin-bottom:1.25rem;display:none" id="tfCard">
+   178→            <div class="modern-card-header">
+   179→                <div class="modern-card-header-left">
+   180→                    <i class="fas fa-check-double" style="color:#10b981"></i>
+   181→                    <span class="modern-card-title">True / False Answer</span>
+   182→                </div>
+   183→            </div>
+   184→            <div style="padding:1.5rem">
+   185→                <label class="modern-form-label">Correct Answer <span class="modern-required">*</span></label>
+   186→                <div style="display:flex;gap:1rem;margin-top:0.5rem">
+   187→                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border:2px solid #e5e7eb;border-radius:10px;transition:all 0.2s" class="tf-option">
+   188→                        <input type="radio" name="correct_tf" id="tfTrue" value="true" class="tf-radio" {{ old('correct_tf') === 'true' ? 'checked' : '' }}>
+   189→                        <i class="fas fa-check" style="color:#10b981"></i> True
+   190→                    </label>
+   191→                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 20px;border:2px solid #e5e7eb;border-radius:10px;transition:all 0.2s" class="tf-option">
+   192→                        <input type="radio" name="correct_tf" id="tfFalse" value="false" class="tf-radio" {{ old('correct_tf') === 'false' ? 'checked' : '' }}>
+   193→                        <i class="fas fa-times" style="color:#ef4444"></i> False
+   194→                    </label>
+   195→                </div>
+   196→                @error('correct_tf')<span class="modern-form-error">{{ $message }}</span>@enderror
+   197→            </div>
+   198→        </div>
+   199→
+   200→        {{-- Explanation --}}
+   201→        <div class="modern-card" style="margin-bottom:1.25rem">
+   202→            <div class="modern-card-header" style="background:linear-gradient(135deg,#0ea5e9,#2563eb)">
+   203→                <div class="modern-card-header-left">
+   204→                    <i class="fas fa-lightbulb" style="color:#fff"></i>
+   205→                    <span class="modern-card-title" style="color:#fff">Post-Answer Explanation</span>
+   206→                </div>
+   207→            </div>
+   208→            <div style="padding:1.5rem">
+   209→                <div class="modern-form-group">
+   210→                    <label class="modern-form-label">Detailed Explanation</label>
+   211→                    <textarea name="explanation" class="modern-input modern-textarea" rows="4" placeholder="Explain WHY the answer is correct. This helps students understand the concept.">{{ old('explanation') }}</textarea>
+   212→                    <div style="font-size:0.75rem;color:#9ca3af;margin-top:4px">Shown after the student submits their answer, whether correct or incorrect.</div>
+   213→                </div>
+   214→                <div class="modern-form-group" style="margin-top:1rem">
+   215→                    <label class="modern-form-label">Worked-Out Solution (Step-by-step)</label>
+   216→                    <textarea name="worked_out_solution" class="modern-input modern-textarea" rows="6" placeholder="Step 1: ...&#10;Step 2: ...&#10;Step 3: ...&#10;Therefore, the answer is ...">{{ old('worked_out_solution') }}</textarea>
+   217→                    <div style="font-size:0.75rem;color:#9ca3af;margin-top:4px">Provide a step-by-step breakdown of how to solve the problem. This is crucial for self-learning.</div>
+   218→                </div>
+   219→            </div>
+   220→        </div>
+   221→
+   222→        {{-- Safe Exam Browser Settings --}}
+   223→        <div class="modern-card" style="margin-bottom:1.25rem">
+   224→            <div class="modern-card-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+   225→                <div class="modern-card-header-left">
+   226→                    <i class="fas fa-shield-alt" style="color:#fff"></i>
+   227→                    <span class="modern-card-title" style="color:#fff">Safe Exam Browser Settings</span>
+   228→                </div>
+   229→                <div class="modern-card-header-right">
+   230→                    <span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.7rem">Optional</span>
+   231→                </div>
+   232→            </div>
+   233→            <div style="padding:1.5rem">
+   234→                <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:0.85rem;color:#6d28d9">
+   235→                    <i class="fas fa-info-circle me-1"></i>
+   236→                    <strong>Safe Exam Browser (SEB)</strong> is a lockdown browser that prevents cheating during assessments.
+   237→                    When enabled, students must open the assessment in SEB which blocks other apps, copy/paste, and screen capture.
+   238→                    <a href="https://safeexambrowser.org/" target="_blank" style="color:#4f46e5;text-decoration:underline">Learn more about SEB</a>
+   239→                </div>
+   240→
+   241→                <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem">
+   242→                    <div class="modern-form-group">
+   243→                        <label class="modern-form-label">SEB Mode</label>
+   244→                        <select name="seb_mode" id="sebMode" class="modern-input modern-select" style="padding-left:0.75rem">
+   245→                            @foreach(\App\Models\AssessmentQuestion::sebModeOptions() as $value => $label)
+   246→                            <option value="{{ $value }}" {{ old('seb_mode', 'none') === $value ? 'selected' : '' }}>{{ $label }}</option>
+   247→                            @endforeach
+   248→                        </select>
+   249→                        <div style="font-size:0.72rem;color:#6b7280;margin-top:3px">"Required" = students MUST use SEB to access this question</div>
+   250→                    </div>
+   251→                    <div class="modern-form-group" id="sebBrowserViewGroup" style="display:none">
+   252→                        <label class="modern-form-label">Browser View</label>
+   253→                        <select name="seb_browser_view_mode" class="modern-input modern-select" style="padding-left:0.75rem">
+   254→                            @foreach(\App\Models\AssessmentQuestion::sebBrowserViewModeOptions() as $value => $label)
+   255→                            <option value="{{ $value }}" {{ old('seb_browser_view_mode', 1) == $value ? 'selected' : '' }}>{{ $label }}</option>
+   256→                            @endforeach
+   257→                        </select>
+   258→                    </div>
+   259→                </div>
+   260→
+   261→                <div id="sebAdvancedSettings" style="display:none;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb">
+   262→                    <h6 style="font-size:0.85rem;font-weight:600;margin-bottom:1rem;color:#4f46e5"><i class="fas fa-cog me-1"></i> Advanced SEB Settings</h6>
+   263→                    <div class="modern-form-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
+   264→                        <div class="modern-form-group">
+   265→                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+   266→                                <input type="checkbox" name="seb_allow_quit" value="1" {{ old('seb_allow_quit') ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#6366f1">
+   267→                                <span style="font-size:0.85rem">Allow quitting SEB</span>
+   268→                            </label>
+   269→                            <div style="font-size:0.7rem;color:#9ca3af">If unchecked, student cannot exit SEB without finishing</div>
+   270→                        </div>
+   271→                        <div class="modern-form-group">
+   272→                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+   273→                                <input type="checkbox" name="seb_show_taskbar" value="1" {{ old('seb_show_taskbar', true) ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#6366f1">
+   274→                                <span style="font-size:0.85rem">Show SEB taskbar</span>
+   275→                            </label>
+   276→                        </div>
+   277→                        <div class="modern-form-group">
+   278→                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+   279→                                <input type="checkbox" name="seb_show_time" value="1" {{ old('seb_show_time', true) ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#6366f1">
+   280→                                <span style="font-size:0.85rem">Show clock in taskbar</span>
+   281→                            </label>
+   282→                        </div>
+   283→                        <div class="modern-form-group">
+   284→                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+   285→                                <input type="checkbox" name="seb_allow_spell_check" value="1" {{ old('seb_allow_spell_check') ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#6366f1">
+   286→                                <span style="font-size:0.85rem">Allow spell checking</span>
+   287→                            </label>
+   288→                        </div>
+   289→                    </div>
+   290→                    <div class="modern-form-group" style="margin-top:1rem">
+   291→                        <label class="modern-form-label">Quit Password (optional)</label>
+   292→                        <input type="text" name="seb_quit_password" class="modern-input" style="padding-left:0.75rem;max-width:300px" value="{{ old('seb_quit_password') }}" placeholder="Password to quit SEB">
+   293→                        <div style="font-size:0.7rem;color:#9ca3af;margin-top:3px">If set, students need this password to exit SEB during the exam</div>
+   294→                    </div>
+   295→                    <div class="modern-form-group" style="margin-top:1rem">
+   296→                        <label class="modern-form-label">Additional Allowed URLs (one per line)</label>
+   297→                        <textarea name="seb_allowed_urls_text" class="modern-input modern-textarea" rows="3" placeholder="https://example.com&#10;https://dictionary.com">{{ old('seb_allowed_urls_text') }}</textarea>
+   298→                        <div style="font-size:0.7rem;color:#9ca3af;margin-top:3px">URLs students can access during the exam (in addition to this assessment). One URL per line.</div>
+   299→                    </div>
+   300→                </div>
+   301→            </div>
+   302→        </div>
+   303→
+   304→        {{-- Submit --}}
+   305→        <div class="modern-card">
+   306→            <div style="padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center">
+   307→                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+   308→                    <input type="checkbox" name="is_active" value="1" id="isActive" {{ old('is_active', true) ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#4361ee">
+   309→                    <span style="font-size:0.9rem;font-weight:500">Active (visible to students)</span>
+   310→                </label>
+   311→                <div style="display:flex;gap:0.5rem">
+   312→                    <a href="{{ route('admin.assessment-questions.index') }}" class="btn-modern btn-modern-ghost">Cancel</a>
+   313→                    <button type="submit" id="saveBtn" class="btn-modern btn-modern-primary"><i class="fas fa-save"></i> Save Question</button>
+   314→                </div>
+   315→            </div>
+   316→        </div>
+   317→    </form>
+   318→</div>
+   319→
+   320→@push('styles')
+   321→<style>
+   322→    .tf-option:has(input:checked) { border-color: #4361ee; background: #f0f4ff; }
+   323→    .is-invalid { border-color: #ef4444 !important; }
+   324→    #saveBtn.saving { opacity: 0.7; pointer-events: none; }
+   325→</style>
+   326→@endpush
+   327→
+   328→@push('scripts')
+   329→<script>
+   330→$(function() {
+   331→    // ── Question type toggle ────────────────────────────────
+   332→    function toggleQuestionType() {
+   333→        var type = $('#questionType').val();
+   334→        if (type === 'multiple_choice') {
+   335→            $('#optionsCard').show();
+   336→            // Re-enable option inputs
+   337→            $('#optionsContainer input').prop('disabled', false);
+   338→            $('#tfCard').hide();
+   339→            // Clear T/F selection
+   340→            $('input[name="correct_tf"]').prop('checked', false).prop('disabled', true);
+   341→        } else if (type === 'true_false') {
+   342→            $('#optionsCard').hide();
+   343→            // Disable option inputs so they don't submit
+   344→            $('#optionsContainer input').prop('disabled', true);
+   345→            $('#tfCard').show();
+   346→            $('input[name="correct_tf"]').prop('disabled', false);
+   347→        } else {
+   348→            // Short answer — hide both, disable option inputs
+   349→            $('#optionsCard').hide();
+   350→            $('#optionsContainer input').prop('disabled', true);
+   351→            $('#tfCard').hide();
+   352→            $('input[name="correct_tf"]').prop('checked', false).prop('disabled', true);
+   353→        }
+   354→    }
+   355→    $('#questionType').on('change', toggleQuestionType);
+   356→    toggleQuestionType();
+   357→
+   358→    // ── SEB Mode toggle ────────────────────────────────
+   359→    function toggleSebSettings() {
+   360→        var mode = $('#sebMode').val();
+   361→        if (mode === 'none') {
+   362→            $('#sebBrowserViewGroup').hide();
+   363→            $('#sebAdvancedSettings').hide();
+   364→        } else {
+   365→            $('#sebBrowserViewGroup').show();
+   366→            $('#sebAdvancedSettings').show();
+   367→        }
+   368→    }
+   369→    $('#sebMode').on('change', toggleSebSettings);
+   370→    toggleSebSettings();
+   371→
+   372→    // ── MCQ Options management ──────────────────────────────
+   373→    $('#addOptionBtn').on('click', function() {
+   374→        var idx = $('#optionsContainer .option-row').length;
+   375→        if (idx >= 6) return;
+   376→        var label = String.fromCharCode(65 + idx);
+   377→        var html = '<div class="option-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem">' +
+   378→            '<input type="text" name="options[' + idx + '][option_label]" class="modern-input" style="width:45px;text-align:center;padding-left:4px" value="' + label + '" readonly>' +
+   379→            '<input type="text" name="options[' + idx + '][option_text]" class="modern-input" style="flex:1;padding-left:0.75rem" placeholder="Option ' + label + ' (leave blank to skip)">' +
+   380→            '<label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;white-space:nowrap;cursor:pointer"><input type="checkbox" name="options[' + idx + '][is_correct]" class="is-correct-check" value="1"> Correct</label>' +
+   381→            '<button type="button" class="modern-btn-icon modern-btn-delete remove-option-btn" title="Remove" style="width:32px;height:32px"><i class="fas fa-times"></i></button>' +
+   382→            '</div>';
+   383→        $('#optionsContainer').append(html);
+   384→    });
+   385→
+   386→    $(document).on('click', '.remove-option-btn', function() {
+   387→        if ($('#optionsContainer .option-row').length > 2) {
+   388→            $(this).closest('.option-row').remove();
+   389→            reindexOptions();
+   390→        }
+   391→    });
+   392→
+   393→    $(document).on('change', '.is-correct-check', function() {
+   394→        if ($(this).is(':checked')) {
+   395→            $('.is-correct-check').not(this).prop('checked', false);
+   396→        }
+   397→    });
+   398→
+   399→    function reindexOptions() {
+   400→        $('#optionsContainer .option-row').each(function(idx) {
+   401→            $(this).find('input[name*="option_label"]').val(String.fromCharCode(65 + idx));
+   402→            $(this).find('input[name*="option_text"]').attr('placeholder', 'Option ' + String.fromCharCode(65 + idx) + ' (leave blank to skip)');
+   403→        });
+   404→    }
+   405→
+   406→    // ── Form submit feedback ────────────────────────────────
+   407→    $('#questionForm').on('submit', function() {
+   408→        var type = $('#questionType').val();
+   409→
+   410→        // For MCQ: validate at least 2 options have text
+   411→        if (type === 'multiple_choice') {
+   412→            var filledCount = 0;
+   413→            $('#optionsContainer .option-row').each(function() {
+   414→                var txt = $(this).find('input[name*="option_text"]').val();
+   415→                if (txt && txt.trim() !== '') filledCount++;
+   416→            });
+   417→            if (filledCount < 2) {
+   418→                alert('Multiple choice questions need at least 2 options with text. You have ' + filledCount + ' filled option(s).');
+   419→                return false;
+   420→            }
+   421→        }
+   422→
+   423→        // For T/F: validate correct_tf is selected
+   424→        if (type === 'true_false') {
+   425→            if (!$('input[name="correct_tf"]:checked').length) {
+   426→                alert('Please select True or False as the correct answer.');
+   427→                return false;
+   428→            }
+   429→        }
+   430→
+   431→        // Show loading state
+   432→        var btn = $('#saveBtn');
+   433→        btn.addClass('saving');
+   434→        btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+   435→        return true;
+   436→    });
+   437→});
+   438→</script>
+   439→@endpush
+   440→@endsection
+   441→

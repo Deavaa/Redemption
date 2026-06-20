@@ -1,0 +1,913 @@
+     1→<?php
+     2→
+     3→namespace App\Http\Controllers\Assessment;
+     4→
+     5→use App\Http\Controllers\Controller;
+     6→use App\Models\AssessmentQuestion;
+     7→use App\Models\AssessmentOption;
+     8→use App\Models\AssessmentAnswer;
+     9→use App\Models\Subject;
+    10→use App\Models\ClassRoom;
+    11→use App\Models\TeacherAssignment;
+    12→use App\Models\AcademicYear;
+    13→use Illuminate\Http\Request;
+    14→use Illuminate\Support\Facades\Auth;
+    15→
+    16→class AssessmentQuestionController extends Controller
+    17→{
+    18→    // ── Teacher: List Questions ─────────────────────────────
+    19→
+    20→    public function index(Request $request)
+    21→    {
+    22→        $user = Auth::user();
+    23→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+    24→
+    25→        $query = AssessmentQuestion::with(['subject', 'classroom', 'section', 'options', 'answers']);
+    26→
+    27→        // Non-admin: only see own questions
+    28→        if (!in_array($user->role, ['admin', 'super_admin', 'branch_principal', 'general_manager'])) {
+    29→            if ($teacher) {
+    30→                $query->where('teacher_id', $teacher->id);
+    31→            }
+    32→        }
+    33→
+    34→        // Filters
+    35→        if ($request->filled('subject_id')) {
+    36→            $query->where('subject_id', $request->subject_id);
+    37→        }
+    38→        if ($request->filled('class_id')) {
+    39→            $query->where('class_id', $request->class_id);
+    40→        }
+    41→        if ($request->filled('difficulty')) {
+    42→            $query->where('difficulty', $request->difficulty);
+    43→        }
+    44→        if ($request->filled('question_type')) {
+    45→            $query->where('question_type', $request->question_type);
+    46→        }
+    47→        if ($request->filled('topic')) {
+    48→            $query->where('topic', 'like', "%{$request->topic}%");
+    49→        }
+    50→        if ($request->filled('search')) {
+    51→            $search = $request->search;
+    52→            $query->where(function ($q) use ($search) {
+    53→                $q->where('question_text', 'like', "%{$search}%")
+    54→                  ->orWhere('title', 'like', "%{$search}%")
+    55→                  ->orWhere('topic', 'like', "%{$search}%");
+    56→            });
+    57→        }
+    58→
+    59→        $questions = $query->latest()->paginate(20);
+    60→
+    61→        // Get subjects the teacher is assigned to
+    62→        $activeAy = AcademicYear::where('is_current', true)->first();
+    63→        $subjects = $this->getTeacherSubjects($teacher, $activeAy);
+    64→        $classes = $this->getTeacherClasses($teacher, $activeAy);
+    65→        $topics = AssessmentQuestion::when($teacher, fn($q) => $q->where('teacher_id', $teacher->id))
+    66→            ->whereNotNull('topic')->distinct()->orderBy('topic')->pluck('topic');
+    67→
+    68→        return view('admin.assessment-questions.index', compact(
+    69→            'questions', 'subjects', 'classes', 'topics', 'teacher', 'activeAy'
+    70→        ));
+    71→    }
+    72→
+    73→    // ── Teacher: Create Question ────────────────────────────
+    74→
+    75→    public function create()
+    76→    {
+    77→        $user = Auth::user();
+    78→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+    79→        $activeAy = AcademicYear::where('is_current', true)->first();
+    80→
+    81→        $subjects = $this->getTeacherSubjects($teacher, $activeAy);
+    82→        $classes = $this->getTeacherClasses($teacher, $activeAy);
+    83→
+    84→        return view('admin.assessment-questions.create', compact('subjects', 'classes', 'teacher', 'activeAy'));
+    85→    }
+    86→
+    87→    // ── Teacher: Store Question ─────────────────────────────
+    88→
+    89→    public function store(Request $request)
+    90→    {
+    91→        $user = Auth::user();
+    92→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+    93→
+    94→        if (!$teacher && !in_array($user->role, ['admin', 'super_admin'])) {
+    95→            return back()->with('error', 'Teacher profile not found.')->withInput();
+    96→        }
+    97→
+    98→        $validated = $request->validate([
+    99→            'title' => 'nullable|string|max:255',
+   100→            'question_text' => 'required|string|max:5000',
+   101→            'question_type' => 'required|in:multiple_choice,true_false,short_answer',
+   102→            'subject_id' => 'required|exists:subjects,id',
+   103→            'class_id' => 'required|exists:classes,id',
+   104→            'difficulty' => 'required|in:easy,medium,hard',
+   105→            'topic' => 'nullable|string|max:255',
+   106→            'marks' => 'integer|min:1|max:100',
+   107→            'hint' => 'nullable|string|max:2000',
+   108→            'explanation' => 'nullable|string|max:10000',
+   109→            'worked_out_solution' => 'nullable|string|max:20000',
+   110→            'is_active' => 'boolean',
+   111→            // Options for multiple choice
+   112→            'options' => 'required_if:question_type,multiple_choice|array|min:2|max:6',
+   113→            'options.*.option_text' => 'required_with:options|string|max:1000',
+   114→            'options.*.option_label' => 'required_with:options|string|max:1',
+   115→            'options.*.is_correct' => 'boolean',
+   116→            // True/False
+   117→            'correct_tf' => 'required_if:question_type,true_false|in:true,false',
+   118→            // Safe Exam Browser
+   119→            'seb_mode' => 'nullable|in:none,optional,required',
+   120→            'seb_browser_view_mode' => 'nullable|integer|in:0,1,2',
+   121→            'seb_allow_quit' => 'nullable|boolean',
+   122→            'seb_quit_password' => 'nullable|string|max:255',
+   123→            'seb_show_taskbar' => 'nullable|boolean',
+   124→            'seb_show_time' => 'nullable|boolean',
+   125→            'seb_allow_spell_check' => 'nullable|boolean',
+   126→            'seb_allowed_urls_text' => 'nullable|string|max:5000',
+   127→        ]);
+   128→
+   129→        $activeAy = AcademicYear::where('is_current', true)->first();
+   130→
+   131→        // Parse SEB allowed URLs from textarea
+   132→        $sebAllowedUrls = null;
+   133→        if ($request->filled('seb_allowed_urls_text')) {
+   134→            $urls = array_filter(array_map('trim', explode("\n", $request->seb_allowed_urls_text)));
+   135→            $sebAllowedUrls = !empty($urls) ? $urls : null;
+   136→        }
+   137→
+   138→        // Generate SEB config key if SEB mode is enabled
+   139→        $sebConfigKey = null;
+   140→        $sebMode = $request->input('seb_mode', 'none');
+   141→        if (in_array($sebMode, ['optional', 'required'])) {
+   142→            $sebConfigKey = bin2hex(random_bytes(32));
+   143→        }
+   144→
+   145→        // Questions are class-level — apply to ALL branches and ALL sections
+   146→        $question = AssessmentQuestion::create([
+   147→            'teacher_id' => $teacher?->id,
+   148→            'subject_id' => $validated['subject_id'],
+   149→            'class_id' => $validated['class_id'],
+   150→            'section_id' => null, // null = applies to all sections
+   151→            'academic_year_id' => $activeAy?->id,
+   152→            'branch_id' => null, // null = applies to all branches
+   153→            'title' => $validated['title'] ?? null,
+   154→            'question_text' => $validated['question_text'],
+   155→            'question_type' => $validated['question_type'],
+   156→            'hint' => $validated['hint'] ?? null,
+   157→            'explanation' => $validated['explanation'] ?? null,
+   158→            'worked_out_solution' => $validated['worked_out_solution'] ?? null,
+   159→            'difficulty' => $validated['difficulty'],
+   160→            'topic' => $validated['topic'] ?? null,
+   161→            'marks' => $validated['marks'] ?? 1,
+   162→            'is_active' => $request->boolean('is_active', true),
+   163→            // SEB fields
+   164→            'seb_mode' => $sebMode,
+   165→            'seb_config_key' => $sebConfigKey,
+   166→            'seb_browser_view_mode' => $request->input('seb_browser_view_mode', 1),
+   167→            'seb_allow_quit' => $request->boolean('seb_allow_quit', false),
+   168→            'seb_quit_password' => $request->input('seb_quit_password'),
+   169→            'seb_show_taskbar' => $request->boolean('seb_show_taskbar', true),
+   170→            'seb_show_time' => $request->boolean('seb_show_time', true),
+   171→            'seb_allow_spell_check' => $request->boolean('seb_allow_spell_check', false),
+   172→            'seb_allowed_urls' => $sebAllowedUrls,
+   173→        ]);
+   174→
+   175→        // Create options based on question type
+   176→        if ($validated['question_type'] === 'multiple_choice' && !empty($validated['options'])) {
+   177→            foreach ($validated['options'] as $idx => $opt) {
+   178→                AssessmentOption::create([
+   179→                    'assessment_question_id' => $question->id,
+   180→                    'option_text' => $opt['option_text'],
+   181→                    'option_label' => $opt['option_label'] ?? chr(65 + $idx), // A, B, C...
+   182→                    'is_correct' => isset($opt['is_correct']) && $opt['is_correct'],
+   183→                    'sort_order' => $idx,
+   184→                ]);
+   185→            }
+   186→        } elseif ($validated['question_type'] === 'true_false') {
+   187→            AssessmentOption::create([
+   188→                'assessment_question_id' => $question->id,
+   189→                'option_text' => 'True',
+   190→                'option_label' => 'A',
+   191→                'is_correct' => $validated['correct_tf'] === 'true',
+   192→                'sort_order' => 0,
+   193→            ]);
+   194→            AssessmentOption::create([
+   195→                'assessment_question_id' => $question->id,
+   196→                'option_text' => 'False',
+   197→                'option_label' => 'B',
+   198→                'is_correct' => $validated['correct_tf'] === 'false',
+   199→                'sort_order' => 1,
+   200→            ]);
+   201→        }
+   202→
+   203→        return redirect()->route('admin.assessment-questions.index')
+   204→            ->with('success', 'Question created successfully.');
+   205→    }
+   206→
+   207→    // ── Show single question ────────────────────────────────
+   208→
+   209→    public function show(AssessmentQuestion $assessment_question)
+   210→    {
+   211→        $assessment_question->load(['subject', 'classroom', 'section', 'options', 'teacher', 'answers.student']);
+   212→
+   213→        $answerStats = $assessment_question->getStudentAnswerStats();
+   214→
+   215→        // Option distribution
+   216→        $optionDistribution = [];
+   217→        if ($assessment_question->question_type !== 'short_answer') {
+   218→            foreach ($assessment_question->options as $option) {
+   219→                $optionDistribution[$option->option_label] = [
+   220→                    'text' => $option->option_text,
+   221→                    'count' => AssessmentAnswer::where('assessment_question_id', $assessment_question->id)
+   222→                        ->where('assessment_option_id', $option->id)
+   223→                        ->count(),
+   224→                    'is_correct' => $option->is_correct,
+   225→                ];
+   226→            }
+   227→        }
+   228→
+   229→        return view('admin.assessment-questions.show', [
+   230→            'question' => $assessment_question,
+   231→            'answerStats' => $answerStats,
+   232→            'optionDistribution' => $optionDistribution,
+   233→        ]);
+   234→    }
+   235→
+   236→    // ── Edit Question ───────────────────────────────────────
+   237→
+   238→    public function edit(AssessmentQuestion $assessment_question)
+   239→    {
+   240→        $user = Auth::user();
+   241→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+   242→
+   243→        // Only creator or admin can edit
+   244→        if (!in_array($user->role, ['admin', 'super_admin']) && $assessment_question->teacher_id !== $teacher?->id) {
+   245→            abort(403, 'You can only edit your own questions.');
+   246→        }
+   247→
+   248→        $assessment_question->load('options');
+   249→        $activeAy = AcademicYear::where('is_current', true)->first();
+   250→        $subjects = $this->getTeacherSubjects($teacher, $activeAy);
+   251→        $classes = $this->getTeacherClasses($teacher, $activeAy);
+   252→
+   253→        return view('admin.assessment-questions.edit', compact(
+   254→            'assessment_question', 'subjects', 'classes', 'teacher', 'activeAy'
+   255→        ));
+   256→    }
+   257→
+   258→    // ── Update Question ─────────────────────────────────────
+   259→
+   260→    public function update(Request $request, AssessmentQuestion $assessment_question)
+   261→    {
+   262→        $user = Auth::user();
+   263→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+   264→
+   265→        if (!in_array($user->role, ['admin', 'super_admin']) && $assessment_question->teacher_id !== $teacher?->id) {
+   266→            abort(403, 'You can only edit your own questions.');
+   267→        }
+   268→
+   269→        $validated = $request->validate([
+   270→            'title' => 'nullable|string|max:255',
+   271→            'question_text' => 'required|string|max:5000',
+   272→            'question_type' => 'required|in:multiple_choice,true_false,short_answer',
+   273→            'subject_id' => 'required|exists:subjects,id',
+   274→            'class_id' => 'required|exists:classes,id',
+   275→            'difficulty' => 'required|in:easy,medium,hard',
+   276→            'topic' => 'nullable|string|max:255',
+   277→            'marks' => 'integer|min:1|max:100',
+   278→            'hint' => 'nullable|string|max:2000',
+   279→            'explanation' => 'nullable|string|max:10000',
+   280→            'worked_out_solution' => 'nullable|string|max:20000',
+   281→            'is_active' => 'boolean',
+   282→            'options' => 'required_if:question_type,multiple_choice|array|min:2|max:6',
+   283→            'options.*.id' => 'nullable|exists:assessment_options,id',
+   284→            'options.*.option_text' => 'required_with:options|string|max:1000',
+   285→            'options.*.option_label' => 'required_with:options|string|max:1',
+   286→            'options.*.is_correct' => 'boolean',
+   287→            'correct_tf' => 'required_if:question_type,true_false|in:true,false',
+   288→            // Safe Exam Browser
+   289→            'seb_mode' => 'nullable|in:none,optional,required',
+   290→            'seb_browser_view_mode' => 'nullable|integer|in:0,1,2',
+   291→            'seb_allow_quit' => 'nullable|boolean',
+   292→            'seb_quit_password' => 'nullable|string|max:255',
+   293→            'seb_show_taskbar' => 'nullable|boolean',
+   294→            'seb_show_time' => 'nullable|boolean',
+   295→            'seb_allow_spell_check' => 'nullable|boolean',
+   296→            'seb_allowed_urls_text' => 'nullable|string|max:5000',
+   297→        ]);
+   298→
+   299→        // Parse SEB allowed URLs
+   300→        $sebAllowedUrls = null;
+   301→        if ($request->filled('seb_allowed_urls_text')) {
+   302→            $urls = array_filter(array_map('trim', explode("\n", $request->seb_allowed_urls_text)));
+   303→            $sebAllowedUrls = !empty($urls) ? $urls : null;
+   304→        }
+   305→
+   306→        // Generate SEB config key if SEB mode is being enabled for the first time
+   307→        $sebMode = $request->input('seb_mode', 'none');
+   308→        $sebConfigKey = $assessment_question->seb_config_key;
+   309→        if (in_array($sebMode, ['optional', 'required']) && !$sebConfigKey) {
+   310→            $sebConfigKey = bin2hex(random_bytes(32));
+   311→        } elseif ($sebMode === 'none') {
+   312→            $sebConfigKey = null;
+   313→        }
+   314→
+   315→        $assessment_question->update([
+   316→            'title' => $validated['title'] ?? null,
+   317→            'question_text' => $validated['question_text'],
+   318→            'question_type' => $validated['question_type'],
+   319→            'subject_id' => $validated['subject_id'],
+   320→            'class_id' => $validated['class_id'],
+   321→            'section_id' => null, // null = applies to all sections
+   322→            'branch_id' => null, // null = applies to all branches
+   323→            'difficulty' => $validated['difficulty'],
+   324→            'topic' => $validated['topic'] ?? null,
+   325→            'marks' => $validated['marks'] ?? 1,
+   326→            'hint' => $validated['hint'] ?? null,
+   327→            'explanation' => $validated['explanation'] ?? null,
+   328→            'worked_out_solution' => $validated['worked_out_solution'] ?? null,
+   329→            'is_active' => $request->boolean('is_active', true),
+   330→            // SEB fields
+   331→            'seb_mode' => $sebMode,
+   332→            'seb_config_key' => $sebConfigKey,
+   333→            'seb_browser_view_mode' => $request->input('seb_browser_view_mode', 1),
+   334→            'seb_allow_quit' => $request->boolean('seb_allow_quit', false),
+   335→            'seb_quit_password' => $request->input('seb_quit_password'),
+   336→            'seb_show_taskbar' => $request->boolean('seb_show_taskbar', true),
+   337→            'seb_show_time' => $request->boolean('seb_show_time', true),
+   338→            'seb_allow_spell_check' => $request->boolean('seb_allow_spell_check', false),
+   339→            'seb_allowed_urls' => $sebAllowedUrls,
+   340→        ]);
+   341→
+   342→        // Sync options
+   343→        // Delete old options and recreate
+   344→        $assessment_question->options()->delete();
+   345→
+   346→        if ($validated['question_type'] === 'multiple_choice' && !empty($validated['options'])) {
+   347→            foreach ($validated['options'] as $idx => $opt) {
+   348→                if (empty($opt['option_text'])) continue;
+   349→                AssessmentOption::create([
+   350→                    'assessment_question_id' => $assessment_question->id,
+   351→                    'option_text' => $opt['option_text'],
+   352→                    'option_label' => $opt['option_label'] ?? chr(65 + $idx),
+   353→                    'is_correct' => isset($opt['is_correct']) && $opt['is_correct'],
+   354→                    'sort_order' => $idx,
+   355→                ]);
+   356→            }
+   357→        } elseif ($validated['question_type'] === 'true_false') {
+   358→            AssessmentOption::create([
+   359→                'assessment_question_id' => $assessment_question->id,
+   360→                'option_text' => 'True',
+   361→                'option_label' => 'A',
+   362→                'is_correct' => $validated['correct_tf'] === 'true',
+   363→                'sort_order' => 0,
+   364→            ]);
+   365→            AssessmentOption::create([
+   366→                'assessment_question_id' => $assessment_question->id,
+   367→                'option_text' => 'False',
+   368→                'option_label' => 'B',
+   369→                'is_correct' => $validated['correct_tf'] === 'false',
+   370→                'sort_order' => 1,
+   371→            ]);
+   372→        }
+   373→
+   374→        return redirect()->route('admin.assessment-questions.index')
+   375→            ->with('success', 'Question updated successfully.');
+   376→    }
+   377→
+   378→    // ── Delete Question ─────────────────────────────────────
+   379→
+   380→    public function destroy(AssessmentQuestion $assessment_question)
+   381→    {
+   382→        $user = Auth::user();
+   383→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+   384→
+   385→        if (!in_array($user->role, ['admin', 'super_admin']) && $assessment_question->teacher_id !== $teacher?->id) {
+   386→            abort(403, 'You can only delete your own questions.');
+   387→        }
+   388→
+   389→        $assessment_question->delete();
+   390→
+   391→        return back()->with('success', 'Question deleted successfully.');
+   392→    }
+   393→
+   394→    // ── Toggle Active ───────────────────────────────────────
+   395→
+   396→    public function toggleActive(AssessmentQuestion $assessment_question)
+   397→    {
+   398→        $assessment_question->update(['is_active' => !$assessment_question->is_active]);
+   399→        return back()->with('success', 'Question status updated.');
+   400→    }
+   401→
+   402→    // ── Bulk Create (Quick Add) ────────────────────────────
+   403→
+   404→    public function bulkCreate()
+   405→    {
+   406→        $user = Auth::user();
+   407→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+   408→        $activeAy = AcademicYear::where('is_current', true)->first();
+   409→        $subjects = $this->getTeacherSubjects($teacher, $activeAy);
+   410→        $classes = $this->getTeacherClasses($teacher, $activeAy);
+   411→
+   412→        return view('admin.assessment-questions.bulk-create', compact('subjects', 'classes', 'teacher', 'activeAy'));
+   413→    }
+   414→
+   415→    public function bulkStore(Request $request)
+   416→    {
+   417→        $user = Auth::user();
+   418→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+   419→
+   420→        $validated = $request->validate([
+   421→            'subject_id' => 'required|exists:subjects,id',
+   422→            'class_id' => 'required|exists:classes,id',
+   423→            'difficulty' => 'required|in:easy,medium,hard',
+   424→            'topic' => 'nullable|string|max:255',
+   425→            'questions' => 'required|array|min:1',
+   426→            'questions.*.question_text' => 'required|string|max:5000',
+   427→            'questions.*.question_type' => 'required|in:multiple_choice,true_false,short_answer',
+   428→            'questions.*.hint' => 'nullable|string|max:2000',
+   429→            'questions.*.explanation' => 'nullable|string|max:10000',
+   430→            'questions.*.worked_out_solution' => 'nullable|string|max:20000',
+   431→            'questions.*.marks' => 'nullable|integer|min:1|max:100',
+   432→        ]);
+   433→
+   434→        $activeAy = AcademicYear::where('is_current', true)->first();
+   435→        $count = 0;
+   436→
+   437→        foreach ($validated['questions'] as $qData) {
+   438→            $question = AssessmentQuestion::create([
+   439→                'teacher_id' => $teacher?->id,
+   440→                'subject_id' => $validated['subject_id'],
+   441→                'class_id' => $validated['class_id'],
+   442→                'section_id' => null, // null = applies to all sections
+   443→                'academic_year_id' => $activeAy?->id,
+   444→                'branch_id' => null, // null = applies to all branches
+   445→                'question_text' => $qData['question_text'],
+   446→                'question_type' => $qData['question_type'],
+   447→                'hint' => $qData['hint'] ?? null,
+   448→                'explanation' => $qData['explanation'] ?? null,
+   449→                'worked_out_solution' => $qData['worked_out_solution'] ?? null,
+   450→                'difficulty' => $validated['difficulty'],
+   451→                'topic' => $validated['topic'] ?? null,
+   452→                'marks' => $qData['marks'] ?? 1,
+   453→                'is_active' => true,
+   454→            ]);
+   455→            $count++;
+   456→        }
+   457→
+   458→        return redirect()->route('admin.assessment-questions.index')
+   459→            ->with('success', "{$count} questions created successfully.");
+   460→    }
+   461→
+   462→    // ── API: Get sections for a class (DEPRECATED - questions are class-level now) ──
+   463→
+   464→    public function apiSections(Request $request)
+   465→    {
+   466→        // Questions are now class-level (apply to all sections),
+   467→        // but keep this endpoint for backward compatibility.
+   468→        return response()->json([]);
+   469→    }
+   470→
+   471→    // ── Download Excel template for bulk import ──────────────
+   472→
+   473→    public function downloadTemplate()
+   474→    {
+   475→        $headers = [
+   476→            'Content-Type' => 'text/csv',
+   477→            'Content-Disposition' => 'attachment; filename="assessment_questions_template.csv"',
+   478→        ];
+   479→
+   480→        $callback = function () {
+   481→            $file = fopen('php://output', 'w');
+   482→
+   483→            // Header row (questions are class-level: apply to all branches & sections)
+   484→            fputcsv($file, [
+   485→                'question_text',
+   486→                'question_type',
+   487→                'subject_name',
+   488→                'class_name',
+   489→                'difficulty',
+   490→                'marks',
+   491→                'topic',
+   492→                'title',
+   493→                'hint',
+   494→                'option_A',
+   495→                'option_B',
+   496→                'option_C',
+   497→                'option_D',
+   498→                'correct_option',
+   499→                'explanation',
+   500→                'worked_out_solution',
+   501→            ]);
+   502→
+   503→            // Example rows
+   504→            fputcsv($file, [
+   505→                'What is the capital of France?',
+   506→                'multiple_choice',
+   507→                'Geography',
+   508→                'Grade 7',
+   509→                'easy',
+   510→                '1',
+   511→                'Chapter 1 - Europe',
+   512→                'European Capitals',
+   513→                'Think about major European cities',
+   514→                'London',
+   515→                'Paris',
+   516→                'Berlin',
+   517→                'Madrid',
+   518→                'B',
+   519→                'Paris is the capital and most populous city of France, located in the north-central part of the country.',
+   520→                'Step 1: Identify the country (France)\nStep 2: Recall that the capital of France is Paris\nTherefore, the answer is Paris (Option B)',
+   521→            ]);
+   522→
+   523→            fputcsv($file, [
+   524→                'Water boils at 100 degrees Celsius.',
+   525→                'true_false',
+   526→                'Physics',
+   527→                'Grade 8',
+   528→                'easy',
+   529→                '1',
+   530→                'Chapter 2 - Heat',
+   531→                '',
+   532→                '',
+   533→                '',
+   534→                '',
+   535→                '',
+   536→                '',
+   537→                'true',
+   538→                'At standard atmospheric pressure (1 atm), water boils at 100 degrees Celsius or 212 degrees Fahrenheit.',
+   539→                'At 1 atm pressure, the boiling point of water is exactly 100°C. This is a standard reference point on the Celsius scale.',
+   540→            ]);
+   541→
+   542→            fputcsv($file, [
+   543→                'Explain photosynthesis in one sentence.',
+   544→                'short_answer',
+   545→                'Biology',
+   546→                'Grade 9',
+   547→                'medium',
+   548→                '2',
+   549→                'Chapter 4 - Plant Biology',
+   550→                '',
+   551→                'Focus on the conversion process',
+   552→                '',
+   553→                '',
+   554→                '',
+   555→                '',
+   556→                '',
+   557→                'Photosynthesis is the process by which green plants convert sunlight, water, and carbon dioxide into glucose and oxygen.',
+   558→                'Sunlight (energy) + CO2 + H2O → C6H12O6 (glucose) + O2 (oxygen)\nThis process occurs in chloroplasts, primarily in the leaves.',
+   559→            ]);
+   560→
+   561→            fclose($file);
+   562→        };
+   563→
+   564→        return response()->stream($callback, 200, $headers);
+   565→    }
+   566→
+   567→    // ── Import questions from CSV upload ─────────────────────
+   568→
+   569→    public function bulkImport(Request $request)
+   570→    {
+   571→        $request->validate([
+   572→            'import_file' => 'required|file|mimes:csv,txt,xlsx,xls|max:5120',
+   573→        ]);
+   574→
+   575→        $user = Auth::user();
+   576→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+   577→
+   578→        if (!$teacher && !in_array($user->role, ['admin', 'super_admin'])) {
+   579→            return back()->with('error', 'Teacher profile not found.')->withInput();
+   580→        }
+   581→
+   582→        $activeAy = AcademicYear::where('is_current', true)->first();
+   583→        $file = $request->file('import_file');
+   584→        $path = $file->getRealPath();
+   585→
+   586→        $imported = 0;
+   587→        $skipped = 0;
+   588→        $errors = [];
+   589→
+   590→        try {
+   591→            // Handle CSV files
+   592→            if ($file->getClientOriginalExtension() === 'csv' || $file->getClientOriginalExtension() === 'txt') {
+   593→                $handle = fopen($path, 'r');
+   594→                $header = fgetcsv($handle); // Skip header row
+   595→
+   596→                $rowNum = 1;
+   597→                while (($row = fgetcsv($handle)) !== false) {
+   598→                    $rowNum++;
+   599→                    try {
+   600→                        $result = $this->importQuestionRow($row, $teacher, $activeAy, $user, $rowNum);
+   601→                        if ($result === true) {
+   602→                            $imported++;
+   603→                        } else {
+   604→                            $skipped++;
+   605→                            $errors[] = $result;
+   606→                        }
+   607→                    } catch (\Exception $e) {
+   608→                        $skipped++;
+   609→                        $errors[] = "Row {$rowNum}: " . $e->getMessage();
+   610→                    }
+   611→                }
+   612→                fclose($handle);
+   613→            } else {
+   614→                // Handle Excel files using PhpSpreadsheet
+   615→                if (!class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
+   616→                    return back()->with('error', 'Excel file support requires PhpSpreadsheet. Please upload a CSV file instead.')->withInput();
+   617→                }
+   618→                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+   619→                $worksheet = $spreadsheet->getActiveSheet();
+   620→                $rows = $worksheet->toArray();
+   621→
+   622→                // Skip header row
+   623→                for ($i = 1; $i < count($rows); $i++) {
+   624→                    $rowNum = $i + 1;
+   625→                    $row = $rows[$i];
+   626→                    try {
+   627→                        $result = $this->importQuestionRow($row, $teacher, $activeAy, $user, $rowNum);
+   628→                        if ($result === true) {
+   629→                            $imported++;
+   630→                        } else {
+   631→                            $skipped++;
+   632→                            $errors[] = $result;
+   633→                        }
+   634→                    } catch (\Exception $e) {
+   635→                        $skipped++;
+   636→                        $errors[] = "Row {$rowNum}: " . $e->getMessage();
+   637→                    }
+   638→                }
+   639→            }
+   640→        } catch (\Exception $e) {
+   641→            return back()->with('error', 'Failed to read file: ' . $e->getMessage())->withInput();
+   642→        }
+   643→
+   644→        $message = "{$imported} questions imported successfully.";
+   645→        if ($skipped > 0) {
+   646→            $message .= " {$skipped} rows skipped.";
+   647→        }
+   648→
+   649→        return redirect()->route('admin.assessment-questions.index')
+   650→            ->with('success', $message)
+   651→            ->with('import_errors', $errors);
+   652→    }
+   653→
+   654→    /**
+   655→     * Import a single question row from CSV/Excel.
+   656→     * Returns true on success, or an error message string on failure.
+   657→     */
+   658→    private function importQuestionRow($row, $teacher, $activeAy, $user, $rowNum)
+   659→    {
+   660→        $questionText = trim($row[0] ?? '');
+   661→        $questionType = trim($row[1] ?? 'multiple_choice');
+   662→        $subjectName  = trim($row[2] ?? '');
+   663→        $className    = trim($row[3] ?? '');
+   664→        // Column 4 (section_name) is no longer used — questions are class-level
+   665→        $difficulty   = trim($row[4] ?? 'medium');
+   666→        if (empty($difficulty) || !in_array($difficulty, ['easy', 'medium', 'hard'])) {
+   667→            // If column 4 looks like a difficulty value, it was an old-format row
+   668→            // where section_name was column 4 and difficulty was column 5
+   669→            // Try reading from column 5 instead
+   670→            $possibleDifficulty = trim($row[5] ?? '');
+   671→            if (in_array($possibleDifficulty, ['easy', 'medium', 'hard'])) {
+   672→                $difficulty = $possibleDifficulty;
+   673→                $colOffset = 1; // old format has extra column
+   674→            } else {
+   675→                $difficulty = 'medium';
+   676→                $colOffset = 0;
+   677→            }
+   678→        } else {
+   679→            $colOffset = 0; // new format (no section_name column)
+   680→        }
+   681→        $marks        = intval($row[5 + $colOffset] ?? 1);
+   682→        $topic        = trim($row[6 + $colOffset] ?? '');
+   683→        $title        = trim($row[7 + $colOffset] ?? '');
+   684→        $hint         = trim($row[8 + $colOffset] ?? '');
+   685→        $optionA      = trim($row[9 + $colOffset] ?? '');
+   686→        $optionB      = trim($row[10 + $colOffset] ?? '');
+   687→        $optionC      = trim($row[11 + $colOffset] ?? '');
+   688→        $optionD      = trim($row[12 + $colOffset] ?? '');
+   689→        $correctOption = strtoupper(trim($row[13 + $colOffset] ?? ''));
+   690→        $explanation  = trim($row[14 + $colOffset] ?? '');
+   691→        $workedOutSolution = trim($row[15 + $colOffset] ?? '');
+   692→
+   693→        // Validate required fields
+   694→        if (empty($questionText)) {
+   695→            return "Row {$rowNum}: Question text is empty.";
+   696→        }
+   697→
+   698→        if (!in_array($questionType, ['multiple_choice', 'true_false', 'short_answer'])) {
+   699→            return "Row {$rowNum}: Invalid question type '{$questionType}'. Use: multiple_choice, true_false, or short_answer.";
+   700→        }
+   701→
+   702→        if (!in_array($difficulty, ['easy', 'medium', 'hard'])) {
+   703→            $difficulty = 'medium';
+   704→        }
+   705→
+   706→        // Resolve subject
+   707→        $subject = null;
+   708→        if (!empty($subjectName)) {
+   709→            $subject = Subject::where('name', $subjectName)->first();
+   710→            if (!$subject) {
+   711→                return "Row {$rowNum}: Subject '{$subjectName}' not found.";
+   712→            }
+   713→        } else {
+   714→            // Try first subject from teacher's assignments
+   715→            $subjects = $this->getTeacherSubjects($teacher, $activeAy);
+   716→            $subject = $subjects->first();
+   717→            if (!$subject) {
+   718→                return "Row {$rowNum}: No subject specified and no teacher assignments found.";
+   719→            }
+   720→        }
+   721→
+   722→        // Resolve class
+   723→        $class = null;
+   724→        if (!empty($className)) {
+   725→            $class = ClassRoom::where('name', $className)->first();
+   726→            if (!$class) {
+   727→                return "Row {$rowNum}: Class '{$className}' not found.";
+   728→            }
+   729→        } else {
+   730→            $classes = $this->getTeacherClasses($teacher, $activeAy);
+   731→            $class = $classes->first();
+   732→            if (!$class) {
+   733→                return "Row {$rowNum}: No class specified and no teacher assignments found.";
+   734→            }
+   735→        }
+   736→
+   737→        // Questions are class-level — apply to ALL branches and ALL sections
+   738→        // Create the question
+   739→        $question = AssessmentQuestion::create([
+   740→            'teacher_id' => $teacher?->id,
+   741→            'subject_id' => $subject->id,
+   742→            'class_id' => $class->id,
+   743→            'section_id' => null, // null = applies to all sections
+   744→            'academic_year_id' => $activeAy?->id,
+   745→            'branch_id' => null, // null = applies to all branches
+   746→            'title' => $title ?: null,
+   747→            'question_text' => $questionText,
+   748→            'question_type' => $questionType,
+   749→            'hint' => $hint ?: null,
+   750→            'explanation' => $explanation ?: null,
+   751→            'worked_out_solution' => $workedOutSolution ?: null,
+   752→            'difficulty' => $difficulty,
+   753→            'topic' => $topic ?: null,
+   754→            'marks' => max(1, min(100, $marks)),
+   755→            'is_active' => true,
+   756→        ]);
+   757→
+   758→        // Create options based on question type
+   759→        if ($questionType === 'multiple_choice') {
+   760→            $options = [];
+   761→            if (!empty($optionA)) $options[] = ['text' => $optionA, 'label' => 'A'];
+   762→            if (!empty($optionB)) $options[] = ['text' => $optionB, 'label' => 'B'];
+   763→            if (!empty($optionC)) $options[] = ['text' => $optionC, 'label' => 'C'];
+   764→            if (!empty($optionD)) $options[] = ['text' => $optionD, 'label' => 'D'];
+   765→
+   766→            if (count($options) < 2) {
+   767→                $question->delete();
+   768→                return "Row {$rowNum}: Multiple choice needs at least 2 options (A and B).";
+   769→            }
+   770→
+   771→            foreach ($options as $idx => $opt) {
+   772→                AssessmentOption::create([
+   773→                    'assessment_question_id' => $question->id,
+   774→                    'option_text' => $opt['text'],
+   775→                    'option_label' => $opt['label'],
+   776→                    'is_correct' => $opt['label'] === $correctOption,
+   777→                    'sort_order' => $idx,
+   778→                ]);
+   779→            }
+   780→        } elseif ($questionType === 'true_false') {
+   781→            $isTrue = in_array(strtolower($correctOption), ['true', 'a', 'yes', '1']);
+   782→            AssessmentOption::create([
+   783→                'assessment_question_id' => $question->id,
+   784→                'option_text' => 'True',
+   785→                'option_label' => 'A',
+   786→                'is_correct' => $isTrue,
+   787→                'sort_order' => 0,
+   788→            ]);
+   789→            AssessmentOption::create([
+   790→                'assessment_question_id' => $question->id,
+   791→                'option_text' => 'False',
+   792→                'option_label' => 'B',
+   793→                'is_correct' => !$isTrue,
+   794→                'sort_order' => 1,
+   795→            ]);
+   796→        }
+   797→
+   798→        return true;
+   799→    }
+   800→
+   801→    // ── Report: Student performance ─────────────────────────
+   802→
+   803→    public function report(Request $request)
+   804→    {
+   805→        $user = Auth::user();
+   806→        $teacher = $user->teacherProfile ?? \App\Models\Teacher::where('email', $user->email)->first();
+   807→        $activeAy = AcademicYear::where('is_current', true)->first();
+   808→
+   809→        $subjects = $this->getTeacherSubjects($teacher, $activeAy);
+   810→        $classes = $this->getTeacherClasses($teacher, $activeAy);
+   811→
+   812→        $query = AssessmentAnswer::with(['student.classroom', 'student.section', 'question.subject']);
+   813→
+   814→        // Filter by teacher's questions
+   815→        if ($teacher && !in_array($user->role, ['admin', 'super_admin'])) {
+   816→            $query->whereHas('question', fn($q) => $q->where('teacher_id', $teacher->id));
+   817→        }
+   818→
+   819→        if ($request->filled('subject_id')) {
+   820→            $query->whereHas('question', fn($q) => $q->where('subject_id', $request->subject_id));
+   821→        }
+   822→        if ($request->filled('class_id')) {
+   823→            $query->whereHas('question', fn($q) => $q->where('class_id', $request->class_id));
+   824→        }
+   825→
+   826→        $answers = $query->latest()->paginate(30);
+   827→
+   828→        // Summary stats
+   829→        $totalQuestions = AssessmentQuestion::when($teacher, fn($q) => $q->where('teacher_id', $teacher?->id))
+   830→            ->when($request->subject_id, fn($q) => $q->where('subject_id', $request->subject_id))
+   831→            ->count();
+   832→
+   833→        $totalAnswers = $query->count();
+   834→        $correctAnswers = (clone $query)->where('is_correct', true)->count();
+   835→
+   836→        return view('admin.assessment-questions.report', compact(
+   837→            'answers', 'subjects', 'classes', 'totalQuestions', 'totalAnswers', 'correctAnswers'
+   838→        ));
+   839→    }
+   840→
+   841→    // ── Helpers ─────────────────────────────────────────────
+   842→
+   843→    private function getTeacherSubjects($teacher, $activeAy)
+   844→    {
+   845→        if (!$teacher || !$activeAy) {
+   846→            return Subject::orderBy('name')->get();
+   847→        }
+   848→
+   849→        // Primary lookup: teacher_id references teachers.id
+   850→        $subjectIds = TeacherAssignment::where('teacher_id', $teacher->id)
+   851→            ->where('academic_year_id', $activeAy->id)
+   852→            ->pluck('subject_id')
+   853→            ->unique();
+   854→
+   855→        // Fallback: if no assignments found via teacher->id, try via user_id
+   856→        if ($subjectIds->isEmpty() && $teacher->user_id) {
+   857→            $subjectIds = TeacherAssignment::where('teacher_id', $teacher->user_id)
+   858→                ->where('academic_year_id', $activeAy->id)
+   859→                ->pluck('subject_id')
+   860→                ->unique();
+   861→        }
+   862→
+   863→        // Final fallback: try matching by email through users table
+   864→        if ($subjectIds->isEmpty() && $teacher->email) {
+   865→            $user = \App\Models\User::where('email', $teacher->email)->first();
+   866→            if ($user) {
+   867→                $subjectIds = TeacherAssignment::where('teacher_id', $user->id)
+   868→                    ->where('academic_year_id', $activeAy->id)
+   869→                    ->pluck('subject_id')
+   870→                    ->unique();
+   871→            }
+   872→        }
+   873→
+   874→        return Subject::whereIn('id', $subjectIds)->orderBy('name')->get();
+   875→    }
+   876→
+   877→    private function getTeacherClasses($teacher, $activeAy)
+   878→    {
+   879→        if (!$teacher || !$activeAy) {
+   880→            return ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+   881→        }
+   882→
+   883→        // Primary lookup: teacher_id references teachers.id
+   884→        $classIds = TeacherAssignment::where('teacher_id', $teacher->id)
+   885→            ->where('academic_year_id', $activeAy->id)
+   886→            ->pluck('class_id')
+   887→            ->unique();
+   888→
+   889→        // Fallback: if no assignments found via teacher->id, try via user_id
+   890→        // This handles the case where teacher_assignments.teacher_id still
+   891→        // stores users.id values (before the data-fix migration runs).
+   892→        if ($classIds->isEmpty() && $teacher->user_id) {
+   893→            $classIds = TeacherAssignment::where('teacher_id', $teacher->user_id)
+   894→                ->where('academic_year_id', $activeAy->id)
+   895→                ->pluck('class_id')
+   896→                ->unique();
+   897→        }
+   898→
+   899→        // Final fallback: if still empty, try matching by email through users table
+   900→        if ($classIds->isEmpty() && $teacher->email) {
+   901→            $user = \App\Models\User::where('email', $teacher->email)->first();
+   902→            if ($user) {
+   903→                $classIds = TeacherAssignment::where('teacher_id', $user->id)
+   904→                    ->where('academic_year_id', $activeAy->id)
+   905→                    ->pluck('class_id')
+   906→                    ->unique();
+   907→            }
+   908→        }
+   909→
+   910→        return ClassRoom::whereIn('id', $classIds)->orderBy('numeric_name')->orderBy('name')->get();
+   911→    }
+   912→}
+   913→
