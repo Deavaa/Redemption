@@ -166,11 +166,11 @@
         </button>
 
         <div class="topbar-breadcrumb">
-            @if($showGreeting)
+            @if($showGreeting ?? false)
                 <span>{{ __('app.hi') }}</span>
                 <span class="breadcrumb-current">{{ $authUser?->name ?? 'Guest' }}</span>
             @else
-                @foreach($breadcrumbs as $i => $crumb)
+                @foreach(($breadcrumbs ?? []) as $i => $crumb)
                     @if(!empty($crumb['is_current']) || $i === count($breadcrumbs) - 1)
                         <span class="breadcrumb-current">{{ $crumb['label'] }}</span>
                     @elseif(!empty($crumb['url']))
@@ -238,7 +238,7 @@
         @endphp
         <a href="{{ route('admin.chat.index') }}" class="topbar-icon-btn" title="{{ __('app.chat') }}">
             <i class="fas fa-comment-dots"></i>
-            @if($chatUnread > 0)
+            @if(($chatUnread ?? 0) > 0)
                 <span class="badge-dot">{{ $chatUnread > 99 ? '99+' : $chatUnread }}</span>
             @endif
         </a>
@@ -259,14 +259,14 @@
                     title="{{ __('app.notifications') }}"
                     aria-label="{{ __('app.notifications') }}">
                 <i class="fas fa-bell"></i>
-                @if($notifUnread > 0)
+                @if(($notifUnread ?? 0) > 0)
                     <span class="badge-dot">{{ $notifUnread > 99 ? '99+' : $notifUnread }}</span>
                 @endif
             </button>
             <ul class="dropdown-menu dropdown-menu-end" style="min-width:320px;max-width:90vw;">
                 <li class="dropdown-header d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-bell me-1"></i> {{ __('app.notifications') }}</span>
-                    @if($notifUnread > 0)
+                    @if(($notifUnread ?? 0) > 0)
                         <form method="POST" action="{{ route('admin.notifications.markAllRead') }}" style="display:inline">@csrf
                             <button type="submit" class="btn btn-link p-0 text-primary" style="font-size:11px;text-decoration:none;">
                                 {{ __('app.mark_all_read') }}
@@ -275,7 +275,7 @@
                     @endif
                 </li>
                 <li><hr class="dropdown-divider"></li>
-                @forelse($latestNotifs as $notif)
+                @forelse(($latestNotifs ?? collect([])) as $notif)
                     <li>
                         <a class="dropdown-item {{ $notif->is_read ? '' : 'bg-light' }}"
                            href="{{ $notif->link ? route('admin.notifications.read', $notif->id) : route('admin.notifications.index') }}"
@@ -303,7 +303,7 @@
             </ul>
         </div>
 
-        @if(in_array($menuLevel, ['full', 'general_manager']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager']))
         <a href="{{ route('admin.settings.index') }}" class="topbar-icon-btn d-none d-md-flex" title="Settings">
             <i class="fas fa-cog"></i>
         </a>

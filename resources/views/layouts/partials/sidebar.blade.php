@@ -164,7 +164,7 @@
                 </a>
             </li>
 
-            @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar', 'finance', 'cashier']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'registrar', 'finance', 'cashier']))
             <li data-menu-item="enrollments">
                 <a href="{{ route('admin.enrollments.index') }}" class="{{ request()->routeIs('admin.enrollments.*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-list"></i><span>Enrollments</span>
@@ -175,21 +175,21 @@
             {{-- ════════════════════════════════════════════════════════
                  ACADEMIC  (single header, role-aware contents)
             ════════════════════════════════════════════════════════ --}}
-            @if(!in_array($menuLevel, ['librarian', 'cashier']))
+            @if(!in_array(($menuLevel ?? 'full'), ['librarian', 'cashier']))
             <li class="menu-header" data-section="academic">ACADEMIC</li>
 
             @if($menuLevel === 'teacher')
                 {{-- Teacher: just marks & planning, no setup --}}
-                <li class="{{ $isAcademicActive ? 'has-active-child' : '' }}" data-menu-item="academic">
+                <li class="{{ ($isAcademicActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="academic">
                     <a href="#academicSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                         <i class="fas fa-graduation-cap"></i><span>Marks &amp; Assessment</span>
                         <i class="fas fa-chevron-down sidebar-chevron"></i>
                     </a>
-                    <ul class="collapse {{ $isAcademicActive ? 'show' : '' }}" id="academicSubmenu">
+                    <ul class="collapse {{ ($isAcademicActive ?? false) ? 'show' : '' }}" id="academicSubmenu">
                         <li><a href="{{ route('admin.mark-entries.index') }}" class="{{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}"><i class="fas fa-pen"></i> Mark Entry</a></li>
                         <li><a href="{{ route('admin.attendance.index') }}" class="{{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
                         <li><a href="{{ route('admin.attendance-delegation.index') }}" class="{{ request()->routeIs('admin.attendance-delegation.*') ? 'active' : '' }}"><i class="fas fa-user-check"></i> Attendance Delegation</a></li>
-                        @if($isHomeroomTeacher)
+                        @if($isHomeroomTeacher ?? false)
                         <li><a href="{{ route('admin.mark-sheet.index') }}" class="{{ request()->routeIs('admin.mark-sheet.*') ? 'active' : '' }}"><i class="fas fa-file-alt"></i> Mark Sheet</a></li>
                         <li><a href="{{ route('admin.mark-sheet-full.index') }}" class="{{ request()->routeIs('admin.mark-sheet-full.*') ? 'active' : '' }}"><i class="fas fa-table"></i> Full Mark Sheet</a></li>
                         @endif
@@ -200,14 +200,14 @@
                         <li><a href="{{ route('admin.assessment-questions.index') }}" class="{{ request()->routeIs('admin.assessment-questions.*') ? 'active' : '' }}"><i class="fas fa-brain"></i> Self-Assessment</a></li>
                     </ul>
                 </li>
-            @elseif($menuLevel === 'registrar')
+            @elseif(($menuLevel ?? 'full') === 'registrar')
                 {{-- Registrar: only academic setup --}}
-                <li class="{{ $isAcademicActive ? 'has-active-child' : '' }}" data-menu-item="academic">
+                <li class="{{ ($isAcademicActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="academic">
                     <a href="#academicSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                         <i class="fas fa-graduation-cap"></i><span>Academic Setup</span>
                         <i class="fas fa-chevron-down sidebar-chevron"></i>
                     </a>
-                    <ul class="collapse {{ $isAcademicActive ? 'show' : '' }}" id="academicSubmenu">
+                    <ul class="collapse {{ ($isAcademicActive ?? false) ? 'show' : '' }}" id="academicSubmenu">
                         <li><a href="{{ route('admin.academic-years.index') }}" class="{{ request()->routeIs('admin.academic-years.*') ? 'active' : '' }}"><i class="fas fa-calendar"></i> Academic Years</a></li>
                         <li><a href="{{ route('admin.terms.index') }}" class="{{ request()->routeIs('admin.terms.*') ? 'active' : '' }}"><i class="fas fa-bookmark"></i> Terms</a></li>
                         <li><a href="{{ route('admin.classrooms.index') }}" class="{{ request()->routeIs('admin.classrooms.*') ? 'active' : '' }}"><i class="fas fa-building"></i> Classes &amp; Sections</a></li>
@@ -216,13 +216,13 @@
                 </li>
             @else
                 {{-- Full / general_manager / branch_principal / finance / hr: full academic menu --}}
-                <li class="{{ $isAcademicActive ? 'has-active-child' : '' }}" data-menu-item="academic">
+                <li class="{{ ($isAcademicActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="academic">
                     <a href="#academicSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                         <i class="fas fa-graduation-cap"></i><span>Academic Management</span>
                         <i class="fas fa-chevron-down sidebar-chevron"></i>
                     </a>
-                    <ul class="collapse {{ $isAcademicActive ? 'show' : '' }}" id="academicSubmenu">
-                        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+                    <ul class="collapse {{ ($isAcademicActive ?? false) ? 'show' : '' }}" id="academicSubmenu">
+                        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal']))
                         <li class="sidebar-subsection-label">Setup</li>
                         <li><a href="{{ route('admin.academic-years.index') }}" class="{{ request()->routeIs('admin.academic-years.*') ? 'active' : '' }}"><i class="fas fa-calendar"></i> Academic Years</a></li>
                         <li><a href="{{ route('admin.terms.index') }}" class="{{ request()->routeIs('admin.terms.*') ? 'active' : '' }}"><i class="fas fa-bookmark"></i> Terms</a></li>
@@ -241,7 +241,7 @@
                         <li><a href="{{ route('admin.mark-sheet-full.index') }}" class="{{ request()->routeIs('admin.mark-sheet-full.*') ? 'active' : '' }}"><i class="fas fa-table"></i> Full Mark Sheet</a></li>
                         <li><a href="{{ route('admin.mark-roster.index') }}" class="{{ request()->routeIs('admin.mark-roster.*') ? 'active' : '' }}"><i class="fas fa-list-ol"></i> Mark Roster</a></li>
 
-                        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+                        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal']))
                         <li class="sidebar-subsection-label">Promotion &amp; Locks</li>
                         <li><a href="{{ route('admin.promotion.index') }}" class="{{ request()->routeIs('admin.promotion.*') ? 'active' : '' }}"><i class="fas fa-level-up-alt"></i> Promotion &amp; Detention</a></li>
                         <li><a href="{{ route('admin.mark-entry-locks.index') }}" class="{{ request()->routeIs('admin.mark-entry-locks.*') ? 'active' : '' }}"><i class="fas fa-lock"></i> Mark Entry Locks</a></li>
@@ -262,19 +262,19 @@
             {{-- ════════════════════════════════════════════════════════
                  PEOPLE
             ════════════════════════════════════════════════════════ --}}
-            @if(!in_array($menuLevel, ['librarian', 'cashier']))
+            @if(!in_array(($menuLevel ?? 'full'), ['librarian', 'cashier']))
             <li class="menu-header" data-section="people">PEOPLE</li>
 
-            @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar', 'finance']))
-            <li class="{{ $isPeopleActive ? 'has-active-child' : '' }}" data-menu-item="people">
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'registrar', 'finance']))
+            <li class="{{ ($isPeopleActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="people">
                 <a href="#peopleSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                     <i class="fas fa-users"></i><span>Students &amp; Staff</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ $isPeopleActive ? 'show' : '' }}" id="peopleSubmenu">
+                <ul class="collapse {{ ($isPeopleActive ?? false) ? 'show' : '' }}" id="peopleSubmenu">
                     <li><a href="{{ route('admin.students.index') }}" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Students</a></li>
                     <li><a href="{{ route('admin.teachers.index') }}" class="{{ request()->routeIs('admin.teachers.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
-                    @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+                    @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal']))
                     <li><a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="fas fa-user-tie"></i> Staff</a></li>
                     <li><a href="{{ route('admin.parents.index') }}" class="{{ request()->routeIs('admin.parents.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parents</a></li>
                     <li><a href="{{ route('admin.team-members.index') }}" class="{{ request()->routeIs('admin.team-members.*') ? 'active' : '' }}"><i class="fas fa-people-arrows"></i> Team Members</a></li>
@@ -283,7 +283,7 @@
                     @endif
                 </ul>
             </li>
-            @elseif($menuLevel === 'teacher')
+            @elseif(($menuLevel ?? 'full') === 'teacher')
             <li data-menu-item="teacher-reviews">
                 <a href="{{ route('admin.teacher-reviews.index') }}" class="{{ request()->routeIs('admin.teacher-reviews.*') ? 'active' : '' }}">
                     <i class="fas fa-star"></i><span>My Reviews</span>
@@ -295,16 +295,16 @@
             {{-- ════════════════════════════════════════════════════════
                  FINANCE & HR
             ════════════════════════════════════════════════════════ --}}
-            @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'finance', 'cashier', 'hr']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'finance', 'cashier', 'hr']))
             <li class="menu-header" data-section="finance">FINANCE &amp; HR</li>
 
-            @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'finance', 'cashier']))
-            <li class="{{ $isFinanceActive ? 'has-active-child' : '' }}" data-menu-item="finance">
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'finance', 'cashier']))
+            <li class="{{ ($isFinanceActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="finance">
                 <a href="#financeSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                     <i class="fas fa-money-bill-wave"></i><span>Finance</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ $isFinanceActive ? 'show' : '' }}" id="financeSubmenu">
+                <ul class="collapse {{ ($isFinanceActive ?? false) ? 'show' : '' }}" id="financeSubmenu">
                     <li><a href="{{ route('admin.fees.index') }}" class="{{ request()->routeIs('admin.fees.*') ? 'active' : '' }}"><i class="fas fa-hand-holding-usd"></i> Fees</a></li>
                     <li><a href="{{ route('admin.fee-payments.index') }}" class="{{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}"><i class="fas fa-receipt"></i> Fee Payments</a></li>
                     <li><a href="{{ route('admin.payrolls.index') }}" class="{{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}"><i class="fas fa-money-check-alt"></i> Payrolls</a></li>
@@ -318,7 +318,7 @@
             </li>
             @endif
 
-            @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'hr']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'hr']))
             <li data-menu-item="hr">
                 <a href="#hrSubmenu" data-bs-toggle="collapse" class="submenu-toggle {{ request()->routeIs($hrRoutes) ? 'active' : '' }}">
                     <i class="fas fa-id-card-alt"></i><span>HR</span>
@@ -335,14 +335,14 @@
             {{-- ════════════════════════════════════════════════════════
                  ANALYSIS
             ════════════════════════════════════════════════════════ --}}
-            @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal']))
             <li class="menu-header" data-section="analysis">ANALYSIS</li>
-            <li class="{{ $isAnalysisActive ? 'has-active-child' : '' }}" data-menu-item="analysis">
+            <li class="{{ ($isAnalysisActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="analysis">
                 <a href="#analysisSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                     <i class="fas fa-chart-pie"></i><span>Performance Analysis</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ $isAnalysisActive ? 'show' : '' }}" id="analysisSubmenu">
+                <ul class="collapse {{ ($isAnalysisActive ?? false) ? 'show' : '' }}" id="analysisSubmenu">
                     <li><a href="{{ route('admin.performance.index') }}" class="{{ request()->routeIs('admin.performance.*') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i> Overview</a></li>
                     <li><a href="{{ route('admin.performance.class-comparison') }}" class="{{ request()->routeIs('admin.performance.class-comparison') ? 'active' : '' }}"><i class="fas fa-graduation-cap"></i> Class Comparison</a></li>
                     <li><a href="{{ route('admin.performance.branch-comparison') }}" class="{{ request()->routeIs('admin.performance.branch-comparison') ? 'active' : '' }}"><i class="fas fa-code-branch"></i> Branch Comparison</a></li>
@@ -357,14 +357,14 @@
             {{-- ════════════════════════════════════════════════════════
                  DOCUMENTS & REPORTS
             ════════════════════════════════════════════════════════ --}}
-            @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'registrar']))
             <li class="menu-header" data-section="documents">DOCUMENTS &amp; REPORTS</li>
-            <li class="{{ $isDocumentActive ? 'has-active-child' : '' }}" data-menu-item="documents">
+            <li class="{{ ($isDocumentActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="documents">
                 <a href="#documentSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                     <i class="fas fa-folder-open"></i><span>Documents &amp; Reports</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ $isDocumentActive ? 'show' : '' }}" id="documentSubmenu">
+                <ul class="collapse {{ ($isDocumentActive ?? false) ? 'show' : '' }}" id="documentSubmenu">
                     <li class="sidebar-subsection-label">Certificates &amp; Documents</li>
                     <li><a href="{{ route('admin.certificate-generate.index') }}" class="{{ request()->routeIs('admin.certificate-generate.*') ? 'active' : '' }}"><i class="fas fa-award"></i> Certificate Generator</a></li>
                     <li><a href="{{ route('admin.certificate-print.index') }}" class="{{ request()->routeIs('admin.certificate-print.*') ? 'active' : '' }}"><i class="fas fa-print"></i> Print on Certificate</a></li>
@@ -383,19 +383,19 @@
             {{-- ════════════════════════════════════════════════════════
                  RESOURCES
             ════════════════════════════════════════════════════════ --}}
-            @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
             <li class="menu-header" data-section="resources">RESOURCES</li>
-            <li class="{{ $isLibraryActive ? 'has-active-child' : '' }}" data-menu-item="library">
-                @if(in_array($menuLevel, ['teacher', 'librarian']))
+            <li class="{{ ($isLibraryActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="library">
+                @if(in_array(($menuLevel ?? 'full'), ['teacher', 'librarian']))
                 <a href="{{ route('admin.video-library.index') }}" class="{{ request()->routeIs('admin.video-library.*') ? 'active' : '' }}">
                     <i class="fas fa-book-open"></i><span>Digital Library</span>
                 </a>
                 @else
-                <a href="#librarySubmenu" data-bs-toggle="collapse" class="submenu-toggle {{ $isLibraryActive ? 'active' : '' }}">
+                <a href="#librarySubmenu" data-bs-toggle="collapse" class="submenu-toggle {{ ($isLibraryActive ?? false) ? 'active' : '' }}">
                     <i class="fas fa-book-open"></i><span>Digital Library</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ $isLibraryActive ? 'show' : '' }}" id="librarySubmenu">
+                <ul class="collapse {{ ($isLibraryActive ?? false) ? 'show' : '' }}" id="librarySubmenu">
                     <li><a href="{{ route('admin.library.index') }}" class="{{ request()->routeIs('admin.library.*') ? 'active' : '' }}"><i class="fas fa-book"></i> Book Library</a></li>
                     <li><a href="{{ route('admin.video-library.index') }}" class="{{ request()->routeIs('admin.video-library.*') ? 'active' : '' }}"><i class="fab fa-youtube"></i> Video Library</a></li>
                 </ul>
@@ -407,8 +407,8 @@
                  COMMUNICATION
             ════════════════════════════════════════════════════════ --}}
             <li class="menu-header" data-section="communication">COMMUNICATION</li>
-            <li class="{{ $isCommActive ? 'has-active-child' : '' }}" data-menu-item="communication">
-                @if(in_array($menuLevel, ['teacher', 'librarian', 'cashier', 'finance', 'hr']))
+            <li class="{{ ($isCommActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="communication">
+                @if(in_array(($menuLevel ?? 'full'), ['teacher', 'librarian', 'cashier', 'finance', 'hr']))
                 <a href="{{ route('admin.calendar.index') }}" class="{{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar-alt"></i><span>Calendar &amp; Announcements</span>
                 </a>
@@ -417,7 +417,7 @@
                     <i class="fas fa-broadcast-tower"></i><span>Communication</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ $isCommActive ? 'show' : '' }}" id="commSubmenu">
+                <ul class="collapse {{ ($isCommActive ?? false) ? 'show' : '' }}" id="commSubmenu">
                     <li><a href="{{ route('admin.calendar.index') }}" class="{{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}"><i class="fas fa-calendar-alt"></i> Academic Calendar</a></li>
                     <li><a href="{{ route('admin.announcements.index') }}" class="{{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}"><i class="fas fa-bullhorn"></i> Announcements</a></li>
                     <li><a href="{{ route('admin.chat.index') }}" class="{{ request()->routeIs('admin.chat.*') ? 'active' : '' }}"><i class="fas fa-comment-dots"></i> Chat</a></li>
@@ -429,14 +429,14 @@
             {{-- ════════════════════════════════════════════════════════
                  WEBSITE
             ════════════════════════════════════════════════════════ --}}
-            @if(in_array($menuLevel, ['full', 'general_manager']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager']))
             <li class="menu-header" data-section="website">WEBSITE</li>
-            <li class="{{ $isWebsiteActive ? 'has-active-child' : '' }}" data-menu-item="website">
+            <li class="{{ ($isWebsiteActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="website">
                 <a href="#websiteSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                     <i class="fas fa-globe"></i><span>Website Management</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ $isWebsiteActive ? 'show' : '' }}" id="websiteSubmenu">
+                <ul class="collapse {{ ($isWebsiteActive ?? false) ? 'show' : '' }}" id="websiteSubmenu">
                     <li><a href="{{ route('admin.branches.index') }}" class="{{ request()->routeIs('admin.branches.*') ? 'active' : '' }}"><i class="fas fa-map-marker-alt"></i> Branches</a></li>
                     <li><a href="{{ route('admin.web-content.index') }}" class="{{ request()->routeIs('admin.web-content.*') ? 'active' : '' }}"><i class="fas fa-paint-brush"></i> Web Content</a></li>
                     <li><a href="{{ route('admin.sliders.index') }}" class="{{ request()->routeIs('admin.sliders.*') ? 'active' : '' }}"><i class="fas fa-images"></i> Sliders</a></li>
@@ -446,7 +446,7 @@
                     <li><a href="{{ route('admin.contact-messages.index') }}" class="{{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}"><i class="fas fa-envelope"></i> Messages</a></li>
                 </ul>
             </li>
-            @elseif($menuLevel === 'branch_principal')
+            @elseif(($menuLevel ?? 'full') === 'branch_principal')
             <li class="menu-header" data-section="transfers">TRANSFERS</li>
             <li data-menu-item="transfer">
                 <a href="{{ route('admin.students.index') }}?filter=transfer" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
@@ -458,14 +458,14 @@
             {{-- ════════════════════════════════════════════════════════
                  ADMINISTRATION
             ════════════════════════════════════════════════════════ --}}
-            @if(in_array($menuLevel, ['full', 'general_manager']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager']))
             <li class="menu-header" data-section="administration">ADMINISTRATION</li>
-            <li class="{{ $isAdminActive ? 'has-active-child' : '' }}" data-menu-item="admin">
+            <li class="{{ ($isAdminActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="admin">
                 <a href="#adminSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
                     <i class="fas fa-cogs"></i><span>System Admin</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ $isAdminActive ? 'show' : '' }}" id="adminSubmenu">
+                <ul class="collapse {{ ($isAdminActive ?? false) ? 'show' : '' }}" id="adminSubmenu">
                     <li class="sidebar-subsection-label">Access Control</li>
                     <li><a href="{{ route('admin.user-access.teachers') }}" class="{{ request()->routeIs('admin.user-access.teachers*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teacher Access</a></li>
                     <li><a href="{{ route('admin.user-access.students') }}" class="{{ request()->routeIs('admin.user-access.students*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Student Access</a></li>
