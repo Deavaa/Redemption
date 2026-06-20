@@ -711,36 +711,36 @@
             <span>Home</span>
         </a>
         {{-- 2. Mark Entry — second item for all roles that can access it --}}
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'teacher']))
         <a href="{{ route('admin.mark-entries.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.mark-entries.*') ? 'active' : '' }}">
             <i class="fas fa-pen"></i>
             <span>Marks</span>
         </a>
         @endif
         {{-- 3. Attendance Taking — third item for all roles that can access it --}}
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'teacher']))
         <a href="{{ route('admin.attendance.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
             <i class="fas fa-clipboard-check"></i>
             <span>Attend.</span>
         </a>
         @endif
         {{-- 4. Role-specific item --}}
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'registrar']))
         <a href="{{ route('admin.students.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
             <i class="fas fa-user-graduate"></i>
             <span>Students</span>
         </a>
-        @elseif(in_array($menuLevel, ['finance', 'cashier']))
+        @elseif(in_array(($menuLevel ?? 'full'), ['finance', 'cashier']))
         <a href="{{ route('admin.fee-payments.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.fee-payments.*') ? 'active' : '' }}">
             <i class="fas fa-credit-card"></i>
             <span>Payments</span>
         </a>
-        @elseif($menuLevel === 'librarian')
+        @elseif(($menuLevel ?? 'full') === 'librarian')
         <a href="{{ route('admin.video-library.index') }}" class="mobile-nav-item {{ request()->routeIs('admin.library.*') || request()->routeIs('admin.video-library.*') ? 'active' : '' }}">
             <i class="fas fa-book-open"></i>
             <span>Library</span>
         </a>
-        @elseif($menuLevel === 'hr')
+        @elseif(($menuLevel ?? 'full') === 'hr')
         @endif
         {{-- More — always last --}}
         <div class="mobile-nav-item mobile-nav-more" id="mobileNavMore" onclick="toggleMobileMenu()">
@@ -760,7 +760,7 @@
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
         </a>
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'registrar']))
         <a href="{{ route('admin.academic-years.index') }}" class="mobile-menu-link">
             <i class="fas fa-calendar"></i>
             <span>Academic Yr</span>
@@ -780,7 +780,7 @@
             <span>Staff</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'registrar']))
         <a href="{{ route('admin.students.index') }}" class="mobile-menu-link">
             <i class="fas fa-user-graduate"></i>
             <span>Students</span>
@@ -790,7 +790,7 @@
             <span>Parents</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['full', 'general_manager']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager']))
         <a href="{{ route('admin.fees.index') }}" class="mobile-menu-link">
             <i class="fas fa-money-bill-wave"></i>
             <span>Fees</span>
@@ -808,13 +808,13 @@
             <span>Leaves</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['finance', 'hr']))
+        @if(in_array(($menuLevel ?? 'full'), ['finance', 'hr']))
         <a href="{{ route('admin.fees.index') }}" class="mobile-menu-link">
             <i class="fas fa-money-bill-wave"></i>
             <span>Fees</span>
         </a>
         @endif
-        @if($menuLevel === 'hr')
+        @if(($menuLevel ?? 'full') === 'hr')
         <a href="{{ route('admin.leaves.index') }}" class="mobile-menu-link">
             <i class="fas fa-calendar-minus"></i>
             <span>Leaves</span>
@@ -824,7 +824,7 @@
             <span>Payroll</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'registrar']))
         <a href="{{ route('admin.exams.index') }}" class="mobile-menu-link">
             <i class="fas fa-file-alt"></i>
             <span>Exams</span>
@@ -842,7 +842,7 @@
             <span>Delegate</span>
         </a>
         @endif
-        @if($menuLevel === 'teacher')
+        @if(($menuLevel ?? 'full') === 'teacher')
         <a href="{{ route('admin.mark-entries.index') }}" class="mobile-menu-link">
             <i class="fas fa-pen"></i>
             <span>Mark Entry</span>
@@ -864,7 +864,7 @@
             <span>Report Exchange</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
         <a href="{{ route('admin.library.index') }}" class="mobile-menu-link">
             <i class="fas fa-book"></i>
             <span>Books</span>
@@ -886,7 +886,7 @@
             <i class="fas fa-comment-dots"></i>
             <span>Chat</span>
         </a>
-        @if(in_array($menuLevel, ['full', 'general_manager', 'branch_principal', 'registrar']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'registrar']))
         <a href="{{ route('admin.report-card.index') }}" class="mobile-menu-link">
             <i class="fas fa-id-card"></i>
             <span>Reports</span>
@@ -896,7 +896,7 @@
             <span>Certs</span>
         </a>
         @endif
-        @if(in_array($menuLevel, ['full', 'general_manager']))
+        @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager']))
         <a href="{{ route('admin.branches.index') }}" class="mobile-menu-link">
             <i class="fas fa-map-marker-alt"></i>
             <span>Branches</span>
@@ -920,8 +920,8 @@
 <script>
 // Global user context for branch principal locking
 window.currentUser = {
-    role: '{{ Auth::user()->role }}',
-    branchId: {{ Auth::user()->branch_id ?? 'null' }},
+    role: '{{ Auth::user()?->role ?? '' }}',
+    branchId: {{ Auth::user()?->branch_id ?? 'null' }},
     branchName: '{{ $userBranch?->name ?? '' }}'
 };
 
@@ -1110,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var dropdownConfig = [
             { id: 'langDropdown', toggleSel: '.topbar-icon-toggle', menuSel: '.dropdown-menu', title: '{{ __("app.language") }}' },
             { id: 'notifDropdown', toggleSel: '.topbar-icon-toggle', menuSel: '.dropdown-menu', title: '{{ __("app.notifications") }}' },
-            { id: 'userDropdown', toggleSel: '.topbar-avatar', menuSel: '.dropdown-menu', title: '{{ Auth::user()->name }}' }
+            { id: 'userDropdown', toggleSel: '.topbar-avatar', menuSel: '.dropdown-menu', title: '{{ Auth::user()?->name ?? 'User' }}' }
         ];
 
         var panelJustOpened = false;
