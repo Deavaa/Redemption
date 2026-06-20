@@ -255,8 +255,6 @@
     <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
-    {{-- Redesign layer — must come AFTER admin.css and modern-components.css so it can override. --}}
-    <link href="{{ asset('css/admin-redesign.css') }}" rel="stylesheet">
     <style>
         html, body { overflow-x: hidden; max-width: 100vw; width: 100%; box-sizing: border-box; }
         .admin-wrapper, .admin-main, .admin-content { max-width: 100%; box-sizing: border-box; }
