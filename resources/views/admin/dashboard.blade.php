@@ -3,7 +3,102 @@
 
 @section('content')
     <div class="modern-page">
-        {{-- Page Header --}}
+
+        {{-- ╔═══════════════════════════════════════════════════════════════════
+            NEW DESIGN SYSTEM — Page Header (showcases admin-redesign.css)
+            This is a cleaner, more spacious header that uses the new
+            .page-header / .page-header-title / .page-header-subtitle / .stat-card
+            classes from public/css/admin-redesign.css. The legacy
+            .dash-stats-grid below remains for backward compatibility.
+            ══════════════════════════════════════════════════════════════════════ --}}
+        <div class="page-header">
+            <div class="page-header-left">
+                <h1 class="page-header-title">
+                    <i class="fas fa-th-large"></i>
+                    {{ __('app.welcome') }}, {{ Auth::user()->name }}
+                </h1>
+                <p class="page-header-subtitle">
+                    @if(isset($currentYear) && $currentYear)
+                        {{ $currentYear->name }} &middot;
+                    @endif
+                    @if(isset($branchName) && $branchName)
+                        {{ $branchName }}
+                    @else
+                        All Branches
+                    @endif
+                    &middot; {{ now()->format('l, F j, Y') }}
+                </p>
+            </div>
+            <div class="page-header-actions">
+                @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'branch_principal', 'teacher']))
+                <a href="{{ route('admin.students.create') }}" class="btn-modern btn-modern-primary">
+                    <i class="fas fa-user-plus"></i> Add Student
+                </a>
+                @endif
+                @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'branch_principal', 'teacher']))
+                <a href="{{ route('admin.mark-entries.index') }}" class="btn-modern btn-modern-secondary">
+                    <i class="fas fa-pen"></i> Mark Entry
+                </a>
+                @endif
+                <a href="{{ route('admin.profile') }}" class="btn-modern btn-modern-ghost" title="My Profile">
+                    <i class="fas fa-user-cog"></i>
+                </a>
+            </div>
+        </div>
+
+        {{-- New stat-card row (uses .stat-card from admin-redesign.css) --}}
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3 col-xl-2">
+                <a href="{{ route('admin.students.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
+                    <div class="stat-card-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="stat-card-label">Students</div>
+                    <div class="stat-card-value">{{ $totalStudents }}</div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+                <a href="{{ route('admin.teachers.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
+                    <div class="stat-card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <div class="stat-card-label">Teachers</div>
+                    <div class="stat-card-value">{{ $totalTeachers }}</div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+                <a href="{{ route('admin.classrooms.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
+                    <div class="stat-card-icon"><i class="fas fa-chalkboard"></i></div>
+                    <div class="stat-card-label">Classes</div>
+                    <div class="stat-card-value">{{ $totalClasses }}</div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+                <a href="{{ route('admin.subjects.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
+                    <div class="stat-card-icon"><i class="fas fa-book"></i></div>
+                    <div class="stat-card-label">Subjects</div>
+                    <div class="stat-card-value">{{ $totalSubjects }}</div>
+                </a>
+            </div>
+            @if(!$isBranchScoped)
+            <div class="col-6 col-md-3 col-xl-2">
+                <a href="{{ route('admin.branches.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
+                    <div class="stat-card-icon"><i class="fas fa-building"></i></div>
+                    <div class="stat-card-label">Branches</div>
+                    <div class="stat-card-value">{{ $totalBranches }}</div>
+                </a>
+            </div>
+            @endif
+            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'finance', 'cashier']))
+            <div class="col-6 col-md-3 col-xl-2">
+                <a href="{{ route('admin.fee-payments.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
+                    <div class="stat-card-icon" style="background:var(--color-success-light);color:var(--color-success);">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-card-label">Fee Collected</div>
+                    <div class="stat-card-value" style="font-size:20px;">{{ number_format($totalFeeCollected, 0) }}</div>
+                </a>
+            </div>
+            @endif
+        </div>
+
+        {{-- Legacy Page Header (preserved for backward compatibility) --}}
         <div class="modern-page-header">
             <div class="modern-page-header-left">
                 <nav aria-label="breadcrumb" class="modern-breadcrumb">

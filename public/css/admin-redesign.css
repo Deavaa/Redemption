@@ -1,0 +1,875 @@
+/* ============================================================================
+   SCHOOL OF REDEMPTION — Admin Redesign Layer (v1)
+   ============================================================================
+   Builds on top of design-tokens.css and modern-components.css.
+   This file adds:
+     • A cleaner sidebar with consolidated sections (no duplicate headers)
+     • A modernized topbar with breadcrumbs + global search
+     • Refreshed card / button / table styling
+     • Improved spacing & typography rhythm
+     • Better mobile responsiveness
+
+   Loaded AFTER admin.css and modern-components.css so it can override
+   legacy styles cleanly. Legacy CSS is preserved for backward compatibility
+   with the ~340 Blade templates that already use it.
+
+   Principles:
+     1. Use design tokens (var(--*)) — no hard-coded colors
+     2. Single source of truth per component
+     3. Mobile-first; progressive enhancement at md/lg breakpoints
+     4. Respect prefers-reduced-motion
+   ============================================================================ */
+
+/* ==========================================================================
+   1. SIDEBAR — Modernized, consolidated, with menu search
+   ========================================================================== */
+
+.admin-sidebar {
+    background: var(--color-sidebar-bg);
+    background-image: linear-gradient(180deg, #0C1F17 0%, #0A1812 100%);
+    width: var(--sidebar-width);
+    box-shadow: 2px 0 24px rgba(0, 0, 0, 0.18);
+    transition: transform var(--transition-normal), width var(--transition-normal);
+}
+
+/* Brand header — cleaner spacing */
+.admin-sidebar .sidebar-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.admin-sidebar .sidebar-brand {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; color: #fff;
+}
+.admin-sidebar .sidebar-brand-icon {
+    width: 40px; height: 40px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--color-primary) 0%, #065F46 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 18px;
+    box-shadow: 0 4px 10px rgba(4, 120, 87, 0.35);
+}
+.admin-sidebar .sidebar-brand-text {
+    display: flex; flex-direction: column; line-height: 1.1;
+}
+.admin-sidebar .sidebar-brand-pre {
+    font-size: 10px; font-weight: 500;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase; letter-spacing: 0.12em;
+}
+.admin-sidebar .sidebar-brand-name {
+    font-size: 17px; font-weight: 800;
+    color: #fff; letter-spacing: -0.02em;
+}
+
+/* ── Menu search ────────────────────────────────────────────── */
+.sidebar-search {
+    padding: 10px 16px 6px;
+}
+.sidebar-search-input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    transition: var(--transition-colors), box-shadow var(--transition-fast);
+}
+.sidebar-search-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+.sidebar-search-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.25);
+}
+.sidebar-search-wrap {
+    position: relative;
+}
+.sidebar-search-wrap i {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px; pointer-events: none;
+}
+
+/* ── Menu list — consolidate the role-specific duplicates ──── */
+.sidebar-menu-wrap {
+    padding: 4px 8px 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.sidebar-menu-wrap::-webkit-scrollbar { width: 6px; }
+.sidebar-menu-wrap::-webkit-scrollbar-track { background: transparent; }
+.sidebar-menu-wrap::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+.sidebar-menu-wrap::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.sidebar-menu {
+    list-style: none; padding: 0; margin: 0;
+}
+
+/* Section header — single style, no duplicates */
+.sidebar-menu > .menu-header {
+    padding: 18px 16px 6px;
+    font-size: 10px; font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+.sidebar-menu > .menu-header:first-child {
+    border-top: none;
+    padding-top: 8px;
+}
+
+/* Subsection label inside a collapsible group */
+.sidebar-subsection-label {
+    padding: 10px 16px 4px;
+    font-size: 9px; font-weight: 700;
+    color: rgba(255, 255, 255, 0.3);
+    text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+/* Top-level menu item */
+.sidebar-menu > li > a,
+.sidebar-menu > li > .submenu-toggle {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 14px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13.5px; font-weight: 500;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    margin-bottom: 1px;
+    transition: var(--transition-colors), background var(--transition-fast);
+    position: relative;
+}
+.sidebar-menu > li > a:hover,
+.sidebar-menu > li > .submenu-toggle:hover {
+    background: var(--color-sidebar-hover);
+    color: #fff;
+}
+.sidebar-menu > li > a i,
+.sidebar-menu > li > .submenu-toggle i:first-child {
+    width: 18px; text-align: center;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.65);
+    transition: var(--transition-colors);
+}
+.sidebar-menu > li > a:hover i,
+.sidebar-menu > li > .submenu-toggle:hover i:first-child {
+    color: var(--color-accent);
+}
+
+/* Active state — left accent bar + tinted bg */
+.sidebar-menu > li > a.active,
+.sidebar-menu > li > a.router-link-active {
+    background: linear-gradient(90deg, rgba(4, 120, 87, 0.25) 0%, rgba(4, 120, 87, 0.08) 100%);
+    color: #fff; font-weight: 600;
+}
+.sidebar-menu > li > a.active::before,
+.sidebar-menu > li > a.router-link-active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px;
+    width: 3px;
+    background: var(--color-accent);
+    border-radius: 0 3px 3px 0;
+}
+.sidebar-menu > li > a.active i,
+.sidebar-menu > li > a.router-link-active i {
+    color: var(--color-accent);
+}
+
+/* Parent with active child */
+.sidebar-menu > li.has-active-child > .submenu-toggle {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.04);
+}
+.sidebar-menu > li.has-active-child > .submenu-toggle i:first-child {
+    color: var(--color-accent);
+}
+
+/* Submenu chevron */
+.sidebar-chevron {
+    margin-left: auto !important;
+    font-size: 10px !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    transition: transform var(--transition-fast);
+}
+.sidebar-menu > li .submenu-toggle[aria-expanded="true"] .sidebar-chevron,
+.sidebar-menu > li .submenu-toggle.collapsed .sidebar-chevron {
+    /* Bootstrap collapse toggles .collapsed; chevron points down when collapsed */
+}
+.sidebar-menu > li .submenu-toggle:not(.collapsed) .sidebar-chevron {
+    transform: rotate(180deg);
+    color: var(--color-accent) !important;
+}
+
+/* Submenu (collapsible) */
+.sidebar-menu ul.collapse,
+.sidebar-menu ul.collapsing {
+    list-style: none; padding: 4px 0 6px;
+    margin: 0;
+}
+.sidebar-menu ul.collapse.show {
+    display: block;
+}
+.sidebar-menu ul.collapse li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 14px 7px 44px;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 13px; font-weight: 500;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    margin: 1px 8px;
+    transition: var(--transition-colors), background var(--transition-fast);
+    position: relative;
+}
+.sidebar-menu ul.collapse li a i {
+    width: 14px; text-align: center;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+}
+.sidebar-menu ul.collapse li a:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+}
+.sidebar-menu ul.collapse li a:hover i { color: var(--color-accent); }
+.sidebar-menu ul.collapse li a.active {
+    background: rgba(4, 120, 87, 0.18);
+    color: #fff; font-weight: 600;
+}
+.sidebar-menu ul.collapse li a.active::before {
+    content: '';
+    position: absolute;
+    left: 28px; top: 50%;
+    transform: translateY(-50%);
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--color-accent);
+}
+.sidebar-menu ul.collapse li a.active i { color: var(--color-accent); }
+
+/* Hidden by search filter — when user types in search, non-matching items get .search-hidden */
+.sidebar-menu li.search-hidden,
+.sidebar-menu > li.search-hidden {
+    display: none !important;
+}
+.sidebar-menu .search-no-results {
+    padding: 16px; text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    display: none;
+}
+.sidebar-menu.searching .search-no-results { display: block; }
+
+/* Sidebar footer (user info) */
+.sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.18);
+}
+.sidebar-footer-user {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 4px;
+    border-radius: var(--radius-md);
+    transition: var(--transition-colors);
+    cursor: pointer;
+}
+.sidebar-footer-user:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+.sidebar-footer-avatar {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+    flex-shrink: 0;
+}
+.sidebar-footer-info {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; line-height: 1.2;
+}
+.sidebar-footer-name {
+    font-size: 13px; font-weight: 600;
+    color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar-footer-role {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: capitalize;
+}
+
+/* ==========================================================================
+   2. TOPBAR — Cleaner, with breadcrumbs + global search
+   ========================================================================== */
+
+.admin-topbar {
+    height: var(--header-height);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border-bottom: 1px solid var(--color-border-light);
+    display: flex; align-items: center;
+    padding: 0 var(--spacing-5);
+    gap: var(--spacing-4);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+}
+.topbar-left {
+    display: flex; align-items: center; gap: var(--spacing-3);
+    flex: 1; min-width: 0;
+}
+.topbar-toggle {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-md);
+    background: transparent; border: none;
+    color: var(--color-text-muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: var(--transition-colors);
+}
+.topbar-toggle:hover {
+    background: var(--color-border-light);
+    color: var(--color-text-dark);
+}
+
+/* Breadcrumbs */
+.topbar-breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+    min-width: 0;
+}
+.topbar-breadcrumb a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: var(--transition-colors);
+    white-space: nowrap;
+}
+.topbar-breadcrumb a:hover { color: var(--color-primary); }
+.topbar-breadcrumb .breadcrumb-current {
+    color: var(--color-text-dark);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.topbar-breadcrumb .breadcrumb-sep {
+    color: var(--color-text-muted);
+    opacity: 0.5;
+    font-size: 10px;
+}
+
+.topbar-right {
+    display: flex; align-items: center; gap: var(--spacing-2);
+}
+
+/* Global search (desktop only) */
+.topbar-search {
+    position: relative;
+    width: 240px;
+    transition: width var(--transition-normal);
+}
+.topbar-search:focus-within { width: 320px; }
+.topbar-search input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-body-bg);
+    color: var(--color-text-dark);
+    font-size: 13px;
+    transition: var(--transition-colors), box-shadow var(--transition-fast);
+}
+.topbar-search input::placeholder { color: var(--color-text-muted); }
+.topbar-search input:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
+}
+.topbar-search i {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    font-size: 12px; pointer-events: none;
+}
+.topbar-search kbd {
+    position: absolute; right: 8px; top: 50%;
+    transform: translateY(-50%);
+    background: var(--color-border-light);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px; font-weight: 600;
+    color: var(--color-text-muted);
+    font-family: var(--font-family);
+}
+
+/* Topbar icon buttons (notifications, language, profile) */
+.topbar-icon-btn {
+    position: relative;
+    width: 38px; height: 38px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--color-text-muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-colors), background var(--transition-fast);
+    text-decoration: none;
+}
+.topbar-icon-btn:hover {
+    background: var(--color-body-bg);
+    color: var(--color-text-dark);
+    border-color: var(--color-border-light);
+}
+.topbar-icon-btn .badge-dot {
+    position: absolute; top: 6px; right: 6px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: var(--radius-full);
+    background: var(--color-danger);
+    color: #fff;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #fff;
+}
+
+/* User dropdown */
+.topbar-dropdown {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 10px 4px 4px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: var(--transition-colors);
+}
+.topbar-dropdown:hover {
+    background: var(--color-body-bg);
+    border-color: var(--color-border-light);
+}
+.topbar-dropdown-avatar {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+}
+.topbar-dropdown-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--color-text-dark);
+    max-width: 140px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topbar-dropdown-chevron {
+    color: var(--color-text-muted); font-size: 10px;
+}
+
+/* ==========================================================================
+   3. CONTENT — Layout & rhythm
+   ========================================================================== */
+
+.admin-content {
+    padding: var(--spacing-6);
+    background: var(--color-body-bg);
+    min-height: calc(100vh - var(--header-height));
+}
+
+/* Page header (title + actions) */
+.page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-5);
+    flex-wrap: wrap;
+}
+.page-header-left { min-width: 0; flex: 1; }
+.page-header-title {
+    font-size: 22px; font-weight: 700;
+    color: var(--color-text-dark);
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+    display: flex; align-items: center; gap: 10px;
+}
+.page-header-title i {
+    color: var(--color-primary);
+    font-size: 20px;
+}
+.page-header-subtitle {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+.page-header-actions {
+    display: flex; align-items: center; gap: var(--spacing-2);
+    flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   4. CARDS — Modern, with subtle elevation
+   ========================================================================== */
+
+.modern-card,
+.card-modern {
+    background: var(--color-card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-light);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+    overflow: hidden;
+}
+.modern-card:hover,
+.card-modern:hover {
+    box-shadow: var(--shadow-md);
+}
+.modern-card-header {
+    padding: var(--spacing-4) var(--spacing-5);
+    border-bottom: 1px solid var(--color-border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--spacing-3);
+    background: linear-gradient(180deg, #fff 0%, #FAFBFC 100%);
+}
+.modern-card-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0;
+    display: flex; align-items: center; gap: 8px;
+}
+.modern-card-title i { color: var(--color-primary); font-size: 14px; }
+.modern-card-body { padding: var(--spacing-5); }
+.modern-card-footer {
+    padding: var(--spacing-3) var(--spacing-5);
+    background: var(--color-body-bg);
+    border-top: 1px solid var(--color-border-light);
+}
+
+/* Stat card (dashboard KPI) */
+.stat-card {
+    background: var(--color-card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-light);
+    padding: var(--spacing-5);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--role-accent, var(--color-primary));
+}
+.stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.stat-card-icon {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--role-accent-light, var(--color-primary-light));
+    color: var(--role-accent, var(--color-primary));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: var(--spacing-3);
+}
+.stat-card-label {
+    font-size: 12px; font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin: 0 0 4px;
+}
+.stat-card-value {
+    font-size: 28px; font-weight: 800;
+    color: var(--color-text-dark);
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+.stat-card-trend {
+    margin-top: 8px;
+    font-size: 12px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.stat-card-trend.up { color: var(--color-success); }
+.stat-card-trend.down { color: var(--color-danger); }
+.stat-card-trend.flat { color: var(--color-text-muted); }
+
+/* ==========================================================================
+   5. BUTTONS — Refreshed
+   ========================================================================== */
+
+.btn-modern {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 600;
+    font-family: inherit;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: var(--transition-colors), box-shadow var(--transition-fast), transform var(--transition-fast);
+    text-decoration: none;
+    white-space: nowrap;
+}
+.btn-modern:active { transform: translateY(1px); }
+.btn-modern:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+.btn-modern-primary {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+.btn-modern-primary:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+    color: #fff;
+    box-shadow: var(--shadow-primary-sm);
+}
+.btn-modern-secondary {
+    background: var(--color-card-bg);
+    color: var(--color-text-dark);
+    border-color: var(--color-border);
+}
+.btn-modern-secondary:hover {
+    background: var(--color-body-bg);
+    border-color: var(--color-text-muted);
+    color: var(--color-text-dark);
+}
+.btn-modern-ghost {
+    background: transparent;
+    color: var(--color-text-muted);
+    border-color: transparent;
+}
+.btn-modern-ghost:hover {
+    background: var(--color-body-bg);
+    color: var(--color-text-dark);
+}
+.btn-modern-danger {
+    background: var(--color-danger);
+    color: #fff;
+    border-color: var(--color-danger);
+}
+.btn-modern-danger:hover {
+    background: #B91C1C;
+    border-color: #B91C1C;
+    color: #fff;
+}
+.btn-modern-sm { padding: 5px 10px; font-size: 12px; }
+.btn-modern-lg { padding: 11px 22px; font-size: 14px; }
+
+/* ==========================================================================
+   6. TABLES — Modernized
+   ========================================================================== */
+
+.modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+.modern-table thead th {
+    background: var(--color-body-bg);
+    color: var(--color-text-muted);
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    position: sticky; top: 0;
+    z-index: 1;
+}
+.modern-table tbody td {
+    padding: 14px 16px;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border-light);
+    vertical-align: middle;
+}
+.modern-table tbody tr:last-child td { border-bottom: none; }
+.modern-table tbody tr {
+    transition: background var(--transition-fast);
+}
+.modern-table tbody tr:hover {
+    background: var(--color-body-bg);
+}
+
+/* ==========================================================================
+   7. FORM CONTROLS — Modernized
+   ========================================================================== */
+
+.modern-input,
+.modern-select,
+.modern-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-card-bg);
+    color: var(--color-text-dark);
+    font-size: 13px;
+    font-family: inherit;
+    transition: var(--transition-colors), box-shadow var(--transition-fast);
+}
+.modern-input:focus,
+.modern-select:focus,
+.modern-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
+}
+.modern-input::placeholder,
+.modern-textarea::placeholder { color: var(--color-text-muted); }
+.modern-label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 6px;
+}
+.modern-label .required { color: var(--color-danger); margin-left: 2px; }
+.modern-form-group { margin-bottom: var(--spacing-4); }
+.modern-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--spacing-4);
+}
+
+/* ==========================================================================
+   8. BADGES & PILLS
+   ========================================================================== */
+
+.modern-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.02em;
+}
+.modern-badge-success { background: var(--color-success-light); color: var(--color-success); }
+.modern-badge-warning { background: var(--color-warning-light); color: var(--color-warning); }
+.modern-badge-danger  { background: var(--color-danger-light);  color: var(--color-danger); }
+.modern-badge-info    { background: var(--color-info-light);    color: var(--color-info); }
+.modern-badge-muted   { background: var(--color-border-light);  color: var(--color-text-muted); }
+.modern-badge-primary { background: var(--color-primary-light); color: var(--color-primary); }
+
+/* ==========================================================================
+   9. EMPTY STATES
+   ========================================================================== */
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-10) var(--spacing-6);
+    color: var(--color-text-muted);
+}
+.empty-state-icon {
+    width: 64px; height: 64px;
+    margin: 0 auto var(--spacing-4);
+    border-radius: var(--radius-full);
+    background: var(--color-body-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    color: var(--color-text-muted);
+}
+.empty-state-title {
+    font-size: 16px; font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0 0 6px;
+}
+.empty-state-text {
+    font-size: 13px;
+    margin: 0 0 var(--spacing-4);
+}
+
+/* ==========================================================================
+   10. MOBILE BOTTOM NAV (PWA-friendly)
+   ========================================================================== */
+
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border-top: 1px solid var(--color-border-light);
+    display: flex;
+    z-index: var(--z-fixed);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.mobile-bottom-nav a {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 2px;
+    color: var(--color-text-muted);
+    font-size: 10px; font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition-colors);
+}
+.mobile-bottom-nav a i { font-size: 18px; }
+.mobile-bottom-nav a.active,
+.mobile-bottom-nav a:active {
+    color: var(--color-primary);
+}
+
+/* ==========================================================================
+   11. RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1023px) {
+    .topbar-search { display: none; }
+    .topbar-dropdown-name { display: none; }
+    .admin-content { padding: var(--spacing-4); }
+}
+
+@media (max-width: 767px) {
+    .admin-content { padding: var(--spacing-3); }
+    .page-header-title { font-size: 18px; }
+    .stat-card { padding: var(--spacing-4); }
+    .stat-card-value { font-size: 24px; }
+    .modern-card-body { padding: var(--spacing-4); }
+    .topbar-breadcrumb { font-size: 13px; }
+    .topbar-breadcrumb .breadcrumb-sep { display: none; }
+    .topbar-breadcrumb a:not(.breadcrumb-current) { display: none; }
+}
+
+/* ==========================================================================
+   12. ACCESSIBILITY — Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ==========================================================================
+   13. UTILITY CLASSES
+   ========================================================================== */
+
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.flex-grow-1 { flex: 1; }
+.min-w-0 { min-width: 0; }
+.cursor-pointer { cursor: pointer; }
+.user-select-none { user-select: none; }
