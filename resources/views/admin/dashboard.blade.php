@@ -3,80 +3,59 @@
 
 @push('styles')
 <style>
-/* Dashboard-specific styles — scoped to .dash-* to avoid conflicts with admin.css */
-.dash-wrap { padding: 0 !important; max-width: 100% !important; }
-.dash-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-.dash-header h4 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #111827; }
-.dash-header h4 i { color: #047857; margin-right: 8px; }
-.dash-meta { margin: 4px 0 0; font-size: 12px; color: #6b7280; }
-.dash-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-right: 4px; }
-.dash-badge-ay { background: #d1fae5; color: #065f46; }
-.dash-badge-br { background: #dbeafe; color: #1e40af; }
-.dash-badge-all { background: #f3f4f6; color: #6b7280; }
-.dash-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-
-/* Stat cards grid — 3 per row on desktop, 2 on tablet, 1 on mobile */
-.dash-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-@media (max-width: 991px) { .dash-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 575px) { .dash-stats { grid-template-columns: 1fr; } }
-
-.dash-stat { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border: 1px solid #e5e7eb; border-left-width: 3px; border-radius: 10px; text-decoration: none; color: inherit; transition: box-shadow 0.2s, transform 0.2s; }
-.dash-stat:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); text-decoration: none; }
-.dash-stat-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-.dash-stat-lbl { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
-.dash-stat-val { font-size: 20px; font-weight: 800; color: #111827; line-height: 1.1; }
-
-/* Quick Actions */
-.dash-quick { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
-.dash-quick-title { font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 8px; }
-.dash-quick-title i { color: #f59e0b; margin-right: 4px; }
-.dash-quick-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-.dash-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; border: 1px solid; transition: all 0.15s; cursor: pointer; }
-.dash-btn:hover { opacity: 0.85; text-decoration: none; }
-
-/* Two-column layout */
-.dash-cols { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
-@media (max-width: 991px) { .dash-cols { grid-template-columns: 1fr; } }
-
-/* Cards */
-.dash-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
-.dash-card-header { padding: 8px 14px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; font-size: 13px; font-weight: 700; color: #111827; }
-.dash-card-header i { margin-right: 4px; }
-
-/* Table */
-.dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.dash-table th { padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-.dash-table td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; color: #1f2937; }
-.dash-table tbody tr:hover { background: #f9fafb; }
-.dash-table tbody tr:last-child td { border-bottom: none; }
-
-/* Status badges */
-.dash-status { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-.dash-status-active { background: #d1fae5; color: #065f46; }
-.dash-status-empty { background: #f3f4f6; color: #6b7280; }
-.dash-status-info { background: #dbeafe; color: #1e40af; }
-.dash-status-danger { background: #fee2e2; color: #991b1b; }
-
-/* Recent payments list */
-.dash-payment { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid #f3f4f6; }
-.dash-payment:last-child { border-bottom: none; }
-.dash-payment-left { display: flex; align-items: center; gap: 8px; }
-.dash-payment-icon { width: 28px; height: 28px; border-radius: 6px; background: #d1fae5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
-.dash-payment-name { font-size: 13px; font-weight: 600; color: #111827; }
-.dash-payment-date { font-size: 11px; color: #6b7280; }
-.dash-payment-amount { font-size: 13px; font-weight: 700; color: #059669; }
-
-/* System info */
-.dash-info-row { display: flex; justify-content: space-between; padding: 6px 14px; font-size: 12px; border-bottom: 1px solid #f3f4f6; }
-.dash-info-row:last-child { border-bottom: none; }
-.dash-info-label { color: #6b7280; }
-.dash-info-value { font-weight: 600; color: #111827; }
-
-/* Current AY card */
-.dash-ay-card { text-align: center; padding: 14px; }
-.dash-ay-card i { font-size: 1.4rem; color: #10b981; margin-bottom: 4px; }
-.dash-ay-card .name { font-size: 1.1rem; font-weight: 800; color: #10b981; }
-.dash-ay-card .dates { font-size: 12px; color: #6b7280; margin: 2px 0 8px; }
+.dash-wrap { padding:0 !important; max-width:100% !important; width:100% !important; overflow:visible !important; }
+.dash-header { display:flex !important; justify-content:space-between !important; align-items:flex-start !important; flex-wrap:wrap !important; gap:10px !important; margin-bottom:16px !important; }
+.dash-header h4 { margin:0 !important; font-size:1.4rem !important; font-weight:700 !important; color:#111827 !important; }
+.dash-header h4 i { color:#047857 !important; margin-right:8px !important; }
+.dash-meta { margin:4px 0 0 !important; font-size:12px !important; color:#6b7280 !important; }
+.dash-badge { display:inline-block !important; padding:2px 8px !important; border-radius:10px !important; font-size:11px !important; font-weight:600 !important; margin-right:4px !important; }
+.dash-badge-ay { background:#d1fae5 !important; color:#065f46 !important; }
+.dash-badge-br { background:#dbeafe !important; color:#1e40af !important; }
+.dash-badge-all { background:#f3f4f6 !important; color:#6b7280 !important; }
+.dash-actions { display:flex !important; gap:6px !important; flex-wrap:wrap !important; }
+.dash-stats { display:grid !important; grid-template-columns:repeat(3,1fr) !important; gap:8px !important; margin-bottom:16px !important; }
+.dash-stat { display:flex !important; align-items:center !important; gap:10px !important; padding:10px 14px !important; background:#fff !important; border:1px solid #e5e7eb !important; border-left-width:3px !important; border-radius:10px !important; text-decoration:none !important; color:inherit !important; transition:box-shadow 0.2s,transform 0.2s !important; }
+.dash-stat:hover { box-shadow:0 4px 12px rgba(0,0,0,0.08) !important; transform:translateY(-1px) !important; text-decoration:none !important; }
+.dash-stat-icon { width:36px !important; height:36px !important; border-radius:8px !important; display:flex !important; align-items:center !important; justify-content:center !important; font-size:15px !important; flex-shrink:0 !important; }
+.dash-stat-lbl { font-size:10px !important; font-weight:700 !important; color:#6b7280 !important; text-transform:uppercase !important; letter-spacing:0.5px !important; }
+.dash-stat-val { font-size:20px !important; font-weight:800 !important; color:#111827 !important; line-height:1.1 !important; }
+.dash-quick { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:10px !important; padding:10px 14px !important; margin-bottom:16px !important; }
+.dash-quick-title { font-size:13px !important; font-weight:700 !important; color:#111827 !important; margin-bottom:8px !important; }
+.dash-quick-title i { color:#f59e0b !important; margin-right:4px !important; }
+.dash-quick-actions { display:flex !important; flex-wrap:wrap !important; gap:6px !important; }
+.dash-btn { display:inline-flex !important; align-items:center !important; gap:4px !important; padding:5px 12px !important; border-radius:6px !important; font-size:12px !important; font-weight:600 !important; text-decoration:none !important; border:1px solid !important; transition:all 0.15s !important; cursor:pointer !important; }
+.dash-btn:hover { opacity:0.85 !important; text-decoration:none !important; }
+.dash-cols { display:grid !important; grid-template-columns:2fr 1fr !important; gap:16px !important; }
+.dash-card { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:10px !important; overflow:hidden !important; margin-bottom:12px !important; }
+.dash-card-header { padding:8px 14px !important; background:#f9fafb !important; border-bottom:1px solid #e5e7eb !important; font-size:13px !important; font-weight:700 !important; color:#111827 !important; }
+.dash-card-header i { margin-right:4px !important; }
+.dash-table { width:100% !important; border-collapse:collapse !important; font-size:13px !important; }
+.dash-table th { padding:8px 12px !important; text-align:left !important; font-size:11px !important; font-weight:700 !important; text-transform:uppercase !important; color:#6b7280 !important; background:#f9fafb !important; border-bottom:1px solid #e5e7eb !important; }
+.dash-table td { padding:8px 12px !important; border-bottom:1px solid #f3f4f6 !important; color:#1f2937 !important; }
+.dash-table tbody tr:hover { background:#f9fafb !important; }
+.dash-table tbody tr:last-child td { border-bottom:none !important; }
+.dash-status { display:inline-block !important; padding:2px 8px !important; border-radius:10px !important; font-size:11px !important; font-weight:600 !important; }
+.dash-status-active { background:#d1fae5 !important; color:#065f46 !important; }
+.dash-status-empty { background:#f3f4f6 !important; color:#6b7280 !important; }
+.dash-status-info { background:#dbeafe !important; color:#1e40af !important; }
+.dash-status-danger { background:#fee2e2 !important; color:#991b1b !important; }
+.dash-payment { display:flex !important; align-items:center !important; justify-content:space-between !important; padding:8px 14px !important; border-bottom:1px solid #f3f4f6 !important; }
+.dash-payment:last-child { border-bottom:none !important; }
+.dash-payment-left { display:flex !important; align-items:center !important; gap:8px !important; }
+.dash-payment-icon { width:28px !important; height:28px !important; border-radius:6px !important; background:#d1fae5 !important; color:#059669 !important; display:flex !important; align-items:center !important; justify-content:center !important; font-size:11px !important; flex-shrink:0 !important; }
+.dash-payment-name { font-size:13px !important; font-weight:600 !important; color:#111827 !important; }
+.dash-payment-date { font-size:11px !important; color:#6b7280 !important; }
+.dash-payment-amount { font-size:13px !important; font-weight:700 !important; color:#059669 !important; }
+.dash-info-row { display:flex !important; justify-content:space-between !important; padding:6px 14px !important; font-size:12px !important; border-bottom:1px solid #f3f4f6 !important; }
+.dash-info-row:last-child { border-bottom:none !important; }
+.dash-info-label { color:#6b7280 !important; }
+.dash-info-value { font-weight:600 !important; color:#111827 !important; }
+.dash-ay-card { text-align:center !important; padding:14px !important; }
+.dash-ay-card i { font-size:1.4rem !important; color:#10b981 !important; margin-bottom:4px !important; }
+.dash-ay-card .name { font-size:1.1rem !important; font-weight:800 !important; color:#10b981 !important; }
+.dash-ay-card .dates { font-size:12px !important; color:#6b7280 !important; margin:2px 0 8px !important; }
+@media (max-width:991px) { .dash-stats { grid-template-columns:repeat(2,1fr) !important; } .dash-cols { grid-template-columns:1fr !important; } }
+@media (max-width:575px) { .dash-stats { grid-template-columns:1fr !important; } }
 </style>
 @endpush
 
@@ -89,8 +68,6 @@
 @endphp
 
 <div class="dash-wrap">
-
-    {{-- ── Page Header ──────────────────────────────────────────── --}}
     <div class="dash-header">
         <div>
             <h4><i class="fas fa-th-large"></i> Welcome, {{ Auth::user()?->name ?? "Guest" }}</h4>
@@ -121,7 +98,6 @@
         </div>
     </div>
 
-    {{-- ── Stat Cards ───────────────────────────────────────────── --}}
     <div class="dash-stats">
         <a href="{{ route('admin.students.index') }}" class="dash-stat" style="border-left-color:#4361ee;">
             <div class="dash-stat-icon" style="background:#e0e7ff;color:#4361ee;"><i class="fas fa-user-graduate"></i></div>
@@ -153,7 +129,6 @@
         @endif
     </div>
 
-    {{-- ── Quick Actions ────────────────────────────────────────── --}}
     <div class="dash-quick">
         <div class="dash-quick-title"><i class="fas fa-bolt"></i> Quick Actions</div>
         <div class="dash-quick-actions">
@@ -175,16 +150,12 @@
         </div>
     </div>
 
-    {{-- ── Two-column layout: Overview + Sidebar ─────────────────── --}}
     <div class="dash-cols">
-        {{-- Left: Management Overview --}}
         <div>
             <div class="dash-card">
                 <div class="dash-card-header"><i class="fas fa-th-large" style="color:#047857;"></i> Management Overview</div>
                 <table class="dash-table">
-                    <thead>
-                        <tr><th>Module</th><th>Total</th><th>Status</th><th>Action</th></tr>
-                    </thead>
+                    <thead><tr><th>Module</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody>
                         @if(!$isBranchScoped)
                         <tr>
@@ -228,22 +199,17 @@
                 </table>
             </div>
         </div>
-
-        {{-- Right: Sidebar --}}
         <div>
             @if($currentYear)
             <div class="dash-card" style="border-left:3px solid #10b981;">
                 <div class="dash-ay-card">
                     <i class="fas fa-calendar-check"></i>
                     <div class="name">{{ $currentYear->name }}</div>
-                    @if($currentYear->start_date)
-                        <div class="dates">{{ $currentYear->start_date }} — {{ $currentYear->end_date }}</div>
-                    @endif
+                    @if($currentYear->start_date)<div class="dates">{{ $currentYear->start_date }} — {{ $currentYear->end_date }}</div>@endif
                     <a href="{{ route('admin.academic-years.index') }}" class="dash-btn" style="background:#fff;color:#059669;border-color:#059669;"><i class="fas fa-eye"></i> View All</a>
                 </div>
             </div>
             @endif
-
             <div class="dash-card">
                 <div class="dash-card-header"><i class="fas fa-credit-card" style="color:#f59e0b;"></i> Recent Payments</div>
                 @if($recentPayments->count() > 0)
@@ -251,22 +217,15 @@
                     <div class="dash-payment">
                         <div class="dash-payment-left">
                             <div class="dash-payment-icon"><i class="fas fa-check"></i></div>
-                            <div>
-                                <div class="dash-payment-name">{{ $payment->student->full_name ?? 'Unknown' }}</div>
-                                <div class="dash-payment-date">{{ $payment->payment_date?->format('M d, Y') ?? '-' }}</div>
-                            </div>
+                            <div><div class="dash-payment-name">{{ $payment->student->full_name ?? 'Unknown' }}</div><div class="dash-payment-date">{{ $payment->payment_date?->format('M d, Y') ?? '-' }}</div></div>
                         </div>
                         <span class="dash-payment-amount">{{ number_format($payment->amount_paid, 2) }}</span>
                     </div>
                     @endforeach
                 @else
-                    <div style="text-align:center;padding:24px;color:#9ca3af;">
-                        <i class="fas fa-inbox" style="font-size:1.5rem;opacity:0.3;display:block;margin-bottom:6px;"></i>
-                        <span style="font-size:12px;">No recent payments</span>
-                    </div>
+                    <div style="text-align:center;padding:24px;color:#9ca3af;"><i class="fas fa-inbox" style="font-size:1.5rem;opacity:0.3;display:block;margin-bottom:6px;"></i><span style="font-size:12px;">No recent payments</span></div>
                 @endif
             </div>
-
             @if(!$isBranchScoped && $isAdminOrGM)
             <div class="dash-card">
                 <div class="dash-card-header"><i class="fas fa-info-circle" style="color:#0d9488;"></i> System Info</div>
