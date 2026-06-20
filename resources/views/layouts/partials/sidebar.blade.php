@@ -178,7 +178,7 @@
             @if(!in_array(($menuLevel ?? 'full'), ['librarian', 'cashier']))
             <li class="menu-header" data-section="academic">ACADEMIC</li>
 
-            @if($menuLevel === 'teacher')
+            @if(($menuLevel ?? 'full') === 'teacher')
                 {{-- Teacher: just marks & planning, no setup --}}
                 <li class="{{ ($isAcademicActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="academic">
                     <a href="#academicSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
@@ -470,7 +470,7 @@
                     <li><a href="{{ route('admin.user-access.teachers') }}" class="{{ request()->routeIs('admin.user-access.teachers*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i> Teacher Access</a></li>
                     <li><a href="{{ route('admin.user-access.students') }}" class="{{ request()->routeIs('admin.user-access.students*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> Student Access</a></li>
                     <li><a href="{{ route('admin.user-access.parents') }}" class="{{ request()->routeIs('admin.user-access.parents*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Parent Access</a></li>
-                    @if($menuLevel === 'full')
+                    @if(($menuLevel ?? 'full') === 'full')
                     <li><a href="{{ route('admin.roles.index') }}" class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"><i class="fas fa-shield-alt"></i> Roles &amp; Permissions</a></li>
                     @endif
 
