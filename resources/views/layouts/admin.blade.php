@@ -252,11 +252,11 @@
     {{-- Bootstrap Icons — needed by subject-assignments and other views that use bi bi-* classes --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/design-tokens.css') }}?v={{ filemtime(public_path('css/design-tokens.css')) }}" rel="stylesheet">
+    <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
+    <link href="{{ asset('css/modern-components.css') }}?v={{ filemtime(public_path('css/modern-components.css')) }}" rel="stylesheet">
     {{-- Redesign layer — must come AFTER admin.css and modern-components.css so it can override. --}}
-    <link href="{{ asset('css/admin-redesign.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/admin-redesign.css') }}?v={{ filemtime(public_path('css/admin-redesign.css')) }}" rel="stylesheet">
     <style>html,body{overflow-x:hidden!important;max-width:100vw!important;width:100%!important;}*{box-sizing:border-box;}.admin-wrapper,.admin-main,.admin-content{max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important;}.admin-topbar{max-width:100vw!important;overflow:visible!important;box-sizing:border-box!important;}</style>
     @stack('styles')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
