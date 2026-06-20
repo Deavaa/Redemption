@@ -667,11 +667,6 @@
                 @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'teacher', 'librarian']))
                 <li class="menu-header">RESOURCES</li>
                 <li class="{{ $isLibraryActive ? 'has-active-child' : '' }}">
-                    @if(in_array(($menuLevel ?? 'full'), ['teacher', 'librarian']))
-                    <a href="{{ route('admin.video-library.index') }}" class="{{ request()->routeIs('admin.video-library.*') ? 'active' : '' }}">
-                        <i class="fas fa-book-open"></i><span>Digital Library</span>
-                    </a>
-                    @else
                     <a href="#librarySubmenu" data-bs-toggle="collapse" class="submenu-toggle {{ $isLibraryActive ? 'active' : '' }}">
                         <i class="fas fa-book-open"></i><span>Digital Library</span><i class="fas fa-chevron-down sidebar-chevron"></i>
                     </a>
@@ -679,7 +674,6 @@
                         <li><a href="{{ route('admin.library.index') }}" class="{{ request()->routeIs('admin.library.*') ? 'active' : '' }}"><i class="fas fa-book"></i> Book Library</a></li>
                         <li><a href="{{ route('admin.video-library.index') }}" class="{{ request()->routeIs('admin.video-library.*') ? 'active' : '' }}"><i class="fab fa-youtube"></i> Video Library</a></li>
                     </ul>
-                    @endif
                 </li>
                 @endif
 
