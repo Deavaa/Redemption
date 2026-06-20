@@ -90,7 +90,7 @@
     <div class="rw-header">
         <div>
             <h2><i class="fas fa-th-large"></i>Welcome, {{ Auth::user()?->name ?? 'Guest' }}</h2>
-            <p>@if($currentYear){{ $currentYear->name }} · @endif@if($branchName){{ $branchName }}@else All Branches@endif · {{ now()->format('M j, Y') }}</p>
+            <p>@if($currentYear){{ $currentYear->name }} · @endif @if($branchName){{ $branchName }} @else All Branches @endif · {{ now()->format('M j, Y') }}</p>
         </div>
         <div class="rw-actions">
             @if($isAdminOrGM || $isBranchPrincipal || $isTeacher)
