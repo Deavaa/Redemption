@@ -774,7 +774,7 @@
             <span>Subjects</span>
         </a>
         @endif
-        @if($isAdmin)
+        @if($isAdmin ?? false)
         <a href="{{ route('admin.staff.index') }}" class="mobile-menu-link">
             <i class="fas fa-id-badge"></i>
             <span>Staff</span>
