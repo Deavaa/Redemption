@@ -17,23 +17,25 @@
 --}}
 
 @php
-    // ── Defensive: if there's no authenticated user, set safe defaults
-    // and skip the topbar entirely (same guard as the sidebar partial).
-    // This prevents "Undefined variable $menuLevel" and "Trying to get
-    // property of null" errors when the topbar is rendered in a context
-    // where Auth::user() is null (e.g. error page rendering).
-    $authUser = \Illuminate\Support\Facades\Auth::user();
-    if (!$authUser) {
-        $menuLevel = 'full';
-        $showGreeting = false;
-        $breadcrumbs = [];
-        $chatUnread = 0;
-        $notifUnread = 0;
-        $latestNotifs = collect([]);
-        $showTopbar = false;
-    } else {
-        $showTopbar = true;
+    // ── STEP 1: Set ALL defaults FIRST, unconditionally.
+    $menuLevel = 'full';
+    $showGreeting = false;
+    $breadcrumbs = [];
+    $chatUnread = 0;
+    $notifUnread = 0;
+    $latestNotifs = collect([]);
+    $authUser = null;
 
+    // ── STEP 2: Try to load the authenticated user.
+    try {
+        $authUser = \Illuminate\Support\Facades\Auth::user();
+    } catch (\Throwable $e) {
+        $authUser = null;
+    }
+
+    // ── STEP 3: If we have a user, build breadcrumbs + load notifications.
+    if ($authUser) {
+        try {
     // Build a simple breadcrumb from the route name
     // e.g. admin.mark-entries.index → [Dashboard, Mark Entries]
     //      admin.students.show      → [Dashboard, Students, Details]
@@ -151,7 +153,10 @@
     }
     // If we ended up with just Dashboard, also show a greeting
     $showGreeting = count($breadcrumbs) === 1;
-    } // end else (authenticated user)
+        } catch (\Throwable $e) {
+            // Defaults stay — $menuLevel is 'full', $breadcrumbs is []
+        }
+    }
 @endphp
 
 <nav class="admin-topbar">
