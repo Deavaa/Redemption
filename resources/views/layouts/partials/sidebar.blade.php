@@ -320,11 +320,11 @@
 
             @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal', 'hr']))
             <li data-menu-item="hr">
-                <a href="#hrSubmenu" data-bs-toggle="collapse" class="submenu-toggle {{ request()->routeIs($hrRoutes) ? 'active' : '' }}">
+                <a href="#hrSubmenu" data-bs-toggle="collapse" class="submenu-toggle {{ request()->routeIs(['admin.leaves.*', 'admin.employee-assets.*']) ? 'active' : '' }}">
                     <i class="fas fa-id-card-alt"></i><span>HR</span>
                     <i class="fas fa-chevron-down sidebar-chevron"></i>
                 </a>
-                <ul class="collapse {{ request()->routeIs($hrRoutes) ? 'show' : '' }}" id="hrSubmenu">
+                <ul class="collapse {{ request()->routeIs(['admin.leaves.*', 'admin.employee-assets.*']) ? 'show' : '' }}" id="hrSubmenu">
                     <li><a href="{{ route('admin.leaves.index') }}" class="{{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}"><i class="fas fa-calendar-times"></i> Leaves</a></li>
                     <li><a href="{{ route('admin.employee-assets.index') }}" class="{{ request()->routeIs('admin.employee-assets.*') ? 'active' : '' }}"><i class="fas fa-briefcase"></i> Employee Assets</a></li>
                 </ul>
