@@ -333,7 +333,7 @@
         </div>
     </div>
 </nav>
-@endif {{-- end @if($showTopbar) --}}
+@endif
 
 <script>
 {{-- Global search: redirect to relevant admin index based on the query.

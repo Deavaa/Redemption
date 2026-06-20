@@ -42,10 +42,7 @@
         $isAcademicActive = $isPeopleActive = $isFinanceActive = false;
         $isAnalysisActive = $isDocumentActive = $isLibraryActive = false;
         $isCommActive = $isWebsiteActive = $isAdminActive = false;
-        $showSidebar = false;
     } else {
-        $showSidebar = true;
-
         // ── Role flags ──────────────────────────────────────────────
         $isTeacher         = $authUser->role === 'teacher';
         $isAdmin           = in_array($authUser->role, ['admin', 'super_admin']);
@@ -113,6 +110,10 @@
             $isCommActive = $isWebsiteActive = $isAdminActive = false;
         }
     }
+    // $showSidebar is true when we have an authenticated user, false otherwise.
+    // Used below to wrap the entire nav in a conditional so the
+    // sidebar doesn't render at all when there's no auth user.
+    $showSidebar = (bool) $authUser;
 @endphp
 
 @if($showSidebar)
@@ -525,7 +526,7 @@
         </ul>
     </div>
 </nav>
-@endif {{-- end @if($showSidebar) --}}
+@endif
 
 {{-- Menu search script — filters items live by label text --}}
 <script>
