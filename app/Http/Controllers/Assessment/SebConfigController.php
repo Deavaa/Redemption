@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AssessmentQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class SebConfigController extends Controller
 {
@@ -15,7 +16,10 @@ class SebConfigController extends Controller
      */
     public function sebRequired($questionId)
     {
-        $question = AssessmentQuestion::active()->findOrFail($questionId);
+        $student = \App\Models\Student::where('user_id', Auth::id())->first();
+        $question = AssessmentQuestion::active()
+            ->where('class_id', $student?->class_id ?? 0)
+            ->findOrFail($questionId);
 
         if (!$question->isSebRequired()) {
             return redirect()->route('student.assessment.show', $questionId);
@@ -33,7 +37,10 @@ class SebConfigController extends Controller
      */
     public function downloadConfig($questionId)
     {
-        $question = AssessmentQuestion::active()->findOrFail($questionId);
+        $student = \App\Models\Student::where('user_id', Auth::id())->first();
+        $question = AssessmentQuestion::active()
+            ->where('class_id', $student?->class_id ?? 0)
+            ->findOrFail($questionId);
 
         if (!$question->isSebEnabled()) {
             return redirect()->route('student.assessment.show', $questionId)
@@ -99,7 +106,7 @@ class SebConfigController extends Controller
 
         $browserViewMode = $question->seb_browser_view_mode ?? 1;
         $allowQuit = $question->seb_allow_quit ? 'true' : 'false';
-        $quitPassword = $question->seb_quit_password ?? '';
+        $quitPassword = $question->seb_quit_password ? hash('sha256', $question->seb_quit_password) : '';
         $showTaskbar = $question->seb_show_taskbar ? 'true' : 'false';
         $showTime = $question->seb_show_time ? 'true' : 'false';
         $allowSpellCheck = $question->seb_allow_spell_check ? 'true' : 'false';
@@ -117,8 +124,6 @@ class SebConfigController extends Controller
     <true/>
     <key>sendBrowserExamKey</key>
     <true/>
-    <key>browserExamKey</key>
-    <string>{$configKey}</string>
     <key>startURL</key>
     <string>{$assessmentUrl}</string>
     <key>sebMode</key>
@@ -210,8 +215,6 @@ class SebConfigController extends Controller
     <key>enableJava</key>
     <false/>
     <key>enableJavaScript</key>
-    <true/>
-    <key>blockPopUpWindows</key>
     <true/>
     <key>allowFlash</key>
     <false/>

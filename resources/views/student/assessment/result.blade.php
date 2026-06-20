@@ -8,6 +8,18 @@
         <div class="col-lg-8">
 
             {{-- Result Banner --}}
+            @if(!empty($examMode))
+                {{-- Exam mode: don't show correct/incorrect --}}
+                <div class="card border-0 shadow-sm mb-4 border-start border-4 border-info">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-check fa-4x text-info"></i>
+                        </div>
+                        <h3 class="text-info">Answer Submitted</h3>
+                        <p class="text-muted">Your answer has been recorded. Results will be available after the exam is reviewed by your teacher.</p>
+                    </div>
+                </div>
+            @else
             <div class="card border-0 shadow-sm mb-4 {{ $isCorrect ? 'border-start border-4 border-success' : 'border-start border-4 border-danger' }}">
                 <div class="card-body text-center py-5">
                     @if($isCorrect)
@@ -25,6 +37,7 @@
                     @endif
                 </div>
             </div>
+            @endif
 
             {{-- Question Review --}}
             <div class="card border-0 shadow-sm mb-4">
@@ -37,7 +50,8 @@
                     @endif
                     <div class="fs-5 mb-3">{!! nl2br(e($question->question_text)) !!}</div>
 
-                    {{-- Show all options with correct/incorrect marking --}}
+                    {{-- Show all options with correct/incorrect marking (hidden in exam mode) --}}
+                    @if(empty($examMode))
                     @if($question->question_type !== 'short_answer')
                     @foreach($question->options as $option)
                     <div class="d-flex align-items-start mb-2 p-3 rounded
@@ -61,10 +75,24 @@
                     </div>
                     @endif
                     @endif
+                    @else
+                    {{-- Exam mode: just show the student's answer, not which is correct --}}
+                    @if($selectedOptionId)
+                        @php $selOpt = $question->options->firstWhere('id', $selectedOptionId); @endphp
+                        <div class="p-3 rounded bg-light mb-2">
+                            <strong>Your Answer:</strong> {{ $selOpt?->option_text ?? '—' }}
+                        </div>
+                    @elseif($studentAnswer)
+                        <div class="p-3 rounded bg-light mb-2">
+                            <strong>Your Answer:</strong> {{ $studentAnswer }}
+                        </div>
+                    @endif
+                    @endif
                 </div>
             </div>
 
-            {{-- Explanation (the key part for self-learning) --}}
+            {{-- Explanation (hidden in exam mode) --}}
+            @if(empty($examMode))
             <div class="card border-0 shadow-sm mb-4 border border-info">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Explanation</h5>
@@ -94,6 +122,7 @@
                     @endif
                 </div>
             </div>
+            @endif {{-- end examMode hide explanation --}}
 
             {{-- Action Buttons --}}
             <div class="d-flex justify-content-between">
@@ -101,9 +130,11 @@
                     <i class="fas fa-arrow-left me-1"></i> Back to {{ $question->subject->name }}
                 </a>
                 <div>
+                    @if(empty($examMode))
                     <a href="{{ route('student.assessment.retake', $question->id) }}" class="btn btn-outline-primary me-2">
                         <i class="fas fa-redo me-1"></i> Try Again
                     </a>
+                    @endif
                     <a href="{{ route('student.assessment.index') }}" class="btn btn-primary">
                         <i class="fas fa-home me-1"></i> All Subjects
                     </a>

@@ -182,6 +182,28 @@ class StudentAssessmentController extends Controller
             ->latest()
             ->first();
 
+        // ── Exam mode checks ──
+        if ($question->isExam()) {
+            // Check if exam is open
+            if (!$question->isExamOpen()) {
+                $status = $question->isExamNotYetOpen() ? 'not yet open' : 'closed';
+                return redirect()->route('student.assessment.subject', $question->subject_id)
+                    ->with('error', "This exam is {$status}.");
+            }
+
+            // Check attempt limit
+            if ($question->hasAttemptLimit()) {
+                $attemptsUsed = AssessmentAnswer::where('student_id', $student->id)
+                    ->where('assessment_question_id', $questionId)
+                    ->distinct('attempt_number')
+                    ->count('attempt_number');
+                if ($attemptsUsed >= $question->max_attempts) {
+                    return redirect()->route('student.assessment.subject', $question->subject_id)
+                        ->with('error', 'You have used all your attempts for this exam.');
+                }
+            }
+        }
+
         return view('student.assessment.question', compact(
             'student', 'question', 'previousAnswer'
         ));
@@ -197,6 +219,17 @@ class StudentAssessmentController extends Controller
         }
 
         $question = AssessmentQuestion::active()->findOrFail($questionId);
+
+        // ── SEB verification on submit (not just on show) ──
+        if ($question->isSebRequired()) {
+            $sebVerified = $request->session()->get('seb_verified_questions', []);
+            $isSeb = $this->isSafeExamBrowserRequest($request, $question);
+
+            if (!$isSeb && !isset($sebVerified[$questionId])) {
+                return redirect()->route('student.assessment.seb-required', $questionId)
+                    ->with('error', 'You must use Safe Exam Browser to submit this assessment.');
+            }
+        }
 
         $rules = [];
         if ($question->question_type === 'multiple_choice' || $question->question_type === 'true_false') {
@@ -236,6 +269,19 @@ class StudentAssessmentController extends Controller
         // Load question with full explanation data for the result page
         $question->load('options');
 
+        // ── Exam mode: hide results if show_results_immediately is false ──
+        if ($question->isExam() && !$question->show_results_immediately) {
+            return view('student.assessment.result', [
+                'student' => $student,
+                'question' => $question,
+                'isCorrect' => null,           // Don't reveal correctness
+                'selectedOptionId' => $optionId,
+                'correctOption' => null,       // Don't reveal correct answer
+                'studentAnswer' => $validated['student_answer'] ?? null,
+                'examMode' => true,
+            ]);
+        }
+
         // Get the correct option for display
         $correctOption = $question->getCorrectOption();
 
@@ -251,7 +297,7 @@ class StudentAssessmentController extends Controller
 
     // ── Retake a question ───────────────────────────────────
 
-    public function retakeQuestion($questionId)
+    public function retakeQuestion(Request $request, $questionId)
     {
         $student = $this->getStudent();
         if (!$student) {
@@ -262,6 +308,16 @@ class StudentAssessmentController extends Controller
             ->with(['options', 'subject', 'classroom'])
             ->where('class_id', $student->class_id)
             ->findOrFail($questionId);
+
+        // ── SEB verification on retake ──
+        if ($question->isSebRequired()) {
+            $sebVerified = $request->session()->get('seb_verified_questions', []);
+            $isSeb = $this->isSafeExamBrowserRequest($request, $question);
+
+            if (!$isSeb && !isset($sebVerified[$questionId])) {
+                return redirect()->route('student.assessment.seb-required', $questionId);
+            }
+        }
 
         return view('student.assessment.question', [
             'student' => $student,
@@ -344,25 +400,29 @@ class StudentAssessmentController extends Controller
         $configKeyHash = $request->header('X-SafeExamBrowser-ConfigKeyHash');
 
         if ($requestHash && $question->seb_config_key) {
-            $expectedHash = base64_encode(
-                hash_hmac('sha256', $request->fullUrl(), $question->seb_config_key, true)
-            );
+            // SEB sends: base64(SHA256(fullUrl + configKey)) — concatenation, not HMAC
+            $expectedHash = base64_encode(hash('sha256', $request->fullUrl() . $question->seb_config_key, true));
             if (hash_equals($expectedHash, $requestHash)) {
                 return true;
             }
         }
 
         if ($configKeyHash && $question->seb_config_key) {
+            // SEB sends: SHA256(configKey) as a hex string
             $expectedConfigHash = hash('sha256', $question->seb_config_key);
             if (hash_equals($expectedConfigHash, $configKeyHash)) {
                 return true;
             }
         }
 
-        // Check SEB user agent (fallback — less secure but reliable)
-        $userAgent = $request->header('User-Agent', '');
-        if (preg_match('/SEB/i', $userAgent)) {
-            return true;
+        // UA fallback — ONLY for 'optional' mode, NOT for 'required' mode.
+        // For 'required' mode, the student MUST have proper SEB headers or
+        // a prior session verification. UA can be trivially spoofed.
+        if ($question->isSebOptional()) {
+            $userAgent = $request->header('User-Agent', '');
+            if (preg_match('/SEB/i', $userAgent)) {
+                return true;
+            }
         }
 
         return false;

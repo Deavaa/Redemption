@@ -14,8 +14,10 @@ class AssessmentQuestion extends Model
         'academic_year_id', 'title', 'question_text',
         'question_type', 'hint', 'explanation', 'worked_out_solution',
         'difficulty', 'topic', 'marks', 'is_active',
+        // Exam mode fields
+        'is_exam', 'exam_duration_minutes', 'max_attempts',
+        'exam_opens_at', 'exam_closes_at', 'show_results_immediately',
         // section_id and branch_id are kept in DB for schema compat but always NULL
-        // Questions are class-level — apply to ALL branches and ALL sections
         'section_id', 'branch_id',
         // Safe Exam Browser integration
         'seb_mode', 'seb_config_key', 'seb_exam_keys',
@@ -34,6 +36,10 @@ class AssessmentQuestion extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_exam' => 'boolean',
+        'show_results_immediately' => 'boolean',
+        'exam_opens_at' => 'datetime',
+        'exam_closes_at' => 'datetime',
         'seb_allow_quit' => 'boolean',
         'seb_show_taskbar' => 'boolean',
         'seb_show_time' => 'boolean',
@@ -89,6 +95,26 @@ class AssessmentQuestion extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeExams($query)
+    {
+        return $query->where('is_exam', true);
+    }
+
+    public function scopePractice($query)
+    {
+        return $query->where('is_exam', false);
+    }
+
+    public function scopeExamOpen($query)
+    {
+        $now = now();
+        return $query->where(function ($q) use ($now) {
+            $q->whereNull('exam_opens_at')->orWhere('exam_opens_at', '<=', $now);
+        })->where(function ($q) use ($now) {
+            $q->whereNull('exam_closes_at')->orWhere('exam_closes_at', '>=', $now);
+        });
     }
 
     public function scopeForClass($query, $classId, $sectionId = null)
@@ -174,5 +200,63 @@ class AssessmentQuestion extends Model
             1 => 'Full Screen',
             2 => 'Full Screen with Touch Optimization',
         ];
+    }
+
+    // ── Exam Helpers ─────────────────────────────────────────
+
+    public function isExam(): bool
+    {
+        return (bool) $this->is_exam;
+    }
+
+    public function isPractice(): bool
+    {
+        return !$this->is_exam;
+    }
+
+    public function isExamOpen(): bool
+    {
+        $now = now();
+        if ($this->exam_opens_at && $now < $this->exam_opens_at) return false;
+        if ($this->exam_closes_at && $now > $this->exam_closes_at) return false;
+        return true;
+    }
+
+    public function isExamClosed(): bool
+    {
+        return $this->exam_closes_at && now() > $this->exam_closes_at;
+    }
+
+    public function isExamNotYetOpen(): bool
+    {
+        return $this->exam_opens_at && now() < $this->exam_opens_at;
+    }
+
+    public function hasTimeLimit(): bool
+    {
+        return $this->is_exam && $this->exam_duration_minutes > 0;
+    }
+
+    public function hasAttemptLimit(): bool
+    {
+        return $this->is_exam && $this->max_attempts > 0;
+    }
+
+    public function getRemainingAttemptsAttribute($studentId): int
+    {
+        if (!$this->hasAttemptLimit()) return PHP_INT_MAX;
+        $used = \App\Models\AssessmentAnswer::where('student_id', $studentId)
+            ->where('assessment_question_id', $this->id)
+            ->distinct('attempt_number')
+            ->count('attempt_number');
+        return max(0, $this->max_attempts - $used);
+    }
+
+    public function getExamStatusLabel(): string
+    {
+        if (!$this->is_exam) return 'Practice';
+        if ($this->isExamNotYetOpen()) return 'Scheduled';
+        if ($this->isExamClosed()) return 'Closed';
+        return 'Open';
     }
 }

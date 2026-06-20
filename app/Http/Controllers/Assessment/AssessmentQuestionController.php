@@ -124,6 +124,13 @@ class AssessmentQuestionController extends Controller
             'seb_show_time' => 'nullable|boolean',
             'seb_allow_spell_check' => 'nullable|boolean',
             'seb_allowed_urls_text' => 'nullable|string|max:5000',
+            // Exam mode
+            'is_exam' => 'nullable|boolean',
+            'exam_duration_minutes' => 'nullable|integer|min:0|max:600',
+            'max_attempts' => 'nullable|integer|min:0|max:10',
+            'exam_opens_at' => 'nullable|date',
+            'exam_closes_at' => 'nullable|date|after_or_equal:exam_opens_at',
+            'show_results_immediately' => 'nullable|boolean',
         ]);
 
         $activeAy = AcademicYear::where('is_current', true)->first();
@@ -170,6 +177,13 @@ class AssessmentQuestionController extends Controller
             'seb_show_time' => $request->boolean('seb_show_time', true),
             'seb_allow_spell_check' => $request->boolean('seb_allow_spell_check', false),
             'seb_allowed_urls' => $sebAllowedUrls,
+            // Exam mode fields
+            'is_exam' => $request->boolean('is_exam', false),
+            'exam_duration_minutes' => $request->input('exam_duration_minutes', 0),
+            'max_attempts' => $request->input('max_attempts', 0),
+            'exam_opens_at' => $request->input('exam_opens_at') ?: null,
+            'exam_closes_at' => $request->input('exam_closes_at') ?: null,
+            'show_results_immediately' => $request->boolean('show_results_immediately', true),
         ]);
 
         // Create options based on question type

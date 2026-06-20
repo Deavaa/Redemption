@@ -219,6 +219,54 @@
             </div>
         </div>
 
+        {{-- Exam Mode Settings --}}
+        <div class="modern-card" style="margin-bottom:1.25rem">
+            <div class="modern-card-header" style="background:linear-gradient(135deg,#dc2626,#ea580c)">
+                <div class="modern-card-header-left">
+                    <i class="fas fa-file-pen" style="color:#fff"></i>
+                    <span class="modern-card-title" style="color:#fff">Exam Mode Settings</span>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <p style="font-size:0.82rem;color:#6b7280;margin-bottom:1rem;">
+                    Enable <strong>Exam Mode</strong> to use this question as a graded online exam instead of a practice self-assessment.
+                    Exam mode hides correct answers and explanations, supports time limits, attempt limits, and scheduling.
+                </p>
+                <div class="modern-form-grid">
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Assessment Type</label>
+                        <select name="is_exam" id="isExam" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="0" {{ old('is_exam', 0) == 0 ? 'selected' : '' }}>Practice (Self-Assessment)</option>
+                            <option value="1" {{ old('is_exam', 0) == 1 ? 'selected' : '' }}>Exam (Graded)</option>
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Time Limit (minutes) <small class="text-muted">(0 = no limit)</small></label>
+                        <input type="number" name="exam_duration_minutes" value="{{ old('exam_duration_minutes', 0) }}" min="0" max="300" class="modern-input">
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Max Attempts <small class="text-muted">(0 = unlimited)</small></label>
+                        <input type="number" name="max_attempts" value="{{ old('max_attempts', 1) }}" min="0" max="10" class="modern-input">
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Show Results Immediately?</label>
+                        <select name="show_results_immediately" class="modern-input modern-select" style="padding-left:0.75rem">
+                            <option value="1" {{ old('show_results_immediately', 1) ? 'selected' : '' }}>Yes — show after submit</option>
+                            <option value="0" {{ old('show_results_immediately', 1) == 0 ? 'selected' : '' }}>No — teacher reviews first</option>
+                        </select>
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Exam Opens At <small class="text-muted">(optional)</small></label>
+                        <input type="datetime-local" name="exam_opens_at" value="{{ old('exam_opens_at') }}" class="modern-input">
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label">Exam Closes At <small class="text-muted">(optional)</small></label>
+                        <input type="datetime-local" name="exam_closes_at" value="{{ old('exam_closes_at') }}" class="modern-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Safe Exam Browser Settings --}}
         <div class="modern-card" style="margin-bottom:1.25rem">
             <div class="modern-card-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
