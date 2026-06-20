@@ -2731,3 +2731,37 @@ html, body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* ===== SIDEBAR SEARCH (added from admin-redesign.css) ===== */
+.sidebar-search {
+    padding: 10px 16px 6px;
+    flex-shrink: 0;
+}
+.sidebar-search-input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.15s ease;
+}
+.sidebar-search-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+.sidebar-search-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #047857;
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.25);
+}
+.sidebar-search-wrap {
+    position: relative;
+}
+.sidebar-search-wrap i {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px; pointer-events: none;
+}
