@@ -26,64 +26,96 @@
 --}}
 
 @php
-    // ── Role flags ──────────────────────────────────────────────
-    $isTeacher         = Auth::user()->role === 'teacher';
-    $isAdmin           = in_array(Auth::user()->role, ['admin', 'super_admin']);
-    $isBranchPrincipal = Auth::user()->role === 'branch_principal';
-    $isGeneralManager  = Auth::user()->role === 'general_manager';
-    $isLibrarian       = Auth::user()->role === 'librarian';
-    $isCashier         = Auth::user()->role === 'cashier';
-    $isRegistrar       = Auth::user()->role === 'registrar';
-    $isFinance         = Auth::user()->role === 'finance';
-    $isHR              = Auth::user()->role === 'hr';
+    // ── Defensive: if there's no authenticated user, set safe defaults
+    // and skip the sidebar entirely. This can happen during error page
+    // rendering or if the session expired mid-request. Without this guard,
+    // Auth::user()->role below would throw "Trying to get property of null",
+    // which would abort the @php block mid-execution — leaving $menuLevel
+    // and all the $is*Active flags undefined, causing a cascade of
+    // "Undefined variable" errors at line 126+.
+    $authUser = \Illuminate\Support\Facades\Auth::user();
+    if (!$authUser) {
+        $menuLevel = 'full';
+        $isTeacher = $isAdmin = $isBranchPrincipal = $isGeneralManager = false;
+        $isLibrarian = $isCashier = $isRegistrar = $isFinance = $isHR = false;
+        $isHomeroomTeacher = false;
+        $isAcademicActive = $isPeopleActive = $isFinanceActive = false;
+        $isAnalysisActive = $isDocumentActive = $isLibraryActive = false;
+        $isCommActive = $isWebsiteActive = $isAdminActive = false;
+        $showSidebar = false;
+    } else {
+        $showSidebar = true;
 
-    // Menu level determines which sidebar sections are shown
-    $menuLevel = 'full'; // default for admin/super_admin
-    if ($isTeacher)              $menuLevel = 'teacher';
-    elseif ($isLibrarian)        $menuLevel = 'librarian';
-    elseif ($isCashier)          $menuLevel = 'cashier';
-    elseif ($isRegistrar)        $menuLevel = 'registrar';
-    elseif ($isFinance)          $menuLevel = 'finance';
-    elseif ($isHR)               $menuLevel = 'hr';
-    elseif ($isBranchPrincipal)  $menuLevel = 'branch_principal';
-    elseif ($isGeneralManager)   $menuLevel = 'general_manager';
+        // ── Role flags ──────────────────────────────────────────────
+        $isTeacher         = $authUser->role === 'teacher';
+        $isAdmin           = in_array($authUser->role, ['admin', 'super_admin']);
+        $isBranchPrincipal = $authUser->role === 'branch_principal';
+        $isGeneralManager  = $authUser->role === 'general_manager';
+        $isLibrarian       = $authUser->role === 'librarian';
+        $isCashier         = $authUser->role === 'cashier';
+        $isRegistrar       = $authUser->role === 'registrar';
+        $isFinance         = $authUser->role === 'finance';
+        $isHR              = $authUser->role === 'hr';
 
-    // Homeroom teacher check (for mark sheet access)
-    $isHomeroomTeacher = false;
-    if ($isTeacher) {
-        $teacherModel = \App\Models\Teacher::where('user_id', Auth::id())->first()
-                     ?: \App\Models\Teacher::where('email', Auth::user()->email)->first();
-        if ($teacherModel) {
-            $isHomeroomTeacher = $teacherModel->classRooms()->exists()
-                              || $teacherModel->sections()->exists();
+        // Menu level — ALWAYS set a default first.
+        $menuLevel = 'full';
+        if ($isTeacher)              $menuLevel = 'teacher';
+        elseif ($isLibrarian)        $menuLevel = 'librarian';
+        elseif ($isCashier)          $menuLevel = 'cashier';
+        elseif ($isRegistrar)        $menuLevel = 'registrar';
+        elseif ($isFinance)          $menuLevel = 'finance';
+        elseif ($isHR)               $menuLevel = 'hr';
+        elseif ($isBranchPrincipal)  $menuLevel = 'branch_principal';
+        elseif ($isGeneralManager)   $menuLevel = 'general_manager';
+
+        // Homeroom teacher check — wrapped in try/catch.
+        $isHomeroomTeacher = false;
+        if ($isTeacher) {
+            try {
+                $teacherModel = \App\Models\Teacher::where('user_id', $authUser->id)->first()
+                             ?: \App\Models\Teacher::where('email', $authUser->email)->first();
+                if ($teacherModel) {
+                    $isHomeroomTeacher = $teacherModel->classRooms()->exists()
+                                      || $teacherModel->sections()->exists();
+                }
+            } catch (\Throwable $e) {
+                // Keep $isHomeroomTeacher = false
+            }
+        }
+
+        // Active-state detection groups
+        $academicSetupRoutes = ['admin.academic-years.*','admin.terms.*','admin.subjects.*','admin.subject-assignments.*','admin.exams.*','admin.classrooms.*','admin.sections.*','admin.class-assets.*'];
+        $academicMarksRoutes = ['admin.mark-entries.*','admin.mark-sheet.*','admin.mark-sheet-full.*','admin.mark-roster.*','admin.attendance.*','admin.attendance-delegation.*','admin.mark-entry-locks.*','admin.mark-entry-permissions.*','admin.mark-entry-disallowals.*','admin.mark-entry-configs.*','admin.promotion.*','admin.lesson-plans.*','admin.content-notes.*'];
+        $academicReportsRoutes = ['admin.report-card.*','admin.progress-reports.*','admin.performance-reports.*'];
+        $documentRoutes = ['admin.id-card-generate.*','admin.certificate-generate.*','admin.certificate-print.*','admin.id-cards.*','admin.certificates.*','admin.report-exchange.*','admin.transcript.*','admin.leaving-certificate.*','admin.report-card.*','admin.progress-reports.*'];
+        $peopleRoutes   = ['admin.students.*','admin.teachers.*','admin.staff.*','admin.team-members.*','admin.parents.*','admin.teacher-assignments.*','admin.enrollments.*','admin.teacher-reviews.*'];
+        $financeRoutes  = ['admin.fees.*','admin.fee-payments.*','admin.payrolls.*','admin.budgets.*','admin.income-expenses.*','admin.finance-statements.*','admin.budget-comparison.*','admin.financial-comparison.*'];
+        $hrRoutes       = ['admin.leaves.*','admin.employee-assets.*'];
+        $analysisRoutes = ['admin.performance-analysis.*','admin.performance-comparison.*','admin.psychological-analysis.*','admin.performance.*'];
+        $libraryRoutes  = ['admin.library.*','admin.video-library.*'];
+        $commRoutes     = ['admin.calendar.*','admin.announcements.*','admin.telegram.*','admin.chat.*'];
+        $websiteRoutes  = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*','admin.web-content.*','admin.news.*'];
+        $adminRoutes    = ['admin.user-access.*','admin.settings.*','admin.roles.*','admin.backup.*','admin.audits.*','admin.email-inbox.*','admin.email-inbox-settings*','admin.bank-integration.*','admin.club-follow-up-configs.*','admin.graphical-reports.*','admin.exam-questions.*'];
+
+        try {
+            $isAcademicActive = request()->routeIs([...$academicSetupRoutes, ...$academicMarksRoutes, 'admin.attendance.*', 'admin.attendance-delegation.*']);
+            $isPeopleActive   = request()->routeIs($peopleRoutes);
+            $isFinanceActive  = request()->routeIs([...$financeRoutes, ...$hrRoutes]);
+            $isAnalysisActive = request()->routeIs($analysisRoutes);
+            $isDocumentActive = request()->routeIs($documentRoutes);
+            $isLibraryActive  = request()->routeIs($libraryRoutes);
+            $isCommActive     = request()->routeIs($commRoutes);
+            $isWebsiteActive  = request()->routeIs($websiteRoutes);
+            $isAdminActive    = request()->routeIs($adminRoutes);
+        } catch (\Throwable $e) {
+            $isAcademicActive = $isPeopleActive = $isFinanceActive = false;
+            $isAnalysisActive = $isDocumentActive = $isLibraryActive = false;
+            $isCommActive = $isWebsiteActive = $isAdminActive = false;
         }
     }
-
-    // Active-state detection groups
-    $academicSetupRoutes = ['admin.academic-years.*','admin.terms.*','admin.subjects.*','admin.subject-assignments.*','admin.exams.*','admin.classrooms.*','admin.sections.*','admin.class-assets.*'];
-    $academicMarksRoutes = ['admin.mark-entries.*','admin.mark-sheet.*','admin.mark-sheet-full.*','admin.mark-roster.*','admin.attendance.*','admin.attendance-delegation.*','admin.mark-entry-locks.*','admin.mark-entry-permissions.*','admin.mark-entry-disallowals.*','admin.mark-entry-configs.*','admin.promotion.*','admin.lesson-plans.*','admin.content-notes.*'];
-    $academicReportsRoutes = ['admin.report-card.*','admin.progress-reports.*','admin.performance-reports.*'];
-    $documentRoutes = ['admin.id-card-generate.*','admin.certificate-generate.*','admin.certificate-print.*','admin.id-cards.*','admin.certificates.*','admin.report-exchange.*','admin.transcript.*','admin.leaving-certificate.*','admin.report-card.*','admin.progress-reports.*'];
-    $peopleRoutes   = ['admin.students.*','admin.teachers.*','admin.staff.*','admin.team-members.*','admin.parents.*','admin.teacher-assignments.*','admin.enrollments.*','admin.teacher-reviews.*'];
-    $financeRoutes  = ['admin.fees.*','admin.fee-payments.*','admin.payrolls.*','admin.budgets.*','admin.income-expenses.*','admin.finance-statements.*','admin.budget-comparison.*','admin.financial-comparison.*'];
-    $hrRoutes       = ['admin.leaves.*','admin.employee-assets.*'];
-    $analysisRoutes = ['admin.performance-analysis.*','admin.performance-comparison.*','admin.psychological-analysis.*','admin.performance.*'];
-    $libraryRoutes  = ['admin.library.*','admin.video-library.*'];
-    $commRoutes     = ['admin.calendar.*','admin.announcements.*','admin.telegram.*','admin.chat.*'];
-    $websiteRoutes  = ['admin.sliders.*','admin.gallery-*','admin.branches.*','admin.contact-messages.*','admin.web-content.*','admin.news.*'];
-    $adminRoutes    = ['admin.user-access.*','admin.settings.*','admin.roles.*','admin.backup.*','admin.audits.*','admin.email-inbox.*','admin.email-inbox-settings*','admin.bank-integration.*','admin.club-follow-up-configs.*','admin.graphical-reports.*','admin.exam-questions.*'];
-
-    $isAcademicActive = request()->routeIs([...$academicSetupRoutes, ...$academicMarksRoutes, 'admin.attendance.*', 'admin.attendance-delegation.*']);
-    $isPeopleActive   = request()->routeIs($peopleRoutes);
-    $isFinanceActive  = request()->routeIs([...$financeRoutes, ...$hrRoutes]);
-    $isAnalysisActive = request()->routeIs($analysisRoutes);
-    $isDocumentActive = request()->routeIs($documentRoutes);
-    $isLibraryActive  = request()->routeIs($libraryRoutes);
-    $isCommActive     = request()->routeIs($commRoutes);
-    $isWebsiteActive  = request()->routeIs($websiteRoutes);
-    $isAdminActive    = request()->routeIs($adminRoutes);
 @endphp
 
+@if($showSidebar)
 <nav class="admin-sidebar" id="adminSidebar">
     {{-- Brand --}}
     <div class="sidebar-header">
@@ -493,6 +525,7 @@
         </ul>
     </div>
 </nav>
+@endif {{-- end @if($showSidebar) --}}
 
 {{-- Menu search script — filters items live by label text --}}
 <script>

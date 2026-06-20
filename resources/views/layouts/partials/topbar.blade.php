@@ -17,6 +17,23 @@
 --}}
 
 @php
+    // ── Defensive: if there's no authenticated user, set safe defaults
+    // and skip the topbar entirely (same guard as the sidebar partial).
+    // This prevents "Undefined variable $menuLevel" and "Trying to get
+    // property of null" errors when the topbar is rendered in a context
+    // where Auth::user() is null (e.g. error page rendering).
+    $authUser = \Illuminate\Support\Facades\Auth::user();
+    if (!$authUser) {
+        $menuLevel = 'full';
+        $showGreeting = false;
+        $breadcrumbs = [];
+        $chatUnread = 0;
+        $notifUnread = 0;
+        $latestNotifs = collect([]);
+        $showTopbar = false;
+    } else {
+        $showTopbar = true;
+
     // Build a simple breadcrumb from the route name
     // e.g. admin.mark-entries.index → [Dashboard, Mark Entries]
     //      admin.students.show      → [Dashboard, Students, Details]
@@ -134,8 +151,10 @@
     }
     // If we ended up with just Dashboard, also show a greeting
     $showGreeting = count($breadcrumbs) === 1;
+    } // end else (authenticated user)
 @endphp
 
+@if($showTopbar)
 <nav class="admin-topbar">
     <div class="topbar-left">
         <button class="topbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
@@ -314,6 +333,7 @@
         </div>
     </div>
 </nav>
+@endif {{-- end @if($showTopbar) --}}
 
 <script>
 {{-- Global search: redirect to relevant admin index based on the query.
