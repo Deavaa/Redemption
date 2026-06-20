@@ -15,7 +15,7 @@
             <div class="page-header-left">
                 <h1 class="page-header-title">
                     <i class="fas fa-th-large"></i>
-                    {{ __('app.welcome') }}, {{ Auth::user()->name }}
+                    {{ __('app.welcome') }}, {{ Auth::user()?->name ?? "Guest" }}
                 </h1>
                 <p class="page-header-subtitle">
                     @if(isset($currentYear) && $currentYear)
@@ -30,12 +30,12 @@
                 </p>
             </div>
             <div class="page-header-actions">
-                @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'branch_principal', 'teacher']))
+                @if(in_array(Auth::user()?->role ?? "", ['admin', 'super_admin', 'general_manager', 'branch_principal', 'teacher']))
                 <a href="{{ route('admin.students.create') }}" class="btn-modern btn-modern-primary">
                     <i class="fas fa-user-plus"></i> Add Student
                 </a>
                 @endif
-                @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'branch_principal', 'teacher']))
+                @if(in_array(Auth::user()?->role ?? "", ['admin', 'super_admin', 'general_manager', 'branch_principal', 'teacher']))
                 <a href="{{ route('admin.mark-entries.index') }}" class="btn-modern btn-modern-secondary">
                     <i class="fas fa-pen"></i> Mark Entry
                 </a>
@@ -95,7 +95,7 @@
                 </a>
             </div>
             @endif
-            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'finance', 'cashier']))
+            @if(in_array(Auth::user()?->role ?? "", ['admin', 'super_admin', 'general_manager', 'finance', 'cashier']))
             <div class="col-6 col-md-3 col-xl-2">
                 <a href="{{ route('admin.fee-payments.index') }}" class="stat-card text-decoration-none d-block" style="color:inherit;">
                     <div class="stat-card-icon" style="background:var(--color-success-light);color:var(--color-success);">
@@ -110,119 +110,16 @@
             @endif
         </div>
 
-        {{-- Legacy Page Header (preserved for backward compatibility) --}}
-        <div class="modern-page-header">
-            <div class="modern-page-header-left">
-                <nav aria-label="breadcrumb" class="modern-breadcrumb">
-                    <ol>
-                        <li class="active"><i class="fas fa-home"></i> Dashboard</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="modern-page-header-right">
-                <a href="{{ route('admin.settings.index') }}" class="btn-modern btn-modern-outline" title="Settings">
-                    <i class="fas fa-cog"></i>
-                </a>
-            </div>
-        </div>
-
-        {{-- Compact Clickable Stats Grid --}}
-        <div class="dash-stats-grid">
-            @if(!$isBranchScoped)
-            <a href="{{ route('admin.branches.index') }}" class="dash-stat-card dash-stat-blue">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-building"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value">{{ $totalBranches }}</div>
-                <div class="dash-stat-label">Branches</div>
-            </a>
-            @else
-            <div class="dash-stat-card dash-stat-blue" style="cursor:default;">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-building"></i></div>
-                </div>
-                <div class="dash-stat-value" style="font-size:1rem;">{{ $branchName ?? 'My Branch' }}</div>
-                <div class="dash-stat-label">Your Branch</div>
-            </div>
-            @endif
-            <a href="{{ route('admin.students.index') }}" class="dash-stat-card dash-stat-gold">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-user-graduate"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value">{{ $totalStudents }}</div>
-                <div class="dash-stat-label">Students</div>
-            </a>
-            <a href="{{ route('admin.teachers.index') }}" class="dash-stat-card dash-stat-green">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value">{{ $totalTeachers }}</div>
-                <div class="dash-stat-label">Teachers</div>
-            </a>
-            @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
-            <a href="{{ route('admin.staff.index') }}" class="dash-stat-card dash-stat-purple">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-id-badge"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value">{{ $totalStaff }}</div>
-                <div class="dash-stat-label">Staff</div>
-            </a>
-            @endif
-            <a href="{{ route('admin.classrooms.index') }}" class="dash-stat-card dash-stat-teal">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-chalkboard"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value">{{ $totalClasses }}</div>
-                <div class="dash-stat-label">Classes</div>
-            </a>
-            <a href="{{ route('admin.subjects.index') }}" class="dash-stat-card dash-stat-blue">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-book"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value">{{ $totalSubjects }}</div>
-                <div class="dash-stat-label">Subjects</div>
-            </a>
-            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'finance', 'cashier']))
-            <a href="{{ route('admin.fee-payments.index') }}" class="dash-stat-card dash-stat-green">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-money-bill-wave"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value" style="font-size:1.15rem;">{{ number_format($totalFeeCollected, 0) }}</div>
-                <div class="dash-stat-label">Fee Collected</div>
-            </a>
-            <a href="{{ route('admin.fees.index') }}" class="dash-stat-card dash-stat-rose">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-exclamation-circle"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value" style="font-size:1.15rem;">{{ number_format($pendingFees, 0) }}</div>
-                <div class="dash-stat-label">Pending Fees</div>
-            </a>
-            @endif
-            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']))
-            <a href="{{ route('admin.chat.index') }}" class="dash-stat-card dash-stat-gold">
-                <div class="dash-stat-top">
-                    <div class="dash-stat-icon"><i class="fas fa-envelope"></i></div>
-                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
-                </div>
-                <div class="dash-stat-value">{{ $unreadMessages }}</div>
-                <div class="dash-stat-label">Unread Messages</div>
-            </a>
-            @endif
-        </div>
+        {{-- Legacy Page Header and Stats Grid REMOVED.
+            The new .page-header and .stat-card row above replace them.
+            Keeping the legacy duplicates caused visual confusion (two
+            headers, two stat grids showing the same data). --}}
 
         {{-- Quick Actions --}}
         @php
-            $isAdminOrGM = in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']);
-            $isBranchPrincipal = Auth::user()->role === 'branch_principal';
-            $isTeacher = Auth::user()->role === 'teacher';
+            $isAdminOrGM = in_array(Auth::user()?->role ?? "", ['admin', 'super_admin', 'general_manager']);
+            $isBranchPrincipal = Auth::user()?->role ?? "" === 'branch_principal';
+            $isTeacher = Auth::user()?->role ?? "" === 'teacher';
         @endphp
         <div class="modern-card" style="margin-bottom: 1.25rem;">
             <div class="modern-card-header">
@@ -246,10 +143,6 @@
                         <div class="modern-quick-action-icon modern-stat-icon-green"><i class="fas fa-plus"></i></div>
                         <span class="modern-quick-action-label">Add Teacher</span>
                     </a>
-                    <a href="{{ route('admin.students.create') }}" class="modern-quick-action-card">
-                        <div class="modern-quick-action-icon modern-stat-icon-gold"><i class="fas fa-plus"></i></div>
-                        <span class="modern-quick-action-label">Add Student</span>
-                    </a>
                     @endif
                     @if($isAdminOrGM || $isBranchPrincipal)
                     <a href="{{ route('admin.classrooms.create') }}" class="modern-quick-action-card">
@@ -269,6 +162,10 @@
                     <a href="{{ route('admin.terms.create') }}" class="modern-quick-action-card">
                         <div class="modern-quick-action-icon modern-stat-icon-gold"><i class="fas fa-plus"></i></div>
                         <span class="modern-quick-action-label">New Term</span>
+                    </a>
+                    <a href="{{ route('admin.attendance.index') }}" class="modern-quick-action-card">
+                        <div class="modern-quick-action-icon modern-stat-icon-rose"><i class="fas fa-clipboard-check"></i></div>
+                        <span class="modern-quick-action-label">Take Attendance</span>
                     </a>
                     @endif
                 </div>
@@ -472,7 +369,7 @@
                 </div>
 
                 {{-- System Info — only for admin/super_admin/general_manager --}}
-                @if(!$isBranchScoped && in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']))
+                @if(!$isBranchScoped && in_array(Auth::user()?->role ?? "", ['admin', 'super_admin', 'general_manager']))
                 <div class="modern-card">
                     <div class="modern-card-header">
                         <div class="modern-card-header-left">
