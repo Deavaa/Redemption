@@ -70,7 +70,7 @@
         @elseif(session('show_email_reset'))
             <p style="margin-bottom:15px;">{{ __('app.set_new_password') }}</p>
             <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && $errors->any())
+            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
                 <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <form method="POST" action="{{ route('password.reset.token') }}">
@@ -103,7 +103,7 @@
         @elseif(session('show_reset_form'))
             <p style="margin-bottom:15px;">{{ __('app.reset_your_password') }}</p>
             <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && $errors->any())
+            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
                 <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <form method="POST" action="{{ route('password.reset.submit') }}">
@@ -135,7 +135,7 @@
         @elseif(session('show_security'))
             <p style="margin-bottom:15px;">{{ __('app.verify_your_identity') }}</p>
             <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && $errors->any())
+            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
                 <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <form method="POST" action="{{ route('password.verify.security') }}">
@@ -153,7 +153,7 @@
         @elseif(session('show_email_forgot'))
             <p style="margin-bottom:15px;">{{ __('app.reset_via_email') }}</p>
             <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && $errors->any())
+            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
                 <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <div style="text-align:center;margin-bottom:16px;">
@@ -179,7 +179,7 @@
         @elseif(session('show_forgot'))
             <p style="margin-bottom:15px;">{{ __('app.find_your_account') }}</p>
             <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && $errors->any())
+            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
                 <div class="alert" role="alert">{{ $errors->first() }}</div>
             @endif
             <form method="POST" action="{{ route('password.forgot.submit') }}">
@@ -203,7 +203,7 @@
             @if (session('error'))
                 <div class="alert" role="alert">{{ session('error') }}</div>
             @endif
-            @if (isset($errors) && $errors->any())
+            @if (isset($errors) && is_object($errors) && method_exists($errors, 'any') && $errors->any())
                 <div class="alert" role="alert">{{ $errors->first('login') ?: ($errors->first('email') ?: $errors->first()) }}</div>
             @endif
             <form id="login-form" method="POST" action="{{ route('login') }}">
