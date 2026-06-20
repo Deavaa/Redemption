@@ -25,14 +25,37 @@
    ==========================================================================
    NOTE: admin.css already defines .admin-sidebar with position:fixed,
    left:0, top:0, bottom:0, z-index:100, display:flex, flex-direction:column.
-   We DO NOT redefine those here — only add visual enhancements on top.
-   Redefining .admin-sidebar without position:fixed would break the layout
-   (sidebar would become a flex item in .admin-wrapper and push the main
-   content to a separate column). */
+   We reinforce those here to prevent browser-cache issues where an older
+   version of this file (without position:fixed) might still be served. */
+
+.admin-sidebar {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    z-index: 100 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 260px !important;
+    background: #0C1F17 !important;
+    background-image: linear-gradient(180deg, #0C1F17 0%, #0A1812 100%) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-shadow: 2px 0 24px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Main content area — must have margin-left to offset for the fixed sidebar */
+.admin-main {
+    margin-left: 260px !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
 
 .admin-sidebar .sidebar-header {
     padding: 18px 20px 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0 !important;
 }
 .admin-sidebar .sidebar-brand {
     display: flex; align-items: center; gap: 12px;
