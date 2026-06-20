@@ -154,7 +154,6 @@
     } // end else (authenticated user)
 @endphp
 
-<?php if (!empty($showTopbar)): ?>
 <nav class="admin-topbar">
     <div class="topbar-left">
         <button class="topbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
@@ -164,7 +163,7 @@
         <div class="topbar-breadcrumb">
             @if($showGreeting)
                 <span>{{ __('app.hi') }}</span>
-                <span class="breadcrumb-current">{{ Auth::user()->name }}</span>
+                <span class="breadcrumb-current">{{ $authUser?->name ?? 'Guest' }}</span>
             @else
                 @foreach($breadcrumbs as $i => $crumb)
                     @if(!empty($crumb['is_current']) || $i === count($breadcrumbs) - 1)
@@ -311,14 +310,14 @@
         {{-- User dropdown --}}
         <div class="dropdown">
             <button class="topbar-dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <div class="topbar-dropdown-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
-                <span class="topbar-dropdown-name d-none d-md-inline">{{ Auth::user()->name }}</span>
+                <div class="topbar-dropdown-avatar">{{ $authUser ? strtoupper(substr($authUser->name, 0, 1)) : '?' }}</div>
+                <span class="topbar-dropdown-name d-none d-md-inline">{{ $authUser?->name ?? 'Guest' }}</span>
                 <i class="fas fa-chevron-down topbar-dropdown-chevron d-none d-md-inline"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end" style="min-width:240px;">
                 <li class="dropdown-header">
-                    <div style="font-weight:700;font-size:14px;color:var(--color-text-dark);">{{ Auth::user()->name }}</div>
-                    <div style="font-size:12px;color:var(--color-text-muted);">{{ Auth::user()->email }}</div>
+                    <div style="font-weight:700;font-size:14px;color:var(--color-text-dark);">{{ $authUser?->name ?? 'Guest' }}</div>
+                    <div style="font-size:12px;color:var(--color-text-muted);">{{ $authUser?->email ?? '' }}</div>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ route('admin.profile') }}"><i class="fas fa-user-cog me-2"></i>Profile &amp; Password</a></li>
@@ -333,7 +332,6 @@
         </div>
     </div>
 </nav>
-<?php endif; ?>
 
 <script>
 {{-- Global search: redirect to relevant admin index based on the query.

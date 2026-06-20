@@ -116,7 +116,6 @@
     $showSidebar = (bool) $authUser;
 @endphp
 
-<?php if ($showSidebar): ?>
 <nav class="admin-sidebar" id="adminSidebar">
     {{-- Brand --}}
     <div class="sidebar-header">
@@ -507,10 +506,10 @@
         </a>
         <div class="sidebar-footer-user" data-bs-toggle="dropdown" role="button" tabindex="0"
              aria-haspopup="true" aria-expanded="false" id="sidebarUserDropdown">
-            <div class="sidebar-footer-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
+            <div class="sidebar-footer-avatar">{{ $authUser ? strtoupper(substr($authUser->name, 0, 1)) : '?' }}</div>
             <div class="sidebar-footer-info">
-                <span class="sidebar-footer-name">{{ Auth::user()->name }}</span>
-                <span class="sidebar-footer-role">{{ Auth::user()->display_role }}</span>
+                <span class="sidebar-footer-name">{{ $authUser?->name ?? 'Guest' }}</span>
+                <span class="sidebar-footer-role">{{ $authUser?->display_role ?? '' }}</span>
             </div>
             <i class="fas fa-ellipsis-v" style="color:rgba(255,255,255,0.4);font-size:12px;"></i>
         </div>
@@ -526,7 +525,6 @@
         </ul>
     </div>
 </nav>
-<?php endif; ?>
 
 {{-- Menu search script — filters items live by label text --}}
 <script>
