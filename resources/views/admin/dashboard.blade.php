@@ -1,242 +1,691 @@
 @extends('layouts.admin')
 @section('title', 'Dashboard')
 
-@push('styles')
-<style>
-.db-wrap { padding:0 !important; max-width:100% !important; width:100% !important; overflow:visible !important; }
-.db-header { display:flex !important; justify-content:space-between !important; align-items:flex-start !important; flex-wrap:wrap !important; gap:10px !important; margin-bottom:16px !important; }
-.db-header h4 { margin:0 !important; font-size:1.4rem !important; font-weight:700 !important; color:#111827 !important; }
-.db-header h4 i { color:#047857 !important; margin-right:8px !important; }
-.db-meta { margin:4px 0 0 !important; font-size:12px !important; color:#6b7280 !important; }
-.db-badge { display:inline-block !important; padding:2px 8px !important; border-radius:10px !important; font-size:11px !important; font-weight:600 !important; margin-right:4px !important; }
-.db-badge-ay { background:#d1fae5 !important; color:#065f46 !important; }
-.db-badge-br { background:#dbeafe !important; color:#1e40af !important; }
-.db-badge-all { background:#f3f4f6 !important; color:#6b7280 !important; }
-.db-actions { display:flex !important; gap:6px !important; flex-wrap:wrap !important; }
-.db-stats { display:grid !important; grid-template-columns:repeat(3,1fr) !important; gap:8px !important; margin-bottom:16px !important; }
-.db-stat { display:flex !important; align-items:center !important; gap:10px !important; padding:10px 14px !important; background:#fff !important; border:1px solid #e5e7eb !important; border-left-width:3px !important; border-radius:10px !important; text-decoration:none !important; color:inherit !important; transition:box-shadow 0.2s,transform 0.2s !important; }
-.db-stat:hover { box-shadow:0 4px 12px rgba(0,0,0,0.08) !important; transform:translateY(-1px) !important; text-decoration:none !important; }
-.db-stat-icon { width:36px !important; height:36px !important; border-radius:8px !important; display:flex !important; align-items:center !important; justify-content:center !important; font-size:15px !important; flex-shrink:0 !important; }
-.db-stat-lbl { font-size:10px !important; font-weight:700 !important; color:#6b7280 !important; text-transform:uppercase !important; letter-spacing:0.5px !important; }
-.db-stat-val { font-size:20px !important; font-weight:800 !important; color:#111827 !important; line-height:1.1 !important; }
-.db-quick { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:10px !important; padding:10px 14px !important; margin-bottom:16px !important; }
-.db-quick-title { font-size:13px !important; font-weight:700 !important; color:#111827 !important; margin-bottom:8px !important; }
-.db-quick-title i { color:#f59e0b !important; margin-right:4px !important; }
-.db-quick-actions { display:flex !important; flex-wrap:wrap !important; gap:6px !important; }
-.db-btn { display:inline-flex !important; align-items:center !important; gap:4px !important; padding:5px 12px !important; border-radius:6px !important; font-size:12px !important; font-weight:600 !important; text-decoration:none !important; border:1px solid !important; transition:all 0.15s !important; cursor:pointer !important; }
-.db-btn:hover { opacity:0.85 !important; text-decoration:none !important; }
-.db-cols { display:grid !important; grid-template-columns:2fr 1fr !important; gap:16px !important; }
-.db-card { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:10px !important; overflow:hidden !important; margin-bottom:12px !important; }
-.db-card-header { padding:8px 14px !important; background:#f9fafb !important; border-bottom:1px solid #e5e7eb !important; font-size:13px !important; font-weight:700 !important; color:#111827 !important; }
-.db-card-header i { margin-right:4px !important; }
-.db-table { width:100% !important; border-collapse:collapse !important; font-size:13px !important; }
-.db-table th { padding:8px 12px !important; text-align:left !important; font-size:11px !important; font-weight:700 !important; text-transform:uppercase !important; color:#6b7280 !important; background:#f9fafb !important; border-bottom:1px solid #e5e7eb !important; }
-.db-table td { padding:8px 12px !important; border-bottom:1px solid #f3f4f6 !important; color:#1f2937 !important; }
-.db-table tbody tr:hover { background:#f9fafb !important; }
-.db-table tbody tr:last-child td { border-bottom:none !important; }
-.db-status { display:inline-block !important; padding:2px 8px !important; border-radius:10px !important; font-size:11px !important; font-weight:600 !important; }
-.db-status-active { background:#d1fae5 !important; color:#065f46 !important; }
-.db-status-empty { background:#f3f4f6 !important; color:#6b7280 !important; }
-.db-status-info { background:#dbeafe !important; color:#1e40af !important; }
-.db-status-danger { background:#fee2e2 !important; color:#991b1b !important; }
-.db-payment { display:flex !important; align-items:center !important; justify-content:space-between !important; padding:8px 14px !important; border-bottom:1px solid #f3f4f6 !important; }
-.db-payment:last-child { border-bottom:none !important; }
-.db-payment-left { display:flex !important; align-items:center !important; gap:8px !important; }
-.db-payment-icon { width:28px !important; height:28px !important; border-radius:6px !important; background:#d1fae5 !important; color:#059669 !important; display:flex !important; align-items:center !important; justify-content:center !important; font-size:11px !important; flex-shrink:0 !important; }
-.db-payment-name { font-size:13px !important; font-weight:600 !important; color:#111827 !important; }
-.db-payment-date { font-size:11px !important; color:#6b7280 !important; }
-.db-payment-amount { font-size:13px !important; font-weight:700 !important; color:#059669 !important; }
-.db-info-row { display:flex !important; justify-content:space-between !important; padding:6px 14px !important; font-size:12px !important; border-bottom:1px solid #f3f4f6 !important; }
-.db-info-row:last-child { border-bottom:none !important; }
-.db-info-label { color:#6b7280 !important; }
-.db-info-value { font-weight:600 !important; color:#111827 !important; }
-.db-ay-card { text-align:center !important; padding:14px !important; }
-.db-ay-card i { font-size:1.4rem !important; color:#10b981 !important; margin-bottom:4px !important; }
-.db-ay-card .name { font-size:1.1rem !important; font-weight:800 !important; color:#10b981 !important; }
-.db-ay-card .dates { font-size:12px !important; color:#6b7280 !important; margin:2px 0 8px !important; }
-@media (max-width:991px) { .db-stats { grid-template-columns:repeat(2,1fr) !important; } .db-cols { grid-template-columns:1fr !important; } }
-@media (max-width:575px) { .db-stats { grid-template-columns:1fr !important; } }
-</style>
-@endpush
-
 @section('content')
-@php
-    $userRole = Auth::user()?->role ?? '';
-    $isAdminOrGM = in_array($userRole, ['admin', 'super_admin', 'general_manager']);
-    $isBranchPrincipal = $userRole === 'branch_principal';
-    $isTeacher = $userRole === 'teacher';
-@endphp
-
-<div class="db-wrap">
-    <div class="db-header">
-        <div>
-            <h4><i class="fas fa-th-large"></i> Welcome, {{ Auth::user()?->name ?? "Guest" }}</h4>
-            <p class="db-meta">
-                @if(isset($currentYear) && $currentYear)
-                    <span class="db-badge db-badge-ay">{{ $currentYear->name }}</span>
-                @endif
-                @if(isset($branchName) && $branchName)
-                    <span class="db-badge db-badge-br">{{ $branchName }}</span>
-                @else
-                    <span class="db-badge db-badge-all">All Branches</span>
-                @endif
-                <i class="far fa-calendar" style="margin:0 4px 0 8px;"></i>{{ now()->format('M j, Y') }}
-            </p>
-        </div>
-        <div class="db-actions">
-            @if($isAdminOrGM || $isBranchPrincipal || $isTeacher)
-            <a href="{{ route('admin.students.create') }}" class="db-btn" style="background:#047857;color:#fff;border-color:#047857;">
-                <i class="fas fa-user-plus"></i> Add Student
-            </a>
-            <a href="{{ route('admin.mark-entries.index') }}" class="db-btn" style="background:#fff;color:#047857;border-color:#047857;">
-                <i class="fas fa-pen"></i> Mark Entry
-            </a>
-            @endif
-            <a href="{{ route('admin.profile') }}" class="db-btn" style="background:#fff;color:#6b7280;border-color:#d1d5db;">
-                <i class="fas fa-user-cog"></i>
-            </a>
-        </div>
-    </div>
-
-    <div class="db-stats">
-        <a href="{{ route('admin.students.index') }}" class="db-stat" style="border-left-color:#4361ee;">
-            <div class="db-stat-icon" style="background:#e0e7ff;color:#4361ee;"><i class="fas fa-user-graduate"></i></div>
-            <div><div class="db-stat-lbl">Students</div><div class="db-stat-val">{{ $totalStudents }}</div></div>
-        </a>
-        <a href="{{ route('admin.teachers.index') }}" class="db-stat" style="border-left-color:#10b981;">
-            <div class="db-stat-icon" style="background:#d1fae5;color:#059669;"><i class="fas fa-chalkboard-teacher"></i></div>
-            <div><div class="db-stat-lbl">Teachers</div><div class="db-stat-val">{{ $totalTeachers }}</div></div>
-        </a>
-        <a href="{{ route('admin.classrooms.index') }}" class="db-stat" style="border-left-color:#0d9488;">
-            <div class="db-stat-icon" style="background:#ccfbf1;color:#0d9488;"><i class="fas fa-chalkboard"></i></div>
-            <div><div class="db-stat-lbl">Classes</div><div class="db-stat-val">{{ $totalClasses }}</div></div>
-        </a>
-        <a href="{{ route('admin.subjects.index') }}" class="db-stat" style="border-left-color:#8b5cf6;">
-            <div class="db-stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-book"></i></div>
-            <div><div class="db-stat-lbl">Subjects</div><div class="db-stat-val">{{ $totalSubjects }}</div></div>
-        </a>
-        @if(!$isBranchScoped)
-        <a href="{{ route('admin.branches.index') }}" class="db-stat" style="border-left-color:#f59e0b;">
-            <div class="db-stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-building"></i></div>
-            <div><div class="db-stat-lbl">Branches</div><div class="db-stat-val">{{ $totalBranches }}</div></div>
-        </a>
-        @endif
-        @if(in_array($userRole, ['admin', 'super_admin', 'general_manager', 'finance', 'cashier']))
-        <a href="{{ route('admin.fee-payments.index') }}" class="db-stat" style="border-left-color:#22c55e;">
-            <div class="db-stat-icon" style="background:#dcfce7;color:#16a34a;"><i class="fas fa-money-bill-wave"></i></div>
-            <div><div class="db-stat-lbl">Fee Collected</div><div class="db-stat-val" style="font-size:16px;">{{ number_format($totalFeeCollected, 0) }}</div></div>
-        </a>
-        @endif
-    </div>
-
-    <div class="db-quick">
-        <div class="db-quick-title"><i class="fas fa-bolt"></i> Quick Actions</div>
-        <div class="db-quick-actions">
-            @if($isAdminOrGM)
-            <a href="{{ route('admin.branches.create') }}" class="db-btn" style="background:#fff;color:#4361ee;border-color:#4361ee;">+ Branch</a>
-            @endif
-            @if($isAdminOrGM || $isBranchPrincipal || $isTeacher)
-            <a href="{{ route('admin.teachers.create') }}" class="db-btn" style="background:#fff;color:#059669;border-color:#059669;">+ Teacher</a>
-            @endif
-            @if($isAdminOrGM || $isBranchPrincipal)
-            <a href="{{ route('admin.classrooms.create') }}" class="db-btn" style="background:#fff;color:#0d9488;border-color:#0d9488;">+ Class</a>
-            @endif
-            @if($isAdminOrGM)
-            <a href="{{ route('admin.subjects.create') }}" class="db-btn" style="background:#fff;color:#7c3aed;border-color:#7c3aed;">+ Subject</a>
-            <a href="{{ route('admin.academic-years.create') }}" class="db-btn" style="background:#fff;color:#059669;border-color:#059669;">+ AY</a>
-            <a href="{{ route('admin.terms.create') }}" class="db-btn" style="background:#fff;color:#d97706;border-color:#d97706;">+ Term</a>
-            @endif
-            <a href="{{ route('admin.attendance.index') }}" class="db-btn" style="background:#fff;color:#dc2626;border-color:#dc2626;"><i class="fas fa-clipboard-check"></i> Attendance</a>
-        </div>
-    </div>
-
-    <div class="db-cols">
-        <div>
-            <div class="db-card">
-                <div class="db-card-header"><i class="fas fa-th-large" style="color:#047857;"></i> Management Overview</div>
-                <table class="db-table">
-                    <thead><tr><th>Module</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody>
-                        @if(!$isBranchScoped)
-                        <tr>
-                            <td><i class="fas fa-building" style="color:#4361ee;margin-right:6px;"></i>Branches</td>
-                            <td><strong>{{ $totalBranches }}</strong></td>
-                            <td>@if($totalBranches > 0)<span class="db-status db-status-active">Active</span>@else<span class="db-status db-status-empty">Empty</span>@endif</td>
-                            <td><a href="{{ route('admin.branches.index') }}" class="db-btn" style="background:#fff;color:#6b7280;border-color:#d1d5db;">Manage</a></td>
-                        </tr>
-                        @endif
-                        <tr>
-                            <td><i class="fas fa-chalkboard-teacher" style="color:#10b981;margin-right:6px;"></i>Teachers</td>
-                            <td><strong>{{ $totalTeachers }}</strong></td>
-                            <td>@if($totalTeachers > 0)<span class="db-status db-status-active">Active</span>@else<span class="db-status db-status-empty">Empty</span>@endif</td>
-                            <td><a href="{{ route('admin.teachers.index') }}" class="db-btn" style="background:#fff;color:#6b7280;border-color:#d1d5db;">Manage</a></td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-user-graduate" style="color:#f59e0b;margin-right:6px;"></i>Students</td>
-                            <td><strong>{{ $totalStudents }}</strong></td>
-                            <td>@if($totalStudents > 0)<span class="db-status db-status-active">Active</span>@else<span class="db-status db-status-empty">Empty</span>@endif</td>
-                            <td><a href="{{ route('admin.students.index') }}" class="db-btn" style="background:#fff;color:#6b7280;border-color:#d1d5db;">Manage</a></td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-chalkboard" style="color:#0d9488;margin-right:6px;"></i>Classes</td>
-                            <td><strong>{{ $totalClasses }}</strong></td>
-                            <td>@if($totalClasses > 0)<span class="db-status db-status-active">Active</span>@else<span class="db-status db-status-empty">Empty</span>@endif</td>
-                            <td><a href="{{ route('admin.classrooms.index') }}" class="db-btn" style="background:#fff;color:#6b7280;border-color:#d1d5db;">Manage</a></td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-book" style="color:#8b5cf6;margin-right:6px;"></i>Subjects</td>
-                            <td><strong>{{ $totalSubjects }}</strong></td>
-                            <td>@if($totalSubjects > 0)<span class="db-status db-status-active">Active</span>@else<span class="db-status db-status-empty">Empty</span>@endif</td>
-                            <td><a href="{{ route('admin.subjects.index') }}" class="db-btn" style="background:#fff;color:#6b7280;border-color:#d1d5db;">Manage</a></td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-calendar-alt" style="color:#10b981;margin-right:6px;"></i>Academic Years</td>
-                            <td><strong>{{ \App\Models\AcademicYear::count() }}</strong></td>
-                            <td>@if($currentYear)<span class="db-status db-status-info">{{ $currentYear->name }}</span>@else<span class="db-status db-status-danger">None Set</span>@endif</td>
-                            <td><a href="{{ route('admin.academic-years.index') }}" class="db-btn" style="background:#fff;color:#6b7280;border-color:#d1d5db;">Manage</a></td>
-                        </tr>
-                    </tbody>
-                </table>
+    <div class="modern-page">
+        {{-- Page Header --}}
+        <div class="modern-page-header">
+            <div class="modern-page-header-left">
+                <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                    <ol>
+                        <li class="active"><i class="fas fa-home"></i> Dashboard</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="modern-page-header-right">
+                <a href="{{ route('admin.settings.index') }}" class="btn-modern btn-modern-outline" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </a>
             </div>
         </div>
-        <div>
-            @if($currentYear)
-            <div class="db-card" style="border-left:3px solid #10b981;">
-                <div class="db-ay-card">
-                    <i class="fas fa-calendar-check"></i>
-                    <div class="name">{{ $currentYear->name }}</div>
-                    @if($currentYear->start_date)<div class="dates">{{ $currentYear->start_date }} — {{ $currentYear->end_date }}</div>@endif
-                    <a href="{{ route('admin.academic-years.index') }}" class="db-btn" style="background:#fff;color:#059669;border-color:#059669;"><i class="fas fa-eye"></i> View All</a>
+
+        {{-- Compact Clickable Stats Grid --}}
+        <div class="dash-stats-grid">
+            @if(!$isBranchScoped)
+            <a href="{{ route('admin.branches.index') }}" class="dash-stat-card dash-stat-blue">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-building"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value">{{ $totalBranches }}</div>
+                <div class="dash-stat-label">Branches</div>
+            </a>
+            @else
+            <div class="dash-stat-card dash-stat-blue" style="cursor:default;">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-building"></i></div>
+                </div>
+                <div class="dash-stat-value" style="font-size:1rem;">{{ $branchName ?? 'My Branch' }}</div>
+                <div class="dash-stat-label">Your Branch</div>
+            </div>
+            @endif
+            <a href="{{ route('admin.students.index') }}" class="dash-stat-card dash-stat-gold">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value">{{ $totalStudents }}</div>
+                <div class="dash-stat-label">Students</div>
+            </a>
+            <a href="{{ route('admin.teachers.index') }}" class="dash-stat-card dash-stat-green">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value">{{ $totalTeachers }}</div>
+                <div class="dash-stat-label">Teachers</div>
+            </a>
+            @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+            <a href="{{ route('admin.staff.index') }}" class="dash-stat-card dash-stat-purple">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-id-badge"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value">{{ $totalStaff }}</div>
+                <div class="dash-stat-label">Staff</div>
+            </a>
+            @endif
+            <a href="{{ route('admin.classrooms.index') }}" class="dash-stat-card dash-stat-teal">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-chalkboard"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value">{{ $totalClasses }}</div>
+                <div class="dash-stat-label">Classes</div>
+            </a>
+            <a href="{{ route('admin.subjects.index') }}" class="dash-stat-card dash-stat-blue">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-book"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value">{{ $totalSubjects }}</div>
+                <div class="dash-stat-label">Subjects</div>
+            </a>
+            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager', 'finance', 'cashier']))
+            <a href="{{ route('admin.fee-payments.index') }}" class="dash-stat-card dash-stat-green">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value" style="font-size:1.15rem;">{{ number_format($totalFeeCollected, 0) }}</div>
+                <div class="dash-stat-label">Fee Collected</div>
+            </a>
+            <a href="{{ route('admin.fees.index') }}" class="dash-stat-card dash-stat-rose">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value" style="font-size:1.15rem;">{{ number_format($pendingFees, 0) }}</div>
+                <div class="dash-stat-label">Pending Fees</div>
+            </a>
+            @endif
+            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']))
+            <a href="{{ route('admin.chat.index') }}" class="dash-stat-card dash-stat-gold">
+                <div class="dash-stat-top">
+                    <div class="dash-stat-icon"><i class="fas fa-envelope"></i></div>
+                    <div class="dash-stat-arrow"><i class="fas fa-arrow-right"></i></div>
+                </div>
+                <div class="dash-stat-value">{{ $unreadMessages }}</div>
+                <div class="dash-stat-label">Unread Messages</div>
+            </a>
+            @endif
+        </div>
+
+        {{-- Quick Actions --}}
+        @php
+            $isAdminOrGM = in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']);
+            $isBranchPrincipal = Auth::user()->role === 'branch_principal';
+            $isTeacher = Auth::user()->role === 'teacher';
+        @endphp
+        <div class="modern-card" style="margin-bottom: 1.25rem;">
+            <div class="modern-card-header">
+                <div class="modern-card-header-left">
+                    <div class="modern-form-section-icon modern-form-section-icon-gold" style="width:36px;height:36px;border-radius:10px;font-size:0.95rem;">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="modern-card-title">Quick Actions</h3>
                 </div>
             </div>
-            @endif
-            <div class="db-card">
-                <div class="db-card-header"><i class="fas fa-credit-card" style="color:#f59e0b;"></i> Recent Payments</div>
-                @if($recentPayments->count() > 0)
-                    @foreach($recentPayments as $payment)
-                    <div class="db-payment">
-                        <div class="db-payment-left">
-                            <div class="db-payment-icon"><i class="fas fa-check"></i></div>
-                            <div><div class="db-payment-name">{{ $payment->student->full_name ?? 'Unknown' }}</div><div class="db-payment-date">{{ $payment->payment_date?->format('M d, Y') ?? '-' }}</div></div>
+            <div class="modern-card-body">
+                <div class="modern-quick-actions">
+                    @if($isAdminOrGM)
+                    <a href="{{ route('admin.branches.create') }}" class="modern-quick-action-card">
+                        <div class="modern-quick-action-icon modern-stat-icon-blue"><i class="fas fa-plus"></i></div>
+                        <span class="modern-quick-action-label">Add Branch</span>
+                    </a>
+                    @endif
+                    @if($isAdminOrGM || $isBranchPrincipal || $isTeacher)
+                    <a href="{{ route('admin.teachers.create') }}" class="modern-quick-action-card">
+                        <div class="modern-quick-action-icon modern-stat-icon-green"><i class="fas fa-plus"></i></div>
+                        <span class="modern-quick-action-label">Add Teacher</span>
+                    </a>
+                    <a href="{{ route('admin.students.create') }}" class="modern-quick-action-card">
+                        <div class="modern-quick-action-icon modern-stat-icon-gold"><i class="fas fa-plus"></i></div>
+                        <span class="modern-quick-action-label">Add Student</span>
+                    </a>
+                    @endif
+                    @if($isAdminOrGM || $isBranchPrincipal)
+                    <a href="{{ route('admin.classrooms.create') }}" class="modern-quick-action-card">
+                        <div class="modern-quick-action-icon modern-stat-icon-purple"><i class="fas fa-plus"></i></div>
+                        <span class="modern-quick-action-label">Add Class</span>
+                    </a>
+                    @endif
+                    @if($isAdminOrGM)
+                    <a href="{{ route('admin.subjects.create') }}" class="modern-quick-action-card">
+                        <div class="modern-quick-action-icon modern-stat-icon-blue"><i class="fas fa-plus"></i></div>
+                        <span class="modern-quick-action-label">Add Subject</span>
+                    </a>
+                    <a href="{{ route('admin.academic-years.create') }}" class="modern-quick-action-card">
+                        <div class="modern-quick-action-icon modern-stat-icon-green"><i class="fas fa-plus"></i></div>
+                        <span class="modern-quick-action-label">New Academic Year</span>
+                    </a>
+                    <a href="{{ route('admin.terms.create') }}" class="modern-quick-action-card">
+                        <div class="modern-quick-action-icon modern-stat-icon-gold"><i class="fas fa-plus"></i></div>
+                        <span class="modern-quick-action-label">New Term</span>
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Main Content Row --}}
+        <div class="modern-dashboard-grid">
+            {{-- Management Overview --}}
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <div class="modern-card-header-left">
+                        <div class="modern-form-section-icon modern-form-section-icon-blue"
+                            style="width:36px;height:36px;border-radius:10px;font-size:0.95rem;">
+                            <i class="fas fa-th-large"></i>
                         </div>
-                        <span class="db-payment-amount">{{ number_format($payment->amount_paid, 2) }}</span>
+                        <h3 class="modern-card-title">Management Overview</h3>
                     </div>
-                    @endforeach
-                @else
-                    <div style="text-align:center;padding:24px;color:#9ca3af;"><i class="fas fa-inbox" style="font-size:1.5rem;opacity:0.3;display:block;margin-bottom:6px;"></i><span style="font-size:12px;">No recent payments</span></div>
+                </div>
+                <div class="modern-card-body" style="padding:0;">
+                    <div class="modern-table-wrapper">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Module</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if(!$isBranchScoped)
+                                <tr>
+                                    <td>
+                                        <div class="modern-table-module">
+                                            <div class="modern-table-module-icon modern-stat-icon-blue"><i class="fas fa-building"></i></div>
+                                            <span>Branches</span>
+                                        </div>
+                                    </td>
+                                    <td><strong>{{ $totalBranches }}</strong></td>
+                                    <td>
+                                        @if($totalBranches > 0)
+                                            <span class="modern-badge modern-badge-success">Active</span>
+                                        @else
+                                            <span class="modern-badge modern-badge-light">Empty</span>
+                                        @endif
+                                    </td>
+                                    <td><a href="{{ route('admin.branches.index') }}" class="btn-modern btn-modern-ghost" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Manage</a></td>
+                                </tr>
+                                @endif
+                                <tr>
+                                    <td>
+                                        <div class="modern-table-module">
+                                            <div class="modern-table-module-icon modern-stat-icon-green"><i class="fas fa-chalkboard-teacher"></i></div>
+                                            <span>Teachers</span>
+                                        </div>
+                                    </td>
+                                    <td><strong>{{ $totalTeachers }}</strong></td>
+                                    <td>
+                                        @if($totalTeachers > 0)
+                                            <span class="modern-badge modern-badge-success">Active</span>
+                                        @else
+                                            <span class="modern-badge modern-badge-light">Empty</span>
+                                        @endif
+                                    </td>
+                                    <td><a href="{{ route('admin.teachers.index') }}" class="btn-modern btn-modern-ghost" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Manage</a></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="modern-table-module">
+                                            <div class="modern-table-module-icon modern-stat-icon-gold"><i class="fas fa-user-graduate"></i></div>
+                                            <span>Students</span>
+                                        </div>
+                                    </td>
+                                    <td><strong>{{ $totalStudents }}</strong></td>
+                                    <td>
+                                        @if($totalStudents > 0)
+                                            <span class="modern-badge modern-badge-success">Active</span>
+                                        @else
+                                            <span class="modern-badge modern-badge-light">Empty</span>
+                                        @endif
+                                    </td>
+                                    <td><a href="{{ route('admin.students.index') }}" class="btn-modern btn-modern-ghost" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Manage</a></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="modern-table-module">
+                                            <div class="modern-table-module-icon modern-stat-icon-purple"><i class="fas fa-chalkboard"></i></div>
+                                            <span>Classes</span>
+                                        </div>
+                                    </td>
+                                    <td><strong>{{ $totalClasses }}</strong></td>
+                                    <td>
+                                        @if($totalClasses > 0)
+                                            <span class="modern-badge modern-badge-success">Active</span>
+                                        @else
+                                            <span class="modern-badge modern-badge-light">Empty</span>
+                                        @endif
+                                    </td>
+                                    <td><a href="{{ route('admin.classrooms.index') }}" class="btn-modern btn-modern-ghost" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Manage</a></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="modern-table-module">
+                                            <div class="modern-table-module-icon modern-stat-icon-blue"><i class="fas fa-book"></i></div>
+                                            <span>Subjects</span>
+                                        </div>
+                                    </td>
+                                    <td><strong>{{ $totalSubjects }}</strong></td>
+                                    <td>
+                                        @if($totalSubjects > 0)
+                                            <span class="modern-badge modern-badge-success">Active</span>
+                                        @else
+                                            <span class="modern-badge modern-badge-light">Empty</span>
+                                        @endif
+                                    </td>
+                                    <td><a href="{{ route('admin.subjects.index') }}" class="btn-modern btn-modern-ghost" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Manage</a></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="modern-table-module">
+                                            <div class="modern-table-module-icon modern-stat-icon-green"><i class="fas fa-calendar-alt"></i></div>
+                                            <span>Academic Years</span>
+                                        </div>
+                                    </td>
+                                    <td><strong>{{ \App\Models\AcademicYear::count() }}</strong></td>
+                                    <td>
+                                        @if($currentYear)
+                                            <span class="modern-badge modern-badge-info">{{ $currentYear->name }}</span>
+                                        @else
+                                            <span class="modern-badge modern-badge-danger">None Set</span>
+                                        @endif
+                                    </td>
+                                    <td><a href="{{ route('admin.academic-years.index') }}" class="btn-modern btn-modern-ghost" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Manage</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Sidebar --}}
+            <div class="modern-dashboard-sidebar">
+                {{-- Current Academic Year --}}
+                @if($currentYear)
+                <div class="modern-card" style="margin-bottom: 1.25rem;">
+                    <div class="modern-card-header" style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px 14px 0 0;">
+                        <div class="modern-card-header-left">
+                            <i class="fas fa-calendar-check" style="color:#fff;font-size:1.1rem;"></i>
+                            <h3 class="modern-card-title" style="color:#fff;">Current Academic Year</h3>
+                        </div>
+                    </div>
+                    <div class="modern-card-body" style="text-align:center;padding:1.25rem;">
+                        <h4 style="color:#10b981;font-weight:800;margin:0 0 0.35rem;font-size:1.25rem;">{{ $currentYear->name }}</h4>
+                        @if($currentYear->start_date)
+                            <p style="color:#6c757d;margin:0 0 0.75rem;font-size:0.85rem;">{{ $currentYear->start_date }} &mdash; {{ $currentYear->end_date }}</p>
+                        @endif
+                        <a href="{{ route('admin.academic-years.index') }}" class="btn-modern btn-modern-outline" style="font-size:0.82rem;padding:0.4rem 1rem;">
+                            <i class="fas fa-eye"></i> View All
+                        </a>
+                    </div>
+                </div>
+                @endif
+
+                {{-- Recent Payments --}}
+                <div class="modern-card" style="margin-bottom: 1.25rem;">
+                    <div class="modern-card-header">
+                        <div class="modern-card-header-left">
+                            <div class="modern-form-section-icon modern-form-section-icon-gold"
+                                style="width:36px;height:36px;border-radius:10px;font-size:0.95rem;">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <h3 class="modern-card-title">Recent Payments</h3>
+                        </div>
+                    </div>
+                    <div class="modern-card-body" style="padding:0;">
+                        @if($recentPayments->count() > 0)
+                            <div class="modern-activity-list">
+                                @foreach($recentPayments as $payment)
+                                    <div class="modern-activity-item">
+                                        <div class="modern-activity-icon modern-stat-icon-green"
+                                            style="width:34px;height:34px;border-radius:8px;font-size:0.8rem;">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        <div class="modern-activity-info">
+                                            <span class="modern-activity-title">{{ $payment->student->full_name ?? 'Unknown' }}</span>
+                                            <span class="modern-activity-desc">{{ $payment->payment_date?->format('M d, Y') ?? '-' }}
+                                                &middot; {{ $payment->payment_method ?? '-' }}</span>
+                                        </div>
+                                        <span class="modern-activity-amount">{{ number_format($payment->amount_paid, 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div style="text-align:center;padding:2rem 1rem;color:#9ca3af;">
+                                <i class="fas fa-inbox" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
+                                <p style="margin:0;font-size:0.88rem;">No recent payments</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- System Info — only for admin/super_admin/general_manager --}}
+                @if(!$isBranchScoped && in_array(Auth::user()->role, ['admin', 'super_admin', 'general_manager']))
+                <div class="modern-card">
+                    <div class="modern-card-header">
+                        <div class="modern-card-header-left">
+                            <div class="modern-form-section-icon modern-form-section-icon-purple"
+                                style="width:36px;height:36px;border-radius:10px;font-size:0.95rem;">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <h3 class="modern-card-title">System Info</h3>
+                        </div>
+                    </div>
+                    <div class="modern-card-body">
+                        <div class="modern-info-list">
+                            <div class="modern-info-row">
+                                <span class="modern-info-label">School</span>
+                                <span class="modern-info-value">School of Redemption</span>
+                            </div>
+                            <div class="modern-info-row">
+                                <span class="modern-info-label">Framework</span>
+                                <span class="modern-info-value">Laravel 12</span>
+                            </div>
+                            <div class="modern-info-row">
+                                <span class="modern-info-label">Branches</span>
+                                <span class="modern-info-value">{{ $totalBranches }}</span>
+                            </div>
+                            <div class="modern-info-row">
+                                <span class="modern-info-label">Students</span>
+                                <span class="modern-info-value">{{ $totalStudents }}</span>
+                            </div>
+                            <div class="modern-info-row" style="border:none;">
+                                <span class="modern-info-label">Academic Year</span>
+                                <span class="modern-info-value">{{ $currentYear ? $currentYear->name : 'Not Set' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 @endif
             </div>
-            @if(!$isBranchScoped && $isAdminOrGM)
-            <div class="db-card">
-                <div class="db-card-header"><i class="fas fa-info-circle" style="color:#0d9488;"></i> System Info</div>
-                <div class="db-info-row"><span class="db-info-label">School</span><span class="db-info-value">School of Redemption</span></div>
-                <div class="db-info-row"><span class="db-info-label">Framework</span><span class="db-info-value">Laravel 12</span></div>
-                <div class="db-info-row"><span class="db-info-label">Branches</span><span class="db-info-value">{{ $totalBranches }}</span></div>
-                <div class="db-info-row"><span class="db-info-label">Students</span><span class="db-info-value">{{ $totalStudents }}</span></div>
-                <div class="db-info-row"><span class="db-info-label">Academic Year</span><span class="db-info-value">{{ $currentYear ? $currentYear->name : 'Not Set' }}</span></div>
-            </div>
-            @endif
         </div>
     </div>
-</div>
+
+    @push('styles')
+        <style>
+            /* Modern Page Layout */
+            .modern-page {
+                animation: fadeSlideIn 0.4s ease-out;
+            }
+
+            @keyframes fadeSlideIn {
+                from { opacity: 0; transform: translateY(12px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            /* Clickable Stats Grid */
+            .dash-stats-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+                margin-bottom: 1.25rem;
+            }
+
+            .dash-stat-card {
+                display: flex;
+                flex-direction: column;
+                padding: 14px 16px;
+                background: var(--card-bg, #fff);
+                border-radius: 14px;
+                border: 1px solid var(--border, #e5e7eb);
+                text-decoration: none;
+                color: inherit;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .dash-stat-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+                border-color: transparent;
+            }
+
+            .dash-stat-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+
+            .dash-stat-icon {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 15px;
+            }
+
+            .dash-stat-arrow {
+                font-size: 11px;
+                opacity: 0;
+                transition: opacity 0.2s, transform 0.2s;
+                transform: translateX(-4px);
+            }
+
+            .dash-stat-card:hover .dash-stat-arrow {
+                opacity: 0.6;
+                transform: translateX(0);
+            }
+
+            .dash-stat-value {
+                font-size: 1.5rem;
+                font-weight: 800;
+                line-height: 1.2;
+            }
+
+            .dash-stat-label {
+                font-size: 0.72rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-top: 2px;
+            }
+
+            /* Color variants */
+            .dash-stat-blue .dash-stat-icon { background: rgba(99,102,241,0.12); color: #6366f1; }
+            .dash-stat-blue .dash-stat-value { color: #6366f1; }
+            .dash-stat-blue .dash-stat-label { color: #818cf8; }
+            .dash-stat-blue:hover { background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(99,102,241,0.03)); }
+
+            .dash-stat-gold .dash-stat-icon { background: rgba(245,158,11,0.12); color: #f59e0b; }
+            .dash-stat-gold .dash-stat-value { color: #f59e0b; }
+            .dash-stat-gold .dash-stat-label { color: #fbbf24; }
+            .dash-stat-gold:hover { background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.03)); }
+
+            .dash-stat-green .dash-stat-icon { background: rgba(16,185,129,0.12); color: #10b981; }
+            .dash-stat-green .dash-stat-value { color: #10b981; }
+            .dash-stat-green .dash-stat-label { color: #34d399; }
+            .dash-stat-green:hover { background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03)); }
+
+            .dash-stat-purple .dash-stat-icon { background: rgba(139,92,246,0.12); color: #8b5cf6; }
+            .dash-stat-purple .dash-stat-value { color: #8b5cf6; }
+            .dash-stat-purple .dash-stat-label { color: #a78bfa; }
+            .dash-stat-purple:hover { background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(139,92,246,0.03)); }
+
+            .dash-stat-teal .dash-stat-icon { background: rgba(20,184,166,0.12); color: #14b8a6; }
+            .dash-stat-teal .dash-stat-value { color: #14b8a6; }
+            .dash-stat-teal .dash-stat-label { color: #2dd4bf; }
+            .dash-stat-teal:hover { background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(20,184,166,0.03)); }
+
+            .dash-stat-rose .dash-stat-icon { background: rgba(244,63,94,0.12); color: #f43f5e; }
+            .dash-stat-rose .dash-stat-value { color: #f43f5e; }
+            .dash-stat-rose .dash-stat-label { color: #fb7185; }
+            .dash-stat-rose:hover { background: linear-gradient(135deg, rgba(244,63,94,0.08), rgba(244,63,94,0.03)); }
+
+            /* Dashboard Grid */
+            .modern-dashboard-grid {
+                display: grid;
+                grid-template-columns: 1fr 320px;
+                gap: 1.25rem;
+            }
+
+            /* Quick Actions */
+            .modern-quick-actions {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 10px;
+            }
+
+            .modern-quick-action-card {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                padding: 12px 8px;
+                border-radius: 12px;
+                border: 1px solid var(--border, #e5e7eb);
+                background: var(--card-bg, #fff);
+                text-decoration: none;
+                color: inherit;
+                transition: all 0.2s;
+            }
+
+            .modern-quick-action-card:hover {
+                border-color: var(--primary, #6366f1);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            }
+
+            .modern-quick-action-icon {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+            }
+
+            .modern-quick-action-label {
+                font-size: 0.72rem;
+                font-weight: 600;
+                text-align: center;
+                color: var(--text-dark, #1f2937);
+            }
+
+            /* Activity List */
+            .modern-activity-list {
+                padding: 0;
+            }
+
+            .modern-activity-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 14px;
+                border-bottom: 1px solid var(--border, #e5e7eb);
+            }
+
+            .modern-activity-item:last-child {
+                border-bottom: none;
+            }
+
+            .modern-activity-icon {
+                flex-shrink: 0;
+            }
+
+            .modern-activity-info {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .modern-activity-title {
+                display: block;
+                font-size: 0.82rem;
+                font-weight: 600;
+                color: var(--text-dark, #1f2937);
+            }
+
+            .modern-activity-desc {
+                display: block;
+                font-size: 0.72rem;
+                color: var(--text-muted, #9ca3af);
+            }
+
+            .modern-activity-amount {
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #10b981;
+            }
+
+            /* Info List */
+            .modern-info-list {
+                padding: 0;
+            }
+
+            .modern-info-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid var(--border, #e5e7eb);
+            }
+
+            .modern-info-row:last-child {
+                border-bottom: none;
+            }
+
+            .modern-info-label {
+                font-size: 0.82rem;
+                color: var(--text-muted, #9ca3af);
+            }
+
+            .modern-info-value {
+                font-size: 0.82rem;
+                font-weight: 600;
+                color: var(--text-dark, #1f2937);
+            }
+
+            /* Table Module */
+            .modern-table-module {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .modern-table-module-icon {
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+            }
+
+            /* Responsive */
+            @media (max-width: 1024px) {
+                .dash-stats-grid { grid-template-columns: repeat(3, 1fr); }
+                .modern-dashboard-grid { grid-template-columns: 1fr; }
+            }
+
+            @media (max-width: 768px) {
+                .dash-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+                .dash-stat-card { padding: 10px 12px; }
+                .dash-stat-icon { width: 30px; height: 30px; font-size: 12px; }
+                .dash-stat-value { font-size: 1.15rem; }
+                .dash-stat-label { font-size: 0.65rem; }
+                .dash-stat-arrow { display: none; }
+                .modern-quick-actions { grid-template-columns: repeat(3, 1fr); }
+            }
+
+            @media (max-width: 480px) {
+                .dash-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+                .dash-stat-card { padding: 8px 10px; }
+                .dash-stat-icon { width: 26px; height: 26px; font-size: 11px; border-radius: 6px; }
+                .dash-stat-value { font-size: 1rem; }
+                .dash-stat-label { font-size: 0.6rem; }
+                .dash-stat-top { margin-bottom: 4px; }
+                .modern-quick-actions { grid-template-columns: repeat(2, 1fr); }
+            }
+        </style>
+    @endpush
 @endsection
