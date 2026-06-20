@@ -154,7 +154,7 @@
     } // end else (authenticated user)
 @endphp
 
-@if($showTopbar)
+<?php if (!empty($showTopbar)): ?>
 <nav class="admin-topbar">
     <div class="topbar-left">
         <button class="topbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
@@ -333,7 +333,7 @@
         </div>
     </div>
 </nav>
-@endif
+<?php endif; ?>
 
 <script>
 {{-- Global search: redirect to relevant admin index based on the query.

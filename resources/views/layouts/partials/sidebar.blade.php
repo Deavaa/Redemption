@@ -116,7 +116,7 @@
     $showSidebar = (bool) $authUser;
 @endphp
 
-@if($showSidebar)
+<?php if ($showSidebar): ?>
 <nav class="admin-sidebar" id="adminSidebar">
     {{-- Brand --}}
     <div class="sidebar-header">
@@ -526,7 +526,7 @@
         </ul>
     </div>
 </nav>
-@endif
+<?php endif; ?>
 
 {{-- Menu search script — filters items live by label text --}}
 <script>
