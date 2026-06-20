@@ -27,7 +27,7 @@ class AttendanceDelegationController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $classes = ClassRoom::with(['sections', 'teacher'])
+        $classes = ClassRoom::with(['sections'])
             ->when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
             ->orderBy('numeric_name')->orderBy('name')->get();
         $teachers = Teacher::with('user')
