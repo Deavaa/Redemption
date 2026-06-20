@@ -334,6 +334,7 @@
             $isAdminActive = request()->routeIs($adminRoutes);
             $isUserMgmtActive = request()->routeIs('admin.user-access.*');
         @endphp
+        {{-- VERSION MARKER v2024 --}}
         <div class="sidebar-menu-wrap">
             <ul class="sidebar-menu">
                 {{-- DASHBOARD --}}
