@@ -316,8 +316,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('mark-entries/api/subjects', [MarkEntryController::class, 'apiSubjects'])->name('mark-entries.api.subjects')->middleware('permission:mark_entries.view');
     Route::get('mark-entries/api/students', [MarkEntryController::class, 'apiStudents'])->name('mark-entries.api.students')->middleware('permission:mark_entries.view');
     Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students')->middleware('permission:mark_entries.view');
-    Route::post('mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save')->middleware('permission:mark_entries.manage');
-    Route::post('mark-entries/api/bulk-save', [MarkEntryController::class, 'apiBulkSave'])->name('mark-entries.api.bulk-save')->middleware('permission:mark_entries.manage');
+    Route::post('mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save');
+    Route::post('mark-entries/api/bulk-save', [MarkEntryController::class, 'apiBulkSave'])->name('mark-entries.api.bulk-save');
     Route::get('mark-entries/api/check-lock', [MarkEntryLockController::class, 'apiCheckLock'])->name('mark-entries.api.check-lock');
     Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
 
