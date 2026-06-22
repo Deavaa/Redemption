@@ -2210,61 +2210,37 @@
         fetch(API_SAVE, {
             method: 'POST',
             credentials: 'same-origin',
-            redirect: 'manual',
             headers: { 'X-CSRF-TOKEN': getCSRF(), 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
         })
         .then(function(r) {
-            // ── Detect 302 redirect (session expired) ──
-            // With redirect:'manual', a 302 returns type='opaqueredirect', status=0
-            if (r.type === 'opaqueredirect' || r.status === 0) {
-                handleSessionExpired('save redirect');
-                throw new Error('Session expired (redirect during save)');
-            }
-
-            // ── Handle 419 CSRF Token Mismatch ──
-            if (r.status === 419) {
-                if (isRetry) {
-                    // Already retried once — give up, backup marks, alert user
-                    setGlobalSaveStatus('error', 'Session Expired');
-                    handleSessionExpired('419 after retry');
-                    throw new Error('Session expired (419 after retry)');
-                }
-                // First 419 — refresh CSRF token and retry the save
-                console.log('[MarkEntry] 419 detected, refreshing CSRF token and retrying...');
-                return refreshCSRFToken().then(function(newToken) {
-                    return saveMark(studentId, markKey, value, true);
-                });
-            }
-
-            // ── Handle 401 Unauthorized ──
-            if (r.status === 401) {
-                handleSessionExpired('save 401');
-                throw new Error('Session expired (401 during save)');
-            }
-
+            // ── Handle non-OK responses ──
             if (!r.ok) {
-                // Try to parse as JSON for error message, fall back to status code
+                if (r.status === 419 || r.status === 401 || r.status === 403) {
+                    handleSessionExpired('save ' + r.status);
+                    throw new Error('Session expired (' + r.status + ')');
+                }
+                // Try to parse error as JSON
                 return r.text().then(function(text) {
                     var errMsg = 'Server error ' + r.status;
                     try {
                         var jsonErr = JSON.parse(text);
                         errMsg = jsonErr.error || jsonErr.message || errMsg;
                     } catch(e) {
-                        // Response is HTML (e.g. login redirect page)
-                        if (text.indexOf('login') !== -1) {
+                        if (text.indexOf('login') !== -1 || text.indexOf('Sign in') !== -1) {
                             handleSessionExpired('save HTML login page');
                             throw new Error('Session expired');
                         }
+                        errMsg = 'Server returned ' + r.status;
                     }
                     throw new Error(errMsg);
                 });
             }
 
-            // Check if fetch followed a redirect despite our manual setting
+            // Check if fetch followed a redirect to login page
             if (r.redirected) {
                 handleSessionExpired('save followed redirect');
-                throw new Error('Session expired (redirect followed during save)');
+                throw new Error('Session expired (redirect)');
             }
 
             return r.json();
