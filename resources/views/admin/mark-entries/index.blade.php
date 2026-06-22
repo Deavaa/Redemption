@@ -693,7 +693,7 @@
             {{-- Field selector + save button --}}
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;background:#fff;padding:10px 14px;border-radius:8px;border:1px solid #e5e7eb;">
                 <label style="font-size:13px;font-weight:600;color:#1a1a2e;margin:0;white-space:nowrap;">Enter marks for:</label>
-                <select id="listViewFieldSelect" class="form-select form-select-sm" style="width:auto;min-width:200px;">
+                <select id="listViewFieldSelect" class="form-select form-select-sm" style="width:auto;min-width:200px;" onchange="renderListViewTable()">
                     <optgroup label="Continuous Assessment">
                         @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
                             @if($f['category'] === 'ca')
