@@ -14,16 +14,16 @@ class AppController extends Controller
     public function manifest(): JsonResponse
     {
         $baseUrl = url('/');
-        
+
         $manifest = [
-            'name' => 'School of Redemption - School Management System',
+            'name' => 'School of Redemption',
             'short_name' => 'Redemption',
-            'description' => 'Complete school management system for School of Redemption - Access marks, attendance, finance, and more',
+            'description' => 'School management system - marks, attendance, fees, reports',
             'start_url' => url('/login'),
             'display' => 'standalone',
             'orientation' => 'portrait-primary',
-            'background_color' => '#0f172a',
-            'theme_color' => '#6366f1',
+            'background_color' => '#0C1F17',
+            'theme_color' => '#047857',
             'scope' => url('/'),
             'icons' => [
                 ['src' => asset('icons/icon-72x72.png'), 'sizes' => '72x72', 'type' => 'image/png', 'purpose' => 'any maskable'],

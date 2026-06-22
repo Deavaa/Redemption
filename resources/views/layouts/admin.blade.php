@@ -1930,77 +1930,12 @@ function toggleMobileMenu() {
     }
 })();
 
-// ===== PULL-TO-REFRESH for Mobile =====
-(function() {
-    var pullIndicator = document.getElementById('pullToRefreshIndicator');
-    if (!pullIndicator) {
-        // Create pull-to-refresh indicator element
-        pullIndicator = document.createElement('div');
-        pullIndicator.id = 'pullToRefreshIndicator';
-        pullIndicator.style.cssText = 'position:fixed;top:0;left:0;right:0;height:0;background:linear-gradient(135deg,#4361ee,#3a0ca3);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;z-index:9999;transition:height 0.2s ease;overflow:hidden;pointer-events:none;';
-        pullIndicator.innerHTML = '<i class="fas fa-sync-alt" style="margin-right:6px;"></i> <span id="ptrText">Pull to refresh</span>';
-        document.body.appendChild(pullIndicator);
-    }
+// ===== PULL-TO-REFRESH REMOVED =====
+// Was causing random page reloads on mobile when users scrolled up.
+// The native browser pull-to-refresh (Chrome on Android) is sufficient.
+// Custom pull-to-refresh is NOT needed and was triggering false reloads.
 
-    var ptrText = document.getElementById('ptrText');
-    var startY = 0;
-    var pulling = false;
-    var threshold = 80;
-    var isScrolledToTop = function() {
-        return window.scrollY <= 0;
-    };
-
-    document.addEventListener('touchstart', function(e) {
-        if (window.innerWidth >= 769) return;
-        if (!isScrolledToTop()) return;
-        startY = e.touches[0].clientY;
-        pulling = false;
-    }, { passive: true });
-
-    document.addEventListener('touchmove', function(e) {
-        if (window.innerWidth >= 769) return;
-        if (startY === 0) return;
-        if (!isScrolledToTop() && !pulling) return;
-
-        var currentY = e.touches[0].clientY;
-        var diff = currentY - startY;
-
-        if (diff > 10 && isScrolledToTop()) {
-            pulling = true;
-            var height = Math.min(diff * 0.5, threshold);
-            pullIndicator.style.height = height + 'px';
-
-            if (height >= threshold) {
-                ptrText.textContent = 'Release to refresh';
-                pullIndicator.querySelector('i').classList.add('fa-spin');
-            } else {
-                ptrText.textContent = 'Pull to refresh';
-                pullIndicator.querySelector('i').classList.remove('fa-spin');
-            }
-        }
-    }, { passive: true });
-
-    document.addEventListener('touchend', function(e) {
-        if (window.innerWidth >= 769 || !pulling) return;
-
-        var currentHeight = parseInt(pullIndicator.style.height) || 0;
-
-        if (currentHeight >= threshold) {
-            // Trigger refresh
-            ptrText.textContent = 'Refreshing...';
-            pullIndicator.style.height = '40px';
-            pullIndicator.querySelector('i').classList.add('fa-spin');
-            setTimeout(function() {
-                window.location.reload();
-            }, 500);
-        } else {
-            // Cancel
-            pullIndicator.style.height = '0';
-        }
-        pulling = false;
-        startY = 0;
-    }, { passive: true });
-})();
+// ===== END ADMIN SCRIPTS =====
 </script>
 <style>
 /* ===== Topbar Icon Buttons (Chat, Notifications, Language) ===== */
@@ -2165,20 +2100,29 @@ function toggleMobileMenu() {
 
 {{-- PWA Service Worker Registration & Notification Permission --}}
 <script>
-// Register service worker for PWA
+// Register service worker for PWA — v6
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('{{ asset('sw.js') }}')
+        navigator.serviceWorker.register(@json(asset('sw.js')))
             .then(function(registration) {
-                console.log('SW registered:', registration.scope);
+                console.log('[PWA] SW registered:', registration.scope);
 
-                // Check for updates periodically
-                setInterval(function() {
-                    registration.update();
-                }, 60 * 60 * 1000); // every hour
+                // Force update on every load to prevent stale SW
+                registration.update();
+
+                // If a new SW is waiting, activate it immediately
+                if (registration.waiting) {
+                    registration.waiting.postMessage('SKIP_WAITING');
+                }
+
+                // Listen for new SW taking over
+                navigator.serviceWorker.addEventListener('controllerchange', function() {
+                    // Don't reload — just log. Reloading caused the loop.
+                    console.log('[PWA] SW updated to new version');
+                });
             })
             .catch(function(error) {
-                console.log('SW registration failed:', error);
+                console.log('[PWA] SW registration failed:', error);
             });
     });
 }
