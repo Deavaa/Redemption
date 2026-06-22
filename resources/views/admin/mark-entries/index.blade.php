@@ -640,6 +640,15 @@
                 </span>
             </div>
             <div class="me-global-status-right">
+                {{-- View Mode Toggle: Per Student (carousel) vs All Students (table) --}}
+                <div class="btn-group btn-group-sm" role="group" id="viewModeToggle">
+                    <button type="button" class="btn btn-outline-primary active" data-mode="card" title="One student at a time">
+                        <i class="fas fa-id-card"></i> Per Student
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-mode="list" title="All students in a table">
+                        <i class="fas fa-list"></i> All Students
+                    </button>
+                </div>
                 <span class="me-save-badge idle" id="globalSaveStatus"><i class="fas fa-check-circle"></i> Ready</span>
             </div>
         </div>
@@ -681,6 +690,61 @@
             <kbd>&larr;</kbd> <kbd>&rarr;</kbd> to navigate students &middot; <kbd>Tab</kbd> to move between fields &middot; Swipe on mobile
         </div>
     </div>
+
+    {{-- ===== LIST VIEW: All students in a table (hidden by default) ===== --}}
+    <div id="listViewArea" class="d-none" style="margin-top:10px;">
+        {{-- Field selector + save button --}}
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <label style="font-size:13px;font-weight:600;color:#1a1a2e;margin:0;">Enter marks for:</label>
+            <select id="listViewFieldSelect" class="form-select form-select-sm" style="width:auto;">
+                <optgroup label="Continuous Assessment">
+                    @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
+                        @if($f['category'] === 'ca')
+                        <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
+                        @endif
+                    @endforeach
+                </optgroup>
+                <optgroup label="Extra CA">
+                    @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
+                        @if($f['category'] === 'extra_ca')
+                        <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
+                        @endif
+                    @endforeach
+                </optgroup>
+                <optgroup label="Examination">
+                    @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
+                        @if($f['category'] === 'exam')
+                        <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
+                        @endif
+                    @endforeach
+                </optgroup>
+            </select>
+            <button type="button" class="btn btn-primary btn-sm" id="listViewSaveBtn">
+                <i class="fas fa-save"></i> Save All
+            </button>
+            <span id="listViewSaveStatus" style="font-size:12px;color:#6b7280;"></span>
+        </div>
+
+        {{-- The table --}}
+        <div class="table-responsive" style="max-height:calc(100vh - 280px);overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;">
+            <table class="table table-sm table-hover mb-0" id="listViewTable">
+                <thead style="position:sticky;top:0;z-index:10;background:#f9fafb;">
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>Student Name</th>
+                        <th>Roll #</th>
+                        <th style="width:120px;">Marks</th>
+                        <th style="width:80px;">Total</th>
+                        <th style="width:60px;">Grade</th>
+                    </tr>
+                </thead>
+                <tbody id="listViewBody">
+                    {{-- dynamically filled --}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {{-- ===== END LIST VIEW ===== --}}
 </div>
 @endsection
 
@@ -2371,6 +2435,165 @@
         if (students.length > 0) {
             backupMarksToLocalStorage();
         }
+    });
+
+    // ========== LIST VIEW (All Students at once) ==========
+
+    var listViewArea = document.getElementById('listViewArea');
+    var listViewBody = document.getElementById('listViewBody');
+    var listViewFieldSelect = document.getElementById('listViewFieldSelect');
+    var listViewSaveBtn = document.getElementById('listViewSaveBtn');
+    var listViewSaveStatus = document.getElementById('listViewSaveStatus');
+    var cardsContainer = document.getElementById('cardsContainer');
+    var carouselNav = document.getElementById('carouselNav');
+    var carouselDots = document.getElementById('carouselDots');
+    var carouselProgress = document.getElementById('carouselProgress');
+    var keyboardHint = document.getElementById('keyboardHint');
+    var currentViewMode = 'card'; // 'card' or 'list'
+
+    // View mode toggle
+    document.querySelectorAll('#viewModeToggle button').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var mode = this.getAttribute('data-mode');
+            if (mode === currentViewMode) return;
+            currentViewMode = mode;
+
+            // Update button states
+            document.querySelectorAll('#viewModeToggle button').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+
+            if (mode === 'list') {
+                // Show list view, hide carousel
+                cardsContainer.classList.add('d-none');
+                if (carouselNav) carouselNav.classList.add('d-none');
+                if (carouselDots) carouselDots.classList.add('d-none');
+                if (carouselProgress) carouselProgress.classList.add('d-none');
+                if (keyboardHint) keyboardHint.classList.add('d-none');
+                listViewArea.classList.remove('d-none');
+                renderListView();
+            } else {
+                // Show carousel, hide list view
+                listViewArea.classList.add('d-none');
+                cardsContainer.classList.remove('d-none');
+                if (carouselNav) carouselNav.classList.remove('d-none');
+                if (carouselDots) carouselDots.classList.remove('d-none');
+                if (carouselProgress) carouselProgress.classList.remove('d-none');
+                if (keyboardHint) keyboardHint.classList.remove('d-none');
+            }
+        });
+    });
+
+    function renderListView() {
+        if (students.length === 0) return;
+
+        var markKey = listViewFieldSelect.value;
+        var fieldConfig = getFieldConfig(markKey);
+        var maxMarks = fieldConfig ? fieldConfig.max : 100;
+
+        var html = '';
+        students.forEach(function(s, idx) {
+            var val = s.marks[markKey];
+            var displayVal = (val !== null && val !== undefined) ? val : '';
+            var grandTotal = s.marks.grand_total;
+            var grade = s.marks.grade || '-';
+
+            html += '<tr data-student-id="' + s.id + '" data-student-index="' + idx + '">';
+            html += '<td style="color:#9ca3af;font-size:12px;">' + (idx + 1) + '</td>';
+            html += '<td style="font-weight:600;font-size:13px;">' + escapeHtml(s.student_name) + '</td>';
+            html += '<td style="font-size:12px;color:#6b7280;">' + escapeHtml(s.roll_number || '') + '</td>';
+            html += '<td><input type="text" inputmode="decimal" class="form-control form-control-sm lv-mark-input" '
+                + 'data-student-id="' + s.id + '" data-mark-key="' + markKey + '" data-max="' + maxMarks + '" '
+                + 'value="' + displayVal + '" placeholder="/' + maxMarks + '" '
+                + 'style="text-align:center;width:80px;padding:4px 8px;font-weight:600;"></td>';
+            html += '<td style="text-align:center;font-weight:700;color:#7c3aed;font-size:13px;" id="lv_total_' + s.id + '">'
+                + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</td>';
+            html += '<td style="text-align:center;font-size:12px;font-weight:600;" id="lv_grade_' + s.id + '">' + grade + '</td>';
+            html += '</tr>';
+        });
+
+        listViewBody.innerHTML = html;
+
+        // Attach input listeners for real-time max enforcement
+        listViewBody.querySelectorAll('.lv-mark-input').forEach(function(input) {
+            input.addEventListener('input', function() {
+                var max = parseFloat(this.getAttribute('data-max'));
+                var val = parseFloat(this.value);
+                if (!isNaN(val) && val > max) {
+                    this.value = max;
+                    this.style.borderColor = '#ef4444';
+                    setTimeout(function() { input.style.borderColor = ''; }, 500);
+                }
+            });
+        });
+    }
+
+    // Re-render list when field selector changes
+    listViewFieldSelect.addEventListener('change', renderListView);
+
+    // Save all marks in list view
+    listViewSaveBtn.addEventListener('click', function() {
+        var markKey = listViewFieldSelect.value;
+        var marks = [];
+        listViewBody.querySelectorAll('.lv-mark-input').forEach(function(input) {
+            marks.push({
+                student_id: input.getAttribute('data-student-id'),
+                value: input.value
+            });
+        });
+
+        listViewSaveBtn.disabled = true;
+        listViewSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        listViewSaveStatus.textContent = '';
+        listViewSaveStatus.style.color = '#6b7280';
+
+        var formData = new FormData();
+        formData.append('_token', getGlobalCSRFToken());
+        formData.append('subject_id', filterSubject.value);
+        formData.append('term_id', filterTerm.value);
+        formData.append('class_id', filterClass.value);
+        formData.append('section_id', filterSection.value || '');
+        formData.append('mark_key', markKey);
+        formData.append('marks', JSON.stringify(marks));
+
+        fetch('{{ route("admin.mark-entries.api.bulk-save") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': getGlobalCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            listViewSaveBtn.disabled = false;
+            listViewSaveBtn.innerHTML = '<i class="fas fa-save"></i> Save All';
+            if (data.success) {
+                listViewSaveStatus.textContent = 'Saved ' + data.saved + ' students successfully!';
+                listViewSaveStatus.style.color = '#059669';
+                if (data.csrf_token) updateCSRFToken(data.csrf_token);
+
+                // Reload students to refresh totals/grades
+                loadStudents(
+                    filterAcademicYear.value,
+                    filterTerm.value,
+                    filterClass.value,
+                    filterSection.value,
+                    filterSubject.value
+                );
+            } else {
+                listViewSaveStatus.textContent = 'Error: ' + (data.error || 'Unknown');
+                listViewSaveStatus.style.color = '#dc2626';
+            }
+        })
+        .catch(function(err) {
+            listViewSaveBtn.disabled = false;
+            listViewSaveBtn.innerHTML = '<i class="fas fa-save"></i> Save All';
+            listViewSaveStatus.textContent = 'Network error: ' + err.message;
+            listViewSaveStatus.style.color = '#dc2626';
+        });
     });
 })();
 </script>

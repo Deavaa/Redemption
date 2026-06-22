@@ -799,7 +799,116 @@ class MarkEntryController extends Controller
             'exam_total' => $entry->exam_total,
             'grand_total' => $entry->grand_total,
             'grade' => $entry->grade ?? null,
-            'csrf_token' => csrf_token(),  // Fresh token — prevents 419 on next save
+            'csrf_token' => csrf_token(),
+        ]);
+    }
+
+    /**
+     * Bulk save marks for multiple students at once.
+     * The teacher selects a mark field (e.g., 'ca1', 'exam1') and enters
+     * values for all students in a table. This endpoint saves them all.
+     */
+    public function apiBulkSave(Request $request)
+    {
+        $request->validate([
+            'subject_id' => 'required',
+            'term_id' => 'required',
+            'mark_key' => 'required|string',
+            'marks' => 'required|array',
+            'marks.*.student_id' => 'required',
+            'marks.*.value' => 'nullable|numeric',
+        ]);
+
+        $subjectId = $request->input('subject_id');
+        $ayId = $request->input('academic_year_id') ?: null;
+        $termId = $request->input('term_id');
+        $markKey = $request->input('mark_key');
+        $classId = $request->input('class_id');
+        $sectionId = $request->input('section_id');
+        $marks = $request->input('marks');
+
+        // Authorization check for teachers
+        $teacher = $this->getTeacherForUser();
+        if ($teacher) {
+            $isAssigned = TeacherAssignment::where('teacher_id', $teacher->id)
+                ->where('class_id', $classId)
+                ->where('subject_id', $subjectId)
+                ->where(function($q) use ($sectionId) {
+                    $q->where('section_id', $sectionId)->orWhereNull('section_id');
+                })
+                ->exists();
+
+            $isHomeroomClass = $teacher->classRooms()->where('id', $classId)->exists();
+            $isHomeroomSection = $sectionId && $teacher->sections()->where('id', $sectionId)->exists();
+
+            if (!$isAssigned && !$isHomeroomClass && !$isHomeroomSection) {
+                return response()->json(['success' => false, 'error' => 'Not authorized.'], 403);
+            }
+        }
+
+        $saved = 0;
+        $errors = [];
+
+        foreach ($marks as $item) {
+            $studentId = $item['student_id'];
+            $value = $item['value'];
+            if ($value === '' || $value === null) {
+                $value = null;
+            }
+
+            // Load existing record
+            $existingQuery = MarkEntry::where('student_id', $studentId)
+                ->where('subject_id', $subjectId)
+                ->where('term_id', $termId);
+            if ($ayId) {
+                $existingQuery->where('academic_year_id', $ayId);
+            } else {
+                $existingQuery->whereNull('academic_year_id');
+            }
+            $existing = $existingQuery->first();
+
+            // Build data with ALL fields (seed from existing so calcTotals works)
+            $data = [
+                'student_id' => $studentId,
+                'subject_id' => $subjectId,
+                'academic_year_id' => $ayId,
+                'term_id' => $termId,
+                'class_id' => $classId,
+                'section_id' => $sectionId,
+                'teacher_id' => $teacher?->id,
+            ];
+
+            if ($existing) {
+                $markFieldNames = array_map(fn($f) => $f['col'], MarkEntry::getMarkFields());
+                foreach ($markFieldNames as $f) {
+                    $data[$f] = $existing->$f;
+                }
+            }
+
+            // Override the single field being bulk-edited
+            $data[$markKey] = $value;
+
+            // Calculate totals
+            $data = MarkEntry::calcTotals($data);
+            $data['marks_obtained'] = $data['grand_total'] ?? 0;
+
+            try {
+                if ($existing) {
+                    $existing->update($data);
+                } else {
+                    MarkEntry::create($data);
+                }
+                $saved++;
+            } catch (\Throwable $e) {
+                $errors[] = "Student {$studentId}: " . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'saved' => $saved,
+            'errors' => $errors,
+            'csrf_token' => csrf_token(),
         ]);
     }
 }
