@@ -689,62 +689,62 @@
         <div class="me-card-hint" id="keyboardHint">
             <kbd>&larr;</kbd> <kbd>&rarr;</kbd> to navigate students &middot; <kbd>Tab</kbd> to move between fields &middot; Swipe on mobile
         </div>
-    </div>
 
-    {{-- ===== LIST VIEW: All students in a table (hidden by default) ===== --}}
-    <div id="listViewArea" class="d-none" style="margin-top:10px;">
-        {{-- Field selector + save button --}}
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-            <label style="font-size:13px;font-weight:600;color:#1a1a2e;margin:0;">Enter marks for:</label>
-            <select id="listViewFieldSelect" class="form-select form-select-sm" style="width:auto;">
-                <optgroup label="Continuous Assessment">
-                    @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
-                        @if($f['category'] === 'ca')
-                        <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
-                        @endif
-                    @endforeach
-                </optgroup>
-                <optgroup label="Extra CA">
-                    @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
-                        @if($f['category'] === 'extra_ca')
-                        <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
-                        @endif
-                    @endforeach
-                </optgroup>
-                <optgroup label="Examination">
-                    @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
-                        @if($f['category'] === 'exam')
-                        <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
-                        @endif
-                    @endforeach
-                </optgroup>
-            </select>
-            <button type="button" class="btn btn-primary btn-sm" id="listViewSaveBtn">
-                <i class="fas fa-save"></i> Save All
-            </button>
-            <span id="listViewSaveStatus" style="font-size:12px;color:#6b7280;"></span>
-        </div>
+        {{-- ===== LIST VIEW: All students in a table (hidden by default) ===== --}}
+        <div id="listViewArea" class="d-none" style="margin-top:10px;">
+            {{-- Field selector + save button --}}
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;background:#fff;padding:10px 14px;border-radius:8px;border:1px solid #e5e7eb;">
+                <label style="font-size:13px;font-weight:600;color:#1a1a2e;margin:0;white-space:nowrap;">Enter marks for:</label>
+                <select id="listViewFieldSelect" class="form-select form-select-sm" style="width:auto;min-width:200px;">
+                    <optgroup label="Continuous Assessment">
+                        @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
+                            @if($f['category'] === 'ca')
+                            <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
+                            @endif
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="Extra CA">
+                        @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
+                            @if($f['category'] === 'extra_ca')
+                            <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
+                            @endif
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="Examination">
+                        @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
+                            @if($f['category'] === 'exam')
+                            <option value="{{ $f['col'] }}">{{ $f['label'] }} ({{ $f['max'] }})</option>
+                            @endif
+                        @endforeach
+                    </optgroup>
+                </select>
+                <button type="button" class="btn btn-primary btn-sm" id="listViewSaveBtn">
+                    <i class="fas fa-save"></i> Save All
+                </button>
+                <span id="listViewSaveStatus" style="font-size:12px;color:#6b7280;"></span>
+            </div>
 
-        {{-- The table --}}
-        <div class="table-responsive" style="max-height:calc(100vh - 280px);overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;">
-            <table class="table table-sm table-hover mb-0" id="listViewTable">
-                <thead style="position:sticky;top:0;z-index:10;background:#f9fafb;">
-                    <tr>
-                        <th style="width:40px;">#</th>
-                        <th>Student Name</th>
-                        <th>Roll #</th>
-                        <th style="width:120px;">Marks</th>
-                        <th style="width:80px;">Total</th>
-                        <th style="width:60px;">Grade</th>
-                    </tr>
-                </thead>
-                <tbody id="listViewBody">
-                    {{-- dynamically filled --}}
-                </tbody>
-            </table>
+            {{-- The table --}}
+            <div class="table-responsive" style="max-height:calc(100vh - 280px);overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;">
+                <table class="table table-sm table-hover mb-0" id="listViewTable">
+                    <thead style="position:sticky;top:0;z-index:10;background:#f9fafb;">
+                        <tr>
+                            <th style="width:40px;">#</th>
+                            <th>Student Name</th>
+                            <th>Roll #</th>
+                            <th style="width:120px;">Marks</th>
+                            <th style="width:80px;">Total</th>
+                            <th style="width:60px;">Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listViewBody">
+                        {{-- dynamically filled --}}
+                    </tbody>
+                </table>
+            </div>
         </div>
+        {{-- ===== END LIST VIEW ===== --}}
     </div>
-    {{-- ===== END LIST VIEW ===== --}}
 </div>
 @endsection
 
