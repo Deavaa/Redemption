@@ -2195,21 +2195,24 @@
 
         setGlobalSaveStatus('saving', 'Saving...');
 
+        // Use FormData for CSRF compatibility
+        var formData = new FormData();
+        formData.append('_token', getCSRF());
+        formData.append('student_id', studentId);
+        formData.append('academic_year_id', ayId);
+        formData.append('term_id', termId);
+        formData.append('class_id', classId);
+        formData.append('section_id', sectionId);
+        formData.append('subject_id', subjectId);
+        formData.append('mark_key', markKey);
+        formData.append('mark_value', markValue === null ? '' : markValue);
+
         fetch(API_SAVE, {
             method: 'POST',
             credentials: 'same-origin',
-            redirect: 'manual', // CRITICAL: Detect 302 redirects instead of following them
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCSRF(), 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({
-                student_id: studentId,
-                academic_year_id: ayId,
-                term_id: termId,
-                class_id: classId,
-                section_id: sectionId,
-                subject_id: subjectId,
-                mark_key: markKey,
-                mark_value: markValue
-            })
+            redirect: 'manual',
+            headers: { 'X-CSRF-TOKEN': getCSRF(), 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
         })
         .then(function(r) {
             // ── Detect 302 redirect (session expired) ──
