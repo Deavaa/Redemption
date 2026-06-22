@@ -1622,6 +1622,8 @@
                     renderAllCards();
                     showMarkEntry();
                     updateInputLockState();
+                    // CRITICAL: Update the global reference so the list view can see the students
+                    window.me_students = students;
                 } else {
                     showNoStudents();
                 }
