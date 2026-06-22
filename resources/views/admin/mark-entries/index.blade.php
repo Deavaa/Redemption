@@ -716,9 +716,7 @@
                         @endforeach
                     </optgroup>
                 </select>
-                <button type="button" class="btn btn-primary btn-sm" id="listViewSaveBtn" onclick="lvSaveAllManual()">
-                    <i class="fas fa-save"></i> Save All
-                </button>
+                {{-- Auto-saves — no Save All button needed --}}
             </div>
 
             {{-- The table --}}
