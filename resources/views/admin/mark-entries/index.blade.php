@@ -2444,11 +2444,8 @@
     var listViewFieldSelect = document.getElementById('listViewFieldSelect');
     var listViewSaveBtn = document.getElementById('listViewSaveBtn');
     var listViewSaveStatus = document.getElementById('listViewSaveStatus');
-    var cardsContainer = document.getElementById('cardsContainer');
-    var carouselNav = document.getElementById('carouselNav');
-    var carouselDots = document.getElementById('carouselDots');
-    var carouselProgress = document.getElementById('carouselProgress');
-    var keyboardHint = document.getElementById('keyboardHint');
+    // cardsContainer, carouselNav, carouselDots, carouselProgress, keyboardHint
+    // are already declared above — don't redeclare them.
     var currentViewMode = 'card'; // 'card' or 'list'
 
     // View mode toggle
@@ -2466,21 +2463,21 @@
 
             if (mode === 'list') {
                 // Show list view, hide carousel
-                cardsContainer.classList.add('d-none');
-                if (carouselNav) carouselNav.classList.add('d-none');
-                if (carouselDots) carouselDots.classList.add('d-none');
-                if (carouselProgress) carouselProgress.classList.add('d-none');
-                if (keyboardHint) keyboardHint.classList.add('d-none');
+                cardsContainer.style.display = 'none';
+                var cn = document.getElementById('carouselNav'); if (cn) cn.classList.add('d-none');
+                var cd = document.getElementById('carouselDots'); if (cd) cd.classList.add('d-none');
+                var cp = document.getElementById('carouselProgress'); if (cp) cp.classList.add('d-none');
+                var kh = document.getElementById('keyboardHint'); if (kh) kh.classList.add('d-none');
                 listViewArea.classList.remove('d-none');
                 renderListView();
             } else {
                 // Show carousel, hide list view
                 listViewArea.classList.add('d-none');
-                cardsContainer.classList.remove('d-none');
-                if (carouselNav) carouselNav.classList.remove('d-none');
-                if (carouselDots) carouselDots.classList.remove('d-none');
-                if (carouselProgress) carouselProgress.classList.remove('d-none');
-                if (keyboardHint) keyboardHint.classList.remove('d-none');
+                cardsContainer.style.display = '';
+                var cn2 = document.getElementById('carouselNav'); if (cn2) cn2.classList.remove('d-none');
+                var cd2 = document.getElementById('carouselDots'); if (cd2) cd2.classList.remove('d-none');
+                var cp2 = document.getElementById('carouselProgress'); if (cp2) cp2.classList.remove('d-none');
+                var kh2 = document.getElementById('keyboardHint'); if (kh2) kh2.classList.remove('d-none');
             }
         });
     });
@@ -2576,13 +2573,7 @@
                 if (data.csrf_token) updateCSRFToken(data.csrf_token);
 
                 // Reload students to refresh totals/grades
-                loadStudents(
-                    filterAcademicYear.value,
-                    filterTerm.value,
-                    filterClass.value,
-                    filterSection.value,
-                    filterSubject.value
-                );
+                loadStudents();
             } else {
                 listViewSaveStatus.textContent = 'Error: ' + (data.error || 'Unknown');
                 listViewSaveStatus.style.color = '#dc2626';
