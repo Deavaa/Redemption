@@ -10,7 +10,7 @@
         var keepaliveUrl = '{{ route("admin.keepalive") }}';
         var sessionExpired = false;
         var lastKeepaliveTime = Date.now();
-        var KEEPALIVE_INTERVAL = 60 * 1000;  // 60 seconds — balanced between reliability and resource usage
+        var KEEPALIVE_INTERVAL = 30 * 1000;  // 30 seconds — more frequent to prevent session expiry
         var ACTIVITY_THRESHOLD = 30 * 1000;  // 30 seconds of inactivity before activity-driven keepalive
 
         // ===== 1. GLOBAL CSRF TOKEN HELPERS =====

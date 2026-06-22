@@ -87,7 +87,7 @@ class AppServiceProvider extends ServiceProvider
         // ============================================================
         try {
             config(['session.driver' => 'database']);
-            config(['session.lifetime' => 480]);           // 8 hours
+            config(['session.lifetime' => 1440]);          // 24 hours (was 8 hours)
             config(['session.encrypt' => false]);
             // Use a host-specific cookie name to avoid conflicts between
             // XAMPP (localhost) and cPanel (byethost4.com) when the same
@@ -103,15 +103,15 @@ class AppServiceProvider extends ServiceProvider
             config(['session.http_only' => true]);
             config(['session.same_site' => 'lax']);
             config(['session.expire_on_close' => false]);
-            config(['session.lottery' => [2, 100]]);       // 2% lottery (safe for DB)
+            config(['session.lottery' => [100, 100]]);     // 100% — clean expired sessions on every request (was 2%)
 
             // Disable PHP's native session GC (belt-and-suspenders —
             // database driver doesn't use PHP file sessions, but we
             // keep these settings in case any PHP code uses $_SESSION)
-            @ini_set('session.gc_maxlifetime', 28800);
+            @ini_set('session.gc_maxlifetime', 86400);
             @ini_set('session.gc_probability', 0);
             @ini_set('session.gc_divisor', 1);
-            @ini_set('session.cookie_lifetime', 28800);
+            @ini_set('session.cookie_lifetime', 86400);
         } catch (\Throwable $e) {
             // Silently fail — session config will use defaults
         }
