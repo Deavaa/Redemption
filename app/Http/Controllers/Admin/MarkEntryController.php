@@ -810,22 +810,40 @@ class MarkEntryController extends Controller
      */
     public function apiBulkSave(Request $request)
     {
-        $request->validate([
-            'subject_id' => 'required',
-            'term_id' => 'required',
-            'mark_key' => 'required|string',
-            'marks' => 'required|array',
-            'marks.*.student_id' => 'required',
-            'marks.*.value' => 'nullable|numeric',
-        ]);
+        // Handle JSON body — Laravel doesn't auto-parse JSON arrays into $request->all()
+        $input = $request->all();
+        
+        // If marks was sent as a JSON string, decode it
+        if (is_string($input['marks'] ?? null)) {
+            $input['marks'] = json_decode($input['marks'], true);
+        }
 
-        $subjectId = $request->input('subject_id');
-        $ayId = $request->input('academic_year_id') ?: null;
-        $termId = $request->input('term_id');
-        $markKey = $request->input('mark_key');
-        $classId = $request->input('class_id');
-        $sectionId = $request->input('section_id');
-        $marks = $request->input('marks');
+        // Manual validation — return JSON errors, not redirects
+        $errors = [];
+        if (empty($input['subject_id'])) $errors['subject_id'] = ['Subject is required.'];
+        if (empty($input['term_id'])) $errors['term_id'] = ['Term is required.'];
+        if (empty($input['mark_key'])) $errors['mark_key'] = ['Mark field is required.'];
+        if (empty($input['marks']) || !is_array($input['marks'])) $errors['marks'] = ['Marks array is required.'];
+
+        if (!empty($errors)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Validation failed: ' . json_encode($errors),
+                'errors' => $errors,
+            ], 422);
+        }
+
+        // Touch session to keep it alive
+        $request->session()->put('_last_mark_save', time());
+        $request->session()->save();
+
+        $subjectId = $input['subject_id'];
+        $ayId = $input['academic_year_id'] ?? null;
+        $termId = $input['term_id'];
+        $markKey = $input['mark_key'];
+        $classId = $input['class_id'] ?? null;
+        $sectionId = $input['section_id'] ?? null;
+        $marks = $input['marks'];
 
         // Authorization check for teachers
         $teacher = $this->getTeacherForUser();
