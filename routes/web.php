@@ -205,6 +205,13 @@ Route::get('/{path}', function ($path = null) {
     abort(404);
 })->where('path', '.*')->fallback();
 
+// ── Mark Entry API routes — OUTSIDE admin group to avoid middleware redirect issues ──
+// These routes have their own auth + authorization checks in the controller.
+Route::middleware(['auth', 'web'])->group(function () {
+    Route::post('admin/mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save');
+    Route::post('admin/mark-entries/api/bulk-save', [MarkEntryController::class, 'apiBulkSave'])->name('mark-entries.api.bulk-save');
+});
+
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
     // Session Keepalive — touches session to keep it alive
     // NOTE: We do NOT regenerate the CSRF token here anymore.
@@ -316,8 +323,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('mark-entries/api/subjects', [MarkEntryController::class, 'apiSubjects'])->name('mark-entries.api.subjects')->middleware('permission:mark_entries.view');
     Route::get('mark-entries/api/students', [MarkEntryController::class, 'apiStudents'])->name('mark-entries.api.students')->middleware('permission:mark_entries.view');
     Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students')->middleware('permission:mark_entries.view');
-    Route::post('mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save');
-    Route::post('mark-entries/api/bulk-save', [MarkEntryController::class, 'apiBulkSave'])->name('mark-entries.api.bulk-save');
+    // Save routes moved OUTSIDE admin group (above) to avoid middleware redirect issues
     Route::get('mark-entries/api/check-lock', [MarkEntryLockController::class, 'apiCheckLock'])->name('mark-entries.api.check-lock');
     Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
 
