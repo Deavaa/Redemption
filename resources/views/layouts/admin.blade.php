@@ -164,23 +164,57 @@
         // ===== 5. SESSION EXPIRED HANDLER =====
         function handleSessionExpired(source) {
             if (sessionExpired) return;
-            sessionExpired = true;
-            console.error('[Keepalive] Session expired detected from:', source);
 
-            // Try to backup any mark entry data to localStorage before redirecting
+            // DON'T immediately flag as expired — the keepalive might have
+            // just hit a momentary DB hiccup. Try ONE silent retry first.
+            console.warn('[Keepalive] Possible session issue from:', source);
+
+            // Wait 3 seconds and retry the keepalive once
+            setTimeout(function() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', keepaliveUrl, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.timeout = 10000;
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        // Session is actually fine — was a temporary glitch
+                        console.log('[Keepalive] Retry succeeded — session is OK');
+                        sessionExpired = false;
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            if (data.csrf_token) updateCSRFToken(data.csrf_token);
+                        } catch(e) {}
+                    } else {
+                        // Session is really expired
+                        doSessionExpired(source);
+                    }
+                };
+                xhr.onerror = function() {
+                    // Network error — don't logout, just wait
+                    console.warn('[Keepalive] Retry failed — network error, not logging out');
+                    sessionExpired = false;
+                };
+                xhr.ontimeout = function() {
+                    console.warn('[Keepalive] Retry timed out — not logging out');
+                    sessionExpired = false;
+                };
+                xhr.send();
+            }, 3000);
+        }
+
+        function doSessionExpired(source) {
+            if (sessionExpired) return;
+            sessionExpired = true;
+            console.error('[Keepalive] Session confirmed expired from:', source);
+
             try {
                 if (typeof backupMarksToLocalStorage === 'function') {
                     backupMarksToLocalStorage();
                 }
             } catch(e) {}
 
-            alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
-
-            // Use RELATIVE PATH (app-root-relative, without subdirectory prefix) instead of
-            // full URL for the redirect parameter.
-            // window.location.pathname includes the subdirectory (e.g., /redemption/admin/...)
-            // which would cause the double-path bug when redirect()->intended() prepends the
-            // base URL again. We strip the base path from APP_URL to get the app-root-relative path.
+            // Don't alert — just redirect silently
             var basePath = '';
             try {
                 var appUrl = '{{ config("app.url") }}';
@@ -188,7 +222,6 @@
                 basePath = parsed.pathname.replace(/\/$/, '');
             } catch(e) {}
             var currentPath = window.location.pathname + window.location.search;
-            // Strip the subdirectory prefix if present (e.g., /redemption/admin/... → /admin/...)
             if (basePath && currentPath.startsWith(basePath + '/')) {
                 currentPath = currentPath.substring(basePath.length) || '/';
             }
