@@ -716,10 +716,10 @@
                         @endforeach
                     </optgroup>
                 </select>
-                <button type="button" class="btn btn-primary btn-sm" id="listViewSaveBtn">
+                <button type="button" class="btn btn-primary btn-sm" id="listViewSaveBtn" onclick="lvSaveAllManual()">
                     <i class="fas fa-save"></i> Save All
                 </button>
-                <span id="listViewSaveStatus" style="font-size:12px;color:#6b7280;"></span>
+                <span id="listViewSaveStatus" style="font-size:12px;color:#6b7280;font-weight:500;">Ready</span>
             </div>
 
             {{-- The table --}}
@@ -2509,6 +2509,7 @@ function renderListViewTable() {
         html += '<td><input type="text" inputmode="decimal" class="form-control form-control-sm lv-mark-input" '
             + 'data-student-id="' + s.id + '" data-max="' + maxMarks + '" '
             + 'value="' + displayVal + '" placeholder="/' + maxMarks + '" '
+            + 'oninput="onLvInputChange(this)" '
             + 'style="text-align:center;width:80px;padding:4px 8px;font-weight:600;"></td>';
         html += '<td style="text-align:center;font-weight:700;color:#7c3aed;font-size:13px;">'
             + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</td>';
@@ -2517,92 +2518,100 @@ function renderListViewTable() {
     });
 
     body.innerHTML = html;
-
-    // Max value enforcement
-    var inputs = body.querySelectorAll('.lv-mark-input');
-    for (var i = 0; i < inputs.length; i++) {
-        inputs[i].addEventListener('input', function() {
-            var max = parseFloat(this.getAttribute('data-max'));
-            var val = parseFloat(this.value);
-            if (!isNaN(val) && val > max) {
-                this.value = max;
-                this.style.borderColor = '#ef4444';
-                var self = this;
-                setTimeout(function() { self.style.borderColor = ''; }, 500);
-            }
-        });
-    }
 }
 
-// Field selector change — re-render table
-(function() {
-    var sel = document.getElementById('listViewFieldSelect');
-    if (sel) sel.addEventListener('change', renderListViewTable);
-})();
+// ── Auto-save with debounce ──────────────────────────────
+var lvSaveTimer = null;
+var lvDirtyCount = 0;
 
-// Save All button
-(function() {
+function onLvInputChange(input) {
+    // Max value enforcement
+    var max = parseFloat(input.getAttribute('data-max'));
+    var val = parseFloat(input.value);
+    if (!isNaN(val) && val > max) {
+        input.value = max;
+        input.style.borderColor = '#ef4444';
+        setTimeout(function() { input.style.borderColor = ''; }, 500);
+    }
+
+    lvDirtyCount++;
+
+    // Update status
+    var status = document.getElementById('listViewSaveStatus');
+    if (status) {
+        status.textContent = '● ' + lvDirtyCount + ' unsaved change' + (lvDirtyCount > 1 ? 's' : '') + ' — auto-saving soon...';
+        status.style.color = '#f59e0b';
+    }
+
+    // Debounce: save 2 seconds after last change
+    if (lvSaveTimer) clearTimeout(lvSaveTimer);
+    lvSaveTimer = setTimeout(lvSaveAll, 2000);
+}
+
+function lvSaveAll() {
+    var body = document.getElementById('listViewBody');
+    var fieldSelect = document.getElementById('listViewFieldSelect');
     var btn = document.getElementById('listViewSaveBtn');
-    if (!btn) return;
-    btn.addEventListener('click', function() {
-        var body = document.getElementById('listViewBody');
-        var fieldSelect = document.getElementById('listViewFieldSelect');
-        var saveStatus = document.getElementById('listViewSaveStatus');
-        if (!body || !fieldSelect) return;
+    var status = document.getElementById('listViewSaveStatus');
+    if (!body || !fieldSelect) return;
 
-        var markKey = fieldSelect.value;
-        var marks = [];
-        var inputs = body.querySelectorAll('.lv-mark-input');
-        for (var i = 0; i < inputs.length; i++) {
-            marks.push({
-                student_id: inputs[i].getAttribute('data-student-id'),
-                value: inputs[i].value
-            });
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        if (saveStatus) { saveStatus.textContent = 'Saving...'; saveStatus.style.color = '#6b7280'; }
-
-        var csrf = window.me_getCSRF ? window.me_getCSRF() : document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        var payload = {
-            _token: csrf,
-            subject_id: window.me_filterSubject ? window.me_filterSubject.value : '',
-            term_id: window.me_filterTerm ? window.me_filterTerm.value : '',
-            class_id: window.me_filterClass ? window.me_filterClass.value : '',
-            section_id: window.me_filterSection ? window.me_filterSection.value : '',
-            mark_key: markKey,
-            marks: marks
-        };
-
-        fetch(window.me_bulkSaveUrl || '/admin/mark-entries/api/bulk-save', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrf,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Save All';
-            if (data.success) {
-                if (saveStatus) { saveStatus.textContent = '✓ Saved ' + data.saved + ' students!'; saveStatus.style.color = '#059669'; }
-                if (data.csrf_token && window.me_updateCSRF) window.me_updateCSRF(data.csrf_token);
-                if (window.me_loadStudents) window.me_loadStudents();
-            } else {
-                if (saveStatus) { saveStatus.textContent = '✗ Error: ' + (data.error || 'Unknown'); saveStatus.style.color = '#dc2626'; }
-            }
-        })
-        .catch(function(err) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Save All';
-            if (saveStatus) { saveStatus.textContent = '✗ Network error: ' + err.message; saveStatus.style.color = '#dc2626'; }
+    var markKey = fieldSelect.value;
+    var marks = [];
+    var inputs = body.querySelectorAll('.lv-mark-input');
+    for (var i = 0; i < inputs.length; i++) {
+        marks.push({
+            student_id: inputs[i].getAttribute('data-student-id'),
+            value: inputs[i].value
         });
+    }
+
+    if (status) { status.textContent = '⏳ Saving ' + lvDirtyCount + ' marks...'; status.style.color = '#3b82f6'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+
+    var csrf = window.me_getCSRF ? window.me_getCSRF() : (document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
+    var payload = {
+        _token: csrf,
+        subject_id: window.me_filterSubject ? window.me_filterSubject.value : '',
+        term_id: window.me_filterTerm ? window.me_filterTerm.value : '',
+        class_id: window.me_filterClass ? window.me_filterClass.value : '',
+        section_id: window.me_filterSection ? window.me_filterSection.value : '',
+        mark_key: markKey,
+        marks: marks
+    };
+
+    fetch(window.me_bulkSaveUrl || '/admin/mark-entries/api/bulk-save', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrf,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save All'; }
+        if (data.success) {
+            if (status) { status.textContent = '✓ Saved ' + data.saved + ' students at ' + new Date().toLocaleTimeString(); status.style.color = '#059669'; }
+            if (data.csrf_token && window.me_updateCSRF) window.me_updateCSRF(data.csrf_token);
+            lvDirtyCount = 0;
+            // Reload students to refresh totals/grades
+            if (window.me_loadStudents) window.me_loadStudents();
+        } else {
+            if (status) { status.textContent = '✗ Error: ' + (data.error || 'Unknown'); status.style.color = '#dc2626'; }
+        }
+    })
+    .catch(function(err) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save All'; }
+        if (status) { status.textContent = '✗ Network error: ' + err.message; status.style.color = '#dc2626'; }
     });
-})();
+}
+
+// Manual Save All button
+function lvSaveAllManual() {
+    if (lvSaveTimer) { clearTimeout(lvSaveTimer); lvSaveTimer = null; }
+    lvSaveAll();
+}
 </script>
 @endpush
