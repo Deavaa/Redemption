@@ -641,14 +641,12 @@
             </div>
             <div class="me-global-status-right">
                 {{-- View Mode Toggle: Per Student (carousel) vs All Students (table) --}}
-                <div class="btn-group btn-group-sm" role="group" id="viewModeToggle">
-                    <button type="button" class="btn btn-outline-primary active" data-mode="card" title="One student at a time">
-                        <i class="fas fa-id-card"></i> Per Student
-                    </button>
-                    <button type="button" class="btn btn-outline-primary" data-mode="list" title="All students in a table">
-                        <i class="fas fa-list"></i> All Students
-                    </button>
-                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary active" id="btnCardMode" onclick="switchToCardMode()" style="margin-right:4px;">
+                    <i class="fas fa-id-card"></i> Per Student
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btnListMode" onclick="switchToListMode()">
+                    <i class="fas fa-list"></i> All Students
+                </button>
                 <span class="me-save-badge idle" id="globalSaveStatus"><i class="fas fa-check-circle"></i> Ready</span>
             </div>
         </div>
@@ -2438,54 +2436,56 @@
     });
 
     // ========== LIST VIEW (All Students at once) ==========
+    // Using GLOBAL functions with onclick= for maximum reliability
 
-    var listViewArea = document.getElementById('listViewArea');
-    var listViewBody = document.getElementById('listViewBody');
-    var listViewFieldSelect = document.getElementById('listViewFieldSelect');
-    var listViewSaveBtn = document.getElementById('listViewSaveBtn');
-    var listViewSaveStatus = document.getElementById('listViewSaveStatus');
-    // cardsContainer, carouselNav, carouselDots, carouselProgress, keyboardHint
-    // are already declared above — don't redeclare them.
-    var currentViewMode = 'card'; // 'card' or 'list'
+    window.switchToCardMode = function() {
+        var cards = document.getElementById('cardsContainer');
+        var listView = document.getElementById('listViewArea');
+        var btnCard = document.getElementById('btnCardMode');
+        var btnList = document.getElementById('btnListMode');
+        var cn = document.getElementById('carouselNav');
+        var cd = document.getElementById('carouselDots');
+        var cp = document.getElementById('carouselProgress');
+        var kh = document.getElementById('keyboardHint');
 
-    // View mode toggle
-    document.querySelectorAll('#viewModeToggle button').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var mode = this.getAttribute('data-mode');
-            if (mode === currentViewMode) return;
-            currentViewMode = mode;
+        if (cards) cards.style.display = '';
+        if (listView) listView.classList.add('d-none');
+        if (btnCard) { btnCard.classList.add('active'); btnCard.classList.remove('btn-primary'); btnCard.classList.add('btn-outline-primary'); }
+        if (btnList) { btnList.classList.remove('active'); btnList.classList.remove('btn-primary'); btnList.classList.add('btn-outline-primary'); }
+        if (cn) cn.classList.remove('d-none');
+        if (cd) cd.classList.remove('d-none');
+        if (cp) cp.classList.remove('d-none');
+        if (kh) kh.classList.remove('d-none');
+    };
 
-            // Update button states
-            document.querySelectorAll('#viewModeToggle button').forEach(function(b) {
-                b.classList.remove('active');
-            });
-            this.classList.add('active');
+    window.switchToListMode = function() {
+        var cards = document.getElementById('cardsContainer');
+        var listView = document.getElementById('listViewArea');
+        var btnCard = document.getElementById('btnCardMode');
+        var btnList = document.getElementById('btnListMode');
+        var cn = document.getElementById('carouselNav');
+        var cd = document.getElementById('carouselDots');
+        var cp = document.getElementById('carouselProgress');
+        var kh = document.getElementById('keyboardHint');
 
-            if (mode === 'list') {
-                // Show list view, hide carousel
-                cardsContainer.style.display = 'none';
-                var cn = document.getElementById('carouselNav'); if (cn) cn.classList.add('d-none');
-                var cd = document.getElementById('carouselDots'); if (cd) cd.classList.add('d-none');
-                var cp = document.getElementById('carouselProgress'); if (cp) cp.classList.add('d-none');
-                var kh = document.getElementById('keyboardHint'); if (kh) kh.classList.add('d-none');
-                listViewArea.classList.remove('d-none');
-                renderListView();
-            } else {
-                // Show carousel, hide list view
-                listViewArea.classList.add('d-none');
-                cardsContainer.style.display = '';
-                var cn2 = document.getElementById('carouselNav'); if (cn2) cn2.classList.remove('d-none');
-                var cd2 = document.getElementById('carouselDots'); if (cd2) cd2.classList.remove('d-none');
-                var cp2 = document.getElementById('carouselProgress'); if (cp2) cp2.classList.remove('d-none');
-                var kh2 = document.getElementById('keyboardHint'); if (kh2) kh2.classList.remove('d-none');
-            }
-        });
-    });
+        if (cards) cards.style.display = 'none';
+        if (listView) listView.classList.remove('d-none');
+        if (btnCard) { btnCard.classList.remove('active'); btnCard.classList.remove('btn-primary'); btnCard.classList.add('btn-outline-primary'); }
+        if (btnList) { btnList.classList.add('active'); btnList.classList.remove('btn-outline-primary'); btnList.classList.add('btn-primary'); }
+        if (cn) cn.classList.add('d-none');
+        if (cd) cd.classList.add('d-none');
+        if (cp) cp.classList.add('d-none');
+        if (kh) kh.classList.add('d-none');
 
-    function renderListView() {
-        if (students.length === 0) return;
+        renderListViewTable();
+    };
 
-        var markKey = listViewFieldSelect.value;
+    function renderListViewTable() {
+        var body = document.getElementById('listViewBody');
+        var fieldSelect = document.getElementById('listViewFieldSelect');
+        if (!body || !fieldSelect || students.length === 0) return;
+
+        var markKey = fieldSelect.value;
         var fieldConfig = getFieldConfig(markKey);
         var maxMarks = fieldConfig ? fieldConfig.max : 100;
 
@@ -2496,7 +2496,7 @@
             var grandTotal = s.marks.grand_total;
             var grade = s.marks.grade || '-';
 
-            html += '<tr data-student-id="' + s.id + '" data-student-index="' + idx + '">';
+            html += '<tr>';
             html += '<td style="color:#9ca3af;font-size:12px;">' + (idx + 1) + '</td>';
             html += '<td style="font-weight:600;font-size:13px;">' + escapeHtml(s.student_name) + '</td>';
             html += '<td style="font-size:12px;color:#6b7280;">' + escapeHtml(s.roll_number || '') + '</td>';
@@ -2504,88 +2504,96 @@
                 + 'data-student-id="' + s.id + '" data-mark-key="' + markKey + '" data-max="' + maxMarks + '" '
                 + 'value="' + displayVal + '" placeholder="/' + maxMarks + '" '
                 + 'style="text-align:center;width:80px;padding:4px 8px;font-weight:600;"></td>';
-            html += '<td style="text-align:center;font-weight:700;color:#7c3aed;font-size:13px;" id="lv_total_' + s.id + '">'
+            html += '<td style="text-align:center;font-weight:700;color:#7c3aed;font-size:13px;">'
                 + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</td>';
-            html += '<td style="text-align:center;font-size:12px;font-weight:600;" id="lv_grade_' + s.id + '">' + grade + '</td>';
+            html += '<td style="text-align:center;font-size:12px;font-weight:600;">' + grade + '</td>';
             html += '</tr>';
         });
 
-        listViewBody.innerHTML = html;
+        body.innerHTML = html;
 
-        // Attach input listeners for real-time max enforcement
-        listViewBody.querySelectorAll('.lv-mark-input').forEach(function(input) {
+        // Max value enforcement
+        body.querySelectorAll('.lv-mark-input').forEach(function(input) {
             input.addEventListener('input', function() {
                 var max = parseFloat(this.getAttribute('data-max'));
                 var val = parseFloat(this.value);
                 if (!isNaN(val) && val > max) {
                     this.value = max;
                     this.style.borderColor = '#ef4444';
-                    setTimeout(function() { input.style.borderColor = ''; }, 500);
+                    var self = this;
+                    setTimeout(function() { self.style.borderColor = ''; }, 500);
                 }
             });
         });
     }
 
-    // Re-render list when field selector changes
-    listViewFieldSelect.addEventListener('change', renderListView);
+    // Re-render table when field selector changes
+    var listViewFieldSelect = document.getElementById('listViewFieldSelect');
+    if (listViewFieldSelect) {
+        listViewFieldSelect.addEventListener('change', renderListViewTable);
+    }
 
-    // Save all marks in list view
-    listViewSaveBtn.addEventListener('click', function() {
-        var markKey = listViewFieldSelect.value;
-        var marks = [];
-        listViewBody.querySelectorAll('.lv-mark-input').forEach(function(input) {
-            marks.push({
-                student_id: input.getAttribute('data-student-id'),
-                value: input.value
+    // Save all marks button
+    var listViewSaveBtn = document.getElementById('listViewSaveBtn');
+    if (listViewSaveBtn) {
+        listViewSaveBtn.addEventListener('click', function() {
+            var body = document.getElementById('listViewBody');
+            var fieldSelect = document.getElementById('listViewFieldSelect');
+            var saveStatus = document.getElementById('listViewSaveStatus');
+            if (!body || !fieldSelect) return;
+
+            var markKey = fieldSelect.value;
+            var marks = [];
+            body.querySelectorAll('.lv-mark-input').forEach(function(input) {
+                marks.push({
+                    student_id: input.getAttribute('data-student-id'),
+                    value: input.value
+                });
+            });
+
+            listViewSaveBtn.disabled = true;
+            listViewSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            if (saveStatus) { saveStatus.textContent = ''; saveStatus.style.color = '#6b7280'; }
+
+            var payload = {
+                _token: getGlobalCSRFToken(),
+                subject_id: filterSubject.value,
+                term_id: filterTerm.value,
+                class_id: filterClass.value,
+                section_id: filterSection.value || '',
+                mark_key: markKey,
+                marks: JSON.stringify(marks)
+            };
+
+            fetch('{{ route("admin.mark-entries.api.bulk-save") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getGlobalCSRFToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                listViewSaveBtn.disabled = false;
+                listViewSaveBtn.innerHTML = '<i class="fas fa-save"></i> Save All';
+                if (data.success) {
+                    if (saveStatus) { saveStatus.textContent = 'Saved ' + data.saved + ' students!'; saveStatus.style.color = '#059669'; }
+                    if (data.csrf_token) updateCSRFToken(data.csrf_token);
+                    loadStudents();
+                } else {
+                    if (saveStatus) { saveStatus.textContent = 'Error: ' + (data.error || 'Unknown'); saveStatus.style.color = '#dc2626'; }
+                }
+            })
+            .catch(function(err) {
+                listViewSaveBtn.disabled = false;
+                listViewSaveBtn.innerHTML = '<i class="fas fa-save"></i> Save All';
+                if (saveStatus) { saveStatus.textContent = 'Error: ' + err.message; saveStatus.style.color = '#dc2626'; }
             });
         });
-
-        listViewSaveBtn.disabled = true;
-        listViewSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        listViewSaveStatus.textContent = '';
-        listViewSaveStatus.style.color = '#6b7280';
-
-        var formData = new FormData();
-        formData.append('_token', getGlobalCSRFToken());
-        formData.append('subject_id', filterSubject.value);
-        formData.append('term_id', filterTerm.value);
-        formData.append('class_id', filterClass.value);
-        formData.append('section_id', filterSection.value || '');
-        formData.append('mark_key', markKey);
-        formData.append('marks', JSON.stringify(marks));
-
-        fetch('{{ route("admin.mark-entries.api.bulk-save") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': getGlobalCSRFToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            },
-            body: formData
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            listViewSaveBtn.disabled = false;
-            listViewSaveBtn.innerHTML = '<i class="fas fa-save"></i> Save All';
-            if (data.success) {
-                listViewSaveStatus.textContent = 'Saved ' + data.saved + ' students successfully!';
-                listViewSaveStatus.style.color = '#059669';
-                if (data.csrf_token) updateCSRFToken(data.csrf_token);
-
-                // Reload students to refresh totals/grades
-                loadStudents();
-            } else {
-                listViewSaveStatus.textContent = 'Error: ' + (data.error || 'Unknown');
-                listViewSaveStatus.style.color = '#dc2626';
-            }
-        })
-        .catch(function(err) {
-            listViewSaveBtn.disabled = false;
-            listViewSaveBtn.innerHTML = '<i class="fas fa-save"></i> Save All';
-            listViewSaveStatus.textContent = 'Network error: ' + err.message;
-            listViewSaveStatus.style.color = '#dc2626';
-        });
-    });
+    }
 })();
 </script>
 @endpush
