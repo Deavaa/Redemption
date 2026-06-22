@@ -2430,6 +2430,7 @@
     window.me_filterClass = filterClass;
     window.me_filterSection = filterSection;
     window.me_bulkSaveUrl = '{{ route("admin.mark-entries.api.bulk-save") }}';
+    window.me_setGlobalSaveStatus = setGlobalSaveStatus;
 
 })();
 
@@ -2511,7 +2512,7 @@ function onLvInputChange(input) {
     }
 
     lvDirtyCount++;
-    setGlobalSaveStatus('editing', lvDirtyCount + ' unsaved');
+    if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('editing', lvDirtyCount + ' unsaved');
 
     // Debounce: save 2 seconds after last change
     if (lvSaveTimer) clearTimeout(lvSaveTimer);
@@ -2533,7 +2534,7 @@ function lvSaveAll() {
         });
     }
 
-    setGlobalSaveStatus('saving', 'Saving...');
+    if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('saving', 'Saving...');
 
     var csrf = window.me_getCSRF ? window.me_getCSRF() : (document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
 
@@ -2558,7 +2559,7 @@ function lvSaveAll() {
     .then(function(r) {
         if (!r.ok) {
             if (r.status === 419 || r.status === 401 || r.status === 403) {
-                setGlobalSaveStatus('error', 'Session expired');
+                if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Session expired');
                 throw new Error('Session expired');
             }
             return r.text().then(function(text) {
@@ -2569,16 +2570,16 @@ function lvSaveAll() {
     })
     .then(function(data) {
         if (data.success) {
-            setGlobalSaveStatus('saved', 'Saved \u2713');
+            if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('saved', 'Saved \u2713');
             if (data.csrf_token && window.me_updateCSRF) window.me_updateCSRF(data.csrf_token);
             lvDirtyCount = 0;
             if (window.me_loadStudents) window.me_loadStudents();
         } else {
-            setGlobalSaveStatus('error', 'Not saved');
+            if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not saved');
         }
     })
     .catch(function(err) {
-        setGlobalSaveStatus('error', 'Not saved');
+        if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not saved');
     });
 }
 
