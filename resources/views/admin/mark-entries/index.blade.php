@@ -2435,165 +2435,172 @@
         }
     });
 
-    // ========== LIST VIEW (All Students at once) ==========
-    // Using GLOBAL functions with onclick= for maximum reliability
-
-    window.switchToCardMode = function() {
-        var cards = document.getElementById('cardsContainer');
-        var listView = document.getElementById('listViewArea');
-        var btnCard = document.getElementById('btnCardMode');
-        var btnList = document.getElementById('btnListMode');
-        var cn = document.getElementById('carouselNav');
-        var cd = document.getElementById('carouselDots');
-        var cp = document.getElementById('carouselProgress');
-        var kh = document.getElementById('keyboardHint');
-
-        if (cards) cards.style.display = '';
-        if (listView) listView.classList.add('d-none');
-        if (btnCard) { btnCard.classList.add('active'); btnCard.classList.remove('btn-primary'); btnCard.classList.add('btn-outline-primary'); }
-        if (btnList) { btnList.classList.remove('active'); btnList.classList.remove('btn-primary'); btnList.classList.add('btn-outline-primary'); }
-        if (cn) cn.classList.remove('d-none');
-        if (cd) cd.classList.remove('d-none');
-        if (cp) cp.classList.remove('d-none');
-        if (kh) kh.classList.remove('d-none');
+    // ========== EXPOSE KEY VARS GLOBALLY for list view ==========
+    window.me_students = students;
+    window.me_getFieldConfig = function(key) {
+        for (var i = 0; i < ALL_MARK_FIELDS.length; i++) {
+            if (ALL_MARK_FIELDS[i].key === key) return ALL_MARK_FIELDS[i];
+        }
+        return null;
     };
+    window.me_escapeHtml = escapeHtml;
+    window.me_loadStudents = loadStudents;
+    window.me_getCSRF = getGlobalCSRFToken;
+    window.me_updateCSRF = updateCSRFToken;
+    window.me_filterSubject = filterSubject;
+    window.me_filterTerm = filterTerm;
+    window.me_filterClass = filterClass;
+    window.me_filterSection = filterSection;
+    window.me_bulkSaveUrl = '{{ route("admin.mark-entries.api.bulk-save") }}';
 
-    window.switchToListMode = function() {
-        var cards = document.getElementById('cardsContainer');
-        var listView = document.getElementById('listViewArea');
-        var btnCard = document.getElementById('btnCardMode');
-        var btnList = document.getElementById('btnListMode');
-        var cn = document.getElementById('carouselNav');
-        var cd = document.getElementById('carouselDots');
-        var cp = document.getElementById('carouselProgress');
-        var kh = document.getElementById('keyboardHint');
+})();
 
-        if (cards) cards.style.display = 'none';
-        if (listView) listView.classList.remove('d-none');
-        if (btnCard) { btnCard.classList.remove('active'); btnCard.classList.remove('btn-primary'); btnCard.classList.add('btn-outline-primary'); }
-        if (btnList) { btnList.classList.add('active'); btnList.classList.remove('btn-outline-primary'); btnList.classList.add('btn-primary'); }
-        if (cn) cn.classList.add('d-none');
-        if (cd) cd.classList.add('d-none');
-        if (cp) cp.classList.add('d-none');
-        if (kh) kh.classList.add('d-none');
+// ========== LIST VIEW — SEPARATE SCRIPT, CAN'T BE BROKEN BY IIFE ERRORS ==========
 
-        renderListViewTable();
-    };
+function switchToCardMode() {
+    var cards = document.getElementById('cardsContainer');
+    var listView = document.getElementById('listViewArea');
+    if (cards) cards.style.display = '';
+    if (listView) listView.classList.add('d-none');
+    var btnCard = document.getElementById('btnCardMode');
+    var btnList = document.getElementById('btnListMode');
+    if (btnCard) { btnCard.classList.add('active'); btnCard.classList.add('btn-outline-primary'); btnCard.classList.remove('btn-primary'); }
+    if (btnList) { btnList.classList.remove('active'); btnList.classList.add('btn-outline-primary'); btnList.classList.remove('btn-primary'); }
+}
 
-    function renderListViewTable() {
+function switchToListMode() {
+    var cards = document.getElementById('cardsContainer');
+    var listView = document.getElementById('listViewArea');
+    if (cards) cards.style.display = 'none';
+    if (listView) listView.classList.remove('d-none');
+    var btnCard = document.getElementById('btnCardMode');
+    var btnList = document.getElementById('btnListMode');
+    if (btnCard) { btnCard.classList.remove('active'); btnCard.classList.add('btn-outline-primary'); btnCard.classList.remove('btn-primary'); }
+    if (btnList) { btnList.classList.add('active'); btnList.classList.add('btn-primary'); btnList.classList.remove('btn-outline-primary'); }
+    renderListViewTable();
+}
+
+function renderListViewTable() {
+    var body = document.getElementById('listViewBody');
+    var fieldSelect = document.getElementById('listViewFieldSelect');
+    var students = window.me_students || [];
+    if (!body || !fieldSelect || students.length === 0) {
+        if (body) body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#9ca3af;">No students loaded. Go back and load students first.</td></tr>';
+        return;
+    }
+
+    var markKey = fieldSelect.value;
+    var fieldConfig = window.me_getFieldConfig ? window.me_getFieldConfig(markKey) : null;
+    var maxMarks = fieldConfig ? fieldConfig.max : 100;
+
+    var html = '';
+    students.forEach(function(s, idx) {
+        var val = s.marks ? s.marks[markKey] : null;
+        var displayVal = (val !== null && val !== undefined) ? val : '';
+        var grandTotal = s.marks ? s.marks.grand_total : null;
+        var grade = (s.marks && s.marks.grade) ? s.marks.grade : '-';
+
+        html += '<tr>';
+        html += '<td style="color:#9ca3af;font-size:12px;">' + (idx + 1) + '</td>';
+        html += '<td style="font-weight:600;font-size:13px;">' + (window.me_escapeHtml ? window.me_escapeHtml(s.student_name) : s.student_name) + '</td>';
+        html += '<td style="font-size:12px;color:#6b7280;">' + (s.roll_number || '') + '</td>';
+        html += '<td><input type="text" inputmode="decimal" class="form-control form-control-sm lv-mark-input" '
+            + 'data-student-id="' + s.id + '" data-max="' + maxMarks + '" '
+            + 'value="' + displayVal + '" placeholder="/' + maxMarks + '" '
+            + 'style="text-align:center;width:80px;padding:4px 8px;font-weight:600;"></td>';
+        html += '<td style="text-align:center;font-weight:700;color:#7c3aed;font-size:13px;">'
+            + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</td>';
+        html += '<td style="text-align:center;font-size:12px;font-weight:600;">' + grade + '</td>';
+        html += '</tr>';
+    });
+
+    body.innerHTML = html;
+
+    // Max value enforcement
+    var inputs = body.querySelectorAll('.lv-mark-input');
+    for (var i = 0; i < inputs.length; i++) {
+        inputs[i].addEventListener('input', function() {
+            var max = parseFloat(this.getAttribute('data-max'));
+            var val = parseFloat(this.value);
+            if (!isNaN(val) && val > max) {
+                this.value = max;
+                this.style.borderColor = '#ef4444';
+                var self = this;
+                setTimeout(function() { self.style.borderColor = ''; }, 500);
+            }
+        });
+    }
+}
+
+// Field selector change — re-render table
+(function() {
+    var sel = document.getElementById('listViewFieldSelect');
+    if (sel) sel.addEventListener('change', renderListViewTable);
+})();
+
+// Save All button
+(function() {
+    var btn = document.getElementById('listViewSaveBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
         var body = document.getElementById('listViewBody');
         var fieldSelect = document.getElementById('listViewFieldSelect');
-        if (!body || !fieldSelect || students.length === 0) return;
+        var saveStatus = document.getElementById('listViewSaveStatus');
+        if (!body || !fieldSelect) return;
 
         var markKey = fieldSelect.value;
-        var fieldConfig = getFieldConfig(markKey);
-        var maxMarks = fieldConfig ? fieldConfig.max : 100;
-
-        var html = '';
-        students.forEach(function(s, idx) {
-            var val = s.marks[markKey];
-            var displayVal = (val !== null && val !== undefined) ? val : '';
-            var grandTotal = s.marks.grand_total;
-            var grade = s.marks.grade || '-';
-
-            html += '<tr>';
-            html += '<td style="color:#9ca3af;font-size:12px;">' + (idx + 1) + '</td>';
-            html += '<td style="font-weight:600;font-size:13px;">' + escapeHtml(s.student_name) + '</td>';
-            html += '<td style="font-size:12px;color:#6b7280;">' + escapeHtml(s.roll_number || '') + '</td>';
-            html += '<td><input type="text" inputmode="decimal" class="form-control form-control-sm lv-mark-input" '
-                + 'data-student-id="' + s.id + '" data-mark-key="' + markKey + '" data-max="' + maxMarks + '" '
-                + 'value="' + displayVal + '" placeholder="/' + maxMarks + '" '
-                + 'style="text-align:center;width:80px;padding:4px 8px;font-weight:600;"></td>';
-            html += '<td style="text-align:center;font-weight:700;color:#7c3aed;font-size:13px;">'
-                + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</td>';
-            html += '<td style="text-align:center;font-size:12px;font-weight:600;">' + grade + '</td>';
-            html += '</tr>';
-        });
-
-        body.innerHTML = html;
-
-        // Max value enforcement
-        body.querySelectorAll('.lv-mark-input').forEach(function(input) {
-            input.addEventListener('input', function() {
-                var max = parseFloat(this.getAttribute('data-max'));
-                var val = parseFloat(this.value);
-                if (!isNaN(val) && val > max) {
-                    this.value = max;
-                    this.style.borderColor = '#ef4444';
-                    var self = this;
-                    setTimeout(function() { self.style.borderColor = ''; }, 500);
-                }
+        var marks = [];
+        var inputs = body.querySelectorAll('.lv-mark-input');
+        for (var i = 0; i < inputs.length; i++) {
+            marks.push({
+                student_id: inputs[i].getAttribute('data-student-id'),
+                value: inputs[i].value
             });
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        if (saveStatus) { saveStatus.textContent = 'Saving...'; saveStatus.style.color = '#6b7280'; }
+
+        var csrf = window.me_getCSRF ? window.me_getCSRF() : document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        var payload = {
+            _token: csrf,
+            subject_id: window.me_filterSubject ? window.me_filterSubject.value : '',
+            term_id: window.me_filterTerm ? window.me_filterTerm.value : '',
+            class_id: window.me_filterClass ? window.me_filterClass.value : '',
+            section_id: window.me_filterSection ? window.me_filterSection.value : '',
+            mark_key: markKey,
+            marks: marks
+        };
+
+        fetch(window.me_bulkSaveUrl || '/admin/mark-entries/api/bulk-save', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrf,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save All';
+            if (data.success) {
+                if (saveStatus) { saveStatus.textContent = '✓ Saved ' + data.saved + ' students!'; saveStatus.style.color = '#059669'; }
+                if (data.csrf_token && window.me_updateCSRF) window.me_updateCSRF(data.csrf_token);
+                if (window.me_loadStudents) window.me_loadStudents();
+            } else {
+                if (saveStatus) { saveStatus.textContent = '✗ Error: ' + (data.error || 'Unknown'); saveStatus.style.color = '#dc2626'; }
+            }
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save All';
+            if (saveStatus) { saveStatus.textContent = '✗ Network error: ' + err.message; saveStatus.style.color = '#dc2626'; }
         });
-    }
-
-    // Re-render table when field selector changes
-    var listViewFieldSelect = document.getElementById('listViewFieldSelect');
-    if (listViewFieldSelect) {
-        listViewFieldSelect.addEventListener('change', renderListViewTable);
-    }
-
-    // Save all marks button
-    var listViewSaveBtn = document.getElementById('listViewSaveBtn');
-    if (listViewSaveBtn) {
-        listViewSaveBtn.addEventListener('click', function() {
-            var body = document.getElementById('listViewBody');
-            var fieldSelect = document.getElementById('listViewFieldSelect');
-            var saveStatus = document.getElementById('listViewSaveStatus');
-            if (!body || !fieldSelect) return;
-
-            var markKey = fieldSelect.value;
-            var marks = [];
-            body.querySelectorAll('.lv-mark-input').forEach(function(input) {
-                marks.push({
-                    student_id: input.getAttribute('data-student-id'),
-                    value: input.value
-                });
-            });
-
-            listViewSaveBtn.disabled = true;
-            listViewSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-            if (saveStatus) { saveStatus.textContent = ''; saveStatus.style.color = '#6b7280'; }
-
-            var payload = {
-                _token: getGlobalCSRFToken(),
-                subject_id: filterSubject.value,
-                term_id: filterTerm.value,
-                class_id: filterClass.value,
-                section_id: filterSection.value || '',
-                mark_key: markKey,
-                marks: JSON.stringify(marks)
-            };
-
-            fetch('{{ route("admin.mark-entries.api.bulk-save") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': getGlobalCSRFToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                listViewSaveBtn.disabled = false;
-                listViewSaveBtn.innerHTML = '<i class="fas fa-save"></i> Save All';
-                if (data.success) {
-                    if (saveStatus) { saveStatus.textContent = 'Saved ' + data.saved + ' students!'; saveStatus.style.color = '#059669'; }
-                    if (data.csrf_token) updateCSRFToken(data.csrf_token);
-                    loadStudents();
-                } else {
-                    if (saveStatus) { saveStatus.textContent = 'Error: ' + (data.error || 'Unknown'); saveStatus.style.color = '#dc2626'; }
-                }
-            })
-            .catch(function(err) {
-                listViewSaveBtn.disabled = false;
-                listViewSaveBtn.innerHTML = '<i class="fas fa-save"></i> Save All';
-                if (saveStatus) { saveStatus.textContent = 'Error: ' + err.message; saveStatus.style.color = '#dc2626'; }
-            });
-        });
-    }
+    });
 })();
 </script>
 @endpush
