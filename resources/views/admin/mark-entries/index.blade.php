@@ -719,7 +719,6 @@
                 <button type="button" class="btn btn-primary btn-sm" id="listViewSaveBtn" onclick="lvSaveAllManual()">
                     <i class="fas fa-save"></i> Save All
                 </button>
-                <span id="listViewSaveStatus" style="font-size:12px;color:#6b7280;font-weight:500;">Ready</span>
             </div>
 
             {{-- The table --}}
@@ -2514,13 +2513,7 @@ function onLvInputChange(input) {
     }
 
     lvDirtyCount++;
-
-    // Update status
-    var status = document.getElementById('listViewSaveStatus');
-    if (status) {
-        status.textContent = '● ' + lvDirtyCount + ' unsaved change' + (lvDirtyCount > 1 ? 's' : '') + ' — auto-saving soon...';
-        status.style.color = '#f59e0b';
-    }
+    setGlobalSaveStatus('editing', lvDirtyCount + ' unsaved');
 
     // Debounce: save 2 seconds after last change
     if (lvSaveTimer) clearTimeout(lvSaveTimer);
@@ -2530,8 +2523,6 @@ function onLvInputChange(input) {
 function lvSaveAll() {
     var body = document.getElementById('listViewBody');
     var fieldSelect = document.getElementById('listViewFieldSelect');
-    var btn = document.getElementById('listViewSaveBtn');
-    var status = document.getElementById('listViewSaveStatus');
     if (!body || !fieldSelect) return;
 
     var markKey = fieldSelect.value;
@@ -2544,12 +2535,10 @@ function lvSaveAll() {
         });
     }
 
-    if (status) { status.textContent = '⏳ Saving ' + lvDirtyCount + ' marks...'; status.style.color = '#3b82f6'; }
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+    setGlobalSaveStatus('saving', 'Saving...');
 
     var csrf = window.me_getCSRF ? window.me_getCSRF() : (document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
 
-    // Use FormData — Laravel handles this better than JSON for CSRF
     var formData = new FormData();
     formData.append('_token', csrf);
     formData.append('subject_id', window.me_filterSubject ? window.me_filterSubject.value : '');
@@ -2569,33 +2558,32 @@ function lvSaveAll() {
         body: formData
     })
     .then(function(r) {
-        var contentType = r.headers.get('content-type') || '';
-        if (contentType.indexOf('application/json') === -1) {
-            if (r.status === 419) throw new Error('Session expired (419). Refresh page.');
-            if (r.status === 302 || r.status === 401 || r.status === 403) throw new Error('Not authenticated. Log in again.');
-            throw new Error('Server returned ' + r.status + ' (expected JSON)');
+        if (!r.ok) {
+            if (r.status === 419 || r.status === 401 || r.status === 403) {
+                setGlobalSaveStatus('error', 'Session expired');
+                throw new Error('Session expired');
+            }
+            return r.text().then(function(text) {
+                throw new Error('Server error ' + r.status);
+            });
         }
         return r.json();
     })
     .then(function(data) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save All'; }
         if (data.success) {
-            if (status) { status.textContent = '✓ Saved ' + data.saved + ' students at ' + new Date().toLocaleTimeString(); status.style.color = '#059669'; }
+            setGlobalSaveStatus('saved', 'Saved \u2713');
             if (data.csrf_token && window.me_updateCSRF) window.me_updateCSRF(data.csrf_token);
             lvDirtyCount = 0;
-            // Reload students to refresh totals/grades
             if (window.me_loadStudents) window.me_loadStudents();
         } else {
-            if (status) { status.textContent = '✗ Error: ' + (data.error || 'Unknown'); status.style.color = '#dc2626'; }
+            setGlobalSaveStatus('error', 'Not saved');
         }
     })
     .catch(function(err) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save All'; }
-        if (status) { status.textContent = '✗ Network error: ' + err.message; status.style.color = '#dc2626'; }
+        setGlobalSaveStatus('error', 'Not saved');
     });
 }
 
-// Manual Save All button
 function lvSaveAllManual() {
     if (lvSaveTimer) { clearTimeout(lvSaveTimer); lvSaveTimer = null; }
     lvSaveAll();
