@@ -23,18 +23,14 @@ class AdminMiddleware
         $user = $request->user();
 
         if (!$user) {
-            // For AJAX/JSON requests, return 401 instead of redirecting.
-            // This prevents fetch() from silently following the redirect
-            // and failing to detect session expiry.
-            if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            // For AJAX/fetch requests, return 401 JSON instead of redirecting.
+            // fetch() follows redirects, and a 302 redirect from POST to GET /login
+            // causes a 404 because there's no POST route for /login.
+            if ($request->expectsJson() || $request->ajax() ||
+                $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+                $request->header('Accept') === 'application/json') {
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
-            // For non-AJAX requests, redirect to login with the current URL as the intended destination.
-            // Use path() (relative to app root) instead of getRequestUri() (which includes subdirectory)
-            // to avoid the double-path 404 bug where /redemption/admin/... becomes /redemption/redemption/admin/...
-            // getRequestUri() returns "/redemption/admin/..." but redirect()->intended() prepends the
-            // base URL (http://localhost/redemption) again, causing duplication.
-            // path() returns "admin/..." without the subdirectory prefix, which is correct.
             return redirect()->route('login')->withIntended('/' . $request->path());
         }
 
