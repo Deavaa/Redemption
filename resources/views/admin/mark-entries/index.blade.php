@@ -2486,7 +2486,7 @@ function renderListViewTable() {
         html += '<td><input type="text" inputmode="decimal" class="form-control form-control-sm lv-mark-input" '
             + 'data-student-id="' + s.id + '" data-max="' + maxMarks + '" '
             + 'value="' + displayVal + '" placeholder="/' + maxMarks + '" '
-            + 'oninput="onLvInputChange(this)" '
+            + 'oninput="onLvInputChange(this)" onblur="onLvInputBlur(this)" '
             + 'style="text-align:center;width:80px;padding:4px 8px;font-weight:600;"></td>';
         html += '<td style="text-align:center;font-weight:700;color:#7c3aed;font-size:13px;">'
             + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</td>';
@@ -2501,22 +2501,38 @@ function renderListViewTable() {
 var lvSaveTimer = null;
 var lvDirtyCount = 0;
 
-function onLvInputChange(input) {
-    // Max value enforcement
+function enforceMax(input) {
     var max = parseFloat(input.getAttribute('data-max'));
     var val = parseFloat(input.value);
     if (!isNaN(val) && val > max) {
         input.value = max;
         input.style.borderColor = '#ef4444';
-        setTimeout(function() { input.style.borderColor = ''; }, 500);
+        input.style.background = '#fee2e2';
+        setTimeout(function() { input.style.borderColor = ''; input.style.background = ''; }, 800);
+        return true;
     }
+    // Also block negative
+    if (!isNaN(val) && val < 0) {
+        input.value = 0;
+        return true;
+    }
+    return false;
+}
 
+function onLvInputChange(input) {
+    enforceMax(input);
     lvDirtyCount++;
     if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('editing', lvDirtyCount + ' unsaved');
-
-    // Debounce: save 2 seconds after last change
     if (lvSaveTimer) clearTimeout(lvSaveTimer);
-    lvSaveTimer = setTimeout(lvSaveAll, 2000);
+    lvSaveTimer = setTimeout(lvSaveAll, 1500);
+}
+
+function onLvInputBlur(input) {
+    // Enforce max on blur too (catches paste, etc.)
+    enforceMax(input);
+    // Save immediately on blur (don't wait for debounce)
+    if (lvSaveTimer) { clearTimeout(lvSaveTimer); lvSaveTimer = null; }
+    lvSaveAll();
 }
 
 function lvSaveAll() {
@@ -2524,10 +2540,15 @@ function lvSaveAll() {
     var fieldSelect = document.getElementById('listViewFieldSelect');
     if (!body || !fieldSelect) return;
 
+    // Don't save if nothing changed
+    if (lvDirtyCount === 0) return;
+
     var markKey = fieldSelect.value;
     var marks = [];
     var inputs = body.querySelectorAll('.lv-mark-input');
     for (var i = 0; i < inputs.length; i++) {
+        // Enforce max one more time before saving
+        enforceMax(inputs[i]);
         marks.push({
             student_id: inputs[i].getAttribute('data-student-id'),
             value: inputs[i].value
@@ -2573,7 +2594,8 @@ function lvSaveAll() {
             if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('saved', 'Saved \u2713');
             if (data.csrf_token && window.me_updateCSRF) window.me_updateCSRF(data.csrf_token);
             lvDirtyCount = 0;
-            if (window.me_loadStudents) window.me_loadStudents();
+            // Don't reload students — it clears the table and loses focus.
+            // The totals/grades will update next time the user switches fields.
         } else {
             if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not saved');
         }
