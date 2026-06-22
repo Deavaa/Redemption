@@ -2569,15 +2569,16 @@ function lvSaveAll() {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
 
     var csrf = window.me_getCSRF ? window.me_getCSRF() : (document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
-    var payload = {
-        _token: csrf,
-        subject_id: window.me_filterSubject ? window.me_filterSubject.value : '',
-        term_id: window.me_filterTerm ? window.me_filterTerm.value : '',
-        class_id: window.me_filterClass ? window.me_filterClass.value : '',
-        section_id: window.me_filterSection ? window.me_filterSection.value : '',
-        mark_key: markKey,
-        marks: marks
-    };
+
+    // Use FormData — Laravel handles this better than JSON for CSRF
+    var formData = new FormData();
+    formData.append('_token', csrf);
+    formData.append('subject_id', window.me_filterSubject ? window.me_filterSubject.value : '');
+    formData.append('term_id', window.me_filterTerm ? window.me_filterTerm.value : '');
+    formData.append('class_id', window.me_filterClass ? window.me_filterClass.value : '');
+    formData.append('section_id', window.me_filterSection ? window.me_filterSection.value : '');
+    formData.append('mark_key', markKey);
+    formData.append('marks', JSON.stringify(marks));
 
     fetch(window.me_bulkSaveUrl || '/admin/mark-entries/api/bulk-save', {
         method: 'POST',
@@ -2585,11 +2586,18 @@ function lvSaveAll() {
             'X-CSRF-TOKEN': csrf,
             'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json',
-            'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
+        body: formData
     })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+        var contentType = r.headers.get('content-type') || '';
+        if (contentType.indexOf('application/json') === -1) {
+            if (r.status === 419) throw new Error('Session expired (419). Refresh page.');
+            if (r.status === 302 || r.status === 401 || r.status === 403) throw new Error('Not authenticated. Log in again.');
+            throw new Error('Server returned ' + r.status + ' (expected JSON)');
+        }
+        return r.json();
+    })
     .then(function(data) {
         if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save All'; }
         if (data.success) {
