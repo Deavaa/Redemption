@@ -206,10 +206,10 @@ Route::get('/{path}', function ($path = null) {
 })->where('path', '.*')->fallback();
 
 // ── Mark Entry API routes — OUTSIDE admin group to avoid middleware redirect issues ──
-// These routes have their own auth + authorization checks in the controller.
+// Named with 'admin.' prefix so Blade's route() helper finds them.
 Route::middleware(['auth', 'web'])->group(function () {
-    Route::post('admin/mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('mark-entries.api.save');
-    Route::post('admin/mark-entries/api/bulk-save', [MarkEntryController::class, 'apiBulkSave'])->name('mark-entries.api.bulk-save');
+    Route::post('admin/mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('admin.mark-entries.api.save');
+    Route::post('admin/mark-entries/api/bulk-save', [MarkEntryController::class, 'apiBulkSave'])->name('admin.mark-entries.api.bulk-save');
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
