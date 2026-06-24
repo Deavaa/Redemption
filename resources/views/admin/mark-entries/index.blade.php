@@ -80,6 +80,13 @@
 .me-save-badge.editing { background: #eff6ff; color: #2563eb; border: 1px solid #93c5fd; }
 @keyframes meBadgePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
 
+/* ── List view mark color coding (by % of max) ── */
+.lv-mark-red   { background: #fef2f2 !important; color: #dc2626 !important; border-color: #fecaca !important; font-weight: 700 !important; }
+.lv-mark-amber { background: #fffbeb !important; color: #d97706 !important; border-color: #fde68a !important; font-weight: 700 !important; }
+.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important; border-color: #bbf7d0 !important; font-weight: 700 !important; }
+.lv-row-dirty  { background: #fffbeb; }
+.lv-row-dirty:hover { background: #fef3c7 !important; }
+
 /* Empty State */
 .me-empty { text-align: center; padding: 1.5rem 1rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #eee; }
 .me-empty i { font-size: 2rem; color: #d1d5db; margin-bottom: 0.5rem; display: block; }
@@ -690,10 +697,10 @@
 
         {{-- ===== LIST VIEW: All students in a table (hidden by default) ===== --}}
         <div id="listViewArea" class="d-none" style="margin-top:10px;">
-            {{-- Field selector + save button --}}
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;background:#fff;padding:10px 14px;border-radius:8px;border:1px solid #e5e7eb;">
+            {{-- Field selector + legend --}}
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;background:#fff;padding:10px 14px;border-radius:8px;border:1px solid #e5e7eb;">
                 <label style="font-size:13px;font-weight:600;color:#1a1a2e;margin:0;white-space:nowrap;">Enter marks for:</label>
-                <select id="listViewFieldSelect" class="form-select form-select-sm" style="width:auto;min-width:200px;" onchange="renderListViewTable()">
+                <select id="listViewFieldSelect" class="form-select form-select-sm" style="width:auto;min-width:220px;" onchange="lvRenderTable()">
                     <optgroup label="Continuous Assessment">
                         @foreach(\App\Models\MarkEntryConfig::getMarkFields() as $f)
                             @if($f['category'] === 'ca')
@@ -716,7 +723,12 @@
                         @endforeach
                     </optgroup>
                 </select>
-                {{-- Auto-saves — no Save All button needed --}}
+                {{-- Color legend --}}
+                <span style="display:flex;align-items:center;gap:10px;font-size:11px;color:#6b7280;margin-left:auto;">
+                    <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#dc2626;"></span> &lt; 50%</span>
+                    <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d97706;"></span> 50&ndash;69%</span>
+                    <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#059669;"></span> &ge; 70%</span>
+                </span>
             </div>
 
             {{-- The table --}}
@@ -727,8 +739,8 @@
                             <th style="width:40px;">#</th>
                             <th>Student Name</th>
                             <th>Roll #</th>
-                            <th style="width:120px;">Marks</th>
-                            <th style="width:80px;">Total</th>
+                            <th style="width:140px;">Marks</th>
+                            <th style="width:90px;">Total</th>
                             <th style="width:60px;">Grade</th>
                         </tr>
                     </thead>
@@ -2435,342 +2447,317 @@
 
 })();
 
-// ========== LIST VIEW — SELF-CONTAINED (no dependency on IIFE globals) ==========
-// All DOM lookups happen INSIDE each function call so nothing can go stale.
-// All status updates go through setLvStatus() which queries the badge fresh.
+// ============================================================================
+// LIST VIEW — CLEAN REBUILD (v3)
+// ============================================================================
+// Self-contained. No dependency on the IIFE above. Every function queries
+// the DOM fresh. Uses the proven per-student apiSave endpoint for each dirty
+// student. Color-codes marks by percentage: red <50%, amber 50-69%, green >=70%.
+// ============================================================================
 
-// Hardcoded route URL printed by Blade — never depends on window.me_bulkSaveUrl
-var LV_BULK_SAVE_URL = '{{ route("admin.mark-entries.api.bulk-save") }}';
-var LV_SAVE_URL      = '{{ route("admin.mark-entries.api.save") }}';
+// Route URL printed by Blade at render time — never changes
+var LV_API_SAVE = '{{ route("admin.mark-entries.api.save") }}';
 
-// ── Status badge helper — queries the badge fresh each time ──
-function setLvStatus(state, text) {
+// Track dirty students: { studentId: true }
+var lvDirty = {};
+var lvSaveTimer = null;
+var lvSaveInFlight = false;
+
+// ── Status badge: queries #globalSaveStatus fresh each call ──
+function lvSetStatus(state, text) {
     var badge = document.getElementById('globalSaveStatus');
-    if (!badge) { console.warn('[LV] globalSaveStatus badge not found'); return; }
+    if (!badge) return;
     var icons = {
         saving:  '<i class="fas fa-spinner fa-spin"></i>',
         saved:   '<i class="fas fa-check-circle"></i>',
         error:   '<i class="fas fa-exclamation-circle"></i>',
-        idle:    '<i class="fas fa-check-circle"></i>',
-        editing: '<i class="fas fa-pen"></i>'
+        editing: '<i class="fas fa-pen"></i>',
+        idle:    '<i class="fas fa-check-circle"></i>'
     };
     badge.className = 'me-save-badge ' + state;
     badge.innerHTML = (icons[state] || '') + ' ' + text;
-    console.log('[LV] status:', state, '|', text);
 }
 
-// ── Read filter values directly from the DOM ──
-function lvGetFilterValues() {
-    var ayId      = (document.getElementById('filterAy')      || {}).value || '';
-    var termId    = (document.getElementById('filterTerm')    || {}).value || '';
-    var classId   = (document.getElementById('filterClass')   || {}).value || '';
-    var sectionId = (document.getElementById('filterSection') || {}).value || '';
-    var subjectId = (document.getElementById('filterSubject') || {}).value || '';
-    return { ayId: ayId, termId: termId, classId: classId, sectionId: sectionId, subjectId: subjectId };
-}
-
-// ── Read CSRF token directly from the meta tag ──
+// ── Get CSRF token from meta tag ──
 function lvGetCSRF() {
     var meta = document.querySelector('meta[name="csrf-token"]');
-    if (!meta || !meta.getAttribute('content')) {
-        console.error('[LV] CSRF meta tag missing or empty');
-        return '';
-    }
-    return meta.getAttribute('content');
+    return meta ? meta.getAttribute('content') : '';
 }
 
-// ── Get list of students from window.me_students (set by IIFE after load) ──
+// ── Get filter values from DOM ──
+function lvGetFilters() {
+    var g = function(id) { var el = document.getElementById(id); return el ? el.value : ''; };
+    return {
+        ayId:      g('filterAy'),
+        termId:    g('filterTerm'),
+        classId:   g('filterClass'),
+        sectionId: g('filterSection'),
+        subjectId: g('filterSubject')
+    };
+}
+
+// ── Get students (set by IIFE after load-students API call) ──
 function lvGetStudents() {
-    if (window.me_students && Array.isArray(window.me_students) && window.me_students.length > 0) {
-        return window.me_students;
-    }
-    return [];
+    return (window.me_students && Array.isArray(window.me_students)) ? window.me_students : [];
 }
 
-// ── Get field config from window.me_getFieldConfig (set by IIFE) ──
-function lvGetFieldConfig(markKey) {
+// ── Get field config (max marks) for a mark key ──
+function lvGetMaxFor(key) {
     if (typeof window.me_getFieldConfig === 'function') {
-        return window.me_getFieldConfig(markKey);
+        var cfg = window.me_getFieldConfig(key);
+        if (cfg && cfg.max) return parseFloat(cfg.max);
     }
-    return null;
+    return 100;
 }
 
-// ── Escape HTML — local copy so we don't depend on window.me_escapeHtml ──
-function lvEscapeHtml(text) {
-    if (typeof window.me_escapeHtml === 'function') return window.me_escapeHtml(text);
-    if (text === null || text === undefined) return '';
-    return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+// ── Escape HTML ──
+function lvEsc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Color class based on percentage of max ──
+function lvColorClass(value, max) {
+    if (value === '' || value === null || value === undefined) return '';
+    var v = parseFloat(value);
+    if (isNaN(v) || max <= 0) return '';
+    var pct = (v / max) * 100;
+    if (pct < 50)  return 'lv-mark-red';
+    if (pct < 70)  return 'lv-mark-amber';
+    return 'lv-mark-green';
+}
+
+// ── Switch to Card view ──
 function switchToCardMode() {
     var cards = document.getElementById('cardsContainer');
-    var listView = document.getElementById('listViewArea');
+    var lv = document.getElementById('listViewArea');
     if (cards) cards.style.display = '';
-    if (listView) listView.classList.add('d-none');
-    var btnCard = document.getElementById('btnCardMode');
-    var btnList = document.getElementById('btnListMode');
-    if (btnCard) { btnCard.classList.add('active'); btnCard.classList.add('btn-outline-primary'); btnCard.classList.remove('btn-primary'); }
-    if (btnList) { btnList.classList.remove('active'); btnList.classList.add('btn-outline-primary'); btnList.classList.remove('btn-primary'); }
+    if (lv) lv.classList.add('d-none');
+    var bc = document.getElementById('btnCardMode');
+    var bl = document.getElementById('btnListMode');
+    if (bc) { bc.classList.add('active','btn-outline-primary'); bc.classList.remove('btn-primary'); }
+    if (bl) { bl.classList.remove('active'); bl.classList.add('btn-outline-primary'); bl.classList.remove('btn-primary'); }
 }
 
+// ── Switch to List view ──
 function switchToListMode() {
-    console.log('[LV] switchToListMode called');
     var cards = document.getElementById('cardsContainer');
-    var listView = document.getElementById('listViewArea');
+    var lv = document.getElementById('listViewArea');
     if (cards) cards.style.display = 'none';
-    if (listView) listView.classList.remove('d-none');
-    var btnCard = document.getElementById('btnCardMode');
-    var btnList = document.getElementById('btnListMode');
-    if (btnCard) { btnCard.classList.remove('active'); btnCard.classList.add('btn-outline-primary'); btnCard.classList.remove('btn-primary'); }
-    if (btnList) { btnList.classList.add('active'); btnList.classList.add('btn-primary'); btnList.classList.remove('btn-outline-primary'); }
-    renderListViewTable();
+    if (lv) lv.classList.remove('d-none');
+    var bc = document.getElementById('btnCardMode');
+    var bl = document.getElementById('btnListMode');
+    if (bc) { bc.classList.remove('active'); bc.classList.add('btn-outline-primary'); bc.classList.remove('btn-primary'); }
+    if (bl) { bl.classList.add('active','btn-primary'); bl.classList.remove('btn-outline-primary'); }
+    lvRenderTable();
 }
 
-function renderListViewTable() {
-    console.log('[LV] renderListViewTable called');
+// ── Render the table body ──
+function lvRenderTable() {
     var body = document.getElementById('listViewBody');
     var fieldSelect = document.getElementById('listViewFieldSelect');
+    if (!body || !fieldSelect) return;
+
     var students = lvGetStudents();
-    console.log('[LV] students count:', students.length);
-    if (!body || !fieldSelect) {
-        console.error('[LV] listViewBody or listViewFieldSelect not found', { body: body, fieldSelect: fieldSelect });
-        return;
-    }
     if (students.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#9ca3af;">No students loaded. Go back to Card mode and load students first.</td></tr>';
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#9ca3af;">No students loaded. Go back to Card mode and load students first.</td></tr>';
         return;
     }
 
     var markKey = fieldSelect.value;
-    var fieldConfig = lvGetFieldConfig(markKey);
-    var maxMarks = fieldConfig ? fieldConfig.max : 100;
-    console.log('[LV] rendering for markKey:', markKey, '| max:', maxMarks);
+    var maxMarks = lvGetMaxFor(markKey);
 
     var html = '';
-    students.forEach(function(s, idx) {
-        var val = s.marks ? s.marks[markKey] : null;
-        var displayVal = (val !== null && val !== undefined) ? val : '';
-        var grandTotal = s.marks ? s.marks.grand_total : null;
+    for (var i = 0; i < students.length; i++) {
+        var s = students[i];
+        var val = (s.marks && s.marks[markKey] !== undefined && s.marks[markKey] !== null) ? s.marks[markKey] : '';
+        var grandTotal = (s.marks && s.marks.grand_total !== undefined && s.marks.grand_total !== null) ? parseFloat(s.marks.grand_total).toFixed(1) : '-';
         var grade = (s.marks && s.marks.grade) ? s.marks.grade : '-';
+        var colorCls = lvColorClass(val, maxMarks);
 
-        html += '<tr>';
-        html += '<td style="color:#9ca3af;font-size:12px;">' + (idx + 1) + '</td>';
-        html += '<td style="font-weight:600;font-size:13px;">' + lvEscapeHtml(s.student_name) + '</td>';
-        html += '<td style="font-size:12px;color:#6b7280;">' + (s.roll_number || '') + '</td>';
-        html += '<td><input type="text" inputmode="decimal" class="form-control form-control-sm lv-mark-input" '
-            + 'data-student-id="' + s.id + '" data-max="' + maxMarks + '" '
-            + 'value="' + displayVal + '" placeholder="/' + maxMarks + '" '
-            + 'oninput="onLvInputChange(this)" onblur="onLvInputBlur(this)" '
-            + 'style="text-align:center;width:80px;padding:4px 8px;font-weight:600;"></td>';
-        html += '<td style="text-align:center;font-weight:700;color:#7c3aed;font-size:13px;">'
-            + (grandTotal !== null && grandTotal !== undefined ? parseFloat(grandTotal).toFixed(1) : '-') + '</td>';
-        html += '<td style="text-align:center;font-size:12px;font-weight:600;">' + grade + '</td>';
+        // Mark the row as dirty if this student is in lvDirty
+        var rowCls = lvDirty[s.id] ? 'lv-row-dirty' : '';
+
+        html += '<tr class="' + rowCls + '">';
+        html += '<td style="color:#9ca3af;font-size:12px;">' + (i + 1) + '</td>';
+        html += '<td style="font-weight:600;font-size:13px;">' + lvEsc(s.student_name) + '</td>';
+        html += '<td style="font-size:12px;color:#6b7280;">' + lvEsc(s.roll_number || '') + '</td>';
+        html += '<td><input type="text" inputmode="decimal" class="form-control form-control-sm lv-input ' + colorCls + '" '
+              + 'data-sid="' + s.id + '" data-max="' + maxMarks + '" '
+              + 'value="' + lvEsc(val) + '" placeholder="/' + maxMarks + '" '
+              + 'oninput="lvOnInput(this)" onblur="lvOnBlur(this)" '
+              + 'style="text-align:center;width:90px;padding:4px 8px;font-weight:600;"></td>';
+        html += '<td class="' + lvColorClass(grandTotal === '-' ? '' : grandTotal, 100) + '" style="text-align:center;font-weight:700;font-size:13px;">' + grandTotal + '</td>';
+        html += '<td style="text-align:center;font-size:12px;font-weight:600;">' + lvEsc(grade) + '</td>';
         html += '</tr>';
-    });
-
+    }
     body.innerHTML = html;
-    console.log('[LV] table rendered with', students.length, 'rows');
 }
 
-// ── Auto-save with debounce ──────────────────────────────
-var lvSaveTimer = null;
-var lvDirtyStudents = {};  // map: student_id → { value: current value, markKey: mark key }
-var lvSaveInFlight = false;
-
+// ── Enforce max value on input ──
 function lvEnforceMax(input) {
     var max = parseFloat(input.getAttribute('data-max'));
-    var val = parseFloat(input.value);
-    if (!isNaN(val) && val > max) {
+    var v = parseFloat(input.value);
+    if (isNaN(max)) return;
+    if (!isNaN(v) && v > max) {
         input.value = max;
         input.style.borderColor = '#ef4444';
-        input.style.background = '#fee2e2';
-        setTimeout(function() { input.style.borderColor = ''; input.style.background = ''; }, 800);
-        return true;
+        setTimeout(function() { input.style.borderColor = ''; }, 800);
     }
-    if (!isNaN(val) && val < 0) {
+    if (!isNaN(v) && v < 0) {
         input.value = 0;
-        return true;
     }
-    return false;
 }
 
-function onLvInputChange(input) {
-    var sid = input.getAttribute('data-student-id');
-    console.log('[LV] onLvInputChange sid=' + sid + ' value=' + input.value);
+// ── Update color class on an input after value change ──
+function lvUpdateColor(input) {
+    var max = parseFloat(input.getAttribute('data-max'));
+    var v = parseFloat(input.value);
+    input.classList.remove('lv-mark-red','lv-mark-amber','lv-mark-green');
+    var cls = lvColorClass(isNaN(v) ? '' : v, max);
+    if (cls) input.classList.add(cls);
+}
+
+// ── oninput handler ──
+function lvOnInput(input) {
     lvEnforceMax(input);
-    lvDirtyStudents[sid] = { value: input.value };
-    var dirtyCount = Object.keys(lvDirtyStudents).length;
-    setLvStatus('editing', dirtyCount + ' unsaved');
+    lvUpdateColor(input);
+    var sid = input.getAttribute('data-sid');
+    lvDirty[sid] = true;
+    var n = Object.keys(lvDirty).length;
+    lvSetStatus('editing', n + ' unsaved');
     if (lvSaveTimer) clearTimeout(lvSaveTimer);
     lvSaveTimer = setTimeout(lvSaveAll, 1500);
 }
 
-function onLvInputBlur(input) {
-    var sid = input.getAttribute('data-student-id');
-    console.log('[LV] onLvInputBlur sid=' + sid + ' value=' + input.value);
+// ── onblur handler ──
+function lvOnBlur(input) {
     lvEnforceMax(input);
+    lvUpdateColor(input);
     if (lvSaveTimer) { clearTimeout(lvSaveTimer); lvSaveTimer = null; }
     lvSaveAll();
 }
 
-// ── Save each dirty student using the PROVEN per-student apiSave endpoint ──
-// This is the SAME endpoint used by the per-student card view, so it benefits
-// from the same authorization, validation, lock checks, and totals recalculation.
-// We send individual requests in parallel and aggregate the results.
+// ── Save all dirty students (uses proven per-student apiSave endpoint) ──
 function lvSaveAll() {
-    var dirtyIds = Object.keys(lvDirtyStudents);
-    console.log('[LV] lvSaveAll called. dirtyIds=' + dirtyIds.length + ', saveInFlight=' + lvSaveInFlight);
-
-    if (dirtyIds.length === 0) {
-        console.log('[LV] save skipped — nothing dirty');
-        return;
-    }
+    var dirtyIds = Object.keys(lvDirty);
+    if (dirtyIds.length === 0) return;
 
     if (lvSaveInFlight) {
-        console.log('[LV] save already in flight — will retry in 500ms');
         if (lvSaveTimer) clearTimeout(lvSaveTimer);
         lvSaveTimer = setTimeout(lvSaveAll, 500);
         return;
     }
 
     var fieldSelect = document.getElementById('listViewFieldSelect');
-    if (!fieldSelect) {
-        console.error('[LV] fieldSelect not found');
-        return;
-    }
+    if (!fieldSelect) return;
     var markKey = fieldSelect.value;
 
     var csrf = lvGetCSRF();
-    var filters = lvGetFilterValues();
+    var f = lvGetFilters();
 
-    if (!csrf) {
-        console.error('[LV] save aborted — CSRF token missing');
-        setLvStatus('error', 'Not Saved');
-        return;
-    }
-    if (!filters.ayId || !filters.subjectId || !filters.termId || !filters.classId || !filters.sectionId) {
-        console.error('[LV] save aborted — missing filter values', filters);
-        setLvStatus('error', 'Not Saved');
+    if (!csrf || !f.ayId || !f.termId || !f.classId || !f.sectionId || !f.subjectId) {
+        lvSetStatus('error', 'Not Saved');
         return;
     }
 
-    setLvStatus('saving', 'Saving...');
+    // Snapshot the current values from the DOM (not from lvDirty — that only has IDs)
+    var toSave = [];
+    var inputs = document.querySelectorAll('.lv-input');
+    for (var i = 0; i < inputs.length; i++) {
+        var sid = inputs[i].getAttribute('data-sid');
+        if (lvDirty[sid]) {
+            toSave.push({ sid: sid, value: inputs[i].value, input: inputs[i] });
+        }
+    }
+
+    if (toSave.length === 0) {
+        lvDirty = {};
+        return;
+    }
+
+    lvSetStatus('saving', 'Saving...');
     lvSaveInFlight = true;
 
-    // Build a snapshot of what we're saving (so changes during save don't corrupt state)
-    var snapshot = {};
-    dirtyIds.forEach(function(sid) {
-        snapshot[sid] = lvDirtyStudents[sid].value;
-    });
-
-    console.log('[LV] POSTing ' + dirtyIds.length + ' individual saves to ' + LV_SAVE_URL);
-
     // Send one apiSave request per dirty student, in parallel
-    var promises = dirtyIds.map(function(sid) {
-        var value = snapshot[sid];
+    var promises = toSave.map(function(item) {
+        var fd = new FormData();
+        fd.append('_token', csrf);
+        fd.append('student_id', item.sid);
+        fd.append('academic_year_id', f.ayId);
+        fd.append('term_id', f.termId);
+        fd.append('class_id', f.classId);
+        fd.append('section_id', f.sectionId);
+        fd.append('subject_id', f.subjectId);
+        fd.append('mark_key', markKey);
+        fd.append('mark_value', item.value === null || item.value === undefined ? '' : item.value);
 
-        var formData = new FormData();
-        formData.append('_token', csrf);
-        formData.append('student_id', sid);
-        formData.append('academic_year_id', filters.ayId);
-        formData.append('term_id', filters.termId);
-        formData.append('class_id', filters.classId);
-        formData.append('section_id', filters.sectionId);
-        formData.append('subject_id', filters.subjectId);
-        formData.append('mark_key', markKey);
-        formData.append('mark_value', value === null || value === undefined ? '' : value);
-
-        return fetch(LV_SAVE_URL, {
+        return fetch(LV_API_SAVE, {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
                 'X-CSRF-TOKEN': csrf,
                 'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
+                'Accept': 'application/json'
             },
-            body: formData
+            body: fd
         })
         .then(function(r) {
-            console.log('[LV] sid=' + sid + ' response: ' + r.status + ' ok=' + r.ok + ' redirected=' + r.redirected);
             if (!r.ok) {
-                return r.text().then(function(text) {
-                    console.error('[LV] sid=' + sid + ' HTTP ' + r.status + ' body:', text.substring(0, 300));
-                    throw new Error('HTTP ' + r.status);
+                return r.text().then(function(t) {
+                    throw new Error('HTTP ' + r.status + ': ' + t.substring(0, 200));
                 });
             }
-            if (r.redirected) {
-                throw new Error('redirected (session expired)');
-            }
+            if (r.redirected) throw new Error('redirected');
             return r.json();
         })
         .then(function(data) {
-            console.log('[LV] sid=' + sid + ' JSON:', data);
-            if (!data.success) {
-                throw new Error(data.error || 'success=false');
-            }
-            // Update CSRF token if server sent a fresh one
+            if (!data.success) throw new Error(data.error || 'success=false');
+            // Refresh CSRF token
             if (data.csrf_token) {
-                csrf = data.csrf_token;  // use fresh token for subsequent requests in this batch
+                csrf = data.csrf_token;
                 var meta = document.querySelector('meta[name="csrf-token"]');
                 if (meta) meta.setAttribute('content', data.csrf_token);
             }
-            // Update local students cache with the response (server may have rounded)
+            // Update local students cache
             var students = lvGetStudents();
             for (var j = 0; j < students.length; j++) {
-                if (String(students[j].id) === String(sid)) {
+                if (String(students[j].id) === String(item.sid)) {
                     if (!students[j].marks) students[j].marks = {};
-                    if (data.entry && data.entry[markKey] !== undefined) {
-                        students[j].marks[markKey] = data.entry[markKey];
-                    } else {
-                        students[j].marks[markKey] = value === '' ? null : parseFloat(value);
-                    }
-                    // Update totals/grade from server response
+                    students[j].marks[markKey] = (item.value === '' || item.value === null) ? null : parseFloat(item.value);
                     if (data.grand_total !== undefined) students[j].marks.grand_total = data.grand_total;
-                    if (data.grade !== undefined) students[j].marks.grade = data.grade;
+                    if (data.grade !== undefined)      students[j].marks.grade = data.grade;
                     break;
                 }
             }
-            return { sid: sid, success: true };
+            return { sid: item.sid, ok: true };
         })
-        .catch(function(err) {
-            console.error('[LV] sid=' + sid + ' failed:', err.message);
-            return { sid: sid, success: false, error: err.message };
+        .then(undefined, function(err) {
+            // Convert rejection to a resolved {ok:false} so Promise.all doesn't short-circuit
+            return { sid: item.sid, ok: false, error: err.message };
         });
     });
 
     Promise.all(promises).then(function(results) {
         lvSaveInFlight = false;
-        var succeeded = results.filter(function(r) { return r.success; });
-        var failed = results.filter(function(r) { return !r.success; });
-
-        console.log('[LV] batch complete: ' + succeeded.length + ' succeeded, ' + failed.length + ' failed');
-
-        // Clear dirty flag for succeeded students
-        succeeded.forEach(function(r) { delete lvDirtyStudents[r.sid]; });
-
-        if (failed.length === 0) {
-            setLvStatus('saved', 'Saved \u2713');
-            // Refresh the table to show updated totals/grades
-            renderListViewTable();
-        } else if (succeeded.length === 0) {
-            setLvStatus('error', 'Not Saved');
+        var ok = 0, fail = 0;
+        for (var i = 0; i < results.length; i++) {
+            if (results[i].ok) {
+                ok++;
+                delete lvDirty[results[i].sid];
+            } else {
+                fail++;
+            }
+        }
+        if (fail === 0) {
+            lvSetStatus('saved', 'Saved \u2713');
+            lvRenderTable();  // re-render to show updated totals + colors
         } else {
-            // Partial failure
-            setLvStatus('error', 'Not Saved');
+            lvSetStatus('error', 'Not Saved');
         }
     });
 }
 
-function lvSaveAllManual() {
-    if (lvSaveTimer) { clearTimeout(lvSaveTimer); lvSaveTimer = null; }
-    lvSaveAll();
-}
-
-console.log('[LV] list-view script loaded. SAVE_URL=', LV_SAVE_URL);
+console.log('[LV] list-view v3 loaded. API_SAVE=' + LV_API_SAVE);
 </script>
 @endpush
