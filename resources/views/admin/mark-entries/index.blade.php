@@ -1629,10 +1629,12 @@
                         clearLocalStorageBackup();
                     }
                     renderAllCards();
+                    // CRITICAL: Update the global reference so the list view can see the students
+                    // This MUST come before showMarkEntry()/updateInputLockState() in case
+                    // those functions throw — the list view still needs access to the students.
+                    window.me_students = students;
                     showMarkEntry();
                     updateInputLockState();
-                    // CRITICAL: Update the global reference so the list view can see the students
-                    window.me_students = students;
                 } else {
                     showNoStudents();
                 }
@@ -2427,6 +2429,12 @@
 
     // ========== EXPOSE KEY VARS GLOBALLY for list view ==========
     window.me_students = students;
+    // Getter that always returns the CURRENT students array (not a stale reference)
+    // This is critical because `students = responseStudents.map(...)` reassigns
+    // the local variable, breaking the reference held by window.me_students set
+    // at IIFE init time. The loadStudents() success handler re-sets
+    // window.me_students, but this getter is a belt-and-suspenders safety net.
+    window.me_getStudents = function() { return students; };
     window.me_getFieldConfig = function(key) {
         for (var i = 0; i < ALL_MARK_FIELDS.length; i++) {
             if (ALL_MARK_FIELDS[i].key === key) return ALL_MARK_FIELDS[i];
@@ -2446,7 +2454,10 @@
     window.me_setGlobalSaveStatus = setGlobalSaveStatus;
 
 })();
+</script>
 
+{{-- ===== LIST VIEW SCRIPT — SEPARATE <script> TAG so IIFE errors don't break it ===== --}}
+<script>
 // ============================================================================
 // LIST VIEW — CLEAN REBUILD (v3)
 // ============================================================================
@@ -2496,9 +2507,63 @@ function lvGetFilters() {
     };
 }
 
-// ── Get students (set by IIFE after load-students API call) ──
+// ── Get students — try multiple sources, fall back to scraping the card DOM ──
 function lvGetStudents() {
-    return (window.me_students && Array.isArray(window.me_students)) ? window.me_students : [];
+    // Source 1: the getter function (closure over the IIFE's students variable)
+    if (typeof window.me_getStudents === 'function') {
+        try {
+            var s = window.me_getStudents();
+            if (s && Array.isArray(s) && s.length > 0) return s;
+        } catch(e) { console.warn('[LV] me_getStudents threw:', e); }
+    }
+    // Source 2: the static reference (set after loadStudents)
+    if (window.me_students && Array.isArray(window.me_students) && window.me_students.length > 0) {
+        return window.me_students;
+    }
+    // Source 3: scrape the card view DOM for student IDs and names
+    // This is a FALLBACK for when the IIFE failed to expose globals
+    var scraped = [];
+    try {
+        var cards = document.querySelectorAll('.me-student-card');
+        if (cards.length > 0) {
+            cards.forEach(function(card) {
+                var nameEl = card.querySelector('.me-sc-name');
+                var id = null;
+                // Try data-student-id on card itself
+                id = card.getAttribute('data-student-id');
+                // Try .mark-input[data-student-id] inside card
+                if (!id) {
+                    var inp = card.querySelector('[data-student-id]');
+                    if (inp) id = inp.getAttribute('data-student-id');
+                }
+                // Try parsing id="card_<id>"
+                if (!id && card.id && card.id.indexOf('card_') === 0) {
+                    id = card.id.substring(5);
+                }
+                if (id) {
+                    // Also scrape existing marks from the card's inputs
+                    var marks = {};
+                    var markInputs = card.querySelectorAll('[data-mark-key]');
+                    for (var mi = 0; mi < markInputs.length; mi++) {
+                        var mk = markInputs[mi].getAttribute('data-mark-key');
+                        var mv = markInputs[mi].value;
+                        if (mk) marks[mk] = (mv === '' || mv === undefined) ? null : parseFloat(mv);
+                    }
+                    scraped.push({
+                        id: id,
+                        student_name: nameEl ? nameEl.textContent.trim() : 'Student ' + id,
+                        roll_number: '',
+                        marks: marks
+                    });
+                }
+            });
+        }
+    } catch(e) { console.warn('[LV] DOM scrape failed:', e); }
+    if (scraped.length > 0) {
+        console.log('[LV] scraped ' + scraped.length + ' students from card DOM (fallback)');
+        return scraped;
+    }
+    return [];
 }
 
 // ── Get field config (max marks) for a mark key ──
@@ -2541,6 +2606,7 @@ function switchToCardMode() {
 
 // ── Switch to List view ──
 function switchToListMode() {
+    console.log('[LV] switchToListMode called');
     var cards = document.getElementById('cardsContainer');
     var lv = document.getElementById('listViewArea');
     if (cards) cards.style.display = 'none';
@@ -2556,9 +2622,13 @@ function switchToListMode() {
 function lvRenderTable() {
     var body = document.getElementById('listViewBody');
     var fieldSelect = document.getElementById('listViewFieldSelect');
-    if (!body || !fieldSelect) return;
+    if (!body || !fieldSelect) {
+        console.error('[LV] renderTable: body or fieldSelect missing', { body: !!body, fieldSelect: !!fieldSelect });
+        return;
+    }
 
     var students = lvGetStudents();
+    console.log('[LV] renderTable: students=' + students.length + ', markKey=' + fieldSelect.value);
     if (students.length === 0) {
         body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#9ca3af;">No students loaded. Go back to Card mode and load students first.</td></tr>';
         return;
