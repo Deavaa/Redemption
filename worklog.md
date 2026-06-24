@@ -1796,3 +1796,72 @@ Stage Summary:
 - FIX 3: DOM-scrape fallback — list view can read students from card HTML
 - User should now see the student list when clicking "All Students"
 - Console logs will show: [LV] switchToListMode called → [LV] renderTable: students=N
+
+---
+Task ID: 15
+Agent: main (Super Z)
+Task: Mark limit not enforced + add color coding to Total/Grade columns
+
+Work Log:
+- User reported: "the mark limit is not working it saves what ever mark i gave
+  it for each student on full mark sheet"
+- User also requested: "if the student total or average result should have
+  coloring according to condition for example if it is under 50 it should be red"
+
+ISSUE 1: MARK LIMIT NOT ENFORCED
+- Root cause: client-side lvEnforceMax was the ONLY enforcement. The server
+  (MarkEntryController::apiSave) accepted ANY value for mark_value and stored
+  it directly. If the client JS failed to load, was bypassed, or had a bug,
+  over-limit values would be saved.
+- Fix: added SERVER-SIDE max enforcement in apiSave():
+  - For single-field saves (mark_key + mark_value): looks up the field config
+    from MarkEntryConfig::getMarkFields(), finds the matching field, clamps
+    the value to [0, max]
+  - For full saves (all mark fields): same clamping applied per field
+  - This is a BELT-AND-SUSPENDERS approach: client enforces for UX, server
+    enforces for data integrity
+- Also strengthened client-side lvEnforceMax:
+  - Now clears non-numeric input (was leaving 'abc' in the field)
+  - Red flash + background on clamp (1 second visual feedback)
+  - Returns early on empty value (don't process empty input)
+
+ISSUE 2: COLOR CODING FOR TOTAL AND GRADE
+- Previously only the Marks input column was color-coded
+- User wants Total (grand_total) and Grade columns also color-coded
+- Fix: added color coding to both columns in lvRenderTable():
+  - Total column: color based on grand_total / 100 (grand_total is scaled
+    to ca_weight + exam_weight = 100)
+    * Red   background + text for < 50%
+    * Amber background + text for 50-69%
+    * Green background + text for >= 70%
+  - Grade column: color based on grade letter
+    * Red   for F, E (failing grades)
+    * Amber for D, C (below-average grades)
+    * Green for B, A (above-average grades)
+  - Added separate CSS rules:
+    * td.lv-mark-*     — for table cells (softer background, bold colored text)
+    * input.lv-mark-*  — for input elements (tinted background, colored border)
+  - Table re-renders after each successful save (lvRenderTable() call in
+    the Promise.all success handler) to update colors based on the server's
+    recalculated grand_total and grade
+
+Key files changed:
+- app/Http/Controllers/Admin/MarkEntryController.php
+  - Added server-side max enforcement in apiSave() for both single-field
+    and full saves
+- resources/views/admin/mark-entries/index.blade.php
+  - Strengthened lvEnforceMax (clears non-numeric, red flash on clamp)
+  - Added color coding to Total and Grade columns in lvRenderTable()
+  - Added CSS rules for td.lv-mark-* and input.lv-mark-*
+- public/sw.js: bumped CACHE_NAME v9 → v10
+
+- Committed and pushed to GitHub as commit ff0d91b
+
+Stage Summary:
+- Mark limits now enforced BOTH client-side (UX) and server-side (data integrity)
+- Over-limit values are clamped to max on the server, so even bypassed clients
+  can't store invalid data
+- Total column color-coded: red <50%, amber 50-69%, green >=70%
+- Grade column color-coded: F/E red, D/C amber, B/A green
+- Marks input column color-coded (from previous commit)
+- All three columns update colors in real-time after each save
