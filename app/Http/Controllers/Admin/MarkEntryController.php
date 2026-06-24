@@ -732,12 +732,47 @@ class MarkEntryController extends Controller
         if ($request->filled('mark_key') && $request->has('mark_value')) {
             $markKey = $request->mark_key;
             $markValue = $request->mark_value;
+
+            // ── SERVER-SIDE MAX ENFORCEMENT ──
+            // The client-side enforceMax() is the first line of defense, but
+            // we ALSO enforce on the server so that bypassed/old clients can't
+            // store over-limit values. Find the field config and clamp.
+            if ($markValue !== '' && $markValue !== null) {
+                $fieldConfig = null;
+                foreach (MarkEntryConfig::getMarkFields() as $f) {
+                    if ($f['col'] === $markKey) { $fieldConfig = $f; break; }
+                }
+                if ($fieldConfig) {
+                    $max = floatval($fieldConfig['max']);
+                    $v = floatval($markValue);
+                    if ($max > 0 && $v > $max) {
+                        $markValue = $max;
+                    }
+                    if ($v < 0) {
+                        $markValue = 0;
+                    }
+                }
+            }
             $data[$markKey] = ($markValue === '' || $markValue === null) ? null : $markValue;
         } else {
             // Full save — copy all mark fields from request
             foreach ($markFieldNames as $f) {
                 if ($request->has($f)) {
                     $val = $request->input($f);
+
+                    // ── SERVER-SIDE MAX ENFORCEMENT for full saves too ──
+                    if ($val !== '' && $val !== null) {
+                        $fieldConfig = null;
+                        foreach (MarkEntryConfig::getMarkFields() as $fc) {
+                            if ($fc['col'] === $f) { $fieldConfig = $fc; break; }
+                        }
+                        if ($fieldConfig) {
+                            $max = floatval($fieldConfig['max']);
+                            $v = floatval($val);
+                            if ($max > 0 && $v > $max) $val = $max;
+                            if ($v < 0) $val = 0;
+                        }
+                    }
                     $data[$f] = ($val === '' || $val === null) ? null : $val;
                 }
             }

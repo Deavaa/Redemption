@@ -17,7 +17,7 @@
 //      fix would still run the old broken JS.
 // ============================================================================
 
-const CACHE_NAME = 'redemption-v9';
+const CACHE_NAME = 'redemption-v10';
 const STATIC_ASSETS = [
     './manifest.webmanifest',
 ];

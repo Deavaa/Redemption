@@ -84,6 +84,17 @@
 .lv-mark-red   { background: #fef2f2 !important; color: #dc2626 !important; border-color: #fecaca !important; font-weight: 700 !important; }
 .lv-mark-amber { background: #fffbeb !important; color: #d97706 !important; border-color: #fde68a !important; font-weight: 700 !important; }
 .lv-mark-green { background: #f0fdf4 !important; color: #059669 !important; border-color: #bbf7d0 !important; font-weight: 700 !important; }
+
+/* For <td> cells (Total/Grade columns) — softer background, bold colored text */
+td.lv-mark-red   { background: #fef2f2 !important; color: #dc2626 !important; font-weight: 700 !important; }
+td.lv-mark-amber { background: #fffbeb !important; color: #d97706 !important; font-weight: 700 !important; }
+td.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important; font-weight: 700 !important; }
+
+/* For <input> elements (Marks column) — keep input styling but tint */
+input.lv-mark-red   { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; font-weight: 700 !important; }
+input.lv-mark-amber { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; font-weight: 700 !important; }
+input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important; border: 1px solid #bbf7d0 !important; font-weight: 700 !important; }
+
 .lv-row-dirty  { background: #fffbeb; }
 .lv-row-dirty:hover { background: #fef3c7 !important; }
 
@@ -2641,9 +2652,28 @@ function lvRenderTable() {
     for (var i = 0; i < students.length; i++) {
         var s = students[i];
         var val = (s.marks && s.marks[markKey] !== undefined && s.marks[markKey] !== null) ? s.marks[markKey] : '';
-        var grandTotal = (s.marks && s.marks.grand_total !== undefined && s.marks.grand_total !== null) ? parseFloat(s.marks.grand_total).toFixed(1) : '-';
+        var grandTotalRaw = (s.marks && s.marks.grand_total !== undefined && s.marks.grand_total !== null) ? parseFloat(s.marks.grand_total) : null;
+        var grandTotal = grandTotalRaw !== null ? grandTotalRaw.toFixed(1) : '-';
         var grade = (s.marks && s.marks.grade) ? s.marks.grade : '-';
         var colorCls = lvColorClass(val, maxMarks);
+
+        // Total cell color (grand_total is out of 100)
+        var totalCls = grandTotalRaw !== null ? lvColorClass(grandTotalRaw, 100) : '';
+        // Total badge style — make it a pill
+        var totalStyle = 'text-align:center;font-weight:700;font-size:13px;';
+        if (totalCls === 'lv-mark-red')   totalStyle += 'color:#dc2626;';
+        else if (totalCls === 'lv-mark-amber') totalStyle += 'color:#d97706;';
+        else if (totalCls === 'lv-mark-green') totalStyle += 'color:#059669;';
+
+        // Grade cell color (F = red, D/C = amber, B/A = green)
+        var gradeCls = '';
+        var gradeStyle = 'text-align:center;font-size:12px;font-weight:700;';
+        if (grade && grade !== '-') {
+            var g = String(grade).toUpperCase().charAt(0);
+            if (g === 'F' || g === 'E') { gradeCls = 'lv-mark-red';   gradeStyle += 'color:#dc2626;'; }
+            else if (g === 'D' || g === 'C') { gradeCls = 'lv-mark-amber'; gradeStyle += 'color:#d97706;'; }
+            else if (g === 'B' || g === 'A') { gradeCls = 'lv-mark-green'; gradeStyle += 'color:#059669;'; }
+        }
 
         // Mark the row as dirty if this student is in lvDirty
         var rowCls = lvDirty[s.id] ? 'lv-row-dirty' : '';
@@ -2657,25 +2687,41 @@ function lvRenderTable() {
               + 'value="' + lvEsc(val) + '" placeholder="/' + maxMarks + '" '
               + 'oninput="lvOnInput(this)" onblur="lvOnBlur(this)" '
               + 'style="text-align:center;width:90px;padding:4px 8px;font-weight:600;"></td>';
-        html += '<td class="' + lvColorClass(grandTotal === '-' ? '' : grandTotal, 100) + '" style="text-align:center;font-weight:700;font-size:13px;">' + grandTotal + '</td>';
-        html += '<td style="text-align:center;font-size:12px;font-weight:600;">' + lvEsc(grade) + '</td>';
+        html += '<td class="' + totalCls + '" style="' + totalStyle + '">' + grandTotal + '</td>';
+        html += '<td class="' + gradeCls + '" style="' + gradeStyle + '">' + lvEsc(grade) + '</td>';
         html += '</tr>';
     }
     body.innerHTML = html;
 }
 
-// ── Enforce max value on input ──
+// ── Enforce max value on input (client-side, server also enforces) ──
 function lvEnforceMax(input) {
+    if (input.value === '') return;
     var max = parseFloat(input.getAttribute('data-max'));
     var v = parseFloat(input.value);
-    if (isNaN(max)) return;
-    if (!isNaN(v) && v > max) {
-        input.value = max;
-        input.style.borderColor = '#ef4444';
-        setTimeout(function() { input.style.borderColor = ''; }, 800);
+    if (isNaN(v)) {
+        // Non-numeric — clear it
+        input.value = '';
+        return;
     }
-    if (!isNaN(v) && v < 0) {
+    if (isNaN(max)) return;
+    var clamped = false;
+    if (v > max) {
+        input.value = max;
+        clamped = true;
+    }
+    if (v < 0) {
         input.value = 0;
+        clamped = true;
+    }
+    if (clamped) {
+        // Visual feedback — red flash + border
+        input.style.borderColor = '#ef4444';
+        input.style.background = '#fee2e2';
+        setTimeout(function() {
+            input.style.borderColor = '';
+            input.style.background = '';
+        }, 1000);
     }
 }
 
