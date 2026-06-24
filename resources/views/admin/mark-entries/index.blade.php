@@ -2435,7 +2435,77 @@
 
 })();
 
-// ========== LIST VIEW — SEPARATE SCRIPT, CAN'T BE BROKEN BY IIFE ERRORS ==========
+// ========== LIST VIEW — SELF-CONTAINED (no dependency on IIFE globals) ==========
+// All DOM lookups happen INSIDE each function call so nothing can go stale.
+// All status updates go through setLvStatus() which queries the badge fresh.
+
+// Hardcoded route URL printed by Blade — never depends on window.me_bulkSaveUrl
+var LV_BULK_SAVE_URL = '{{ route("admin.mark-entries.api.bulk-save") }}';
+var LV_SAVE_URL      = '{{ route("admin.mark-entries.api.save") }}';
+
+// ── Status badge helper — queries the badge fresh each time ──
+function setLvStatus(state, text) {
+    var badge = document.getElementById('globalSaveStatus');
+    if (!badge) { console.warn('[LV] globalSaveStatus badge not found'); return; }
+    var icons = {
+        saving:  '<i class="fas fa-spinner fa-spin"></i>',
+        saved:   '<i class="fas fa-check-circle"></i>',
+        error:   '<i class="fas fa-exclamation-circle"></i>',
+        idle:    '<i class="fas fa-check-circle"></i>',
+        editing: '<i class="fas fa-pen"></i>'
+    };
+    badge.className = 'me-save-badge ' + state;
+    badge.innerHTML = (icons[state] || '') + ' ' + text;
+    console.log('[LV] status:', state, '|', text);
+}
+
+// ── Read filter values directly from the DOM ──
+function lvGetFilterValues() {
+    var ayId      = (document.getElementById('filterAy')      || {}).value || '';
+    var termId    = (document.getElementById('filterTerm')    || {}).value || '';
+    var classId   = (document.getElementById('filterClass')   || {}).value || '';
+    var sectionId = (document.getElementById('filterSection') || {}).value || '';
+    var subjectId = (document.getElementById('filterSubject') || {}).value || '';
+    return { ayId: ayId, termId: termId, classId: classId, sectionId: sectionId, subjectId: subjectId };
+}
+
+// ── Read CSRF token directly from the meta tag ──
+function lvGetCSRF() {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (!meta || !meta.getAttribute('content')) {
+        console.error('[LV] CSRF meta tag missing or empty');
+        return '';
+    }
+    return meta.getAttribute('content');
+}
+
+// ── Get list of students from window.me_students (set by IIFE after load) ──
+function lvGetStudents() {
+    if (window.me_students && Array.isArray(window.me_students) && window.me_students.length > 0) {
+        return window.me_students;
+    }
+    return [];
+}
+
+// ── Get field config from window.me_getFieldConfig (set by IIFE) ──
+function lvGetFieldConfig(markKey) {
+    if (typeof window.me_getFieldConfig === 'function') {
+        return window.me_getFieldConfig(markKey);
+    }
+    return null;
+}
+
+// ── Escape HTML — local copy so we don't depend on window.me_escapeHtml ──
+function lvEscapeHtml(text) {
+    if (typeof window.me_escapeHtml === 'function') return window.me_escapeHtml(text);
+    if (text === null || text === undefined) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 function switchToCardMode() {
     var cards = document.getElementById('cardsContainer');
@@ -2449,6 +2519,7 @@ function switchToCardMode() {
 }
 
 function switchToListMode() {
+    console.log('[LV] switchToListMode called');
     var cards = document.getElementById('cardsContainer');
     var listView = document.getElementById('listViewArea');
     if (cards) cards.style.display = 'none';
@@ -2461,17 +2532,24 @@ function switchToListMode() {
 }
 
 function renderListViewTable() {
+    console.log('[LV] renderListViewTable called');
     var body = document.getElementById('listViewBody');
     var fieldSelect = document.getElementById('listViewFieldSelect');
-    var students = window.me_students || [];
-    if (!body || !fieldSelect || students.length === 0) {
-        if (body) body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#9ca3af;">No students loaded. Go back and load students first.</td></tr>';
+    var students = lvGetStudents();
+    console.log('[LV] students count:', students.length);
+    if (!body || !fieldSelect) {
+        console.error('[LV] listViewBody or listViewFieldSelect not found', { body: body, fieldSelect: fieldSelect });
+        return;
+    }
+    if (students.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#9ca3af;">No students loaded. Go back to Card mode and load students first.</td></tr>';
         return;
     }
 
     var markKey = fieldSelect.value;
-    var fieldConfig = window.me_getFieldConfig ? window.me_getFieldConfig(markKey) : null;
+    var fieldConfig = lvGetFieldConfig(markKey);
     var maxMarks = fieldConfig ? fieldConfig.max : 100;
+    console.log('[LV] rendering for markKey:', markKey, '| max:', maxMarks);
 
     var html = '';
     students.forEach(function(s, idx) {
@@ -2482,7 +2560,7 @@ function renderListViewTable() {
 
         html += '<tr>';
         html += '<td style="color:#9ca3af;font-size:12px;">' + (idx + 1) + '</td>';
-        html += '<td style="font-weight:600;font-size:13px;">' + (window.me_escapeHtml ? window.me_escapeHtml(s.student_name) : s.student_name) + '</td>';
+        html += '<td style="font-weight:600;font-size:13px;">' + lvEscapeHtml(s.student_name) + '</td>';
         html += '<td style="font-size:12px;color:#6b7280;">' + (s.roll_number || '') + '</td>';
         html += '<td><input type="text" inputmode="decimal" class="form-control form-control-sm lv-mark-input" '
             + 'data-student-id="' + s.id + '" data-max="' + maxMarks + '" '
@@ -2496,13 +2574,15 @@ function renderListViewTable() {
     });
 
     body.innerHTML = html;
+    console.log('[LV] table rendered with', students.length, 'rows');
 }
 
 // ── Auto-save with debounce ──────────────────────────────
 var lvSaveTimer = null;
 var lvDirtyCount = 0;
+var lvSaveInFlight = false;  // prevent overlapping saves
 
-function enforceMax(input) {
+function lvEnforceMax(input) {
     var max = parseFloat(input.getAttribute('data-max'));
     var val = parseFloat(input.value);
     if (!isNaN(val) && val > max) {
@@ -2512,7 +2592,6 @@ function enforceMax(input) {
         setTimeout(function() { input.style.borderColor = ''; input.style.background = ''; }, 800);
         return true;
     }
-    // Also block negative
     if (!isNaN(val) && val < 0) {
         input.value = 0;
         return true;
@@ -2521,70 +2600,88 @@ function enforceMax(input) {
 }
 
 function onLvInputChange(input) {
-    enforceMax(input);
+    console.log('[LV] onLvInputChange', input.getAttribute('data-student-id'), '=>', input.value);
+    lvEnforceMax(input);
     lvDirtyCount++;
-    if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('editing', lvDirtyCount + ' unsaved');
+    setLvStatus('editing', lvDirtyCount + ' unsaved');
     if (lvSaveTimer) clearTimeout(lvSaveTimer);
     lvSaveTimer = setTimeout(lvSaveAll, 1500);
 }
 
 function onLvInputBlur(input) {
-    // Enforce max on blur too (catches paste, etc.)
-    enforceMax(input);
-    // Save immediately on blur (don't wait for debounce)
+    console.log('[LV] onLvInputBlur', input.getAttribute('data-student-id'), '=>', input.value);
+    lvEnforceMax(input);
     if (lvSaveTimer) { clearTimeout(lvSaveTimer); lvSaveTimer = null; }
     lvSaveAll();
 }
 
 function lvSaveAll() {
+    console.log('[LV] lvSaveAll called. dirtyCount=' + lvDirtyCount + ', saveInFlight=' + lvSaveInFlight);
+
     var body = document.getElementById('listViewBody');
     var fieldSelect = document.getElementById('listViewFieldSelect');
-    if (!body || !fieldSelect) return;
+    if (!body || !fieldSelect) {
+        console.error('[LV] save aborted — body or fieldSelect missing');
+        return;
+    }
 
-    // Don't save if nothing changed
-    if (lvDirtyCount === 0) return;
+    if (lvDirtyCount === 0) {
+        console.log('[LV] save skipped — nothing dirty');
+        return;
+    }
+
+    if (lvSaveInFlight) {
+        console.log('[LV] save already in flight — will retry in 500ms');
+        // Schedule a retry — the in-flight save will reset this if it succeeds
+        if (lvSaveTimer) clearTimeout(lvSaveTimer);
+        lvSaveTimer = setTimeout(lvSaveAll, 500);
+        return;
+    }
 
     var markKey = fieldSelect.value;
     var marks = [];
     var inputs = body.querySelectorAll('.lv-mark-input');
     for (var i = 0; i < inputs.length; i++) {
-        // Enforce max one more time before saving
-        enforceMax(inputs[i]);
+        lvEnforceMax(inputs[i]);
         marks.push({
             student_id: inputs[i].getAttribute('data-student-id'),
             value: inputs[i].value
         });
     }
 
-    if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('saving', 'Saving...');
+    setLvStatus('saving', 'Saving...');
 
-    var csrf = window.me_getCSRF ? window.me_getCSRF() : (document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
+    var csrf = lvGetCSRF();
+    var filters = lvGetFilterValues();
 
-    var ayId = window.me_filterAy ? window.me_filterAy.value : '';
-    var subjectId = window.me_filterSubject ? window.me_filterSubject.value : '';
-    var termId = window.me_filterTerm ? window.me_filterTerm.value : '';
-    var classId = window.me_filterClass ? window.me_filterClass.value : '';
-    var sectionId = window.me_filterSection ? window.me_filterSection.value : '';
-
-    // Pre-flight: if ayId/subject_id/term_id/class_id/section_id is empty, fail fast with a clear message
-    if (!ayId || !subjectId || !termId || !classId || !sectionId) {
-        console.error('[MarkEntry] bulk save aborted — missing filter values', { ayId: ayId, subjectId: subjectId, termId: termId, classId: classId, sectionId: sectionId });
-        if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
+    if (!csrf) {
+        console.error('[LV] save aborted — CSRF token missing');
+        setLvStatus('error', 'Not Saved');
+        return;
+    }
+    if (!filters.ayId || !filters.subjectId || !filters.termId || !filters.classId || !filters.sectionId) {
+        console.error('[LV] save aborted — missing filter values', filters);
+        setLvStatus('error', 'Not Saved');
         return;
     }
 
     var formData = new FormData();
     formData.append('_token', csrf);
-    formData.append('academic_year_id', ayId);
-    formData.append('subject_id', subjectId);
-    formData.append('term_id', termId);
-    formData.append('class_id', classId);
-    formData.append('section_id', sectionId);
+    formData.append('academic_year_id', filters.ayId);
+    formData.append('subject_id', filters.subjectId);
+    formData.append('term_id', filters.termId);
+    formData.append('class_id', filters.classId);
+    formData.append('section_id', filters.sectionId);
     formData.append('mark_key', markKey);
     formData.append('marks', JSON.stringify(marks));
 
-    fetch(window.me_bulkSaveUrl || '/admin/mark-entries/api/bulk-save', {
+    console.log('[LV] POSTing to', LV_BULK_SAVE_URL, 'with', marks.length, 'marks');
+
+    lvSaveInFlight = true;
+
+    fetch(LV_BULK_SAVE_URL, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'X-CSRF-TOKEN': csrf,
             'X-Requested-With': 'XMLHttpRequest',
@@ -2593,50 +2690,56 @@ function lvSaveAll() {
         body: formData
     })
     .then(function(r) {
+        console.log('[LV] fetch response:', r.status, 'ok=' + r.ok, 'redirected=' + r.redirected);
         if (!r.ok) {
             if (r.status === 419 || r.status === 401 || r.status === 403) {
-                if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
+                setLvStatus('error', 'Not Saved');
                 throw new Error('Session expired (' + r.status + ')');
             }
             return r.text().then(function(text) {
-                console.error('[MarkEntry] bulk save HTTP', r.status, 'body:', text);
-                if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
+                console.error('[LV] bulk save HTTP', r.status, 'body:', text.substring(0, 500));
+                setLvStatus('error', 'Not Saved');
                 throw new Error('Server error ' + r.status);
             });
         }
-        // Check if fetch followed a redirect to login page (session expired)
         if (r.redirected) {
-            if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
+            setLvStatus('error', 'Not Saved');
             throw new Error('Session expired (redirect)');
         }
         return r.json();
     })
     .then(function(data) {
+        console.log('[LV] response JSON:', data);
         if (data.success) {
-            if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('saved', 'Saved \u2713');
-            if (data.csrf_token && window.me_updateCSRF) window.me_updateCSRF(data.csrf_token);
+            setLvStatus('saved', 'Saved \u2713');
+            // Update CSRF token if server sent a fresh one
+            if (data.csrf_token) {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) meta.setAttribute('content', data.csrf_token);
+            }
             lvDirtyCount = 0;
-            // Update local copy of marks so the table reflects saved state
-            if (window.me_students && Array.isArray(window.me_students)) {
-                for (var i = 0; i < marks.length; i++) {
-                    for (var j = 0; j < window.me_students.length; j++) {
-                        if (String(window.me_students[j].id) === String(marks[i].student_id)) {
-                            if (!window.me_students[j].marks) window.me_students[j].marks = {};
-                            window.me_students[j].marks[markKey] = marks[i].value === '' ? null : parseFloat(marks[i].value);
-                            break;
-                        }
+            // Update local copy of marks so re-rendering the table shows the saved values
+            var students = lvGetStudents();
+            for (var i = 0; i < marks.length; i++) {
+                for (var j = 0; j < students.length; j++) {
+                    if (String(students[j].id) === String(marks[i].student_id)) {
+                        if (!students[j].marks) students[j].marks = {};
+                        students[j].marks[markKey] = marks[i].value === '' ? null : parseFloat(marks[i].value);
+                        break;
                     }
                 }
             }
         } else {
-            console.error('[MarkEntry] bulk save returned success=false:', data);
-            if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
+            console.error('[LV] bulk save returned success=false:', data);
+            setLvStatus('error', 'Not Saved');
         }
     })
     .catch(function(err) {
-        console.error('[MarkEntry] bulk save failed:', err);
-        // Use the SAME status text as per-student save: 'Not Saved'
-        if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
+        console.error('[LV] bulk save failed:', err);
+        setLvStatus('error', 'Not Saved');
+    })
+    .finally(function() {
+        lvSaveInFlight = false;
     });
 }
 
@@ -2644,5 +2747,7 @@ function lvSaveAllManual() {
     if (lvSaveTimer) { clearTimeout(lvSaveTimer); lvSaveTimer = null; }
     lvSaveAll();
 }
+
+console.log('[LV] list-view script loaded. BULK_SAVE_URL=', LV_BULK_SAVE_URL);
 </script>
 @endpush

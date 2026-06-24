@@ -1,5 +1,5 @@
 // ============================================================================
-// Redemption School Management System - Service Worker v6 (Complete Rewrite)
+// Redemption School Management System - Service Worker v7 (Complete Rewrite)
 // ============================================================================
 // FIXES:
 //   1. Reload loop: NO navigation caching at all. Only static assets cached.
@@ -10,9 +10,14 @@
 //   3. Login loop: Never caches /login or / (CSRF token staleness).
 //   4. Pull-to-refresh conflict: Removed the admin layout's pull-to-refresh
 //      JS that was triggering random reloads on touch devices.
+//   5. v7: bumped cache name to force-bust all stale-while-revalidate JS/CSS
+//      caches. Previous version was serving the OLD mark-entry JS even after
+//      Ctrl+F5 because the SW was returning the cached version first and
+//      updating in the background — meaning the user's first reload after a
+//      fix would still run the old broken JS.
 // ============================================================================
 
-const CACHE_NAME = 'redemption-v6';
+const CACHE_NAME = 'redemption-v7';
 const STATIC_ASSETS = [
     './manifest.webmanifest',
 ];
