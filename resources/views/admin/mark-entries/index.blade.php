@@ -2470,6 +2470,8 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
     window.me_escapeHtml = escapeHtml;
     window.me_loadStudents = loadStudents;
     window.me_renderAllCards = renderAllCards;  // exposed for list-view → card-view sync
+    window.me_showStudent = showStudent;  // exposed for list-view → card-view sync
+    window.me_getCurrentStudentIndex = function() { return currentStudentIndex; };
     window.me_getCSRF = getCSRF;
     window.me_updateCSRF = updateCSRFToken;
     window.me_filterAy = filterAy;
@@ -2631,9 +2633,21 @@ function switchToCardMode() {
     if (bc) { bc.classList.add('active','btn-outline-primary'); bc.classList.remove('btn-primary'); }
     if (bl) { bl.classList.remove('active'); bl.classList.add('btn-outline-primary'); bl.classList.remove('btn-primary'); }
     // Re-render cards with the latest data (syncs any marks changed in list view)
-    if (typeof window.me_renderAllCards === 'function') {
-        try { window.me_renderAllCards(); } catch(e) { console.warn('[LV] renderAllCards failed:', e); }
-    }
+    // Then re-activate the current student card so it's visible.
+    try {
+        if (typeof window.me_renderAllCards === 'function') {
+            window.me_renderAllCards();
+        }
+        // Re-show the current student card (renderAllCards rebuilds HTML,
+        // so .card-active is lost and needs to be re-applied)
+        if (typeof window.me_showStudent === 'function') {
+            var idx = (typeof window.me_getCurrentStudentIndex === 'function') ? window.me_getCurrentStudentIndex() : 0;
+            // Use setTimeout to ensure the re-rendered DOM is ready
+            setTimeout(function() {
+                try { window.me_showStudent(idx, false); } catch(e) { console.warn('[LV] showStudent failed:', e); }
+            }, 0);
+        }
+    } catch(e) { console.warn('[LV] card view sync failed:', e); }
 }
 
 // ── Switch to List view ──
