@@ -1732,3 +1732,67 @@ Stage Summary:
 - Status badge reliably shows: 'N unsaved' → 'Saving...' → 'Saved ✓' / 'Not Saved'
 - Auto-save uses proven per-student apiSave endpoint (same as card view)
 - All functions self-contained — no IIFE global dependencies
+
+---
+Task ID: 14
+Agent: main (Super Z)
+Task: Student list not showing in All Students view after the v3 rebuild.
+
+Work Log:
+- User reported: "now the student list is not showing for multiple student mark entry"
+- Diagnosed ROOT CAUSE: the list-view JS was in the SAME <script> tag as the IIFE.
+  If the IIFE threw ANY runtime error (even AFTER the card view rendered successfully),
+  the entire script tag would abort and switchToListMode() / lvRenderTable() would
+  NEVER be defined. Clicking "All Students" would silently do nothing.
+
+THREE FIXES APPLIED:
+
+1. SPLIT INTO SEPARATE <script> TAGS
+   - The IIFE is now in its own <script> tag (lines 759-2457)
+   - The list-view code is in a SEPARATE <script> tag (lines 2460-2832)
+   - If the IIFE throws at any point, the list-view script still runs independently
+   - switchToListMode(), lvRenderTable(), lvOnInput(), etc. are ALWAYS defined
+   - This is the key structural fix
+
+2. MOVED window.me_students = students BEFORE showMarkEntry()
+   - Previously the order was:
+       renderAllCards() → showMarkEntry() → updateInputLockState() → window.me_students = students
+   - If showMarkEntry() or updateInputLockState() threw, the global was never set
+   - Card view would work (renderAllCards already ran) but list view would see []
+   - New order:
+       renderAllCards() → window.me_students = students → showMarkEntry() → updateInputLockState()
+   - The global is set immediately after students are loaded, before any UI functions
+
+3. ADDED DOM-SCRAPE FALLBACK in lvGetStudents()
+   - Source 1: window.me_getStudents() (closure over IIFE's students variable)
+   - Source 2: window.me_students (static reference, set after loadStudents)
+   - Source 3: SCRAPE THE CARD VIEW DOM — reads .me-student-card elements:
+     * Student ID from: data-student-id attribute, or id="card_<id>", or inner [data-student-id]
+     * Student name from: .me-sc-name element
+     * Existing marks from: [data-mark-key] input values
+   - This fallback ensures the list view can ALWAYS show students as long as
+     the card view has rendered them — even if ALL IIFE globals failed to expose
+
+Also added:
+- console.log('[LV] switchToListMode called') at the start of switchToListMode
+- console.log('[LV] renderTable: students=N, markKey=X') in lvRenderTable
+- try/catch around each source in lvGetStudents() so one failure doesn't block next
+- Bumped SW cache version v8 → v9
+
+Key files changed:
+- resources/views/admin/mark-entries/index.blade.php
+  - Split <script> tag into two (IIFE + list view)
+  - Moved window.me_students assignment earlier in loadStudents success handler
+  - Added DOM-scrape fallback to lvGetStudents()
+  - Added diagnostic console logging
+- public/sw.js: bumped CACHE_NAME v8 → v9
+
+- Committed and pushed to GitHub as commit 78223a8
+
+Stage Summary:
+- ROOT CAUSE: single <script> tag meant IIFE errors killed list-view functions
+- FIX 1: separate <script> tags — list view always loads
+- FIX 2: window.me_students set before potentially-throwing UI functions
+- FIX 3: DOM-scrape fallback — list view can read students from card HTML
+- User should now see the student list when clicking "All Students"
+- Console logs will show: [LV] switchToListMode called → [LV] renderTable: students=N
