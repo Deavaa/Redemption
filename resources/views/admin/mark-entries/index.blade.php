@@ -98,6 +98,9 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
 .lv-row-dirty  { background: #fffbeb; }
 .lv-row-dirty:hover { background: #fef3c7 !important; }
 
+/* Toast animation */
+@keyframes lvToastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
 /* Empty State */
 .me-empty { text-align: center; padding: 1.5rem 1rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #eee; }
 .me-empty i { font-size: 2rem; color: #d1d5db; margin-bottom: 0.5rem; display: block; }
@@ -1914,9 +1917,21 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
         if (inp.value === '') return;
         var v = parseFloat(inp.value);
         if (isNaN(v)) { inp.value = ''; return; }
-        if (!isNaN(max) && v > max) v = max;
-        if (v < 0) v = 0;
+        var original = v;
+        var clamped = false;
+        if (!isNaN(max) && v > max) { v = max; clamped = true; }
+        if (v < 0) { v = 0; clamped = true; }
         inp.value = Math.round(v * 10) / 10;
+        if (clamped) {
+            // Visual feedback — red flash
+            inp.style.borderColor = '#ef4444';
+            inp.style.background = '#fee2e2';
+            setTimeout(function() { inp.style.borderColor = ''; inp.style.background = ''; }, 1500);
+            // Toast notification
+            if (typeof lvToast === 'function') {
+                lvToast('⚠ Value adjusted from ' + original + ' to ' + inp.value + ' (max is ' + max + ')', 'warning');
+            }
+        }
     }
 
     // ========== RECALCULATE STUDENT TOTALS ==========
@@ -2454,6 +2469,7 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
     };
     window.me_escapeHtml = escapeHtml;
     window.me_loadStudents = loadStudents;
+    window.me_renderAllCards = renderAllCards;  // exposed for list-view → card-view sync
     window.me_getCSRF = getCSRF;
     window.me_updateCSRF = updateCSRFToken;
     window.me_filterAy = filterAy;
@@ -2605,6 +2621,7 @@ function lvColorClass(value, max) {
 
 // ── Switch to Card view ──
 function switchToCardMode() {
+    console.log('[LV] switchToCardMode called');
     var cards = document.getElementById('cardsContainer');
     var lv = document.getElementById('listViewArea');
     if (cards) cards.style.display = '';
@@ -2613,6 +2630,10 @@ function switchToCardMode() {
     var bl = document.getElementById('btnListMode');
     if (bc) { bc.classList.add('active','btn-outline-primary'); bc.classList.remove('btn-primary'); }
     if (bl) { bl.classList.remove('active'); bl.classList.add('btn-outline-primary'); bl.classList.remove('btn-primary'); }
+    // Re-render cards with the latest data (syncs any marks changed in list view)
+    if (typeof window.me_renderAllCards === 'function') {
+        try { window.me_renderAllCards(); } catch(e) { console.warn('[LV] renderAllCards failed:', e); }
+    }
 }
 
 // ── Switch to List view ──
@@ -2694,18 +2715,44 @@ function lvRenderTable() {
     body.innerHTML = html;
 }
 
+// ── Toast notification (temporary popup at top of page) ──
+function lvToast(msg, type) {
+    type = type || 'warning';
+    var container = document.getElementById('lvToastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'lvToastContainer';
+        container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;max-width:350px;';
+        document.body.appendChild(container);
+    }
+    var toast = document.createElement('div');
+    var bg = type === 'error' ? '#dc2626' : type === 'success' ? '#059669' : '#d97706';
+    toast.style.cssText = 'background:' + bg + ';color:#fff;padding:12px 16px;border-radius:8px;margin-bottom:8px;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.2);animation:lvToastIn .3s ease-out;cursor:pointer;';
+    toast.innerHTML = '<i class="fas fa-' + (type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'exclamation-triangle') + '"></i> ' + msg;
+    toast.onclick = function() { toast.remove(); };
+    container.appendChild(toast);
+    setTimeout(function() {
+        if (toast.parentNode) {
+            toast.style.transition = 'opacity .3s';
+            toast.style.opacity = '0';
+            setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+        }
+    }, 3500);
+}
+
 // ── Enforce max value on input (client-side, server also enforces) ──
+// Returns true if the value was clamped, false otherwise
 function lvEnforceMax(input) {
-    if (input.value === '') return;
+    if (input.value === '') return false;
     var max = parseFloat(input.getAttribute('data-max'));
     var v = parseFloat(input.value);
     if (isNaN(v)) {
-        // Non-numeric — clear it
         input.value = '';
-        return;
+        return false;
     }
-    if (isNaN(max)) return;
+    if (isNaN(max)) return false;
     var clamped = false;
+    var original = v;
     if (v > max) {
         input.value = max;
         clamped = true;
@@ -2721,8 +2768,14 @@ function lvEnforceMax(input) {
         setTimeout(function() {
             input.style.borderColor = '';
             input.style.background = '';
-        }, 1000);
+        }, 1500);
+        // Toast notification so the user KNOWS their value was adjusted
+        var studentRow = input.closest('tr');
+        var nameEl = studentRow ? studentRow.querySelector('td:nth-child(2)') : null;
+        var studentName = nameEl ? nameEl.textContent.trim() : 'Student';
+        lvToast('⚠ "' + studentName + '": value adjusted from ' + original + ' to ' + input.value + ' (max is ' + max + ')', 'warning');
     }
+    return clamped;
 }
 
 // ── Update color class on an input after value change ──
@@ -2835,12 +2888,31 @@ function lvSaveAll() {
                 var meta = document.querySelector('meta[name="csrf-token"]');
                 if (meta) meta.setAttribute('content', data.csrf_token);
             }
-            // Update local students cache
+            // Update local students cache with SERVER values (server may have clamped)
             var students = lvGetStudents();
             for (var j = 0; j < students.length; j++) {
                 if (String(students[j].id) === String(item.sid)) {
                     if (!students[j].marks) students[j].marks = {};
-                    students[j].marks[markKey] = (item.value === '' || item.value === null) ? null : parseFloat(item.value);
+                    // Use server's entry value if available (server may have clamped over-max values)
+                    var serverVal = null;
+                    if (data.entry && data.entry[markKey] !== undefined) {
+                        serverVal = data.entry[markKey];
+                    } else {
+                        serverVal = (item.value === '' || item.value === null) ? null : parseFloat(item.value);
+                    }
+                    students[j].marks[markKey] = serverVal;
+
+                    // If the server's value differs from what we sent, the server clamped it
+                    // — update the input field AND show a toast
+                    var sentVal = item.value;
+                    if (sentVal !== '' && sentVal !== null && serverVal !== null) {
+                        if (parseFloat(sentVal) !== parseFloat(serverVal)) {
+                            // Update the input to show the server's clamped value
+                            if (item.input) item.input.value = serverVal;
+                            lvToast('⚠ Value adjusted from ' + sentVal + ' to ' + serverVal + ' (over maximum)', 'warning');
+                        }
+                    }
+
                     if (data.grand_total !== undefined) students[j].marks.grand_total = data.grand_total;
                     if (data.grade !== undefined)      students[j].marks.grade = data.grade;
                     break;
