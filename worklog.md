@@ -1466,3 +1466,51 @@ Stage Summary:
   no error message — because all the status-setter globals were undefined.
 - Fix is single-character in spirit (rename function), but also added defensive logging
   and pre-flight validation so similar issues will be visible in the future.
+
+---
+Task ID: 10
+Agent: main (Super Z)
+Task: Fix bulk save for All Students view — was not saving AND status messages inconsistent with per-student save. User explicitly asked to use the SAME status messaging text as per-student save.
+
+Work Log:
+- Compared the per-student saveMark() (line 2180) with the bulk lvSaveAll() (line 2538)
+- FOUND ROOT CAUSE #1 (save not working): bulk save was NOT sending `academic_year_id`
+  - Per-student save appends `formData.append('academic_year_id', ayId)` at line 2199
+  - Bulk save did NOT have this line — only sent subject_id, term_id, class_id, section_id
+  - The controller apiBulkSave() at line 841 reads `$ayId = $input['academic_year_id'] ?? null`
+  - Then at line 881: `if ($ayId) { $existingQuery->where('academic_year_id', $ayId); } else { $existingQuery->whereNull('academic_year_id'); }`
+  - With ayId missing, controller filtered `whereNull('academic_year_id')` — didn't find
+    existing records that per-student save had stored WITH an academic_year_id
+  - Result: either insert failed (unique key violation) OR created orphan records
+    without ayId → "save didn't work" from user perspective
+- FOUND ROOT CAUSE #2 (inconsistent status): bulk save used various messages
+  - Per-student save uses: 'Saving...', 'Saved ✓', 'Not Saved' (capital S)
+  - Bulk save was using: 'Not saved' (lowercase), 'Network error',
+    'Session expired', 'Validation failed', 'Route 404', 'Server error NNN', etc.
+  - User explicitly asked to use the SAME text as per-student save
+- Fixes applied (all in resources/views/admin/mark-entries/index.blade.php):
+  1. Added `window.me_filterAy = filterAy;` to the IIFE globals (line 2428)
+     — previously filterAy was NOT exposed, only filterSubject/Term/Class/Section
+  2. Added `formData.append('academic_year_id', ayId);` to bulk save FormData
+  3. Pre-flight check now also validates class_id and section_id (was only checking
+     subject_id and term_id)
+  4. All error paths now use 'Not Saved' (capital S) to match per-student save exactly:
+     - Pre-flight failure: 'Not Saved'
+     - HTTP 419/401/403: 'Not Saved'
+     - HTTP 4xx/5xx: 'Not Saved'
+     - Redirect-to-login: 'Not Saved'
+     - success=false response: 'Not Saved'
+     - Network error (catch): 'Not Saved'
+  5. Console logging preserved for debugging — visible to developer but not to user
+  6. 'Saving...' and 'Saved ✓' texts were already identical, no change needed
+- Committed and pushed to GitHub as commit c7c8a7e
+
+Stage Summary:
+- ROOT CAUSE: missing `academic_year_id` in bulk save FormData
+- This was missed in the previous fix (commit 9c3e293) which only fixed the
+  `getGlobalCSRFToken` → `getCSRF` rename
+- After both fixes (9c3e293 + c7c8a7e), bulk save should now:
+  1. Actually persist marks to the database
+  2. Show 'Saving...' → 'Saved ✓' on success
+  3. Show 'Not Saved' on any failure (matching per-student save exactly)
+- Filter values (ay, term, class, section, subject) are now ALL pre-flight validated
