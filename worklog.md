@@ -1422,3 +1422,47 @@ Stage Summary:
 - Files deleted: public/manifest.json, app/Http/Middleware/VerifyCsrfToken.php.
 - Not yet done (intentionally — out of scope for this round): Laravel Policies for object-level auth, splitting the 2425-line layouts/admin.blade.php into partials, removing AppServiceProvider auto-APP_KEY generation, adding global HSTS/CSP middleware, refactoring PermissionMiddleware's 478-line hardcoded arrays into config.
 - Next step: commit and attempt push to origin/main (may require GitHub PAT).
+
+---
+Task ID: 9
+Agent: main (Super Z)
+Task: Fix mark entry "All Students" view not saving — user reported marks not saving in bulk view.
+
+Work Log:
+- Reviewed the bulk-save code path: lvSaveAll() → fetch POST /admin/mark-entries/api/bulk-save
+- Inspected routes/web.php line 210-213: routes correctly defined OUTSIDE admin middleware group, named admin.mark-entries.api.bulk-save
+- Inspected MarkEntryController::apiBulkSave() — manual validation, returns JSON, looks correct
+- Inspected lvSaveAll() JS function in mark-entries/index.blade.php — logic looked correct
+- Traced why server might return 422 (which would cause silent failure)
+- FOUND ROOT CAUSE: line 2426 — `window.me_getCSRF = getGlobalCSRFToken;`
+  - Function `getGlobalCSRFToken` is NEVER DEFINED in the file
+  - Actual function is `getCSRF()` defined at line 838
+  - This threw `ReferenceError: getGlobalCSRFToken is not defined` inside the IIFE
+  - The IIFE then exited early, so ALL subsequent `window.me_*` assignments on
+    lines 2427-2433 NEVER RAN:
+      * window.me_updateCSRF = undefined
+      * window.me_filterSubject = undefined → bulk save POSTed with empty subject_id
+      * window.me_filterTerm = undefined → bulk save POSTed with empty term_id
+      * window.me_filterClass = undefined
+      * window.me_filterSection = undefined
+      * window.me_bulkSaveUrl = undefined (fell back to /admin/mark-entries/api/bulk-save which is correct on Laravel but wrong on XAMPP subdirectory)
+      * window.me_setGlobalSaveStatus = undefined → no status badge update on save error
+  - Server returned 422 validation error (subject_id + term_id required)
+  - JS catch() tried to call window.me_setGlobalSaveStatus (undefined) → silently swallowed
+- Fix applied:
+  - Changed `getGlobalCSRFToken` → `getCSRF` (the actual function name)
+  - Added pre-flight check: if subject_id or term_id empty, show "Filter subject/term missing" status instead of failing silently
+  - Added per-HTTP-status error messages (422/404/5xx) inside the response handler
+  - Added console.error logging for debugging future issues
+  - Added local me_students marks update on save success so the table reflects saved state
+  - Modified catch() so it doesn't overwrite more specific error messages already set in the response handler
+- Committed and pushed to GitHub as commit 9c3e293
+
+Stage Summary:
+- ROOT CAUSE: a typo — `getGlobalCSRFToken` (referenced) vs `getCSRF` (defined)
+- This was a silent killer: it threw inside an IIFE so the rest of the IIFE didn't run,
+  but the IIFE didn't crash the page (because the IIFE call itself is a single statement).
+- The user saw: change marks in All Students view → nothing happens, no status update,
+  no error message — because all the status-setter globals were undefined.
+- Fix is single-character in spirit (rename function), but also added defensive logging
+  and pre-flight validation so similar issues will be visible in the future.
