@@ -2661,11 +2661,68 @@ function switchToCardMode() {
             // Use setTimeout to ensure the re-rendered DOM is ready
             setTimeout(function() {
                 try { window.me_showStudent(idx, false); } catch(e) { console.warn('[LV] showStudent failed:', e); }
+                // BELT-AND-SUSPENDERS: directly update all card inputs from the
+                // students array in case renderAllCards used stale data or wasn't called.
+                // This guarantees the card view shows the latest marks.
+                try { lvSyncCardInputs(); } catch(e) { console.warn('[LV] lvSyncCardInputs failed:', e); }
             }, 0);
         } else {
             console.error('[LV] me_showStudent is NOT available');
         }
     } catch(e) { console.warn('[LV] card view sync failed:', e); }
+}
+
+// ── Directly update card view inputs from the shared students array ──
+// This is a FALLBACK that runs after renderAllCards+showStudent to guarantee
+// the card inputs show the latest marks, regardless of whether renderAllCards
+// read stale data or the IIFE globals are broken.
+function lvSyncCardInputs() {
+    var students = lvGetStudents();
+    if (students.length === 0) return;
+    console.log('[LV] lvSyncCardInputs: syncing ' + students.length + ' students to card inputs');
+
+    // Build a lookup map: studentId → marks
+    var marksBySid = {};
+    students.forEach(function(s) {
+        marksBySid[String(s.id)] = s.marks || {};
+    });
+
+    // Find ALL mark-input elements in the card view and update their values
+    var cardInputs = document.querySelectorAll('.mark-input[data-student-id][data-mark-key]');
+    console.log('[LV] found ' + cardInputs.length + ' card mark-input elements to sync');
+    var updated = 0;
+    cardInputs.forEach(function(inp) {
+        var sid = String(inp.getAttribute('data-student-id'));
+        var mk = inp.getAttribute('data-mark-key');
+        var marks = marksBySid[sid];
+        if (marks && marks[mk] !== undefined) {
+            var newVal = marks[mk];
+            var oldVal = inp.value;
+            var displayVal = (newVal !== null && newVal !== undefined) ? String(newVal) : '';
+            if (oldVal !== displayVal) {
+                inp.value = displayVal;
+                updated++;
+            }
+        }
+    });
+    console.log('[LV] lvSyncCardInputs: updated ' + updated + ' inputs with new values');
+
+    // Also update the totals/grade displays in the cards
+    students.forEach(function(s) {
+        var card = document.getElementById('card_' + s.id);
+        if (!card) return;
+
+        // Update grand total
+        var gtEl = card.querySelector('#cardGrandTotal_' + s.id + ', .me-sc-grand-total');
+        if (gtEl && s.marks.grand_total !== null && s.marks.grand_total !== undefined) {
+            gtEl.textContent = parseFloat(s.marks.grand_total).toFixed(1);
+        }
+        // Update grade
+        var grEl = card.querySelector('#cardGrade_' + s.id + ', .me-sc-grade');
+        if (grEl) {
+            grEl.textContent = s.marks.grade || '-';
+        }
+    });
 }
 
 // ── Switch to List view ──
