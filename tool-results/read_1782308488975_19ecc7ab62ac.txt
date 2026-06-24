@@ -1,0 +1,698 @@
+     1→@extends('layouts.admin')
+     2→@section('title', 'Full Mark Sheet')
+     3→
+     4→@push('styles')
+     5→<style>
+     6→.fms-page{animation:fmsIn .4s ease-out}
+     7→@keyframes fmsIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+     8→.fms-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+     9→.fms-header-left{flex:1}
+    10→.fms-title{font-size:1.75rem;font-weight:800;color:#1a1a2e;margin:0;letter-spacing:-.5px}
+    11→.fms-subtitle{font-size:.9rem;color:#6c757d;margin:.25rem 0 0}
+    12→.fms-breadcrumb ol{display:flex;list-style:none;padding:0;margin:0 0 .5rem;gap:.5rem;font-size:.8rem;align-items:center}
+    13→.fms-breadcrumb li{color:#adb5bd}
+    14→.fms-breadcrumb li a{color:#6c757d;text-decoration:none;transition:color .2s}
+    15→.fms-breadcrumb li a:hover{color:#4361ee}
+    16→.fms-breadcrumb li+li::before{content:'/';margin-right:.5rem;color:#dee2e6}
+    17→.fms-breadcrumb li.active{color:#4361ee;font-weight:500}
+    18→
+    19→.fms-card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #f0f0f0;overflow:hidden;margin-bottom:1.5rem}
+    20→.fms-card-head{display:flex;align-items:center;gap:.75rem;padding:1rem 1.5rem;border-bottom:1px solid #f0f0f0;background:#fafbfc}
+    21→.fms-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+    22→.fms-card-icon.blue{background:#eef2ff;color:#4361ee}
+    23→.fms-card-title{font-size:1rem;font-weight:700;color:#1a1a2e;margin:0}
+    24→.fms-card-desc{font-size:.82rem;color:#9ca3af;margin:.1rem 0 0}
+    25→.fms-card-body{padding:1.25rem 1.5rem}
+    26→.fms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+    27→.fms-group{display:flex;flex-direction:column}
+    28→.fms-label{font-weight:600;color:#374151;margin-bottom:.4rem;font-size:.85rem}
+    29→.fms-select{width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:.6rem 2.2rem .6rem .8rem;font-size:.88rem;color:#1a1a2e;background:#fff;appearance:none;cursor:pointer;transition:all .2s;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");background-position:right .6rem center;background-repeat:no-repeat;background-size:1.15rem}
+    30→.fms-select:focus{outline:none;border-color:#4361ee;box-shadow:0 0 0 3px rgba(67,97,238,.1)}
+    31→.fms-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.25rem;border-radius:10px;font-weight:600;font-size:.88rem;border:none;cursor:pointer;transition:all .25s;color:#fff;background:linear-gradient(135deg,#4361ee,#3a0ca3);box-shadow:0 2px 8px rgba(67,97,238,.3)}
+    32→.fms-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(67,97,238,.4)}
+    33→.fms-btn-outline{background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;box-shadow:none}
+    34→.fms-btn-outline:hover{border-color:#4361ee;color:#4361ee;background:#f8f9ff;transform:none;box-shadow:none}
+    35→.fms-actions{display:flex;justify-content:flex-end;gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
+    36→
+    37→/* Term section headers */
+    38→.fms-term-section{margin-bottom:2rem}
+    39→.fms-term-section:last-child{margin-bottom:0}
+    40→.fms-term-head{display:flex;align-items:center;gap:.75rem;padding:1rem 1.5rem;border-radius:14px 14px 0 0;color:#fff;font-size:1.1rem;font-weight:800}
+    41→.fms-term-head.term1{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+    42→.fms-term-head.term2{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+    43→.fms-term-head.annual{background:linear-gradient(135deg,#10b981,#059669)}
+    44→.fms-term-head .term-icon{font-size:1.3rem}
+    45→.fms-term-head .term-label{font-size:.78rem;background:rgba(255,255,255,.2);padding:.1rem .5rem;border-radius:5px;margin-left:auto}
+    46→
+    47→/* Rotated header table */
+    48→.fms-seq-table-wrap{overflow-x:auto}
+    49→.fms-seq-table{width:100%;border-collapse:collapse;font-size:.82rem}
+    50→.fms-seq-table th{border:1px solid #e5e7eb;font-weight:700;position:sticky;top:0;vertical-align:bottom;padding:0}
+    51→.fms-seq-table td{padding:.45rem .5rem;border:1px solid #e5e7eb;text-align:center}
+    52→.fms-seq-table tbody tr:nth-child(even){background:#f9fafb}
+    53→.fms-seq-table tbody tr:hover{background:#eef2ff}
+    54→
+    55→/* Rotated subject headers - using writing-mode for reliable 90° rotation */
+    56→.fms-seq-table .th-rotated{height:140px;white-space:nowrap;padding:0;border:1px solid #e5e7eb;vertical-align:bottom}
+    57→.fms-seq-table .th-rotated .th-rotate-inner{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
+    58→.fms-seq-table .th-rotated .th-rotate-text{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.78rem;font-weight:700;padding:6px 2px;white-space:nowrap;letter-spacing:.3px;line-height:1.1}
+    59→
+    60→/* Fixed header columns */
+    61→.fms-seq-table .th-fixed{padding:.55rem .5rem;white-space:nowrap;text-align:center}
+    62→.fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:160px}
+    63→.fms-seq-table .mark-val{font-weight:600}
+    64→.fms-seq-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee}
+    65→.fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.78rem}
+    66→.fms-seq-table .rank-col{font-weight:700}
+    67→
+    68→/* Term-specific summary row colors */
+    69→.fms-seq-table .avg-row td{font-weight:700;border-top:2px solid #6366f1}
+    70→.fms-seq-table .avg-row.term1 td{background:#dbeafe!important;color:#1e40af}
+    71→.fms-seq-table .avg-row.term2 td{background:#ede9fe!important;color:#5b21b6}
+    72→.fms-seq-table .avg-row.annual td{background:#d1fae5!important;color:#065f46}
+    73→.fms-seq-table .avg-row .stu-name{font-weight:700}
+    74→
+    75→.fms-seq-table .highest-row td{font-weight:700;border-top:2px solid #eab308;background:#fef9c3!important;color:#854d0e}
+    76→.fms-seq-table .highest-row .stu-name{font-weight:700}
+    77→
+    78→.fms-seq-table .lowest-row td{font-weight:700;border-top:2px solid #ef4444;background:#fee2e2!important;color:#991b1b}
+    79→.fms-seq-table .lowest-row .stu-name{font-weight:700}
+    80→
+    81→/* Term 1 header */
+    82→.fms-seq-table.term1-table .th-fixed{background:#eff6ff;color:#1e3a8a}
+    83→.fms-seq-table.term1-table .th-rotated{background:#eff6ff;color:#1e3a8a}
+    84→.fms-seq-table.term1-table .rank-col{color:#2563eb;background:#dbeafe}
+    85→/* Term 2 header */
+    86→.fms-seq-table.term2-table .th-fixed{background:#f5f3ff;color:#5b21b6}
+    87→.fms-seq-table.term2-table .th-rotated{background:#f5f3ff;color:#5b21b6}
+    88→.fms-seq-table.term2-table .rank-col{color:#7c3aed;background:#ede9fe}
+    89→/* Annual header */
+    90→.fms-seq-table.annual-table .th-fixed{background:#ecfdf5;color:#065f46}
+    91→.fms-seq-table.annual-table .th-rotated{background:#ecfdf5;color:#065f46}
+    92→.fms-seq-table.annual-table .rank-col{color:#059669;background:#d1fae5}
+    93→
+    94→/* No data */
+    95→.fms-empty{text-align:center;padding:3rem 1rem;color:#9ca3af}
+    96→.fms-empty i{font-size:2.5rem;margin-bottom:.75rem;display:block}
+    97→.fms-empty p{margin:0;font-size:.95rem}
+    98→
+    99→/* Summary stats row under each table */
+   100→.fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
+   101→.fms-stat-card{background:#fff;border-radius:10px;padding:.75rem 1rem;border:1px solid #e5e7eb}
+   102→.fms-stat-card .stat-label{font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+   103→.fms-stat-card .stat-value{font-size:1.1rem;font-weight:800;margin-top:.15rem}
+   104→.fms-stat-card.term1 .stat-value{color:#2563eb}
+   105→.fms-stat-card.term2 .stat-value{color:#7c3aed}
+   106→.fms-stat-card.annual .stat-value{color:#059669}
+   107→
+   108→/* Print styles */
+   109→@page{
+   110→    size:landscape;
+   111→    margin:8mm
+   112→}
+   113→@media print{
+   114→    /* Reset all layout containers to full width - override sidebar offset */
+   115→    .admin-wrapper{
+   116→        margin:0!important;
+   117→        padding:0!important;
+   118→        display:block!important;
+   119→        box-sizing:border-box!important
+   120→    }
+   121→    .admin-main{
+   122→        margin:0!important;
+   123→        margin-left:0!important;
+   124→        padding:0!important;
+   125→        overflow:visible!important;
+   126→        max-width:100%!important;
+   127→        width:100%!important;
+   128→        display:block!important;
+   129→        box-sizing:border-box!important
+   130→    }
+   131→    .admin-content{
+   132→        margin:0!important;
+   133→        padding:0!important;
+   134→        overflow:visible!important;
+   135→        max-width:100%!important;
+   136→        width:100%!important;
+   137→        display:block!important;
+   138→        box-sizing:border-box!important
+   139→    }
+   140→    /* Hide non-print elements */
+   141→    .fms-header,.fms-card,.fms-actions,.fms-term-stats,
+   142→    .admin-sidebar,.sidebar-backdrop,.admin-topbar,.sidebar-footer,.sidebar-toggle,
+   143→    .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{
+   144→        display:none!important
+   145→    }
+   146→    /* Remove box shadows and decorative borders */
+   147→    *{
+   148→        box-sizing:border-box!important
+   149→    }
+   150→    body,html{
+   151→        background:#fff!important;
+   152→        margin:0!important;
+   153→        padding:0!important;
+   154→        overflow:visible!important
+   155→    }
+   156→    .fms-page{
+   157→        width:100%!important;
+   158→        max-width:100%!important;
+   159→        padding:4mm!important;
+   160→        margin:0!important;
+   161→        box-shadow:none!important;
+   162→        border:none!important;
+   163→        overflow:visible!important
+   164→    }
+   165→    .fms-term-head{
+   166→        border-radius:0!important;
+   167→        -webkit-print-color-adjust:exact;
+   168→        print-color-adjust:exact;
+   169→        margin:0!important;
+   170→        padding:6px 10px!important
+   171→    }
+   172→    /* Table container must not clip content */
+   173→    .fms-seq-table-wrap{
+   174→        overflow:visible!important;
+   175→        width:100%!important;
+   176→        max-width:100%!important;
+   177→        margin:0!important;
+   178→        padding:0!important
+   179→    }
+   180→    .fms-seq-table{
+   181→        font-size:7.5pt;
+   182→        width:100%!important;
+   183→        table-layout:fixed!important;
+   184→        border-collapse:collapse!important
+   185→    }
+   186→    .fms-seq-table th{
+   187→        -webkit-print-color-adjust:exact;
+   188→        print-color-adjust:exact
+   189→    }
+   190→    .fms-term-section{
+   191→        page-break-inside:avoid;
+   192→        margin-bottom:10px!important;
+   193→        overflow:visible!important
+   194→    }
+   195→    .avg-row td,.highest-row td,.lowest-row td{
+   196→        -webkit-print-color-adjust:exact;
+   197→        print-color-adjust:exact
+   198→    }
+   199→    .fms-seq-table .th-rotated{
+   200→        height:80px!important
+   201→    }
+   202→    .fms-seq-table .th-rotated .th-rotate-text{
+   203→        font-size:6pt!important
+   204→    }
+   205→    .fms-seq-table td{
+   206→        padding:2px 4px!important;
+   207→        font-size:7.5pt!important;
+   208→        overflow:hidden!important;
+   209→        text-overflow:ellipsis!important
+   210→    }
+   211→    .fms-seq-table .stu-name{
+   212→        min-width:100px!important;
+   213→        max-width:140px!important;
+   214→        font-size:7.5pt!important;
+   215→        overflow:hidden!important;
+   216→        text-overflow:ellipsis!important
+   217→    }
+   218→    .fms-seq-table .th-fixed{
+   219→        font-size:7pt!important;
+   220→        padding:3px 4px!important
+   221→    }
+   222→    .fms-seq-table .total-col,
+   223→    .fms-seq-table .avg-col,
+   224→    .fms-seq-table .rank-col{
+   225→        min-width:40px!important
+   226→    }
+   227→}
+   228→
+   229→/* Responsive */
+   230→@media(max-width:768px){.fms-grid{grid-template-columns:1fr 1fr}.fms-title{font-size:1.35rem}}
+   231→@media(max-width:480px){.fms-grid{grid-template-columns:1fr}}
+   232→</style>
+   233→@endpush
+   234→
+   235→@section('content')
+   236→<div class="fms-page">
+   237→    <div class="fms-header">
+   238→        <div class="fms-header-left">
+   239→            <nav aria-label="breadcrumb" class="fms-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li class="active">Full Mark Sheet</li></ol></nav>
+   240→            <h1 class="fms-title">Full Mark Sheet</h1>
+   241→            <p class="fms-subtitle">Complete mark sheet with Term 1, Term 2, and Annual results in sequence</p>
+   242→        </div>
+   243→    </div>
+   244→
+   245→    {{-- Filter Card --}}
+   246→    <div class="fms-card no-print">
+   247→        <div class="fms-card-head">
+   248→            <div class="fms-card-icon blue"><i class="fas fa-filter"></i></div>
+   249→            <div><h3 class="fms-card-title">Select Filters</h3><p class="fms-card-desc">Choose academic year and class to generate the full mark sheet</p></div>
+   250→        </div>
+   251→        <form method="GET" action="{{ route('admin.mark-sheet-full.generate') }}">
+   252→            <div class="fms-card-body">
+   253→                <div class="fms-grid">
+   254→                    <div class="fms-group">
+   255→                        <label class="fms-label">Academic Year <span style="color:#ef4444">*</span></label>
+   256→                        <select name="academic_year_id" class="fms-select" required {{ $isTeacher ?? false ? 'disabled' : '' }}>
+   257→                            <option value="">-- Select Year --</option>
+   258→                            @foreach($academicYears as $ay)<option value="{{ $ay->id }}" {{ old('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>@endforeach
+   259→                        </select>
+   260→                        @if($isTeacher ?? false)<input type="hidden" name="academic_year_id" value="{{ $academicYears->first()->id ?? '' }}">@endif
+   261→                    </div>
+   262→                    <div class="fms-group">
+   263→                        <label class="fms-label">Class <span style="color:#ef4444">*</span></label>
+   264→                        <select name="class_id" id="filterClass" class="fms-select" required>
+   265→                            <option value="">-- Select Class --</option>
+   266→                            @foreach($classes as $c)<option value="{{ $c->id }}" {{ old('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach
+   267→                        </select>
+   268→                    </div>
+   269→                    <div class="fms-group">
+   270→                        <label class="fms-label">Section</label>
+   271→                        <select name="section_id" id="filterSection" class="fms-select">
+   272→                            <option value="">-- All Sections --</option>
+   273→                        </select>
+   274→                    </div>
+   275→                    <div class="fms-group" style="align-self:flex-end">
+   276→                        <button type="submit" class="fms-btn"><i class="fas fa-table"></i> Generate Sheet</button>
+   277→                    </div>
+   278→                </div>
+   279→            </div>
+   280→        </form>
+   281→    </div>
+   282→
+   283→    {{-- Results --}}
+   284→    @isset($roster)
+   285→    @if(count($roster) > 0)
+   286→
+   287→    {{-- Print & Export Actions --}}
+   288→    <div class="fms-card no-print" style="margin-bottom:1rem">
+   289→        <div style="display:flex;justify-content:flex-end;gap:.75rem;padding:.75rem 1.5rem">
+   290→            <button onclick="window.print()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print All</button>
+   291→            <button onclick="exportCSV()" class="fms-btn fms-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+   292→        </div>
+   293→    </div>
+   294→
+   295→    {{-- Compute highest and lowest marks for all terms --}}
+   296→    @php
+   297→        $highest = ['term1' => [], 'term2' => [], 'annual' => [], 'term1_total' => 0, 'term2_total' => 0, 'annual_total' => 0];
+   298→        $lowest  = ['term1' => [], 'term2' => [], 'annual' => [], 'term1_total' => 0, 'term2_total' => 0, 'annual_total' => 0];
+   299→        foreach ($subjects as $subj) {
+   300→            $t1Vals = []; $t2Vals = []; $aVals = [];
+   301→            foreach ($roster as $row) {
+   302→                $t1 = $row['term1'][$subj->id] ?? null;
+   303→                if ($t1 && $t1['grand_total'] !== null) $t1Vals[] = floatval($t1['grand_total']);
+   304→                $t2 = $row['term2'][$subj->id] ?? null;
+   305→                if ($t2 && $t2['grand_total'] !== null) $t2Vals[] = floatval($t2['grand_total']);
+   306→                $ann = $row['annual'][$subj->id] ?? null;
+   307→                if ($ann && $ann['grand_total'] !== null) $aVals[] = floatval($ann['grand_total']);
+   308→            }
+   309→            $highest['term1'][$subj->id]  = count($t1Vals) ? max($t1Vals) : null;
+   310→            $lowest['term1'][$subj->id]   = count($t1Vals) ? min($t1Vals) : null;
+   311→            $highest['term2'][$subj->id]  = count($t2Vals) ? max($t2Vals) : null;
+   312→            $lowest['term2'][$subj->id]   = count($t2Vals) ? min($t2Vals) : null;
+   313→            $highest['annual'][$subj->id] = count($aVals) ? max($aVals) : null;
+   314→            $lowest['annual'][$subj->id]  = count($aVals) ? min($aVals) : null;
+   315→        }
+   316→        $t1Totals = array_filter(array_column($roster, 'term1_total'));
+   317→        $t2Totals = array_filter(array_column($roster, 'term2_total'));
+   318→        $aTotals  = array_filter(array_column($roster, 'annual_total'));
+   319→        $highest['term1_total']  = count($t1Totals) ? max($t1Totals) : 0;
+   320→        $lowest['term1_total']   = count($t1Totals) ? min($t1Totals) : 0;
+   321→        $highest['term2_total']  = count($t2Totals) ? max($t2Totals) : 0;
+   322→        $lowest['term2_total']   = count($t2Totals) ? min($t2Totals) : 0;
+   323→        $highest['annual_total'] = count($aTotals) ? max($aTotals) : 0;
+   324→        $lowest['annual_total']  = count($aTotals) ? min($aTotals) : 0;
+   325→    @endphp
+   326→
+   327→
+   328→    {{-- ============================================================ --}}
+   329→    {{-- TERM 1 --}}
+   330→    {{-- ============================================================ --}}
+   331→    <div class="fms-term-section">
+   332→        <div class="fms-term-head term1">
+   333→            <i class="fas fa-clipboard-list term-icon"></i>
+   334→            <span>Term 1{{ $term1 ? ': ' . $term1->name : '' }}</span>
+   335→            <span class="term-label">{{ count($roster) }} Students &middot; {{ $subjects->count() }} Subjects</span>
+   336→        </div>
+   337→        <div class="fms-seq-table-wrap">
+   338→            <table class="fms-seq-table term1-table">
+   339→                <thead>
+   340→                    <tr>
+   341→                        <th class="th-fixed" style="width:40px">#</th>
+   342→                        <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>
+   343→                        @foreach($subjects as $subj)
+   344→                        <th class="th-rotated">
+   345→                            <div class="th-rotate-inner">
+   346→                                <span class="th-rotate-text">{{ $subj->name }}</span>
+   347→                            </div>
+   348→                        </th>
+   349→                        @endforeach
+   350→                        <th class="th-fixed">Total</th>
+   351→                        <th class="th-fixed">Average</th>
+   352→                        <th class="th-fixed">Rank</th>
+   353→                    </tr>
+   354→                </thead>
+   355→                <tbody>
+   356→                    @foreach($roster as $i => $row)
+   357→                    <tr>
+   358→                        <td>{{ $i + 1 }}</td>
+   359→                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
+   360→                        @foreach($subjects as $subj)
+   361→                            @php $t1 = $row['term1'][$subj->id] ?? null @endphp
+   362→                            <td>
+   363→                                @if($t1 && $t1['grand_total'] !== null)
+   364→                                    <span class="mark-val">{{ $t1['grand_total'] }}</span>
+   365→                                @else
+   366→                                    <span style="color:#d1d5db">-</span>
+   367→                                @endif
+   368→                            </td>
+   369→                        @endforeach
+   370→                        <td class="total-col">{{ $row['term1_total'] ?: '-' }}</td>
+   371→                        <td class="avg-col">{{ $row['term1_avg'] ?: '-' }}</td>
+   372→                        <td class="rank-col">{{ $row['term1_rank'] ?? '-' }}</td>
+   373→                    </tr>
+   374→                    @endforeach
+   375→
+   376→                    {{-- Class Average --}}
+   377→                    <tr class="avg-row term1">
+   378→                        <td colspan="2" class="stu-name"><i class="fas fa-chart-bar"></i> Class Average</td>
+   379→                        @foreach($subjects as $subj)
+   380→                            <td>{{ $averages['term1'][$subj->id] ?? '-' }}</td>
+   381→                        @endforeach
+   382→                        <td>{{ $averages['term1_total_avg'] ?? '-' }}</td>
+   383→                        <td>-</td>
+   384→                        <td>-</td>
+   385→                    </tr>
+   386→
+   387→                    {{-- Highest Mark --}}
+   388→                    <tr class="highest-row">
+   389→                        <td colspan="2" class="stu-name"><i class="fas fa-arrow-up"></i> Highest Mark</td>
+   390→                        @foreach($subjects as $subj)
+   391→                            <td>{{ $highest['term1'][$subj->id] ?? '-' }}</td>
+   392→                        @endforeach
+   393→                        <td>{{ $highest['term1_total'] ?: '-' }}</td>
+   394→                        <td>-</td>
+   395→                        <td>-</td>
+   396→                    </tr>
+   397→
+   398→                    {{-- Lowest Mark --}}
+   399→                    <tr class="lowest-row">
+   400→                        <td colspan="2" class="stu-name"><i class="fas fa-arrow-down"></i> Lowest Mark</td>
+   401→                        @foreach($subjects as $subj)
+   402→                            <td>{{ $lowest['term1'][$subj->id] ?? '-' }}</td>
+   403→                        @endforeach
+   404→                        <td>{{ $lowest['term1_total'] ?: '-' }}</td>
+   405→                        <td>-</td>
+   406→                        <td>-</td>
+   407→                    </tr>
+   408→                </tbody>
+   409→            </table>
+   410→        </div>
+   411→        {{-- Term 1 Stats --}}
+   412→        <div class="fms-term-stats">
+   413→            <div class="fms-stat-card term1">
+   414→                <div class="stat-label">Students</div>
+   415→                <div class="stat-value">{{ count($roster) }}</div>
+   416→            </div>
+   417→            <div class="fms-stat-card term1">
+   418→                <div class="stat-label">Class Average</div>
+   419→                <div class="stat-value">{{ $averages['term1_total_avg'] ?? '-' }}</div>
+   420→            </div>
+   421→            <div class="fms-stat-card term1">
+   422→                <div class="stat-label">Highest Total</div>
+   423→                <div class="stat-value">{{ $highest['term1_total'] ?: '-' }}</div>
+   424→            </div>
+   425→            <div class="fms-stat-card term1">
+   426→                <div class="stat-label">Lowest Total</div>
+   427→                <div class="stat-value">{{ $lowest['term1_total'] ?: '-' }}</div>
+   428→            </div>
+   429→        </div>
+   430→    </div>
+   431→
+   432→    {{-- ============================================================ --}}
+   433→    {{-- TERM 2 --}}
+   434→    {{-- ============================================================ --}}
+   435→    @if($term2)
+   436→    <div class="fms-term-section">
+   437→        <div class="fms-term-head term2">
+   438→            <i class="fas fa-clipboard-list term-icon"></i>
+   439→            <span>Term 2: {{ $term2->name }}</span>
+   440→            <span class="term-label">{{ count($roster) }} Students &middot; {{ $subjects->count() }} Subjects</span>
+   441→        </div>
+   442→        <div class="fms-seq-table-wrap">
+   443→            <table class="fms-seq-table term2-table">
+   444→                <thead>
+   445→                    <tr>
+   446→                        <th class="th-fixed" style="width:40px">#</th>
+   447→                        <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>
+   448→                        @foreach($subjects as $subj)
+   449→                        <th class="th-rotated">
+   450→                            <div class="th-rotate-inner">
+   451→                                <span class="th-rotate-text">{{ $subj->name }}</span>
+   452→                            </div>
+   453→                        </th>
+   454→                        @endforeach
+   455→                        <th class="th-fixed">Total</th>
+   456→                        <th class="th-fixed">Average</th>
+   457→                        <th class="th-fixed">Rank</th>
+   458→                    </tr>
+   459→                </thead>
+   460→                <tbody>
+   461→                    @foreach($roster as $i => $row)
+   462→                    <tr>
+   463→                        <td>{{ $i + 1 }}</td>
+   464→                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
+   465→                        @foreach($subjects as $subj)
+   466→                            @php $t2 = $row['term2'][$subj->id] ?? null @endphp
+   467→                            <td>
+   468→                                @if($t2 && $t2['grand_total'] !== null)
+   469→                                    <span class="mark-val">{{ $t2['grand_total'] }}</span>
+   470→                                @else
+   471→                                    <span style="color:#d1d5db">-</span>
+   472→                                @endif
+   473→                            </td>
+   474→                        @endforeach
+   475→                        <td class="total-col">{{ $row['term2_total'] ?: '-' }}</td>
+   476→                        <td class="avg-col">{{ $row['term2_avg'] ?: '-' }}</td>
+   477→                        <td class="rank-col">{{ $row['term2_rank'] ?? '-' }}</td>
+   478→                    </tr>
+   479→                    @endforeach
+   480→
+   481→                    <tr class="avg-row term2">
+   482→                        <td colspan="2" class="stu-name"><i class="fas fa-chart-bar"></i> Class Average</td>
+   483→                        @foreach($subjects as $subj)
+   484→                            <td>{{ $averages['term2'][$subj->id] ?? '-' }}</td>
+   485→                        @endforeach
+   486→                        <td>{{ $averages['term2_total_avg'] ?? '-' }}</td>
+   487→                        <td>-</td>
+   488→                        <td>-</td>
+   489→                    </tr>
+   490→
+   491→                    <tr class="highest-row">
+   492→                        <td colspan="2" class="stu-name"><i class="fas fa-arrow-up"></i> Highest Mark</td>
+   493→                        @foreach($subjects as $subj)
+   494→                            <td>{{ $highest['term2'][$subj->id] ?? '-' }}</td>
+   495→                        @endforeach
+   496→                        <td>{{ $highest['term2_total'] ?: '-' }}</td>
+   497→                        <td>-</td>
+   498→                        <td>-</td>
+   499→                    </tr>
+   500→
+   501→                    <tr class="lowest-row">
+   502→                        <td colspan="2" class="stu-name"><i class="fas fa-arrow-down"></i> Lowest Mark</td>
+   503→                        @foreach($subjects as $subj)
+   504→                            <td>{{ $lowest['term2'][$subj->id] ?? '-' }}</td>
+   505→                        @endforeach
+   506→                        <td>{{ $lowest['term2_total'] ?: '-' }}</td>
+   507→                        <td>-</td>
+   508→                        <td>-</td>
+   509→                    </tr>
+   510→                </tbody>
+   511→            </table>
+   512→        </div>
+   513→        <div class="fms-term-stats">
+   514→            <div class="fms-stat-card term2">
+   515→                <div class="stat-label">Students</div>
+   516→                <div class="stat-value">{{ count($roster) }}</div>
+   517→            </div>
+   518→            <div class="fms-stat-card term2">
+   519→                <div class="stat-label">Class Average</div>
+   520→                <div class="stat-value">{{ $averages['term2_total_avg'] ?? '-' }}</div>
+   521→            </div>
+   522→            <div class="fms-stat-card term2">
+   523→                <div class="stat-label">Highest Total</div>
+   524→                <div class="stat-value">{{ $highest['term2_total'] ?: '-' }}</div>
+   525→            </div>
+   526→            <div class="fms-stat-card term2">
+   527→                <div class="stat-label">Lowest Total</div>
+   528→                <div class="stat-value">{{ $lowest['term2_total'] ?: '-' }}</div>
+   529→            </div>
+   530→        </div>
+   531→    </div>
+   532→    @endif
+   533→
+   534→    {{-- ============================================================ --}}
+   535→    {{-- ANNUAL --}}
+   536→    {{-- ============================================================ --}}
+   537→    <div class="fms-term-section">
+   538→        <div class="fms-term-head annual">
+   539→            <i class="fas fa-award term-icon"></i>
+   540→            <span>Annual Result (Average of Term 1 & Term 2)</span>
+   541→            <span class="term-label">{{ count($roster) }} Students &middot; {{ $subjects->count() }} Subjects</span>
+   542→        </div>
+   543→        <div class="fms-seq-table-wrap">
+   544→            <table class="fms-seq-table annual-table">
+   545→                <thead>
+   546→                    <tr>
+   547→                        <th class="th-fixed" style="width:40px">#</th>
+   548→                        <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>
+   549→                        @foreach($subjects as $subj)
+   550→                        <th class="th-rotated">
+   551→                            <div class="th-rotate-inner">
+   552→                                <span class="th-rotate-text">{{ $subj->name }}</span>
+   553→                            </div>
+   554→                        </th>
+   555→                        @endforeach
+   556→                        <th class="th-fixed">Total</th>
+   557→                        <th class="th-fixed">Average</th>
+   558→                        <th class="th-fixed">Rank</th>
+   559→                    </tr>
+   560→                </thead>
+   561→                <tbody>
+   562→                    @foreach($roster as $i => $row)
+   563→                    <tr>
+   564→                        <td>{{ $i + 1 }}</td>
+   565→                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
+   566→                        @foreach($subjects as $subj)
+   567→                            @php $ann = $row['annual'][$subj->id] ?? null @endphp
+   568→                            <td>
+   569→                                @if($ann && $ann['grand_total'] !== null)
+   570→                                    <span class="mark-val">{{ $ann['grand_total'] }}</span>
+   571→                                @else
+   572→                                    <span style="color:#d1d5db">-</span>
+   573→                                @endif
+   574→                            </td>
+   575→                        @endforeach
+   576→                        <td class="total-col">{{ $row['annual_total'] ?: '-' }}</td>
+   577→                        <td class="avg-col">{{ $row['annual_avg'] ?: '-' }}</td>
+   578→                        <td class="rank-col">{{ $row['annual_rank'] ?? '-' }}</td>
+   579→                    </tr>
+   580→                    @endforeach
+   581→
+   582→                    <tr class="avg-row annual">
+   583→                        <td colspan="2" class="stu-name"><i class="fas fa-chart-bar"></i> Class Average</td>
+   584→                        @foreach($subjects as $subj)
+   585→                            <td>{{ $averages['annual'][$subj->id] ?? '-' }}</td>
+   586→                        @endforeach
+   587→                        <td>{{ $averages['annual_total_avg'] ?? '-' }}</td>
+   588→                        <td>-</td>
+   589→                        <td>-</td>
+   590→                    </tr>
+   591→
+   592→                    <tr class="highest-row">
+   593→                        <td colspan="2" class="stu-name"><i class="fas fa-arrow-up"></i> Highest Mark</td>
+   594→                        @foreach($subjects as $subj)
+   595→                            <td>{{ $highest['annual'][$subj->id] ?? '-' }}</td>
+   596→                        @endforeach
+   597→                        <td>{{ $highest['annual_total'] ?: '-' }}</td>
+   598→                        <td>-</td>
+   599→                        <td>-</td>
+   600→                    </tr>
+   601→
+   602→                    <tr class="lowest-row">
+   603→                        <td colspan="2" class="stu-name"><i class="fas fa-arrow-down"></i> Lowest Mark</td>
+   604→                        @foreach($subjects as $subj)
+   605→                            <td>{{ $lowest['annual'][$subj->id] ?? '-' }}</td>
+   606→                        @endforeach
+   607→                        <td>{{ $lowest['annual_total'] ?: '-' }}</td>
+   608→                        <td>-</td>
+   609→                        <td>-</td>
+   610→                    </tr>
+   611→                </tbody>
+   612→            </table>
+   613→        </div>
+   614→        <div class="fms-term-stats">
+   615→            <div class="fms-stat-card annual">
+   616→                <div class="stat-label">Students</div>
+   617→                <div class="stat-value">{{ count($roster) }}</div>
+   618→            </div>
+   619→            <div class="fms-stat-card annual">
+   620→                <div class="stat-label">Class Average</div>
+   621→                <div class="stat-value">{{ $averages['annual_total_avg'] ?? '-' }}</div>
+   622→            </div>
+   623→            <div class="fms-stat-card annual">
+   624→                <div class="stat-label">Highest Total</div>
+   625→                <div class="stat-value">{{ $highest['annual_total'] ?: '-' }}</div>
+   626→            </div>
+   627→            <div class="fms-stat-card annual">
+   628→                <div class="stat-label">Lowest Total</div>
+   629→                <div class="stat-value">{{ $lowest['annual_total'] ?: '-' }}</div>
+   630→            </div>
+   631→        </div>
+   632→    </div>
+   633→
+   634→    @else
+   635→    <div class="fms-card">
+   636→        <div class="fms-empty">
+   637→            <i class="fas fa-clipboard-list"></i>
+   638→            <p>No marks found for the selected filters.</p>
+   639→            <p style="font-size:.82rem;margin-top:.5rem">Please make sure marks have been entered for the selected academic year and class.</p>
+   640→        </div>
+   641→    </div>
+   642→    @endif
+   643→    @endisset
+   644→</div>
+   645→@endsection
+   646→
+   647→@push('scripts')
+   648→<script>
+   649→(function(){
+   650→    var cls=document.getElementById('filterClass');
+   651→    var sec=document.getElementById('filterSection');
+   652→    if(cls){
+   653→        cls.addEventListener('change',function(){
+   654→            if(!this.value){sec.innerHTML='<option value="">-- All Sections --</option>';return;}
+   655→            fetch('{{ route("admin.mark-sheet-full.sections") }}?class_id='+this.value,{credentials:'same-origin'})
+   656→            .then(function(r){return r.json();})
+   657→            .then(function(data){
+   658→                sec.innerHTML='<option value="">-- All Sections --</option>';
+   659→                data.forEach(function(s){sec.innerHTML+='<option value="'+s.id+'">'+s.name+'</option>';});
+   660→            });
+   661→        });
+   662→    }
+   663→})();
+   664→
+   665→function exportCSV(){
+   666→    var tables=document.querySelectorAll('.fms-seq-table');
+   667→    if(!tables.length)return;
+   668→    var csv=[];
+   669→    tables.forEach(function(table){
+   670→        var sectionHead=table.closest('.fms-term-section');
+   671→        if(sectionHead){
+   672→            var headDiv=sectionHead.querySelector('.fms-term-head');
+   673→            if(headDiv){
+   674→                csv.push('');
+   675→                csv.push('=== '+headDiv.innerText.trim()+' ===');
+   676→                csv.push('');
+   677→            }
+   678→        }
+   679→        var rows=table.querySelectorAll('tr');
+   680→        rows.forEach(function(row){
+   681→            var cols=row.querySelectorAll('td,th');
+   682→            var rowData=[];
+   683→            cols.forEach(function(col){
+   684→                var text=col.innerText.replace(/"/g,'""').replace(/\n/g,' ');
+   685→                rowData.push('"'+text+'"');
+   686→            });
+   687→            csv.push(rowData.join(','));
+   688→        });
+   689→    });
+   690→    var blob=new Blob([csv.join('\n')],{type:'text/csv;charset=utf-8;'});
+   691→    var link=document.createElement('a');
+   692→    link.href=URL.createObjectURL(blob);
+   693→    link.download='mark_sheet_full.csv';
+   694→    link.click();
+   695→}
+   696→</script>
+   697→@endpush
+   698→
