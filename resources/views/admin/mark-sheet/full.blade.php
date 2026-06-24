@@ -65,6 +65,17 @@
 .fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.78rem}
 .fms-seq-table .rank-col{font-weight:700}
 
+/* Color-coded marks by percentage (red <50%, amber 50-69%, green >=70%) */
+.fms-seq-table td.mark-red{background:#fef2f2!important;color:#dc2626!important;font-weight:700}
+.fms-seq-table td.mark-amber{background:#fffbeb!important;color:#d97706!important;font-weight:700}
+.fms-seq-table td.mark-green{background:#f0fdf4!important;color:#059669!important;font-weight:700}
+.fms-seq-table .total-col.mark-red{background:#fef2f2!important;color:#dc2626!important}
+.fms-seq-table .total-col.mark-amber{background:#fffbeb!important;color:#d97706!important}
+.fms-seq-table .total-col.mark-green{background:#f0fdf4!important;color:#059669!important}
+.fms-seq-table .avg-col.mark-red{background:#fef2f2!important;color:#dc2626!important}
+.fms-seq-table .avg-col.mark-amber{background:#fffbeb!important;color:#d97706!important}
+.fms-seq-table .avg-col.mark-green{background:#f0fdf4!important;color:#059669!important}
+
 /* Term-specific summary row colors */
 .fms-seq-table .avg-row td{font-weight:700;border-top:2px solid #6366f1}
 .fms-seq-table .avg-row.term1 td{background:#dbeafe!important;color:#1e40af}
@@ -284,11 +295,32 @@
     @isset($roster)
     @if(count($roster) > 0)
 
+    @php
+        // Helper: color class based on grand_total value (out of 100)
+        // Returns 'mark-red' (<50), 'mark-amber' (50-69), 'mark-green' (>=70), or '' (no value)
+        $markClass = function($v) {
+            if ($v === null || $v === '') return '';
+            $val = floatval($v);
+            if ($val < 50) return 'mark-red';
+            if ($val < 70) return 'mark-amber';
+            return 'mark-green';
+        };
+    @endphp
+
     {{-- Print & Export Actions --}}
     <div class="fms-card no-print" style="margin-bottom:1rem">
-        <div style="display:flex;justify-content:flex-end;gap:.75rem;padding:.75rem 1.5rem">
-            <button onclick="window.print()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print All</button>
-            <button onclick="exportCSV()" class="fms-btn fms-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.75rem 1.5rem;flex-wrap:wrap">
+            {{-- Color legend --}}
+            <div style="display:flex;align-items:center;gap:12px;font-size:.78rem;color:#6b7280;">
+                <span style="font-weight:600;color:#1a1a2e;">Color Legend:</span>
+                <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#fef2f2;border:1px solid #fecaca;"></span> <span style="color:#dc2626;font-weight:600;">&lt; 50 (Fail)</span></span>
+                <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#fffbeb;border:1px solid #fde68a;"></span> <span style="color:#d97706;font-weight:600;">50&ndash;69 (Below Avg)</span></span>
+                <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#f0fdf4;border:1px solid #bbf7d0;"></span> <span style="color:#059669;font-weight:600;">&ge; 70 (Pass)</span></span>
+            </div>
+            <div style="display:flex;gap:.75rem;">
+                <button onclick="window.print()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print All</button>
+                <button onclick="exportCSV()" class="fms-btn fms-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+            </div>
         </div>
     </div>
 
@@ -359,7 +391,7 @@
                         <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
                         @foreach($subjects as $subj)
                             @php $t1 = $row['term1'][$subj->id] ?? null @endphp
-                            <td>
+                            <td class="{{ $t1 && $t1['grand_total'] !== null ? $markClass($t1['grand_total']) : '' }}">
                                 @if($t1 && $t1['grand_total'] !== null)
                                     <span class="mark-val">{{ $t1['grand_total'] }}</span>
                                 @else
@@ -367,8 +399,8 @@
                                 @endif
                             </td>
                         @endforeach
-                        <td class="total-col">{{ $row['term1_total'] ?: '-' }}</td>
-                        <td class="avg-col">{{ $row['term1_avg'] ?: '-' }}</td>
+                        <td class="total-col {{ $markClass($row['term1_total'] ?? null) }}">{{ $row['term1_total'] ?: '-' }}</td>
+                        <td class="avg-col {{ $markClass($row['term1_avg'] ?? null) }}">{{ $row['term1_avg'] ?: '-' }}</td>
                         <td class="rank-col">{{ $row['term1_rank'] ?? '-' }}</td>
                     </tr>
                     @endforeach
@@ -464,7 +496,7 @@
                         <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
                         @foreach($subjects as $subj)
                             @php $t2 = $row['term2'][$subj->id] ?? null @endphp
-                            <td>
+                            <td class="{{ $t2 && $t2['grand_total'] !== null ? $markClass($t2['grand_total']) : '' }}">
                                 @if($t2 && $t2['grand_total'] !== null)
                                     <span class="mark-val">{{ $t2['grand_total'] }}</span>
                                 @else
@@ -472,8 +504,8 @@
                                 @endif
                             </td>
                         @endforeach
-                        <td class="total-col">{{ $row['term2_total'] ?: '-' }}</td>
-                        <td class="avg-col">{{ $row['term2_avg'] ?: '-' }}</td>
+                        <td class="total-col {{ $markClass($row['term2_total'] ?? null) }}">{{ $row['term2_total'] ?: '-' }}</td>
+                        <td class="avg-col {{ $markClass($row['term2_avg'] ?? null) }}">{{ $row['term2_avg'] ?: '-' }}</td>
                         <td class="rank-col">{{ $row['term2_rank'] ?? '-' }}</td>
                     </tr>
                     @endforeach
@@ -565,7 +597,7 @@
                         <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
                         @foreach($subjects as $subj)
                             @php $ann = $row['annual'][$subj->id] ?? null @endphp
-                            <td>
+                            <td class="{{ $ann && $ann['grand_total'] !== null ? $markClass($ann['grand_total']) : '' }}">
                                 @if($ann && $ann['grand_total'] !== null)
                                     <span class="mark-val">{{ $ann['grand_total'] }}</span>
                                 @else
@@ -573,8 +605,8 @@
                                 @endif
                             </td>
                         @endforeach
-                        <td class="total-col">{{ $row['annual_total'] ?: '-' }}</td>
-                        <td class="avg-col">{{ $row['annual_avg'] ?: '-' }}</td>
+                        <td class="total-col {{ $markClass($row['annual_total'] ?? null) }}">{{ $row['annual_total'] ?: '-' }}</td>
+                        <td class="avg-col {{ $markClass($row['annual_avg'] ?? null) }}">{{ $row['annual_avg'] ?: '-' }}</td>
                         <td class="rank-col">{{ $row['annual_rank'] ?? '-' }}</td>
                     </tr>
                     @endforeach

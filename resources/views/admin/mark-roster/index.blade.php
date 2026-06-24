@@ -100,13 +100,22 @@
 .mr-table .exam-total-col{background:#fde68a;font-weight:700;color:#92400e}
 
 /* Result columns */
-.mr-table .grand-total-col{background:#d1fae5;font-weight:800;color:#065f46}
+.mr-table .grand-total-col{font-weight:800}
+.mr-table .grand-total-col.mark-red{background:#fef2f2!important;color:#dc2626!important}
+.mr-table .grand-total-col.mark-amber{background:#fffbeb!important;color:#d97706!important}
+.mr-table .grand-total-col.mark-green{background:#f0fdf4!important;color:#059669!important}
 .mr-table .grade-col{font-weight:800}
-.mr-table .grade-col.g-a{color:#059669}
-.mr-table .grade-col.g-b{color:#2563eb}
-.mr-table .grade-col.g-c{color:#d97706}
-.mr-table .grade-col.g-d{color:#ea580c}
-.mr-table .grade-col.g-f{color:#dc2626}
+.mr-table .grade-col.g-a{color:#059669;background:#f0fdf4}
+.mr-table .grade-col.g-b{color:#2563eb;background:#eff6ff}
+.mr-table .grade-col.g-c{color:#d97706;background:#fffbeb}
+.mr-table .grade-col.g-d{color:#ea580c;background:#fff7ed}
+.mr-table .grade-col.g-f{color:#dc2626;background:#fef2f2}
+.mr-table .grade-col.g-i{color:#6b7280;background:#f3f4f6}
+
+/* Color-coded individual mark cells (CA + Exam fields) */
+.mr-table td.mark-red{background:#fef2f2!important;color:#dc2626!important;font-weight:700}
+.mr-table td.mark-amber{background:#fffbeb!important;color:#d97706!important;font-weight:700}
+.mr-table td.mark-green{background:#f0fdf4!important;color:#059669!important;font-weight:700}
 
 /* Average row */
 .mr-table .avg-row td{background:#f0f4ff!important;font-weight:700;color:#4338ca;border-top:2px solid #6366f1}
@@ -265,9 +274,18 @@
             @if($section)<span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $section->name }}</span>@endif
             <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ count($subjectRosters) }} Subjects</span>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:.75rem;padding:.5rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc">
-            <button onclick="window.print()" class="mr-btn mr-btn-outline"><i class="fas fa-print"></i> Print</button>
-            <button onclick="exportRosterCSV()" class="mr-btn mr-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.5rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc;flex-wrap:wrap">
+            {{-- Color legend --}}
+            <div style="display:flex;align-items:center;gap:10px;font-size:.75rem;color:#6b7280;">
+                <span style="font-weight:600;color:#1a1a2e;">Legend:</span>
+                <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#fef2f2;border:1px solid #fecaca;"></span> <span style="color:#dc2626;font-weight:600;">&lt; 50%</span></span>
+                <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#fffbeb;border:1px solid #fde68a;"></span> <span style="color:#d97706;font-weight:600;">50&ndash;69%</span></span>
+                <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f0fdf4;border:1px solid #bbf7d0;"></span> <span style="color:#059669;font-weight:600;">&ge; 70%</span></span>
+            </div>
+            <div style="display:flex;gap:.75rem;">
+                <button onclick="window.print()" class="mr-btn mr-btn-outline"><i class="fas fa-print"></i> Print</button>
+                <button onclick="exportRosterCSV()" class="mr-btn mr-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+            </div>
         </div>
     </div>
 
@@ -288,6 +306,15 @@
         $fmt2 = function($v) {
             if ($v === null || $v === '') return '-';
             return number_format((float)$v, 2);
+        };
+        // Helper: color class based on value/max percentage
+        // Returns 'mark-red' (<50%), 'mark-amber' (50-69%), 'mark-green' (>=70%), or '' (no value)
+        $markClass = function($v, $max) {
+            if ($v === null || $v === '' || $max <= 0) return '';
+            $pct = (floatval($v) / floatval($max)) * 100;
+            if ($pct < 50) return 'mark-red';
+            if ($pct < 70) return 'mark-amber';
+            return 'mark-green';
         };
     ?>
     <div class="mr-subject-section">
@@ -339,31 +366,41 @@
                     <tr>
                         <td class="stu-serial">{{ $row['serial'] }}</td>
                         <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
-                        {{-- CA raw fields (1 decimal) --}}
-                        <td class="ca-col">{{ $fmt1($row['ca1'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca2'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca3'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca4'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca5'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca6'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca7'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca8'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca9'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['ca10'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['conduct'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['handwriting'] ?? null) }}</td>
-                        <td class="ca-col">{{ $fmt1($row['creativity'] ?? null) }}</td>
-                        {{-- CA Total (2 decimals - calculated) --}}
-                        <td class="ca-total-col">{{ $fmt2($row['ca_total'] ?? null) }}</td>
+                        {{-- CA raw fields (1 decimal) — color-coded by /5 --}}
+                        <td class="ca-col {{ $markClass($row['ca1'] ?? null, 5) }}">{{ $fmt1($row['ca1'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca2'] ?? null, 5) }}">{{ $fmt1($row['ca2'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca3'] ?? null, 5) }}">{{ $fmt1($row['ca3'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca4'] ?? null, 5) }}">{{ $fmt1($row['ca4'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca5'] ?? null, 5) }}">{{ $fmt1($row['ca5'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca6'] ?? null, 5) }}">{{ $fmt1($row['ca6'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca7'] ?? null, 5) }}">{{ $fmt1($row['ca7'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca8'] ?? null, 5) }}">{{ $fmt1($row['ca8'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca9'] ?? null, 5) }}">{{ $fmt1($row['ca9'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['ca10'] ?? null, 5) }}">{{ $fmt1($row['ca10'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['conduct'] ?? null, 5) }}">{{ $fmt1($row['conduct'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['handwriting'] ?? null, 5) }}">{{ $fmt1($row['handwriting'] ?? null) }}</td>
+                        <td class="ca-col {{ $markClass($row['creativity'] ?? null, 10) }}">{{ $fmt1($row['creativity'] ?? null) }}</td>
+                        {{-- CA Total (2 decimals - calculated) — /30 --}}
+                        <td class="ca-total-col {{ $markClass($row['ca_total'] ?? null, 30) }}">{{ $fmt2($row['ca_total'] ?? null) }}</td>
                         {{-- Exam raw fields (1 decimal) --}}
-                        <td class="exam-col">{{ $fmt1($row['test1'] ?? null) }}</td>
-                        <td class="exam-col">{{ $fmt1($row['test2'] ?? null) }}</td>
-                        <td class="exam-col">{{ $fmt1($row['mid_term'] ?? null) }}</td>
-                        <td class="exam-col">{{ $fmt1($row['final_exam'] ?? null) }}</td>
-                        {{-- Exam Total (2 decimals - calculated) --}}
-                        <td class="exam-total-col">{{ $fmt2($row['exam_total'] ?? null) }}</td>
-                        {{-- Grand Total (2 decimals - calculated) --}}
-                        <td class="grand-total-col">{{ $fmt2($row['grand_total'] ?? null) }}</td>
+                        <td class="exam-col {{ $markClass($row['test1'] ?? null, 10) }}">{{ $fmt1($row['test1'] ?? null) }}</td>
+                        <td class="exam-col {{ $markClass($row['test2'] ?? null, 10) }}">{{ $fmt1($row['test2'] ?? null) }}</td>
+                        <td class="exam-col {{ $markClass($row['mid_term'] ?? null, 20) }}">{{ $fmt1($row['mid_term'] ?? null) }}</td>
+                        <td class="exam-col {{ $markClass($row['final_exam'] ?? null, 30) }}">{{ $fmt1($row['final_exam'] ?? null) }}</td>
+                        {{-- Exam Total (2 decimals - calculated) — /70 --}}
+                        <td class="exam-total-col {{ $markClass($row['exam_total'] ?? null, 70) }}">{{ $fmt2($row['exam_total'] ?? null) }}</td>
+                        {{-- Grand Total (2 decimals - calculated) — color-coded by percentage --}}
+                        @php
+                            $gt = $row['grand_total'] ?? null;
+                            $gtClass = '';
+                            if ($gt !== null && $gt !== '') {
+                                $gtVal = floatval($gt);
+                                if ($gtVal < 50) $gtClass = 'mark-red';
+                                elseif ($gtVal < 70) $gtClass = 'mark-amber';
+                                else $gtClass = 'mark-green';
+                            }
+                        @endphp
+                        <td class="grand-total-col {{ $gtClass }}">{{ $fmt2($row['grand_total'] ?? null) }}</td>
                         @php
                             $gClass = 'g-f';
                             if ($row['grade']) {
