@@ -2425,6 +2425,7 @@
     window.me_loadStudents = loadStudents;
     window.me_getCSRF = getCSRF;
     window.me_updateCSRF = updateCSRFToken;
+    window.me_filterAy = filterAy;
     window.me_filterSubject = filterSubject;
     window.me_filterTerm = filterTerm;
     window.me_filterClass = filterClass;
@@ -2559,20 +2560,22 @@ function lvSaveAll() {
 
     var csrf = window.me_getCSRF ? window.me_getCSRF() : (document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
 
+    var ayId = window.me_filterAy ? window.me_filterAy.value : '';
     var subjectId = window.me_filterSubject ? window.me_filterSubject.value : '';
     var termId = window.me_filterTerm ? window.me_filterTerm.value : '';
     var classId = window.me_filterClass ? window.me_filterClass.value : '';
     var sectionId = window.me_filterSection ? window.me_filterSection.value : '';
 
-    // Pre-flight: if subject_id or term_id is empty, server will 422 — fail fast with a clear message
-    if (!subjectId || !termId) {
-        console.error('[MarkEntry] bulk save aborted — missing subject_id or term_id', { subjectId: subjectId, termId: termId });
-        if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Filter subject/term missing');
+    // Pre-flight: if ayId/subject_id/term_id/class_id/section_id is empty, fail fast with a clear message
+    if (!ayId || !subjectId || !termId || !classId || !sectionId) {
+        console.error('[MarkEntry] bulk save aborted — missing filter values', { ayId: ayId, subjectId: subjectId, termId: termId, classId: classId, sectionId: sectionId });
+        if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
         return;
     }
 
     var formData = new FormData();
     formData.append('_token', csrf);
+    formData.append('academic_year_id', ayId);
     formData.append('subject_id', subjectId);
     formData.append('term_id', termId);
     formData.append('class_id', classId);
@@ -2592,22 +2595,19 @@ function lvSaveAll() {
     .then(function(r) {
         if (!r.ok) {
             if (r.status === 419 || r.status === 401 || r.status === 403) {
-                if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Session expired');
-                throw new Error('Session expired');
+                if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
+                throw new Error('Session expired (' + r.status + ')');
             }
             return r.text().then(function(text) {
                 console.error('[MarkEntry] bulk save HTTP', r.status, 'body:', text);
-                if (window.me_setGlobalSaveStatus) {
-                    if (r.status === 422) {
-                        window.me_setGlobalSaveStatus('error', 'Validation failed');
-                    } else if (r.status === 404) {
-                        window.me_setGlobalSaveStatus('error', 'Route 404');
-                    } else {
-                        window.me_setGlobalSaveStatus('error', 'Server error ' + r.status);
-                    }
-                }
+                if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
                 throw new Error('Server error ' + r.status);
             });
+        }
+        // Check if fetch followed a redirect to login page (session expired)
+        if (r.redirected) {
+            if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
+            throw new Error('Session expired (redirect)');
         }
         return r.json();
     })
@@ -2630,20 +2630,13 @@ function lvSaveAll() {
             }
         } else {
             console.error('[MarkEntry] bulk save returned success=false:', data);
-            if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', data.error ? String(data.error).substring(0, 40) : 'Not saved');
+            if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
         }
     })
     .catch(function(err) {
         console.error('[MarkEntry] bulk save failed:', err);
-        // Only set error status if not already set (e.g. session expired / server error already set above)
-        // The catch() is also triggered by the throws above — don't overwrite the more specific message.
-        if (window.me_setGlobalSaveStatus) {
-            // Use a softer message here since the more specific one was already shown
-            // We only reach here without prior status update if the fetch itself threw (network error)
-            if (err && err.message && err.message.indexOf('Server error') === -1 && err.message.indexOf('Session expired') === -1) {
-                window.me_setGlobalSaveStatus('error', 'Network error');
-            }
-        }
+        // Use the SAME status text as per-student save: 'Not Saved'
+        if (window.me_setGlobalSaveStatus) window.me_setGlobalSaveStatus('error', 'Not Saved');
     });
 }
 
