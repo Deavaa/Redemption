@@ -1657,3 +1657,78 @@ Stage Summary:
   students this is fine and the reliability gain is worth it
 - Status text matches per-student save exactly: 'Saving...' / 'Saved ✓' / 'Not Saved'
 - The [LV] console logs will show exactly what happens on each save
+
+---
+Task ID: 13
+Agent: main (Super Z)
+Task: Rebuild All Students view from scratch — auto-save still not working + add color-coded marks (red <50%, etc.)
+
+Work Log:
+- User reported: "still multiple students single mark title entry is not working
+  with ajax auto saving and event the status show stop working"
+- User also requested: "on full mark sheet you didnt color group mark information
+  like under 50 should be red in color"
+- DECISION: Did a COMPLETE REBUILD (v3) of the list view JS instead of another
+  incremental patch. The previous version had accumulated bugs from 6+ rounds
+  of fixes and the state was inconsistent.
+
+Rebuild approach:
+1. Replaced lvDirtyStudents (object map with {value}) with lvDirty (simple object map: {studentId: true})
+   - Just tracks WHICH students changed, not their values
+   - Values are read fresh from the DOM at save time
+   - This eliminates stale-value bugs and the 'NaN' issue
+
+2. Replaced lvSaveAll with a cleaner implementation:
+   - Snapshots dirty inputs from DOM (querySelectorAll('.lv-input'))
+   - For each dirty input, fires fetch to LV_API_SAVE (the proven per-student endpoint)
+   - Each fetch has its own .then(undefined, errorHandler) so Promise.all
+     doesn't short-circuit on first failure
+   - On all-success: lvSetStatus('saved', 'Saved ✓') + lvRenderTable() to refresh
+   - On any-failure: lvSetStatus('error', 'Not Saved')
+
+3. Added color-coded marks (user-requested feature):
+   - lvColorClass(value, max) returns 'lv-mark-red' / 'lv-mark-amber' / 'lv-mark-green' / ''
+   - Red:   < 50% of max
+   - Amber: 50-69% of max
+   - Green: >= 70% of max
+   - Applied to: mark input cell AND total column
+   - Colors update in real-time via lvUpdateColor() on every input event
+   - Color legend added to the toolbar (3 colored squares with % ranges)
+   - CSS classes added to the @push('styles') block
+
+4. Added dirty row highlighting:
+   - Rows with unsaved changes get .lv-row-dirty (subtle amber background)
+   - Helps teachers visually track which students still need saving
+
+5. Status badge states (matching per-student save text exactly):
+   - 'N unsaved' (editing state, blue badge)
+   - 'Saving...' (saving state, amber badge, pulsing)
+   - 'Saved ✓' (saved state, green badge)
+   - 'Not Saved' (error state, red badge)
+
+6. Self-contained — no IIFE dependencies:
+   - lvGetCSRF() reads meta tag directly
+   - lvGetFilters() reads filter dropdowns directly via document.getElementById
+   - lvGetStudents() reads window.me_students with safe fallback to []
+   - lvGetMaxFor() uses window.me_getFieldConfig with fallback to 100
+   - lvEsc() local HTML escape function
+   - LV_API_SAVE hardcoded via Blade route
+
+7. Bumped SW cache version v7 → v8 to force-refresh cached static assets
+
+Key files changed:
+- resources/views/admin/mark-entries/index.blade.php
+  - HTML: added color legend to toolbar, widened Marks column to 140px
+  - CSS: added .lv-mark-red, .lv-mark-amber, .lv-mark-green, .lv-row-dirty classes
+  - JS: complete rewrite of list view section (lines 2443-2740)
+- public/sw.js: bumped CACHE_NAME v7 → v8
+
+- Committed and pushed to GitHub as commit 88408a7
+
+Stage Summary:
+- Complete rebuild eliminates accumulated bugs from 6+ previous incremental fixes
+- Color-coded marks now visible: red <50%, amber 50-69%, green >=70%
+- Dirty rows highlighted with amber background
+- Status badge reliably shows: 'N unsaved' → 'Saving...' → 'Saved ✓' / 'Not Saved'
+- Auto-save uses proven per-student apiSave endpoint (same as card view)
+- All functions self-contained — no IIFE global dependencies
