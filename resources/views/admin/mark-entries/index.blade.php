@@ -2632,20 +2632,38 @@ function switchToCardMode() {
     var bl = document.getElementById('btnListMode');
     if (bc) { bc.classList.add('active','btn-outline-primary'); bc.classList.remove('btn-primary'); }
     if (bl) { bl.classList.remove('active'); bl.classList.add('btn-outline-primary'); bl.classList.remove('btn-primary'); }
+
+    // DIAGNOSTIC: log what data we have
+    var students = lvGetStudents();
+    console.log('[LV] switchToCardMode: students count=' + students.length);
+    if (students.length > 0) {
+        console.log('[LV] first student marks sample:', students[0].id, JSON.stringify(students[0].marks));
+    }
+    console.log('[LV] me_renderAllCards available:', typeof window.me_renderAllCards);
+    console.log('[LV] me_showStudent available:', typeof window.me_showStudent);
+    console.log('[LV] me_getCurrentStudentIndex available:', typeof window.me_getCurrentStudentIndex);
+
     // Re-render cards with the latest data (syncs any marks changed in list view)
     // Then re-activate the current student card so it's visible.
     try {
         if (typeof window.me_renderAllCards === 'function') {
+            console.log('[LV] calling renderAllCards()');
             window.me_renderAllCards();
+            console.log('[LV] renderAllCards() done');
+        } else {
+            console.error('[LV] me_renderAllCards is NOT available — IIFE may have failed to expose it');
         }
         // Re-show the current student card (renderAllCards rebuilds HTML,
         // so .card-active is lost and needs to be re-applied)
         if (typeof window.me_showStudent === 'function') {
             var idx = (typeof window.me_getCurrentStudentIndex === 'function') ? window.me_getCurrentStudentIndex() : 0;
+            console.log('[LV] calling showStudent(' + idx + ')');
             // Use setTimeout to ensure the re-rendered DOM is ready
             setTimeout(function() {
                 try { window.me_showStudent(idx, false); } catch(e) { console.warn('[LV] showStudent failed:', e); }
             }, 0);
+        } else {
+            console.error('[LV] me_showStudent is NOT available');
         }
     } catch(e) { console.warn('[LV] card view sync failed:', e); }
 }
@@ -2904,6 +2922,7 @@ function lvSaveAll() {
             }
             // Update local students cache with SERVER values (server may have clamped)
             var students = lvGetStudents();
+            console.log('[LV] save success for sid=' + item.sid + ', updating shared students array. Array length=' + students.length);
             for (var j = 0; j < students.length; j++) {
                 if (String(students[j].id) === String(item.sid)) {
                     if (!students[j].marks) students[j].marks = {};
@@ -2914,6 +2933,7 @@ function lvSaveAll() {
                     } else {
                         serverVal = (item.value === '' || item.value === null) ? null : parseFloat(item.value);
                     }
+                    console.log('[LV] updating student ' + item.sid + ' markKey=' + markKey + ' from ' + students[j].marks[markKey] + ' to ' + serverVal);
                     students[j].marks[markKey] = serverVal;
 
                     // If the server's value differs from what we sent, the server clamped it
@@ -2929,6 +2949,7 @@ function lvSaveAll() {
 
                     if (data.grand_total !== undefined) students[j].marks.grand_total = data.grand_total;
                     if (data.grade !== undefined)      students[j].marks.grade = data.grade;
+                    console.log('[LV] student ' + item.sid + ' marks now:', JSON.stringify(students[j].marks));
                     break;
                 }
             }
