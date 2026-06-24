@@ -2633,43 +2633,28 @@ function switchToCardMode() {
     if (bc) { bc.classList.add('active','btn-outline-primary'); bc.classList.remove('btn-primary'); }
     if (bl) { bl.classList.remove('active'); bl.classList.add('btn-outline-primary'); bl.classList.remove('btn-primary'); }
 
-    // DIAGNOSTIC: log what data we have
-    var students = lvGetStudents();
-    console.log('[LV] switchToCardMode: students count=' + students.length);
-    if (students.length > 0) {
-        console.log('[LV] first student marks sample:', students[0].id, JSON.stringify(students[0].marks));
+    // APPROACH: Reload students from server to guarantee fresh data.
+    // This is the most reliable way to sync — the server has the latest marks
+    // (saved by either view), and reloading picks them all up.
+    if (typeof window.me_loadStudents === 'function') {
+        console.log('[LV] calling me_loadStudents() to reload fresh data from server');
+        try {
+            window.me_loadStudents();
+        } catch(e) {
+            console.warn('[LV] me_loadStudents failed:', e);
+            // Fallback: try to sync existing data
+            try { lvSyncCardInputs(); } catch(e2) { console.warn('[LV] fallback sync failed:', e2); }
+        }
+    } else {
+        console.error('[LV] me_loadStudents is NOT available — trying direct sync');
+        // Fallback: directly update card inputs from shared students array
+        try {
+            if (typeof window.me_renderAllCards === 'function') {
+                window.me_renderAllCards();
+            }
+            lvSyncCardInputs();
+        } catch(e) { console.warn('[LV] fallback sync failed:', e); }
     }
-    console.log('[LV] me_renderAllCards available:', typeof window.me_renderAllCards);
-    console.log('[LV] me_showStudent available:', typeof window.me_showStudent);
-    console.log('[LV] me_getCurrentStudentIndex available:', typeof window.me_getCurrentStudentIndex);
-
-    // Re-render cards with the latest data (syncs any marks changed in list view)
-    // Then re-activate the current student card so it's visible.
-    try {
-        if (typeof window.me_renderAllCards === 'function') {
-            console.log('[LV] calling renderAllCards()');
-            window.me_renderAllCards();
-            console.log('[LV] renderAllCards() done');
-        } else {
-            console.error('[LV] me_renderAllCards is NOT available — IIFE may have failed to expose it');
-        }
-        // Re-show the current student card (renderAllCards rebuilds HTML,
-        // so .card-active is lost and needs to be re-applied)
-        if (typeof window.me_showStudent === 'function') {
-            var idx = (typeof window.me_getCurrentStudentIndex === 'function') ? window.me_getCurrentStudentIndex() : 0;
-            console.log('[LV] calling showStudent(' + idx + ')');
-            // Use setTimeout to ensure the re-rendered DOM is ready
-            setTimeout(function() {
-                try { window.me_showStudent(idx, false); } catch(e) { console.warn('[LV] showStudent failed:', e); }
-                // BELT-AND-SUSPENDERS: directly update all card inputs from the
-                // students array in case renderAllCards used stale data or wasn't called.
-                // This guarantees the card view shows the latest marks.
-                try { lvSyncCardInputs(); } catch(e) { console.warn('[LV] lvSyncCardInputs failed:', e); }
-            }, 0);
-        } else {
-            console.error('[LV] me_showStudent is NOT available');
-        }
-    } catch(e) { console.warn('[LV] card view sync failed:', e); }
 }
 
 // ── Directly update card view inputs from the shared students array ──
@@ -2736,7 +2721,36 @@ function switchToListMode() {
     var bl = document.getElementById('btnListMode');
     if (bc) { bc.classList.remove('active'); bc.classList.add('btn-outline-primary'); bc.classList.remove('btn-primary'); }
     if (bl) { bl.classList.add('active','btn-primary'); bl.classList.remove('btn-outline-primary'); }
+
+    // Render immediately with whatever data we have (in case loadStudents is slow)
     lvRenderTable();
+
+    // APPROACH: Reload students from server to guarantee fresh data.
+    // After loadStudents completes, re-render the table to show fresh marks.
+    if (typeof window.me_loadStudents === 'function') {
+        console.log('[LV] calling me_loadStudents() to reload fresh data from server');
+        // Capture current students reference to detect when it changes
+        var beforeStudents = window.me_students;
+        try {
+            window.me_loadStudents();
+        } catch(e) {
+            console.warn('[LV] me_loadStudents failed:', e);
+        }
+        // Poll for the students array to change (loadStudents reassigns it)
+        // Once it changes, re-render the table with fresh data.
+        var pollCount = 0;
+        var pollTimer = setInterval(function() {
+            pollCount++;
+            var currentStudents = (typeof window.me_getStudents === 'function') ? window.me_getStudents() : window.me_students;
+            if (currentStudents !== beforeStudents || pollCount > 20) {
+                clearInterval(pollTimer);
+                console.log('[LV] students reloaded after ' + pollCount * 200 + 'ms, re-rendering table');
+                lvRenderTable();
+            }
+        }, 200);
+    } else {
+        console.error('[LV] me_loadStudents is NOT available — rendering with existing data');
+    }
 }
 
 // ── Render the table body ──
