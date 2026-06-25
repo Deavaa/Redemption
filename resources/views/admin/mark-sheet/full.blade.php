@@ -35,14 +35,14 @@
 .fms-actions{display:flex;justify-content:flex-end;gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
 
 /* Term section headers */
-.fms-term-section{margin-bottom:1rem}
+.fms-term-section{margin-bottom:0}
 .fms-term-section:last-child{margin-bottom:0}
-.fms-term-head{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-radius:10px 10px 0 0;color:#fff;font-size:1rem;font-weight:800}
+.fms-term-head{display:flex;align-items:center;gap:.4rem;padding:0 .5rem;margin:0;border-radius:0;color:#fff;font-size:.85rem;font-weight:800;line-height:1.4;min-height:24px}
 .fms-term-head.term1{background:linear-gradient(135deg,#3b82f6,#2563eb)}
 .fms-term-head.term2{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
 .fms-term-head.annual{background:linear-gradient(135deg,#10b981,#059669)}
-.fms-term-head .term-icon{font-size:1.3rem}
-.fms-term-head .term-label{font-size:.78rem;background:rgba(255,255,255,.2);padding:.1rem .5rem;border-radius:5px;margin-left:auto}
+.fms-term-head .term-icon{font-size:.85rem}
+.fms-term-head .term-label{font-size:.7rem;background:rgba(255,255,255,.2);padding:0 .4rem;border-radius:3px;margin-left:auto}
 
 /* Rotated header table */
 .fms-seq-table-wrap{overflow-x:auto}
@@ -108,10 +108,10 @@
 .fms-empty p{margin:0;font-size:.95rem}
 
 /* Summary stats row under each table */
-.fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem;padding:.5rem .75rem;border-top:1px solid #f0f0f0;background:#fafbfc}
-.fms-stat-card{background:#fff;border-radius:8px;padding:.4rem .75rem;border:1px solid #e5e7eb}
-.fms-stat-card .stat-label{font-size:.7rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.fms-stat-card .stat-value{font-size:1rem;font-weight:800;margin-top:.1rem}
+.fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.25rem;padding:.25rem .5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
+.fms-stat-card{background:#fff;border-radius:6px;padding:.2rem .5rem;border:1px solid #e5e7eb}
+.fms-stat-card .stat-label{font-size:.65rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.fms-stat-card .stat-value{font-size:.9rem;font-weight:800;margin-top:0}
 .fms-stat-card.term1 .stat-value{color:#2563eb}
 .fms-stat-card.term2 .stat-value{color:#7c3aed}
 .fms-stat-card.annual .stat-value{color:#059669}
@@ -203,7 +203,10 @@
         -webkit-print-color-adjust:exact;
         print-color-adjust:exact;
         margin:0!important;
-        padding:6px 10px!important
+        padding:1px 6px!important;
+        font-size:8pt!important;
+        line-height:1.3!important;
+        min-height:0!important
     }
     /* Table container must not clip content */
     .fms-seq-table-wrap{
