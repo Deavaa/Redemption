@@ -35,9 +35,9 @@
 .fms-actions{display:flex;justify-content:flex-end;gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
 
 /* Term section headers */
-.fms-term-section{margin-bottom:2rem}
+.fms-term-section{margin-bottom:1rem}
 .fms-term-section:last-child{margin-bottom:0}
-.fms-term-head{display:flex;align-items:center;gap:.75rem;padding:1rem 1.5rem;border-radius:14px 14px 0 0;color:#fff;font-size:1.1rem;font-weight:800}
+.fms-term-head{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-radius:10px 10px 0 0;color:#fff;font-size:1rem;font-weight:800}
 .fms-term-head.term1{background:linear-gradient(135deg,#3b82f6,#2563eb)}
 .fms-term-head.term2{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
 .fms-term-head.annual{background:linear-gradient(135deg,#10b981,#059669)}
@@ -48,14 +48,14 @@
 .fms-seq-table-wrap{overflow-x:auto}
 .fms-seq-table{width:100%;border-collapse:collapse;font-size:.82rem}
 .fms-seq-table th{border:1px solid #e5e7eb;font-weight:700;position:sticky;top:0;vertical-align:bottom;padding:0}
-.fms-seq-table td{padding:.45rem .5rem;border:1px solid #e5e7eb;text-align:center}
+.fms-seq-table td{padding:.2rem .4rem;border:1px solid #e5e7eb;text-align:center}
 .fms-seq-table tbody tr:nth-child(even){background:#f9fafb}
 .fms-seq-table tbody tr:hover{background:#eef2ff}
 
 /* Rotated subject headers - using writing-mode for reliable 90° rotation */
-.fms-seq-table .th-rotated{height:140px;white-space:nowrap;padding:0;border:1px solid #e5e7eb;vertical-align:bottom}
+.fms-seq-table .th-rotated{height:100px;padding:0;border:1px solid #e5e7eb;vertical-align:bottom}
 .fms-seq-table .th-rotated .th-rotate-inner{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
-.fms-seq-table .th-rotated .th-rotate-text{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.78rem;font-weight:700;padding:6px 2px;white-space:nowrap;letter-spacing:.3px;line-height:1.1}
+.fms-seq-table .th-rotated .th-rotate-text{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.78rem;font-weight:700;padding:4px 2px;white-space:normal;word-break:break-word;overflow-wrap:break-word;letter-spacing:.3px;line-height:1.1;max-height:100px}
 
 /* Fixed header columns */
 .fms-seq-table .th-fixed{padding:.55rem .5rem;white-space:nowrap;text-align:center}
@@ -108,10 +108,10 @@
 .fms-empty p{margin:0;font-size:.95rem}
 
 /* Summary stats row under each table */
-.fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;padding:1rem 1.5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
-.fms-stat-card{background:#fff;border-radius:10px;padding:.75rem 1rem;border:1px solid #e5e7eb}
-.fms-stat-card .stat-label{font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.fms-stat-card .stat-value{font-size:1.1rem;font-weight:800;margin-top:.15rem}
+.fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem;padding:.5rem .75rem;border-top:1px solid #f0f0f0;background:#fafbfc}
+.fms-stat-card{background:#fff;border-radius:8px;padding:.4rem .75rem;border:1px solid #e5e7eb}
+.fms-stat-card .stat-label{font-size:.7rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.fms-stat-card .stat-value{font-size:1rem;font-weight:800;margin-top:.1rem}
 .fms-stat-card.term1 .stat-value{color:#2563eb}
 .fms-stat-card.term2 .stat-value{color:#7c3aed}
 .fms-stat-card.annual .stat-value{color:#059669}
@@ -225,7 +225,7 @@
     }
     .fms-term-section{
         page-break-inside:avoid;
-        margin-bottom:10px!important;
+        margin-bottom:4px!important;
         overflow:visible!important
     }
     .avg-row td,.highest-row td,.lowest-row td{
@@ -233,13 +233,16 @@
         print-color-adjust:exact
     }
     .fms-seq-table .th-rotated{
-        height:80px!important
+        height:60px!important
     }
     .fms-seq-table .th-rotated .th-rotate-text{
-        font-size:6pt!important
+        font-size:6pt!important;
+        white-space:normal!important;
+        word-break:break-word!important;
+        overflow-wrap:break-word!important
     }
     .fms-seq-table td{
-        padding:2px 4px!important;
+        padding:1px 3px!important;
         font-size:7.5pt!important;
         overflow:hidden!important;
         text-overflow:ellipsis!important
@@ -338,7 +341,7 @@
     @endif
 
     {{-- ── Report Header (visible on screen AND print) ── --}}
-    <div class="fms-report-header" style="text-align:center;margin-bottom:1.5rem;padding:1.25rem 1.5rem;background:#fff;border-radius:12px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;">
+    <div class="fms-report-header" style="text-align:center;margin-bottom:.75rem;padding:.75rem 1rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;">
         @if(!empty($logoUrl))
         <img src="{{ $logoUrl }}" alt="School Logo" style="position:absolute;top:1rem;left:1.25rem;width:60px;height:60px;object-fit:contain;border-radius:8px;" />
         <img src="{{ $logoUrl }}" alt="School Logo" style="position:absolute;top:1rem;right:1.25rem;width:60px;height:60px;object-fit:contain;border-radius:8px;" />
