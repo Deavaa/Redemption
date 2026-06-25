@@ -158,6 +158,27 @@
     .print-only{display:block!important}
     /* Hide the screen-only report header on print (print-only header takes over) */
     .fms-report-header{display:none!important}
+    /* Print header repeats on each page via thead */
+    .fms-print-header{display:table-header-group!important}
+    .fms-print-header-table{display:table!important;width:100%!important}
+    /* Print-only school header row in each table thead (repeats on each page) */
+    .fms-print-school-header{display:table-row!important}
+    .fms-print-school-header th{background:#fff!important;color:#000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    /* Watermark — logo centered on each page */
+    .fms-watermark{
+        position:fixed!important;
+        top:50%!important;
+        left:50%!important;
+        transform:translate(-50%,-50%)!important;
+        width:300px!important;
+        height:300px!important;
+        opacity:0.06!important;
+        z-index:-1!important;
+        pointer-events:none!important;
+        object-fit:contain!important;
+        -webkit-print-color-adjust:exact!important;
+        print-color-adjust:exact!important;
+    }
     /* Remove box shadows and decorative borders */
     *{
         box-sizing:border-box!important
@@ -311,33 +332,56 @@
         };
     @endphp
 
+    {{-- Print-only watermark — logo centered on each page --}}
+    @if(!empty($logoUrl))
+    <img src="{{ $logoUrl }}" alt="" class="fms-watermark print-only" style="display:none;" />
+    @endif
+
     {{-- ── Report Header (visible on screen AND print) ── --}}
-    <div class="fms-report-header" style="text-align:center;margin-bottom:1.5rem;padding:1.25rem 1.5rem;background:#fff;border-radius:12px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.04);">
-        <h1 style="margin:0 0 .25rem;font-size:1.5rem;font-weight:800;color:#1a1a2e;letter-spacing:-.3px;">{{ $schoolName ?? 'School of Redemption' }}</h1>
-        @if($branch)<p style="margin:0 0 .25rem;font-size:.95rem;color:#374151;font-weight:600;"><i class="fas fa-code-branch" style="color:#6b7280;width:18px;"></i> {{ $branch->name ?? '' }} Branch</p>@endif
-        <p style="margin:0 0 .15rem;font-size:.95rem;color:#374151;">
-            @if($class)<span style="font-weight:600;"><i class="fas fa-users-class" style="color:#6b7280;width:18px;"></i> Class: {{ $class->name ?? '' }}</span>@endif
-            @if($section)<span style="margin-left:1rem;font-weight:600;"><i class="fas fa-layer-group" style="color:#6b7280;width:18px;"></i> Section: {{ $section->name ?? '' }}</span>@endif
-        </p>
-        <p style="margin:.15rem 0 0;font-size:.9rem;color:#6b7280;">
-            @if($academicYear)<span style="font-weight:600;"><i class="fas fa-calendar-alt" style="width:18px;"></i> Academic Year: {{ $academicYear->name ?? '' }}</span>@endif
-            @if($term1)<span style="margin-left:1rem;"><i class="fas fa-flag" style="width:18px;"></i> Term 1: {{ $term1->name ?? '' }}</span>@endif
-            @if($term2)<span style="margin-left:1rem;"><i class="fas fa-flag" style="width:18px;"></i> Term 2: {{ $term2->name ?? '' }}</span>@endif
-        </p>
-        <p style="margin:.5rem 0 0;font-size:1.05rem;font-weight:700;color:#4361ee;border-top:2px solid #e5e7eb;padding-top:.5rem;display:inline-block;padding-left:2rem;padding-right:2rem;">
-            <i class="fas fa-clipboard-list"></i> Full Mark Sheet
-        </p>
+    <div class="fms-report-header" style="text-align:center;margin-bottom:1.5rem;padding:1.25rem 1.5rem;background:#fff;border-radius:12px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;">
+        @if(!empty($logoUrl))
+        <img src="{{ $logoUrl }}" alt="School Logo" style="position:absolute;top:1rem;left:1.25rem;width:60px;height:60px;object-fit:contain;border-radius:8px;" />
+        <img src="{{ $logoUrl }}" alt="School Logo" style="position:absolute;top:1rem;right:1.25rem;width:60px;height:60px;object-fit:contain;border-radius:8px;" />
+        @endif
+        <div style="{{ !empty($logoUrl) ? 'padding:0 80px;' : '' }}">
+            <h1 style="margin:0 0 .25rem;font-size:1.5rem;font-weight:800;color:#1a1a2e;letter-spacing:-.3px;">{{ $schoolName ?? 'School of Redemption' }}</h1>
+            @if($branch)<p style="margin:0 0 .25rem;font-size:.95rem;color:#374151;font-weight:600;"><i class="fas fa-code-branch" style="color:#6b7280;width:18px;"></i> {{ $branch->name ?? '' }} Branch</p>@endif
+            <p style="margin:0 0 .15rem;font-size:.95rem;color:#374151;">
+                @if($class)<span style="font-weight:600;"><i class="fas fa-users-class" style="color:#6b7280;width:18px;"></i> Class: {{ $class->name ?? '' }}</span>@endif
+                @if($section)<span style="margin-left:1rem;font-weight:600;"><i class="fas fa-layer-group" style="color:#6b7280;width:18px;"></i> Section: {{ $section->name ?? '' }}</span>@endif
+            </p>
+            <p style="margin:.15rem 0 0;font-size:.9rem;color:#6b7280;">
+                @if($academicYear)<span style="font-weight:600;"><i class="fas fa-calendar-alt" style="width:18px;"></i> Academic Year: {{ $academicYear->name ?? '' }}</span>@endif
+                @if($term1)<span style="margin-left:1rem;"><i class="fas fa-flag" style="width:18px;"></i> Term 1: {{ $term1->name ?? '' }}</span>@endif
+                @if($term2)<span style="margin-left:1rem;"><i class="fas fa-flag" style="width:18px;"></i> Term 2: {{ $term2->name ?? '' }}</span>@endif
+            </p>
+            <p style="margin:.5rem 0 0;font-size:1.05rem;font-weight:700;color:#4361ee;border-top:2px solid #e5e7eb;padding-top:.5rem;display:inline-block;padding-left:2rem;padding-right:2rem;">
+                <i class="fas fa-clipboard-list"></i> Full Mark Sheet
+            </p>
+        </div>
     </div>
 
-    {{-- Print-only header (compact, for printed pages) --}}
-    <div class="print-only" style="display:none;text-align:center;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid #333">
-        <h2 style="margin:0;font-size:1.3rem;font-weight:800">{{ $schoolName ?? 'School of Redemption' }}</h2>
-        <p style="margin:.25rem 0 0;font-size:.9rem;color:#666">
-            @if($branch){{ $branch->name ?? '' }} Branch &middot; @endif
-            Full Mark Sheet &middot;
-            @if($class){{ $class->name ?? '' }}@if($section) - {{ $section->name }}@endif @endif
-            &middot; @if($academicYear){{ $academicYear->name }}@endif
-        </p>
+    {{-- Print-only header (compact, for printed pages — repeats on each page) --}}
+    <div class="print-only fms-print-header" style="display:none;">
+        <table class="fms-print-header-table" style="width:100%;border-bottom:2px solid #333;padding-bottom:6px;margin-bottom:8px;">
+            <tr>
+                <td style="width:50px;vertical-align:middle;text-align:left;">
+                    @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="Logo" style="width:40px;height:40px;object-fit:contain;" />@endif
+                </td>
+                <td style="text-align:center;vertical-align:middle;">
+                    <div style="font-size:1.1rem;font-weight:800">{{ $schoolName ?? 'School of Redemption' }}</div>
+                    <div style="font-size:.78rem;color:#666;margin-top:2px;">
+                        @if($branch){{ $branch->name ?? '' }} Branch &middot; @endif
+                        Full Mark Sheet &middot;
+                        @if($class){{ $class->name ?? '' }}@if($section) - {{ $section->name }}@endif @endif
+                        &middot; @if($academicYear){{ $academicYear->name }}@endif
+                    </div>
+                </td>
+                <td style="width:50px;vertical-align:middle;text-align:right;">
+                    @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="Logo" style="width:40px;height:40px;object-fit:contain;" />@endif
+                </td>
+            </tr>
+        </table>
     </div>
 
     {{-- Print & Export Actions --}}
@@ -402,6 +446,30 @@
         <div class="fms-seq-table-wrap">
             <table class="fms-seq-table term1-table">
                 <thead>
+                    {{-- Print-only school header row (repeats on each printed page) --}}
+                    <tr class="fms-print-school-header print-only" style="display:none;">
+                        <th colspan="{{ 2 + $subjects->count() + 3 }}" style="text-align:center;border:1px solid #333;padding:6px 8px;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                            <table style="width:100%;border:none;">
+                                <tr>
+                                    <td style="width:36px;border:none;text-align:left;vertical-align:middle;">
+                                        @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="" style="width:32px;height:32px;object-fit:contain;" />@endif
+                                    </td>
+                                    <td style="border:none;text-align:center;vertical-align:middle;">
+                                        <div style="font-size:1rem;font-weight:800;color:#000!important;">{{ $schoolName ?? 'School of Redemption' }}</div>
+                                        <div style="font-size:.72rem;color:#444!important;margin-top:1px;">
+                                            @if($branch){{ $branch->name }} Branch &middot; @endif
+                                            @if($class){{ $class->name }}@if($section) - {{ $section->name }}@endif @endif
+                                            &middot; @if($academicYear){{ $academicYear->name }}@endif
+                                            &middot; Term 1: {{ $term1->name ?? '' }}
+                                        </div>
+                                    </td>
+                                    <td style="width:36px;border:none;text-align:right;vertical-align:middle;">
+                                        @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="" style="width:32px;height:32px;object-fit:contain;" />@endif
+                                    </td>
+                                </tr>
+                            </table>
+                        </th>
+                    </tr>
                     <tr>
                         <th class="th-fixed" style="width:40px">#</th>
                         <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>
@@ -507,6 +575,30 @@
         <div class="fms-seq-table-wrap">
             <table class="fms-seq-table term2-table">
                 <thead>
+                    {{-- Print-only school header row (repeats on each printed page) --}}
+                    <tr class="fms-print-school-header print-only" style="display:none;">
+                        <th colspan="{{ 2 + $subjects->count() + 3 }}" style="text-align:center;border:1px solid #333;padding:6px 8px;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                            <table style="width:100%;border:none;">
+                                <tr>
+                                    <td style="width:36px;border:none;text-align:left;vertical-align:middle;">
+                                        @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="" style="width:32px;height:32px;object-fit:contain;" />@endif
+                                    </td>
+                                    <td style="border:none;text-align:center;vertical-align:middle;">
+                                        <div style="font-size:1rem;font-weight:800;color:#000!important;">{{ $schoolName ?? 'School of Redemption' }}</div>
+                                        <div style="font-size:.72rem;color:#444!important;margin-top:1px;">
+                                            @if($branch){{ $branch->name }} Branch &middot; @endif
+                                            @if($class){{ $class->name }}@if($section) - {{ $section->name }}@endif @endif
+                                            &middot; @if($academicYear){{ $academicYear->name }}@endif
+                                            &middot; Term 2: {{ $term2->name ?? '' }}
+                                        </div>
+                                    </td>
+                                    <td style="width:36px;border:none;text-align:right;vertical-align:middle;">
+                                        @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="" style="width:32px;height:32px;object-fit:contain;" />@endif
+                                    </td>
+                                </tr>
+                            </table>
+                        </th>
+                    </tr>
                     <tr>
                         <th class="th-fixed" style="width:40px">#</th>
                         <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>
@@ -608,6 +700,30 @@
         <div class="fms-seq-table-wrap">
             <table class="fms-seq-table annual-table">
                 <thead>
+                    {{-- Print-only school header row (repeats on each printed page) --}}
+                    <tr class="fms-print-school-header print-only" style="display:none;">
+                        <th colspan="{{ 2 + $subjects->count() + 3 }}" style="text-align:center;border:1px solid #333;padding:6px 8px;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                            <table style="width:100%;border:none;">
+                                <tr>
+                                    <td style="width:36px;border:none;text-align:left;vertical-align:middle;">
+                                        @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="" style="width:32px;height:32px;object-fit:contain;" />@endif
+                                    </td>
+                                    <td style="border:none;text-align:center;vertical-align:middle;">
+                                        <div style="font-size:1rem;font-weight:800;color:#000!important;">{{ $schoolName ?? 'School of Redemption' }}</div>
+                                        <div style="font-size:.72rem;color:#444!important;margin-top:1px;">
+                                            @if($branch){{ $branch->name }} Branch &middot; @endif
+                                            @if($class){{ $class->name }}@if($section) - {{ $section->name }}@endif @endif
+                                            &middot; @if($academicYear){{ $academicYear->name }}@endif
+                                            &middot; Annual Result
+                                        </div>
+                                    </td>
+                                    <td style="width:36px;border:none;text-align:right;vertical-align:middle;">
+                                        @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="" style="width:32px;height:32px;object-fit:contain;" />@endif
+                                    </td>
+                                </tr>
+                            </table>
+                        </th>
+                    </tr>
                     <tr>
                         <th class="th-fixed" style="width:40px">#</th>
                         <th class="th-fixed" style="text-align:left;min-width:160px">Student Name</th>

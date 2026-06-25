@@ -323,8 +323,9 @@ class MarkSheetFullController extends Controller
             $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         }
 
-        // Get school name and branch for the report header
+        // Get school name, logo, and branch for the report header
         $schoolName = Setting::getLocalizedName();
+        $logoUrl = Setting::getLogoUrl();
         $branch = null;
         if ($class && $class->branch_id) {
             $branch = Branch::find($class->branch_id);
@@ -346,6 +347,7 @@ class MarkSheetFullController extends Controller
             'averages',
             'isTeacher',
             'schoolName',
+            'logoUrl',
             'branch'
         ));
     }
