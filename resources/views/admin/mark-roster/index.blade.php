@@ -174,6 +174,8 @@
         overflow:visible!important
     }
     .print-only { display: block !important; }
+    /* Hide the screen-only report header on print (print-only header takes over) */
+    .mr-report-header { display: none !important; }
     .mr-header,.mr-filter-card,.mr-actions,.mr-btn,
     .admin-sidebar,.sidebar-backdrop,.admin-topbar,.sidebar-footer,.sidebar-toggle,
     .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{display:none!important}
@@ -258,10 +260,33 @@
     @isset($subjectRosters)
     @if(count($subjectRosters) > 0)
 
-    {{-- Print-only header --}}
+    {{-- ── Report Header (visible on screen AND print) ── --}}
+    <div class="mr-report-header" style="text-align:center;margin-bottom:1.5rem;padding:1.25rem 1.5rem;background:#fff;border-radius:12px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+        <h1 style="margin:0 0 .25rem;font-size:1.5rem;font-weight:800;color:#1a1a2e;letter-spacing:-.3px;">{{ $schoolName ?? 'School of Redemption' }}</h1>
+        @if($branch)<p style="margin:0 0 .25rem;font-size:.95rem;color:#374151;font-weight:600;"><i class="fas fa-code-branch" style="color:#6b7280;width:18px;"></i> {{ $branch->name ?? '' }} Branch</p>@endif
+        <p style="margin:0 0 .15rem;font-size:.95rem;color:#374151;">
+            @if($class)<span style="font-weight:600;"><i class="fas fa-users-class" style="color:#6b7280;width:18px;"></i> Class: {{ $class->name ?? '' }}</span>@endif
+            @if($section)<span style="margin-left:1rem;font-weight:600;"><i class="fas fa-layer-group" style="color:#6b7280;width:18px;"></i> Section: {{ $section->name ?? '' }}</span>@endif
+        </p>
+        <p style="margin:.15rem 0 0;font-size:.9rem;color:#6b7280;">
+            @if($academicYear)<span style="font-weight:600;"><i class="fas fa-calendar-alt" style="width:18px;"></i> Academic Year: {{ $academicYear->name ?? '' }}</span>@endif
+            @if($term)<span style="margin-left:1rem;"><i class="fas fa-flag" style="width:18px;"></i> Term: {{ $term->name ?? '' }}</span>@endif
+        </p>
+        <p style="margin:.5rem 0 0;font-size:1.05rem;font-weight:700;color:#4361ee;border-top:2px solid #e5e7eb;padding-top:.5rem;display:inline-block;padding-left:2rem;padding-right:2rem;">
+            <i class="fas fa-clipboard-list"></i> Mark Roster
+        </p>
+    </div>
+
+    {{-- Print-only header (compact, for printed pages) --}}
     <div class="print-only" style="display:none;text-align:center;margin-bottom:1rem;padding:1rem 0;border-bottom:2px solid #333">
-        <h2 style="margin:0;font-size:1.3rem;font-weight:800">School of Redemption</h2>
-        <p style="margin:.25rem 0 0;font-size:.9rem;color:#666">Mark Roster - {{ $class->name ?? '' }} - {{ $term->name ?? '' }} - {{ $academicYear->name ?? '' }}</p>
+        <h2 style="margin:0;font-size:1.3rem;font-weight:800">{{ $schoolName ?? 'School of Redemption' }}</h2>
+        <p style="margin:.25rem 0 0;font-size:.9rem;color:#666">
+            @if($branch){{ $branch->name ?? '' }} Branch &middot; @endif
+            Mark Roster &middot;
+            @if($class){{ $class->name ?? '' }}@if($section) - {{ $section->name }}@endif @endif
+            &middot; @if($term){{ $term->name }}@endif
+            &middot; @if($academicYear){{ $academicYear->name }}@endif
+        </p>
     </div>
 
     {{-- Info bar --}}

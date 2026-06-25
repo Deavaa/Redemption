@@ -10,6 +10,8 @@ use App\Models\AcademicYear;
 use App\Models\Term;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\Branch;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class MarkSheetFullController extends Controller
@@ -321,6 +323,16 @@ class MarkSheetFullController extends Controller
             $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
         }
 
+        // Get school name and branch for the report header
+        $schoolName = Setting::getLocalizedName();
+        $branch = null;
+        if ($class && $class->branch_id) {
+            $branch = Branch::find($class->branch_id);
+        }
+        if (!$branch && $branchScope) {
+            $branch = Branch::find($branchScope);
+        }
+
         return view('admin.mark-sheet.full', compact(
             'roster',
             'subjects',
@@ -332,7 +344,9 @@ class MarkSheetFullController extends Controller
             'academicYears',
             'classes',
             'averages',
-            'isTeacher'
+            'isTeacher',
+            'schoolName',
+            'branch'
         ));
     }
 
