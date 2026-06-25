@@ -46,20 +46,20 @@
 
 /* Rotated header table */
 .fms-seq-table-wrap{overflow-x:auto}
-.fms-seq-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.fms-seq-table{width:100%;border-collapse:collapse;font-size:.75rem}
 .fms-seq-table th{border:1px solid #e5e7eb;font-weight:700;position:sticky;top:0;vertical-align:bottom;padding:0}
-.fms-seq-table td{padding:.2rem .4rem;border:1px solid #e5e7eb;text-align:center}
+.fms-seq-table td{padding:1px 3px;border:1px solid #e5e7eb;text-align:center;line-height:1.2}
 .fms-seq-table tbody tr:nth-child(even){background:#f9fafb}
 .fms-seq-table tbody tr:hover{background:#eef2ff}
 
 /* Rotated subject headers - using writing-mode for reliable 90° rotation */
-.fms-seq-table .th-rotated{height:100px;padding:0;border:1px solid #e5e7eb;vertical-align:bottom}
+.fms-seq-table .th-rotated{height:60px;padding:0;border:1px solid #e5e7eb;vertical-align:bottom}
 .fms-seq-table .th-rotated .th-rotate-inner{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
-.fms-seq-table .th-rotated .th-rotate-text{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.78rem;font-weight:700;padding:4px 2px;white-space:normal;word-break:break-word;overflow-wrap:break-word;letter-spacing:.3px;line-height:1.1;max-height:100px}
+.fms-seq-table .th-rotated .th-rotate-text{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.72rem;font-weight:700;padding:2px 1px;white-space:normal;word-break:break-word;overflow-wrap:break-word;letter-spacing:.2px;line-height:1.05;max-height:60px}
 
 /* Fixed header columns */
-.fms-seq-table .th-fixed{padding:.55rem .5rem;white-space:nowrap;text-align:center}
-.fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:160px}
+.fms-seq-table .th-fixed{padding:1px 4px;white-space:nowrap;text-align:center}
+.fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:120px}
 .fms-seq-table .mark-val{font-weight:600}
 .fms-seq-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee}
 .fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.78rem}
@@ -108,10 +108,10 @@
 .fms-empty p{margin:0;font-size:.95rem}
 
 /* Summary stats row under each table */
-.fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.25rem;padding:.25rem .5rem;border-top:1px solid #f0f0f0;background:#fafbfc}
-.fms-stat-card{background:#fff;border-radius:6px;padding:.2rem .5rem;border:1px solid #e5e7eb}
-.fms-stat-card .stat-label{font-size:.65rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.fms-stat-card .stat-value{font-size:.9rem;font-weight:800;margin-top:0}
+.fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:2px;padding:2px 4px;border-top:1px solid #f0f0f0;background:#fafbfc}
+.fms-stat-card{background:#fff;border-radius:4px;padding:1px 6px;border:1px solid #e5e7eb}
+.fms-stat-card .stat-label{font-size:.6rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.3px;line-height:1.1}
+.fms-stat-card .stat-value{font-size:.8rem;font-weight:800;margin-top:0;line-height:1.2}
 .fms-stat-card.term1 .stat-value{color:#2563eb}
 .fms-stat-card.term2 .stat-value{color:#7c3aed}
 .fms-stat-card.annual .stat-value{color:#059669}
@@ -343,27 +343,21 @@
     <img src="{{ $logoUrl }}" alt="" class="fms-watermark print-only" style="display:none;" />
     @endif
 
-    {{-- ── Report Header (visible on screen AND print) ── --}}
-    <div class="fms-report-header" style="text-align:center;margin-bottom:.75rem;padding:.75rem 1rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;">
+    {{-- ── Report Header (compact, single block) ── --}}
+    <div class="fms-report-header" style="text-align:center;margin-bottom:.25rem;padding:.25rem .5rem;background:#fff;border-radius:6px;border:1px solid #e5e7eb;position:relative;">
         @if(!empty($logoUrl))
-        <img src="{{ $logoUrl }}" alt="School Logo" style="position:absolute;top:1rem;left:1.25rem;width:60px;height:60px;object-fit:contain;border-radius:8px;" />
-        <img src="{{ $logoUrl }}" alt="School Logo" style="position:absolute;top:1rem;right:1.25rem;width:60px;height:60px;object-fit:contain;border-radius:8px;" />
+        <img src="{{ $logoUrl }}" alt="School Logo" style="position:absolute;top:2px;left:4px;width:36px;height:36px;object-fit:contain;" />
+        <img src="{{ $logoUrl }}" alt="School Logo" style="position:absolute;top:2px;right:4px;width:36px;height:36px;object-fit:contain;" />
         @endif
-        <div style="{{ !empty($logoUrl) ? 'padding:0 80px;' : '' }}">
-            <h1 style="margin:0 0 .25rem;font-size:1.5rem;font-weight:800;color:#1a1a2e;letter-spacing:-.3px;">{{ $schoolName ?? 'School of Redemption' }}</h1>
-            @if($branch)<p style="margin:0 0 .25rem;font-size:.95rem;color:#374151;font-weight:600;"><i class="fas fa-code-branch" style="color:#6b7280;width:18px;"></i> {{ $branch->name ?? '' }} Branch</p>@endif
-            <p style="margin:0 0 .15rem;font-size:.95rem;color:#374151;">
-                @if($class)<span style="font-weight:600;"><i class="fas fa-users-class" style="color:#6b7280;width:18px;"></i> Class: {{ $class->name ?? '' }}</span>@endif
-                @if($section)<span style="margin-left:1rem;font-weight:600;"><i class="fas fa-layer-group" style="color:#6b7280;width:18px;"></i> Section: {{ $section->name ?? '' }}</span>@endif
-            </p>
-            <p style="margin:.15rem 0 0;font-size:.9rem;color:#6b7280;">
-                @if($academicYear)<span style="font-weight:600;"><i class="fas fa-calendar-alt" style="width:18px;"></i> Academic Year: {{ $academicYear->name ?? '' }}</span>@endif
-                @if($term1)<span style="margin-left:1rem;"><i class="fas fa-flag" style="width:18px;"></i> Term 1: {{ $term1->name ?? '' }}</span>@endif
-                @if($term2)<span style="margin-left:1rem;"><i class="fas fa-flag" style="width:18px;"></i> Term 2: {{ $term2->name ?? '' }}</span>@endif
-            </p>
-            <p style="margin:.5rem 0 0;font-size:1.05rem;font-weight:700;color:#4361ee;border-top:2px solid #e5e7eb;padding-top:.5rem;display:inline-block;padding-left:2rem;padding-right:2rem;">
-                <i class="fas fa-clipboard-list"></i> Full Mark Sheet
-            </p>
+        <div style="{{ !empty($logoUrl) ? 'padding:0 44px;' : '' }}">
+            <div style="font-size:1rem;font-weight:800;color:#1a1a2e;line-height:1.2;">{{ $schoolName ?? 'School of Redemption' }}</div>
+            <div style="font-size:.72rem;color:#374151;line-height:1.3;margin-top:1px;">
+                @if($branch)<strong>{{ $branch->name ?? '' }}</strong> &middot; @endif
+                @if($class)<strong>{{ $class->name ?? '' }}</strong>@if($section) - {{ $section->name }}@endif @endif
+                &middot; @if($academicYear){{ $academicYear->name }}@endif
+                @if($term1) &middot; T1: {{ $term1->name }}@endif
+                @if($term2) &middot; T2: {{ $term2->name }}@endif
+            </div>
         </div>
     </div>
 
