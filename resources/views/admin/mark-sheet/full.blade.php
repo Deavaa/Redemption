@@ -361,29 +361,6 @@
         </div>
     </div>
 
-    {{-- Print-only header (compact, for printed pages — repeats on each page) --}}
-    <div class="print-only fms-print-header" style="display:none;">
-        <table class="fms-print-header-table" style="width:100%;border-bottom:2px solid #333;padding-bottom:6px;margin-bottom:8px;">
-            <tr>
-                <td style="width:50px;vertical-align:middle;text-align:left;">
-                    @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="Logo" style="width:40px;height:40px;object-fit:contain;" />@endif
-                </td>
-                <td style="text-align:center;vertical-align:middle;">
-                    <div style="font-size:1.1rem;font-weight:800">{{ $schoolName ?? 'School of Redemption' }}</div>
-                    <div style="font-size:.78rem;color:#666;margin-top:2px;">
-                        @if($branch){{ $branch->name ?? '' }} Branch &middot; @endif
-                        Full Mark Sheet &middot;
-                        @if($class){{ $class->name ?? '' }}@if($section) - {{ $section->name }}@endif @endif
-                        &middot; @if($academicYear){{ $academicYear->name }}@endif
-                    </div>
-                </td>
-                <td style="width:50px;vertical-align:middle;text-align:right;">
-                    @if(!empty($logoUrl))<img src="{{ $logoUrl }}" alt="Logo" style="width:40px;height:40px;object-fit:contain;" />@endif
-                </td>
-            </tr>
-        </table>
-    </div>
-
     {{-- Print & Export Actions --}}
     <div class="fms-card no-print" style="margin-bottom:1rem">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.75rem 1.5rem;flex-wrap:wrap">

@@ -306,18 +306,6 @@
     <img src="{{ $logoUrl }}" alt="" class="mr-watermark print-only" style="display:none;" />
     @endif
 
-    {{-- Print-only header (compact, for printed pages) --}}
-    <div class="print-only" style="display:none;text-align:center;margin-bottom:1rem;padding:1rem 0;border-bottom:2px solid #333">
-        <h2 style="margin:0;font-size:1.3rem;font-weight:800">{{ $schoolName ?? 'School of Redemption' }}</h2>
-        <p style="margin:.25rem 0 0;font-size:.9rem;color:#666">
-            @if($branch){{ $branch->name ?? '' }} Branch &middot; @endif
-            Mark Roster &middot;
-            @if($class){{ $class->name ?? '' }}@if($section) - {{ $section->name }}@endif @endif
-            &middot; @if($term){{ $term->name }}@endif
-            &middot; @if($academicYear){{ $academicYear->name }}@endif
-        </p>
-    </div>
-
     {{-- Info bar --}}
     <div class="mr-card info-bar no-print" style="margin-bottom:1.5rem">
         <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:linear-gradient(135deg,#1e3a5f,#264b73);color:#fff;flex-wrap:wrap">
