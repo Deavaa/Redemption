@@ -118,10 +118,35 @@
 
 /* Print styles */
 @page{
-    size:landscape;
-    margin:8mm
+    size:A4 landscape;
+    margin:6mm;
+}
+/* When printing, apply fit-to-page scaling */
+@media print{
+    body.printing-a4 .fms-page{
+        zoom:0.92;  /* Scale down slightly to ensure everything fits A4 landscape */
+    }
+    /* Firefox doesn't support zoom, use transform as fallback */
+    @-moz-document url-prefix(){
+        body.printing-a4 .fms-page{
+            transform:scale(0.92);
+            transform-origin:top left;
+            width:108.7%;  /* 100/0.92 to compensate for scale */
+        }
+    }
 }
 @media print{
+    /* Fit-to-page: scale content to fit A4 landscape width */
+    html,body{
+        zoom:1!important
+    }
+    .fms-page{
+        width:100%!important;
+        max-width:297mm!important;  /* A4 landscape width */
+        margin:0!important;
+        padding:0!important;
+        overflow:visible!important
+    }
     /* Reset all layout containers to full width - override sidebar offset */
     .admin-wrapper{
         margin:0!important;
@@ -373,7 +398,7 @@
                 <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#f0fdf4;border:1px solid #bbf7d0;"></span> <span style="color:#059669;font-weight:600;">&ge; 70 (Pass)</span></span>
             </div>
             <div style="display:flex;gap:.75rem;">
-                <button onclick="window.print()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print All</button>
+                <button onclick="fmsPrint()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print All</button>
                 <button onclick="exportCSV()" class="fms-btn fms-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
             </div>
         </div>
@@ -851,6 +876,19 @@ function exportCSV(){
     link.href=URL.createObjectURL(blob);
     link.download='mark_sheet_full.csv';
     link.click();
+}
+
+// Print with A4 landscape pre-selected
+// The @page CSS rule (size:A4 landscape) tells the browser to use A4.
+// We also add a body class that triggers fit-to-page scaling.
+function fmsPrint(){
+    document.body.classList.add('printing-a4');
+    // Small delay to let CSS apply before print dialog opens
+    setTimeout(function(){
+        window.print();
+        // Clean up after print dialog closes
+        setTimeout(function(){ document.body.classList.remove('printing-a4'); }, 500);
+    }, 50);
 }
 </script>
 @endpush

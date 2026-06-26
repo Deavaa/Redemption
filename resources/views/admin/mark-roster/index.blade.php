@@ -132,10 +132,21 @@
 
 /* Print styles — each subject on its own page */
 @page{
-    size:landscape;
-    margin:8mm
+    size:A4 landscape;
+    margin:6mm;
 }
 @media print{
+    /* Fit-to-page: scale content to fit A4 landscape width */
+    html,body{
+        zoom:1!important
+    }
+    .mr-page{
+        width:100%!important;
+        max-width:297mm!important;  /* A4 landscape width */
+        margin:0!important;
+        padding:0!important;
+        overflow:visible!important
+    }
     /* Reset all layout containers to full width - override sidebar offset */
     .admin-wrapper{
         margin:0!important;
@@ -328,7 +339,7 @@
                 <span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f0fdf4;border:1px solid #bbf7d0;"></span> <span style="color:#059669;font-weight:600;">&ge; 70%</span></span>
             </div>
             <div style="display:flex;gap:.75rem;">
-                <button onclick="window.print()" class="mr-btn mr-btn-outline"><i class="fas fa-print"></i> Print</button>
+                <button onclick="mrPrint()" class="mr-btn mr-btn-outline"><i class="fas fa-print"></i> Print</button>
                 <button onclick="exportRosterCSV()" class="mr-btn mr-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
             </div>
         </div>
@@ -584,6 +595,16 @@ function exportRosterCSV(){
     link.href=URL.createObjectURL(blob);
     link.download='mark_roster.csv';
     link.click();
+}
+
+// Print with A4 landscape pre-selected
+// The @page CSS rule (size:A4 landscape) tells the browser to use A4.
+function mrPrint(){
+    document.body.classList.add('printing-a4');
+    setTimeout(function(){
+        window.print();
+        setTimeout(function(){ document.body.classList.remove('printing-a4'); }, 500);
+    }, 50);
 }
 </script>
 @endpush
