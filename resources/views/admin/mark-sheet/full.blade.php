@@ -37,32 +37,32 @@
 /* Term section headers */
 .fms-term-section{margin-bottom:0}
 .fms-term-section:last-child{margin-bottom:0}
-.fms-term-head{display:flex;align-items:center;gap:.4rem;padding:0 .5rem;margin:0;border-radius:0;color:#fff;font-size:.85rem;font-weight:800;line-height:1.4;min-height:24px}
+.fms-term-head{display:flex;align-items:center;gap:.4rem;padding:0 .5rem;margin:0;border-radius:0;color:#fff;font-size:1rem;font-weight:800;line-height:1.4;min-height:28px}
 .fms-term-head.term1{background:linear-gradient(135deg,#3b82f6,#2563eb)}
 .fms-term-head.term2{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
 .fms-term-head.annual{background:linear-gradient(135deg,#10b981,#059669)}
-.fms-term-head .term-icon{font-size:.85rem}
-.fms-term-head .term-label{font-size:.7rem;background:rgba(255,255,255,.2);padding:0 .4rem;border-radius:3px;margin-left:auto}
+.fms-term-head .term-icon{font-size:1rem}
+.fms-term-head .term-label{font-size:.82rem;background:rgba(255,255,255,.2);padding:0 .4rem;border-radius:3px;margin-left:auto}
 
 /* Rotated header table */
 .fms-seq-table-wrap{overflow-x:auto}
-.fms-seq-table{width:100%;border-collapse:collapse;font-size:.75rem}
+.fms-seq-table{width:100%;border-collapse:collapse;font-size:.95rem}
 .fms-seq-table th{border:1px solid #e5e7eb;font-weight:700;position:sticky;top:0;vertical-align:bottom;padding:0}
 .fms-seq-table td{padding:1px 3px;border:1px solid #e5e7eb;text-align:center;line-height:1.2}
 .fms-seq-table tbody tr:nth-child(even){background:#f9fafb}
 .fms-seq-table tbody tr:hover{background:#eef2ff}
 
 /* Rotated subject headers - using writing-mode for reliable 90° rotation */
-.fms-seq-table .th-rotated{height:60px;padding:0;border:1px solid #e5e7eb;vertical-align:bottom}
+.fms-seq-table .th-rotated{height:75px;padding:0;border:1px solid #e5e7eb;vertical-align:bottom}
 .fms-seq-table .th-rotated .th-rotate-inner{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
-.fms-seq-table .th-rotated .th-rotate-text{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.72rem;font-weight:700;padding:2px 1px;white-space:normal;word-break:break-word;overflow-wrap:break-word;letter-spacing:.2px;line-height:1.05;max-height:60px}
+.fms-seq-table .th-rotated .th-rotate-text{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.88rem;font-weight:700;padding:3px 2px;white-space:normal;word-break:break-word;overflow-wrap:break-word;letter-spacing:.2px;line-height:1.05;max-height:75px}
 
 /* Fixed header columns */
 .fms-seq-table .th-fixed{padding:1px 4px;white-space:nowrap;text-align:center}
 .fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;padding:1px 6px;overflow:hidden;text-overflow:ellipsis;max-width:180px}
 .fms-seq-table .mark-val{font-weight:600}
 .fms-seq-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee}
-.fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.78rem}
+.fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.9rem}
 .fms-seq-table .rank-col{font-weight:700}
 
 /* Color-coded marks by percentage (red <50%, amber 50-69%, green >=70%) */
@@ -110,8 +110,8 @@
 /* Summary stats row under each table */
 .fms-term-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:2px;padding:2px 4px;border-top:1px solid #f0f0f0;background:#fafbfc}
 .fms-stat-card{background:#fff;border-radius:4px;padding:1px 6px;border:1px solid #e5e7eb}
-.fms-stat-card .stat-label{font-size:.6rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.3px;line-height:1.1}
-.fms-stat-card .stat-value{font-size:.8rem;font-weight:800;margin-top:0;line-height:1.2}
+.fms-stat-card .stat-label{font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.3px;line-height:1.1}
+.fms-stat-card .stat-value{font-size:1rem;font-weight:800;margin-top:0;line-height:1.2}
 .fms-stat-card.term1 .stat-value{color:#2563eb}
 .fms-stat-card.term2 .stat-value{color:#7c3aed}
 .fms-stat-card.annual .stat-value{color:#059669}
@@ -229,7 +229,7 @@
         print-color-adjust:exact;
         margin:0!important;
         padding:1px 6px!important;
-        font-size:8pt!important;
+        font-size:10pt!important;
         line-height:1.3!important;
         min-height:0!important
     }
@@ -242,7 +242,7 @@
         padding:0!important
     }
     .fms-seq-table{
-        font-size:7.5pt;
+        font-size:9pt!important;
         width:100%!important;
         table-layout:auto!important;
         border-collapse:collapse!important
@@ -261,30 +261,30 @@
         print-color-adjust:exact
     }
     .fms-seq-table .th-rotated{
-        height:60px!important
+        height:75px!important
     }
     .fms-seq-table .th-rotated .th-rotate-text{
-        font-size:6pt!important;
+        font-size:8pt!important;
         white-space:normal!important;
         word-break:break-word!important;
         overflow-wrap:break-word!important
     }
     .fms-seq-table td{
-        padding:1px 3px!important;
-        font-size:7.5pt!important;
+        padding:2px 4px!important;
+        font-size:9pt!important;
         overflow:hidden!important;
         text-overflow:ellipsis!important
     }
     .fms-seq-table .stu-name{
-        font-size:7pt!important;
+        font-size:9pt!important;
         white-space:nowrap!important;
-        max-width:150px!important;
+        max-width:170px!important;
         overflow:hidden!important;
         text-overflow:ellipsis!important;
-        padding:1px 4px!important
+        padding:2px 6px!important
     }
     .fms-seq-table .th-fixed{
-        font-size:7pt!important;
+        font-size:8.5pt!important;
         padding:3px 4px!important
     }
     .fms-seq-table .total-col,
