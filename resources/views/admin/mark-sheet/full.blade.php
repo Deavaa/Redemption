@@ -124,19 +124,19 @@
 /* When printing, apply fit-to-page scaling */
 @media print{
     body.printing-a4 .fms-page{
-        zoom:0.92;  /* Scale down slightly to ensure everything fits A4 landscape */
+        zoom:1;  /* Full 100% — no scaling, fit to A4 landscape width */
     }
     /* Firefox doesn't support zoom, use transform as fallback */
     @-moz-document url-prefix(){
         body.printing-a4 .fms-page{
-            transform:scale(0.92);
+            transform:scale(1);
             transform-origin:top left;
-            width:108.7%;  /* 100/0.92 to compensate for scale */
+            width:100%;
         }
     }
 }
 @media print{
-    /* Fit-to-page: scale content to fit A4 landscape width */
+    /* Fit-to-page: full A4 landscape width, no scaling */
     html,body{
         zoom:1!important
     }
