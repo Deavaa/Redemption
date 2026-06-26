@@ -61,7 +61,7 @@
 .mr-table td{padding:.2rem .25rem;border:1px solid #e5e7eb;text-align:center}
 .mr-table tbody tr:nth-child(even){background:#f9fafb}
 .mr-table tbody tr:hover{background:#eef2ff}
-.mr-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:130px;position:sticky;left:0;z-index:2;background:inherit}
+.mr-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:130px;width:auto;max-width:none;overflow:visible;position:sticky;left:0;z-index:2;background:inherit}
 .mr-table .stu-serial{font-weight:600;color:#6b7280;position:sticky;left:0;z-index:2;background:inherit;min-width:32px}
 
 /* ── Rotated column headers ── */
@@ -215,11 +215,13 @@
     .mr-subject-section{page-break-after:always;break-after:page}
     .mr-subject-section:last-child{page-break-after:auto;break-after:auto}
     .mr-subject-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0!important;padding:4px 8px!important;font-size:11pt!important}
-    .mr-table{font-size:9pt;width:100%!important;table-layout:fixed!important}
+    .mr-table{font-size:9pt;width:100%!important;table-layout:auto!important}
     .mr-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important}
     .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .mr-table .rot-th{height:65px;font-size:7.5pt;white-space:normal!important;word-break:break-word!important;overflow-wrap:break-word!important}
-    .mr-table td{padding:2px 3px!important;font-size:9pt!important;overflow:hidden!important;text-overflow:ellipsis!important}
+    .mr-table td{padding:2px 3px!important;font-size:9pt!important}
+    /* Name column: full width, no truncation, no wrapping */
+    .mr-table .stu-name{font-size:9pt!important;white-space:nowrap!important;width:auto!important;max-width:none!important;overflow:visible!important;padding:2px 8px!important;position:static!important}
     .group-ca th,.group-exam th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .avg-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .info-bar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
