@@ -59,7 +59,7 @@
 
 /* Fixed header columns */
 .fms-seq-table .th-fixed{padding:1px 4px;white-space:nowrap;text-align:center}
-.fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;padding:1px 6px;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;padding:1px 6px;overflow:visible}
 .fms-seq-table .mark-val{font-weight:600}
 .fms-seq-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee}
 .fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.9rem}
@@ -244,7 +244,7 @@
     .fms-seq-table{
         font-size:9pt!important;
         width:100%!important;
-        table-layout:fixed!important;
+        table-layout:auto!important;
         border-collapse:collapse!important
     }
     .fms-seq-table th{
@@ -276,21 +276,15 @@
         text-overflow:ellipsis!important;
         word-wrap:break-word!important
     }
-    /* With table-layout:fixed, set column widths so table fills A4 width */
+    /* Name column: full width, no truncation, no wrapping */
     .fms-seq-table .stu-name{
         font-size:9pt!important;
         white-space:nowrap!important;
-        width:18%!important;
-        max-width:18%!important;
-        overflow:hidden!important;
-        text-overflow:ellipsis!important;
-        padding:2px 6px!important
+        width:auto!important;
+        max-width:none!important;
+        overflow:visible!important;
+        padding:2px 8px!important
     }
-    .fms-seq-table th.th-fixed[style*="width:40px"]{width:3%!important}
-    .fms-seq-table .th-rotated{width:auto!important}
-    .fms-seq-table .total-col{width:7%!important}
-    .fms-seq-table .avg-col{width:7%!important}
-    .fms-seq-table .rank-col{width:6%!important}
     .fms-seq-table .th-fixed{
         font-size:8.5pt!important;
         padding:3px 4px!important
