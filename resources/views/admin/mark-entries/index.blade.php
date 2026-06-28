@@ -613,11 +613,24 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
                 </div>
 
             </div>
-            <div style="margin-top:4px;display:flex;gap:4px;align-items:center;max-width:100%;box-sizing:border-box;overflow:hidden;">
+            <div style="margin-top:4px;display:flex;gap:4px;align-items:center;max-width:100%;box-sizing:border-box;overflow:hidden;flex-wrap:wrap;">
                 <button type="button" class="btn-modern btn-modern-primary" id="btnLoadStudents" style="font-size:0.68rem;padding:3px 10px;" disabled>
                     <i class="fas fa-download"></i> Load
                 </button>
                 <span id="filterHint" style="font-size:0.6rem;color:#9ca3af;">Select all filters</span>
+                @if(in_array(auth()->user()->role, ['admin', 'super_admin', 'general_manager', 'branch_principal']))
+                <span style="flex:1;"></span>
+                <button type="button" class="btn-modern btn-modern-outline" onclick="exportMarks()" style="font-size:0.65rem;padding:3px 8px;color:#059669;border-color:#059669;" title="Download current marks as CSV">
+                    <i class="fas fa-file-export"></i> Export Marks
+                </button>
+                <button type="button" class="btn-modern btn-modern-outline" onclick="exportTemplate()" style="font-size:0.65rem;padding:3px 8px;color:#6b7280;border-color:#6b7280;" title="Download blank CSV template">
+                    <i class="fas fa-file-download"></i> Template
+                </button>
+                <button type="button" class="btn-modern btn-modern-outline" onclick="document.getElementById('importMarkFileTop').click()" style="font-size:0.65rem;padding:3px 8px;color:#d97706;border-color:#d97706;" title="Upload marks from CSV">
+                    <i class="fas fa-file-import"></i> Import Marks
+                </button>
+                <input type="file" id="importMarkFileTop" accept=".csv,.txt" style="display:none;" onchange="importMarks(this)" />
+                @endif
             </div>
         </div>
     </div>
