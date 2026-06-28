@@ -19,6 +19,21 @@
                 <i class="fas fa-paper-plane"></i>
                 <span>Message</span>
             </a>
+            @if(in_array(auth()->user()->role, ['admin', 'super_admin', 'general_manager', 'branch_principal']))
+            <a href="{{ route('admin.teachers.export') }}" class="btn-modern btn-modern-ghost" style="color:#059669;border-color:#059669;" title="Export teachers as CSV">
+                <i class="fas fa-file-export"></i>
+                <span>Export</span>
+            </a>
+            <button type="button" class="btn-modern btn-modern-ghost" style="color:#d97706;border-color:#d97706;" onclick="document.getElementById('teacherImportFile').click()" title="Import teachers from CSV">
+                <i class="fas fa-file-import"></i>
+                <span>Import</span>
+            </button>
+            <input type="file" id="teacherImportFile" accept=".csv,.txt" style="display:none;" onchange="document.getElementById('teacherImportForm').submit()" />
+            <form id="teacherImportForm" action="{{ route('admin.teachers.import') }}" method="POST" enctype="multipart/form-data" style="display:none;">
+                @csrf
+                <input type="file" name="file" />
+            </form>
+            @endif
             <a href="{{ route('admin.teachers.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-plus"></i>
                 <span>Add Teacher</span>

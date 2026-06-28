@@ -437,6 +437,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('students/upload-students', [StudentController::class, 'uploadStudents'])->name('students.upload-students')->middleware('permission:students.manage');
     Route::post('students/bulk-store', [StudentController::class, 'bulkStore'])->name('students.bulk-store')->middleware('permission:students.manage');
     Route::post('students/bulk-transfer', [StudentController::class, 'bulkTransfer'])->name('students.bulk-transfer')->middleware('permission:students.manage');
+    Route::get('students/export', [StudentController::class, 'exportCsv'])->name('students.export')->middleware('permission:students.view');
+    Route::post('students/import', [StudentController::class, 'importCsv'])->name('students.import')->middleware('permission:students.manage');
     Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
     Route::get('students/api/admission-preview', [StudentController::class, 'apiAdmissionPreview'])->name('students.api.admission-preview');
     Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
@@ -464,6 +466,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('parents/link-student', [ParentController::class, 'linkToStudent'])->name('parents.link-student')->middleware('permission:parents.manage');
     Route::get('teachers/{teacher}/transfer', [TeacherController::class, 'transferForm'])->name('teachers.transfer')->middleware('permission:teachers.manage');
     Route::post('teachers/{teacher}/transfer', [TeacherController::class, 'transfer'])->name('teachers.transfer-store')->middleware('permission:teachers.manage');
+    Route::get('teachers/export', [TeacherController::class, 'exportCsv'])->name('teachers.export')->middleware('permission:teachers.view');
+    Route::post('teachers/import', [TeacherController::class, 'importCsv'])->name('teachers.import')->middleware('permission:teachers.manage');
     Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');
     Route::get('staff/api/employee-id-preview', [StaffController::class, 'apiEmployeeIdPreview'])->name('staff.api.employee-id-preview')->middleware('permission:staff.view');
     Route::resource('staff', StaffController::class)->middleware('permission:staff.view');

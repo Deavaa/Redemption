@@ -1652,4 +1652,117 @@ class StudentController extends Controller
 
         return $rows;
     }
+
+    /**
+     * Export students as CSV, filtered by academic year / class / section / branch.
+     */
+    public function exportCsv(Request $request)
+    {
+        $ayId = $request->query('academic_year_id');
+        $classId = $request->query('class_id');
+        $sectionId = $request->query('section_id');
+        $branchId = $request->query('branch_id');
+        $status = $request->query('status', 'active');
+
+        $query = Student::query();
+        if ($branchId) $query->where('branch_id', $branchId);
+        if ($classId) $query->where('class_id', $classId);
+        if ($sectionId) $query->where('section_id', $sectionId);
+        if ($status && $status !== 'all') $query->where('status', $status);
+
+        // If academic year filter, use enrollment records
+        if ($ayId) {
+            $studentIds = StudentEnrollment::where('academic_year_id', $ayId)
+                ->where('status', 'enrolled')
+                ->pluck('student_id');
+            $query->whereIn('id', $studentIds);
+        }
+
+        $students = $query->orderBy('full_name')->get();
+
+        $headers = ['id', 'full_name', 'admission_number', 'roll_number', 'gender', 'date_of_birth', 'email', 'phone', 'guardian_name', 'guardian_phone', 'address', 'branch_id', 'class_id', 'section_id', 'academic_year_id', 'admission_date', 'status', 'blood_group', 'religion', 'nationality', 'previous_school', 'ethnicity', 'place_of_birth', 'medical_conditions', 'allergies', 'notes'];
+
+        $filename = 'students_export_' . date('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($headers, $students) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM for Excel
+            fputcsv($out, $headers);
+            foreach ($students as $s) {
+                $row = [];
+                foreach ($headers as $h) {
+                    $row[] = $s->$h ?? '';
+                }
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Import students from a CSV file. Updates existing (by id or admission_number) or creates new.
+     */
+    public function importCsv(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:10240',
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+        $bom = fread($handle, 3);
+        if ($bom !== "\xEF\xBB\xBF") fseek($handle, 0);
+
+        $headers = fgetcsv($handle);
+        if (!$headers) {
+            fclose($handle);
+            return back()->with('error', 'CSV file is empty or invalid.');
+        }
+        $headers = array_map('trim', $headers);
+
+        $allowedFields = ['full_name', 'admission_number', 'roll_number', 'gender', 'date_of_birth', 'email', 'phone', 'guardian_name', 'guardian_phone', 'address', 'branch_id', 'class_id', 'section_id', 'academic_year_id', 'admission_date', 'status', 'blood_group', 'religion', 'nationality', 'previous_school', 'ethnicity', 'place_of_birth', 'medical_conditions', 'allergies', 'notes'];
+
+        $saved = 0; $updated = 0; $errors = []; $lineNum = 1;
+        while (($row = fgetcsv($handle)) !== false) {
+            $lineNum++;
+            $data = [];
+            $id = null; $admNum = null;
+            foreach ($headers as $i => $h) {
+                $val = isset($row[$i]) ? trim($row[$i]) : '';
+                if ($h === 'id') { $id = $val; continue; }
+                if ($h === 'admission_number') { $admNum = $val; }
+                if (in_array($h, $allowedFields)) {
+                    $data[$h] = $val !== '' ? $val : null;
+                }
+            }
+            if (empty($data['full_name'])) {
+                $errors[] = "Line $lineNum: missing full_name — skipped.";
+                continue;
+            }
+            try {
+                $existing = null;
+                if ($id) $existing = Student::find($id);
+                if (!$existing && $admNum) $existing = Student::where('admission_number', $admNum)->first();
+                if ($existing) {
+                    $existing->update(array_filter($data, fn($v) => $v !== null));
+                    $updated++;
+                } else {
+                    Student::create($data);
+                    $saved++;
+                }
+            } catch (\Throwable $e) {
+                $errors[] = "Line $lineNum: " . $e->getMessage();
+            }
+        }
+        fclose($handle);
+
+        $msg = "Imported $saved new students, updated $updated existing.";
+        if (count($errors) > 0) {
+            $msg .= " " . count($errors) . " errors: " . implode(' | ', array_slice($errors, 0, 5));
+        }
+        return back()->with('success', $msg);
+    }
 }

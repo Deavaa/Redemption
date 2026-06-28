@@ -151,6 +151,18 @@
                     </a></li>
                 </ul>
             </div>
+            @if(in_array(auth()->user()->role, ['admin', 'super_admin', 'general_manager', 'branch_principal']))
+            <button type="button" class="btn-modern btn-modern-outline" onclick="document.getElementById('studentImportFile').click()"
+                    style="font-size:0.78rem;padding:0.4rem 0.9rem;color:#d97706;border-color:#d97706;">
+                <i class="fas fa-file-import"></i> Import CSV
+            </button>
+            <input type="file" id="studentImportFile" accept=".csv,.txt" style="display:none;"
+                   onchange="document.getElementById('studentImportForm').submit()" />
+            <form id="studentImportForm" action="{{ route('admin.students.import') }}" method="POST" enctype="multipart/form-data" style="display:none;">
+                @csrf
+                <input type="file" name="file" />
+            </form>
+            @endif
         </div>
     </div>
 

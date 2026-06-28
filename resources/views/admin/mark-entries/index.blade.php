@@ -668,7 +668,7 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
                 <button type="button" class="btn btn-sm btn-outline-primary" id="btnListMode" onclick="switchToListMode()">
                     <i class="fas fa-list"></i> All Students
                 </button>
-                @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
+                @if(in_array(auth()->user()->role, ['admin', 'super_admin', 'general_manager', 'branch_principal']))
                 <button type="button" class="btn btn-sm btn-outline-success" id="btnExportMarks" onclick="exportMarks()" style="margin-left:8px;" title="Download current marks as CSV">
                     <i class="fas fa-file-export"></i> Export
                 </button>
