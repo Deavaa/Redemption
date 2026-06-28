@@ -3154,43 +3154,157 @@ function importMarks(input) {
     fd.append('section_id', f.section_id);
     fd.append('subject_id', f.subject_id);
 
-    lvToast('Importing marks...', 'warning');
+    lvShowImportProgress(file.name);
     fetch(LV_IMPORT_URL, {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'X-CSRF-TOKEN': lvGetCSRF(), 'Accept': 'application/json' },
+        headers: { 'X-CSRF-TOKEN': lvGetCSRF(), 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: fd
     })
     .then(function(r) {
-        // Server returns a redirect (302) on success with flash message
-        // or JSON on validation error
-        var ct = r.headers.get('Content-Type') || '';
-        if (ct.indexOf('application/json') !== -1) {
-            return r.json().then(function(data) {
-                if (data.errors) {
-                    throw new Error(Object.values(data.errors).map(function(e) { return Array.isArray(e) ? e.join(' ') : e; }).join(' | '));
-                }
-                throw new Error(data.message || 'Import failed.');
-            });
-        }
-        // Redirect = success. Read flash message from redirect URL if present.
-        return r.text().then(function() {
-            lvToast('Import complete. Reloading marks...', 'success');
-            // Reload students to show imported marks
+        // Server now always returns JSON when X-Requested-With=XMLHttpRequest
+        // is sent. Parse JSON regardless of status code so we can show
+        // per-row errors in the modal.
+        return r.json().then(function(body) {
+            return { ok: r.ok, status: r.status, body: body };
+        }, function() {
+            // Response wasn't JSON (e.g. redirect on legacy fallback) — treat as
+            // success since the server only redirects after a successful import.
+            return { ok: r.ok, status: r.status, body: { success: r.ok, message: 'Import completed.', imported: 0, skipped: 0, errors: [] } };
+        });
+    })
+    .then(function(res) {
+        lvHideImportProgress();
+        lvShowImportResult(res.body);
+        // If import succeeded with at least 1 row, auto-reload the student list
+        if (res.ok && res.body && (res.body.success || (res.body.imported|0) > 0)) {
             setTimeout(function() {
                 if (typeof window.me_loadStudents === 'function') {
                     window.me_loadStudents();
                 } else {
                     location.reload();
                 }
-            }, 800);
-        });
+            }, 2500);
+        }
     })
     .catch(function(err) {
         console.error('[LV] import failed:', err);
-        lvToast('Import failed: ' + err.message, 'error');
+        lvHideImportProgress();
+        lvShowImportResult({ success: false, error: 'Network error: ' + err.message, imported: 0, skipped: 0, errors: [] });
     });
     input.value = '';
+}
+
+// ============================================================================
+// IMPORT RESULT MODAL (pure DOM, no Bootstrap dependency)
+// ============================================================================
+function lvEnsureImportModal() {
+    var shell = document.getElementById('lvImportModalShell');
+    if (shell) return shell;
+    shell = document.createElement('div');
+    shell.id = 'lvImportModalShell';
+    shell.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:1rem;';
+    shell.innerHTML =
+        '<div style="background:#fff;border-radius:10px;max-width:560px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,0.25);">' +
+          '<div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:0.6rem;">' +
+            '<i class="fas fa-file-csv" style="color:#4361ee;font-size:1.2rem;"></i>' +
+            '<span id="lvImportModalTitle" style="font-weight:600;font-size:1rem;color:#111827;">Import Result</span>' +
+            '<span style="flex:1;"></span>' +
+            '<button id="lvImportModalClose" style="background:none;border:none;font-size:1.3rem;color:#9ca3af;cursor:pointer;line-height:1;">&times;</button>' +
+          '</div>' +
+          '<div id="lvImportModalBody" style="padding:1.25rem;overflow-y:auto;flex:1;"></div>' +
+          '<div style="padding:0.75rem 1.25rem;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:0.5rem;">' +
+            '<button id="lvImportModalOk" class="btn-modern btn-modern-primary" style="font-size:0.85rem;padding:0.4rem 1rem;">OK</button>' +
+          '</div>' +
+        '</div>';
+    document.body.appendChild(shell);
+    shell.addEventListener('click', function (e) { if (e.target === shell) shell.style.display = 'none'; });
+    document.getElementById('lvImportModalClose').addEventListener('click', function() { shell.style.display = 'none'; });
+    document.getElementById('lvImportModalOk').addEventListener('click', function() { shell.style.display = 'none'; });
+    return shell;
+}
+
+function lvShowImportProgress(filename) {
+    var shell = lvEnsureImportModal();
+    document.getElementById('lvImportModalTitle').textContent = 'Importing…';
+    document.getElementById('lvImportModalOk').style.display = 'none';
+    document.getElementById('lvImportModalBody').innerHTML =
+        '<div style="text-align:center;padding:1.5rem 0;">' +
+          '<div style="display:inline-block;width:42px;height:42px;border:4px solid #e5e7eb;border-top-color:#4361ee;border-radius:50%;animation:lvSpin 0.8s linear infinite;"></div>' +
+          '<p style="margin-top:1rem;color:#374151;font-size:0.9rem;">Uploading <strong>' + lvEscapeHtml(filename) + '</strong></p>' +
+          '<p style="margin-top:0.25rem;color:#9ca3af;font-size:0.78rem;">Parsing CSV and saving marks…</p>' +
+        '</div>' +
+        '<style>@keyframes lvSpin{to{transform:rotate(360deg);}}</style>';
+    shell.style.display = 'flex';
+}
+
+function lvHideImportProgress() {
+    document.getElementById('lvImportModalOk').style.display = '';
+}
+
+function lvEscapeHtml(s) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(s == null ? '' : String(s)));
+    return d.innerHTML;
+}
+
+function lvShowImportResult(result) {
+    var shell = lvEnsureImportModal();
+    document.getElementById('lvImportModalTitle').textContent = 'Import Result';
+    document.getElementById('lvImportModalOk').style.display = '';
+
+    var html = '';
+    if (!result) {
+        html = '<p style="color:#dc2626;">No response from server.</p>';
+    } else if (result.success === false && !(result.imported > 0)) {
+        html =
+            '<div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.75rem 1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;">' +
+              '<i class="fas fa-circle-exclamation" style="color:#dc2626;font-size:1.1rem;margin-top:2px;"></i>' +
+              '<div><strong style="color:#991b1b;">Import failed</strong>' +
+              '<p style="margin:0.35rem 0 0;color:#7f1d1d;font-size:0.85rem;">' + lvEscapeHtml(result.error || result.message || 'Unknown error') + '</p></div>' +
+            '</div>';
+    } else {
+        var imported = result.imported || 0;
+        var skipped = result.skipped || 0;
+        var errors = result.errors || [];
+        var tone = imported > 0 ? '#ecfdf5' : '#fffbeb';
+        var border = imported > 0 ? '#a7f3d0' : '#fde68a';
+        var icon = imported > 0 ? '#059669' : '#d97706';
+        var iconClass = imported > 0 ? 'fa-circle-check' : 'fa-circle-exclamation';
+
+        html =
+            '<div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.75rem 1rem;background:' + tone + ';border:1px solid ' + border + ';border-radius:6px;">' +
+              '<i class="fas ' + iconClass + '" style="color:' + icon + ';font-size:1.1rem;margin-top:2px;"></i>' +
+              '<div>' +
+                '<strong style="color:#065f46;">Import complete</strong>' +
+                '<div style="margin-top:0.4rem;font-size:0.85rem;color:#374151;">' +
+                  '<div><strong style="color:#059669;">' + imported + '</strong> row(s) imported</div>' +
+                  (skipped > 0 ? '<div><strong style="color:#d97706;">' + skipped + '</strong> row(s) skipped</div>' : '') +
+                '</div>' +
+              '</div>' +
+            '</div>';
+
+        if (errors && errors.length > 0) {
+            var shown = errors.slice(0, 50);
+            var hidden = errors.length - shown.length;
+            html +=
+                '<div style="margin-top:0.85rem;">' +
+                  '<strong style="font-size:0.8rem;color:#374151;">Issues (' + errors.length + '):</strong>' +
+                  '<ul style="margin:0.4rem 0 0;padding-left:1.2rem;max-height:200px;overflow-y:auto;font-size:0.78rem;color:#7f1d1d;">' +
+                    shown.map(function(e) { return '<li>' + lvEscapeHtml(e) + '</li>'; }).join('') +
+                  '</ul>' +
+                  (hidden > 0 ? '<p style="font-size:0.7rem;color:#9ca3af;margin-top:0.35rem;">… and ' + hidden + ' more not shown.</p>' : '') +
+                '</div>';
+        }
+
+        if (imported > 0) {
+            html +=
+              '<p style="margin-top:0.85rem;font-size:0.78rem;color:#6b7280;">' +
+              'The student list will refresh automatically in a few seconds to show the new marks.</p>';
+        }
+    }
+    document.getElementById('lvImportModalBody').innerHTML = html;
+    shell.style.display = 'flex';
 }
 </script>
 @endpush

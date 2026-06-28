@@ -1139,6 +1139,11 @@ class MarkEntryController extends Controller
         $sectionId = $request->input('section_id');
         $subjectId = $request->input('subject_id');
 
+        // Detect if the client wants JSON (modern fetch) vs. redirect (legacy form post)
+        $wantsJson = $request->expectsJson() || $request->ajax() ||
+                     $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+                     $request->header('Accept') === 'application/json';
+
         $markFields = MarkEntry::getMarkFields();
         $markFieldCols = array_map(fn($f) => $f['col'], $markFields);
         $markFieldMap = []; // header label → field col
@@ -1149,6 +1154,11 @@ class MarkEntryController extends Controller
 
         $file = $request->file('file');
         $handle = fopen($file->getRealPath(), 'r');
+        if ($handle === false) {
+            return $wantsJson
+                ? response()->json(['success' => false, 'error' => 'Cannot open uploaded file.'], 400)
+                : back()->with('error', 'Cannot open uploaded file.');
+        }
         // Skip BOM if present
         $bom = fread($handle, 3);
         if ($bom !== "\xEF\xBB\xBF") {
@@ -1158,16 +1168,33 @@ class MarkEntryController extends Controller
         $headers = fgetcsv($handle);
         if (!$headers) {
             fclose($handle);
-            return back()->with('error', 'CSV file is empty or invalid.');
+            $msg = 'CSV file is empty or invalid.';
+            return $wantsJson
+                ? response()->json(['success' => false, 'error' => $msg], 400)
+                : back()->with('error', $msg);
         }
-        // Normalize headers (trim)
-        $headers = array_map('trim', $headers);
+        // Normalize headers (trim + strip invisible chars that Excel sometimes adds)
+        $headers = array_map(function($h) {
+            $h = trim($h);
+            $h = preg_replace('/[\x00-\x1F\x7F\xEF\xBB\xBF]/u', '', $h); // strip BOM/control chars
+            return $h;
+        }, $headers);
 
-        // Find student_id column index
-        $sidIdx = array_search('student_id', $headers);
-        if ($sidIdx === false) {
+        // Find student_id column index (also accept 'Student ID', 'student id', 'ID')
+        $sidIdx = null;
+        foreach ($headers as $i => $h) {
+            $norm = strtolower($h);
+            if ($norm === 'student_id' || $norm === 'student id' || $norm === 'id') {
+                $sidIdx = $i;
+                break;
+            }
+        }
+        if ($sidIdx === null) {
             fclose($handle);
-            return back()->with('error', 'CSV must have a "student_id" column.');
+            $msg = 'CSV must have a "student_id" column. Headers found: ' . implode(', ', $headers);
+            return $wantsJson
+                ? response()->json(['success' => false, 'error' => $msg], 400)
+                : back()->with('error', $msg);
         }
 
         // Map header indices to mark field cols
@@ -1180,25 +1207,72 @@ class MarkEntryController extends Controller
 
         if (empty($colMap)) {
             fclose($handle);
-            return back()->with('error', 'CSV must have at least one mark field column (e.g. ca1, test1, etc.).');
+            $msg = 'CSV must have at least one mark field column (e.g. ca1, test1, ca1 (/50), etc.). Headers found: ' . implode(', ', $headers);
+            return $wantsJson
+                ? response()->json(['success' => false, 'error' => $msg], 400)
+                : back()->with('error', $msg);
         }
 
         $saved = 0;
+        $skipped = 0;
         $errors = [];
         $lineNum = 1;
 
+        // Eager-load all students that appear in the CSV in ONE query — avoids
+        // N+1 Student::find() calls inside the loop (the previous implementation
+        // did one DB query per row, which is slow for large classes and also
+        // made the import feel "stuck" after the first row on slow servers).
+        // We do two passes: first collect student_ids, then bulk-fetch.
+        $allStudentIds = [];
+        $rowsBuffer = [];
         while (($row = fgetcsv($handle)) !== false) {
+            $rowsBuffer[] = $row;
+        }
+        fclose($handle);
+
+        foreach ($rowsBuffer as $row) {
+            $sidVal = isset($row[$sidIdx]) ? trim($row[$sidIdx]) : '';
+            if ($sidVal !== '') $allStudentIds[] = $sidVal;
+        }
+        $allStudentIds = array_unique($allStudentIds);
+        $studentsMap = !empty($allStudentIds)
+            ? Student::whereIn('id', $allStudentIds)->get()->keyBy('id')
+            : collect();
+
+        // Also eager-load existing mark entries for the same subject/term/ay
+        // so we don't query the DB once per row inside the loop.
+        $existingMap = !empty($allStudentIds)
+            ? MarkEntry::where('subject_id', $subjectId)
+                ->where('term_id', $termId)
+                ->where('academic_year_id', $ayId)
+                ->whereIn('student_id', $allStudentIds)
+                ->get()->keyBy('student_id')
+            : collect();
+
+        foreach ($rowsBuffer as $row) {
             $lineNum++;
-            $studentId = $row[$sidIdx] ?? null;
-            if (!$studentId) {
-                $errors[] = "Line $lineNum: missing student_id — skipped.";
+
+            // Skip totally blank rows (Excel trailing-empty-row artifact)
+            $isEmptyRow = true;
+            foreach ($row as $cell) {
+                if (trim((string)$cell) !== '') { $isEmptyRow = false; break; }
+            }
+            if ($isEmptyRow) {
                 continue;
             }
 
-            // Verify student exists
-            $student = Student::find($studentId);
+            $studentId = isset($row[$sidIdx]) ? trim($row[$sidIdx]) : '';
+            if ($studentId === '') {
+                $errors[] = "Line $lineNum: missing student_id — skipped.";
+                $skipped++;
+                continue;
+            }
+
+            // Verify student exists (lookup from eager-loaded map)
+            $student = $studentsMap[$studentId] ?? null;
             if (!$student) {
                 $errors[] = "Line $lineNum: student_id $studentId not found — skipped.";
+                $skipped++;
                 continue;
             }
 
@@ -1213,13 +1287,8 @@ class MarkEntryController extends Controller
                 'teacher_id' => null,
             ];
 
-            // Load existing record to preserve other fields
-            $existing = MarkEntry::where('student_id', $studentId)
-                ->where('subject_id', $subjectId)
-                ->where('term_id', $termId)
-                ->where('academic_year_id', $ayId)
-                ->first();
-
+            // Load existing record (from eager-loaded map) to preserve other fields
+            $existing = $existingMap[$studentId] ?? null;
             if ($existing) {
                 foreach ($markFieldCols as $f) {
                     $data[$f] = $existing->$f;
@@ -1227,26 +1296,39 @@ class MarkEntryController extends Controller
             }
 
             // Override with imported values (with server-side max enforcement)
+            $hasAnyMarkValue = false;
             foreach ($colMap as $idx => $col) {
                 $val = isset($row[$idx]) ? trim($row[$idx]) : '';
                 if ($val === '') {
-                    $data[$col] = null;
-                } else {
-                    // Find field config for max enforcement
-                    $fieldConfig = null;
-                    foreach ($markFields as $fc) {
-                        if ($fc['col'] === $col) { $fieldConfig = $fc; break; }
-                    }
-                    if ($fieldConfig) {
-                        $max = floatval($fieldConfig['max']);
-                        $v = floatval($val);
-                        if ($max > 0 && $v > $max) $v = $max;
-                        if ($v < 0) $v = 0;
-                        $data[$col] = $v;
-                    } else {
-                        $data[$col] = floatval($val);
-                    }
+                    // Empty cell: preserve existing value, don't overwrite with null
+                    // (the previous implementation null'd empty cells, which destroyed
+                    // existing marks when the user only wanted to update some columns)
+                    if (!isset($data[$col])) $data[$col] = null;
+                    continue;
                 }
+                $hasAnyMarkValue = true;
+                // Find field config for max enforcement
+                $fieldConfig = null;
+                foreach ($markFields as $fc) {
+                    if ($fc['col'] === $col) { $fieldConfig = $fc; break; }
+                }
+                if ($fieldConfig) {
+                    $max = floatval($fieldConfig['max']);
+                    $v = floatval($val);
+                    if ($max > 0 && $v > $max) $v = $max;
+                    if ($v < 0) $v = 0;
+                    $data[$col] = $v;
+                } else {
+                    $data[$col] = floatval($val);
+                }
+            }
+
+            // Skip rows that have no mark values at all (just student_id + name)
+            // — this prevents creating empty mark records when the user uploads
+            // the template back unchanged.
+            if (!$hasAnyMarkValue && !$existing) {
+                $skipped++;
+                continue;
             }
 
             // Calculate totals
@@ -1257,20 +1339,38 @@ class MarkEntryController extends Controller
                 if ($existing) {
                     $existing->update($data);
                 } else {
+                    // Fill in class_grade / section text for new records
+                    $classRoom = \App\Models\ClassRoom::find($classId);
+                    $section   = \App\Models\Section::find($sectionId);
+                    $data['class_grade'] = $classRoom?->name;
+                    $data['section']     = $section?->name;
                     MarkEntry::create($data);
                 }
                 $saved++;
             } catch (\Throwable $e) {
                 $errors[] = "Line $lineNum (student $studentId): " . $e->getMessage();
+                $skipped++;
             }
         }
-        fclose($handle);
 
         $msg = "Imported $saved marks successfully.";
-        if (count($errors) > 0) {
-            $msg .= " " . count($errors) . " errors: " . implode(' | ', array_slice($errors, 0, 5));
-            if (count($errors) > 5) $msg .= ' (and ' . (count($errors) - 5) . ' more)';
+        if ($skipped > 0) {
+            $msg .= " Skipped $skipped row(s).";
         }
-        return back()->with('success', $msg);
+        if (count($errors) > 0) {
+            $msg .= " Errors: " . implode(' | ', array_slice($errors, 0, 10));
+            if (count($errors) > 10) $msg .= ' (and ' . (count($errors) - 10) . ' more)';
+        }
+
+        if ($wantsJson) {
+            return response()->json([
+                'success' => $saved > 0,
+                'imported' => $saved,
+                'skipped'  => $skipped,
+                'errors'   => $errors,
+                'message'  => $msg,
+            ]);
+        }
+        return back()->with($saved > 0 ? 'success' : 'error', $msg);
     }
 }
