@@ -325,6 +325,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students')->middleware('permission:mark_entries.view');
     // Save routes moved OUTSIDE admin group (above) to avoid middleware redirect issues
     Route::get('mark-entries/api/check-lock', [MarkEntryLockController::class, 'apiCheckLock'])->name('mark-entries.api.check-lock');
+    // Bulk import/export (admin only)
+    Route::get('mark-entries/export', [MarkEntryController::class, 'export'])->name('mark-entries.export')->middleware('permission:mark_entries.manage');
+    Route::get('mark-entries/export-template', [MarkEntryController::class, 'exportTemplate'])->name('mark-entries.export-template')->middleware('permission:mark_entries.manage');
+    Route::post('mark-entries/import', [MarkEntryController::class, 'import'])->name('mark-entries.import')->middleware('permission:mark_entries.manage');
     Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
 
     // Mark Entry Lock Management (Branch Principal / Admin)

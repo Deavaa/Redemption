@@ -964,4 +964,313 @@ class MarkEntryController extends Controller
             'csrf_token' => csrf_token(),
         ]);
     }
+
+    /**
+     * Export marks for a class/section/subject/term as a CSV file.
+     * Admin-only. Downloads current marks + student list.
+     */
+    public function export(Request $request)
+    {
+        $ayId = $request->query('academic_year_id');
+        $termId = $request->query('term_id');
+        $classId = $request->query('class_id');
+        $sectionId = $request->query('section_id');
+        $subjectId = $request->query('subject_id');
+
+        if (!$ayId || !$termId || !$classId || !$sectionId || !$subjectId) {
+            return back()->with('error', 'All filters (academic year, term, class, section, subject) are required for export.');
+        }
+
+        $markFields = MarkEntry::getMarkFields();
+
+        // Load students
+        $enrolledStudentIds = \App\Models\StudentEnrollment::where('academic_year_id', $ayId)
+            ->where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->where('status', 'enrolled')
+            ->pluck('student_id');
+
+        if ($enrolledStudentIds->isNotEmpty()) {
+            $students = Student::whereIn('id', $enrolledStudentIds)
+                ->where('status', 'active')
+                ->orderBy('full_name', 'asc')
+                ->select('id', 'full_name', 'roll_number')
+                ->get();
+        } else {
+            $students = Student::where('class_id', $classId)
+                ->where('section_id', $sectionId)
+                ->where('status', 'active')
+                ->orderBy('full_name', 'asc')
+                ->select('id', 'full_name', 'roll_number')
+                ->get();
+        }
+
+        $existingMarks = MarkEntry::where('academic_year_id', $ayId)
+            ->where('term_id', $termId)
+            ->where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->where('subject_id', $subjectId)
+            ->get()->keyBy('student_id');
+
+        // Build CSV
+        $headers = ['student_id', 'student_name', 'roll_number'];
+        foreach ($markFields as $f) {
+            $headers[] = $f['col'] . ' (/' . $f['max'] . ')';
+        }
+
+        $rows = [];
+        foreach ($students as $s) {
+            $mark = $existingMarks->get($s->id);
+            $row = [$s->id, $s->full_name, $s->roll_number];
+            foreach ($markFields as $f) {
+                $col = $f['col'];
+                $val = $mark ? $mark->$col : null;
+                $row[] = ($val !== null && $val !== '') ? $val : '';
+            }
+            $rows[] = $row;
+        }
+
+        $subject = Subject::find($subjectId);
+        $term = Term::find($termId);
+        $class = ClassRoom::find($classId);
+        $section = Section::find($sectionId);
+        $academicYear = AcademicYear::find($ayId);
+
+        $filename = 'marks_' . ($class->name ?? 'class') . '_' . ($section->name ?? 'sec') . '_' . ($subject->name ?? 'subj') . '_' . ($term->name ?? 'term') . '.csv';
+
+        return response()->streamDownload(function () use ($headers, $rows) {
+            $out = fopen('php://output', 'w');
+            // BOM for Excel UTF-8 compatibility
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, $headers);
+            foreach ($rows as $row) {
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Export a blank template CSV for bulk mark entry.
+     * Same as export but with empty mark columns.
+     */
+    public function exportTemplate(Request $request)
+    {
+        $ayId = $request->query('academic_year_id');
+        $termId = $request->query('term_id');
+        $classId = $request->query('class_id');
+        $sectionId = $request->query('section_id');
+        $subjectId = $request->query('subject_id');
+
+        if (!$ayId || !$termId || !$classId || !$sectionId || !$subjectId) {
+            return back()->with('error', 'All filters (academic year, term, class, section, subject) are required for template export.');
+        }
+
+        $markFields = MarkEntry::getMarkFields();
+
+        // Load students (template = empty marks)
+        $enrolledStudentIds = \App\Models\StudentEnrollment::where('academic_year_id', $ayId)
+            ->where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->where('status', 'enrolled')
+            ->pluck('student_id');
+
+        if ($enrolledStudentIds->isNotEmpty()) {
+            $students = Student::whereIn('id', $enrolledStudentIds)
+                ->where('status', 'active')
+                ->orderBy('full_name', 'asc')
+                ->select('id', 'full_name', 'roll_number')
+                ->get();
+        } else {
+            $students = Student::where('class_id', $classId)
+                ->where('section_id', $sectionId)
+                ->where('status', 'active')
+                ->orderBy('full_name', 'asc')
+                ->select('id', 'full_name', 'roll_number')
+                ->get();
+        }
+
+        $headers = ['student_id', 'student_name', 'roll_number'];
+        foreach ($markFields as $f) {
+            $headers[] = $f['col'] . ' (/' . $f['max'] . ')';
+        }
+
+        $filename = 'mark_template_' . ($subjectId) . '.csv';
+
+        return response()->streamDownload(function () use ($headers, $students, $markFields) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, $headers);
+            foreach ($students as $s) {
+                $row = [$s->id, $s->full_name, $s->roll_number];
+                foreach ($markFields as $f) {
+                    $row[] = ''; // empty mark
+                }
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Import marks from a CSV file.
+     * Admin-only. Parses the CSV and saves marks via the same logic as apiSave.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:5120', // max 5MB
+            'academic_year_id' => 'required',
+            'term_id' => 'required',
+            'class_id' => 'required',
+            'section_id' => 'required',
+            'subject_id' => 'required',
+        ]);
+
+        $ayId = $request->input('academic_year_id');
+        $termId = $request->input('term_id');
+        $classId = $request->input('class_id');
+        $sectionId = $request->input('section_id');
+        $subjectId = $request->input('subject_id');
+
+        $markFields = MarkEntry::getMarkFields();
+        $markFieldCols = array_map(fn($f) => $f['col'], $markFields);
+        $markFieldMap = []; // header label → field col
+        foreach ($markFields as $f) {
+            $markFieldMap[$f['col'] . ' (/' . $f['max'] . ')'] = $f['col'];
+            $markFieldMap[$f['col']] = $f['col']; // also accept bare col name
+        }
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+        // Skip BOM if present
+        $bom = fread($handle, 3);
+        if ($bom !== "\xEF\xBB\xBF") {
+            fseek($handle, 0);
+        }
+
+        $headers = fgetcsv($handle);
+        if (!$headers) {
+            fclose($handle);
+            return back()->with('error', 'CSV file is empty or invalid.');
+        }
+        // Normalize headers (trim)
+        $headers = array_map('trim', $headers);
+
+        // Find student_id column index
+        $sidIdx = array_search('student_id', $headers);
+        if ($sidIdx === false) {
+            fclose($handle);
+            return back()->with('error', 'CSV must have a "student_id" column.');
+        }
+
+        // Map header indices to mark field cols
+        $colMap = []; // index → mark field col
+        foreach ($headers as $i => $h) {
+            if (isset($markFieldMap[$h])) {
+                $colMap[$i] = $markFieldMap[$h];
+            }
+        }
+
+        if (empty($colMap)) {
+            fclose($handle);
+            return back()->with('error', 'CSV must have at least one mark field column (e.g. ca1, test1, etc.).');
+        }
+
+        $saved = 0;
+        $errors = [];
+        $lineNum = 1;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $lineNum++;
+            $studentId = $row[$sidIdx] ?? null;
+            if (!$studentId) {
+                $errors[] = "Line $lineNum: missing student_id — skipped.";
+                continue;
+            }
+
+            // Verify student exists
+            $student = Student::find($studentId);
+            if (!$student) {
+                $errors[] = "Line $lineNum: student_id $studentId not found — skipped.";
+                continue;
+            }
+
+            // Build mark data
+            $data = [
+                'student_id' => $studentId,
+                'subject_id' => $subjectId,
+                'academic_year_id' => $ayId,
+                'term_id' => $termId,
+                'class_id' => $classId,
+                'section_id' => $sectionId,
+                'teacher_id' => null,
+            ];
+
+            // Load existing record to preserve other fields
+            $existing = MarkEntry::where('student_id', $studentId)
+                ->where('subject_id', $subjectId)
+                ->where('term_id', $termId)
+                ->where('academic_year_id', $ayId)
+                ->first();
+
+            if ($existing) {
+                foreach ($markFieldCols as $f) {
+                    $data[$f] = $existing->$f;
+                }
+            }
+
+            // Override with imported values (with server-side max enforcement)
+            foreach ($colMap as $idx => $col) {
+                $val = isset($row[$idx]) ? trim($row[$idx]) : '';
+                if ($val === '') {
+                    $data[$col] = null;
+                } else {
+                    // Find field config for max enforcement
+                    $fieldConfig = null;
+                    foreach ($markFields as $fc) {
+                        if ($fc['col'] === $col) { $fieldConfig = $fc; break; }
+                    }
+                    if ($fieldConfig) {
+                        $max = floatval($fieldConfig['max']);
+                        $v = floatval($val);
+                        if ($max > 0 && $v > $max) $v = $max;
+                        if ($v < 0) $v = 0;
+                        $data[$col] = $v;
+                    } else {
+                        $data[$col] = floatval($val);
+                    }
+                }
+            }
+
+            // Calculate totals
+            $data = MarkEntry::calcTotals($data);
+            $data['marks_obtained'] = $data['grand_total'] ?? 0;
+
+            try {
+                if ($existing) {
+                    $existing->update($data);
+                } else {
+                    MarkEntry::create($data);
+                }
+                $saved++;
+            } catch (\Throwable $e) {
+                $errors[] = "Line $lineNum (student $studentId): " . $e->getMessage();
+            }
+        }
+        fclose($handle);
+
+        $msg = "Imported $saved marks successfully.";
+        if (count($errors) > 0) {
+            $msg .= " " . count($errors) . " errors: " . implode(' | ', array_slice($errors, 0, 5));
+            if (count($errors) > 5) $msg .= ' (and ' . (count($errors) - 5) . ' more)';
+        }
+        return back()->with('success', $msg);
+    }
 }

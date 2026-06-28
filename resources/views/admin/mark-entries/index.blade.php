@@ -668,6 +668,18 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
                 <button type="button" class="btn btn-sm btn-outline-primary" id="btnListMode" onclick="switchToListMode()">
                     <i class="fas fa-list"></i> All Students
                 </button>
+                @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
+                <button type="button" class="btn btn-sm btn-outline-success" id="btnExportMarks" onclick="exportMarks()" style="margin-left:8px;" title="Download current marks as CSV">
+                    <i class="fas fa-file-export"></i> Export
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnExportTemplate" onclick="exportTemplate()" title="Download blank CSV template">
+                    <i class="fas fa-file-download"></i> Template
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning" id="btnImportMarks" onclick="document.getElementById('importMarkFile').click()" title="Upload marks from CSV">
+                    <i class="fas fa-file-import"></i> Import
+                </button>
+                <input type="file" id="importMarkFile" accept=".csv,.txt" style="display:none;" onchange="importMarks(this)" />
+                @endif
                 <span class="me-save-badge idle" id="globalSaveStatus"><i class="fas fa-check-circle"></i> Ready</span>
             </div>
         </div>
@@ -3053,5 +3065,119 @@ function lvSaveAll() {
 }
 
 console.log('[LV] list-view v3 loaded. API_SAVE=' + LV_API_SAVE);
+
+// ============================================================================
+// BULK IMPORT / EXPORT (admin only)
+// ============================================================================
+var LV_EXPORT_URL = '{{ route("admin.mark-entries.export") }}';
+var LV_TEMPLATE_URL = '{{ route("admin.mark-entries.export-template") }}';
+var LV_IMPORT_URL = '{{ route("admin.mark-entries.import") }}';
+
+// Read filter values from the DOM (same as lvGetFilters)
+function lvGetFiltersObj() {
+    var g = function(id) { var el = document.getElementById(id); return el ? el.value : ''; };
+    return {
+        academic_year_id: g('filterAy'),
+        term_id: g('filterTerm'),
+        class_id: g('filterClass'),
+        section_id: g('filterSection'),
+        subject_id: g('filterSubject')
+    };
+}
+
+function exportMarks() {
+    var f = lvGetFiltersObj();
+    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id || !f.subject_id) {
+        lvToast('Please select all filters (year, term, class, section, subject) before exporting.', 'warning');
+        return;
+    }
+    var qs = 'academic_year_id=' + encodeURIComponent(f.academic_year_id) +
+             '&term_id=' + encodeURIComponent(f.term_id) +
+             '&class_id=' + encodeURIComponent(f.class_id) +
+             '&section_id=' + encodeURIComponent(f.section_id) +
+             '&subject_id=' + encodeURIComponent(f.subject_id);
+    window.location.href = LV_EXPORT_URL + '?' + qs;
+}
+
+function exportTemplate() {
+    var f = lvGetFiltersObj();
+    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id || !f.subject_id) {
+        lvToast('Please select all filters (year, term, class, section, subject) before downloading template.', 'warning');
+        return;
+    }
+    var qs = 'academic_year_id=' + encodeURIComponent(f.academic_year_id) +
+             '&term_id=' + encodeURIComponent(f.term_id) +
+             '&class_id=' + encodeURIComponent(f.class_id) +
+             '&section_id=' + encodeURIComponent(f.section_id) +
+             '&subject_id=' + encodeURIComponent(f.subject_id);
+    window.location.href = LV_TEMPLATE_URL + '?' + qs;
+}
+
+function importMarks(input) {
+    var f = lvGetFiltersObj();
+    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id || !f.subject_id) {
+        lvToast('Please select all filters (year, term, class, section, subject) before importing.', 'warning');
+        input.value = '';
+        return;
+    }
+    if (!input.files || input.files.length === 0) return;
+    var file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+        lvToast('File too large. Maximum 5MB.', 'error');
+        input.value = '';
+        return;
+    }
+    if (!confirm('Import marks from "' + file.name + '"?\n\nThis will UPDATE marks for the selected class/section/subject/term.\nValues over the maximum will be clamped.\nEmpty cells will be ignored (existing marks preserved).')) {
+        input.value = '';
+        return;
+    }
+
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('_token', lvGetCSRF());
+    fd.append('academic_year_id', f.academic_year_id);
+    fd.append('term_id', f.term_id);
+    fd.append('class_id', f.class_id);
+    fd.append('section_id', f.section_id);
+    fd.append('subject_id', f.subject_id);
+
+    lvToast('Importing marks...', 'warning');
+    fetch(LV_IMPORT_URL, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'X-CSRF-TOKEN': lvGetCSRF(), 'Accept': 'application/json' },
+        body: fd
+    })
+    .then(function(r) {
+        // Server returns a redirect (302) on success with flash message
+        // or JSON on validation error
+        var ct = r.headers.get('Content-Type') || '';
+        if (ct.indexOf('application/json') !== -1) {
+            return r.json().then(function(data) {
+                if (data.errors) {
+                    throw new Error(Object.values(data.errors).map(function(e) { return Array.isArray(e) ? e.join(' ') : e; }).join(' | '));
+                }
+                throw new Error(data.message || 'Import failed.');
+            });
+        }
+        // Redirect = success. Read flash message from redirect URL if present.
+        return r.text().then(function() {
+            lvToast('Import complete. Reloading marks...', 'success');
+            // Reload students to show imported marks
+            setTimeout(function() {
+                if (typeof window.me_loadStudents === 'function') {
+                    window.me_loadStudents();
+                } else {
+                    location.reload();
+                }
+            }, 800);
+        });
+    })
+    .catch(function(err) {
+        console.error('[LV] import failed:', err);
+        lvToast('Import failed: ' + err.message, 'error');
+    });
+    input.value = '';
+}
 </script>
 @endpush
