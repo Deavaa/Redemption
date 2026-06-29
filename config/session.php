@@ -30,10 +30,10 @@ return [
     */
     'driver' => env('SESSION_DRIVER', 'database'),
 
-    // On local/dev environments, boost session lifetime to 24 hours so the
-    // user never gets logged out mid-work due to slow keepalives or
-    // transient DB hiccups that are common on XAMPP / php artisan serve.
-    'lifetime' => env('SESSION_LIFETIME', app()->environment('local', 'testing') ? 1440 : 480),
+    // Session lifetime in minutes. Set SESSION_LIFETIME=1440 in your .env
+    // for local dev (24h) so you don't get logged out mid-work on slow
+    // XAMPP/artisan-serve setups. Production should use 480 (8h).
+    'lifetime' => env('SESSION_LIFETIME', 480),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
