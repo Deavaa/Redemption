@@ -544,88 +544,69 @@ class MarkEntryController extends Controller
             'term_id' => 'required',
         ]);
 
-        // Touch session to keep it alive during mark entry
+        // Touch session to keep it alive during mark entry (file driver = fast)
         $request->session()->put('_last_mark_save', time());
-        // Force-save session to database immediately (critical for database driver)
-        $request->session()->save();
 
         $studentId = $request->input('student_id');
         $subjectId = $request->input('subject_id');
         $ayId = $request->input('academic_year_id') ?: null;
         $termId = $request->input('term_id');
+        $classId = $request->input('class_id');
+        $sectionId = $request->input('section_id');
 
-        // ── Authorization check for teachers ──
-        $teacher = $this->getTeacherForUser();
-        if ($teacher) {
-            $classId = $request->input('class_id');
-            $sectionId = $request->input('section_id');
+        $user = auth()->user();
+        $isAdmin = $user && in_array($user->role, ['admin', 'super_admin', 'general_manager', 'branch_principal']);
 
-            // Resolve class_id from class_grade if needed
-            if (empty($classId) && $request->filled('class_grade')) {
-                $classRoom = ClassRoom::where('name', $request->input('class_grade'))->first();
-                if ($classRoom) $classId = $classRoom->id;
-            }
-            // Resolve section_id from section if needed
-            if (empty($sectionId) && $request->filled('section') && !empty($classId)) {
-                $sectionModel = Section::where('class_id', $classId)
-                    ->where('name', $request->input('section'))->first();
-                if ($sectionModel) $sectionId = $sectionModel->id;
-            }
+        // ── Authorization check for teachers ONLY (skip for admins — fast path) ──
+        if (!$isAdmin) {
+            $teacher = $this->getTeacherForUser();
+            if ($teacher) {
+                // Check if teacher is assigned to this class+section+subject
+                $isAssigned = TeacherAssignment::where('teacher_id', $teacher->id)
+                    ->where('class_id', $classId)
+                    ->where('subject_id', $subjectId)
+                    ->where(function($q) use ($sectionId) {
+                        $q->where('section_id', $sectionId)->orWhereNull('section_id');
+                    })
+                    ->exists();
 
-            // Check if teacher is assigned to this class+section+subject
-            $isAssigned = TeacherAssignment::where('teacher_id', $teacher->id)
-                ->where('class_id', $classId)
-                ->where('subject_id', $subjectId)
-                ->where(function($q) use ($sectionId) {
-                    $q->where('section_id', $sectionId)->orWhereNull('section_id');
-                })
-                ->exists();
+                // Or check if teacher is homeroom for this class or section
+                $isHomeroomClass = !empty($classId) && $teacher->classRooms()->where('id', $classId)->exists();
+                $isHomeroomSection = !empty($sectionId) && $teacher->sections()->where('id', $sectionId)->exists();
 
-            // Or check if teacher is homeroom for this class or section
-            $isHomeroomClass = !empty($classId) && $teacher->classRooms()->where('id', $classId)->exists();
-            $isHomeroomSection = !empty($sectionId) && $teacher->sections()->where('id', $sectionId)->exists();
+                if (!$isAssigned && !$isHomeroomClass && !$isHomeroomSection) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'You are not authorized to enter marks for this class/section/subject.',
+                    ], 403);
+                }
 
-            if (!$isAssigned && !$isHomeroomClass && !$isHomeroomSection) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'You are not authorized to enter marks for this class/section/subject.',
-                ], 403);
-            }
+                // ── Disallowal check: branch principal can disallow specific teachers ──
+                $effectiveAyId = $ayId;
+                $effectiveTermId = $termId;
+                if (!$effectiveAyId) {
+                    $activeAy = AcademicYear::where('is_current', true)->first();
+                    $effectiveAyId = $activeAy?->id;
+                }
+                if (!$effectiveTermId && $effectiveAyId) {
+                    $activeTerm = Term::where('academic_year_id', $effectiveAyId)->where('is_active', true)->first();
+                    $effectiveTermId = $activeTerm?->id;
+                }
 
-            // ── Disallowal check: branch principal can disallow specific teachers ──
-            $effectiveAyId = $ayId;
-            $effectiveTermId = $termId;
-            if (!$effectiveAyId) {
-                $activeAy = AcademicYear::where('is_current', true)->first();
-                $effectiveAyId = $activeAy?->id;
-            }
-            if (!$effectiveTermId && $effectiveAyId) {
-                $activeTerm = Term::where('academic_year_id', $effectiveAyId)->where('is_active', true)->first();
-                $effectiveTermId = $activeTerm?->id;
-            }
-
-            $isDisallowed = MarkEntryDisallowal::isDisallowed(
-                $teacher->id,
-                $classId,
-                $sectionId,
-                $subjectId,
-                $effectiveAyId,
-                $effectiveTermId
-            );
-
-            if ($isDisallowed) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Your mark entry permission has been restricted for this class/section/subject. Contact your branch principal for assistance.',
-                    'is_disallowed' => true,
-                ], 403);
+                $isDisallowed = MarkEntryDisallowal::isDisallowed(
+                    $teacher->id, $classId, $sectionId, $subjectId, $effectiveAyId, $effectiveTermId
+                );
+                if ($isDisallowed) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Your mark entry permission has been restricted for this class/section/subject.',
+                        'is_disallowed' => true,
+                    ], 403);
+                }
             }
         }
 
-        // ── Mark Entry Lock & Permission Check ──
-        $user = auth()->user();
-        $isAdmin = $user && in_array($user->role, ['admin', 'super_admin']);
-
+        // ── Mark Entry Lock & Permission Check (skip for admins — fast path) ──
         if (!$isAdmin) {
             // Resolve class_id for lock check
             $lockClassId = $request->input('class_id');
@@ -977,8 +958,9 @@ class MarkEntryController extends Controller
     }
 
     /**
-     * Export marks for a class/section/subject/term as a CSV file.
-     * Admin-only. Downloads current marks + student list.
+     * BULK Export — ALL subjects, ALL marks for a class/section/term in ONE CSV.
+     * Long format: one row per student per subject.
+     * Admin-only. Does NOT require subject_id — exports every subject.
      */
     public function export(Request $request)
     {
@@ -986,10 +968,10 @@ class MarkEntryController extends Controller
         $termId = $request->query('term_id');
         $classId = $request->query('class_id');
         $sectionId = $request->query('section_id');
-        $subjectId = $request->query('subject_id');
+        // subject_id is OPTIONAL — if not provided, export ALL subjects
 
-        if (!$ayId || !$termId || !$classId || !$sectionId || !$subjectId) {
-            return back()->with('error', 'All filters (academic year, term, class, section, subject) are required for export.');
+        if (!$ayId || !$termId || !$classId || !$sectionId) {
+            return back()->with('error', 'Academic year, term, class, and section are required for export.');
         }
 
         $markFields = MarkEntry::getMarkFields();
@@ -1016,43 +998,58 @@ class MarkEntryController extends Controller
                 ->get();
         }
 
-        $existingMarks = MarkEntry::where('academic_year_id', $ayId)
+        // Load ALL subjects for this class (via teacher assignments) or all subjects if admin
+        $subjectsQuery = \App\Models\Subject::orderBy('priority')->orderBy('name');
+        $subjectId = $request->query('subject_id');
+        if ($subjectId) {
+            $subjectsQuery->where('id', $subjectId);
+        }
+        $subjects = $subjectsQuery->get(['id', 'name']);
+
+        // Load ALL existing marks for these students × subjects × term
+        $allMarks = MarkEntry::where('academic_year_id', $ayId)
             ->where('term_id', $termId)
             ->where('class_id', $classId)
             ->where('section_id', $sectionId)
-            ->where('subject_id', $subjectId)
-            ->get()->keyBy('student_id');
+            ->whereIn('student_id', $students->pluck('id'))
+            ->whereIn('subject_id', $subjects->pluck('id'))
+            ->get();
 
-        // Build CSV
-        $headers = ['student_id', 'student_name', 'roll_number'];
+        // Index marks by student_id + subject_id for fast lookup
+        $marksIndex = [];
+        foreach ($allMarks as $m) {
+            $marksIndex[$m->student_id . '_' . $m->subject_id] = $m;
+        }
+
+        // Build CSV headers
+        $headers = ['student_id', 'student_name', 'roll_number', 'subject_id', 'subject_name'];
         foreach ($markFields as $f) {
             $headers[] = $f['col'] . ' (/' . $f['max'] . ')';
         }
 
+        // Build rows: one row per student per subject
         $rows = [];
         foreach ($students as $s) {
-            $mark = $existingMarks->get($s->id);
-            $row = [$s->id, $s->full_name, $s->roll_number];
-            foreach ($markFields as $f) {
-                $col = $f['col'];
-                $val = $mark ? $mark->$col : null;
-                $row[] = ($val !== null && $val !== '') ? $val : '';
+            foreach ($subjects as $subj) {
+                $mark = $marksIndex[$s->id . '_' . $subj->id] ?? null;
+                $row = [$s->id, $s->full_name, $s->roll_number, $subj->id, $subj->name];
+                foreach ($markFields as $f) {
+                    $col = $f['col'];
+                    $val = $mark ? $mark->$col : null;
+                    $row[] = ($val !== null && $val !== '') ? $val : '';
+                }
+                $rows[] = $row;
             }
-            $rows[] = $row;
         }
 
-        $subject = Subject::find($subjectId);
-        $term = Term::find($termId);
         $class = ClassRoom::find($classId);
         $section = Section::find($sectionId);
-        $academicYear = AcademicYear::find($ayId);
-
-        $filename = 'marks_' . ($class->name ?? 'class') . '_' . ($section->name ?? 'sec') . '_' . ($subject->name ?? 'subj') . '_' . ($term->name ?? 'term') . '.csv';
+        $term = Term::find($termId);
+        $filename = 'marks_' . str_replace(' ', '_', $class->name ?? 'class') . '_' . str_replace(' ', '_', $section->name ?? 'sec') . '_' . str_replace(' ', '_', $term->name ?? 'term') . '_ALL_SUBJECTS.csv';
 
         return response()->streamDownload(function () use ($headers, $rows) {
             $out = fopen('php://output', 'w');
-            // BOM for Excel UTF-8 compatibility
-            fwrite($out, "\xEF\xBB\xBF");
+            fwrite($out, "\xEF\xBB\xBF"); // BOM for Excel UTF-8
             fputcsv($out, $headers);
             foreach ($rows as $row) {
                 fputcsv($out, $row);
@@ -1065,8 +1062,8 @@ class MarkEntryController extends Controller
     }
 
     /**
-     * Export a blank template CSV for bulk mark entry.
-     * Same as export but with empty mark columns.
+     * BULK Template — blank CSV with ALL subjects listed, empty mark columns.
+     * Same structure as export but marks are empty.
      */
     public function exportTemplate(Request $request)
     {
@@ -1074,15 +1071,14 @@ class MarkEntryController extends Controller
         $termId = $request->query('term_id');
         $classId = $request->query('class_id');
         $sectionId = $request->query('section_id');
-        $subjectId = $request->query('subject_id');
 
-        if (!$ayId || !$termId || !$classId || !$sectionId || !$subjectId) {
-            return back()->with('error', 'All filters (academic year, term, class, section, subject) are required for template export.');
+        if (!$ayId || !$termId || !$classId || !$sectionId) {
+            return back()->with('error', 'Academic year, term, class, and section are required for template export.');
         }
 
         $markFields = MarkEntry::getMarkFields();
 
-        // Load students (template = empty marks)
+        // Load students
         $enrolledStudentIds = \App\Models\StudentEnrollment::where('academic_year_id', $ayId)
             ->where('class_id', $classId)
             ->where('section_id', $sectionId)
@@ -1104,23 +1100,27 @@ class MarkEntryController extends Controller
                 ->get();
         }
 
-        $headers = ['student_id', 'student_name', 'roll_number'];
+        $subjects = \App\Models\Subject::orderBy('priority')->orderBy('name')->get(['id', 'name']);
+
+        $headers = ['student_id', 'student_name', 'roll_number', 'subject_id', 'subject_name'];
         foreach ($markFields as $f) {
             $headers[] = $f['col'] . ' (/' . $f['max'] . ')';
         }
 
-        $filename = 'mark_template_' . ($subjectId) . '.csv';
+        $filename = 'mark_template_ALL_SUBJECTS.csv';
 
-        return response()->streamDownload(function () use ($headers, $students, $markFields) {
+        return response()->streamDownload(function () use ($headers, $students, $subjects, $markFields) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, $headers);
             foreach ($students as $s) {
-                $row = [$s->id, $s->full_name, $s->roll_number];
-                foreach ($markFields as $f) {
-                    $row[] = ''; // empty mark
+                foreach ($subjects as $subj) {
+                    $row = [$s->id, $s->full_name, $s->roll_number, $subj->id, $subj->name];
+                    foreach ($markFields as $f) {
+                        $row[] = ''; // empty mark
+                    }
+                    fputcsv($out, $row);
                 }
-                fputcsv($out, $row);
             }
             fclose($out);
         }, $filename, [
@@ -1130,37 +1130,37 @@ class MarkEntryController extends Controller
     }
 
     /**
-     * Import marks from a CSV file.
-     * Admin-only. Parses the CSV and saves marks via the same logic as apiSave.
+     * BULK Import — imports ALL subjects from one CSV.
+     * CSV must have: student_id, subject_id, and mark field columns.
+     * Updates existing marks (replace) or creates new ones.
+     * Returns JSON with counts of created/updated/skipped/errors.
      */
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:5120', // max 5MB
+            'file' => 'required|file|mimes:csv,txt|max:10240',
             'academic_year_id' => 'required',
             'term_id' => 'required',
             'class_id' => 'required',
             'section_id' => 'required',
-            'subject_id' => 'required',
+            // subject_id is OPTIONAL — read from each CSV row
         ]);
 
         $ayId = $request->input('academic_year_id');
         $termId = $request->input('term_id');
         $classId = $request->input('class_id');
         $sectionId = $request->input('section_id');
-        $subjectId = $request->input('subject_id');
 
-        // Detect if the client wants JSON (modern fetch) vs. redirect (legacy form post)
         $wantsJson = $request->expectsJson() || $request->ajax() ||
                      $request->header('X-Requested-With') === 'XMLHttpRequest' ||
                      $request->header('Accept') === 'application/json';
 
         $markFields = MarkEntry::getMarkFields();
         $markFieldCols = array_map(fn($f) => $f['col'], $markFields);
-        $markFieldMap = []; // header label → field col
+        $markFieldMap = [];
         foreach ($markFields as $f) {
             $markFieldMap[$f['col'] . ' (/' . $f['max'] . ')'] = $f['col'];
-            $markFieldMap[$f['col']] = $f['col']; // also accept bare col name
+            $markFieldMap[$f['col']] = $f['col'];
         }
 
         $file = $request->file('file');
@@ -1170,11 +1170,8 @@ class MarkEntryController extends Controller
                 ? response()->json(['success' => false, 'error' => 'Cannot open uploaded file.'], 400)
                 : back()->with('error', 'Cannot open uploaded file.');
         }
-        // Skip BOM if present
         $bom = fread($handle, 3);
-        if ($bom !== "\xEF\xBB\xBF") {
-            fseek($handle, 0);
-        }
+        if ($bom !== "\xEF\xBB\xBF") fseek($handle, 0);
 
         $headers = fgetcsv($handle);
         if (!$headers) {
@@ -1184,102 +1181,113 @@ class MarkEntryController extends Controller
                 ? response()->json(['success' => false, 'error' => $msg], 400)
                 : back()->with('error', $msg);
         }
-        // Normalize headers (trim + strip invisible chars that Excel sometimes adds)
         $headers = array_map(function($h) {
             $h = trim($h);
-            $h = preg_replace('/[\x00-\x1F\x7F\xEF\xBB\xBF]/u', '', $h); // strip BOM/control chars
+            $h = preg_replace('/[\x00-\x1F\x7F\xEF\xBB\xBF]/u', '', $h);
             return $h;
         }, $headers);
 
-        // Find student_id column index (also accept 'Student ID', 'student id', 'ID')
+        // Find student_id and subject_id column indices
         $sidIdx = null;
+        $subjIdIdx = null;
         foreach ($headers as $i => $h) {
             $norm = strtolower($h);
             if ($norm === 'student_id' || $norm === 'student id' || $norm === 'id') {
                 $sidIdx = $i;
-                break;
+            }
+            if ($norm === 'subject_id' || $norm === 'subject id') {
+                $subjIdIdx = $i;
             }
         }
         if ($sidIdx === null) {
             fclose($handle);
-            $msg = 'CSV must have a "student_id" column. Headers found: ' . implode(', ', $headers);
+            $msg = 'CSV must have a "student_id" column.';
+            return $wantsJson
+                ? response()->json(['success' => false, 'error' => $msg], 400)
+                : back()->with('error', $msg);
+        }
+        if ($subjIdIdx === null) {
+            fclose($handle);
+            $msg = 'CSV must have a "subject_id" column (bulk import handles ALL subjects).';
             return $wantsJson
                 ? response()->json(['success' => false, 'error' => $msg], 400)
                 : back()->with('error', $msg);
         }
 
         // Map header indices to mark field cols
-        $colMap = []; // index → mark field col
+        $colMap = [];
         foreach ($headers as $i => $h) {
             if (isset($markFieldMap[$h])) {
                 $colMap[$i] = $markFieldMap[$h];
             }
         }
-
         if (empty($colMap)) {
             fclose($handle);
-            $msg = 'CSV must have at least one mark field column (e.g. ca1, test1, ca1 (/50), etc.). Headers found: ' . implode(', ', $headers);
+            $msg = 'CSV must have at least one mark field column.';
             return $wantsJson
                 ? response()->json(['success' => false, 'error' => $msg], 400)
                 : back()->with('error', $msg);
         }
 
-        $saved = 0;
-        $skipped = 0;
-        $errors = [];
-        $lineNum = 1;
-
-        // Eager-load all students that appear in the CSV in ONE query — avoids
-        // N+1 Student::find() calls inside the loop (the previous implementation
-        // did one DB query per row, which is slow for large classes and also
-        // made the import feel "stuck" after the first row on slow servers).
-        // We do two passes: first collect student_ids, then bulk-fetch.
-        $allStudentIds = [];
+        // Read all rows
         $rowsBuffer = [];
         while (($row = fgetcsv($handle)) !== false) {
             $rowsBuffer[] = $row;
         }
         fclose($handle);
 
+        // Eager-load students and existing marks
+        $allStudentIds = [];
+        $allSubjectIds = [];
         foreach ($rowsBuffer as $row) {
             $sidVal = isset($row[$sidIdx]) ? trim($row[$sidIdx]) : '';
+            $subjVal = isset($row[$subjIdIdx]) ? trim($row[$subjIdIdx]) : '';
             if ($sidVal !== '') $allStudentIds[] = $sidVal;
+            if ($subjVal !== '') $allSubjectIds[] = $subjVal;
         }
         $allStudentIds = array_unique($allStudentIds);
+        $allSubjectIds = array_unique($allSubjectIds);
+
         $studentsMap = !empty($allStudentIds)
             ? Student::whereIn('id', $allStudentIds)->get()->keyBy('id')
             : collect();
 
-        // Also eager-load existing mark entries for the same subject/term/ay
-        // so we don't query the DB once per row inside the loop.
-        $existingMap = !empty($allStudentIds)
-            ? MarkEntry::where('subject_id', $subjectId)
-                ->where('term_id', $termId)
+        $existingMap = (!empty($allStudentIds) && !empty($allSubjectIds))
+            ? MarkEntry::where('term_id', $termId)
                 ->where('academic_year_id', $ayId)
                 ->whereIn('student_id', $allStudentIds)
-                ->get()->keyBy('student_id')
+                ->whereIn('subject_id', $allSubjectIds)
+                ->get()->keyBy(function($m) { return $m->student_id . '_' . $m->subject_id; })
             : collect();
+
+        $classRoom = \App\Models\ClassRoom::find($classId);
+        $classGradeName = $classRoom?->name;
+
+        $created = 0;
+        $updated = 0;
+        $skipped = 0;
+        $errors = [];
+        $lineNum = 1;
 
         foreach ($rowsBuffer as $row) {
             $lineNum++;
 
-            // Skip totally blank rows (Excel trailing-empty-row artifact)
+            // Skip blank rows
             $isEmptyRow = true;
             foreach ($row as $cell) {
                 if (trim((string)$cell) !== '') { $isEmptyRow = false; break; }
             }
-            if ($isEmptyRow) {
-                continue;
-            }
+            if ($isEmptyRow) continue;
 
             $studentId = isset($row[$sidIdx]) ? trim($row[$sidIdx]) : '';
-            if ($studentId === '') {
-                $errors[] = "Line $lineNum: missing student_id — skipped.";
+            $subjectId = isset($row[$subjIdIdx]) ? trim($row[$subjIdIdx]) : '';
+
+            if ($studentId === '' || $subjectId === '') {
+                $errors[] = "Line $lineNum: missing student_id or subject_id — skipped.";
                 $skipped++;
                 continue;
             }
 
-            // Verify student exists (lookup from eager-loaded map)
             $student = $studentsMap[$studentId] ?? null;
             if (!$student) {
                 $errors[] = "Line $lineNum: student_id $studentId not found — skipped.";
@@ -1287,7 +1295,8 @@ class MarkEntryController extends Controller
                 continue;
             }
 
-            // Build mark data
+            $existing = $existingMap[$studentId . '_' . $subjectId] ?? null;
+
             $data = [
                 'student_id' => $studentId,
                 'subject_id' => $subjectId,
@@ -1296,29 +1305,24 @@ class MarkEntryController extends Controller
                 'class_id' => $classId,
                 'section_id' => $sectionId,
                 'teacher_id' => null,
+                'class_grade' => $classGradeName,
             ];
 
-            // Load existing record (from eager-loaded map) to preserve other fields
-            $existing = $existingMap[$studentId] ?? null;
+            // Seed from existing
             if ($existing) {
                 foreach ($markFieldCols as $f) {
                     $data[$f] = $existing->$f;
                 }
             }
 
-            // Override with imported values (with server-side max enforcement)
             $hasAnyMarkValue = false;
             foreach ($colMap as $idx => $col) {
                 $val = isset($row[$idx]) ? trim($row[$idx]) : '';
                 if ($val === '') {
-                    // Empty cell: preserve existing value, don't overwrite with null
-                    // (the previous implementation null'd empty cells, which destroyed
-                    // existing marks when the user only wanted to update some columns)
                     if (!isset($data[$col])) $data[$col] = null;
                     continue;
                 }
                 $hasAnyMarkValue = true;
-                // Find field config for max enforcement
                 $fieldConfig = null;
                 foreach ($markFields as $fc) {
                     if ($fc['col'] === $col) { $fieldConfig = $fc; break; }
@@ -1334,54 +1338,46 @@ class MarkEntryController extends Controller
                 }
             }
 
-            // Skip rows that have no mark values at all (just student_id + name)
-            // — this prevents creating empty mark records when the user uploads
-            // the template back unchanged.
             if (!$hasAnyMarkValue && !$existing) {
                 $skipped++;
                 continue;
             }
 
-            // Calculate totals
             $data = MarkEntry::calcTotals($data);
             $data['marks_obtained'] = $data['grand_total'] ?? 0;
 
             try {
                 if ($existing) {
                     $existing->update($data);
+                    $updated++;
                 } else {
-                    // Fill in class_grade text for new records (section column may not exist)
-                    $classRoom = \App\Models\ClassRoom::find($classId);
-                    $data['class_grade'] = $classRoom?->name;
-                    // NOTE: do NOT set $data['section'] — that column doesn't exist in all
-                    // databases (only class_grade was added by migration). section_id is the FK.
                     MarkEntry::create($data);
+                    $created++;
                 }
-                $saved++;
             } catch (\Throwable $e) {
-                $errors[] = "Line $lineNum (student $studentId): " . $e->getMessage();
+                $errors[] = "Line $lineNum (student $studentId, subject $subjectId): " . $e->getMessage();
                 $skipped++;
             }
         }
 
-        $msg = "Imported $saved marks successfully.";
-        if ($skipped > 0) {
-            $msg .= " Skipped $skipped row(s).";
-        }
+        $total = $created + $updated;
+        $msg = "Import complete: $total marks processed. Created $created new, updated $updated existing.";
+        if ($skipped > 0) $msg .= " Skipped $skipped row(s).";
         if (count($errors) > 0) {
-            $msg .= " Errors: " . implode(' | ', array_slice($errors, 0, 10));
-            if (count($errors) > 10) $msg .= ' (and ' . (count($errors) - 10) . ' more)';
+            $msg .= " Errors: " . implode(' | ', array_slice($errors, 0, 5));
+            if (count($errors) > 5) $msg .= ' (and ' . (count($errors) - 5) . ' more)';
         }
 
         if ($wantsJson) {
             return response()->json([
-                'success' => $saved > 0,
-                'imported' => $saved,
-                'skipped'  => $skipped,
-                'errors'   => $errors,
-                'message'  => $msg,
+                'success' => $total > 0,
+                'created' => $created,
+                'updated' => $updated,
+                'skipped' => $skipped,
+                'errors' => $errors,
+                'message' => $msg,
             ]);
         }
-        return back()->with($saved > 0 ? 'success' : 'error', $msg);
+        return back()->with($total > 0 ? 'success' : 'error', $msg);
     }
 }

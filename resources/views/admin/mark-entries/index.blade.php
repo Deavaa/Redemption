@@ -928,30 +928,26 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
     }
 
     function handleSessionExpired(source) {
-        if (sessionExpiredHandled) return; // Only show once
+        if (sessionExpiredHandled) return; // Only handle once
 
-        // Always back up marks first — this is non-negotiable, even on local.
+        // Always back up marks first — silent, no popup.
         backupMarksToLocalStorage();
 
         if (LV_IS_LOCAL) {
             // LOCAL MODE: do NOT redirect to login. The session issue is
-            // likely transient (slow DB, slow PHP, cookie hiccup). Show a
-            // non-blocking warning and let the user keep working / decide
-            // when to re-login. The admin layout's keepalive will keep
-            // retrying and auto-recover when the server comes back.
-            console.warn('[MarkEntry] Local mode: session issue detected (' + source + '). NOT redirecting. Marks backed up.');
-            sessionExpiredHandled = true;  // prevent re-entry
-            showLvLocalMarkEntryWarning(source);
+            // likely transient (slow DB, slow PHP, cookie hiccup). Keep
+            // retrying silently — the admin layout's keepalive will
+            // auto-recover when the server comes back.
+            console.warn('[MarkEntry] Local mode: session issue (' + source + '). Retrying silently. Marks backed up.');
+            sessionExpiredHandled = true;
+            // Reset after 10s so future issues can retry
+            setTimeout(function() { sessionExpiredHandled = false; }, 10000);
             return;
         }
 
+        // NON-LOCAL: silent redirect — no alert, no popup.
         sessionExpiredHandled = true;
-        console.error('[MarkEntry] Session expired detected from:', source);
-        alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
-        // Use FULL URL (href) instead of pathname to avoid double-path 404 bug on XAMPP.
-        // On XAMPP with subdirectory app, pathname includes the base path (e.g. /Redemption/public/admin/mark-entries),
-        // which redirect()->intended() prepends again, creating /Redemption/public/Redemption/public/... → 404.
-        // Using the full URL makes Laravel recognize it as valid and use it as-is.
+        console.warn('[MarkEntry] Session expired (' + source + '). Redirecting silently.');
         var returnUrl = encodeURIComponent(window.location.href);
         window.location.href = '{{ route("login") }}?redirect=' + returnUrl;
     }

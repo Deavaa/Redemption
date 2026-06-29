@@ -387,13 +387,13 @@
     // Read CSRF token dynamically from meta tag (global keepalive keeps it fresh)
     function getCSRF() { return document.querySelector('meta[name="csrf-token"]').content; }
 
-    // Session expiry handler — backup marks to localStorage and redirect
+    // Session expiry handler — backup marks silently and redirect without alert
     function handleSessionExpired() {
         try {
             var backup = { timestamp: new Date().toISOString(), marks: marksData, students: students.map(function(s) { return s.id; }) };
             localStorage.setItem('markEntryCreateBackup', JSON.stringify(backup));
         } catch(e) {}
-        alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up.');
+        // Silent redirect — no alert popup
         var returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
         window.location.href = '/login?redirect=' + returnUrl;
     }
