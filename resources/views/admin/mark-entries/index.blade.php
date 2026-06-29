@@ -3142,47 +3142,48 @@ function lvGetFiltersObj() {
 
 function exportMarks() {
     var f = lvGetFiltersObj();
-    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id || !f.subject_id) {
-        lvToast('Please select all filters (year, term, class, section, subject) before exporting.', 'warning');
+    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id) {
+        lvToast('Please select year, term, class, and section before exporting.', 'warning');
         return;
     }
+    // subject_id is OPTIONAL — if not selected, exports ALL subjects
     var qs = 'academic_year_id=' + encodeURIComponent(f.academic_year_id) +
              '&term_id=' + encodeURIComponent(f.term_id) +
              '&class_id=' + encodeURIComponent(f.class_id) +
-             '&section_id=' + encodeURIComponent(f.section_id) +
-             '&subject_id=' + encodeURIComponent(f.subject_id);
+             '&section_id=' + encodeURIComponent(f.section_id);
+    if (f.subject_id) qs += '&subject_id=' + encodeURIComponent(f.subject_id);
     window.location.href = LV_EXPORT_URL + '?' + qs;
 }
 
 function exportTemplate() {
     var f = lvGetFiltersObj();
-    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id || !f.subject_id) {
-        lvToast('Please select all filters (year, term, class, section, subject) before downloading template.', 'warning');
+    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id) {
+        lvToast('Please select year, term, class, and section before downloading template.', 'warning');
         return;
     }
+    // Template always includes ALL subjects (no subject_id needed)
     var qs = 'academic_year_id=' + encodeURIComponent(f.academic_year_id) +
              '&term_id=' + encodeURIComponent(f.term_id) +
              '&class_id=' + encodeURIComponent(f.class_id) +
-             '&section_id=' + encodeURIComponent(f.section_id) +
-             '&subject_id=' + encodeURIComponent(f.subject_id);
+             '&section_id=' + encodeURIComponent(f.section_id);
     window.location.href = LV_TEMPLATE_URL + '?' + qs;
 }
 
 function importMarks(input) {
     var f = lvGetFiltersObj();
-    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id || !f.subject_id) {
-        lvToast('Please select all filters (year, term, class, section, subject) before importing.', 'warning');
+    if (!f.academic_year_id || !f.term_id || !f.class_id || !f.section_id) {
+        lvToast('Please select year, term, class, and section before importing.', 'warning');
         input.value = '';
         return;
     }
     if (!input.files || input.files.length === 0) return;
     var file = input.files[0];
-    if (file.size > 5 * 1024 * 1024) {
-        lvToast('File too large. Maximum 5MB.', 'error');
+    if (file.size > 10 * 1024 * 1024) {
+        lvToast('File too large. Maximum 10MB.', 'error');
         input.value = '';
         return;
     }
-    if (!confirm('Import marks from "' + file.name + '"?\n\nThis will UPDATE marks for the selected class/section/subject/term.\nValues over the maximum will be clamped.\nEmpty cells will be ignored (existing marks preserved).')) {
+    if (!confirm('Import marks from "' + file.name + '"?\n\nThis will UPDATE/CREATE marks for ALL subjects in the CSV for the selected class/section/term.\nValues over the maximum will be clamped.\nEmpty cells will be ignored (existing marks preserved).')) {
         input.value = '';
         return;
     }
@@ -3194,7 +3195,7 @@ function importMarks(input) {
     fd.append('term_id', f.term_id);
     fd.append('class_id', f.class_id);
     fd.append('section_id', f.section_id);
-    fd.append('subject_id', f.subject_id);
+    // subject_id is NOT sent — read from each CSV row (bulk import handles ALL subjects)
 
     lvShowImportProgress(file.name);
     fetch(LV_IMPORT_URL, {
