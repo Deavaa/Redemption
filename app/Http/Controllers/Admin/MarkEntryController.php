@@ -1162,6 +1162,12 @@ class MarkEntryController extends Controller
             $markFieldMap[$f['col'] . ' (/' . $f['max'] . ')'] = $f['col'];
             $markFieldMap[$f['col']] = $f['col'];
         }
+        // Also add common case variants for header matching robustness
+        $markFieldMap['ca1 (/5)'] = 'ca1';
+        $markFieldMap['CA1 (/5)'] = 'ca1';
+
+        // Log the headers we found and the colMap for debugging
+        \Log::info('MarkEntry import: markFieldMap', ['map' => $markFieldMap]);
 
         $file = $request->file('file');
         $handle = fopen($file->getRealPath(), 'r');
@@ -1223,11 +1229,23 @@ class MarkEntryController extends Controller
         }
         if (empty($colMap)) {
             fclose($handle);
-            $msg = 'CSV must have at least one mark field column.';
+            $msg = 'CSV must have at least one mark field column. Headers found: ' . implode(', ', $headers);
+            \Log::error('MarkEntry import: no mark columns found', [
+                'headers' => $headers,
+                'markFieldMap_keys' => array_keys($markFieldMap),
+            ]);
             return $wantsJson
                 ? response()->json(['success' => false, 'error' => $msg], 400)
                 : back()->with('error', $msg);
         }
+
+        // Log for debugging
+        \Log::info('MarkEntry import: parsed headers and colMap', [
+            'headers' => $headers,
+            'sidIdx' => $sidIdx,
+            'subjIdIdx' => $subjIdIdx,
+            'colMap' => $colMap,
+        ]);
 
         // Read all rows
         $rowsBuffer = [];
@@ -1277,13 +1295,19 @@ class MarkEntryController extends Controller
             foreach ($row as $cell) {
                 if (trim((string)$cell) !== '') { $isEmptyRow = false; break; }
             }
-            if ($isEmptyRow) continue;
+            if ($isEmptyRow) {
+                \Log::info("MarkEntry import: Line $lineNum is empty — skipping");
+                continue;
+            }
 
             $studentId = isset($row[$sidIdx]) ? trim($row[$sidIdx]) : '';
             $subjectId = isset($row[$subjIdIdx]) ? trim($row[$subjIdIdx]) : '';
 
             if ($studentId === '' || $subjectId === '') {
                 $errors[] = "Line $lineNum: missing student_id or subject_id — skipped.";
+                \Log::info("MarkEntry import: Line $lineNum missing student_id or subject_id", [
+                    'studentId' => $studentId, 'subjectId' => $subjectId, 'row' => $row
+                ]);
                 $skipped++;
                 continue;
             }
@@ -1291,6 +1315,7 @@ class MarkEntryController extends Controller
             $student = $studentsMap[$studentId] ?? null;
             if (!$student) {
                 $errors[] = "Line $lineNum: student_id $studentId not found — skipped.";
+                \Log::info("MarkEntry import: Line $lineNum student_id $studentId not found in studentsMap (keys: " . implode(',', $studentsMap->keys()->take(5)->all()) . ")");
                 $skipped++;
                 continue;
             }
@@ -1339,9 +1364,11 @@ class MarkEntryController extends Controller
             }
 
             if (!$hasAnyMarkValue && !$existing) {
+                \Log::info("MarkEntry import: Line $lineNum (student $studentId, subject $subjectId) — no mark values and no existing record, skipping");
                 $skipped++;
                 continue;
             }
+            \Log::info("MarkEntry import: Line $lineNum (student $studentId, subject $subjectId) — processing. hasAnyMarkValue=$hasAnyMarkValue, existing=" . ($existing ? 'yes' : 'no'));
 
             $data = MarkEntry::calcTotals($data);
             $data['marks_obtained'] = $data['grand_total'] ?? 0;
