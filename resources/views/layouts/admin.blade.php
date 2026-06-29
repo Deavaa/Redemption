@@ -15,14 +15,18 @@
         // On local/dev servers (http://localhost, XAMPP, php artisan serve),
         // the session is much more prone to transient failures — slow DB,
         // slow PHP, browser cookie quirks, etc. In local mode we:
-        //   • ping keepalive more often (15s instead of 30s)
+        //   • ping keepalive less often (60s instead of 15s — fewer false alarms)
         //   • NEVER auto-redirect to login on transient failures
-        //   • show a non-blocking toast prompting manual re-login
+        //   • NEVER show the "session expired" warning unless we get 5+ CONSECUTIVE failures
         //   • keep retrying forever so the page stays usable
-        var IS_LOCAL = {{ app()->environment('local', 'testing') ? 'true' : 'false' }};
-        var KEEPALIVE_INTERVAL = IS_LOCAL ? (15 * 1000) : (30 * 1000);  // 15s local, 30s prod
-        var ACTIVITY_THRESHOLD = IS_LOCAL ? (15 * 1000) : (30 * 1000);
+        var isEnvLocal = {{ app()->environment('local', 'testing') ? 'true' : 'false' }};
+        var isHostLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.indexOf('localhost') !== -1);
+        var IS_LOCAL = isEnvLocal || isHostLocal;  // either env or host indicates local
+        var KEEPALIVE_INTERVAL = IS_LOCAL ? (60 * 1000) : (30 * 1000);  // 60s local, 30s prod
+        var ACTIVITY_THRESHOLD = IS_LOCAL ? (60 * 1000) : (30 * 1000);
         var MAX_NETWORK_FAILURES = IS_LOCAL ? 999 : 5;  // local: never give up; prod: 5
+        // On local, require 5 CONSECUTIVE failures before showing any warning
+        var LOCAL_WARNING_THRESHOLD = IS_LOCAL ? 5 : 1;
         var networkFailureCount = 0;
         var localWarningShown = false;  // only show the local-mode warning once
 
@@ -202,7 +206,19 @@
         function handleSessionExpired(source) {
             if (sessionExpired) return;
 
-            console.warn('[Keepalive] Possible session issue from:', source);
+            console.warn('[Keepalive] Possible session issue from:', source, '(failure count: ' + (networkFailureCount + 1) + ')');
+
+            // On local: require MULTIPLE consecutive failures before showing warning.
+            // A single transient failure (slow DB, slow PHP, network hiccup) should
+            // NOT trigger the warning — it just scares the user.
+            if (IS_LOCAL && networkFailureCount < LOCAL_WARNING_THRESHOLD) {
+                networkFailureCount++;
+                console.log('[Keepalive] Local mode: tolerating failure ' + networkFailureCount + '/' + LOCAL_WARNING_THRESHOLD + ' — NOT showing warning yet.');
+                sessionExpired = false;  // allow retry
+                // Try again in 10 seconds
+                setTimeout(fireKeepalive, 10000);
+                return;
+            }
 
             // Wait 3 seconds and retry the keepalive once
             setTimeout(function() {
