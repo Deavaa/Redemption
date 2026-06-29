@@ -63,52 +63,76 @@ class MarkEntryConfig extends Model
     }
 
     /**
-     * Clear the config cache
+     * Clear the config cache (both Laravel cache and static request cache)
      */
     public static function clearCache(): void
     {
         Cache::forget(static::cacheKey());
+        // Reset static request-level caches so the next call re-reads from DB
+        static::$markFieldsCache = null;
+        static::$caWeightCache = null;
+        static::$examWeightCache = null;
+        static::$precisionCache = null;
+        static::$gradeScaleCache = null;
     }
 
     /**
-     * Get mark fields configuration from DB (with hardcoded fallback)
+     * Get mark fields configuration from DB (with hardcoded fallback).
+     * Static-cached per request to avoid repeated DB/cache lookups.
      */
     public static function getMarkFields(): array
     {
-        return static::getValue('mark_fields', static::defaultMarkFields());
+        if (isset(static::$markFieldsCache)) return static::$markFieldsCache;
+        static::$markFieldsCache = static::getValue('mark_fields', static::defaultMarkFields());
+        return static::$markFieldsCache;
     }
 
     /**
-     * Get CA weight (out of 100)
+     * Get CA weight (out of 100). Static-cached per request.
      */
     public static function getCaWeight(): float
     {
-        return (float) static::getValue('ca_weight', 30);
+        if (isset(static::$caWeightCache)) return static::$caWeightCache;
+        static::$caWeightCache = (float) static::getValue('ca_weight', 30);
+        return static::$caWeightCache;
     }
 
     /**
-     * Get exam weight (out of 100)
+     * Get exam weight (out of 100). Static-cached per request.
      */
     public static function getExamWeight(): float
     {
-        return (float) static::getValue('exam_weight', 70);
+        if (isset(static::$examWeightCache)) return static::$examWeightCache;
+        static::$examWeightCache = (float) static::getValue('exam_weight', 70);
+        return static::$examWeightCache;
     }
 
     /**
-     * Get rounding precision
+     * Get rounding precision. Static-cached per request.
      */
     public static function getRoundingPrecision(): int
     {
-        return (int) static::getValue('rounding_precision', 2);
+        if (isset(static::$precisionCache)) return static::$precisionCache;
+        static::$precisionCache = (int) static::getValue('rounding_precision', 2);
+        return static::$precisionCache;
     }
 
     /**
-     * Get grade scale as array from DB
+     * Get grade scale as array from DB. Static-cached per request.
      */
     public static function getGradeScale(): array
     {
-        return static::getValue('grade_scale', static::defaultGradeScale());
+        if (isset(static::$gradeScaleCache)) return static::$gradeScaleCache;
+        static::$gradeScaleCache = static::getValue('grade_scale', static::defaultGradeScale());
+        return static::$gradeScaleCache;
     }
+
+    // Static request-level caches (populated once, reused for subsequent calls)
+    protected static ?array $markFieldsCache = null;
+    protected static ?float $caWeightCache = null;
+    protected static ?float $examWeightCache = null;
+    protected static ?int $precisionCache = null;
+    protected static ?array $gradeScaleCache = null;
 
     /**
      * Default mark fields when no config exists in DB
