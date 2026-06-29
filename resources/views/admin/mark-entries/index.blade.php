@@ -3176,8 +3176,12 @@ function importMarks(input) {
     .then(function(res) {
         lvHideImportProgress();
         lvShowImportResult(res.body);
-        // If import succeeded with at least 1 row, auto-reload the student list
-        if (res.ok && res.body && (res.body.success || (res.body.imported|0) > 0)) {
+        // Only auto-reload the student list when the import was clean — i.e.
+        // it succeeded AND there were NO errors to show. If there are errors,
+        // the modal must stay open so the user can read/copy them.
+        var hasErrors = res.body && res.body.errors && res.body.errors.length > 0;
+        var cleanSuccess = res.ok && res.body && (res.body.success || (res.body.imported|0) > 0) && !hasErrors;
+        if (cleanSuccess) {
             setTimeout(function() {
                 if (typeof window.me_loadStudents === 'function') {
                     window.me_loadStudents();
@@ -3218,10 +3222,37 @@ function lvEnsureImportModal() {
           '</div>' +
         '</div>';
     document.body.appendChild(shell);
-    shell.addEventListener('click', function (e) { if (e.target === shell) shell.style.display = 'none'; });
-    document.getElementById('lvImportModalClose').addEventListener('click', function() { shell.style.display = 'none'; });
-    document.getElementById('lvImportModalOk').addEventListener('click', function() { shell.style.display = 'none'; });
+    // IMPORTANT: Do NOT close the modal when the user clicks the backdrop.
+    // The user needs to be able to select error text with the mouse without
+    // accidentally dismissing the modal when the selection drifts outside
+    // the modal panel. Only the × and OK buttons close the modal.
+    document.getElementById('lvImportModalClose').addEventListener('click', function() {
+        shell.style.display = 'none';
+        lvMaybeRefreshAfterImport();
+    });
+    document.getElementById('lvImportModalOk').addEventListener('click', function() {
+        shell.style.display = 'none';
+        lvMaybeRefreshAfterImport();
+    });
     return shell;
+}
+
+// If the last import succeeded with at least 1 row (even with errors),
+// refresh the student list so the newly-saved marks appear. This runs
+// when the user dismisses the result modal — by then they've had time
+// to read / copy any error messages.
+function lvMaybeRefreshAfterImport() {
+    var r = window.__lvLastImportResult;
+    if (!r) return;
+    if ((r.imported|0) > 0 || r.success === true) {
+        if (typeof window.me_loadStudents === 'function') {
+            try { window.me_loadStudents(); } catch (e) { console.warn('[LV] me_loadStudents failed:', e); }
+        } else {
+            // Avoid full reload — it loses filter state. Only reload as last resort.
+            // (Don't reload if no rows were actually imported.)
+            if ((r.imported|0) > 0) location.reload();
+        }
+    }
 }
 
 function lvShowImportProgress(filename) {
@@ -3253,6 +3284,9 @@ function lvShowImportResult(result) {
     document.getElementById('lvImportModalTitle').textContent = 'Import Result';
     document.getElementById('lvImportModalOk').style.display = '';
 
+    // Stash the raw result so the Copy button can access it later
+    window.__lvLastImportResult = result;
+
     var html = '';
     if (!result) {
         html = '<p style="color:#dc2626;">No response from server.</p>';
@@ -3260,8 +3294,10 @@ function lvShowImportResult(result) {
         html =
             '<div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.75rem 1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;">' +
               '<i class="fas fa-circle-exclamation" style="color:#dc2626;font-size:1.1rem;margin-top:2px;"></i>' +
-              '<div><strong style="color:#991b1b;">Import failed</strong>' +
-              '<p style="margin:0.35rem 0 0;color:#7f1d1d;font-size:0.85rem;">' + lvEscapeHtml(result.error || result.message || 'Unknown error') + '</p></div>' +
+              '<div style="flex:1;"><strong style="color:#991b1b;">Import failed</strong>' +
+              '<p id="lvImportErrorMsg" style="margin:0.35rem 0 0;color:#7f1d1d;font-size:0.85rem;white-space:pre-wrap;word-break:break-word;user-select:text;-webkit-user-select:text;">' + lvEscapeHtml(result.error || result.message || 'Unknown error') + '</p>' +
+              '<button type="button" onclick="lvCopyImportErrors()" style="margin-top:0.5rem;background:#fff;border:1px solid #fecaca;color:#991b1b;padding:0.25rem 0.6rem;border-radius:4px;font-size:0.75rem;cursor:pointer;"><i class="fas fa-copy"></i> Copy error</button>' +
+              '</div>' +
             '</div>';
     } else {
         var imported = result.imported || 0;
@@ -3289,22 +3325,71 @@ function lvShowImportResult(result) {
             var hidden = errors.length - shown.length;
             html +=
                 '<div style="margin-top:0.85rem;">' +
-                  '<strong style="font-size:0.8rem;color:#374151;">Issues (' + errors.length + '):</strong>' +
-                  '<ul style="margin:0.4rem 0 0;padding-left:1.2rem;max-height:200px;overflow-y:auto;font-size:0.78rem;color:#7f1d1d;">' +
+                  '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">' +
+                    '<strong style="font-size:0.8rem;color:#374151;">Issues (' + errors.length + '):</strong>' +
+                    '<button type="button" onclick="lvCopyImportErrors()" style="background:#fff;border:1px solid #e5e7eb;color:#374151;padding:0.2rem 0.55rem;border-radius:4px;font-size:0.7rem;cursor:pointer;"><i class="fas fa-copy"></i> Copy all</button>' +
+                  '</div>' +
+                  '<ul id="lvImportErrorList" style="margin:0.4rem 0 0;padding-left:1.2rem;max-height:200px;overflow-y:auto;font-size:0.78rem;color:#7f1d1d;user-select:text;-webkit-user-select:text;">' +
                     shown.map(function(e) { return '<li>' + lvEscapeHtml(e) + '</li>'; }).join('') +
                   '</ul>' +
-                  (hidden > 0 ? '<p style="font-size:0.7rem;color:#9ca3af;margin-top:0.35rem;">… and ' + hidden + ' more not shown.</p>' : '') +
+                  (hidden > 0 ? '<p style="font-size:0.7rem;color:#9ca3af;margin-top:0.35rem;">… and ' + hidden + ' more not shown — click “Copy all” for the full list.</p>' : '') +
                 '</div>';
         }
 
-        if (imported > 0) {
+        if (imported > 0 && (!errors || errors.length === 0)) {
             html +=
               '<p style="margin-top:0.85rem;font-size:0.78rem;color:#6b7280;">' +
               'The student list will refresh automatically in a few seconds to show the new marks.</p>';
+        } else if (imported > 0 && errors && errors.length > 0) {
+            html +=
+              '<p style="margin-top:0.85rem;font-size:0.78rem;color:#6b7280;">' +
+              'Some rows had issues. Review the list above, then click OK to refresh the student list.</p>';
         }
     }
     document.getElementById('lvImportModalBody').innerHTML = html;
     shell.style.display = 'flex';
+}
+
+// Copies the full import result (error message + all issues) to the clipboard
+// so the user can paste it into a support ticket / chat. Falls back to a
+// textarea + document.execCommand('copy') for older WebViews.
+function lvCopyImportErrors() {
+    var r = window.__lvLastImportResult || {};
+    var lines = [];
+    if (r.error || r.message) lines.push(r.error || r.message);
+    if (r.errors && r.errors.length > 0) {
+        lines.push('');
+        lines.push('Issues (' + r.errors.length + '):');
+        r.errors.forEach(function(e, i) { lines.push((i + 1) + '. ' + e); });
+    }
+    if (lines.length === 0) lines.push('No error details available.');
+    var text = lines.join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            lvToast('Copied to clipboard', 'success');
+        }, function() { lvCopyFallback(text); });
+    } else {
+        lvCopyFallback(text);
+    }
+}
+
+function lvCopyFallback(text) {
+    try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.top = '-9999px';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) lvToast('Copied to clipboard', 'success');
+        else lvToast('Copy failed — please select the text manually', 'warning');
+    } catch (e) {
+        lvToast('Copy failed: ' + e.message, 'warning');
+    }
 }
 </script>
 @endpush
