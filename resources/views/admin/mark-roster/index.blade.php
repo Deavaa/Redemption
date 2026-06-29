@@ -317,9 +317,9 @@
         </div>
     </div>
 
-    {{-- Print-only watermark — logo centered on each page --}}
+    {{-- Screen + Print watermark — logo centered behind content on each page --}}
     @if(!empty($logoUrl))
-    <img src="{{ $logoUrl }}" alt="" class="mr-watermark print-only" style="display:none;" />
+    <img src="{{ $logoUrl }}" alt="" class="mr-watermark" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:350px;opacity:0.05;z-index:0;pointer-events:none;object-fit:contain;" />
     @endif
 
     {{-- Info bar --}}
