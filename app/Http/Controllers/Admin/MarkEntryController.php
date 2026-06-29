@@ -674,10 +674,20 @@ class MarkEntryController extends Controller
         $data['term_id'] = $termId;
 
         // Copy explicit fields from request
-        foreach (['class_id','section_id','class_grade','section','exam_id','grade','remarks'] as $f) {
+        // NOTE: 'section' and 'class_grade' are text columns that may not exist
+        // in all databases (only class_grade was added by migration; section is
+        // tracked via section_id FK). We skip them here — section_id and class_id
+        // are the authoritative references. This prevents 'Unknown column section'
+        // errors when saving marks.
+        foreach (['class_id','section_id','exam_id','grade','remarks'] as $f) {
             if ($request->has($f)) {
                 $data[$f] = $request->input($f) ?: null;
             }
+        }
+        // class_grade is a real column — set it from the class name if available
+        if (!empty($data['class_id'])) {
+            $cr = \App\Models\ClassRoom::find($data['class_id']);
+            if ($cr) $data['class_grade'] = $cr->name;
         }
 
         // Resolve class_id and section_id from class_grade/section if not provided
@@ -795,8 +805,9 @@ class MarkEntryController extends Controller
                         'ca_total','exam_total','grand_total'])) return true;
                     // Update mark fields only if they were explicitly set
                     if (in_array($key, $markFieldNames)) return true;
-                    // Update other fields like class_grade, section, etc.
-                    if (in_array($key, ['class_grade','section','exam_id','grade','remarks'])) return true;
+                    // Update other fields like class_grade, exam_id, grade, remarks
+                    // NOTE: 'section' column doesn't exist in all DBs — only class_grade
+                    if (in_array($key, ['class_grade','exam_id','grade','remarks'])) return true;
                     return false;
                 }, ARRAY_FILTER_USE_BOTH);
 
