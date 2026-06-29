@@ -30,10 +30,10 @@ return [
     */
     'driver' => env('SESSION_DRIVER', 'file'),
 
-    // Session lifetime in minutes. Default 1440 = 24 hours so users on local
-    // dev (XAMPP) never get logged out mid-work due to slow keepalives.
-    // Production can override via SESSION_LIFETIME in .env (e.g. 480 = 8h).
-    'lifetime' => env('SESSION_LIFETIME', 1440),
+    // Session lifetime in minutes. Default 525600 = 1 YEAR (indefinite).
+    // Users stay logged in for a full year unless they manually log out
+    // or clear browser cookies. Set SESSION_LIFETIME in .env to override.
+    'lifetime' => env('SESSION_LIFETIME', 525600),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
