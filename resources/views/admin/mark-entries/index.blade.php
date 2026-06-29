@@ -917,6 +917,9 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
     // Uses XMLHttpRequest (more reliable on XAMPP HTTPS than fetch with redirect:'manual')
     var csrfRefreshInProgress = false;
     var sessionExpiredHandled = false; // Prevent multiple session-expired alerts
+    // Mirror the admin layout's local-environment flag — on local we never
+    // force-redirect to login from a transient session issue.
+    var LV_IS_LOCAL = {{ app()->environment('local', 'testing') ? 'true' : 'false' }};
 
     function updateCSRFToken(newToken) {
         if (!newToken) return;
@@ -926,9 +929,24 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
 
     function handleSessionExpired(source) {
         if (sessionExpiredHandled) return; // Only show once
+
+        // Always back up marks first — this is non-negotiable, even on local.
+        backupMarksToLocalStorage();
+
+        if (LV_IS_LOCAL) {
+            // LOCAL MODE: do NOT redirect to login. The session issue is
+            // likely transient (slow DB, slow PHP, cookie hiccup). Show a
+            // non-blocking warning and let the user keep working / decide
+            // when to re-login. The admin layout's keepalive will keep
+            // retrying and auto-recover when the server comes back.
+            console.warn('[MarkEntry] Local mode: session issue detected (' + source + '). NOT redirecting. Marks backed up.');
+            sessionExpiredHandled = true;  // prevent re-entry
+            showLvLocalMarkEntryWarning(source);
+            return;
+        }
+
         sessionExpiredHandled = true;
         console.error('[MarkEntry] Session expired detected from:', source);
-        backupMarksToLocalStorage();
         alert('Your session has expired. You will be redirected to the login page.\n\nYour unsaved marks have been backed up and will be restored after you log back in.');
         // Use FULL URL (href) instead of pathname to avoid double-path 404 bug on XAMPP.
         // On XAMPP with subdirectory app, pathname includes the base path (e.g. /Redemption/public/admin/mark-entries),
@@ -936,6 +954,34 @@ input.lv-mark-green { background: #f0fdf4 !important; color: #059669 !important;
         // Using the full URL makes Laravel recognize it as valid and use it as-is.
         var returnUrl = encodeURIComponent(window.location.href);
         window.location.href = '{{ route("login") }}?redirect=' + returnUrl;
+    }
+
+    // Non-blocking warning for local mode (mirrors admin layout's warning
+    // but with mark-entry-specific wording about marks being backed up).
+    function showLvLocalMarkEntryWarning(source) {
+        if (document.getElementById('lvMarkEntryLocalWarning')) return;
+        try {
+            var div = document.createElement('div');
+            div.id = 'lvMarkEntryLocalWarning';
+            div.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#dc2626;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);';
+            div.innerHTML =
+                '<i class="fas fa-triangle-exclamation" style="font-size:1.1rem;"></i>' +
+                '<span style="flex:1;">Your session may have expired. Your unsaved marks have been backed up and will be restored after re-login.</span>' +
+                '<button id="lvMeReLoginBtn" style="background:#fff;color:#dc2626;border:none;padding:6px 14px;border-radius:4px;font-weight:700;cursor:pointer;font-size:12px;">Re-login now</button>' +
+                '<button id="lvMeDismissBtn" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;">Dismiss</button>';
+            document.body.appendChild(div);
+            document.getElementById('lvMeReLoginBtn').addEventListener('click', function() {
+                var returnUrl = encodeURIComponent(window.location.href);
+                window.location.href = '{{ route("login") }}?redirect=' + returnUrl;
+            });
+            document.getElementById('lvMeDismissBtn').addEventListener('click', function() {
+                div.remove();
+                // Allow future warnings + reset state so save retries can fire
+                sessionExpiredHandled = false;
+            });
+        } catch(e) {
+            console.warn('[MarkEntry] Could not show local warning:', e);
+        }
     }
 
     function refreshCSRFToken() {

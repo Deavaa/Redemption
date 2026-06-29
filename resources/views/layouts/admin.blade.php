@@ -3,15 +3,28 @@
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
-    {{-- Global Session Keepalive v3 — Bulletproof session management --}}
+    {{-- Global Session Keepalive v4 — Local-env bulletproof mode --}}
     <script>
     (function() {
         var loginUrl = '{{ route("login") }}';
         var keepaliveUrl = '{{ route("admin.keepalive") }}';
         var sessionExpired = false;
         var lastKeepaliveTime = Date.now();
-        var KEEPALIVE_INTERVAL = 30 * 1000;  // 30 seconds — more frequent to prevent session expiry
-        var ACTIVITY_THRESHOLD = 30 * 1000;  // 30 seconds of inactivity before activity-driven keepalive
+
+        // ─── LOCAL ENVIRONMENT MODE ───
+        // On local/dev servers (http://localhost, XAMPP, php artisan serve),
+        // the session is much more prone to transient failures — slow DB,
+        // slow PHP, browser cookie quirks, etc. In local mode we:
+        //   • ping keepalive more often (15s instead of 30s)
+        //   • NEVER auto-redirect to login on transient failures
+        //   • show a non-blocking toast prompting manual re-login
+        //   • keep retrying forever so the page stays usable
+        var IS_LOCAL = {{ app()->environment('local', 'testing') ? 'true' : 'false' }};
+        var KEEPALIVE_INTERVAL = IS_LOCAL ? (15 * 1000) : (30 * 1000);  // 15s local, 30s prod
+        var ACTIVITY_THRESHOLD = IS_LOCAL ? (15 * 1000) : (30 * 1000);
+        var MAX_NETWORK_FAILURES = IS_LOCAL ? 999 : 5;  // local: never give up; prod: 5
+        var networkFailureCount = 0;
+        var localWarningShown = false;  // only show the local-mode warning once
 
         // ===== 1. GLOBAL CSRF TOKEN HELPERS =====
         window.getGlobalCSRFToken = function() {
@@ -28,7 +41,11 @@
 
         // ===== 2. KEEPALIVE — Using XMLHttpRequest (more reliable on XAMPP HTTPS) =====
         function fireKeepalive() {
-            if (sessionExpired) return;
+            // On local: always fire (even if sessionExpired is set from a
+            // previous transient issue — we want to keep retrying so we can
+            // auto-recover when the server comes back).
+            // On prod: bail out if sessionExpired is set (we're redirecting).
+            if (!IS_LOCAL && sessionExpired) return;
 
             try {
                 var xhr = new XMLHttpRequest();
@@ -38,7 +55,10 @@
                 xhr.timeout = 8000; // 8 second timeout (reduced from 15s to prevent accumulation)
 
                 xhr.onload = function() {
-                    if (sessionExpired) return;
+                    // On local: keep processing even if a previous transient
+                    // issue set sessionExpired — we want to recover.
+                    if (!IS_LOCAL && sessionExpired) return;
+                    networkFailureCount = 0;  // got a response — reset counter
 
                     // If redirected to login page, session is expired
                     if (xhr.responseURL && xhr.responseURL.indexOf('/login') !== -1) {
@@ -53,6 +73,12 @@
                                 updateCSRFToken(data.csrf_token);
                             }
                             lastKeepaliveTime = Date.now();
+                            // If we previously showed a local warning, clear it
+                            if (localWarningShown) {
+                                localWarningShown = false;
+                                var w = document.getElementById('lvLocalSessionWarning');
+                                if (w) w.remove();
+                            }
                         } catch(e) {
                             // Response is HTML (login page) — session expired
                             if (xhr.responseText && xhr.responseText.indexOf('<html') !== -1) {
@@ -62,7 +88,7 @@
                         }
                     } else if (xhr.status === 401 || xhr.status === 419) {
                         // Don't give up immediately on 419 — try to refresh CSRF and retry
-                        console.warn('[Keepalive] Got 419, attempting CSRF refresh...');
+                        console.warn('[Keepalive] Got ' + xhr.status + ', attempting CSRF refresh...');
                         refreshCSRFAndRetry();
                     } else {
                         console.warn('[Keepalive] Unexpected status:', xhr.status);
@@ -71,10 +97,21 @@
 
                 xhr.onerror = function() {
                     console.warn('[Keepalive] Network error (will retry)');
+                    // On local: don't logout on network errors — server is just slow
+                    // On prod: track failures and only logout after MAX_NETWORK_FAILURES
+                    networkFailureCount++;
+                    if (!IS_LOCAL && networkFailureCount >= MAX_NETWORK_FAILURES) {
+                        handleSessionExpired('network errors exceeded threshold');
+                    }
                 };
 
                 xhr.ontimeout = function() {
                     console.warn('[Keepalive] Timeout (will retry)');
+                    // On local: never logout on timeout — server is just slow
+                    networkFailureCount++;
+                    if (!IS_LOCAL && networkFailureCount >= MAX_NETWORK_FAILURES) {
+                        handleSessionExpired('keepalive timeouts exceeded threshold');
+                    }
                 };
 
                 xhr.send();
@@ -165,8 +202,6 @@
         function handleSessionExpired(source) {
             if (sessionExpired) return;
 
-            // DON'T immediately flag as expired — the keepalive might have
-            // just hit a momentary DB hiccup. Try ONE silent retry first.
             console.warn('[Keepalive] Possible session issue from:', source);
 
             // Wait 3 seconds and retry the keepalive once
@@ -181,26 +216,84 @@
                         // Session is actually fine — was a temporary glitch
                         console.log('[Keepalive] Retry succeeded — session is OK');
                         sessionExpired = false;
+                        networkFailureCount = 0;
                         try {
                             var data = JSON.parse(xhr.responseText);
                             if (data.csrf_token) updateCSRFToken(data.csrf_token);
                         } catch(e) {}
+                        // Clear local warning if it was shown
+                        if (localWarningShown) {
+                            localWarningShown = false;
+                            var w = document.getElementById('lvLocalSessionWarning');
+                            if (w) w.remove();
+                        }
+                    } else if (IS_LOCAL) {
+                        // LOCAL MODE: Don't logout. Show a non-blocking warning
+                        // so the user can finish their work, then manually re-login
+                        // when they're ready. Continue retrying keepalive.
+                        console.warn('[Keepalive] Local mode: session issue detected, NOT logging out. Will keep retrying.');
+                        showLocalSessionWarning(source);
                     } else {
-                        // Session is really expired
+                        // PROD MODE: Session is really expired — redirect to login
                         doSessionExpired(source);
                     }
                 };
                 xhr.onerror = function() {
-                    // Network error — don't logout, just wait
-                    console.warn('[Keepalive] Retry failed — network error, not logging out');
-                    sessionExpired = false;
+                    if (IS_LOCAL) {
+                        console.warn('[Keepalive] Local mode: network error on retry, NOT logging out.');
+                        showLocalSessionWarning(source + ' (network error)');
+                    } else {
+                        // PROD: don't logout on pure network error either
+                        console.warn('[Keepalive] Retry failed — network error, not logging out');
+                        sessionExpired = false;
+                    }
                 };
                 xhr.ontimeout = function() {
-                    console.warn('[Keepalive] Retry timed out — not logging out');
-                    sessionExpired = false;
+                    if (IS_LOCAL) {
+                        console.warn('[Keepalive] Local mode: retry timed out, NOT logging out.');
+                        showLocalSessionWarning(source + ' (timeout)');
+                    } else {
+                        console.warn('[Keepalive] Retry timed out — not logging out');
+                        sessionExpired = false;
+                    }
                 };
                 xhr.send();
             }, 3000);
+        }
+
+        // ===== 5a. LOCAL MODE WARNING (non-blocking) =====
+        // Shows a small toast at the top of the page that lets the user
+        // manually re-login when convenient. Does NOT interrupt their work.
+        function showLocalSessionWarning(source) {
+            if (localWarningShown) return;  // only show once
+            localWarningShown = true;
+            try {
+                var div = document.createElement('div');
+                div.id = 'lvLocalSessionWarning';
+                div.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#dc2626;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);';
+                div.innerHTML =
+                    '<i class="fas fa-triangle-exclamation" style="font-size:1.1rem;"></i>' +
+                    '<span style="flex:1;">Your session may have expired. Your work on this page is preserved, but new saves might fail until you re-login.</span>' +
+                    '<button id="lvLocalReLoginBtn" style="background:#fff;color:#dc2626;border:none;padding:6px 14px;border-radius:4px;font-weight:700;cursor:pointer;font-size:12px;">Re-login now</button>' +
+                    '<button id="lvLocalDismissBtn" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;">Dismiss</button>';
+                document.body.appendChild(div);
+                document.getElementById('lvLocalReLoginBtn').addEventListener('click', function() {
+                    // Backup marks (if applicable) before leaving
+                    try { if (typeof backupMarksToLocalStorage === 'function') backupMarksToLocalStorage(); } catch(e) {}
+                    var currentPath = window.location.pathname + window.location.search;
+                    window.location.href = loginUrl + '?redirect=' + encodeURIComponent(currentPath);
+                });
+                document.getElementById('lvLocalDismissBtn').addEventListener('click', function() {
+                    div.remove();
+                    localWarningShown = false;
+                    // Reset sessionExpired so keepalive resumes
+                    sessionExpired = false;
+                    // Fire an immediate keepalive to test the waters
+                    setTimeout(fireKeepalive, 500);
+                });
+            } catch(e) {
+                console.warn('[Keepalive] Could not show local warning:', e);
+            }
         }
 
         function doSessionExpired(source) {
@@ -232,7 +325,11 @@
         // ===== 6. PERIODIC KEEPALIVE =====
         function scheduleKeepalive() {
             setInterval(function() {
-                if (!sessionExpired) fireKeepalive();
+                // On local: keep firing even if a transient issue was detected,
+                // so we can recover automatically when the server comes back.
+                // On prod: stop firing once sessionExpired is set (to avoid
+                // spamming the server after we've decided to redirect).
+                if (IS_LOCAL || !sessionExpired) fireKeepalive();
             }, KEEPALIVE_INTERVAL);
         }
 
@@ -243,7 +340,9 @@
         var activityEvents = ['input', 'click', 'keydown', 'touchstart'];
         activityEvents.forEach(function(evtName) {
             document.addEventListener(evtName, function() {
-                if (sessionExpired) return;
+                // On local: always resume keepalive on activity (sessionExpired
+                // doesn't mean "give up", it means "pause pending retry")
+                if (!IS_LOCAL && sessionExpired) return;
                 var now = Date.now();
                 // Throttle: only check once per ACTIVITY_THRESHOLD period
                 if (now - lastActivityCheck < ACTIVITY_THRESHOLD) return;
