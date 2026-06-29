@@ -1339,11 +1339,11 @@ class MarkEntryController extends Controller
                 if ($existing) {
                     $existing->update($data);
                 } else {
-                    // Fill in class_grade / section text for new records
+                    // Fill in class_grade text for new records (section column may not exist)
                     $classRoom = \App\Models\ClassRoom::find($classId);
-                    $section   = \App\Models\Section::find($sectionId);
                     $data['class_grade'] = $classRoom?->name;
-                    $data['section']     = $section?->name;
+                    // NOTE: do NOT set $data['section'] — that column doesn't exist in all
+                    // databases (only class_grade was added by migration). section_id is the FK.
                     MarkEntry::create($data);
                 }
                 $saved++;
