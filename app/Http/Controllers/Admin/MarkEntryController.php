@@ -1266,8 +1266,12 @@ class MarkEntryController extends Controller
         $allStudentIds = array_unique($allStudentIds);
         $allSubjectIds = array_unique($allSubjectIds);
 
+        // CRITICAL: keyBy('id') uses the DB's integer ID, but $studentId from
+        // the CSV is a string. PHP arrays distinguish int vs string keys, so
+        // $studentsMap["113"] returns null even if $studentsMap[113] exists.
+        // FIX: key by string-cast ID so lookups match.
         $studentsMap = !empty($allStudentIds)
-            ? Student::whereIn('id', $allStudentIds)->get()->keyBy('id')
+            ? Student::whereIn('id', $allStudentIds)->get()->keyBy(function($s) { return (string)$s->id; })
             : collect();
 
         $existingMap = (!empty($allStudentIds) && !empty($allSubjectIds))
@@ -1275,7 +1279,7 @@ class MarkEntryController extends Controller
                 ->where('academic_year_id', $ayId)
                 ->whereIn('student_id', $allStudentIds)
                 ->whereIn('subject_id', $allSubjectIds)
-                ->get()->keyBy(function($m) { return $m->student_id . '_' . $m->subject_id; })
+                ->get()->keyBy(function($m) { return (string)$m->student_id . '_' . (string)$m->subject_id; })
             : collect();
 
         $classRoom = \App\Models\ClassRoom::find($classId);
