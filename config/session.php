@@ -28,12 +28,12 @@ return [
     |
     | DO NOT use "safe_file" or "file" — they WILL expire on XAMPP.
     */
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('SESSION_DRIVER', 'file'),
 
-    // Session lifetime in minutes. Set SESSION_LIFETIME=1440 in your .env
-    // for local dev (24h) so you don't get logged out mid-work on slow
-    // XAMPP/artisan-serve setups. Production should use 480 (8h).
-    'lifetime' => env('SESSION_LIFETIME', 480),
+    // Session lifetime in minutes. Default 1440 = 24 hours so users on local
+    // dev (XAMPP) never get logged out mid-work due to slow keepalives.
+    // Production can override via SESSION_LIFETIME in .env (e.g. 480 = 8h).
+    'lifetime' => env('SESSION_LIFETIME', 1440),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 

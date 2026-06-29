@@ -215,10 +215,30 @@ class AuthController extends Controller
     }
 
     public function logout(Request $r) {
+        // Aggressive logout — clears Auth, session, AND cookies to prevent
+        // the login-loop bug where a stale session cookie keeps redirecting
+        // back to /login after the user has already logged out.
         Auth::logout();
-        $r->session()->invalidate();
-        $r->session()->regenerateToken();
-        return redirect('/');
+        try {
+            $r->session()->invalidate();
+            $r->session()->regenerateToken();
+        } catch (\Throwable $e) {
+            // Session may already be gone — keep going
+        }
+
+        // Clear the session cookie entirely (forces browser to drop it)
+        $cookieName = config('session.cookie', 'redemption_session_v5');
+        try {
+            cookie()->queue(cookie()->forget($cookieName));
+            // Also clear the remember_web_* cookie if present
+            cookie()->queue(cookie()->forget(\Illuminate\Support\Str::slug(config('auth.defaults.guard', 'web')) . '_remember'));
+        } catch (\Throwable $e) {}
+
+        return redirect('/')->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     // ── Forgot Password Flow ──────────────────────────────────
