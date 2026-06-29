@@ -64,30 +64,26 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // ============================================================
-        // SESSION: Use 'database' driver.
+        // SESSION: Use 'file' driver with 1-YEAR lifetime.
         //
-        // This is the ONLY reliable session driver on XAMPP.
-        // File-based sessions get killed by PHP's native garbage
-        // collection (gc) regardless of ini_set settings, because
-        // XAMPP's PHP SAPI ignores gc_probability=0 overrides.
+        // File driver is fast and doesn't depend on the sessions DB table
+        // (which can have AUTO_INCREMENT issues on XAMPP). Sessions are
+        // stored in storage/framework/sessions/.
         //
-        // Database sessions store session data in MySQL, where Laravel
-        // has FULL control over the session lifecycle. PHP's native GC
-        // cannot touch database rows. Session expiry is handled entirely
-        // by Laravel checking the last_activity column against
-        // session.lifetime (480 min = 8 hours).
+        // Lifetime: 525600 minutes = 1 YEAR (indefinite).
+        // Users stay logged in for a full year unless they manually log out.
         //
         // Key settings:
-        // - session.driver = database
-        // - session.cookie = redemption_session_v5 (NEW name to avoid
-        //   conflicts with old session cookies from file/cookie drivers)
-        // - session.lottery = [2, 100] (2% chance of Laravel GC,
-        //   which only deletes expired rows — SAFE)
-        // - session.lifetime = 480 (8 hours)
+        // - session.driver = file (respects .env override)
+        // - session.lifetime = 525600 (1 year, respects .env override)
+        // - session.lottery = [2, 100] (2% chance of Laravel GC)
         // ============================================================
         try {
-            config(['session.driver' => 'database']);
-            config(['session.lifetime' => 1440]);          // 24 hours (was 8 hours)
+            // Respect .env if explicitly set, otherwise use file + 1 year
+            $driver = env('SESSION_DRIVER', 'file');
+            $lifetime = (int) env('SESSION_LIFETIME', 525600);
+            config(['session.driver' => $driver]);
+            config(['session.lifetime' => $lifetime]);
             config(['session.encrypt' => false]);
             // Use a host-specific cookie name to avoid conflicts between
             // XAMPP (localhost) and cPanel (byethost4.com) when the same
@@ -97,21 +93,17 @@ class AppServiceProvider extends ServiceProvider
             config(['session.cookie' => 'redemption_sess_' . $hostSuffix]);
             config(['session.path' => '/']);
             config(['session.domain' => null]);
-            // NOTE: session.secure is set dynamically in boot() based on the
-            // actual request scheme. Default false here for XAMPP (HTTP).
             config(['session.secure' => false]);
             config(['session.http_only' => true]);
             config(['session.same_site' => 'lax']);
             config(['session.expire_on_close' => false]);
-            config(['session.lottery' => [100, 100]]);     // 100% — clean expired sessions on every request (was 2%)
+            config(['session.lottery' => [2, 100]]);     // 2% — clean expired sessions occasionally
 
-            // Disable PHP's native session GC (belt-and-suspenders —
-            // database driver doesn't use PHP file sessions, but we
-            // keep these settings in case any PHP code uses $_SESSION)
-            @ini_set('session.gc_maxlifetime', 86400);
+            // Disable PHP's native session GC (file driver uses Laravel's GC)
+            @ini_set('session.gc_maxlifetime', 525600);   // 1 year
             @ini_set('session.gc_probability', 0);
             @ini_set('session.gc_divisor', 1);
-            @ini_set('session.cookie_lifetime', 86400);
+            @ini_set('session.cookie_lifetime', 525600);  // 1 year
         } catch (\Throwable $e) {
             // Silently fail — session config will use defaults
         }
