@@ -149,8 +149,10 @@ class CertificatePrintController extends Controller
         $homeroomTeacher = $student->section?->teacher;
         $homeroomTeacherName = $homeroomTeacher?->full_name ?? '';
 
-        // Homeroom teacher comment — try StudentComment first, then fall back to teacher_comments column
+        // Homeroom teacher comment — try StudentComment first, then fall back to auto-generated
         $homeroomComment = '';
+        $homeroomCommentTerm1 = '';
+        $homeroomCommentTerm2 = '';
         if ($academicYear) {
             $reportComment = StudentComment::where('student_id', $student->id)
                 ->where('academic_year_id', $academicYear->id)
@@ -163,6 +165,11 @@ class CertificatePrintController extends Controller
         if (empty($homeroomComment)) {
             $homeroomComment = $student->teacher_comments ?? '';
         }
+
+        // Auto-generate homeroom comments based on average (if no manual comment)
+        // These will be filled after term summaries are calculated (below)
+        $autoCommentTerm1 = '';
+        $autoCommentTerm2 = '';
 
         // ========== TERM-BASED MARKS ==========
         // Initialize defaults
@@ -321,15 +328,67 @@ class CertificatePrintController extends Controller
         $creativity   = $allMarks->whereNotNull('creativity')->count() > 0
             ? round($allMarks->whereNotNull('creativity')->avg('creativity'), 0) : null;
 
+        // ── Auto-generate homeroom teacher comments based on average ──
+        // Generates one comment per term + one for annual
+        $homeroomCommentTerm1 = $this->generateHomeroomComment($termSummaries['term1']['average'] ?? 0);
+        $homeroomCommentTerm2 = $this->generateHomeroomComment($termSummaries['term2']['average'] ?? 0);
+        $homeroomCommentAnnual = $this->generateHomeroomComment($annualSummary['average']);
+
+        // Determine promotion status
+        $promotionStatus = 'promoted';
+        if ($annualSummary['average'] > 0 && $annualSummary['average'] < 50) {
+            $promotionStatus = 'detained';
+        }
+        $nextClassSection = '';
+        if ($promotionStatus === 'promoted') {
+            // Try to find the next class
+            $currentNumeric = (int)($student->classroom?->numeric_name ?? 0);
+            if ($currentNumeric > 0) {
+                $nextClass = \App\Models\ClassRoom::where('numeric_name', '>', $currentNumeric)
+                    ->orderBy('numeric_name')->first();
+                if ($nextClass) {
+                    $nextSections = \App\Models\Section::where('class_id', $nextClass->id)->orderBy('name')->get();
+                    $nextClassSection = $nextClass->name . ($nextSections->first() ? ' - ' . $nextSections->first()->name : '');
+                }
+            }
+        } else {
+            $nextClassSection = ($student->classroom?->name ?? '') . ' - ' . ($student->section?->name ?? '');
+        }
+
+        // Student age calculation
+        $studentAge = '';
+        if ($student->date_of_birth) {
+            try {
+                $studentAge = \Carbon\Carbon::parse($student->date_of_birth)->age . ' years';
+            } catch (\Throwable $e) {}
+        }
+
         return view('admin.certificate-print.print', compact(
             'student', 'academicYear', 'marks', 'totalMarks', 'totalPossible',
             'average', 'rank', 'schoolName', 'schoolAddress', 'schoolPhone',
             'schoolLogo', 'templateType', 'templateLabel', 'numericName', 'stream',
             'conduct', 'handwriting', 'creativity',
             'homeroomTeacherName', 'homeroomComment',
+            'homeroomCommentTerm1', 'homeroomCommentTerm2', 'homeroomCommentAnnual',
+            'promotionStatus', 'nextClassSection', 'studentAge',
             'termKeys', 'termNames', 'subjectRows',
             'termSummaries', 'annualSummary'
         ));
+    }
+
+    /**
+     * Auto-generate a homeroom teacher comment based on the student's average.
+     */
+    private function generateHomeroomComment(float $average): string
+    {
+        if ($average <= 0) return '';
+        if ($average >= 90) return 'Outstanding performance! Keep up the excellent work and continue to strive for excellence.';
+        if ($average >= 80) return 'Excellent performance. Your dedication and hard work are commendable. Keep it up!';
+        if ($average >= 70) return 'Very good performance. You are doing well. With more effort, you can achieve excellence.';
+        if ($average >= 60) return 'Good performance. Continue to work hard and you will see even better results.';
+        if ($average >= 50) return 'Satisfactory performance. Put more effort into your studies to improve your results.';
+        if ($average >= 40) return 'Below average performance. You need to work harder and seek help when needed.';
+        return 'Poor performance. Please seek additional support and put more effort into your studies.';
     }
 
     private function calculateRank(Student $student, ?AcademicYear $academicYear): ?int
