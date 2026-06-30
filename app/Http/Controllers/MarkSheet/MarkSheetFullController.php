@@ -162,11 +162,14 @@ class MarkSheetFullController extends Controller
 
         // ── Load first-term override marks for mid-year entrants ──
         // These are per-subject marks entered manually from the student's previous school.
-        $overrideMap = \App\Models\FirstTermOverride::where('academic_year_id', $academicYearId)
-            ->where('class_id', $classId)
-            ->where('section_id', $sectionId)
-            ->get()
-            ->keyBy(function($o) { return $o->student_id . '_' . $o->subject_id; });
+        $overrideQuery = \App\Models\FirstTermOverride::where('academic_year_id', $academicYearId)
+            ->where('class_id', $classId);
+        // Only filter by section_id if it's set (otherwise load ALL sections for this class)
+        if ($sectionId) {
+            $overrideQuery->where('section_id', $sectionId);
+        }
+        $overrideMap = $overrideQuery->get()
+            ->keyBy(function($o) { return (string)$o->student_id . '_' . (string)$o->subject_id; });
 
         // Build roster rows with Term1, Term2, and Annual calculations
         $roster = [];
@@ -195,7 +198,7 @@ class MarkSheetFullController extends Controller
             if ($isMidYearEntrant) {
                 // Load per-subject first-term overrides from the first_term_overrides table
                 foreach ($subjects as $subj) {
-                    $overrideKey = $student->id . '_' . $subj->id;
+                    $overrideKey = (string)$student->id . '_' . (string)$subj->id;
                     $override = $overrideMap[$overrideKey] ?? null;
                     if ($override && $override->grand_total !== null) {
                         $row['term1'][$subj->id] = [

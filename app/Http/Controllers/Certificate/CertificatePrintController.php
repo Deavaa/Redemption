@@ -195,11 +195,46 @@ class CertificatePrintController extends Controller
 
         // Build term-keyed marks collections (term1, term2, etc.)
 
+        // ── MID-YEAR ENTRANT: load first-term override marks ──
+        $isMidYear = (int)($student->joined_term ?? 1) === 2;
+        $overrideMarks = collect();
+        if ($isMidYear) {
+            $overrideMarks = \App\Models\FirstTermOverride::where('student_id', $student->id)
+                ->where('academic_year_id', $academicYear?->id)
+                ->get()
+                ->map(function($o) {
+                    return (object)[
+                        'subject_id' => $o->subject_id,
+                        'term_id' => null,  // will be set to term1's ID below
+                        'grand_total' => $o->grand_total,
+                        'grade' => $o->grade,
+                        'conduct' => null,
+                        'subject' => \App\Models\Subject::find($o->subject_id),
+                        'is_override' => true,
+                    ];
+                });
+        }
+
         foreach ($terms as $idx => $term) {
             $key = 'term' . ($idx + 1);
             $termKeys[] = $key;
             $termNames[$key] = $term->name ?: ('Term ' . ($idx + 1));
             $termMarks[$key] = $allMarks->filter(fn($m) => $m->term_id == $term->id);
+
+            // ── For mid-year entrants: merge override marks into term1 ──
+            if ($isMidYear && $idx === 0 && $overrideMarks->isNotEmpty()) {
+                // Set term_id on override marks to match term1
+                $overrideMarks->each(fn($om) => $om->term_id = $term->id);
+                // Merge: override marks replace any existing term1 marks for the same subject
+                $existingSubjectIds = $termMarks[$key]->pluck('subject_id')->toArray();
+                $merged = $termMarks[$key]->toArray();
+                foreach ($overrideMarks as $om) {
+                    if (!in_array($om->subject_id, $existingSubjectIds)) {
+                        $merged[] = $om;
+                    }
+                }
+                $termMarks[$key] = collect($merged);
+            }
         }
 
         // If no terms found but marks exist, group by term_id
@@ -361,6 +396,14 @@ class CertificatePrintController extends Controller
 
         if ($isMidYear && $isTerm1) {
             // Return the manual override rank for mid-year entrants in Term 1
+            // Try per-subject override first, fall back to student-level override
+            $overrideRank = \App\Models\FirstTermOverride::where('student_id', $student->id)
+                ->where('academic_year_id', $academicYear->id)
+                ->whereNotNull('rank_override')
+                ->avg('rank_override');
+            if ($overrideRank !== null) {
+                return (int)round($overrideRank);
+            }
             return $student->first_term_rank_override !== null
                 ? (int)$student->first_term_rank_override : null;
         }
