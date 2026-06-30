@@ -10,6 +10,7 @@ use App\Models\Section;
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Models\TeacherAssignment;
 use Illuminate\Http\Request;
 
 class FirstTermOverrideController extends Controller
@@ -53,7 +54,22 @@ class FirstTermOverrideController extends Controller
                     ->get();
             }
 
-            $subjects = Subject::orderBy('priority')->orderBy('name')->get(['id', 'name']);
+            // Load ONLY subjects assigned to this class/section via teacher assignments
+            $subjectIds = TeacherAssignment::where('class_id', $selectedClass)
+                ->where(function($q) use ($selectedSection) {
+                    $q->where('section_id', $selectedSection)->orWhereNull('section_id');
+                })
+                ->pluck('subject_id')
+                ->unique();
+
+            if ($subjectIds->isNotEmpty()) {
+                $subjects = Subject::whereIn('id', $subjectIds)
+                    ->orderBy('priority')->orderBy('name')
+                    ->get(['id', 'name']);
+            } else {
+                // Fallback: if no teacher assignments, show all subjects
+                $subjects = Subject::orderBy('priority')->orderBy('name')->get(['id', 'name']);
+            }
 
             // Load existing overrides
             $overrides = FirstTermOverride::where('academic_year_id', $selectedAy)

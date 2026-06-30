@@ -20,39 +20,15 @@ class AuthController extends Controller
         }
 
         // ── LOOP BUG FIX ──────────────────────────────────────────────────
-        // When a user arrives at /login after their session expired, the
-        // browser still holds the OLD session cookie. The previous code only
-        // invalidated the session if the row was missing from the DB — but
-        // an expired session row can linger (Laravel only GC's it on the 2%
-        // lottery). That left the user with a "valid-looking" but stale
-        // session, and the next POST /login would sometimes (especially under
-        // flaky networks or after GC ran between GET and POST) fail CSRF and
-        // trigger the bootstrap/app.php exception handler — which used to
-        // redirect back to /login, causing an infinite "session expired"
-        // loop.
-        //
-        // New behavior: ALWAYS force a clean session on /login (since the
-        // user is unauthenticated and we have nothing useful to preserve).
-        // This guarantees the form's @csrf token will match the session's
-        // _token on the next POST.
+        // Simplified: just regenerate the token. Don't invalidate+regenerate
+        // which can cause issues if the session file can't be written.
         // ──────────────────────────────────────────────────────────────────
         try {
-            $oldSessionId = $request->session()->getId();
-
-            // invalidate() = flush data + migrate to a new ID with destroy=true.
-            // regenerate() = migrate again (defensive — guarantees a brand new ID
-            // even if invalidate() somehow kept the old one).
-            $request->session()->invalidate();
-            $request->session()->regenerate();
-
-            Log::info('AuthController@showLogin: regenerated fresh session for login page', [
-                'old_session_id_prefix' => substr($oldSessionId, 0, 8) . '...',
-            ]);
+            $request->session()->regenerateToken();
         } catch (\Throwable $e) {
-            Log::warning('AuthController@showLogin: session regeneration failed, continuing', [
+            Log::warning('AuthController@showLogin: token regeneration failed', [
                 'error' => $e->getMessage(),
             ]);
-            // Last resort — keep going; the view will still render.
         }
 
         // If there's a redirect parameter, store it in the session so
@@ -70,8 +46,10 @@ class AuthController extends Controller
         // Regenerate the CSRF token for a fresh login page.
         $request->session()->regenerateToken();
 
-        // Force-save the session immediately to prevent race conditions
-        $request->session()->save();
+        // Note: session->save() is NOT needed here — Laravel saves the session
+        // automatically at the end of the request via middleware.
+        // Calling save() manually can fail if the session directory isn't writable,
+        // which causes the login loop.
 
         return response()->view('auth.login')
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
@@ -167,8 +145,9 @@ class AuthController extends Controller
         // Regenerate session ID to prevent session fixation
         $r->session()->regenerate();
 
-        // Force-save the session immediately (file driver = fast, no DB needed)
-        $r->session()->save();
+        // Note: session->save() removed — Laravel saves automatically at end of request.
+        // Manual save() can fail on XAMPP if storage/framework/sessions isn't writable,
+        // which causes the session to not persist and the login loop.
 
         // Validate and normalize the redirect URL
         $validatedRedirect = $this->validateRedirectUrl($redirectUrl);
@@ -623,9 +602,9 @@ class AuthController extends Controller
     private function renderLoginViewWithNoStoreHeaders(array $data = [])
     {
         // Regenerate the CSRF token so the new form gets a fresh one.
+        // Note: no manual save() — Laravel saves at end of request.
         try {
             request()->session()->regenerateToken();
-            request()->session()->save();
         } catch (\Throwable $e) {
             // Keep going — the view will still render.
         }
