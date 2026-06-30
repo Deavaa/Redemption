@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AcademicYear\AcademicYearController;
 use App\Http\Controllers\Admin\MarkEntryController;
+use App\Http\Controllers\Admin\FirstTermOverrideController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\SubjectAssignmentController;
 use App\Http\Controllers\Audit\AuditController;
@@ -333,6 +334,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
 
     // Mark Entry Lock Management (Branch Principal / Admin)
     Route::get('mark-entry-locks', [MarkEntryLockController::class, 'index'])->name('mark-entry-locks.index')->middleware('permission:mark_entries.view');
+
+    // First Term Override Marks (for mid-year entrants)
+    Route::get('first-term-overrides', [FirstTermOverrideController::class, 'index'])->name('first-term-overrides.index')->middleware('permission:mark_entries.view');
+    Route::post('first-term-overrides', [FirstTermOverrideController::class, 'store'])->name('first-term-overrides.store')->middleware('permission:mark_entries.manage');
     Route::post('mark-entry-locks/lock', [MarkEntryLockController::class, 'lock'])->name('mark-entry-locks.lock')->middleware('permission:mark_entries.manage');
     Route::post('mark-entry-locks/unlock', [MarkEntryLockController::class, 'unlock'])->name('mark-entry-locks.unlock')->middleware('permission:mark_entries.manage');
 

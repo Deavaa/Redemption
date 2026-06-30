@@ -160,6 +160,14 @@ class MarkSheetFullController extends Controller
             ];
         }
 
+        // ── Load first-term override marks for mid-year entrants ──
+        // These are per-subject marks entered manually from the student's previous school.
+        $overrideMap = \App\Models\FirstTermOverride::where('academic_year_id', $ayId)
+            ->where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->get()
+            ->keyBy(function($o) { return $o->student_id . '_' . $o->subject_id; });
+
         // Build roster rows with Term1, Term2, and Annual calculations
         $roster = [];
         foreach ($students as $student) {
@@ -183,24 +191,24 @@ class MarkSheetFullController extends Controller
                 'annual_avg'   => 0,
             ];
 
-            // ── MID-YEAR ENTRANT: use manual override for Term 1 ──
+            // ── MID-YEAR ENTRANT: use per-subject override marks for Term 1 ──
             if ($isMidYearEntrant) {
-                // Use the manually entered first_term_mark_override as the Term 1 total
-                $t1Override = $student->first_term_mark_override !== null
-                    ? floatval($student->first_term_mark_override) : null;
-
-                if ($t1Override !== null) {
-                    $row['term1_total'] = $t1Override;
-                    $row['term1_count'] = 1;  // treat as 1 "subject" for avg calc
-                    // Populate each subject's term1 with the override (for display)
-                    foreach ($subjects as $subj) {
+                // Load per-subject first-term overrides from the first_term_overrides table
+                foreach ($subjects as $subj) {
+                    $overrideKey = $student->id . '_' . $subj->id;
+                    $override = $overrideMap[$overrideKey] ?? null;
+                    if ($override && $override->grand_total !== null) {
                         $row['term1'][$subj->id] = [
-                            'grand_total' => $t1Override,
-                            'grade'       => $this->calcGrade($t1Override),
+                            'grand_total' => floatval($override->grand_total),
+                            'grade'       => $override->grade ?? $this->calcGrade(floatval($override->grand_total)),
                             'ca_total'    => null,
                             'exam_total'  => null,
                             'is_override' => true,
                         ];
+                        $row['term1_total'] += floatval($override->grand_total);
+                        $row['term1_count']++;
+                    } else {
+                        $row['term1'][$subj->id] = null;
                     }
                 }
             }
