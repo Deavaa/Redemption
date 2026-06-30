@@ -155,7 +155,19 @@ class StudentController extends Controller
             'status' => 'nullable|in:active,inactive,graduated,transferred',
             'notes' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            // Mid-year admission fields
+            'joined_term' => 'nullable|integer|in:1,2',
+            'first_term_mark_override' => 'nullable|numeric',
+            'first_term_rank_override' => 'nullable|integer',
         ]);
+
+        // Ensure mid-year fields are set (default if not provided)
+        $validated['joined_term'] = $validated['joined_term'] ?? 1;
+        // If joined_term is 1 (regular), clear the override fields
+        if ((int)$validated['joined_term'] === 1) {
+            $validated['first_term_mark_override'] = null;
+            $validated['first_term_rank_override'] = null;
+        }
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -358,6 +370,10 @@ class StudentController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'guardian_id' => 'nullable|integer|exists:parents,id',
             'new_comment' => 'nullable|string|max:2000',
+            // Mid-year admission fields
+            'joined_term' => 'nullable|integer|in:1,2',
+            'first_term_mark_override' => 'nullable|numeric',
+            'first_term_rank_override' => 'nullable|integer',
         ]);
 
         // Handle photo upload
@@ -372,6 +388,14 @@ class StudentController extends Controller
 
         if (empty($validated['admission_date'])) {
             $validated['admission_date'] = now()->toDateString();
+        }
+
+        // Ensure mid-year fields are set (default if not provided)
+        $validated['joined_term'] = $validated['joined_term'] ?? 1;
+        // If joined_term is 1 (regular), clear the override fields
+        if ((int)$validated['joined_term'] === 1) {
+            $validated['first_term_mark_override'] = null;
+            $validated['first_term_rank_override'] = null;
         }
 
         // Extract non-fillable fields before update

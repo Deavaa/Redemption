@@ -303,6 +303,12 @@ class CertificatePrintController extends Controller
             return null;
         }
 
+        // ── MID-YEAR ENTRANT: annual rank is based on Term 2 only ──
+        // Their Term 1 override mark does NOT affect other students' annual ranks.
+        // All students (including mid-year entrants) are ranked together based on
+        // their available marks. Mid-year entrants naturally have only Term 2 marks
+        // in the mark_entries table, so the avg() query below will only consider
+        // their Term 2 marks — which is correct.
         $classStudents = Student::where('class_id', $student->class_id)
             ->where('academic_year_id', $academicYear->id)
             ->active()
@@ -314,6 +320,8 @@ class CertificatePrintController extends Controller
 
         $averages = [];
         foreach ($classStudents as $sid) {
+            // For mid-year entrants, the avg() only includes their Term 2 marks
+            // (they have no Term 1 mark_entries rows). This is the correct behavior.
             $avg = MarkEntry::where('student_id', $sid)
                 ->where('academic_year_id', $academicYear->id)
                 ->avg('grand_total');
@@ -341,6 +349,22 @@ class CertificatePrintController extends Controller
             return null;
         }
 
+        // ── MID-YEAR ENTRANT: Term 1 rank is the manual override ──
+        // Mid-year entrants are excluded from Term 1 ranking; their rank comes
+        // from first_term_rank_override. For Term 2, they participate normally.
+        $isMidYear = (int)($student->joined_term ?? 1) === 2;
+
+        // Check if this is Term 1 (the first term of the academic year)
+        $firstTerm = \App\Models\Term::where('academic_year_id', $academicYear->id)
+            ->orderBy('id', 'asc')->first();
+        $isTerm1 = $firstTerm && $firstTerm->id == $termId;
+
+        if ($isMidYear && $isTerm1) {
+            // Return the manual override rank for mid-year entrants in Term 1
+            return $student->first_term_rank_override !== null
+                ? (int)$student->first_term_rank_override : null;
+        }
+
         $classStudents = Student::where('class_id', $student->class_id)
             ->where('academic_year_id', $academicYear->id)
             ->active()
@@ -348,6 +372,14 @@ class CertificatePrintController extends Controller
 
         if ($classStudents->isEmpty()) {
             return null;
+        }
+
+        // For Term 1 ranking, exclude mid-year entrants (they have no real Term 1 marks)
+        if ($isTerm1) {
+            $classStudents = $classStudents->filter(function($sid) {
+                $s = Student::find($sid);
+                return $s && (int)($s->joined_term ?? 1) !== 2;
+            });
         }
 
         $averages = [];
