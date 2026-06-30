@@ -142,6 +142,11 @@ class PerformanceAnalysisController extends Controller
         $academicYear = AcademicYear::find($r->academic_year_id);
         $term = Term::find($r->term_id);
 
+        // Load filter dropdown data (needed by the view's filter form)
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        $terms = Term::orderBy('id', 'desc')->get();
+        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+
         return view('admin.performance-analysis.index', compact(
             'analysis', 'subjectAverages', 'gradeDistribution', 'classStats',
             'class', 'section', 'academicYear', 'term',
