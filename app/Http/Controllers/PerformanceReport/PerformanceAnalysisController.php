@@ -100,10 +100,11 @@ class PerformanceAnalysisController extends Controller
             return $b['average'] <=> $a['average'];
         });
 
-        // Assign ranks
+        // Assign ranks and calculate grades
         $rank = 1;
         foreach ($analysis as &$row) {
             $row['rank'] = $rank++;
+            $row['grade'] = $this->getGrade($row['average']);
         }
 
         // Subject averages

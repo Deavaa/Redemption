@@ -198,7 +198,7 @@
                         <td>{{ $row['subject_count'] }}</td>
                         <td>{{ $row['total_marks'] }}</td>
                         <td>{{ $row['average'] }}</td>
-                        <td><strong>{{ \App\Http\Controllers\PerformanceReport\PerformanceAnalysisController::getGrade($row['average']) }}</strong></td>
+                        <td><strong>{{ $row['grade'] ?? '-' }}</strong></td>
                     </tr>
                     @endforeach
                 </tbody>
