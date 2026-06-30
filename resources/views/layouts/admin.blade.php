@@ -208,14 +208,24 @@
 
             console.warn('[Keepalive] Possible session issue from:', source, '(failure count: ' + (networkFailureCount + 1) + ')');
 
-            // On local: require MULTIPLE consecutive failures before showing warning.
-            // A single transient failure (slow DB, slow PHP, network hiccup) should
-            // NOT trigger the warning — it just scares the user.
-            if (IS_LOCAL && networkFailureCount < LOCAL_WARNING_THRESHOLD) {
+            // ── LOCAL MODE: NEVER redirect, NEVER show warning ──
+            // On local (XAMPP), session issues are almost always transient
+            // (slow DB, slow PHP, file permission issue, GC ran). The session
+            // is usually still valid — the keepalive just failed to reach the
+            // server. We silently retry without interrupting the user.
+            if (IS_LOCAL) {
                 networkFailureCount++;
-                console.log('[Keepalive] Local mode: tolerating failure ' + networkFailureCount + '/' + LOCAL_WARNING_THRESHOLD + ' — NOT showing warning yet.');
+                console.log('[Keepalive] LOCAL mode: silently tolerating failure ' + networkFailureCount + ' — NO warning, NO redirect. Will retry in 15s.');
                 sessionExpired = false;  // allow retry
-                // Try again in 10 seconds
+                setTimeout(fireKeepalive, 15000);
+                return;
+            }
+
+            // ── PRODUCTION MODE: require multiple failures before redirect ──
+            if (networkFailureCount < LOCAL_WARNING_THRESHOLD) {
+                networkFailureCount++;
+                console.log('[Keepalive] Prod mode: tolerating failure ' + networkFailureCount + '/' + LOCAL_WARNING_THRESHOLD);
+                sessionExpired = false;
                 setTimeout(fireKeepalive, 10000);
                 return;
             }
@@ -458,7 +468,7 @@
 
             // Route groups for active state detection
             $academicSetupRoutes = ['admin.academic-years.*','admin.terms.*','admin.subjects.*','admin.subject-assignments.*','admin.exams.*','admin.classrooms.*','admin.sections.*','admin.class-assets.*'];
-            $academicMarksRoutes = ['admin.mark-entries.*','admin.mark-sheet.*','admin.mark-sheet-full.*','admin.mark-roster.*','admin.attendance.*','admin.attendance-delegation.*','admin.mark-entry-locks.*','admin.mark-entry-permissions.*','admin.mark-entry-disallowals.*','admin.mark-entry-configs.*','admin.promotion.*','admin.lesson-plans.*','admin.content-notes.*'];
+            $academicMarksRoutes = ['admin.mark-entries.*','admin.mark-sheet.*','admin.mark-sheet-full.*','admin.mark-roster.*','admin.attendance.*','admin.attendance-delegation.*','admin.mark-entry-locks.*','admin.first-term-overrides.*','admin.mark-entry-permissions.*','admin.mark-entry-disallowals.*','admin.mark-entry-configs.*','admin.promotion.*','admin.lesson-plans.*','admin.content-notes.*'];
             $academicReportsRoutes = ['admin.report-card.*','admin.progress-reports.*','admin.performance-reports.*'];
             $documentRoutes = ['admin.id-card-generate.*','admin.certificate-generate.*','admin.certificate-print.*','admin.id-cards.*','admin.certificates.*','admin.report-exchange.*','admin.transcript.*','admin.leaving-certificate.*','admin.report-card.*','admin.progress-reports.*'];
             $peopleRoutes = ['admin.students.*','admin.teachers.*','admin.staff.*','admin.team-members.*','admin.parents.*','admin.teacher-assignments.*','admin.enrollments.*','admin.teacher-reviews.*'];
@@ -563,6 +573,7 @@
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Promotion & Locks</li>
                         <li><a href="{{ route('admin.promotion.index') }}" class="{{ request()->routeIs('admin.promotion.*') ? 'active' : '' }}"><i class="fas fa-level-up-alt"></i> Promotion & Detention</a></li>
                         <li><a href="{{ route('admin.mark-entry-locks.index') }}" class="{{ request()->routeIs('admin.mark-entry-locks.*') ? 'active' : '' }}"><i class="fas fa-lock"></i> Mark Entry Locks</a></li>
+                        <li><a href="{{ route('admin.first-term-overrides.index') }}" class="{{ request()->routeIs('admin.first-term-overrides.*') ? 'active' : '' }}"><i class="fas fa-user-plus"></i> First Term Overrides</a></li>
                         <li><a href="{{ route('admin.mark-entry-permissions.index') }}" class="{{ request()->routeIs('admin.mark-entry-permissions.*') ? 'active' : '' }}"><i class="fas fa-key"></i> Mark Edit Permissions</a></li>
                         <li><a href="{{ route('admin.mark-entry-disallowals.index') }}" class="{{ request()->routeIs('admin.mark-entry-disallowals.*') ? 'active' : '' }}"><i class="fas fa-ban"></i> Mark Entry Disallowals</a></li>
                         <li><a href="{{ route('admin.mark-entry-configs.index') }}" class="{{ request()->routeIs('admin.mark-entry-configs.*') ? 'active' : '' }}"><i class="fas fa-cog"></i> Mark Entry Config</a></li>
@@ -597,6 +608,9 @@
                         <li style="margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb;font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding-left:12px;">Promotion & Locks</li>
                         <li><a href="{{ route('admin.promotion.index') }}" class="{{ request()->routeIs('admin.promotion.*') ? 'active' : '' }}"><i class="fas fa-level-up-alt"></i> Promotion & Detention</a></li>
                         <li><a href="{{ route('admin.mark-entry-locks.index') }}" class="{{ request()->routeIs('admin.mark-entry-locks.*') ? 'active' : '' }}"><i class="fas fa-lock"></i> Mark Entry Locks</a></li>
+                        @if(in_array(Auth::user()?->role ?? '', ['admin', 'super_admin', 'general_manager', 'branch_principal']))
+                        <li><a href="{{ route('admin.first-term-overrides.index') }}" class="{{ request()->routeIs('admin.first-term-overrides.*') ? 'active' : '' }}"><i class="fas fa-user-plus"></i> First Term Overrides</a></li>
+                        @endif
                         <li><a href="{{ route('admin.mark-entry-permissions.index') }}" class="{{ request()->routeIs('admin.mark-entry-permissions.*') ? 'active' : '' }}"><i class="fas fa-key"></i> Mark Edit Permissions</a></li>
                         <li><a href="{{ route('admin.mark-entry-disallowals.index') }}" class="{{ request()->routeIs('admin.mark-entry-disallowals.*') ? 'active' : '' }}"><i class="fas fa-ban"></i> Mark Entry Disallowals</a></li>
                         @if(in_array(Auth::user()?->role ?? '', ['admin', 'super_admin', 'branch_principal']))
