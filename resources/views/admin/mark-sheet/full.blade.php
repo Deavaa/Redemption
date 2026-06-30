@@ -492,9 +492,9 @@
                 </thead>
                 <tbody>
                     @foreach($roster as $i => $row)
-                    <tr>
+                    <tr @if(!empty($row['is_mid_year'])) style="background:#fffbeb;" @endif>
                         <td>{{ $i + 1 }}</td>
-                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}</td>
+                        <td class="stu-name">{{ $row['student']->full_name ?? '' }}@if(!empty($row['is_mid_year'])) <span style="font-size:.6rem;background:#d97706;color:#fff;padding:1px 4px;border-radius:3px;margin-left:2px;" title="Joined in Term 2">T2</span>@endif</td>
                         @foreach($subjects as $subj)
                             @php $t1 = $row['term1'][$subj->id] ?? null @endphp
                             <td class="{{ $t1 && $t1['grand_total'] !== null ? $markClass($t1['grand_total']) : '' }}">

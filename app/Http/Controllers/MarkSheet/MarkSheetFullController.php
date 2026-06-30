@@ -163,8 +163,12 @@ class MarkSheetFullController extends Controller
         // Build roster rows with Term1, Term2, and Annual calculations
         $roster = [];
         foreach ($students as $student) {
+            // Check if student joined in term 2 (mid-year entrant)
+            $isMidYearEntrant = (int)($student->joined_term ?? 1) === 2;
+
             $row = [
                 'student'      => $student,
+                'is_mid_year'  => $isMidYearEntrant,
                 'term1'        => [],
                 'term2'        => [],
                 'annual'       => [],
@@ -179,13 +183,37 @@ class MarkSheetFullController extends Controller
                 'annual_avg'   => 0,
             ];
 
+            // ── MID-YEAR ENTRANT: use manual override for Term 1 ──
+            if ($isMidYearEntrant) {
+                // Use the manually entered first_term_mark_override as the Term 1 total
+                $t1Override = $student->first_term_mark_override !== null
+                    ? floatval($student->first_term_mark_override) : null;
+
+                if ($t1Override !== null) {
+                    $row['term1_total'] = $t1Override;
+                    $row['term1_count'] = 1;  // treat as 1 "subject" for avg calc
+                    // Populate each subject's term1 with the override (for display)
+                    foreach ($subjects as $subj) {
+                        $row['term1'][$subj->id] = [
+                            'grand_total' => $t1Override,
+                            'grade'       => $this->calcGrade($t1Override),
+                            'ca_total'    => null,
+                            'exam_total'  => null,
+                            'is_override' => true,
+                        ];
+                    }
+                }
+            }
+
             foreach ($subjects as $subj) {
-                // Term 1
-                $t1 = $markData[$student->id][$term1->id][$subj->id] ?? null;
-                $row['term1'][$subj->id] = $t1;
-                if ($t1 && $t1['grand_total'] !== null) {
-                    $row['term1_total'] += floatval($t1['grand_total']);
-                    $row['term1_count']++;
+                // Term 1 (skip for mid-year entrants — already set above)
+                if (!$isMidYearEntrant) {
+                    $t1 = $markData[$student->id][$term1->id][$subj->id] ?? null;
+                    $row['term1'][$subj->id] = $t1;
+                    if ($t1 && $t1['grand_total'] !== null) {
+                        $row['term1_total'] += floatval($t1['grand_total']);
+                        $row['term1_count']++;
+                    }
                 }
 
                 // Term 2
@@ -199,33 +227,49 @@ class MarkSheetFullController extends Controller
                     $row['term2_count']++;
                 }
 
-                // Annual = average of Term1 and Term2 (if both exist)
-                if ($t1 && $t2 && $t1['grand_total'] !== null && $t2['grand_total'] !== null) {
-                    $annualMark = round((floatval($t1['grand_total']) + floatval($t2['grand_total'])) / 2, 1);
-                    $row['annual'][$subj->id] = [
-                        'grand_total' => $annualMark,
-                        'grade'       => $this->calcGrade($annualMark),
-                    ];
-                    $row['annual_total'] += $annualMark;
-                    $row['annual_count']++;
-                } elseif ($t1 && $t1['grand_total'] !== null && (!$t2 || $t2['grand_total'] === null)) {
-                    // Only Term1 exists, use it as annual
-                    $row['annual'][$subj->id] = [
-                        'grand_total' => $t1['grand_total'],
-                        'grade'       => $t1['grade'],
-                    ];
-                    $row['annual_total'] += floatval($t1['grand_total']);
-                    $row['annual_count']++;
-                } elseif ($t2 && $t2['grand_total'] !== null && (!$t1 || $t1['grand_total'] === null)) {
-                    // Only Term2 exists
-                    $row['annual'][$subj->id] = [
-                        'grand_total' => $t2['grand_total'],
-                        'grade'       => $t2['grade'],
-                    ];
-                    $row['annual_total'] += floatval($t2['grand_total']);
-                    $row['annual_count']++;
+                // Annual calculation
+                if ($isMidYearEntrant) {
+                    // ── MID-YEAR ENTRANT: annual = Term 2 only ──
+                    // Their annual total/rank is based ONLY on Term 2 marks.
+                    // Term 1 override mark is display-only and does NOT affect
+                    // the annual calculation or other students' annual ranks.
+                    if ($t2 && $t2['grand_total'] !== null) {
+                        $row['annual'][$subj->id] = [
+                            'grand_total' => $t2['grand_total'],
+                            'grade'       => $t2['grade'],
+                        ];
+                        $row['annual_total'] += floatval($t2['grand_total']);
+                        $row['annual_count']++;
+                    } else {
+                        $row['annual'][$subj->id] = null;
+                    }
                 } else {
-                    $row['annual'][$subj->id] = null;
+                    // ── REGULAR STUDENT: annual = average of Term1 and Term2 ──
+                    if ($t1 && $t2 && $t1['grand_total'] !== null && $t2['grand_total'] !== null) {
+                        $annualMark = round((floatval($t1['grand_total']) + floatval($t2['grand_total'])) / 2, 1);
+                        $row['annual'][$subj->id] = [
+                            'grand_total' => $annualMark,
+                            'grade'       => $this->calcGrade($annualMark),
+                        ];
+                        $row['annual_total'] += $annualMark;
+                        $row['annual_count']++;
+                    } elseif ($t1 && $t1['grand_total'] !== null && (!$t2 || $t2['grand_total'] === null)) {
+                        $row['annual'][$subj->id] = [
+                            'grand_total' => $t1['grand_total'],
+                            'grade'       => $t1['grade'],
+                        ];
+                        $row['annual_total'] += floatval($t1['grand_total']);
+                        $row['annual_count']++;
+                    } elseif ($t2 && $t2['grand_total'] !== null && (!$t1 || $t1['grand_total'] === null)) {
+                        $row['annual'][$subj->id] = [
+                            'grand_total' => $t2['grand_total'],
+                            'grade'       => $t2['grade'],
+                        ];
+                        $row['annual_total'] += floatval($t2['grand_total']);
+                        $row['annual_count']++;
+                    } else {
+                        $row['annual'][$subj->id] = null;
+                    }
                 }
             }
 
@@ -241,10 +285,26 @@ class MarkSheetFullController extends Controller
         }
 
         // Calculate Term1 ranks
-        $this->assignRanks($roster, 'term1_total', 'term1_rank');
-        // Calculate Term2 ranks
+        // ── MID-YEAR ENTRANTS: excluded from Term 1 ranking ──
+        // Their rank is manually entered via first_term_rank_override.
+        $this->assignRanks($roster, 'term1_total', 'term1_rank', function($row) {
+            return !$row['is_mid_year'];  // only rank regular students
+        });
+        // Apply manual rank overrides for mid-year entrants
+        foreach ($roster as &$row) {
+            if ($row['is_mid_year'] && $row['student']->first_term_rank_override !== null) {
+                $row['term1_rank'] = $row['student']->first_term_rank_override;
+            }
+        }
+        unset($row);
+
+        // Calculate Term2 ranks (ALL students participate, including mid-year entrants)
         $this->assignRanks($roster, 'term2_total', 'term2_rank');
+
         // Calculate Annual ranks
+        // ── ALL students participate in annual ranking ──
+        // Mid-year entrants are ranked based on their Term 2 total only,
+        // alongside regular students who are ranked on their annual average.
         $this->assignRanks($roster, 'annual_total', 'annual_rank');
 
         // Calculate class averages for each subject per term
@@ -375,9 +435,15 @@ class MarkSheetFullController extends Controller
      * Assign ranks to roster based on a given total field.
      * Handles ties (same total = same rank, next rank skips).
      */
-    private function assignRanks(array &$roster, string $totalField, string $rankField): void
+    private function assignRanks(array &$roster, string $totalField, string $rankField, ?\Closure $filter = null): void
     {
-        $ranked = collect($roster)->sortByDesc($totalField)->values();
+        // Filter roster if a closure is provided (e.g. exclude mid-year entrants from Term 1 ranking)
+        $eligible = collect($roster);
+        if ($filter) {
+            $eligible = $eligible->filter($filter);
+        }
+
+        $ranked = $eligible->sortByDesc($totalField)->values();
         $rank = 1;
         $rankMap = [];
 
@@ -389,6 +455,8 @@ class MarkSheetFullController extends Controller
         }
 
         foreach ($roster as &$row) {
+            // Only assign rank if the student was eligible (in the rankMap)
+            // Students not in the rankMap get '-' (will be overridden later for mid-year entrants)
             $row[$rankField] = $rankMap[$row['student']->id] ?? '-';
         }
         unset($row);

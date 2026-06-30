@@ -315,6 +315,73 @@
                                 @enderror
                             </div>
 
+                            {{-- Mid-Year Admission Support --}}
+                            <div class="modern-form-group">
+                                <label class="modern-form-label" for="joined_term">
+                                    Joined Term <span style="color:#6b7280;font-weight:400;">(mid-year admission?)</span>
+                                </label>
+                                <div class="modern-input-wrapper">
+                                    <i class="fas fa-user-plus modern-input-icon"></i>
+                                    <select name="joined_term" id="joined_term"
+                                        class="modern-input {{ $errors->has('joined_term') ? 'is-invalid' : '' }}"
+                                        onchange="toggleMidYearFields()">
+                                        <option value="1" @if(old('joined_term', $data->joined_term ?? 1) == 1) selected @endif>Term 1 (start of year)</option>
+                                        <option value="2" @if(old('joined_term', $data->joined_term ?? 1) == 2) selected @endif>Term 2 (mid-year transfer)</option>
+                                    </select>
+                                </div>
+                                <div class="modern-input-hint">
+                                    Students who joined in Term 2 can have their Term 1 mark/rank entered manually.
+                                    They participate in Term 2 and Annual ranking based on Term 2 marks only.
+                                </div>
+                            </div>
+
+                            <div id="midYearFields" style="display:none;">
+                                <div class="modern-form-group">
+                                    <label class="modern-form-label" for="first_term_mark_override">
+                                        First Term Mark Override (total)
+                                    </label>
+                                    <div class="modern-input-wrapper">
+                                        <i class="fas fa-edit modern-input-icon"></i>
+                                        <input type="number" step="0.01" id="first_term_mark_override" name="first_term_mark_override"
+                                            class="modern-input {{ $errors->has('first_term_mark_override') ? 'is-invalid' : '' }}"
+                                            value="{{ old('first_term_mark_override', $data->first_term_mark_override ?? '') }}"
+                                            placeholder="e.g. 450 (manually entered Term 1 total)">
+                                    </div>
+                                    <div class="modern-input-hint">
+                                        Enter the student's Term 1 total mark from their previous school.
+                                        This is display-only and does NOT affect other students' ranks.
+                                    </div>
+                                </div>
+
+                                <div class="modern-form-group">
+                                    <label class="modern-form-label" for="first_term_rank_override">
+                                        First Term Rank Override
+                                    </label>
+                                    <div class="modern-input-wrapper">
+                                        <i class="fas fa-ranking-star modern-input-icon"></i>
+                                        <input type="number" step="1" id="first_term_rank_override" name="first_term_rank_override"
+                                            class="modern-input {{ $errors->has('first_term_rank_override') ? 'is-invalid' : '' }}"
+                                            value="{{ old('first_term_rank_override', $data->first_term_rank_override ?? '') }}"
+                                            placeholder="e.g. 5 (manually entered Term 1 rank)">
+                                    </div>
+                                    <div class="modern-input-hint">
+                                        Enter the student's Term 1 rank from their previous school.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <script>
+                            function toggleMidYearFields() {
+                                var sel = document.getElementById('joined_term');
+                                var fields = document.getElementById('midYearFields');
+                                if (sel && fields) {
+                                    fields.style.display = sel.value === '2' ? '' : 'none';
+                                }
+                            }
+                            // Initialize on page load
+                            document.addEventListener('DOMContentLoaded', toggleMidYearFields);
+                            </script>
+
                             <div class="modern-form-group">
                                 <label class="modern-form-label" for="status">
                                     Status
