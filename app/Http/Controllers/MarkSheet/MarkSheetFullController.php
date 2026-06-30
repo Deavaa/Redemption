@@ -162,7 +162,7 @@ class MarkSheetFullController extends Controller
 
         // ── Load first-term override marks for mid-year entrants ──
         // These are per-subject marks entered manually from the student's previous school.
-        $overrideMap = \App\Models\FirstTermOverride::where('academic_year_id', $ayId)
+        $overrideMap = \App\Models\FirstTermOverride::where('academic_year_id', $academicYearId)
             ->where('class_id', $classId)
             ->where('section_id', $sectionId)
             ->get()
