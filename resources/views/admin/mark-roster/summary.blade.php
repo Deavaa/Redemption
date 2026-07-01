@@ -35,6 +35,8 @@
     .ms-table .stu-name{min-width:100px!important;width:120px!important;max-width:120px!important;position:static!important;white-space:nowrap!important;overflow:visible!important;}
     .ms-table thead{display:table-header-group!important;}
     .ms-table .student-group{page-break-inside:avoid!important;break-inside:avoid!important;}
+    /* Force page break after every 5th student (15 rows = 5 students × 3 rows) */
+    .ms-table .student-group.page-break-after{page-break-after:always!important;break-after:page!important;}
     .ms-card{box-shadow:none!important;border:none!important;}
     .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:300px!important;height:300px!important;opacity:0.06!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
@@ -93,7 +95,7 @@
                     @php $studentNum = 0; @endphp
                     @foreach($roster as $studentRows)
                         @php $studentNum++; @endphp
-                        <tbody class="student-group">
+                        <tbody class="student-group{{ $studentNum % 5 == 0 ? ' page-break-after' : '' }}">
                         @foreach(['term1', 'term2', 'annual'] as $termKey)
                         <tr class="{{ $termKey }}-row">
                             @if($termKey === 'term1')
