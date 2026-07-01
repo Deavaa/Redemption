@@ -2766,3 +2766,52 @@ html, body {
     color: rgba(255, 255, 255, 0.4);
     font-size: 12px; pointer-events: none;
 }
+
+/* ===== GLOBAL PRINT LAYOUT OVERRIDE ===== */
+/* Force admin layout to use 100% of the page in print mode */
+@media print {
+    html, body {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+    .admin-wrapper {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+    .admin-sidebar,
+    .sidebar-backdrop,
+    .admin-topbar,
+    .sidebar-footer,
+    .sidebar-toggle {
+        display: none !important;
+    }
+    .admin-main {
+        margin: 0 !important;
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+    .admin-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+    /* Remove any max-width constraints from page containers */
+    .fms-page, .mr-page, .ms-page {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
