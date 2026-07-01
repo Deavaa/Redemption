@@ -850,6 +850,46 @@
         </div>
     </div>
     @endisset
+
+    {{-- Hidden JSON data for export (avoids Blade-in-JS issues) --}}
+    @isset($roster)
+    @isset($subjects)
+    <script type="application/json" id="fms-export-data">@json([
+        'subjects' => $subjects->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->values(),
+        'roster' => collect($roster)->map(function($row) use ($subjects) {
+            $s = $row['student'];
+            $age = '';
+            try { $age = $s->date_of_birth ? \Carbon\Carbon::parse($s->date_of_birth)->age . '' : ''; } catch(\Throwable $e) {}
+            $t1 = []; $t2 = []; $ann = [];
+            foreach ($subjects as $subj) {
+                $m1 = $row['term1'][$subj->id] ?? null;
+                $t1[] = ($m1 && isset($m1['grand_total']) && $m1['grand_total'] !== null) ? floatval($m1['grand_total']) : null;
+                $m2 = $row['term2'][$subj->id] ?? null;
+                $t2[] = ($m2 && isset($m2['grand_total']) && $m2['grand_total'] !== null) ? floatval($m2['grand_total']) : null;
+                $ma = $row['annual'][$subj->id] ?? null;
+                $ann[] = ($ma && isset($ma['grand_total']) && $ma['grand_total'] !== null) ? floatval($ma['grand_total']) : null;
+            }
+            return [
+                'name' => $s->full_name ?? '',
+                'gender' => $s->gender ?? '',
+                'age' => $age,
+                't1_subjects' => $t1,
+                't1_total' => $row['term1_total'],
+                't1_avg' => $row['term1_avg'],
+                't1_rank' => $row['term1_rank'] ?? '-',
+                't2_subjects' => $t2,
+                't2_total' => $row['term2_total'],
+                't2_avg' => $row['term2_avg'],
+                't2_rank' => $row['term2_rank'] ?? '-',
+                'ann_subjects' => $ann,
+                'ann_total' => $row['annual_total'],
+                'ann_avg' => $row['annual_avg'],
+                'ann_rank' => $row['annual_rank'] ?? '-',
+            ];
+        })->values(),
+    ])</script>
+    @endisset
+    @endisset
 </div>
 @endsection
 
@@ -874,52 +914,14 @@
 // ── Roster data for XLSX export (horizontal: all terms side-by-side) ──
 var FMS_ROSTER = [];
 var FMS_SUBJECTS = [];
-@isset($roster)
-@isset($subjects)
-@php
-    $className = $class->name ?? '';
-    $sectionName = $section->name ?? '';
-    $subjArray = [];
-    foreach ($subjects as $sj) { $subjArray[] = ['id' => $sj->id, 'name' => $sj->name]; }
-@endphp
-FMS_SUBJECTS = {{ json_encode($subjArray) }};
-@foreach($roster as $row)
-    @php
-        $s = $row['student'];
-        $age = '';
-        try { $age = $s->date_of_birth ? \Carbon\Carbon::parse($s->date_of_birth)->age . '' : ''; } catch(\Throwable $e) {}
-        $t1Subjects = [];
-        $t2Subjects = [];
-        $annSubjects = [];
-        foreach ($subjects as $subj) {
-            $t1 = $row['term1'][$subj->id] ?? null;
-            $t1Subjects[] = ($t1 && isset($t1['grand_total']) && $t1['grand_total'] !== null) ? floatval($t1['grand_total']) : null;
-            $t2 = $row['term2'][$subj->id] ?? null;
-            $t2Subjects[] = ($t2 && isset($t2['grand_total']) && $t2['grand_total'] !== null) ? floatval($t2['grand_total']) : null;
-            $ann = $row['annual'][$subj->id] ?? null;
-            $annSubjects[] = ($ann && isset($ann['grand_total']) && $ann['grand_total'] !== null) ? floatval($ann['grand_total']) : null;
-        }
-    @endphp
-    FMS_ROSTER.push({
-        name: {{ json_encode($s->full_name ?? '') }},
-        gender: {{ json_encode($s->gender ?? '') }},
-        age: {{ json_encode($age) }},
-        t1_subjects: {{ json_encode($t1Subjects) }},
-        t1_total: {{ json_encode($row['term1_total']) }},
-        t1_avg: {{ json_encode($row['term1_avg']) }},
-        t1_rank: {{ json_encode($row['term1_rank'] ?? '-') }},
-        t2_subjects: {{ json_encode($t2Subjects) }},
-        t2_total: {{ json_encode($row['term2_total']) }},
-        t2_avg: {{ json_encode($row['term2_avg']) }},
-        t2_rank: {{ json_encode($row['term2_rank'] ?? '-') }},
-        ann_subjects: {{ json_encode($annSubjects) }},
-        ann_total: {{ json_encode($row['annual_total']) }},
-        ann_avg: {{ json_encode($row['annual_avg']) }},
-        ann_rank: {{ json_encode($row['annual_rank'] ?? '-') }},
-    });
-@endforeach
-@endisset
-@endisset
+try {
+    var dataEl = document.getElementById('fms-export-data');
+    if (dataEl) {
+        var parsed = JSON.parse(dataEl.textContent);
+        FMS_ROSTER = parsed.roster || [];
+        FMS_SUBJECTS = parsed.subjects || [];
+    }
+} catch(e) { console.warn('FMS export data parse error:', e); }
 
 // ── Mark-based comment configuration ──
 var FMS_COMMENT_RANGES = [
