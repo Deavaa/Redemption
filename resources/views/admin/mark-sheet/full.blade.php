@@ -869,33 +869,57 @@
     }
 })();
 
-// ── Student data for XLSX export (gender, age, class, section, comments) ──
-var FMS_STUDENT_DATA = {};
+// ── Roster data for XLSX export (horizontal: all terms side-by-side) ──
+var FMS_ROSTER = [];
+var FMS_SUBJECTS = [];
 @isset($roster)
-@if(isset($class) && isset($section))
-@php
-    $className = $class->name ?? '';
-    $sectionName = $section->name ?? '';
-@endphp
+@isset($subjects)
+@php $className = $class->name ?? ''; $sectionName = $section->name ?? ''; @endphp
+FMS_SUBJECTS = @json($subjects->map(fn($s) => ['id' => $s->id, 'name' => $s->name]));
 @foreach($roster as $row)
     @php
         $s = $row['student'];
         $age = '';
         try { $age = $s->date_of_birth ? \Carbon\Carbon::parse($s->date_of_birth)->age . '' : ''; } catch(\Throwable $e) {}
+        // Build term data
+        $t1Subjects = [];
+        foreach ($subjects as $subj) {
+            $t1 = $row['term1'][$subj->id] ?? null;
+            $t1Subjects[] = ($t1 && $t1['grand_total'] !== null) ? floatval($t1['grand_total']) : null;
+        }
+        $t2Subjects = [];
+        foreach ($subjects as $subj) {
+            $t2 = $row['term2'][$subj->id] ?? null;
+            $t2Subjects[] = ($t2 && $t2['grand_total'] !== null) ? floatval($t2['grand_total']) : null;
+        }
+        $annSubjects = [];
+        foreach ($subjects as $subj) {
+            $ann = $row['annual'][$subj->id] ?? null;
+            $annSubjects[] = ($ann && $ann['grand_total'] !== null) ? floatval($ann['grand_total']) : null;
+        }
     @endphp
-    FMS_STUDENT_DATA[{{ $s->id }}] = {
+    FMS_ROSTER.push({
+        name: {{ json_encode($s->full_name ?? '') }},
         gender: {{ json_encode($s->gender ?? '') }},
         age: {{ json_encode($age) }},
-        class_name: {{ json_encode($className) }},
-        section_name: {{ json_encode($sectionName) }},
-    };
+        t1_subjects: {{ json_encode($t1Subjects) }},
+        t1_total: {{ json_encode($row['term1_total']) }},
+        t1_avg: {{ json_encode($row['term1_avg']) }},
+        t1_rank: {{ json_encode($row['term1_rank'] ?? '-') }},
+        t2_subjects: {{ json_encode($t2Subjects) }},
+        t2_total: {{ json_encode($row['term2_total']) }},
+        t2_avg: {{ json_encode($row['term2_avg']) }},
+        t2_rank: {{ json_encode($row['term2_rank'] ?? '-') }},
+        ann_subjects: {{ json_encode($annSubjects) }},
+        ann_total: {{ json_encode($row['annual_total']) }},
+        ann_avg: {{ json_encode($row['annual_avg']) }},
+        ann_rank: {{ json_encode($row['annual_rank'] ?? '-') }},
+    });
 @endforeach
-@endif
+@endisset
 @endisset
 
 // ── Mark-based comment configuration ──
-// Returns a comment based on the student's average mark.
-// Configured via FMS_COMMENT_RANGES (editable below).
 var FMS_COMMENT_RANGES = [
     { min: 90, comment: 'Outstanding performance! Keep up the excellent work.' },
     { min: 80, comment: 'Excellent performance. Your dedication is commendable.' },
@@ -914,121 +938,89 @@ function fmsGetCommentForMark(avg) {
 }
 
 function exportCSV(){
-    var tables=document.querySelectorAll('.fms-seq-table');
-    if(!tables.length)return;
-
-    // ── Single-sheet XLSX export: all tables in sequence on one sheet ──
-    if(typeof XLSX !== 'undefined'){
-        var wsData = [];
-        var studentKeys = Object.keys(FMS_STUDENT_DATA);
-
-        tables.forEach(function(table, tableIdx){
-            var sectionHead=table.closest('.fms-term-section');
-            // Add section header as a title row
-            if(sectionHead){
-                var headDiv=sectionHead.querySelector('.fms-term-head');
-                if(headDiv){
-                    var titleText=headDiv.innerText.trim();
-                    wsData.push([titleText]);  // Section title row
-                }
-            }
-
-            var rows = table.querySelectorAll('tr');
-            var dataRowCount = 0;
-            rows.forEach(function(row, rowIdx) {
-                var cols = row.querySelectorAll('td,th');
-                var rowData = [];
-                cols.forEach(function(col) {
-                    var clone = col.cloneNode(true);
-                    var badges = clone.querySelectorAll('span');
-                    badges.forEach(function(b) { b.remove(); });
-                    rowData.push(clone.innerText.trim().replace(/\n/g,' '));
-                });
-
-                if (rowIdx === 0) {
-                    // Header row: insert Gender, Age, Class, Section after Student Name
-                    // and Comment at the end
-                    var newHeader = [rowData[0], 'Gender', 'Age', 'Class', 'Section'];
-                    for (var i = 2; i < rowData.length; i++) newHeader.push(rowData[i]);
-                    newHeader.push('Comment');
-                    wsData.push(newHeader);
-                } else {
-                    // Skip summary rows (Class Average, Highest, Lowest)
-                    var firstCell = (rowData[0] || '').toLowerCase();
-                    if (firstCell.indexOf('class average') !== -1 || firstCell.indexOf('highest') !== -1 || firstCell.indexOf('lowest') !== -1) {
-                        // Still add them but without extra columns
-                        wsData.push(rowData);
-                        return;
-                    }
-
-                    // Data row: insert student info after Student Name
-                    var newRow = [rowData[0]]; // #
-                    newRow.push(rowData[1]);   // Student Name
-
-                    // Match student by index
-                    if (studentKeys[dataRowCount]) {
-                        var info = FMS_STUDENT_DATA[studentKeys[dataRowCount]];
-                        newRow.push(info.gender || '');
-                        newRow.push(info.age || '');
-                        newRow.push(info.class_name || '');
-                        newRow.push(info.section_name || '');
-                    } else {
-                        newRow.push('', '', '', '');
-                    }
-
-                    // Add remaining columns (subjects, Total, Average, Rank)
-                    for (var j = 2; j < rowData.length; j++) newRow.push(rowData[j]);
-
-                    // Add comment based on average (second-to-last column)
-                    var avgIdx = rowData.length - 2;
-                    var avgVal = parseFloat(rowData[avgIdx]) || 0;
-                    newRow.push(fmsGetCommentForMark(avgVal));
-
-                    wsData.push(newRow);
-                    dataRowCount++;
-                }
-            });
-
-            // Add empty row between sections
-            wsData.push([]);
-        });
-
-        var wb = XLSX.utils.book_new();
-        var ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Full Mark Sheet');
-        XLSX.writeFile(wb, 'mark_sheet_full.xlsx');
+    if(!FMS_ROSTER.length) {
+        alert('No data to export. Please generate the mark sheet first.');
         return;
     }
 
-    // Fallback: CSV with BOM (single file, all tables concatenated)
-    var csv=[];
-    tables.forEach(function(table){
-        var sectionHead=table.closest('.fms-term-section');
-        if(sectionHead){
-            var headDiv=sectionHead.querySelector('.fms-term-head');
-            if(headDiv){
-                csv.push('');
-                csv.push('=== '+headDiv.innerText.trim()+' ===');
-                csv.push('');
-            }
+    if(typeof XLSX === 'undefined'){
+        alert('Excel library not loaded. Please check your internet connection.');
+        return;
+    }
+
+    // Build horizontal worksheet:
+    // Columns: Student Name | Gender | Age | Conduct T1 | [T1 subjects...] | T1 Total | T1 Avg | T1 Rank | T1 Comment |
+    //          Conduct T2 | [T2 subjects...] | T2 Total | T2 Avg | T2 Rank | T2 Comment |
+    //          [Annual subjects...] | Ann Total | Ann Avg | Ann Rank
+    var wsData = [];
+
+    // ── Header row ──
+    var header = ['Student Name', 'Gender', 'Age'];
+    // Term 1 block
+    header.push('Conduct (T1)');
+    for (var i = 0; i < FMS_SUBJECTS.length; i++) {
+        header.push(FMS_SUBJECTS[i].name + ' (T1)');
+    }
+    header.push('Total (T1)', 'Average (T1)', 'Rank (T1)', 'Comment (T1)');
+    // Term 2 block
+    header.push('Conduct (T2)');
+    for (var i = 0; i < FMS_SUBJECTS.length; i++) {
+        header.push(FMS_SUBJECTS[i].name + ' (T2)');
+    }
+    header.push('Total (T2)', 'Average (T2)', 'Rank (T2)', 'Comment (T2)');
+    // Annual block (no conduct, no comment)
+    for (var i = 0; i < FMS_SUBJECTS.length; i++) {
+        header.push(FMS_SUBJECTS[i].name + ' (Annual)');
+    }
+    header.push('Total (Annual)', 'Average (Annual)', 'Rank (Annual)');
+    wsData.push(header);
+
+    // ── Data rows ──
+    FMS_ROSTER.forEach(function(r) {
+        var row = [];
+        row.push(r.name);
+        row.push(r.gender);
+        row.push(r.age);
+
+        // Term 1: Conduct (blank for now — manually entered by homeroom teacher)
+        row.push('');
+        // T1 subject marks
+        for (var i = 0; i < FMS_SUBJECTS.length; i++) {
+            row.push(r.t1_subjects[i] !== null ? r.t1_subjects[i] : '-');
         }
-        var rows=table.querySelectorAll('tr');
-        rows.forEach(function(row){
-            var cols=row.querySelectorAll('td,th');
-            var rowData=[];
-            cols.forEach(function(col){
-                var text=col.innerText.replace(/"/g,'""').replace(/\n/g,' ');
-                rowData.push('"'+text+'"');
-            });
-            csv.push(rowData.join(','));
-        });
+        // T1 total, avg, rank, comment
+        row.push(r.t1_total > 0 ? r.t1_total : '-');
+        row.push(r.t1_avg > 0 ? r.t1_avg : '-');
+        row.push(r.t1_rank);
+        row.push(fmsGetCommentForMark(r.t1_avg));
+
+        // Term 2: Conduct
+        row.push('');
+        // T2 subject marks
+        for (var i = 0; i < FMS_SUBJECTS.length; i++) {
+            row.push(r.t2_subjects[i] !== null ? r.t2_subjects[i] : '-');
+        }
+        // T2 total, avg, rank, comment
+        row.push(r.t2_total > 0 ? r.t2_total : '-');
+        row.push(r.t2_avg > 0 ? r.t2_avg : '-');
+        row.push(r.t2_rank);
+        row.push(fmsGetCommentForMark(r.t2_avg));
+
+        // Annual: no conduct, no comment
+        for (var i = 0; i < FMS_SUBJECTS.length; i++) {
+            row.push(r.ann_subjects[i] !== null ? r.ann_subjects[i] : '-');
+        }
+        row.push(r.ann_total > 0 ? r.ann_total : '-');
+        row.push(r.ann_avg > 0 ? r.ann_avg : '-');
+        row.push(r.ann_rank);
+
+        wsData.push(row);
     });
-    // Prepend UTF-8 BOM (\uFEFF) so Excel opens with correct encoding for Amharic
-    var blob=new Blob(['\uFEFF'+csv.join('\n')],{type:'text/csv;charset=utf-8;'});
-    var link=document.createElement('a');
-    link.href=URL.createObjectURL(blob);
-    link.download='mark_sheet_full.csv';
-    link.click();
+
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Full Mark Sheet');
+    XLSX.writeFile(wb, 'mark_sheet_full.xlsx');
 }
 
 // Print with A4 landscape pre-selected
