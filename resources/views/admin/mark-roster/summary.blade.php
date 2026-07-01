@@ -28,16 +28,24 @@
 .ms-table .mark-green{color:#059669;font-weight:700;}
 @page{size:A4 landscape;margin:6mm;}
 @media print{
+    html,body{margin:0!important;padding:0!important;width:100%!important;}
     .admin-wrapper,.admin-sidebar,.admin-topbar,.sidebar-backdrop,.sidebar-footer,.sidebar-toggle,
     .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{display:none!important;}
-    .ms-page{width:100%!important;max-width:100%!important;padding:0!important;margin:0!important;}
-    .ms-table{font-size:7pt!important;table-layout:fixed!important;width:100%!important;border-collapse:collapse!important;}
-    .ms-table .stu-name{min-width:160px!important;width:180px!important;max-width:180px!important;position:static!important;white-space:nowrap!important;overflow:visible!important;}
+    .admin-wrapper{display:block!important;margin:0!important;padding:0!important;}
+    .admin-main{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;}
+    .admin-content{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;overflow:visible!important;}
+    .ms-page{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;}
+    .ms-card{box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;}
+    .ms-card-head,.ms-card-body{padding:2mm!important;}
+    .ms-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important;border:none!important;max-height:none!important;}
+    .ms-table{font-size:8pt!important;width:100%!important;border-collapse:collapse!important;}
+    .ms-table th{padding:3px 5px!important;white-space:nowrap!important;}
+    .ms-table td{padding:2px 5px!important;font-size:8pt!important;white-space:nowrap!important;}
+    .ms-table .stu-name{white-space:nowrap!important;width:auto!important;min-width:150px!important;max-width:none!important;overflow:visible!important;position:static!important;}
+    .ms-table .term-label{white-space:nowrap!important;width:auto!important;}
     .ms-table thead{display:table-header-group!important;}
     .ms-table .student-group{page-break-inside:avoid!important;break-inside:avoid!important;}
-    /* Force page break after every 5th student (15 rows = 5 students × 3 rows) */
     .ms-table .student-group.page-break-after{page-break-after:always!important;break-after:page!important;}
-    .ms-card{box-shadow:none!important;border:none!important;}
     .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:300px!important;height:300px!important;opacity:0.06!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
 </style>
