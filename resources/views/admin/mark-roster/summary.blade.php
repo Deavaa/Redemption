@@ -31,8 +31,10 @@
     .admin-wrapper,.admin-sidebar,.admin-topbar,.sidebar-backdrop,.sidebar-footer,.sidebar-toggle,
     .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{display:none!important;}
     .ms-page{width:100%!important;max-width:100%!important;padding:0!important;margin:0!important;}
-    .ms-table{font-size:7pt!important;table-layout:auto!important;width:100%!important;}
-    .ms-table .stu-name{min-width:100px!important;position:static!important;}
+    .ms-table{font-size:7pt!important;table-layout:fixed!important;width:100%!important;border-collapse:collapse!important;}
+    .ms-table .stu-name{min-width:100px!important;width:120px!important;max-width:120px!important;position:static!important;white-space:nowrap!important;overflow:visible!important;}
+    .ms-table thead{display:table-header-group!important;}
+    .ms-table tbody tr{page-break-inside:auto!important;}
     .ms-card{box-shadow:none!important;border:none!important;}
     .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:300px!important;height:300px!important;opacity:0.06!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
