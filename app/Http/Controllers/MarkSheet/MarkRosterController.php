@@ -419,8 +419,31 @@ class MarkRosterController extends Controller
             $students = Student::where('class_id', $classId)->when($sectionId, fn($q) => $q->where('section_id', $sectionId))->where('status', 'active')->orderBy('full_name')->get();
         }
 
-        // Load all subjects
-        $subjects = \App\Models\Subject::orderBy('priority')->orderBy('name')->get(['id', 'name']);
+        // Load ONLY subjects assigned to this class/section via teacher assignments
+        $subjectIds = TeacherAssignment::where('class_id', $classId)
+            ->when($sectionId, function($q) use ($sectionId) {
+                $q->where(function($q2) use ($sectionId) {
+                    $q2->where('section_id', $sectionId)->orWhereNull('section_id');
+                });
+            })
+            ->pluck('subject_id')
+            ->unique();
+
+        if ($subjectIds->isNotEmpty()) {
+            $subjects = \App\Models\Subject::whereIn('id', $subjectIds)
+                ->orderBy('priority')->orderBy('name')->get(['id', 'name']);
+        } else {
+            // Fallback: get subjects from existing mark entries for this class
+            $markSubjectIds = MarkEntry::where('academic_year_id', $academicYearId)
+                ->where('class_id', $classId)
+                ->pluck('subject_id')->unique();
+            if ($markSubjectIds->isNotEmpty()) {
+                $subjects = \App\Models\Subject::whereIn('id', $markSubjectIds)
+                    ->orderBy('priority')->orderBy('name')->get(['id', 'name']);
+            } else {
+                $subjects = collect();
+            }
+        }
 
         // Load all marks for these students
         $allMarks = MarkEntry::where('academic_year_id', $academicYearId)
