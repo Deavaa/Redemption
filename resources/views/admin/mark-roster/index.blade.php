@@ -223,8 +223,8 @@
     /* Name column: fixed width in print, no overlap */
     .mr-table .stu-name{font-size:9pt!important;white-space:nowrap!important;width:140px!important;min-width:140px!important;max-width:140px!important;overflow:visible!important;padding:2px 8px!important;position:static!important}
     .mr-table .stu-serial{position:static!important;width:32px!important;min-width:32px!important}
-    /* Allow rows to break across pages */
-    .mr-table tbody tr{page-break-inside:auto!important}
+    /* Each student row stays together — don't split across pages */
+    .mr-table tbody tr{page-break-inside:avoid!important;break-inside:avoid!important;}
     .mr-table thead{display:table-header-group!important}
     .group-ca th,.group-exam th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .avg-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
