@@ -850,6 +850,7 @@
 
 // ── Student data for XLSX export (gender, age, class, section, comments) ──
 var FMS_STUDENT_DATA = {};
+@isset($roster)
 @php
     use Carbon\Carbon;
     $className = $class->name ?? '';
@@ -868,6 +869,7 @@ var FMS_STUDENT_DATA = {};
         section_name: {{ json_encode($sectionName) }},
     };
 @endforeach
+@endisset
 
 // ── Mark-based comment configuration ──
 // Returns a comment based on the student's average mark.
