@@ -876,28 +876,28 @@ var FMS_ROSTER = [];
 var FMS_SUBJECTS = [];
 @isset($roster)
 @isset($subjects)
-@php $className = $class->name ?? ''; $sectionName = $section->name ?? ''; @endphp
-FMS_SUBJECTS = @json($subjects->map(fn($s) => ['id' => $s->id, 'name' => $s->name]));
+@php
+    $className = $class->name ?? '';
+    $sectionName = $section->name ?? '';
+    $subjArray = [];
+    foreach ($subjects as $sj) { $subjArray[] = ['id' => $sj->id, 'name' => $sj->name]; }
+@endphp
+FMS_SUBJECTS = {{ json_encode($subjArray) }};
 @foreach($roster as $row)
     @php
         $s = $row['student'];
         $age = '';
         try { $age = $s->date_of_birth ? \Carbon\Carbon::parse($s->date_of_birth)->age . '' : ''; } catch(\Throwable $e) {}
-        // Build term data
         $t1Subjects = [];
-        foreach ($subjects as $subj) {
-            $t1 = $row['term1'][$subj->id] ?? null;
-            $t1Subjects[] = ($t1 && $t1['grand_total'] !== null) ? floatval($t1['grand_total']) : null;
-        }
         $t2Subjects = [];
-        foreach ($subjects as $subj) {
-            $t2 = $row['term2'][$subj->id] ?? null;
-            $t2Subjects[] = ($t2 && $t2['grand_total'] !== null) ? floatval($t2['grand_total']) : null;
-        }
         $annSubjects = [];
         foreach ($subjects as $subj) {
+            $t1 = $row['term1'][$subj->id] ?? null;
+            $t1Subjects[] = ($t1 && isset($t1['grand_total']) && $t1['grand_total'] !== null) ? floatval($t1['grand_total']) : null;
+            $t2 = $row['term2'][$subj->id] ?? null;
+            $t2Subjects[] = ($t2 && isset($t2['grand_total']) && $t2['grand_total'] !== null) ? floatval($t2['grand_total']) : null;
             $ann = $row['annual'][$subj->id] ?? null;
-            $annSubjects[] = ($ann && $ann['grand_total'] !== null) ? floatval($ann['grand_total']) : null;
+            $annSubjects[] = ($ann && isset($ann['grand_total']) && $ann['grand_total'] !== null) ? floatval($ann['grand_total']) : null;
         }
     @endphp
     FMS_ROSTER.push({
