@@ -854,9 +854,11 @@
     {{-- Hidden JSON data for export (avoids Blade-in-JS issues) --}}
     @isset($roster)
     @isset($subjects)
-    <script type="application/json" id="fms-export-data">@json([
-        'subjects' => $subjects->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->values(),
-        'roster' => collect($roster)->map(function($row) use ($subjects) {
+    @php
+        $exportSubjects = [];
+        foreach ($subjects as $sj) { $exportSubjects[] = ['id' => $sj->id, 'name' => $sj->name]; }
+        $exportRoster = [];
+        foreach ($roster as $row) {
             $s = $row['student'];
             $age = '';
             try { $age = $s->date_of_birth ? \Carbon\Carbon::parse($s->date_of_birth)->age . '' : ''; } catch(\Throwable $e) {}
@@ -869,7 +871,7 @@
                 $ma = $row['annual'][$subj->id] ?? null;
                 $ann[] = ($ma && isset($ma['grand_total']) && $ma['grand_total'] !== null) ? floatval($ma['grand_total']) : null;
             }
-            return [
+            $exportRoster[] = [
                 'name' => $s->full_name ?? '',
                 'gender' => $s->gender ?? '',
                 'age' => $age,
@@ -886,8 +888,10 @@
                 'ann_avg' => $row['annual_avg'],
                 'ann_rank' => $row['annual_rank'] ?? '-',
             ];
-        })->values(),
-    ])</script>
+        }
+        $exportData = ['subjects' => $exportSubjects, 'roster' => $exportRoster];
+    @endphp
+    <script type="application/json" id="fms-export-data">{{ json_encode($exportData) }}</script>
     @endisset
     @endisset
 </div>
