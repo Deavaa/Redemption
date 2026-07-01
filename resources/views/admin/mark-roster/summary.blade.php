@@ -46,7 +46,9 @@
 @section('content')
 <div class="ms-page">
     @if(!empty($logoUrl))
-    <img src="{{ $logoUrl }}" alt="" class="ms-watermark no-print" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:350px;opacity:0.05;z-index:0;pointer-events:none;object-fit:contain;" />
+    <img src="{{ $logoUrl }}" alt="" class="ms-watermark" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:350px;opacity:0.05;z-index:0;pointer-events:none;object-fit:contain;" />
+    {{-- Print-only watermark — force visible in print --}}
+    <style>@media print{.ms-watermark{display:block!important;opacity:0.06!important;}}</style>
     @endif
 
     {{-- Report Header --}}
@@ -98,9 +100,7 @@
                         <tbody class="student-group{{ $studentNum % 5 == 0 ? ' page-break-after' : '' }}">
                         @foreach(['term1', 'term2', 'annual'] as $termKey)
                         <tr class="{{ $termKey }}-row">
-                            @if($termKey === 'term1')
-                            <td class="stu-name" rowspan="3">{{ $studentRows['term1']['student']->full_name ?? '' }}</td>
-                            @endif
+                            <td class="stu-name">{{ $termKey === 'term1' ? ($studentRows['term1']['student']->full_name ?? '') : '' }}</td>
                             <td class="term-label">{{ $studentRows[$termKey]['term_label'] }}</td>
                             @foreach($subjects as $subj)
                                 @php
