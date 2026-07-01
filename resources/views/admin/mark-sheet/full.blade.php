@@ -891,7 +891,7 @@
         }
         $exportData = ['subjects' => $exportSubjects, 'roster' => $exportRoster];
     @endphp
-    <script type="application/json" id="fms-export-data">{{ json_encode($exportData) }}</script>
+    <script type="application/json" id="fms-export-data">{!! json_encode($exportData) !!}</script>
     @endisset
     @endisset
 </div>
