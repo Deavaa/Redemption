@@ -401,6 +401,24 @@
                                 @enderror
                             </div>
 
+                            <div class="modern-form-group">
+                                <label class="modern-form-label" for="special_needs">
+                                    Special Needs <span style="color:#6b7280;font-weight:400;">(excluded from ranking)</span>
+                                </label>
+                                <div class="modern-input-wrapper">
+                                    <i class="fas fa-accessible-icon modern-input-icon"></i>
+                                    <select name="special_needs" id="special_needs"
+                                        class="modern-input {{ $errors->has('special_needs') ? 'is-invalid' : '' }}">
+                                        <option value="0" @if(!old('special_needs', $data->special_needs ?? 0)) selected @endif>No</option>
+                                        <option value="1" @if(old('special_needs', $data->special_needs ?? 0)) selected @endif>Yes — exclude from ranking</option>
+                                    </select>
+                                </div>
+                                <div class="modern-input-hint">
+                                    Special needs students receive marks but are excluded from class ranking.
+                                    Their rank shows as 'SN' on mark sheets and certificates.
+                                </div>
+                            </div>
+
                             <div class="modern-form-group modern-form-span-2">
                                 <label class="modern-form-label" for="notes">
                                     Notes <small>(optional)</small>

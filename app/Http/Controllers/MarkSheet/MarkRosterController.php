@@ -549,7 +549,10 @@ class MarkRosterController extends Controller
 
     private function assignSummaryRanks(array &$roster, string $termKey): void
     {
-        $ranked = collect($roster)->sortByDesc(fn($s) => $s[$termKey]['total'])->values();
+        // Exclude special needs students from ranking
+        $ranked = collect($roster)->filter(function($s) use ($termKey) {
+            return !($s[$termKey]['student']->special_needs ?? false);
+        })->sortByDesc(fn($s) => $s[$termKey]['total'])->values();
         $rank = 1;
         $rankMap = [];
         foreach ($ranked as $i => $studentRows) {
@@ -559,7 +562,11 @@ class MarkRosterController extends Controller
             $rankMap[$studentRows[$termKey]['student']->id] = $rank;
         }
         foreach ($roster as &$studentRows) {
-            $studentRows[$termKey]['rank'] = $rankMap[$studentRows[$termKey]['student']->id] ?? '-';
+            if ($studentRows[$termKey]['student']->special_needs ?? false) {
+                $studentRows[$termKey]['rank'] = 'SN';
+            } else {
+                $studentRows[$termKey]['rank'] = $rankMap[$studentRows[$termKey]['student']->id] ?? '-';
+            }
         }
         unset($studentRows);
     }

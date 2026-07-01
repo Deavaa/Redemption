@@ -159,15 +159,16 @@ class StudentController extends Controller
             'joined_term' => 'nullable|integer|in:1,2',
             'first_term_mark_override' => 'nullable|numeric',
             'first_term_rank_override' => 'nullable|integer',
+            'special_needs' => 'nullable|boolean',
         ]);
 
         // Ensure mid-year fields are set (default if not provided)
         $validated['joined_term'] = $validated['joined_term'] ?? 1;
-        // If joined_term is 1 (regular), clear the override fields
         if ((int)$validated['joined_term'] === 1) {
             $validated['first_term_mark_override'] = null;
             $validated['first_term_rank_override'] = null;
         }
+        $validated['special_needs'] = (bool)($validated['special_needs'] ?? false);
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -374,7 +375,16 @@ class StudentController extends Controller
             'joined_term' => 'nullable|integer|in:1,2',
             'first_term_mark_override' => 'nullable|numeric',
             'first_term_rank_override' => 'nullable|integer',
+            'special_needs' => 'nullable|boolean',
         ]);
+
+        // Ensure mid-year fields are set (default if not provided)
+        $validated['joined_term'] = $validated['joined_term'] ?? 1;
+        if ((int)$validated['joined_term'] === 1) {
+            $validated['first_term_mark_override'] = null;
+            $validated['first_term_rank_override'] = null;
+        }
+        $validated['special_needs'] = (bool)($validated['special_needs'] ?? false);
 
         // Handle photo upload
         if ($request->hasFile('photo')) {

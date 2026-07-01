@@ -178,8 +178,9 @@ class MarkSheetFullController extends Controller
             $isMidYearEntrant = (int)($student->joined_term ?? 1) === 2;
 
             $row = [
-                'student'      => $student,
-                'is_mid_year'  => $isMidYearEntrant,
+                'student'          => $student,
+                'is_mid_year'      => $isMidYearEntrant,
+                'is_special_needs' => (bool)($student->special_needs ?? false),
                 'term1'        => [],
                 'term2'        => [],
                 'annual'       => [],
@@ -295,28 +296,44 @@ class MarkSheetFullController extends Controller
             $roster[] = $row;
         }
 
+        // ── SPECIAL NEEDS: excluded from ALL rankings ──
+        // Their marks are still displayed, but they get rank 'SN' (Special Needs)
+        // and don't affect other students' ranks.
+
         // Calculate Term1 ranks
-        // ── MID-YEAR ENTRANTS: excluded from Term 1 ranking ──
-        // Their rank is manually entered via first_term_rank_override.
+        // Excluded: mid-year entrants (manual override) + special needs students
         $this->assignRanks($roster, 'term1_total', 'term1_rank', function($row) {
-            return !$row['is_mid_year'];  // only rank regular students
+            return !$row['is_mid_year'] && !$row['is_special_needs'];
         });
         // Apply manual rank overrides for mid-year entrants
         foreach ($roster as &$row) {
             if ($row['is_mid_year'] && $row['student']->first_term_rank_override !== null) {
                 $row['term1_rank'] = $row['student']->first_term_rank_override;
             }
+            // Special needs students get 'SN' instead of a number rank
+            if ($row['is_special_needs']) {
+                $row['term1_rank'] = 'SN';
+            }
         }
         unset($row);
 
-        // Calculate Term2 ranks (ALL students participate, including mid-year entrants)
-        $this->assignRanks($roster, 'term2_total', 'term2_rank');
+        // Calculate Term2 ranks (exclude special needs)
+        $this->assignRanks($roster, 'term2_total', 'term2_rank', function($row) {
+            return !$row['is_special_needs'];
+        });
+        foreach ($roster as &$row) {
+            if ($row['is_special_needs']) $row['term2_rank'] = 'SN';
+        }
+        unset($row);
 
-        // Calculate Annual ranks
-        // ── ALL students participate in annual ranking ──
-        // Mid-year entrants are ranked based on their Term 2 total only,
-        // alongside regular students who are ranked on their annual average.
-        $this->assignRanks($roster, 'annual_total', 'annual_rank');
+        // Calculate Annual ranks (exclude special needs)
+        $this->assignRanks($roster, 'annual_total', 'annual_rank', function($row) {
+            return !$row['is_special_needs'];
+        });
+        foreach ($roster as &$row) {
+            if ($row['is_special_needs']) $row['annual_rank'] = 'SN';
+        }
+        unset($row);
 
         // Calculate class averages for each subject per term
         $averages = [

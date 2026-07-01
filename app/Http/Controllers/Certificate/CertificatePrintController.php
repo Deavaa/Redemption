@@ -397,6 +397,11 @@ class CertificatePrintController extends Controller
             return null;
         }
 
+        // ── SPECIAL NEEDS: return 'SN' (not ranked) ──
+        if ($student->special_needs ?? false) {
+            return null; // Certificate will show 'SN'
+        }
+
         // ── MID-YEAR ENTRANT: annual rank is based on Term 2 only ──
         // Their Term 1 override mark does NOT affect other students' annual ranks.
         // All students (including mid-year entrants) are ranked together based on
@@ -440,6 +445,11 @@ class CertificatePrintController extends Controller
     private function calculateRankForTerm(Student $student, ?AcademicYear $academicYear, ?int $termId): ?int
     {
         if (!$academicYear || !$student->class_id || !$termId) {
+            return null;
+        }
+
+        // ── SPECIAL NEEDS: not ranked ──
+        if ($student->special_needs ?? false) {
             return null;
         }
 
