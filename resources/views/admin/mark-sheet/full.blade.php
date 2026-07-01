@@ -852,7 +852,6 @@
 var FMS_STUDENT_DATA = {};
 @isset($roster)
 @php
-    use Carbon\Carbon;
     $className = $class->name ?? '';
     $sectionName = $section->name ?? '';
 @endphp
@@ -860,7 +859,7 @@ var FMS_STUDENT_DATA = {};
     @php
         $s = $row['student'];
         $age = '';
-        try { $age = $s->date_of_birth ? Carbon::parse($s->date_of_birth)->age . '' : ''; } catch(\Throwable $e) {}
+        try { $age = $s->date_of_birth ? \Carbon\Carbon::parse($s->date_of_birth)->age . '' : ''; } catch(\Throwable $e) {}
     @endphp
     FMS_STUDENT_DATA[{{ $s->id }}] = {
         gender: {{ json_encode($s->gender ?? '') }},
