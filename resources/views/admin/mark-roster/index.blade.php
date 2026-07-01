@@ -585,6 +585,29 @@
     </div>
     @endif
     @endisset
+
+    {{-- Signature Section --}}
+    @isset($subjectRosters)
+    @if(count($subjectRosters) > 0)
+    <div style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
+        <div style="text-align:center;min-width:180px;">
+            <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Subject Teacher</div>
+            <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
+            <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Date: _______________</div>
+        </div>
+        <div style="text-align:center;min-width:180px;">
+            <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Homeroom Teacher</div>
+            <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
+            <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Date: _______________</div>
+        </div>
+        <div style="text-align:center;min-width:180px;">
+            <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Branch Principal</div>
+            <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
+            <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Date: _______________</div>
+        </div>
+    </div>
+    @endif
+    @endisset
 </div>
 @endsection
 
