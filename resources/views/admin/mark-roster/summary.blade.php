@@ -15,7 +15,7 @@
 .ms-table{width:100%;border-collapse:collapse;font-size:.75rem;}
 .ms-table th{border:1px solid #e5e7eb;font-weight:700;padding:2px 4px;text-align:center;background:#f9fafb;position:sticky;top:0;z-index:5;white-space:nowrap;}
 .ms-table td{border:1px solid #e5e7eb;padding:1px 3px;text-align:center;}
-.ms-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:130px;position:sticky;left:0;background:#fff;z-index:2;}
+.ms-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:130px;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
 .ms-table .term-label{font-size:.65rem;font-weight:700;color:#6b7280;text-align:left;min-width:55px;white-space:nowrap;}
 .ms-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee;}
 .ms-table .avg-col{font-weight:700;background:#eef2ff;color:#6366f1;}
@@ -31,8 +31,8 @@
     .admin-wrapper,.admin-sidebar,.admin-topbar,.sidebar-backdrop,.sidebar-footer,.sidebar-toggle,
     .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{display:none!important;}
     .ms-page{width:100%!important;max-width:100%!important;padding:0!important;margin:0!important;}
-    .ms-table{font-size:7pt!important;table-layout:fixed!important;width:100%!important;}
-    .ms-table .stu-name{min-width:100px!important;}
+    .ms-table{font-size:7pt!important;table-layout:auto!important;width:100%!important;}
+    .ms-table .stu-name{min-width:100px!important;position:static!important;}
     .ms-card{box-shadow:none!important;border:none!important;}
     .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:300px!important;height:300px!important;opacity:0.06!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
