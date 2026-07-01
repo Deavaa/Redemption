@@ -848,6 +848,47 @@
     }
 })();
 
+// ── Student data for XLSX export (gender, age, class, section, comments) ──
+var FMS_STUDENT_DATA = {};
+@php
+    use Carbon\Carbon;
+    $className = $class->name ?? '';
+    $sectionName = $section->name ?? '';
+@endphp
+@foreach($roster as $row)
+    @php
+        $s = $row['student'];
+        $age = '';
+        try { $age = $s->date_of_birth ? Carbon::parse($s->date_of_birth)->age . '' : ''; } catch(\Throwable $e) {}
+    @endphp
+    FMS_STUDENT_DATA[{{ $s->id }}] = {
+        gender: {{ json_encode($s->gender ?? '') }},
+        age: {{ json_encode($age) }},
+        class_name: {{ json_encode($className) }},
+        section_name: {{ json_encode($sectionName) }},
+    };
+@endforeach
+
+// ── Mark-based comment configuration ──
+// Returns a comment based on the student's average mark.
+// Configured via FMS_COMMENT_RANGES (editable below).
+var FMS_COMMENT_RANGES = [
+    { min: 90, comment: 'Outstanding performance! Keep up the excellent work.' },
+    { min: 80, comment: 'Excellent performance. Your dedication is commendable.' },
+    { min: 70, comment: 'Very good performance. Continue striving for excellence.' },
+    { min: 60, comment: 'Good performance. With more effort you can achieve more.' },
+    { min: 50, comment: 'Satisfactory. Put more effort to improve your results.' },
+    { min: 40, comment: 'Below average. You need to work harder and seek help.' },
+    { min: 0,  comment: 'Poor performance. Please seek additional support.' },
+];
+function fmsGetCommentForMark(avg) {
+    if (!avg || avg <= 0) return '';
+    for (var i = 0; i < FMS_COMMENT_RANGES.length; i++) {
+        if (avg >= FMS_COMMENT_RANGES[i].min) return FMS_COMMENT_RANGES[i].comment;
+    }
+    return '';
+}
+
 function exportCSV(){
     var tables=document.querySelectorAll('.fms-seq-table');
     if(!tables.length)return;
@@ -862,13 +903,80 @@ function exportCSV(){
             if(sectionHead){
                 var headDiv=sectionHead.querySelector('.fms-term-head');
                 if(headDiv){
-                    // Clean sheet name (max 31 chars, no special chars)
                     var name=headDiv.innerText.trim().replace(/[\\\/\?\*\[\]]/g,'').substring(0,31);
                     if(name) sheetName=name;
                 }
             }
-            // Convert HTML table to worksheet
-            var ws = XLSX.utils.table_to_sheet(table);
+
+            // Build worksheet from table data with extra columns
+            var wsData = [];
+            var rows = table.querySelectorAll('tr');
+            var headerRow = [];
+            var dataRows = [];
+            rows.forEach(function(row, rowIdx) {
+                var cols = row.querySelectorAll('td,th');
+                var rowData = [];
+                cols.forEach(function(col) {
+                    // Get text content, strip T2 badge
+                    var clone = col.cloneNode(true);
+                    var badges = clone.querySelectorAll('span');
+                    badges.forEach(function(b) { b.remove(); });
+                    rowData.push(clone.innerText.trim().replace(/\n/g,' '));
+                });
+                if (rowIdx === 0) {
+                    headerRow = rowData;
+                } else {
+                    dataRows.push(rowData);
+                }
+            });
+
+            // Insert Gender, Age, Class, Section columns after Student Name (index 1)
+            // Original columns: #, Student Name, [subjects...], Total, Average, Rank
+            // New columns:      #, Student Name, Gender, Age, Class, Section, [subjects...], Total, Average, Rank, Comment
+            var newHeader = [headerRow[0], 'Gender', 'Age', 'Class', 'Section'];
+            for (var i = 2; i < headerRow.length; i++) newHeader.push(headerRow[i]);
+            newHeader.push('Comment');
+            wsData.push(newHeader);
+
+            dataRows.forEach(function(dRow) {
+                // Find student by name (match the stu-name cell)
+                var studentName = dRow[1] || '';
+                // Find student ID from the table row's data attributes or by name lookup
+                var studentInfo = null;
+                for (var sid in FMS_STUDENT_DATA) {
+                    // We'll match by row index — the roster order is the same
+                    break;
+                }
+                // Build new row with extra columns
+                var newRow = [dRow[0]]; // #
+                newRow.push(dRow[1]);   // Student Name
+
+                // Find student info — use the data row index to match roster
+                var rowIdx = dataRows.indexOf(dRow);
+                var studentKeys = Object.keys(FMS_STUDENT_DATA);
+                if (studentKeys[rowIdx]) {
+                    var info = FMS_STUDENT_DATA[studentKeys[rowIdx]];
+                    newRow.push(info.gender || '');
+                    newRow.push(info.age || '');
+                    newRow.push(info.class_name || '');
+                    newRow.push(info.section_name || '');
+                } else {
+                    newRow.push('', '', '', '');
+                }
+
+                // Add remaining original columns (subjects, Total, Average, Rank)
+                for (var j = 2; j < dRow.length; j++) newRow.push(dRow[j]);
+
+                // Add comment based on average
+                // Average is the second-to-last column (before Rank)
+                var avgIdx = dRow.length - 2; // Average column index in original row
+                var avgVal = parseFloat(dRow[avgIdx]) || 0;
+                newRow.push(fmsGetCommentForMark(avgVal));
+
+                wsData.push(newRow);
+            });
+
+            var ws = XLSX.utils.aoa_to_sheet(wsData);
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
         });
         XLSX.writeFile(wb, 'mark_sheet_full.xlsx');
