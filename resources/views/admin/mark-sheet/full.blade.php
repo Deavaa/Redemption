@@ -896,92 +896,85 @@ function exportCSV(){
     var tables=document.querySelectorAll('.fms-seq-table');
     if(!tables.length)return;
 
-    // Check if SheetJS (xlsx library) is loaded — if so, export as multi-sheet XLSX
+    // ── Single-sheet XLSX export: all tables in sequence on one sheet ──
     if(typeof XLSX !== 'undefined'){
-        var wb = XLSX.utils.book_new();
-        var sheetCount = 0;
-        tables.forEach(function(table){
+        var wsData = [];
+        var studentKeys = Object.keys(FMS_STUDENT_DATA);
+
+        tables.forEach(function(table, tableIdx){
             var sectionHead=table.closest('.fms-term-section');
-            var sheetName='Sheet'+(++sheetCount);
+            // Add section header as a title row
             if(sectionHead){
                 var headDiv=sectionHead.querySelector('.fms-term-head');
                 if(headDiv){
-                    var name=headDiv.innerText.trim().replace(/[\\\/\?\*\[\]]/g,'').substring(0,31);
-                    if(name) sheetName=name;
+                    var titleText=headDiv.innerText.trim();
+                    wsData.push([titleText]);  // Section title row
                 }
             }
 
-            // Build worksheet from table data with extra columns
-            var wsData = [];
             var rows = table.querySelectorAll('tr');
-            var headerRow = [];
-            var dataRows = [];
+            var dataRowCount = 0;
             rows.forEach(function(row, rowIdx) {
                 var cols = row.querySelectorAll('td,th');
                 var rowData = [];
                 cols.forEach(function(col) {
-                    // Get text content, strip T2 badge
                     var clone = col.cloneNode(true);
                     var badges = clone.querySelectorAll('span');
                     badges.forEach(function(b) { b.remove(); });
                     rowData.push(clone.innerText.trim().replace(/\n/g,' '));
                 });
+
                 if (rowIdx === 0) {
-                    headerRow = rowData;
+                    // Header row: insert Gender, Age, Class, Section after Student Name
+                    // and Comment at the end
+                    var newHeader = [rowData[0], 'Gender', 'Age', 'Class', 'Section'];
+                    for (var i = 2; i < rowData.length; i++) newHeader.push(rowData[i]);
+                    newHeader.push('Comment');
+                    wsData.push(newHeader);
                 } else {
-                    dataRows.push(rowData);
+                    // Skip summary rows (Class Average, Highest, Lowest)
+                    var firstCell = (rowData[0] || '').toLowerCase();
+                    if (firstCell.indexOf('class average') !== -1 || firstCell.indexOf('highest') !== -1 || firstCell.indexOf('lowest') !== -1) {
+                        // Still add them but without extra columns
+                        wsData.push(rowData);
+                        return;
+                    }
+
+                    // Data row: insert student info after Student Name
+                    var newRow = [rowData[0]]; // #
+                    newRow.push(rowData[1]);   // Student Name
+
+                    // Match student by index
+                    if (studentKeys[dataRowCount]) {
+                        var info = FMS_STUDENT_DATA[studentKeys[dataRowCount]];
+                        newRow.push(info.gender || '');
+                        newRow.push(info.age || '');
+                        newRow.push(info.class_name || '');
+                        newRow.push(info.section_name || '');
+                    } else {
+                        newRow.push('', '', '', '');
+                    }
+
+                    // Add remaining columns (subjects, Total, Average, Rank)
+                    for (var j = 2; j < rowData.length; j++) newRow.push(rowData[j]);
+
+                    // Add comment based on average (second-to-last column)
+                    var avgIdx = rowData.length - 2;
+                    var avgVal = parseFloat(rowData[avgIdx]) || 0;
+                    newRow.push(fmsGetCommentForMark(avgVal));
+
+                    wsData.push(newRow);
+                    dataRowCount++;
                 }
             });
 
-            // Insert Gender, Age, Class, Section columns after Student Name (index 1)
-            // Original columns: #, Student Name, [subjects...], Total, Average, Rank
-            // New columns:      #, Student Name, Gender, Age, Class, Section, [subjects...], Total, Average, Rank, Comment
-            var newHeader = [headerRow[0], 'Gender', 'Age', 'Class', 'Section'];
-            for (var i = 2; i < headerRow.length; i++) newHeader.push(headerRow[i]);
-            newHeader.push('Comment');
-            wsData.push(newHeader);
-
-            dataRows.forEach(function(dRow) {
-                // Find student by name (match the stu-name cell)
-                var studentName = dRow[1] || '';
-                // Find student ID from the table row's data attributes or by name lookup
-                var studentInfo = null;
-                for (var sid in FMS_STUDENT_DATA) {
-                    // We'll match by row index — the roster order is the same
-                    break;
-                }
-                // Build new row with extra columns
-                var newRow = [dRow[0]]; // #
-                newRow.push(dRow[1]);   // Student Name
-
-                // Find student info — use the data row index to match roster
-                var rowIdx = dataRows.indexOf(dRow);
-                var studentKeys = Object.keys(FMS_STUDENT_DATA);
-                if (studentKeys[rowIdx]) {
-                    var info = FMS_STUDENT_DATA[studentKeys[rowIdx]];
-                    newRow.push(info.gender || '');
-                    newRow.push(info.age || '');
-                    newRow.push(info.class_name || '');
-                    newRow.push(info.section_name || '');
-                } else {
-                    newRow.push('', '', '', '');
-                }
-
-                // Add remaining original columns (subjects, Total, Average, Rank)
-                for (var j = 2; j < dRow.length; j++) newRow.push(dRow[j]);
-
-                // Add comment based on average
-                // Average is the second-to-last column (before Rank)
-                var avgIdx = dRow.length - 2; // Average column index in original row
-                var avgVal = parseFloat(dRow[avgIdx]) || 0;
-                newRow.push(fmsGetCommentForMark(avgVal));
-
-                wsData.push(newRow);
-            });
-
-            var ws = XLSX.utils.aoa_to_sheet(wsData);
-            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            // Add empty row between sections
+            wsData.push([]);
         });
+
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Full Mark Sheet');
         XLSX.writeFile(wb, 'mark_sheet_full.xlsx');
         return;
     }

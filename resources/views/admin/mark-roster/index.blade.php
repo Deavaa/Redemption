@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Mark Roster')
+@section('title', 'Mark List')
 
 @push('styles')
 <style>
@@ -237,8 +237,8 @@
 <div class="mr-page">
     <div class="mr-header">
         <div class="mr-header-left">
-            <nav aria-label="breadcrumb" class="mr-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li class="active">Mark Roster</li></ol></nav>
-            <h1 class="mr-title">Mark Roster</h1>
+            <nav aria-label="breadcrumb" class="mr-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li class="active">Mark List</li></ol></nav>
+            <h1 class="mr-title">Mark List</h1>
             <p class="mr-subtitle">Detailed mark roster with separate table per subject showing all CA and Exam entries</p>
         </div>
     </div>
@@ -312,7 +312,7 @@
                 @if($term)<span style="margin-left:1rem;"><i class="fas fa-flag" style="width:18px;"></i> Term: {{ $term->name ?? '' }}</span>@endif
             </p>
             <p style="margin:.5rem 0 0;font-size:1.05rem;font-weight:700;color:#4361ee;border-top:2px solid #e5e7eb;padding-top:.5rem;display:inline-block;padding-left:2rem;padding-right:2rem;">
-                <i class="fas fa-clipboard-list"></i> Mark Roster
+                <i class="fas fa-clipboard-list"></i> Mark List
             </p>
         </div>
     </div>
@@ -325,7 +325,7 @@
     {{-- Info bar --}}
     <div class="mr-card info-bar no-print" style="margin-bottom:1.5rem">
         <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:linear-gradient(135deg,#1e3a5f,#264b73);color:#fff;flex-wrap:wrap">
-            <span style="font-weight:800;font-size:1.05rem"><i class="fas fa-clipboard-list me-1"></i> Mark Roster</span>
+            <span style="font-weight:800;font-size:1.05rem"><i class="fas fa-clipboard-list me-1"></i> Mark List</span>
             <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $academicYear->name ?? '' }}</span>
             <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $term->name ?? '' }}</span>
             <span style="font-size:.78rem;background:rgba(255,255,255,.13);padding:.15rem .6rem;border-radius:6px">{{ $class->name ?? '' }}</span>
@@ -397,7 +397,7 @@
                                         <div style="font-size:1rem;font-weight:800;color:#000!important;">{{ $schoolName ?? 'School of Redemption' }}</div>
                                         <div style="font-size:.72rem;color:#444!important;margin-top:1px;">
                                             @if($branch){{ $branch->name }} Branch &middot; @endif
-                                            Mark Roster &middot;
+                                            Mark List &middot;
                                             @if($class){{ $class->name }}@if($section) - {{ $section->name }}@endif @endif
                                             &middot; @if($term){{ $term->name }}@endif
                                             &middot; @if($academicYear){{ $academicYear->name }}@endif
