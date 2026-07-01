@@ -851,6 +851,31 @@
 function exportCSV(){
     var tables=document.querySelectorAll('.fms-seq-table');
     if(!tables.length)return;
+
+    // Check if SheetJS (xlsx library) is loaded — if so, export as multi-sheet XLSX
+    if(typeof XLSX !== 'undefined'){
+        var wb = XLSX.utils.book_new();
+        var sheetCount = 0;
+        tables.forEach(function(table){
+            var sectionHead=table.closest('.fms-term-section');
+            var sheetName='Sheet'+(++sheetCount);
+            if(sectionHead){
+                var headDiv=sectionHead.querySelector('.fms-term-head');
+                if(headDiv){
+                    // Clean sheet name (max 31 chars, no special chars)
+                    var name=headDiv.innerText.trim().replace(/[\\\/\?\*\[\]]/g,'').substring(0,31);
+                    if(name) sheetName=name;
+                }
+            }
+            // Convert HTML table to worksheet
+            var ws = XLSX.utils.table_to_sheet(table);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+        XLSX.writeFile(wb, 'mark_sheet_full.xlsx');
+        return;
+    }
+
+    // Fallback: CSV with BOM (single file, all tables concatenated)
     var csv=[];
     tables.forEach(function(table){
         var sectionHead=table.closest('.fms-term-section');

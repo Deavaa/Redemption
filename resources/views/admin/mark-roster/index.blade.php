@@ -570,6 +570,29 @@
 function exportRosterCSV(){
     var tables=document.querySelectorAll('.mr-table');
     if(!tables.length)return;
+
+    // Check if SheetJS (xlsx library) is loaded — if so, export as multi-sheet XLSX
+    if(typeof XLSX !== 'undefined'){
+        var wb = XLSX.utils.book_new();
+        var sheetCount = 0;
+        tables.forEach(function(table){
+            var sectionHead=table.closest('.mr-subject-section');
+            var sheetName='Subject'+(++sheetCount);
+            if(sectionHead){
+                var headDiv=sectionHead.querySelector('.mr-subject-head');
+                if(headDiv){
+                    var name=headDiv.innerText.trim().replace(/[\\\/\?\*\[\]]/g,'').substring(0,31);
+                    if(name) sheetName=name;
+                }
+            }
+            var ws = XLSX.utils.table_to_sheet(table);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+        XLSX.writeFile(wb, 'mark_roster.xlsx');
+        return;
+    }
+
+    // Fallback: CSV with BOM
     var csv=[];
     tables.forEach(function(table){
         var sectionHead=table.closest('.mr-subject-section');
