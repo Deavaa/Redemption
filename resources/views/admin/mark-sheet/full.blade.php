@@ -48,7 +48,7 @@
 .fms-seq-table-wrap{overflow-x:auto}
 .fms-seq-table{width:100%;border-collapse:collapse;font-size:.95rem}
 .fms-seq-table th{border:1px solid #e5e7eb;font-weight:700;position:sticky;top:0;vertical-align:bottom;padding:0}
-.fms-seq-table td{padding:1px 3px;border:1px solid #e5e7eb;text-align:center;line-height:1.2}
+.fms-seq-table td{padding:1px 3px;border:1px solid #e5e7eb;text-align:right;line-height:1.2;font-variant-numeric:tabular-nums}
 .fms-seq-table tbody tr:nth-child(even){background:#f9fafb}
 .fms-seq-table tbody tr:hover{background:#eef2ff}
 
@@ -61,9 +61,9 @@
 .fms-seq-table .th-fixed{padding:1px 4px;white-space:nowrap;text-align:center}
 .fms-seq-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;padding:1px 6px;overflow:visible}
 .fms-seq-table .mark-val{font-weight:600}
-.fms-seq-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee}
-.fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.9rem}
-.fms-seq-table .rank-col{font-weight:700}
+.fms-seq-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee;text-align:right}
+.fms-seq-table .avg-col{font-weight:600;background:#eef2ff;color:#6366f1;font-size:.9rem;text-align:right}
+.fms-seq-table .rank-col{font-weight:700;text-align:center}
 
 /* Color-coded marks by percentage (red <50%, amber 50-69%, green >=70%) */
 .fms-seq-table td.mark-red{background:#fef2f2!important;color:#dc2626!important;font-weight:700}
@@ -501,14 +501,14 @@
                             @php $t1 = $row['term1'][$subj->id] ?? null @endphp
                             <td class="{{ $t1 && $t1['grand_total'] !== null ? $markClass($t1['grand_total']) : '' }}">
                                 @if($t1 && $t1['grand_total'] !== null)
-                                    <span class="mark-val">{{ $t1['grand_total'] }}</span>
+                                    <span class="mark-val">{{ number_format($t1['grand_total'], 2) }}</span>
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
                             </td>
                         @endforeach
-                        <td class="total-col {{ $markClass($row['term1_total'] ?? null) }}">{{ $row['term1_total'] ?: '-' }}</td>
-                        <td class="avg-col {{ $markClass($row['term1_avg'] ?? null) }}">{{ $row['term1_avg'] ?: '-' }}</td>
+                        <td class="total-col {{ $markClass($row['term1_total'] ?? null) }}">{{ $row['term1_total'] ? number_format($row['term1_total'], 2) : '-' }}</td>
+                        <td class="avg-col {{ $markClass($row['term1_avg'] ?? null) }}">{{ $row['term1_avg'] ? number_format($row['term1_avg'], 2) : '-' }}</td>
                         <td class="rank-col">{{ $row['term1_rank'] ?? '-' }}</td>
                     </tr>
                     @endforeach
@@ -630,14 +630,14 @@
                             @php $t2 = $row['term2'][$subj->id] ?? null @endphp
                             <td class="{{ $t2 && $t2['grand_total'] !== null ? $markClass($t2['grand_total']) : '' }}">
                                 @if($t2 && $t2['grand_total'] !== null)
-                                    <span class="mark-val">{{ $t2['grand_total'] }}</span>
+                                    <span class="mark-val">{{ number_format($t2['grand_total'], 2) }}</span>
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
                             </td>
                         @endforeach
-                        <td class="total-col {{ $markClass($row['term2_total'] ?? null) }}">{{ $row['term2_total'] ?: '-' }}</td>
-                        <td class="avg-col {{ $markClass($row['term2_avg'] ?? null) }}">{{ $row['term2_avg'] ?: '-' }}</td>
+                        <td class="total-col {{ $markClass($row['term2_total'] ?? null) }}">{{ $row['term2_total'] ? number_format($row['term2_total'], 2) : '-' }}</td>
+                        <td class="avg-col {{ $markClass($row['term2_avg'] ?? null) }}">{{ $row['term2_avg'] ? number_format($row['term2_avg'], 2) : '-' }}</td>
                         <td class="rank-col">{{ $row['term2_rank'] ?? '-' }}</td>
                     </tr>
                     @endforeach
@@ -755,14 +755,14 @@
                             @php $ann = $row['annual'][$subj->id] ?? null @endphp
                             <td class="{{ $ann && $ann['grand_total'] !== null ? $markClass($ann['grand_total']) : '' }}">
                                 @if($ann && $ann['grand_total'] !== null)
-                                    <span class="mark-val">{{ $ann['grand_total'] }}</span>
+                                    <span class="mark-val">{{ number_format($ann['grand_total'], 2) }}</span>
                                 @else
                                     <span style="color:#d1d5db">-</span>
                                 @endif
                             </td>
                         @endforeach
-                        <td class="total-col {{ $markClass($row['annual_total'] ?? null) }}">{{ $row['annual_total'] ?: '-' }}</td>
-                        <td class="avg-col {{ $markClass($row['annual_avg'] ?? null) }}">{{ $row['annual_avg'] ?: '-' }}</td>
+                        <td class="total-col {{ $markClass($row['annual_total'] ?? null) }}">{{ $row['annual_total'] ? number_format($row['annual_total'], 2) : '-' }}</td>
+                        <td class="avg-col {{ $markClass($row['annual_avg'] ?? null) }}">{{ $row['annual_avg'] ? number_format($row['annual_avg'], 2) : '-' }}</td>
                         <td class="rank-col">{{ $row['annual_rank'] ?? '-' }}</td>
                     </tr>
                     @endforeach

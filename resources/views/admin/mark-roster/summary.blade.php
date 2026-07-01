@@ -14,12 +14,12 @@
 .ms-table-wrap{overflow-x:auto;max-height:calc(100vh - 300px);overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;}
 .ms-table{width:100%;border-collapse:collapse;font-size:.75rem;}
 .ms-table th{border:1px solid #e5e7eb;font-weight:700;padding:2px 4px;text-align:center;background:#f9fafb;position:sticky;top:0;z-index:5;white-space:nowrap;}
-.ms-table td{border:1px solid #e5e7eb;padding:1px 3px;text-align:center;}
+.ms-table td{border:1px solid #e5e7eb;padding:1px 3px;text-align:right;font-variant-numeric:tabular-nums;}
 .ms-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:130px;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
 .ms-table .term-label{font-size:.65rem;font-weight:700;color:#6b7280;text-align:left;min-width:55px;white-space:nowrap;}
-.ms-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee;}
-.ms-table .avg-col{font-weight:700;background:#eef2ff;color:#6366f1;}
-.ms-table .rank-col{font-weight:700;background:#f0fdf4;color:#059669;}
+.ms-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee;text-align:right;}
+.ms-table .avg-col{font-weight:700;background:#eef2ff;color:#6366f1;text-align:right;}
+.ms-table .rank-col{font-weight:700;background:#f0fdf4;color:#059669;text-align:center;}
 .ms-table .term1-row{background:#eff6ff;}
 .ms-table .term2-row{background:#f5f3ff;}
 .ms-table .annual-row{background:#f0fdf4;font-weight:600;}
@@ -112,10 +112,10 @@
                                         else $markClass = 'mark-green';
                                     }
                                 @endphp
-                                <td class="{{ $markClass }}">{{ $mark !== null ? $mark : '-' }}</td>
+                                <td class="{{ $markClass }}">{{ $mark !== null ? number_format($mark, 2) : '-' }}</td>
                             @endforeach
-                            <td class="total-col">{{ $studentRows[$termKey]['total'] > 0 ? $studentRows[$termKey]['total'] : '-' }}</td>
-                            <td class="avg-col">{{ $studentRows[$termKey]['average'] > 0 ? $studentRows[$termKey]['average'] : '-' }}</td>
+                            <td class="total-col">{{ $studentRows[$termKey]['total'] > 0 ? number_format($studentRows[$termKey]['total'], 2) : '-' }}</td>
+                            <td class="avg-col">{{ $studentRows[$termKey]['average'] > 0 ? number_format($studentRows[$termKey]['average'], 2) : '-' }}</td>
                             <td class="rank-col">{{ $studentRows[$termKey]['rank'] }}</td>
                         </tr>
                         @endforeach
