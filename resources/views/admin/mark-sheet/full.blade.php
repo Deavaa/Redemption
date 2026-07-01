@@ -873,7 +873,8 @@ function exportCSV(){
             csv.push(rowData.join(','));
         });
     });
-    var blob=new Blob([csv.join('\n')],{type:'text/csv;charset=utf-8;'});
+    // Prepend UTF-8 BOM (\uFEFF) so Excel opens with correct encoding for Amharic
+    var blob=new Blob(['\uFEFF'+csv.join('\n')],{type:'text/csv;charset=utf-8;'});
     var link=document.createElement('a');
     link.href=URL.createObjectURL(blob);
     link.download='mark_sheet_full.csv';
