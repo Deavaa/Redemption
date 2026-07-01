@@ -215,7 +215,7 @@
     .mr-subject-section{page-break-after:always;break-after:page}
     .mr-subject-section:last-child{page-break-after:auto;break-after:auto}
     .mr-subject-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0!important;padding:4px 8px!important;font-size:11pt!important}
-    .mr-table{font-size:9pt;width:100%!important;table-layout:auto!important}
+    .mr-table{font-size:9pt;width:100%!important;table-layout:fixed!important}
     .mr-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important}
     .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .mr-table .rot-th{height:65px;font-size:7.5pt;white-space:normal!important;word-break:break-word!important;overflow-wrap:break-word!important}
