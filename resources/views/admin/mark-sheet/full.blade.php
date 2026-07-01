@@ -399,9 +399,11 @@
                 <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#fffbeb;border:1px solid #fde68a;"></span> <span style="color:#d97706;font-weight:600;">50&ndash;69 (Below Avg)</span></span>
                 <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#f0fdf4;border:1px solid #bbf7d0;"></span> <span style="color:#059669;font-weight:600;">&ge; 70 (Pass)</span></span>
             </div>
-            <div style="display:flex;gap:.75rem;">
-                <button onclick="fmsPrint()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print All</button>
-                <button onclick="exportCSV()" class="fms-btn fms-btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <button onclick="fmsPrint()" class="fms-btn fms-btn-outline"><i class="fas fa-print"></i> Print</button>
+                <button onclick="exportXLSX()" class="fms-btn fms-btn-outline" style="color:#059669;border-color:#059669;"><i class="fas fa-file-excel"></i> Excel</button>
+                <button onclick="exportCSVFile()" class="fms-btn fms-btn-outline" style="color:#d97706;border-color:#d97706;"><i class="fas fa-file-csv"></i> CSV</button>
+                <button onclick="exportPDF()" class="fms-btn fms-btn-outline" style="color:#dc2626;border-color:#dc2626;"><i class="fas fa-file-pdf"></i> PDF</button>
             </div>
         </div>
     </div>
@@ -937,91 +939,82 @@ function fmsGetCommentForMark(avg) {
     return '';
 }
 
-function exportCSV(){
-    if(!FMS_ROSTER.length) {
-        alert('No data to export. Please generate the mark sheet first.');
-        return;
-    }
+// ── Shared function: build the horizontal data array ──
+function fmsBuildExportData() {
+    if(!FMS_ROSTER.length) return null;
 
-    if(typeof XLSX === 'undefined'){
-        alert('Excel library not loaded. Please check your internet connection.');
-        return;
-    }
-
-    // Build horizontal worksheet:
-    // Columns: Student Name | Gender | Age | Conduct T1 | [T1 subjects...] | T1 Total | T1 Avg | T1 Rank | T1 Comment |
-    //          Conduct T2 | [T2 subjects...] | T2 Total | T2 Avg | T2 Rank | T2 Comment |
-    //          [Annual subjects...] | Ann Total | Ann Avg | Ann Rank
     var wsData = [];
-
-    // ── Header row ──
+    // Header row
     var header = ['Student Name', 'Gender', 'Age'];
-    // Term 1 block
     header.push('Conduct (T1)');
-    for (var i = 0; i < FMS_SUBJECTS.length; i++) {
-        header.push(FMS_SUBJECTS[i].name + ' (T1)');
-    }
+    for (var i = 0; i < FMS_SUBJECTS.length; i++) header.push(FMS_SUBJECTS[i].name + ' (T1)');
     header.push('Total (T1)', 'Average (T1)', 'Rank (T1)', 'Comment (T1)');
-    // Term 2 block
     header.push('Conduct (T2)');
-    for (var i = 0; i < FMS_SUBJECTS.length; i++) {
-        header.push(FMS_SUBJECTS[i].name + ' (T2)');
-    }
+    for (var i = 0; i < FMS_SUBJECTS.length; i++) header.push(FMS_SUBJECTS[i].name + ' (T2)');
     header.push('Total (T2)', 'Average (T2)', 'Rank (T2)', 'Comment (T2)');
-    // Annual block (no conduct, no comment)
-    for (var i = 0; i < FMS_SUBJECTS.length; i++) {
-        header.push(FMS_SUBJECTS[i].name + ' (Annual)');
-    }
+    for (var i = 0; i < FMS_SUBJECTS.length; i++) header.push(FMS_SUBJECTS[i].name + ' (Annual)');
     header.push('Total (Annual)', 'Average (Annual)', 'Rank (Annual)');
     wsData.push(header);
 
-    // ── Data rows ──
+    // Data rows
     FMS_ROSTER.forEach(function(r) {
-        var row = [];
-        row.push(r.name);
-        row.push(r.gender);
-        row.push(r.age);
-
-        // Term 1: Conduct (blank for now — manually entered by homeroom teacher)
+        var row = [r.name, r.gender, r.age];
+        // T1
         row.push('');
-        // T1 subject marks
-        for (var i = 0; i < FMS_SUBJECTS.length; i++) {
-            row.push(r.t1_subjects[i] !== null ? r.t1_subjects[i] : '-');
-        }
-        // T1 total, avg, rank, comment
-        row.push(r.t1_total > 0 ? r.t1_total : '-');
-        row.push(r.t1_avg > 0 ? r.t1_avg : '-');
-        row.push(r.t1_rank);
-        row.push(fmsGetCommentForMark(r.t1_avg));
-
-        // Term 2: Conduct
+        for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.t1_subjects[i] !== null ? r.t1_subjects[i] : '-');
+        row.push(r.t1_total > 0 ? r.t1_total : '-', r.t1_avg > 0 ? r.t1_avg : '-', r.t1_rank, fmsGetCommentForMark(r.t1_avg));
+        // T2
         row.push('');
-        // T2 subject marks
-        for (var i = 0; i < FMS_SUBJECTS.length; i++) {
-            row.push(r.t2_subjects[i] !== null ? r.t2_subjects[i] : '-');
-        }
-        // T2 total, avg, rank, comment
-        row.push(r.t2_total > 0 ? r.t2_total : '-');
-        row.push(r.t2_avg > 0 ? r.t2_avg : '-');
-        row.push(r.t2_rank);
-        row.push(fmsGetCommentForMark(r.t2_avg));
-
-        // Annual: no conduct, no comment
-        for (var i = 0; i < FMS_SUBJECTS.length; i++) {
-            row.push(r.ann_subjects[i] !== null ? r.ann_subjects[i] : '-');
-        }
-        row.push(r.ann_total > 0 ? r.ann_total : '-');
-        row.push(r.ann_avg > 0 ? r.ann_avg : '-');
-        row.push(r.ann_rank);
-
+        for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.t2_subjects[i] !== null ? r.t2_subjects[i] : '-');
+        row.push(r.t2_total > 0 ? r.t2_total : '-', r.t2_avg > 0 ? r.t2_avg : '-', r.t2_rank, fmsGetCommentForMark(r.t2_avg));
+        // Annual
+        for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.ann_subjects[i] !== null ? r.ann_subjects[i] : '-');
+        row.push(r.ann_total > 0 ? r.ann_total : '-', r.ann_avg > 0 ? r.ann_avg : '-', r.ann_rank);
         wsData.push(row);
     });
+    return wsData;
+}
 
+// ── Excel (XLSX) export ──
+function exportXLSX() {
+    var wsData = fmsBuildExportData();
+    if (!wsData) { alert('No data to export.'); return; }
+    if (typeof XLSX === 'undefined') { alert('Excel library not loaded.'); return; }
     var wb = XLSX.utils.book_new();
     var ws = XLSX.utils.aoa_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, 'Full Mark Sheet');
     XLSX.writeFile(wb, 'mark_sheet_full.xlsx');
 }
+
+// ── CSV export (with UTF-8 BOM for Amharic) ──
+function exportCSVFile() {
+    var wsData = fmsBuildExportData();
+    if (!wsData) { alert('No data to export.'); return; }
+    var csv = [];
+    wsData.forEach(function(row) {
+        var rowData = row.map(function(cell) {
+            var s = String(cell);
+            if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+                s = '"' + s.replace(/"/g, '""') + '"';
+            }
+            return s;
+        });
+        csv.push(rowData.join(','));
+    });
+    var blob = new Blob(['\uFEFF' + csv.join('\n')], {type: 'text/csv;charset=utf-8;'});
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'mark_sheet_full.csv';
+    link.click();
+}
+
+// ── PDF export (opens print dialog — user saves as PDF) ──
+function exportPDF() {
+    fmsPrint();
+}
+
+// ── Legacy alias ──
+function exportCSV() { exportXLSX(); }
 
 // Print with A4 landscape pre-selected
 // The @page CSS rule (size:A4 landscape) tells the browser to use A4.
