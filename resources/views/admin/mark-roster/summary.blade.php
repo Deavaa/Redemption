@@ -39,8 +39,8 @@
     .ms-card-head,.ms-card-body{padding:2mm!important;}
     .ms-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important;border:none!important;max-height:none!important;}
     .ms-table{font-size:8pt!important;width:100%!important;border-collapse:collapse!important;}
-    .ms-table th{padding:3px 5px!important;white-space:nowrap!important;}
-    .ms-table td{padding:2px 5px!important;font-size:8pt!important;white-space:nowrap!important;}
+    .ms-table th{padding:3px 5px!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table td{padding:2px 5px!important;font-size:8pt!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     .ms-table .stu-name{white-space:nowrap!important;width:auto!important;min-width:150px!important;max-width:none!important;overflow:visible!important;position:static!important;}
     .ms-table .term-label{white-space:nowrap!important;width:auto!important;}
     .ms-table thead{display:table-header-group!important;}

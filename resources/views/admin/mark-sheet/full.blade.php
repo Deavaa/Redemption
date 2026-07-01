@@ -190,6 +190,9 @@
     /* Print-only school header row in each table thead (repeats on each page) */
     .fms-print-school-header{display:table-row!important}
     .fms-print-school-header th{background:#fff!important;color:#000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    /* Dark table borders for print */
+    .fms-seq-table th{border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    .fms-seq-table td{border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     /* Watermark — logo centered on each page */
     .fms-watermark{
         position:fixed!important;

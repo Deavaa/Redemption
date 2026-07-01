@@ -218,9 +218,9 @@
     .mr-subject-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0!important;padding:4px 8px!important;font-size:11pt!important}
     .mr-table{font-size:9pt;width:100%!important;border-collapse:collapse!important}
     .mr-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important}
-    .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact;border:1px solid #333!important}
     .mr-table .rot-th{height:65px;font-size:7.5pt;white-space:normal!important;word-break:break-word!important;overflow-wrap:break-word!important}
-    .mr-table td{padding:2px 5px!important;font-size:9pt!important;white-space:nowrap!important}
+    .mr-table td{padding:2px 5px!important;font-size:9pt!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     .mr-table .stu-name{font-size:9pt!important;white-space:nowrap!important;width:auto!important;min-width:150px!important;max-width:none!important;overflow:visible!important;padding:2px 8px!important;position:static!important}
     .mr-table .stu-serial{position:static!important;width:32px!important;min-width:32px!important}
     /* Each student row stays together — don't split across pages */
