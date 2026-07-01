@@ -851,6 +851,7 @@
 // ── Student data for XLSX export (gender, age, class, section, comments) ──
 var FMS_STUDENT_DATA = {};
 @isset($roster)
+@if(isset($class) && isset($section))
 @php
     $className = $class->name ?? '';
     $sectionName = $section->name ?? '';
@@ -868,6 +869,7 @@ var FMS_STUDENT_DATA = {};
         section_name: {{ json_encode($sectionName) }},
     };
 @endforeach
+@endif
 @endisset
 
 // ── Mark-based comment configuration ──
