@@ -409,7 +409,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
     <style>html,body{overflow-x:hidden!important;max-width:100vw!important;width:100%!important;}*{box-sizing:border-box;}.admin-wrapper,.admin-main,.admin-content{max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important;}.admin-topbar{max-width:100vw!important;overflow:visible!important;box-sizing:border-box!important;}</style>
     @stack('styles')
@@ -1820,6 +1820,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (bsCollapse) bsCollapse.hide();
                 }
             });
+
+            // ── Scroll the expanded menu into view ──
+            // After the collapse animation finishes (~350ms), scroll the sidebar
+            // so the expanded submenu is visible on screen.
+            setTimeout(function() {
+                try {
+                    var toggle = menu.closest('li').querySelector('.submenu-toggle');
+                    if (toggle) {
+                        toggle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                } catch(e) {}
+            }, 400);
         });
     });
 

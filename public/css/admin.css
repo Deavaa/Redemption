@@ -131,13 +131,14 @@ html { scroll-behavior: smooth; }
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-x: hidden;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(4,120,87,0.15) transparent;
+    scrollbar-width: auto;
+    scrollbar-color: rgba(255,255,255,0.25) rgba(0,0,0,0.15);
 }
 
-.admin-sidebar::-webkit-scrollbar { width: 4px; }
-.admin-sidebar::-webkit-scrollbar-thumb { background: rgba(4,120,87,0.15); border-radius: 4px; }
-.admin-sidebar::-webkit-scrollbar-track { background: transparent; }
+.admin-sidebar::-webkit-scrollbar { width: 8px; }
+.admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 4px; }
+.admin-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+.admin-sidebar::-webkit-scrollbar-track { background: rgba(0,0,0,0.15); border-radius: 4px; }
 
 
 /* Sidebar Header / Brand */
