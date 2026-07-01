@@ -290,6 +290,45 @@
         </form>
     </div>
 
+    {{-- Summary Mark List (3 rows per student) --}}
+    <div class="mr-card mr-filter-card" style="margin-top:1rem;">
+        <div class="mr-card-head">
+            <div class="mr-card-icon green"><i class="fas fa-list-ol"></i></div>
+            <div><h3 class="mr-card-title">Summary Mark List</h3><p class="mr-card-desc">3 rows per student (Term 1, Term 2, Annual) with subjects as columns</p></div>
+        </div>
+        <form method="POST" action="{{ route('admin.mark-roster.summary') }}">
+            @csrf
+            <div class="mr-card-body">
+                <div class="mr-grid">
+                    <div class="mr-group">
+                        <label class="mr-label">Academic Year <span style="color:#ef4444">*</span></label>
+                        <select name="academic_year_id" class="mr-select" required {{ $isTeacher ?? false ? 'disabled' : '' }}>
+                            <option value="">-- Select Year --</option>
+                            @foreach($academicYears as $ay)<option value="{{ $ay->id }}" {{ old('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>@endforeach
+                        </select>
+                        @if($isTeacher ?? false)<input type="hidden" name="academic_year_id" value="{{ $academicYears->first()->id ?? '' }}">@endif
+                    </div>
+                    <div class="mr-group">
+                        <label class="mr-label">Class <span style="color:#ef4444">*</span></label>
+                        <select name="class_id" id="filterClassSummary" class="mr-select" required>
+                            <option value="">-- Select Class --</option>
+                            @foreach($classes as $c)<option value="{{ $c->id }}" {{ old('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="mr-group">
+                        <label class="mr-label">Section</label>
+                        <select name="section_id" id="filterSectionSummary" class="mr-select">
+                            <option value="">-- All Sections --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="mr-actions">
+                <button type="submit" class="mr-btn" style="background:linear-gradient(135deg,#059669,#047857);"><i class="fas fa-list-ol"></i> Generate Summary List</button>
+            </div>
+        </form>
+    </div>
+
     {{-- Roster Results --}}
     @isset($subjectRosters)
     @if(count($subjectRosters) > 0)

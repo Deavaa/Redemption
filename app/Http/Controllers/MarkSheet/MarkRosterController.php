@@ -379,4 +379,165 @@ class MarkRosterController extends Controller
 
         return response()->json($sections);
     }
+
+    /**
+     * Generate summary mark list — 3 rows per student (Term1, Term2, Annual).
+     * Subjects as columns, Total/Average/Rank at the end.
+     */
+    public function generateSummary(Request $r)
+    {
+        $branchScope = $r->attributes->get('branch_scope');
+        if ($r->isMethod('GET') && !$r->filled('academic_year_id')) {
+            return redirect()->route('admin.mark-roster.index');
+        }
+
+        $r->validate([
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'class_id'         => 'required|exists:classes,id',
+            'section_id'       => 'nullable|exists:sections,id',
+        ]);
+
+        $academicYearId = $r->academic_year_id;
+        $classId = $r->class_id;
+        $sectionId = $r->filled('section_id') ? $r->section_id : null;
+
+        // Load terms for this academic year
+        $terms = Term::where('academic_year_id', $academicYearId)->orderBy('id', 'asc')->get();
+        $term1 = $terms->first();
+        $term2 = $terms->count() > 1 ? $terms[1] : null;
+
+        // Load students
+        $enrolledIds = \App\Models\StudentEnrollment::where('academic_year_id', $academicYearId)
+            ->where('class_id', $classId)
+            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
+            ->where('status', 'enrolled')
+            ->pluck('student_id');
+
+        if ($enrolledIds->isNotEmpty()) {
+            $students = Student::whereIn('id', $enrolledIds)->where('status', 'active')->orderBy('full_name')->get();
+        } else {
+            $students = Student::where('class_id', $classId)->when($sectionId, fn($q) => $q->where('section_id', $sectionId))->where('status', 'active')->orderBy('full_name')->get();
+        }
+
+        // Load all subjects
+        $subjects = \App\Models\Subject::orderBy('priority')->orderBy('name')->get(['id', 'name']);
+
+        // Load all marks for these students
+        $allMarks = MarkEntry::where('academic_year_id', $academicYearId)
+            ->where('class_id', $classId)
+            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
+            ->whereIn('student_id', $students->pluck('id'))
+            ->get();
+
+        // Load first-term overrides for mid-year entrants
+        $overrideMap = \App\Models\FirstTermOverride::where('academic_year_id', $academicYearId)
+            ->where('class_id', $classId)
+            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
+            ->get()
+            ->keyBy(fn($o) => (string)$o->student_id . '_' . (string)$o->subject_id);
+
+        // Build roster: for each student, 3 rows (T1, T2, Annual)
+        $roster = [];
+        foreach ($students as $student) {
+            $isMidYear = (int)($student->joined_term ?? 1) === 2;
+            $studentRows = [];
+
+            foreach (['term1' => $term1, 'term2' => $term2, 'annual' => null] as $key => $term) {
+                $row = [
+                    'student' => $student,
+                    'term_label' => $key === 'term1' ? 'Term 1' : ($key === 'term2' ? 'Term 2' : 'Annual'),
+                    'subjects' => [],
+                    'total' => 0,
+                    'count' => 0,
+                    'average' => 0,
+                    'rank' => '-',
+                ];
+
+                foreach ($subjects as $subj) {
+                    $mark = null;
+                    if ($key === 'annual') {
+                        // Annual = average of T1 and T2
+                        $t1Mark = null;
+                        $t2Mark = null;
+                        if ($isMidYear) {
+                            $override = $overrideMap[(string)$student->id . '_' . (string)$subj->id] ?? null;
+                            $t1Mark = $override?->grand_total !== null ? floatval($override->grand_total) : null;
+                        } else {
+                            $t1Entry = $allMarks->first(fn($m) => $m->student_id == $student->id && $m->subject_id == $subj->id && $term1 && $m->term_id == $term1->id);
+                            $t1Mark = $t1Entry?->grand_total !== null ? floatval($t1Entry->grand_total) : null;
+                        }
+                        if ($term2) {
+                            $t2Entry = $allMarks->first(fn($m) => $m->student_id == $student->id && $m->subject_id == $subj->id && $m->term_id == $term2->id);
+                            $t2Mark = $t2Entry?->grand_total !== null ? floatval($t2Entry->grand_total) : null;
+                        }
+                        if ($isMidYear) {
+                            // Mid-year: annual = T2 only
+                            $mark = $t2Mark;
+                        } elseif ($t1Mark !== null && $t2Mark !== null) {
+                            $mark = round(($t1Mark + $t2Mark) / 2, 1);
+                        } elseif ($t1Mark !== null) {
+                            $mark = $t1Mark;
+                        } else {
+                            $mark = $t2Mark;
+                        }
+                    } else {
+                        // Term 1 or Term 2
+                        if ($key === 'term1' && $isMidYear) {
+                            $override = $overrideMap[(string)$student->id . '_' . (string)$subj->id] ?? null;
+                            $mark = $override?->grand_total !== null ? floatval($override->grand_total) : null;
+                        } elseif ($term) {
+                            $entry = $allMarks->first(fn($m) => $m->student_id == $student->id && $m->subject_id == $subj->id && $m->term_id == $term->id);
+                            $mark = $entry?->grand_total !== null ? floatval($entry->grand_total) : null;
+                        }
+                    }
+
+                    $row['subjects'][$subj->id] = $mark;
+                    if ($mark !== null) {
+                        $row['total'] += $mark;
+                        $row['count']++;
+                    }
+                }
+                $row['average'] = $row['count'] > 0 ? round($row['total'] / $row['count'], 1) : 0;
+                $studentRows[$key] = $row;
+            }
+
+            // Calculate ranks for each term across all students (done after all students are processed)
+            $roster[] = $studentRows;
+        }
+
+        // Calculate ranks
+        $this->assignSummaryRanks($roster, 'term1');
+        $this->assignSummaryRanks($roster, 'term2');
+        $this->assignSummaryRanks($roster, 'annual');
+
+        $academicYear = AcademicYear::find($academicYearId);
+        $class = ClassRoom::find($classId);
+        $section = $sectionId ? Section::find($sectionId) : null;
+        $schoolName = Setting::getLocalizedName();
+        $logoUrl = Setting::getLogoUrl();
+        $branch = null;
+        if ($class && $class->branch_id) $branch = Branch::find($class->branch_id);
+
+        return view('admin.mark-roster.summary', compact(
+            'roster', 'subjects', 'students', 'academicYear', 'class', 'section',
+            'schoolName', 'logoUrl', 'branch', 'term1', 'term2'
+        ));
+    }
+
+    private function assignSummaryRanks(array &$roster, string $termKey): void
+    {
+        $ranked = collect($roster)->sortByDesc(fn($s) => $s[$termKey]['total'])->values();
+        $rank = 1;
+        $rankMap = [];
+        foreach ($ranked as $i => $studentRows) {
+            if ($i > 0 && $studentRows[$termKey]['total'] < $ranked[$i - 1][$termKey]['total']) {
+                $rank = $i + 1;
+            }
+            $rankMap[$studentRows[$termKey]['student']->id] = $rank;
+        }
+        foreach ($roster as &$studentRows) {
+            $studentRows[$termKey]['rank'] = $rankMap[$studentRows[$termKey]['student']->id] ?? '-';
+        }
+        unset($studentRows);
+    }
 }

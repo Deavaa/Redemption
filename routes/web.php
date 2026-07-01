@@ -394,6 +394,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     // Mark Roster
     Route::get('mark-roster', [MarkRosterController::class, 'index'])->name('mark-roster.index')->middleware('permission:mark_sheets.view');
     Route::match(['get', 'post'], 'mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate')->middleware('permission:mark_sheets.generate');
+    Route::match(['get', 'post'], 'mark-roster/summary', [MarkRosterController::class, 'generateSummary'])->name('mark-roster.summary')->middleware('permission:mark_sheets.generate');
     Route::get('mark-roster/api/sections', [MarkRosterController::class, 'getSections'])->name('mark-roster.sections');
 
     // Report Card
