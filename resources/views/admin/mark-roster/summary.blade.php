@@ -28,7 +28,7 @@
 .ms-table .mark-green{color:#059669;font-weight:700;}
 @page{size:A4 landscape;margin:6mm;}
 @media print{
-    html,body{margin:0!important;padding:0!important;width:100%!important;}
+    html,body{margin:0!important;padding:0!important;width:100%!important;font-size:105%!important;}
     .admin-wrapper,.admin-sidebar,.admin-topbar,.sidebar-backdrop,.sidebar-footer,.sidebar-toggle,
     .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{display:none!important;}
     .admin-wrapper{display:block!important;margin:0!important;padding:0!important;}

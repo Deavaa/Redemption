@@ -138,7 +138,8 @@
 @media print{
     /* Fit-to-page: scale content to fit A4 landscape width */
     html,body{
-        zoom:1!important
+        zoom:1!important;
+        font-size:105%!important;
     }
     .mr-page{
         width:100%!important;

@@ -138,7 +138,8 @@
 @media print{
     /* Fit-to-page: full A4 landscape width, no scaling */
     html,body{
-        zoom:1!important
+        zoom:1!important;
+        font-size:105%!important;
     }
     .fms-page{
         width:100%!important;
