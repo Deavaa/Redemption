@@ -46,6 +46,9 @@
     .ms-table thead{display:table-header-group!important;}
     .ms-table .student-group{page-break-inside:avoid!important;break-inside:avoid!important;}
     .ms-table .student-group.page-break-after{page-break-after:always!important;break-after:page!important;}
+    /* Stats table: show on first page only, hide on subsequent pages */
+    .ms-stats-table{page-break-inside:avoid!important;break-inside:avoid!important;}
+    /* Hide web-only elements in print */
     .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:300px!important;height:300px!important;opacity:0.06!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
 </style>
@@ -135,6 +138,7 @@
     </div>
 
     {{-- Summary Statistics: pass/fail breakdown by gender (ANNUAL ONLY) --}}
+    {{-- Print only on first page (no-print class hides on screen, page-break-after forces to first page) --}}
     @php
         $stats = ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]];
         foreach ($roster as $studentRows) {
@@ -152,7 +156,7 @@
             }
         }
     @endphp
-    <div style="display:flex;justify-content:flex-start;margin-top:1rem;">
+    <div class="ms-stats-table" style="display:flex;justify-content:flex-start;margin-top:1rem;">
         <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
             <thead>
                 <tr style="background:#f9fafb;">
@@ -164,34 +168,29 @@
             </thead>
             <tbody>
                 <tr>
-                    <td style="border:1px solid #333;padding:2px 8px;color:#059669;">Above 50% (Pass)</td>
-                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['M'] }}</td>
-                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['F'] }}</td>
-                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['above50']['total'] }}</td>
-                </tr>
-                <tr>
                     <td style="border:1px solid #333;padding:2px 8px;color:#dc2626;">Below 50% (Fail)</td>
                     <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['below50']['M'] }}</td>
                     <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['below50']['F'] }}</td>
                     <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['below50']['total'] }}</td>
                 </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;color:#059669;">Above 50% (Pass)</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['M'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['F'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['above50']['total'] }}</td>
+                </tr>
             </tbody>
         </table>
     </div>
 
-    {{-- Signature Section --}}
+    {{-- Signature Section: Homeroom + Principal only (no Subject Teacher) --}}
     <div style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
-        <div style="text-align:center;min-width:180px;">
-            <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Subject Teacher</div>
-            <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
-            <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Date: _______________</div>
-        </div>
-        <div style="text-align:center;min-width:180px;">
+        <div style="text-align:center;min-width:200px;">
             <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Homeroom Teacher</div>
             <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
             <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Date: _______________</div>
         </div>
-        <div style="text-align:center;min-width:180px;">
+        <div style="text-align:center;min-width:200px;">
             <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Branch Principal</div>
             <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
             <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Date: _______________</div>
