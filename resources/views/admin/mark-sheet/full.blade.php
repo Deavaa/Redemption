@@ -892,7 +892,7 @@
             }
             $exportRoster[] = [
                 'name' => $s->full_name ?? '',
-                'gender' => $s->gender ?? '',
+                'gender' => strtoupper(substr($s->gender ?? '', 0, 1)),
                 'age' => $age,
                 't1_subjects' => $t1,
                 't1_total' => $row['term1_total'],
@@ -987,11 +987,11 @@ function fmsBuildExportData() {
     FMS_ROSTER.forEach(function(r) {
         var row = [r.name, r.gender, r.age];
         // T1
-        row.push(r.conduct_t1 !== null && r.conduct_t1 !== undefined ? r.conduct_t1 : '');
+        row.push(r.conduct_t1 !== null && r.conduct_t1 !== undefined && r.conduct_t1 !== '' ? r.conduct_t1 : '-');
         for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.t1_subjects[i] !== null ? r.t1_subjects[i] : '-');
         row.push(r.t1_total > 0 ? r.t1_total : '-', r.t1_avg > 0 ? r.t1_avg : '-', r.t1_rank, fmsGetCommentForMark(r.t1_avg));
         // T2
-        row.push(r.conduct_t2 !== null && r.conduct_t2 !== undefined ? r.conduct_t2 : '');
+        row.push(r.conduct_t2 !== null && r.conduct_t2 !== undefined && r.conduct_t2 !== '' ? r.conduct_t2 : '-');
         for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.t2_subjects[i] !== null ? r.t2_subjects[i] : '-');
         row.push(r.t2_total > 0 ? r.t2_total : '-', r.t2_avg > 0 ? r.t2_avg : '-', r.t2_rank, fmsGetCommentForMark(r.t2_avg));
         // Annual
