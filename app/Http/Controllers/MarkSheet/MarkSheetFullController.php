@@ -112,11 +112,11 @@ class MarkSheetFullController extends Controller
 
         // Get all terms for the academic year
         $terms = Term::where('academic_year_id', $academicYearId)
-            ->orderBy('term_number')
+            ->orderBy('id', 'asc')
             ->get();
 
         $term1 = $terms->first();
-        $term2 = $terms->count() >= 2 ? $terms->skip(1)->first() : null;
+        $term2 = $terms->count() >= 2 ? $terms[1] : null;
 
         if (!$term1) {
             return view('admin.mark-sheet.full', compact('academicYears', 'classes', 'isTeacher'))
@@ -199,6 +199,9 @@ class MarkSheetFullController extends Controller
         // Build roster rows with Term1, Term2, and Annual calculations
         $roster = [];
         foreach ($students as $student) {
+            // Safety: skip if student is not a valid object
+            if (!is_object($student)) continue;
+
             // Check if student joined in term 2 (mid-year entrant)
             $isMidYearEntrant = (int)($student->joined_term ?? 1) === 2;
 
