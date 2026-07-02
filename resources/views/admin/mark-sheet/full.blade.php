@@ -491,6 +491,7 @@
                             </div>
                         </th>
                         @endforeach
+                        <th class="th-fixed">Conduct</th>
                         <th class="th-fixed">Total</th>
                         <th class="th-fixed">Average</th>
                         <th class="th-fixed">Rank</th>
@@ -511,6 +512,7 @@
                                 @endif
                             </td>
                         @endforeach
+                        <td>{{ $row['conduct_t1'] !== null ? number_format($row['conduct_t1'], 2) : '-' }}</td>
                         <td class="total-col {{ $markClass($row['term1_total'] ?? null) }}">{{ $row['term1_total'] ? number_format($row['term1_total'], 2) : '-' }}</td>
                         <td class="avg-col {{ $markClass($row['term1_avg'] ?? null) }}">{{ $row['term1_avg'] ? number_format($row['term1_avg'], 2) : '-' }}</td>
                         <td class="rank-col">{{ $row['term1_rank'] ?? '-' }}</td>
@@ -523,6 +525,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $averages['term1'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $averages['term1_total_avg'] ?? '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -534,6 +537,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $highest['term1'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $highest['term1_total'] ?: '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -545,6 +549,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $lowest['term1'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $lowest['term1_total'] ?: '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -620,6 +625,7 @@
                             </div>
                         </th>
                         @endforeach
+                        <th class="th-fixed">Conduct</th>
                         <th class="th-fixed">Total</th>
                         <th class="th-fixed">Average</th>
                         <th class="th-fixed">Rank</th>
@@ -640,6 +646,7 @@
                                 @endif
                             </td>
                         @endforeach
+                        <td>{{ $row['conduct_t2'] !== null ? number_format($row['conduct_t2'], 2) : '-' }}</td>
                         <td class="total-col {{ $markClass($row['term2_total'] ?? null) }}">{{ $row['term2_total'] ? number_format($row['term2_total'], 2) : '-' }}</td>
                         <td class="avg-col {{ $markClass($row['term2_avg'] ?? null) }}">{{ $row['term2_avg'] ? number_format($row['term2_avg'], 2) : '-' }}</td>
                         <td class="rank-col">{{ $row['term2_rank'] ?? '-' }}</td>
@@ -651,6 +658,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $averages['term2'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $averages['term2_total_avg'] ?? '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -661,6 +669,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $highest['term2'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $highest['term2_total'] ?: '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -671,6 +680,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $lowest['term2'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $lowest['term2_total'] ?: '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -745,6 +755,7 @@
                             </div>
                         </th>
                         @endforeach
+                        <th class="th-fixed">Conduct</th>
                         <th class="th-fixed">Total</th>
                         <th class="th-fixed">Average</th>
                         <th class="th-fixed">Rank</th>
@@ -765,6 +776,7 @@
                                 @endif
                             </td>
                         @endforeach
+                        <td>-</td>
                         <td class="total-col {{ $markClass($row['annual_total'] ?? null) }}">{{ $row['annual_total'] ? number_format($row['annual_total'], 2) : '-' }}</td>
                         <td class="avg-col {{ $markClass($row['annual_avg'] ?? null) }}">{{ $row['annual_avg'] ? number_format($row['annual_avg'], 2) : '-' }}</td>
                         <td class="rank-col">{{ $row['annual_rank'] ?? '-' }}</td>
@@ -776,6 +788,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $averages['annual'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $averages['annual_total_avg'] ?? '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -786,6 +799,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $highest['annual'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $highest['annual_total'] ?: '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -796,6 +810,7 @@
                         @foreach($subjects as $subj)
                             <td>{{ $lowest['annual'][$subj->id] ?? '-' }}</td>
                         @endforeach
+                        <td>-</td>
                         <td>{{ $lowest['annual_total'] ?: '-' }}</td>
                         <td>-</td>
                         <td>-</td>
@@ -891,6 +906,8 @@
                 'ann_total' => $row['annual_total'],
                 'ann_avg' => $row['annual_avg'],
                 'ann_rank' => $row['annual_rank'] ?? '-',
+                'conduct_t1' => $row['conduct_t1'] ?? null,
+                'conduct_t2' => $row['conduct_t2'] ?? null,
             ];
         }
         $exportData = ['subjects' => $exportSubjects, 'roster' => $exportRoster];
@@ -970,11 +987,11 @@ function fmsBuildExportData() {
     FMS_ROSTER.forEach(function(r) {
         var row = [r.name, r.gender, r.age];
         // T1
-        row.push('');
+        row.push(r.conduct_t1 !== null && r.conduct_t1 !== undefined ? r.conduct_t1 : '');
         for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.t1_subjects[i] !== null ? r.t1_subjects[i] : '-');
         row.push(r.t1_total > 0 ? r.t1_total : '-', r.t1_avg > 0 ? r.t1_avg : '-', r.t1_rank, fmsGetCommentForMark(r.t1_avg));
         // T2
-        row.push('');
+        row.push(r.conduct_t2 !== null && r.conduct_t2 !== undefined ? r.conduct_t2 : '');
         for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.t2_subjects[i] !== null ? r.t2_subjects[i] : '-');
         row.push(r.t2_total > 0 ? r.t2_total : '-', r.t2_avg > 0 ? r.t2_avg : '-', r.t2_rank, fmsGetCommentForMark(r.t2_avg));
         // Annual

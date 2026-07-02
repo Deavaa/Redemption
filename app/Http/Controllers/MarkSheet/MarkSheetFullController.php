@@ -157,7 +157,27 @@ class MarkSheetFullController extends Controller
                 'grade'       => $entry->grade,
                 'ca_total'    => $entry->ca_total,
                 'exam_total'  => $entry->exam_total,
+                'conduct'     => $entry->conduct,
             ];
+        }
+
+        // ── Calculate aggregated conduct per student per term ──
+        // Averages the conduct scores from ALL subjects, then converts to a
+        // proportional grade out of 100 (conduct is out of 5, so multiply by 20).
+        $conductAgg = []; // [studentId][termId] = proportional grade (0-100)
+        foreach ($markData as $studentId => $terms) {
+            foreach ($terms as $termId => $subjects) {
+                $conducts = [];
+                foreach ($subjects as $subjId => $data) {
+                    if (isset($data['conduct']) && $data['conduct'] !== null) {
+                        $conducts[] = floatval($data['conduct']);
+                    }
+                }
+                if (count($conducts) > 0) {
+                    $avg = array_sum($conducts) / count($conducts); // out of 5
+                    $conductAgg[$studentId][$termId] = round($avg * 20, 1); // proportional to 100
+                }
+            }
         }
 
         // ── Load first-term override marks for mid-year entrants ──
@@ -193,6 +213,8 @@ class MarkSheetFullController extends Controller
                 'term1_avg'    => 0,
                 'term2_avg'    => 0,
                 'annual_avg'   => 0,
+                'conduct_t1'   => $conductAgg[$student->id][$term1->id] ?? null,
+                'conduct_t2'   => $term2 ? ($conductAgg[$student->id][$term2->id] ?? null) : null,
             ];
 
             // ── MID-YEAR ENTRANT: use per-subject override marks for Term 1 ──
