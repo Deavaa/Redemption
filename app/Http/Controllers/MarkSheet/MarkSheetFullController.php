@@ -123,6 +123,10 @@ class MarkSheetFullController extends Controller
                 ->with('error', 'No terms found for the selected academic year. Please create terms first.');
         }
 
+        // Ensure term1 and term2 are objects (not arrays)
+        if (is_array($term1)) $term1 = (object)$term1;
+        if ($term2 && is_array($term2)) $term2 = (object)$term2;
+
         // Query all students in the class/section
         $studentQuery = Student::where('class_id', $classId)
             ->where('status', 'active');
