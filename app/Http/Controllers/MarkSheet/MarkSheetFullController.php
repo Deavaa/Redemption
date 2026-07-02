@@ -118,6 +118,11 @@ class MarkSheetFullController extends Controller
         $term1 = $terms->first();
         $term2 = $terms->count() >= 2 ? $terms->skip(1)->first() : null;
 
+        if (!$term1) {
+            return view('admin.mark-sheet.full', compact('academicYears', 'classes', 'isTeacher'))
+                ->with('error', 'No terms found for the selected academic year. Please create terms first.');
+        }
+
         // Query all students in the class/section
         $studentQuery = Student::where('class_id', $classId)
             ->where('status', 'active');
