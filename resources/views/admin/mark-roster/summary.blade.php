@@ -134,6 +134,88 @@
         </div>
     </div>
 
+    {{-- Summary Statistics: pass/fail breakdown by gender --}}
+    @php
+        $stats = ['term1' => ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]],
+                  'term2' => ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]],
+                  'annual' => ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]]];
+        foreach ($roster as $studentRows) {
+            $gender = strtoupper(substr($studentRows['term1']['student']->gender ?? 'M', 0, 1));
+            if ($gender !== 'M' && $gender !== 'F') $gender = 'M';
+            foreach (['term1', 'term2', 'annual'] as $tk) {
+                $avg = $studentRows[$tk]['average'] ?? 0;
+                if ($avg > 0) {
+                    if ($avg >= 50) {
+                        $stats[$tk]['above50'][$gender]++;
+                        $stats[$tk]['above50']['total']++;
+                    } else {
+                        $stats[$tk]['below50'][$gender]++;
+                        $stats[$tk]['below50']['total']++;
+                    }
+                }
+            }
+        }
+    @endphp
+    <div style="display:flex;justify-content:flex-start;margin-top:1rem;">
+        <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
+            <thead>
+                <tr style="background:#f9fafb;">
+                    <th style="border:1px solid #333;padding:3px 8px;text-align:left;">Result Summary</th>
+                    <th style="border:1px solid #333;padding:3px 8px;">Male</th>
+                    <th style="border:1px solid #333;padding:3px 8px;">Female</th>
+                    <th style="border:1px solid #333;padding:3px 8px;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;font-weight:600;" colspan="4">Term 1</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;color:#059669;">Above 50% (Pass)</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['term1']['above50']['M'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['term1']['above50']['F'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['term1']['above50']['total'] }}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;color:#dc2626;">Below 50% (Fail)</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['term1']['below50']['M'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['term1']['below50']['F'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['term1']['below50']['total'] }}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;font-weight:600;" colspan="4">Term 2</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;color:#059669;">Above 50% (Pass)</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['term2']['above50']['M'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['term2']['above50']['F'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['term2']['above50']['total'] }}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;color:#dc2626;">Below 50% (Fail)</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['term2']['below50']['M'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['term2']['below50']['F'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['term2']['below50']['total'] }}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;font-weight:600;" colspan="4">Annual</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;color:#059669;">Above 50% (Pass)</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['annual']['above50']['M'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['annual']['above50']['F'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['annual']['above50']['total'] }}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #333;padding:2px 8px;color:#dc2626;">Below 50% (Fail)</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['annual']['below50']['M'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['annual']['below50']['F'] }}</td>
+                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['annual']['below50']['total'] }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
     {{-- Signature Section --}}
     <div style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
         <div style="text-align:center;min-width:180px;">
