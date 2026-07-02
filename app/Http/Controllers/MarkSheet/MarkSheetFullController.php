@@ -186,17 +186,17 @@ class MarkSheetFullController extends Controller
         // Averages the conduct scores from ALL subjects, then converts to a
         // proportional grade out of 100 (conduct is out of 5, so multiply by 20).
         $conductAgg = []; // [studentId][termId] = proportional grade (0-100)
-        foreach ($markData as $studentId => $terms) {
-            foreach ($terms as $termId => $subjects) {
+        foreach ($markData as $sId => $termData) {
+            foreach ($termData as $tId => $subjData) {
                 $conducts = [];
-                foreach ($subjects as $subjId => $data) {
+                foreach ($subjData as $sKey => $data) {
                     if (isset($data['conduct']) && $data['conduct'] !== null) {
                         $conducts[] = floatval($data['conduct']);
                     }
                 }
                 if (count($conducts) > 0) {
                     $avg = array_sum($conducts) / count($conducts); // out of 5
-                    $conductAgg[$studentId][$termId] = round($avg * 20, 1); // proportional to 100
+                    $conductAgg[$sId][$tId] = round($avg * 20, 1); // proportional to 100
                 }
             }
         }
