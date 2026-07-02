@@ -512,7 +512,7 @@
                                 @endif
                             </td>
                         @endforeach
-                        <td>{{ $row['conduct_t1'] !== null ? number_format($row['conduct_t1'], 2) : '-' }}</td>
+                        <td style="font-weight:700;text-align:center;">{{ $row['conduct_t1'] ?? '-' }}</td>
                         <td class="total-col {{ $markClass($row['term1_total'] ?? null) }}">{{ $row['term1_total'] ? number_format($row['term1_total'], 2) : '-' }}</td>
                         <td class="avg-col {{ $markClass($row['term1_avg'] ?? null) }}">{{ $row['term1_avg'] ? number_format($row['term1_avg'], 2) : '-' }}</td>
                         <td class="rank-col">{{ $row['term1_rank'] ?? '-' }}</td>
@@ -646,7 +646,7 @@
                                 @endif
                             </td>
                         @endforeach
-                        <td>{{ $row['conduct_t2'] !== null ? number_format($row['conduct_t2'], 2) : '-' }}</td>
+                        <td style="font-weight:700;text-align:center;">{{ $row['conduct_t2'] ?? '-' }}</td>
                         <td class="total-col {{ $markClass($row['term2_total'] ?? null) }}">{{ $row['term2_total'] ? number_format($row['term2_total'], 2) : '-' }}</td>
                         <td class="avg-col {{ $markClass($row['term2_avg'] ?? null) }}">{{ $row['term2_avg'] ? number_format($row['term2_avg'], 2) : '-' }}</td>
                         <td class="rank-col">{{ $row['term2_rank'] ?? '-' }}</td>
@@ -907,7 +907,9 @@
                 'ann_avg' => $row['annual_avg'],
                 'ann_rank' => $row['annual_rank'] ?? '-',
                 'conduct_t1' => $row['conduct_t1'] ?? null,
+                'conduct_t1_val' => $row['conduct_t1_val'] ?? null,
                 'conduct_t2' => $row['conduct_t2'] ?? null,
+                'conduct_t2_val' => $row['conduct_t2_val'] ?? null,
             ];
         }
         $exportData = ['subjects' => $exportSubjects, 'roster' => $exportRoster];

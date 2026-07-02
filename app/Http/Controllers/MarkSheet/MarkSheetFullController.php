@@ -185,7 +185,8 @@ class MarkSheetFullController extends Controller
         // ── Calculate aggregated conduct per student per term ──
         // Averages the conduct scores from ALL subjects, then converts to a
         // proportional grade out of 100 (conduct is out of 5, so multiply by 20).
-        $conductAgg = []; // [studentId][termId] = proportional grade (0-100)
+        // Also assigns a letter grade: A(>=80), B(>=70), C(>=60), D(>=50), F(<50)
+        $conductAgg = []; // [studentId][termId] = ['value' => 80.0, 'grade' => 'A']
         foreach ($markData as $sId => $termData) {
             foreach ($termData as $tId => $subjData) {
                 $conducts = [];
@@ -196,7 +197,13 @@ class MarkSheetFullController extends Controller
                 }
                 if (count($conducts) > 0) {
                     $avg = array_sum($conducts) / count($conducts); // out of 5
-                    $conductAgg[$sId][$tId] = round($avg * 20, 1); // proportional to 100
+                    $proportional = round($avg * 20, 1); // proportional to 100
+                    $conductGrade = 'F';
+                    if ($proportional >= 80) $conductGrade = 'A';
+                    elseif ($proportional >= 70) $conductGrade = 'B';
+                    elseif ($proportional >= 60) $conductGrade = 'C';
+                    elseif ($proportional >= 50) $conductGrade = 'D';
+                    $conductAgg[$sId][$tId] = ['value' => $proportional, 'grade' => $conductGrade];
                 }
             }
         }
@@ -239,8 +246,10 @@ class MarkSheetFullController extends Controller
                 'term1_avg'    => 0,
                 'term2_avg'    => 0,
                 'annual_avg'   => 0,
-                'conduct_t1'   => $conductAgg[$studentId][$term1Id] ?? null,
-                'conduct_t2'   => $term2 ? ($conductAgg[$studentId][$term2Id] ?? null) : null,
+                'conduct_t1'   => isset($conductAgg[$studentId][$term1Id]) ? $conductAgg[$studentId][$term1Id]['grade'] : null,
+                'conduct_t1_val' => isset($conductAgg[$studentId][$term1Id]) ? $conductAgg[$studentId][$term1Id]['value'] : null,
+                'conduct_t2'   => $term2Id ? (isset($conductAgg[$studentId][$term2Id]) ? $conductAgg[$studentId][$term2Id]['grade'] : null) : null,
+                'conduct_t2_val' => $term2Id ? (isset($conductAgg[$studentId][$term2Id]) ? $conductAgg[$studentId][$term2Id]['value'] : null) : null,
             ];
 
             // ── MID-YEAR ENTRANT: use per-subject override marks for Term 1 ──
