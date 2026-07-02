@@ -184,7 +184,9 @@ class MarkSheetFullController extends Controller
 
         // ── Calculate aggregated conduct per student per term ──
         // Averages the conduct scores from ALL subjects, then converts to a
-        // proportional grade out of 100 (conduct is out of 5, so multiply by 20).
+        // PERCENTILE (not raw score) so it's comparable across classes with
+        // different numbers of subjects. Conduct is out of 5, so:
+        // percentile = (avg_conduct / 5) * 100
         // Also assigns a letter grade: A(>=80), B(>=70), C(>=60), D(>=50), F(<50)
         $conductAgg = []; // [studentId][termId] = ['value' => 80.0, 'grade' => 'A']
         foreach ($markData as $sId => $termData) {
@@ -197,13 +199,13 @@ class MarkSheetFullController extends Controller
                 }
                 if (count($conducts) > 0) {
                     $avg = array_sum($conducts) / count($conducts); // out of 5
-                    $proportional = round($avg * 20, 1); // proportional to 100
+                    $percentile = round(($avg / 5) * 100, 1); // percentile 0-100
                     $conductGrade = 'F';
-                    if ($proportional >= 80) $conductGrade = 'A';
-                    elseif ($proportional >= 70) $conductGrade = 'B';
-                    elseif ($proportional >= 60) $conductGrade = 'C';
-                    elseif ($proportional >= 50) $conductGrade = 'D';
-                    $conductAgg[$sId][$tId] = ['value' => $proportional, 'grade' => $conductGrade];
+                    if ($percentile >= 80) $conductGrade = 'A';
+                    elseif ($percentile >= 70) $conductGrade = 'B';
+                    elseif ($percentile >= 60) $conductGrade = 'C';
+                    elseif ($percentile >= 50) $conductGrade = 'D';
+                    $conductAgg[$sId][$tId] = ['value' => $percentile, 'grade' => $conductGrade];
                 }
             }
         }
