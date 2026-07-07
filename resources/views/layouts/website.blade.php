@@ -62,8 +62,8 @@
 
     @yield('before-nav')
 
-    <!-- ========== Elegant Dark Green Navbar ========== -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="navbar">
+    <!-- ========== Modern Light Glass Navbar ========== -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="navbar">
         <div class="container-fluid nav-container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
                 @if($settings['school_logo'] ?? '')

@@ -76,11 +76,6 @@
                                             @if($slider->description ?? null)
                                                 <p>{{ $slider->description }}</p>
                                             @endif
-                                            <div class="hero-buttons hero-buttons-right">
-                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
-                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
-                                                </a>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -102,11 +97,6 @@
                                             </span>
                                             <h1>Empowering Minds, <span>Shaping Futures</span></h1>
                                             <p>{{ $settings['school_description'] }}</p>
-                                            <div class="hero-buttons hero-buttons-right">
-                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
-                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
-                                                </a>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -127,11 +117,6 @@
                                             </span>
                                             <h1>Where Learning <span>Becomes Discovery</span></h1>
                                             <p>Our innovative curriculum combines academic rigor with creative exploration, preparing students to think critically and solve real-world problems with confidence.</p>
-                                            <div class="hero-buttons hero-buttons-right">
-                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
-                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
-                                                </a>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -181,6 +166,11 @@
                 <span class="carousel-control-next-icon"></span>
             </button>
         </div>
+
+        <!-- Mobile-only Login Button at bottom of slider (hidden on desktop) -->
+        <a href="{{ route('login') }}" class="hero-mobile-login-btn" aria-label="Login">
+            <i class="fas fa-sign-in-alt me-1"></i>Login
+        </a>
 
         <!-- Bottom Overlay: Alerts (Left) + News (Right) -->
         @if($sliderAlerts->count() > 0)
