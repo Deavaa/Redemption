@@ -59,6 +59,16 @@ class NewsController extends Controller
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('news-images', 'public');
             $data['image_path'] = $path;
+            // Fallback for missing storage:link — also copy to public/news-images/
+            // so the cover image is web-accessible even without the symlink.
+            $sourceFile = storage_path('app/public/' . $path);
+            $fallbackDir = public_path('news-images');
+            if (!is_dir($fallbackDir)) {
+                @mkdir($fallbackDir, 0775, true);
+            }
+            if (is_file($sourceFile)) {
+                @copy($sourceFile, $fallbackDir . '/' . basename($path));
+            }
         }
 
         News::create($data);
@@ -92,6 +102,15 @@ class NewsController extends Controller
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('news-images', 'public');
             $data['image_path'] = $path;
+            // Fallback for missing storage:link — also copy to public/news-images/
+            $sourceFile = storage_path('app/public/' . $path);
+            $fallbackDir = public_path('news-images');
+            if (!is_dir($fallbackDir)) {
+                @mkdir($fallbackDir, 0775, true);
+            }
+            if (is_file($sourceFile)) {
+                @copy($sourceFile, $fallbackDir . '/' . basename($path));
+            }
         }
 
         $news->update($data);
@@ -143,6 +162,9 @@ class NewsController extends Controller
      * public/news-images/. Returns the absolute URL so Summernote can
      * embed it in the editor as a real <img src="..."> instead of a
      * huge base64 data URI.
+     *
+     * Also ensures the storage symlink exists (php artisan storage:link
+     * equivalent) so the returned URL resolves to a real file.
      */
     public function uploadImage(Request $request)
     {
@@ -155,11 +177,47 @@ class NewsController extends Controller
         }
 
         try {
+            // Ensure the public/storage symlink exists — this is the #1 cause
+            // of "image not showing" on XAMPP. Target: storage/app/public
+            // Link:    public/storage
+            $publicStorage = public_path('storage');
+            $target = storage_path('app/public');
+            if (!file_exists($publicStorage)) {
+                // Windows / XAMPP: symlink may fail without admin privs.
+                // Try symlink first; if it fails, create a junction (Windows)
+                // or just copy the directory as a last resort.
+                @symlink($target, $publicStorage);
+                if (!file_exists($publicStorage)) {
+                    // Fallback: copy the file directly to public/news-images
+                    // so it's web-accessible even without the symlink.
+                    $publicNewsDir = public_path('news-images');
+                    if (!is_dir($publicNewsDir)) {
+                        @mkdir($publicNewsDir, 0775, true);
+                    }
+                }
+            }
+
             $path = $request->file('file')->store('news-images', 'public');
             $url = asset('storage/' . $path);
-            return response()->json(['url' => $url]);
+
+            // Fallback: if symlink isn't working, also expose the file via
+            // public/news-images/ so it's directly web-accessible.
+            $sourceFile = storage_path('app/public/' . $path);
+            $fallbackDir = public_path('news-images');
+            if (is_file($sourceFile) && is_dir($fallbackDir)) {
+                @copy($sourceFile, $fallbackDir . '/' . basename($path));
+            }
+
+            return response()->json([
+                'url' => $url,
+                'path' => $path,
+                'filename' => basename($path),
+            ]);
         } catch (\Throwable $e) {
-            return response()->json(['error' => 'Upload failed: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Upload failed: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ], 500);
         }
     }
 }

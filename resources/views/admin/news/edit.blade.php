@@ -82,27 +82,48 @@
                         var editor = $(this);
                         var formData = new FormData();
                         formData.append('file', files[0]);
-                        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-                        var $placeholder = $('<div class="note-image-uploading"><i class="fas fa-spinner fa-spin"></i> Uploading...</div>');
+                        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+                        if (!csrfToken) {
+                            alert('CSRF token meta tag not found. Image upload cannot proceed.');
+                            return;
+                        }
+                        formData.append('_token', csrfToken.getAttribute('content'));
+                        var $placeholder = $('<div class="note-image-uploading" style="padding:8px 12px;background:#ecfdf5;border-radius:6px;color:#059669;font-size:0.85rem;"><i class="fas fa-spinner fa-spin"></i> Uploading image...</div>');
                         editor.summernote('insertNode', $placeholder[0]);
-                        fetch('{{ route("admin.news.upload-image") }}', {
+                        var uploadUrl = '{{ route("admin.news.upload-image") }}';
+                        fetch(uploadUrl, {
                             method: 'POST',
                             body: formData,
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+                            }
                         })
-                        .then(function(r) { return r.json(); })
+                        .then(function(r) {
+                            if (!r.ok) {
+                                return r.text().then(function(t) {
+                                    throw new Error('HTTP ' + r.status + ': ' + t);
+                                });
+                            }
+                            return r.json();
+                        })
                         .then(function(data) {
+                            $placeholder.remove();
                             if (data.url) {
-                                $placeholder.remove();
-                                editor.summernote('insertImage', data.url);
+                                editor.summernote('insertImage', data.url, function($image) {
+                                    $image.css('max-width', '100%');
+                                    $image.css('height', 'auto');
+                                    $image.css('border-radius', '8px');
+                                });
                             } else {
-                                $placeholder.remove();
-                                alert('Image upload failed: ' + (data.error || 'Unknown error'));
+                                alert('Image upload failed: ' + (data.error || 'Unknown error. Check the browser console for details.'));
+                                console.error('Upload response:', data);
                             }
                         })
                         .catch(function(err) {
                             $placeholder.remove();
-                            alert('Image upload failed: ' + err.message);
+                            console.error('Image upload error:', err);
+                            alert('Image upload failed: ' + err.message + '\n\nCheck that:\n1. You are logged in\n2. The route /admin/news/upload-image is registered\n3. PHP has write permission to storage/app/public/news-images/');
                         });
                     }
                 }

@@ -206,12 +206,22 @@
                     @php
                         // Resolve the card image:
                         // 1. Use the dedicated cover image (image_path) if the file exists
+                        //    in either storage/app/public OR public/news-images/ (fallback)
                         // 2. Fall back to the first <img> inside the Summernote content
                         // 3. Fall back to null (shows a gradient placeholder block)
                         $cardImage = null;
-                        if ($newsItem->image_path && \Storage::disk('public')->exists($newsItem->image_path)) {
-                            $cardImage = asset('storage/' . $newsItem->image_path);
-                        } elseif ($newsItem->content) {
+                        if ($newsItem->image_path) {
+                            $basename = basename($newsItem->image_path);
+                            // Primary: storage/app/public/news-images/<file>
+                            if (\Storage::disk('public')->exists($newsItem->image_path)) {
+                                $cardImage = asset('storage/' . $newsItem->image_path);
+                            }
+                            // Fallback: public/news-images/<file> (works without storage:link)
+                            elseif (file_exists(public_path('news-images/' . $basename))) {
+                                $cardImage = asset('news-images/' . $basename);
+                            }
+                        }
+                        if (!$cardImage && $newsItem->content) {
                             if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $newsItem->content, $m)) {
                                 $src = $m[1];
                                 // data: URIs, full URLs, and absolute paths are fine as-is

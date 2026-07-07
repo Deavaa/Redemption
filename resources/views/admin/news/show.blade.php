@@ -87,10 +87,21 @@
                 </div>
             </div>
 
-            {{-- Cover image --}}
-            @if($news->image_path && \Storage::disk('public')->exists($news->image_path))
+            {{-- Cover image — with fallback to public/news-images/ if storage:link is missing --}}
+            @php
+                $coverUrl = null;
+                if ($news->image_path) {
+                    $basename = basename($news->image_path);
+                    if (\Storage::disk('public')->exists($news->image_path)) {
+                        $coverUrl = asset('storage/' . $news->image_path);
+                    } elseif (file_exists(public_path('news-images/' . $basename))) {
+                        $coverUrl = asset('news-images/' . $basename);
+                    }
+                }
+            @endphp
+            @if($coverUrl)
             <div style="margin-bottom:1.75rem;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.08);">
-                <img src="{{ asset('storage/' . $news->image_path) }}" alt="{{ $news->title }}" style="width:100%;max-height:400px;object-fit:cover;display:block;">
+                <img src="{{ $coverUrl }}" alt="{{ $news->title }}" style="width:100%;max-height:400px;object-fit:cover;display:block;">
             </div>
             @endif
 

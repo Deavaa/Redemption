@@ -115,6 +115,26 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // ============================================================
+        // AUTO-CREATE STORAGE SYMLINK (storage:link equivalent)
+        // ============================================================
+        // On XAMPP / shared hosting, users often forget to run
+        // 'php artisan storage:link'. This creates the public/storage
+        // -> storage/app/public symlink at boot time. If symlink fails
+        // (Windows permissions), it silently falls back — controllers
+        // that upload files are also responsible for copying to
+        // public/news-images/ as a backup location.
+        // ============================================================
+        try {
+            $publicStorage = public_path('storage');
+            $target = storage_path('app/public');
+            if (!file_exists($publicStorage) && is_dir($target)) {
+                @symlink($target, $publicStorage);
+            }
+        } catch (\Throwable $e) {
+            // Silently fail — upload handlers have fallback copy logic
+        }
+
+        // ============================================================
         // URL FIX FOR SUBDIRECTORY HOSTING
         // ============================================================
         // The root index.php auto-detects the subdirectory from
