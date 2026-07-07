@@ -107,6 +107,133 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
+
+// ============================================================
+// NEWS IMAGE DEBUG ROUTE — temporary diagnostic tool.
+// Visit /news-debug to see exactly where news images are stored,
+// whether the storage symlink works, and which URL the website
+// would use to render each image.
+// ============================================================
+Route::get('/news-debug', function () {
+    if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+        return 'Please login as admin first, then visit /news-debug';
+    }
+
+    $output = "<h1>News Image Debug</h1><pre style='background:#f4f4f4;padding:1rem;border-radius:8px;overflow-x:auto;font-size:12px;'>";
+
+    // 1. Storage symlink status
+    $publicStorage = public_path('storage');
+    $target = storage_path('app/public');
+    $output .= "=== STORAGE SYMLINK STATUS ===\n";
+    $output .= "public/storage exists: " . (file_exists($publicStorage) ? 'YES' : 'NO') . "\n";
+    $output .= "public/storage is_link: " . (is_link($publicStorage) ? 'YES' : 'NO') . "\n";
+    $output .= "public/storage is_dir: " . (is_dir($publicStorage) ? 'YES' : 'NO') . "\n";
+    if (is_link($publicStorage)) {
+        $output .= "public/storage link target: " . readlink($publicStorage) . "\n";
+    }
+    $output .= "storage/app/public exists: " . (is_dir($target) ? 'YES' : 'NO') . "\n";
+    $output .= "\n";
+
+    // 2. PHP permissions
+    $output .= "=== PERMISSIONS ===\n";
+    $output .= "storage/app/public writable: " . (is_writable($target) ? 'YES' : 'NO') . "\n";
+    $output .= "public/ writable: " . (is_writable(public_path()) ? 'YES' : 'NO') . "\n";
+    if (!is_dir(public_path('news-images'))) {
+        @mkdir(public_path('news-images'), 0775, true);
+    }
+    $output .= "public/news-images writable: " . (is_writable(public_path('news-images')) ? 'YES' : 'NO') . "\n";
+    $output .= "\n";
+
+    // 3. All news records
+    $output .= "=== NEWS RECORDS ===\n";
+    $news = \App\Models\News::orderBy('created_at', 'desc')->limit(10)->get();
+    $output .= "Total news records: " . $news->count() . "\n\n";
+
+    foreach ($news as $n) {
+        $output .= "--- News #{$n->id}: {$n->title} ---\n";
+        $output .= "  image_path (DB): " . ($n->image_path ?: '(empty)') . "\n";
+        $output .= "  is_active: " . ($n->is_active ? 'YES' : 'NO') . "\n";
+        $output .= "  is_approved: " . ($n->is_approved ? 'YES' : 'NO') . "\n";
+        $output .= "  created_at: " . $n->created_at . "\n";
+
+        if ($n->image_path) {
+            $basename = basename($n->image_path);
+            $storageFile = storage_path('app/public/' . $n->image_path);
+            $publicFile = public_path('news-images/' . $basename);
+            $storageUrl = asset('storage/' . $n->image_path);
+            $publicUrl = asset('news-images/' . $basename);
+
+            $output .= "  Storage::disk('public')->exists: " . (\Storage::disk('public')->exists($n->image_path) ? 'YES' : 'NO') . "\n";
+            $output .= "  storage/app/public/{$n->image_path} exists: " . (file_exists($storageFile) ? 'YES' : 'NO') . "\n";
+            $output .= "  public/news-images/{$basename} exists: " . (file_exists($publicFile) ? 'YES' : 'NO') . "\n";
+            $output .= "  storage_url: {$storageUrl}\n";
+            $output .= "  public_url:  {$publicUrl}\n";
+
+            // Which URL will the website actually use?
+            if (\Storage::disk('public')->exists($n->image_path)) {
+                $output .= "  >> WEBSITE WILL USE: storage_url\n";
+            } elseif (file_exists($publicFile)) {
+                $output .= "  >> WEBSITE WILL USE: public_url (fallback)\n";
+            } else {
+                $output .= "  >> WEBSITE WILL USE: placeholder (file missing in both locations!)\n";
+            }
+        }
+
+        // Check images inside content
+        if ($n->content && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $n->content, $m)) {
+            $output .= "  First <img> in content: " . $m[1] . "\n";
+        }
+        $output .= "\n";
+    }
+
+    // 4. Files actually on disk
+    $output .= "=== FILES IN storage/app/public/news-images/ ===\n";
+    $dir1 = storage_path('app/public/news-images');
+    if (is_dir($dir1)) {
+        $files1 = array_diff(scandir($dir1), ['.', '..', '.gitignore']);
+        $output .= count($files1) . " files:\n";
+        foreach ($files1 as $f) { $output .= "  $f\n"; }
+    } else {
+        $output .= "Directory does not exist!\n";
+    }
+    $output .= "\n";
+
+    $output .= "=== FILES IN public/news-images/ ===\n";
+    $dir2 = public_path('news-images');
+    if (is_dir($dir2)) {
+        $files2 = array_diff(scandir($dir2), ['.', '..', '.gitignore']);
+        $output .= count($files2) . " files:\n";
+        foreach ($files2 as $f) { $output .= "  $f\n"; }
+    } else {
+        $output .= "Directory does not exist!\n";
+    }
+    $output .= "\n";
+
+    // 5. Test creating a file in both locations
+    $output .= "=== WRITE TEST ===\n";
+    $testContent = 'test ' . date('Y-m-d H:i:s');
+    $test1 = @file_put_contents($target . '/news-images/_write_test.txt', $testContent);
+    $output .= "Write to storage/app/public/news-images/: " . ($test1 !== false ? 'OK (' . $test1 . ' bytes)' : 'FAILED') . "\n";
+    if (!is_dir(public_path('news-images'))) {
+        @mkdir(public_path('news-images'), 0775, true);
+    }
+    $test2 = @file_put_contents(public_path('news-images/_write_test.txt'), $testContent);
+    $output .= "Write to public/news-images/: " . ($test2 !== false ? 'OK (' . $test2 . ' bytes)' : 'FAILED') . "\n";
+    $output .= "\n";
+
+    // 6. APP_URL config
+    $output .= "=== CONFIG ===\n";
+    $output .= "APP_URL: " . config('app.url') . "\n";
+    $output .= "asset_url: " . (config('app.asset_url') ?: '(null)') . "\n";
+    $output .= "current request host: " . request()->getHost() . "\n";
+    $output .= "current request scheme: " . request()->getScheme() . "\n";
+    $output .= "current request path: " . request()->path() . "\n";
+
+    $output .= "</pre>";
+    $output .= "<p style='margin-top:1rem;'><a href='" . route('admin.news.index') . "'>← Back to News Admin</a></p>";
+
+    return response($output);
+})->name('news.debug');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::get('/team', [HomeController::class, 'team'])->name('team');

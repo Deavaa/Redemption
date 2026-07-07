@@ -14,6 +14,9 @@
             </nav>
         </div>
         <div class="modern-page-header-right">
+            <a href="{{ route('news.debug') }}" class="btn-modern btn-modern-primary" style="background:#fef3c7;color:#92400e;box-shadow:none;" target="_blank">
+                <i class="fas fa-bug"></i><span>Debug Images</span>
+            </a>
             <a href="{{ route('admin.news.create') }}" class="btn-modern btn-modern-primary">
                 <i class="fas fa-plus"></i><span>Add News</span>
             </a>

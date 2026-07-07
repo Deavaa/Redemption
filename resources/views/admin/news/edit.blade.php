@@ -160,9 +160,31 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Cover Image</label>
-                    @if($news->image_path)<img src="{{ Storage::url($news->image_path) }}" alt="" style="max-height:80px" class="mb-2 d-block">@endif
+                    @php
+                        $existingCoverUrl = null;
+                        if ($news->image_path) {
+                            $basename = basename($news->image_path);
+                            if (\Storage::disk('public')->exists($news->image_path)) {
+                                $existingCoverUrl = asset('storage/' . $news->image_path);
+                            } elseif (file_exists(public_path('news-images/' . $basename))) {
+                                $existingCoverUrl = asset('news-images/' . $basename);
+                            }
+                        }
+                    @endphp
+                    @if($existingCoverUrl)
+                        <div style="margin-bottom:0.5rem;">
+                            <img src="{{ $existingCoverUrl }}" alt="Current cover" style="max-height:100px;border-radius:8px;border:2px solid #e5e7eb;">
+                            <div style="font-size:0.75rem;color:#6b7280;margin-top:4px;">Current cover image</div>
+                        </div>
+                    @elseif($news->image_path)
+                        <div style="padding:0.75rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:0.85rem;margin-bottom:0.5rem;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Cover image file not found at: {{ $news->image_path }}
+                            <br>Run <code>php artisan storage:link</code> or visit the <a href="{{ route('news.debug') }}" target="_blank">debug page</a>.
+                        </div>
+                    @endif
                     <input type="file" name="image" class="form-control" accept="image/*">
-                    <small class="text-muted">Optional — shown as a thumbnail on news cards</small>
+                    <small class="text-muted">Upload a new image to replace the current one</small>
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">

@@ -236,7 +236,11 @@
                     <article class="news-splash-card">
                         <div class="news-splash-card-img">
                             @if($cardImage)
-                                <img src="{{ $cardImage }}" alt="{{ $newsItem->title }}" loading="lazy">
+                                <img src="{{ $cardImage }}" alt="{{ $newsItem->title }}" loading="lazy"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="news-splash-card-img-placeholder" style="display:none;">
+                                    <i class="fas fa-newspaper"></i>
+                                </div>
                             @else
                                 <div class="news-splash-card-img-placeholder">
                                     <i class="fas fa-newspaper"></i>
