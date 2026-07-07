@@ -15,6 +15,17 @@ class NewsController extends Controller
         return view('admin.news.index', compact('news'));
     }
 
+    /**
+     * Display a single news item.
+     * Required by Route::resource — without this, visiting
+     * /admin/news/{id} throws "Call to undefined method show()".
+     */
+    public function show(News $news)
+    {
+        $news->load('creator', 'approver');
+        return view('admin.news.show', compact('news'));
+    }
+
     public function create()
     {
         return view('admin.news.create');

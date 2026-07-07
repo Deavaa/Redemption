@@ -98,6 +98,9 @@
                                         </button>
                                     </form>
                                     @endif
+                                    <a href="{{ route('admin.news.show', $item) }}" class="modern-btn-icon modern-btn-view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                     <a href="{{ route('admin.news.edit', $item) }}" class="modern-btn-icon modern-btn-edit" title="Edit">
                                         <i class="fas fa-pen"></i>
                                     </a>
