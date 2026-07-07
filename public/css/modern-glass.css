@@ -1,0 +1,758 @@
+/* ============================================================================
+   MODERN GLASS — Header & Slider Redesign
+   ----------------------------------------------------------------------------
+   A premium glassmorphism layer that overrides the existing navbar and hero
+   slider styles. Uses CSS custom properties defined in layouts/website.blade.php
+   so it works regardless of school color settings.
+
+   Design language:
+   - Frosted glass with deep backdrop-blur (24-32px)
+   - Soft inner highlights (top border = 1px rgba(255,255,255,0.18))
+   - Subtle gradient sheen on glass surfaces
+   - Refined micro-interactions (hover lift, focus glow)
+   - Elegant typography rhythm
+   ============================================================================ */
+
+/* ============================================================================
+   1. NAVBAR — Frosted Glass Pill
+   ============================================================================ */
+
+.navbar {
+    background: linear-gradient(180deg,
+        rgba(var(--primary-rgb), 0.55) 0%,
+        rgba(var(--primary-rgb), 0.35) 100%) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10) !important;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.06) inset,
+        0 8px 32px rgba(0, 0, 0, 0.18) !important;
+    padding: 0.85rem 0 !important;
+    transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Top hairline highlight that catches the light */
+.navbar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.25) 50%,
+        transparent 100%);
+    pointer-events: none;
+}
+
+.navbar.scrolled {
+    background: linear-gradient(180deg,
+        rgba(var(--primary-rgb), 0.82) 0%,
+        rgba(var(--primary-rgb), 0.68) 100%) !important;
+    backdrop-filter: blur(32px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+    padding: 0.55rem 0 !important;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.08) inset,
+        0 12px 40px rgba(0, 0, 0, 0.28) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Brand — refined typography */
+.navbar-brand {
+    position: relative;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    transition: background 0.3s ease;
+}
+.navbar-brand:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+.navbar-brand .brand-pre {
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase;
+    font-weight: 500 !important;
+}
+.navbar-brand .brand-name {
+    color: #ffffff !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.navbar-brand img {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25));
+    transition: transform 0.3s ease;
+}
+.navbar-brand:hover img {
+    transform: scale(1.04);
+}
+
+/* Nav links — refined glassy pills */
+.navbar-nav .nav-item {
+    position: relative;
+}
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-weight: 500 !important;
+    font-size: 0.92rem !important;
+    margin: 0 0.25rem !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative;
+    background: transparent;
+}
+.navbar-nav .nav-link:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08);
+}
+/* Active link — small accent dot instead of underline */
+.navbar-nav .nav-link.active {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.10);
+}
+.navbar-nav .nav-link.active::before {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    box-shadow: 0 0 8px var(--secondary-color);
+}
+/* Remove the old gradient underline */
+.navbar-nav .nav-link::after {
+    display: none !important;
+}
+
+/* Glass login / portal button */
+.btn-nav-portal {
+    background: rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 50px !important;
+    padding: 0.5rem 1.25rem !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.15) inset,
+        0 4px 14px rgba(0, 0, 0, 0.12) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.btn-nav-portal:hover {
+    background: rgba(255, 255, 255, 0.20) !important;
+    border-color: rgba(255, 255, 255, 0.40) !important;
+    transform: translateY(-1px) !important;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.22) inset,
+        0 8px 22px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* The "Login" portal button gets an accent fill to stand out */
+.navbar-nav .nav-item:last-child .btn-nav-portal,
+.navbar-nav .nav-item:nth-last-child(2) .btn-nav-portal {
+    /* both Get App + Login share style — keep neutral glass */
+}
+
+/* Mobile login pill — glass */
+.mobile-login-pill {
+    background: rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.15) inset,
+        0 2px 10px rgba(0, 0, 0, 0.12) !important;
+}
+.mobile-login-pill:hover {
+    background: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Hamburger — glass circle */
+.hamburger-btn {
+    background: rgba(255, 255, 255, 0.10) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease !important;
+}
+.hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+}
+
+
+/* ============================================================================
+   2. HERO SLIDER — Glass Content Cards & Refined Controls
+   ============================================================================ */
+
+/* Stronger gradient overlay so glass cards read well */
+.hero-overlay {
+    background: linear-gradient(105deg,
+        rgba(0, 0, 0, 0.55) 0%,
+        rgba(0, 0, 0, 0.35) 40%,
+        rgba(0, 0, 0, 0.25) 70%,
+        rgba(0, 0, 0, 0.45) 100%) !important;
+}
+
+/* Add a subtle bottom fade for legibility of slider-bottom-overlay */
+.hero-slide::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 40%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Hero content — wrap text in a glass card */
+.hero-content {
+    padding: 2.5rem !important;
+    border-radius: 24px;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.10) 0%,
+        rgba(255, 255, 255, 0.04) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.18) inset,
+        0 20px 60px rgba(0, 0, 0, 0.30);
+    max-width: 640px;
+    position: relative;
+    overflow: hidden;
+}
+/* Glass card top hairline */
+.hero-content::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.40) 50%,
+        transparent 100%);
+    pointer-events: none;
+}
+/* When news panel is visible, narrow the hero card */
+.hero-slider.has-news-panel .hero-content {
+    max-width: 580px;
+}
+
+.hero-badge {
+    background: rgba(255, 255, 255, 0.10) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+    padding: 0.4rem 1.1rem !important;
+    border-radius: 50px !important;
+    font-size: 0.78rem !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+.hero-content h1 {
+    font-size: 3rem !important;
+    line-height: 1.15 !important;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45) !important;
+    margin-bottom: 1.2rem !important;
+}
+.hero-content h1 span {
+    color: var(--secondary-color) !important;
+    text-shadow: 0 0 24px rgba(212, 160, 23, 0.45),
+                 0 2px 18px rgba(0, 0, 0, 0.45) !important;
+}
+.hero-content p {
+    color: rgba(255, 255, 255, 0.88) !important;
+    font-size: 1.05rem !important;
+    line-height: 1.7 !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* Hero buttons — glass */
+.btn-hero-small {
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.30) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 0.5rem 1.4rem !important;
+    border-radius: 50px !important;
+    font-size: 0.82rem !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+    transition: all 0.3s ease !important;
+}
+.btn-hero-small:hover {
+    background: var(--secondary-color) !important;
+    color: #0d0d2b !important;
+    border-color: var(--secondary-color) !important;
+    box-shadow: 0 6px 20px rgba(212, 160, 23, 0.45) !important;
+}
+
+/* Hero stats — wrap in subtle inner glass */
+.hero-stats {
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem !important;
+    margin-top: 1.75rem !important;
+}
+
+/* Carousel controls — glassy circles */
+.hero-slider .carousel-control-prev,
+.hero-slider .carousel-control-next {
+    background: rgba(255, 255, 255, 0.10) !important;
+    backdrop-filter: blur(14px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.15) inset,
+        0 6px 22px rgba(0, 0, 0, 0.25) !important;
+    transition: all 0.35s ease !important;
+}
+.hero-slider .carousel-control-prev:hover,
+.hero-slider .carousel-control-next:hover {
+    background: rgba(255, 255, 255, 0.20) !important;
+    border-color: rgba(255, 255, 255, 0.40) !important;
+    transform: scale(1.05);
+}
+
+/* Indicators — refined glass dots */
+.hero-slider .carousel-indicators {
+    bottom: 26px !important;
+    gap: 6px;
+}
+.hero-slider .carousel-indicators button {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    margin: 0 4px !important;
+    background: rgba(255, 255, 255, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.30) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.hero-slider .carousel-indicators button.active {
+    background: var(--secondary-color) !important;
+    width: 32px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 0 14px rgba(212, 160, 23, 0.55);
+}
+
+
+/* ============================================================================
+   3. NEWS SPLASH — Right-Side Glass Panel Inside Hero Slider
+   ============================================================================ */
+
+/* Wrapper is positioned absolutely inside the hero-slider section */
+.news-splash-panel {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(110%, -50%);
+    width: 380px;
+    max-width: 92vw;
+    max-height: 78vh;
+    z-index: 95;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(155deg,
+        rgba(255, 255, 255, 0.14) 0%,
+        rgba(255, 255, 255, 0.06) 100%);
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-right: none;
+    border-top-left-radius: 24px;
+    border-bottom-left-radius: 24px;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.25) inset,
+        -20px 30px 60px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        transform 0.55s cubic-bezier(0.32, 0.72, 0.18, 1),
+        opacity 0.4s ease,
+        visibility 0.4s ease;
+    pointer-events: auto;
+}
+.news-splash-panel.active {
+    transform: translate(0, -50%);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Top hairline catch-light */
+.news-splash-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.45) 50%,
+        transparent 100%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Header strip */
+.news-splash-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1.1rem 1.4rem;
+    background: linear-gradient(135deg,
+        rgba(212, 160, 23, 0.18) 0%,
+        rgba(212, 160, 23, 0.06) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    position: relative;
+    z-index: 1;
+}
+.news-splash-panel-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgba(212, 160, 23, 0.22);
+    border: 1px solid rgba(212, 160, 23, 0.40);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.news-splash-panel-icon i {
+    color: var(--secondary-color);
+    font-size: 1rem;
+    text-shadow: 0 0 10px rgba(212, 160, 23, 0.6);
+}
+.news-splash-panel-title {
+    flex: 1;
+    min-width: 0;
+}
+.news-splash-panel-title h3 {
+    margin: 0;
+    color: #ffffff;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+}
+.news-splash-panel-title span {
+    display: block;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-top: 2px;
+}
+.news-splash-panel-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+.news-splash-panel-close:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    transform: rotate(90deg);
+}
+
+/* Card list (scrollable) */
+.news-splash-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+.news-splash-panel-body::-webkit-scrollbar { width: 6px; }
+.news-splash-panel-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.20);
+    border-radius: 6px;
+}
+.news-splash-panel-body::-webkit-scrollbar-track { background: transparent; }
+
+/* Each news card */
+.news-splash-card {
+    display: flex;
+    gap: 0.85rem;
+    padding: 0.85rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+.news-splash-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(212, 160, 23, 0.40);
+    transform: translateX(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.20);
+}
+.news-splash-card-img {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+.news-splash-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+.news-splash-card:hover .news-splash-card-img img {
+    transform: scale(1.08);
+}
+.news-splash-card-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg,
+        rgba(212, 160, 23, 0.20) 0%,
+        rgba(212, 160, 23, 0.05) 100%);
+    border: 1px solid rgba(212, 160, 23, 0.30);
+}
+.news-splash-card-placeholder i {
+    font-size: 1.4rem;
+    color: rgba(212, 160, 23, 0.70);
+}
+.news-splash-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.news-splash-card-date {
+    font-size: 0.65rem;
+    color: var(--secondary-color);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+.news-splash-card-body h4 {
+    margin: 0 0 4px 0;
+    color: #ffffff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.news-splash-card-body p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.60);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Footer strip with "View All" link */
+.news-splash-panel-footer {
+    padding: 0.85rem 1.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+.news-splash-panel-footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--secondary-color);
+    font-size: 0.80rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: gap 0.3s ease;
+}
+.news-splash-panel-footer a:hover {
+    gap: 10px;
+    color: #FBBF24;
+}
+
+/* Toggle chip — small chip on the right edge of the slider that re-opens the panel */
+.news-splash-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 94;
+    background: linear-gradient(135deg,
+        rgba(212, 160, 23, 0.85) 0%,
+        rgba(212, 160, 23, 0.65) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-right: none;
+    border-top-left-radius: 50px;
+    border-bottom-left-radius: 50px;
+    padding: 12px 10px;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.30) inset,
+        -6px 8px 20px rgba(0, 0, 0, 0.30);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+.news-splash-toggle.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+.news-splash-toggle:hover {
+    padding-right: 14px;
+    background: linear-gradient(135deg,
+        rgba(212, 160, 23, 1) 0%,
+        rgba(212, 160, 23, 0.85) 100%);
+}
+.news-splash-toggle i {
+    font-size: 1rem;
+    writing-mode: horizontal-tb;
+}
+
+/* When panel is open, hide the toggle */
+.news-splash-panel.active ~ .news-splash-toggle {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Mobile: panel becomes full-width bottom sheet */
+@media (max-width: 991px) {
+    .news-splash-panel {
+        top: auto;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        width: 100%;
+        max-width: 100%;
+        max-height: 70vh;
+        transform: translateY(110%);
+        border-radius: 24px 24px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.20);
+        border-bottom: none;
+    }
+    .news-splash-panel.active {
+        transform: translateY(0);
+    }
+    .news-splash-panel::before { display: none; }
+
+    .news-splash-toggle {
+        top: auto;
+        bottom: 80px;
+        right: 16px;
+        transform: none;
+        writing-mode: horizontal-tb;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.30);
+        padding: 10px 16px;
+        flex-direction: row;
+    }
+    .news-splash-toggle i { font-size: 0.85rem; }
+}
+
+@media (max-width: 575px) {
+    .hero-content {
+        padding: 1.5rem !important;
+        border-radius: 18px !important;
+    }
+    .hero-content h1 { font-size: 2rem !important; }
+    .news-splash-panel-header { padding: 0.9rem 1.1rem; }
+    .news-splash-panel-title h3 { font-size: 0.95rem; }
+    .news-splash-card { padding: 0.7rem; }
+    .news-splash-card-img { width: 54px; height: 54px; }
+}
+
+
+/* ============================================================================
+   4. ANNOUNCEMENT TICKER — Glass strip
+   ============================================================================ */
+#announcementTicker {
+    background: linear-gradient(135deg,
+        rgba(var(--primary-rgb), 0.92) 0%,
+        rgba(var(--primary-rgb), 0.78) 100%) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+}
+
+
+/* ============================================================================
+   5. SLIDER BOTTOM OVERLAY (Alerts) — Glass
+   ============================================================================ */
+.slider-bottom-overlay {
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, 0.55) 0%,
+        rgba(0, 0, 0, 0.20) 60%,
+        transparent 100%) !important;
+}
+.slider-bottom-label {
+    background: rgba(255, 255, 255, 0.10) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+}
+.slider-bottom-alert-item {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.18) inset,
+        0 4px 14px rgba(0, 0, 0, 0.20) !important;
+}

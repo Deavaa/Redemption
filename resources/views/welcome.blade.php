@@ -2,6 +2,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/homepage.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/modern-glass.css') }}">
 @endpush
 
 @section('before-nav')
@@ -203,30 +204,29 @@
             </div>
         </div>
         @endif
-    </section>
 
-    <!-- ========== News Splash Screen ========== -->
-    @isset($latestNews)
-    @if($latestNews->count() > 0)
-    <div class="news-splash" id="newsSplash">
-        <div class="news-splash-backdrop" id="newsSplashBackdrop"></div>
-        <div class="news-splash-modal">
-            <button class="news-splash-close" id="newsSplashClose" aria-label="Close news">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="news-splash-header">
-                <div class="news-splash-icon">
+        <!-- ========== Right-Side News Splash Panel (Modern Glass) ========== -->
+        @isset($latestNews)
+        @if($latestNews->count() > 0)
+        <div class="news-splash-panel" id="newsSplashPanel" aria-label="Latest school news" role="dialog">
+            <div class="news-splash-panel-header">
+                <div class="news-splash-panel-icon">
                     <i class="fas fa-newspaper"></i>
                 </div>
-                <h2>Latest News</h2>
-                <p>Stay updated with the latest from our school</p>
+                <div class="news-splash-panel-title">
+                    <h3>Latest News</h3>
+                    <span>Stay updated</span>
+                </div>
+                <button class="news-splash-panel-close" id="newsSplashPanelClose" aria-label="Close news panel" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="news-splash-grid">
+            <div class="news-splash-panel-body">
                 @foreach($latestNews as $newsItem)
-                    <div class="news-splash-card">
+                    <a href="javascript:void(0)" class="news-splash-card" onclick="return false;">
                         @if($newsItem->image_path)
                             <div class="news-splash-card-img">
-                                <img src="{{ asset('storage/' . $newsItem->image_path) }}" alt="{{ $newsItem->title }}">
+                                <img src="{{ asset('storage/' . $newsItem->image_path) }}" alt="{{ $newsItem->title }}" loading="lazy">
                             </div>
                         @else
                             <div class="news-splash-card-img news-splash-card-placeholder">
@@ -235,72 +235,85 @@
                         @endif
                         <div class="news-splash-card-body">
                             <span class="news-splash-card-date">{{ $newsItem->created_at->format('M d, Y') }}</span>
-                            <h3>{{ $newsItem->title }}</h3>
+                            <h4>{{ $newsItem->title }}</h4>
                             @if($newsItem->content)
-                                <p>{{ Str::limit(strip_tags($newsItem->content), 120) }}</p>
+                                <p>{{ Str::limit(strip_tags($newsItem->content), 110) }}</p>
                             @endif
                         </div>
-                    </div>
+                    </a>
                 @endforeach
             </div>
+            <div class="news-splash-panel-footer">
+                <button type="button" id="newsSplashPanelDismiss" style="background:none;border:none;color:inherit;padding:0;font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                    <i class="fas fa-check"></i> Dismiss for this session
+                </button>
+            </div>
         </div>
-    </div>
-    <style>
-    .news-splash { position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all 0.4s ease; }
-    .news-splash.active { opacity:1;visibility:visible; }
-    .news-splash-backdrop { position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
-    .news-splash-modal { position:relative;background:linear-gradient(145deg,#0d0d2b 0%,#1a1a3e 100%);border:1px solid rgba(212,160,23,0.3);border-radius:24px;padding:2rem;max-width:800px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.5),0 0 40px rgba(212,160,23,0.1);transform:scale(0.9) translateY(20px);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); }
-    .news-splash.active .news-splash-modal { transform:scale(1) translateY(0); }
-    .news-splash-close { position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.3s ease;z-index:2; }
-    .news-splash-close:hover { background:rgba(212,160,23,0.3);border-color:rgba(212,160,23,0.5);transform:rotate(90deg); }
-    .news-splash-header { text-align:center;margin-bottom:2rem; }
-    .news-splash-icon { width:64px;height:64px;background:rgba(212,160,23,0.15);border:2px solid rgba(212,160,23,0.4);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem; }
-    .news-splash-icon i { font-size:1.5rem;color:#D4A017; }
-    .news-splash-header h2 { color:#fff;font-family:'Playfair Display',serif;font-size:1.8rem;margin-bottom:0.5rem; }
-    .news-splash-header p { color:rgba(255,255,255,0.6);font-size:0.9rem;margin:0; }
-    .news-splash-grid { display:grid;grid-template-columns:1fr;gap:1.25rem; }
-    .news-splash-card { display:flex;gap:1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;transition:all 0.3s ease;cursor:pointer; }
-    .news-splash-card:hover { background:rgba(255,255,255,0.1);border-color:rgba(212,160,23,0.4);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3); }
-    .news-splash-card-img { width:120px;min-height:100px;flex-shrink:0;overflow:hidden; }
-    .news-splash-card-img img { width:100%;height:100%;object-fit:cover; }
-    .news-splash-card-placeholder { display:flex;align-items:center;justify-content:center;background:rgba(212,160,23,0.1); }
-    .news-splash-card-placeholder i { font-size:2rem;color:rgba(212,160,23,0.5); }
-    .news-splash-card-body { flex:1;padding:1rem 1rem 1rem 0;min-width:0; }
-    .news-splash-card-date { font-size:0.72rem;color:rgba(212,160,23,0.8);font-weight:600;text-transform:uppercase;letter-spacing:0.5px; }
-    .news-splash-card-body h3 { color:#fff;font-size:1rem;margin:0.3rem 0 0.5rem;line-height:1.3; }
-    .news-splash-card-body p { color:rgba(255,255,255,0.6);font-size:0.82rem;margin:0;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
-    @media(max-width:768px) {
-        .news-splash-modal { padding:1.5rem;border-radius:20px; }
-        .news-splash-header h2 { font-size:1.4rem; }
-        .news-splash-card { flex-direction:column; }
-        .news-splash-card-img { width:100%;min-height:140px; }
-        .news-splash-card-body { padding:1rem; }
-    }
-    </style>
-    <script>
-    (function(){
-        var splash = document.getElementById('newsSplash');
-        var closeBtn = document.getElementById('newsSplashClose');
-        var backdrop = document.getElementById('newsSplashBackdrop');
-        // Show splash after 2 seconds
-        setTimeout(function(){
-            if(splash && !sessionStorage.getItem('news_splash_dismissed')){
-                splash.classList.add('active');
+
+        <!-- Toggle chip to re-open the news panel after dismissing -->
+        <button type="button" class="news-splash-toggle" id="newsSplashToggle" aria-label="Open news panel">
+            <i class="fas fa-newspaper"></i>
+            <span>News</span>
+        </button>
+
+        <script>
+        (function(){
+            var panel  = document.getElementById('newsSplashPanel');
+            var closeBtn   = document.getElementById('newsSplashPanelClose');
+            var dismissBtn = document.getElementById('newsSplashPanelDismiss');
+            var toggleBtn  = document.getElementById('newsSplashToggle');
+            var heroSlider = document.querySelector('.hero-slider');
+            if (!panel) return;
+
+            // Tell the slider to narrow hero text when panel is open
+            function setHeroNarrow(on) {
+                if (heroSlider) {
+                    if (on) heroSlider.classList.add('has-news-panel');
+                    else   heroSlider.classList.remove('has-news-panel');
+                }
             }
-        }, 2000);
-        function closeSplash(){
-            splash.classList.remove('active');
-            sessionStorage.setItem('news_splash_dismissed', '1');
-        }
-        if(closeBtn) closeBtn.addEventListener('click', closeSplash);
-        if(backdrop) backdrop.addEventListener('click', closeSplash);
-        document.addEventListener('keydown', function(e){
-            if(e.key === 'Escape') closeSplash();
-        });
-    })();
-    </script>
-    @endif
-    @endisset
+
+            function openPanel() {
+                panel.classList.add('active');
+                setHeroNarrow(true);
+                if (toggleBtn) toggleBtn.classList.remove('visible');
+                sessionStorage.removeItem('news_splash_dismissed');
+            }
+            function closePanel(showToggle) {
+                panel.classList.remove('active');
+                setHeroNarrow(false);
+                if (showToggle && toggleBtn) toggleBtn.classList.add('visible');
+            }
+            function dismissPanel() {
+                closePanel(true);
+                sessionStorage.setItem('news_splash_dismissed', '1');
+            }
+
+            // Auto-open after 2s unless user has dismissed this session
+            setTimeout(function(){
+                if (!sessionStorage.getItem('news_splash_dismissed')) {
+                    openPanel();
+                } else if (toggleBtn) {
+                    // Show toggle chip so user can re-open
+                    toggleBtn.classList.add('visible');
+                }
+            }, 1800);
+
+            if (closeBtn)   closeBtn.addEventListener('click', function(){ dismissPanel(); });
+            if (dismissBtn) dismissBtn.addEventListener('click', function(){ dismissPanel(); });
+            if (toggleBtn)  toggleBtn.addEventListener('click', function(){ openPanel(); });
+
+            // ESC closes (but does not dismiss — user can re-open via toggle)
+            document.addEventListener('keydown', function(e){
+                if (e.key === 'Escape' && panel.classList.contains('active')) {
+                    closePanel(true);
+                }
+            });
+        })();
+        </script>
+        @endif
+        @endisset
+    </section>
 
     <!-- ========== Animated Counters Section ========== -->
     <section class="counters-section section-divider-top" id="counters">

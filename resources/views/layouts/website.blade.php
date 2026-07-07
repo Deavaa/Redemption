@@ -52,6 +52,7 @@
     </style>
     <link rel="stylesheet" href="{{ asset('css/design-tokens.css') }}">
     <link rel="stylesheet" href="{{ asset('css/website.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/modern-glass.css') }}">
     @stack('styles')
 </head>
 <body>
