@@ -76,7 +76,41 @@
                 styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'pre'],
                 dialogFade: true,
                 disableLinkTarget: false,
-                codemirror: { theme: 'monokai' }
+                codemirror: { theme: 'monokai' },
+                // Upload images to the server instead of embedding as base64.
+                // This keeps the HTML content small and lets the news splash
+                // panel extract a real <img src="http://..."> URL for the
+                // card thumbnail.
+                callbacks: {
+                    onImageUpload: function(files) {
+                        var editor = $(this);
+                        var formData = new FormData();
+                        formData.append('file', files[0]);
+                        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                        // Show a placeholder while uploading
+                        var $placeholder = $('<div class="note-image-uploading"><i class="fas fa-spinner fa-spin"></i> Uploading...</div>');
+                        editor.summernote('insertNode', $placeholder[0]);
+                        fetch('{{ route("admin.news.upload-image") }}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (data.url) {
+                                $placeholder.remove();
+                                editor.summernote('insertImage', data.url);
+                            } else {
+                                $placeholder.remove();
+                                alert('Image upload failed: ' + (data.error || 'Unknown error'));
+                            }
+                        })
+                        .catch(function(err) {
+                            $placeholder.remove();
+                            alert('Image upload failed: ' + err.message);
+                        });
+                    }
+                }
             });
         }
     });

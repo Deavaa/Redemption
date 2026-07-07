@@ -515,6 +515,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     // News custom routes (MUST be before resource to avoid {news} parameter conflict)
     Route::post('news/{news}/approve', [NewsController::class, 'approve'])->name('news.approve')->middleware('permission:news.manage');
     Route::post('news/{news}/reject', [NewsController::class, 'reject'])->name('news.reject')->middleware('permission:news.manage');
+    Route::post('news/upload-image', [NewsController::class, 'uploadImage'])->name('news.upload-image')->middleware('permission:news.manage');
     Route::resource('news', NewsController::class)->middleware('permission:news.manage');
 
     // ── Classes & Sections ─────────────────────────────────

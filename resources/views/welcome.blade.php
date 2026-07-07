@@ -1,8 +1,7 @@
 @extends('layouts.website')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/homepage.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/modern-glass.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/homepage.css') }}?v={{ filemtime(public_path('css/homepage.css')) }}">
 @endpush
 
 @section('before-nav')
@@ -201,10 +200,20 @@
             </div>
             <div class="news-splash-panel-body">
                 @foreach($latestNews as $newsItem)
+                    @php
+                        // Use cover image if set; otherwise try to extract the first
+                        // <img src="..."> from the Summernote content as a fallback.
+                        $cardImage = $newsItem->image_path;
+                        if (!$cardImage && $newsItem->content) {
+                            if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $newsItem->content, $m)) {
+                                $cardImage = $m[1];
+                            }
+                        }
+                    @endphp
                     <article class="news-splash-card">
-                        @if($newsItem->image_path)
+                        @if($cardImage)
                             <div class="news-splash-card-img">
-                                <img src="{{ asset('storage/' . $newsItem->image_path) }}" alt="{{ $newsItem->title }}" loading="lazy">
+                                <img src="{{ Str::startsWith($cardImage, ['http', '//', 'data:', '/']) ? $cardImage : asset('storage/' . $cardImage) }}" alt="{{ $newsItem->title }}" loading="lazy">
                             </div>
                         @endif
                         <div class="news-splash-card-body">
@@ -219,7 +228,7 @@
                             </div>
                             <h4>{{ $newsItem->title }}</h4>
                             @if($newsItem->content)
-                                <p class="news-splash-card-excerpt">{!! Str::limit(strip_tags($newsItem->content), 130) !!}</p>
+                                <p class="news-splash-card-excerpt">{{ Str::limit(strip_tags($newsItem->content), 130) }}</p>
                             @endif
                         </div>
                     </article>

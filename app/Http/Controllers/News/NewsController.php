@@ -125,4 +125,30 @@ class NewsController extends Controller
         $news->delete();
         return redirect()->route('admin.news.index')->with('success', 'News item deleted.');
     }
+
+    /**
+     * Summernote image upload endpoint.
+     * Receives an image from the rich text editor and stores it in
+     * public/news-images/. Returns the absolute URL so Summernote can
+     * embed it in the editor as a real <img src="..."> instead of a
+     * huge base64 data URI.
+     */
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|image|max:5120', // 5MB max
+        ]);
+
+        if (!$request->hasFile('file')) {
+            return response()->json(['error' => 'No file uploaded'], 400);
+        }
+
+        try {
+            $path = $request->file('file')->store('news-images', 'public');
+            $url = asset('storage/' . $path);
+            return response()->json(['url' => $url]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'Upload failed: ' . $e->getMessage()], 500);
+        }
+    }
 }
