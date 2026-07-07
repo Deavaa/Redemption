@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\News;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class NewsController extends Controller
 {
@@ -17,8 +19,6 @@ class NewsController extends Controller
 
     /**
      * Display a single news item.
-     * Required by Route::resource — without this, visiting
-     * /admin/news/{id} throws "Call to undefined method show()".
      */
     public function show(News $news)
     {
@@ -31,20 +31,55 @@ class NewsController extends Controller
         return view('admin.news.create');
     }
 
-    public function store(Request $request)
+    /**
+     * Helper: Store an uploaded image file in MULTIPLE locations to maximize
+     * the chance it will be web-accessible regardless of storage:link state.
+     * Returns the relative path stored in the DB (e.g. "news-images/abc.jpg").
+     */
+    private function storeNewsImage($file): ?string
     {
-        // Log the incoming request for debugging image upload issues
-        \Log::info('News store: incoming request', [
-            'has_file_image' => $request->hasFile('image'),
-            'files_keys' => array_keys($_FILES),
-            'content_length' => strlen($request->input('content', '')),
-            'title' => $request->input('title'),
+        if (!$file || !$file->isValid()) {
+            return null;
+        }
+
+        // Generate a clean unique filename
+        $extension = $file->getClientOriginalExtension() ?: 'jpg';
+        $filename = 'news_' . date('Ymd_His') . '_' . Str::random(8) . '.' . $extension;
+        $relativePath = 'news-images/' . $filename;
+
+        // Location 1: storage/app/public/news-images/ (Laravel standard)
+        $storageDir = storage_path('app/public/news-images');
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0775, true);
+        }
+        $storagePath = $storageDir . '/' . $filename;
+        $savedToStorage = @copy($file->getRealPath(), $storagePath) || @move_uploaded_file($file->getRealPath(), $storagePath);
+
+        // Location 2: public/news-images/ (directly web-accessible, no symlink needed)
+        $publicDir = public_path('news-images');
+        if (!is_dir($publicDir)) {
+            @mkdir($publicDir, 0775, true);
+        }
+        $publicPath = $publicDir . '/' . $filename;
+        $savedToPublic = @copy($file->getRealPath(), $publicPath);
+
+        \Log::info('News image stored', [
+            'filename' => $filename,
+            'storage_path' => $storagePath,
+            'storage_exists' => file_exists($storagePath),
+            'public_path' => $publicPath,
+            'public_exists' => file_exists($publicPath),
         ]);
 
+        return $relativePath;
+    }
+
+    public function store(Request $request)
+    {
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:10240', // 10MB max (was 2MB — too small for phone photos)
+            'image' => 'nullable|image|max:10240', // 10MB
             'is_active' => 'boolean',
             'show_until' => 'nullable|date',
             'priority' => 'nullable|integer',
@@ -54,72 +89,43 @@ class NewsController extends Controller
         $data['created_by'] = Auth::id();
         $data['is_active'] = $request->boolean('is_active', true);
 
-        // If admin/super_admin creates news, auto-approve it
         if (in_array(Auth::user()->role, ['admin', 'super_admin'])) {
             $data['is_approved'] = true;
             $data['approved_by'] = Auth::id();
             $data['approved_at'] = now();
         } else {
-            // News from principals/managers needs admin approval
             $data['is_approved'] = false;
         }
 
-        // Handle image upload — with extensive error logging
+        // Handle cover image upload with our robust helper
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            \Log::info('News store: processing image upload', [
-                'original_name' => $file->getClientOriginalName(),
-                'mime' => $file->getMimeType(),
+            \Log::info('News store: image received', [
+                'name' => $file->getClientOriginalName(),
                 'size' => $file->getSize(),
-                'is_valid' => $file->isValid(),
-                'error' => $file->getError(),
-                'error_message' => $file->getErrorMessage(),
+                'mime' => $file->getMimeType(),
+                'valid' => $file->isValid(),
+                'error_msg' => $file->getErrorMessage(),
             ]);
 
-            try {
-                $path = $file->store('news-images', 'public');
+            $path = $this->storeNewsImage($file);
+            if ($path) {
                 $data['image_path'] = $path;
-                \Log::info('News store: image stored successfully', ['path' => $path]);
-
-                // Fallback for missing storage:link — also copy to public/news-images/
-                $sourceFile = storage_path('app/public/' . $path);
-                $fallbackDir = public_path('news-images');
-                if (!is_dir($fallbackDir)) {
-                    @mkdir($fallbackDir, 0775, true);
-                }
-                if (is_file($sourceFile)) {
-                    @copy($sourceFile, $fallbackDir . '/' . basename($path));
-                    \Log::info('News store: image copied to public fallback', [
-                        'fallback' => $fallbackDir . '/' . basename($path),
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                \Log::error('News store: image upload FAILED', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-                // Continue saving the news even if image upload fails
-                // so the user doesn't lose their title + content.
+            } else {
+                \Log::error('News store: storeNewsImage() returned null');
             }
         }
 
         $news = News::create($data);
-        \Log::info('News store: news created', [
-            'id' => $news->id,
-            'image_path' => $news->image_path,
-            'is_active' => $news->is_active,
-            'is_approved' => $news->is_approved,
-        ]);
 
         $msg = in_array(Auth::user()->role, ['admin', 'super_admin'])
             ? 'News item created and published successfully.'
             : 'News item submitted. It will be visible after admin approval.';
 
-        // Include image status in the success message for clarity
-        if ($request->hasFile('image') && empty($news->image_path)) {
-            $msg .= ' WARNING: Image upload failed — check storage/logs/laravel.log for details.';
-        } elseif ($news->image_path) {
-            $msg .= ' Cover image saved: ' . $news->image_path;
+        if (!empty($news->image_path)) {
+            $msg .= ' Image saved: ' . $news->image_path;
+        } elseif ($request->hasFile('image')) {
+            $msg .= ' WARNING: Image could not be saved — check storage/logs/laravel.log.';
         }
 
         return redirect()->route('admin.news.index')->with('success', $msg);
@@ -132,16 +138,10 @@ class NewsController extends Controller
 
     public function update(Request $request, News $news)
     {
-        \Log::info('News update: incoming request', [
-            'news_id' => $news->id,
-            'has_file_image' => $request->hasFile('image'),
-            'existing_image_path' => $news->image_path,
-        ]);
-
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:10240', // 10MB max
+            'image' => 'nullable|image|max:10240',
             'is_active' => 'boolean',
             'show_until' => 'nullable|date',
             'priority' => 'nullable|integer',
@@ -152,47 +152,23 @@ class NewsController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            \Log::info('News update: processing image upload', [
-                'original_name' => $file->getClientOriginalName(),
-                'mime' => $file->getMimeType(),
+            \Log::info('News update: image received', [
+                'name' => $file->getClientOriginalName(),
                 'size' => $file->getSize(),
-                'is_valid' => $file->isValid(),
-                'error' => $file->getError(),
-                'error_message' => $file->getErrorMessage(),
+                'valid' => $file->isValid(),
             ]);
 
-            try {
-                $path = $file->store('news-images', 'public');
+            $path = $this->storeNewsImage($file);
+            if ($path) {
                 $data['image_path'] = $path;
-                \Log::info('News update: image stored successfully', ['path' => $path]);
-
-                // Fallback for missing storage:link
-                $sourceFile = storage_path('app/public/' . $path);
-                $fallbackDir = public_path('news-images');
-                if (!is_dir($fallbackDir)) {
-                    @mkdir($fallbackDir, 0775, true);
-                }
-                if (is_file($sourceFile)) {
-                    @copy($sourceFile, $fallbackDir . '/' . basename($path));
-                }
-            } catch (\Throwable $e) {
-                \Log::error('News update: image upload FAILED', [
-                    'error' => $e->getMessage(),
-                ]);
             }
         }
 
         $news->update($data);
-        \Log::info('News update: news updated', [
-            'id' => $news->id,
-            'image_path' => $news->fresh()->image_path,
-        ]);
 
         $msg = 'News item updated successfully.';
-        if ($request->hasFile('image') && empty($news->fresh()->image_path)) {
-            $msg .= ' WARNING: Image upload failed — check storage/logs/laravel.log.';
-        } elseif ($news->fresh()->image_path && $request->hasFile('image')) {
-            $msg .= ' Cover image updated: ' . $news->fresh()->image_path;
+        if (!empty($news->fresh()->image_path) && $request->hasFile('image')) {
+            $msg .= ' Image updated: ' . $news->fresh()->image_path;
         }
 
         return redirect()->route('admin.news.index')->with('success', $msg);
@@ -238,66 +214,37 @@ class NewsController extends Controller
 
     /**
      * Summernote image upload endpoint.
-     * Receives an image from the rich text editor and stores it in
-     * public/news-images/. Returns the absolute URL so Summernote can
-     * embed it in the editor as a real <img src="..."> instead of a
-     * huge base64 data URI.
-     *
-     * Also ensures the storage symlink exists (php artisan storage:link
-     * equivalent) so the returned URL resolves to a real file.
+     * Saves to BOTH storage/app/public/news-images/ AND public/news-images/
+     * so the image is web-accessible regardless of storage:link state.
+     * Returns the absolute URL.
      */
     public function uploadImage(Request $request)
     {
         $request->validate([
-            'file' => 'required|image|max:5120', // 5MB max
+            'file' => 'required|image|max:10240',
         ]);
 
         if (!$request->hasFile('file')) {
             return response()->json(['error' => 'No file uploaded'], 400);
         }
 
-        try {
-            // Ensure the public/storage symlink exists — this is the #1 cause
-            // of "image not showing" on XAMPP. Target: storage/app/public
-            // Link:    public/storage
-            $publicStorage = public_path('storage');
-            $target = storage_path('app/public');
-            if (!file_exists($publicStorage)) {
-                // Windows / XAMPP: symlink may fail without admin privs.
-                // Try symlink first; if it fails, create a junction (Windows)
-                // or just copy the directory as a last resort.
-                @symlink($target, $publicStorage);
-                if (!file_exists($publicStorage)) {
-                    // Fallback: copy the file directly to public/news-images
-                    // so it's web-accessible even without the symlink.
-                    $publicNewsDir = public_path('news-images');
-                    if (!is_dir($publicNewsDir)) {
-                        @mkdir($publicNewsDir, 0775, true);
-                    }
-                }
-            }
-
-            $path = $request->file('file')->store('news-images', 'public');
-            $url = asset('storage/' . $path);
-
-            // Fallback: if symlink isn't working, also expose the file via
-            // public/news-images/ so it's directly web-accessible.
-            $sourceFile = storage_path('app/public/' . $path);
-            $fallbackDir = public_path('news-images');
-            if (is_file($sourceFile) && is_dir($fallbackDir)) {
-                @copy($sourceFile, $fallbackDir . '/' . basename($path));
-            }
-
-            return response()->json([
-                'url' => $url,
-                'path' => $path,
-                'filename' => basename($path),
-            ]);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'error' => 'Upload failed: ' . $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ], 500);
+        $file = $request->file('file');
+        if (!$file->isValid()) {
+            return response()->json(['error' => 'Invalid upload: ' . $file->getErrorMessage()], 400);
         }
+
+        $path = $this->storeNewsImage($file);
+        if (!$path) {
+            return response()->json(['error' => 'Failed to store image'], 500);
+        }
+
+        // Build the URL — prefer the public/ path since it doesn't depend on the storage symlink
+        $url = asset($path);
+
+        return response()->json([
+            'url' => $url,
+            'path' => $path,
+            'filename' => basename($path),
+        ]);
     }
 }
