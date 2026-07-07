@@ -1,0 +1,917 @@
+     1→@extends('layouts.website')
+     2→
+     3→@push('styles')
+     4→    <link rel="stylesheet" href="{{ asset('css/homepage.css') }}">
+     5→@endpush
+     6→
+     7→@section('before-nav')
+     8→    <!-- Announcement Ticker Bar -->
+     9→    <div id="announcementTicker" style="display:none;background:linear-gradient(135deg,#1B5E20 0%,#0D3B12 100%);color:#fff;overflow:hidden;position:fixed;top:0;left:0;right:0;z-index:9999;">
+    10→        <div style="display:flex;align-items:center;height:36px;">
+    11→            <div style="background:rgba(255,255,255,0.18);padding:0 14px;height:100%;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0;border-right:1px solid rgba(255,255,255,0.15);">
+    12→                <i class="fas fa-bullhorn" style="font-size:13px;"></i> <span>Announcements</span>
+    13→            </div>
+    14→            <div style="flex:1;overflow:hidden;position:relative;height:100%;">
+    15→                <div id="tickerTrack" style="display:flex;align-items:center;height:100%;white-space:nowrap;"></div>
+    16→            </div>
+    17→            <button id="tickerClose" style="background:rgba(255,255,255,0.12);border:none;color:#fff;width:36px;height:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.15);" title="Dismiss"><i class="fas fa-times"></i></button>
+    18→        </div>
+    19→    </div>
+    20→    <style>
+    21→    @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    22→    .ticker-item { display:inline-flex;align-items:center;gap:8px;padding:0 24px;font-size:13px;font-weight:500;white-space:nowrap; }
+    23→    .ticker-dot { width:6px;height:6px;border-radius:50%;flex-shrink:0; }
+    24→    .ticker-cat { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.7; }
+    25→    .ticker-date { font-size:11px;opacity:0.6; }
+    26→    #tickerTrack.scrolling { animation: ticker-scroll 120s linear infinite; }
+    27→    #tickerTrack.scrolling:hover { animation-play-state:paused; }
+    28→    @media(max-width:768px) { .ticker-item { padding:0 14px;font-size:12px; } }
+    29→    </style>
+    30→    <script>
+    31→    // Adjust navbar top when ticker is visible
+    32→    (function() {
+    33→        var navbar = document.getElementById('navbar');
+    34→        var tickerEl = document.getElementById('announcementTicker');
+    35→        if (navbar) {
+    36→            // Start at top, the website.js will adjust if ticker is visible
+    37→            navbar.style.top = '0';
+    38→        }
+    39→    })();
+    40→    </script>
+    41→@endsection
+    42→
+    43→@section('content')
+    44→    <!-- ========== Hero Slider Section ========== -->
+    45→    <section class="hero-slider" id="home">
+    46→
+    47→        <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-pause="false">
+    48→            <div class="carousel-indicators">
+    49→                @forelse($sliders as $index => $slider)
+    50→                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ $index }}" @if($index === 0) class="active" @endif></button>
+    51→                @empty
+    52→                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+    53→                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+    54→                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+    55→                @endforelse
+    56→            </div>
+    57→            <div class="carousel-inner">
+    58→                @forelse($sliders as $index => $slider)
+    59→                    <div class="carousel-item @if($index === 0) active @endif" data-bs-interval="6000">
+    60→                        <div class="hero-slide" data-parallax style="background-image: url('{{ asset('storage/' . $slider->image_path) }}')">
+    61→                            <div class="hero-overlay"></div>
+    62→                            <div class="hero-dot-grid"></div>
+    63→                            <div class="container h-100">
+    64→                                <div class="row h-100 align-items-center">
+    65→                                    <div class="col-lg-8">
+    66→                                        <div class="hero-content hero-text-reveal">
+    67→                                            @if($slider->title)
+    68→                                                <span class="hero-badge">
+    69→                                                    <i class="fas fa-graduation-cap me-2"></i>{{ $slider->title }}
+    70→                                                </span>
+    71→                                            @endif
+    72→                                            @if($slider->subtitle)
+    73→                                                <h1>{{ $slider->subtitle }}</h1>
+    74→                                            @endif
+    75→                                            @if($slider->description ?? null)
+    76→                                                <p>{{ $slider->description }}</p>
+    77→                                            @endif
+    78→                                            <div class="hero-buttons hero-buttons-right">
+    79→                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
+    80→                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
+    81→                                                </a>
+    82→                                            </div>
+    83→                                        </div>
+    84→                                    </div>
+    85→                                </div>
+    86→                            </div>
+    87→                        </div>
+    88→                    </div>
+    89→                @empty
+    90→                    <!-- Default Slide 1 -->
+    91→                    <div class="carousel-item active" data-bs-interval="6000">
+    92→                        <div class="hero-slide" data-parallax style="background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
+    93→                            <div class="hero-overlay"></div>
+    94→                            <div class="hero-dot-grid"></div>
+    95→                            <div class="container h-100">
+    96→                                <div class="row h-100 align-items-center">
+    97→                                    <div class="col-lg-8">
+    98→                                        <div class="hero-content hero-text-reveal">
+    99→                                            <span class="hero-badge">
+   100→                                                <i class="fas fa-graduation-cap me-2"></i>Excellence in Education
+   101→                                            </span>
+   102→                                            <h1>Empowering Minds, <span>Shaping Futures</span></h1>
+   103→                                            <p>{{ $settings['school_description'] }}</p>
+   104→                                            <div class="hero-buttons hero-buttons-right">
+   105→                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
+   106→                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
+   107→                                                </a>
+   108→                                            </div>
+   109→                                        </div>
+   110→                                    </div>
+   111→                                </div>
+   112→                            </div>
+   113→                        </div>
+   114→                    </div>
+   115→                    <!-- Default Slide 2 -->
+   116→                    <div class="carousel-item" data-bs-interval="6000">
+   117→                        <div class="hero-slide" data-parallax style="background-image: url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
+   118→                            <div class="hero-overlay"></div>
+   119→                            <div class="hero-dot-grid"></div>
+   120→                            <div class="container h-100">
+   121→                                <div class="row h-100 align-items-center">
+   122→                                    <div class="col-lg-8">
+   123→                                        <div class="hero-content hero-text-reveal">
+   124→                                            <span class="hero-badge">
+   125→                                                <i class="fas fa-book-reader me-2"></i>Excellence in Education
+   126→                                            </span>
+   127→                                            <h1>Where Learning <span>Becomes Discovery</span></h1>
+   128→                                            <p>Our innovative curriculum combines academic rigor with creative exploration, preparing students to think critically and solve real-world problems with confidence.</p>
+   129→                                            <div class="hero-buttons hero-buttons-right">
+   130→                                                <a href="{{ route('login') }}" class="btn btn-hero-small">
+   131→                                                    <i class="fas fa-sign-in-alt me-1"></i>Login
+   132→                                                </a>
+   133→                                            </div>
+   134→                                        </div>
+   135→                                    </div>
+   136→                                </div>
+   137→                            </div>
+   138→                        </div>
+   139→                    </div>
+   140→                    <!-- Default Slide 3 -->
+   141→                    <div class="carousel-item" data-bs-interval="6000">
+   142→                        <div class="hero-slide" data-parallax style="background-image: url('https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
+   143→                            <div class="hero-overlay"></div>
+   144→                            <div class="hero-dot-grid"></div>
+   145→                            <div class="container h-100">
+   146→                                <div class="row h-100 align-items-center">
+   147→                                    <div class="col-lg-8">
+   148→                                        <div class="hero-content hero-text-reveal">
+   149→                                            <span class="hero-badge">
+   150→                                                <i class="fas fa-users me-2"></i>Join Our Community
+   151→                                            </span>
+   152→                                            <h1>Building <span>Tomorrow's Leaders</span></h1>
+   153→                                            <p>With {{ $settings['total_students'] }} students, {{ $settings['total_teachers'] }} expert teachers, and a {{ $settings['university_acceptance'] }} university acceptance rate, {{ $settings['school_name'] }} is where excellence meets opportunity.</p>
+   154→                                            <div class="hero-stats">
+   155→                                                <div class="stat-item">
+   156→                                                    <h3><span class="counter" data-target="{{ $settings['total_students'] }}">0</span>+</h3>
+   157→                                                    <p>Students</p>
+   158→                                                </div>
+   159→                                                <div class="stat-item">
+   160→                                                    <h3><span class="counter" data-target="{{ $settings['total_teachers'] }}">0</span>+</h3>
+   161→                                                    <p>Expert Teachers</p>
+   162→                                                </div>
+   163→                                                <div class="stat-item">
+   164→                                                    <h3><span class="counter" data-target="{{ preg_replace('/[^0-9]/', '', $settings['university_acceptance']) }}">0</span>%</h3>
+   165→                                                    <p>University Acceptance</p>
+   166→                                                </div>
+   167→                                            </div>
+   168→                                        </div>
+   169→                                    </div>
+   170→                                </div>
+   171→                            </div>
+   172→                        </div>
+   173→                    </div>
+   174→                @endforelse
+   175→            </div>
+   176→            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+   177→                <span class="carousel-control-prev-icon"></span>
+   178→            </button>
+   179→            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+   180→                <span class="carousel-control-next-icon"></span>
+   181→            </button>
+   182→        </div>
+   183→
+   184→        <!-- Bottom Overlay: Alerts (Left) + News (Right) -->
+   185→        @if($sliderAlerts->count() > 0)
+   186→        <div class="slider-bottom-overlay">
+   187→            <div class="slider-bottom-overlay-inner">
+   188→                <!-- Left: Slider Alerts -->
+   189→                <div class="slider-bottom-alerts">
+   190→                    <div class="slider-bottom-label">
+   191→                        <i class="fas fa-bullhorn"></i>
+   192→                        <span>Alerts</span>
+   193→                    </div>
+   194→                    <div class="slider-bottom-alerts-list">
+   195→                        @foreach($sliderAlerts as $alert)
+   196→                            <span class="slider-bottom-alert-item" style="background:{{ $alert->bg_color }};color:{{ $alert->text_color }};">
+   197→                                <i class="fas {{ $alert->icon }}"></i>
+   198→                                {{ $alert->message }}
+   199→                            </span>
+   200→                        @endforeach
+   201→                    </div>
+   202→                </div>
+   203→            </div>
+   204→        </div>
+   205→        @endif
+   206→    </section>
+   207→
+   208→    <!-- ========== News Splash Screen ========== -->
+   209→    @isset($latestNews)
+   210→    @if($latestNews->count() > 0)
+   211→    <div class="news-splash" id="newsSplash">
+   212→        <div class="news-splash-backdrop" id="newsSplashBackdrop"></div>
+   213→        <div class="news-splash-modal">
+   214→            <button class="news-splash-close" id="newsSplashClose" aria-label="Close news">
+   215→                <i class="fas fa-times"></i>
+   216→            </button>
+   217→            <div class="news-splash-header">
+   218→                <div class="news-splash-icon">
+   219→                    <i class="fas fa-newspaper"></i>
+   220→                </div>
+   221→                <h2>Latest News</h2>
+   222→                <p>Stay updated with the latest from our school</p>
+   223→            </div>
+   224→            <div class="news-splash-grid">
+   225→                @foreach($latestNews as $newsItem)
+   226→                    <div class="news-splash-card">
+   227→                        @if($newsItem->image_path)
+   228→                            <div class="news-splash-card-img">
+   229→                                <img src="{{ asset('storage/' . $newsItem->image_path) }}" alt="{{ $newsItem->title }}">
+   230→                            </div>
+   231→                        @else
+   232→                            <div class="news-splash-card-img news-splash-card-placeholder">
+   233→                                <i class="fas fa-newspaper"></i>
+   234→                            </div>
+   235→                        @endif
+   236→                        <div class="news-splash-card-body">
+   237→                            <span class="news-splash-card-date">{{ $newsItem->created_at->format('M d, Y') }}</span>
+   238→                            <h3>{{ $newsItem->title }}</h3>
+   239→                            @if($newsItem->content)
+   240→                                <p>{{ Str::limit(strip_tags($newsItem->content), 120) }}</p>
+   241→                            @endif
+   242→                        </div>
+   243→                    </div>
+   244→                @endforeach
+   245→            </div>
+   246→        </div>
+   247→    </div>
+   248→    <style>
+   249→    .news-splash { position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all 0.4s ease; }
+   250→    .news-splash.active { opacity:1;visibility:visible; }
+   251→    .news-splash-backdrop { position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
+   252→    .news-splash-modal { position:relative;background:linear-gradient(145deg,#0d0d2b 0%,#1a1a3e 100%);border:1px solid rgba(212,160,23,0.3);border-radius:24px;padding:2rem;max-width:800px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.5),0 0 40px rgba(212,160,23,0.1);transform:scale(0.9) translateY(20px);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); }
+   253→    .news-splash.active .news-splash-modal { transform:scale(1) translateY(0); }
+   254→    .news-splash-close { position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.3s ease;z-index:2; }
+   255→    .news-splash-close:hover { background:rgba(212,160,23,0.3);border-color:rgba(212,160,23,0.5);transform:rotate(90deg); }
+   256→    .news-splash-header { text-align:center;margin-bottom:2rem; }
+   257→    .news-splash-icon { width:64px;height:64px;background:rgba(212,160,23,0.15);border:2px solid rgba(212,160,23,0.4);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem; }
+   258→    .news-splash-icon i { font-size:1.5rem;color:#D4A017; }
+   259→    .news-splash-header h2 { color:#fff;font-family:'Playfair Display',serif;font-size:1.8rem;margin-bottom:0.5rem; }
+   260→    .news-splash-header p { color:rgba(255,255,255,0.6);font-size:0.9rem;margin:0; }
+   261→    .news-splash-grid { display:grid;grid-template-columns:1fr;gap:1.25rem; }
+   262→    .news-splash-card { display:flex;gap:1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;transition:all 0.3s ease;cursor:pointer; }
+   263→    .news-splash-card:hover { background:rgba(255,255,255,0.1);border-color:rgba(212,160,23,0.4);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3); }
+   264→    .news-splash-card-img { width:120px;min-height:100px;flex-shrink:0;overflow:hidden; }
+   265→    .news-splash-card-img img { width:100%;height:100%;object-fit:cover; }
+   266→    .news-splash-card-placeholder { display:flex;align-items:center;justify-content:center;background:rgba(212,160,23,0.1); }
+   267→    .news-splash-card-placeholder i { font-size:2rem;color:rgba(212,160,23,0.5); }
+   268→    .news-splash-card-body { flex:1;padding:1rem 1rem 1rem 0;min-width:0; }
+   269→    .news-splash-card-date { font-size:0.72rem;color:rgba(212,160,23,0.8);font-weight:600;text-transform:uppercase;letter-spacing:0.5px; }
+   270→    .news-splash-card-body h3 { color:#fff;font-size:1rem;margin:0.3rem 0 0.5rem;line-height:1.3; }
+   271→    .news-splash-card-body p { color:rgba(255,255,255,0.6);font-size:0.82rem;margin:0;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+   272→    @media(max-width:768px) {
+   273→        .news-splash-modal { padding:1.5rem;border-radius:20px; }
+   274→        .news-splash-header h2 { font-size:1.4rem; }
+   275→        .news-splash-card { flex-direction:column; }
+   276→        .news-splash-card-img { width:100%;min-height:140px; }
+   277→        .news-splash-card-body { padding:1rem; }
+   278→    }
+   279→    </style>
+   280→    <script>
+   281→    (function(){
+   282→        var splash = document.getElementById('newsSplash');
+   283→        var closeBtn = document.getElementById('newsSplashClose');
+   284→        var backdrop = document.getElementById('newsSplashBackdrop');
+   285→        // Show splash after 2 seconds
+   286→        setTimeout(function(){
+   287→            if(splash && !sessionStorage.getItem('news_splash_dismissed')){
+   288→                splash.classList.add('active');
+   289→            }
+   290→        }, 2000);
+   291→        function closeSplash(){
+   292→            splash.classList.remove('active');
+   293→            sessionStorage.setItem('news_splash_dismissed', '1');
+   294→        }
+   295→        if(closeBtn) closeBtn.addEventListener('click', closeSplash);
+   296→        if(backdrop) backdrop.addEventListener('click', closeSplash);
+   297→        document.addEventListener('keydown', function(e){
+   298→            if(e.key === 'Escape') closeSplash();
+   299→        });
+   300→    })();
+   301→    </script>
+   302→    @endif
+   303→    @endisset
+   304→
+   305→    <!-- ========== Animated Counters Section ========== -->
+   306→    <section class="counters-section section-divider-top" id="counters">
+   307→        <div class="container">
+   308→            <div class="row g-4">
+   309→                <div class="col-lg-3 col-md-6 col-6">
+   310→                    <div class="counter-item reveal">
+   311→                        <div class="counter-icon">
+   312→                            <i class="fas fa-user-graduate"></i>
+   313→                        </div>
+   314→                        <h3><span class="counter" data-target="{{ $settings['total_students'] }}">0</span>+</h3>
+   315→                        <p>Students</p>
+   316→                    </div>
+   317→                </div>
+   318→                <div class="col-lg-3 col-md-6 col-6">
+   319→                    <div class="counter-item reveal">
+   320→                        <div class="counter-icon">
+   321→                            <i class="fas fa-chalkboard-teacher"></i>
+   322→                        </div>
+   323→                        <h3><span class="counter" data-target="{{ $settings['total_teachers'] }}">0</span>+</h3>
+   324→                        <p>Expert Teachers</p>
+   325→                    </div>
+   326→                </div>
+   327→                <div class="col-lg-3 col-md-6 col-6">
+   328→                    <div class="counter-item reveal">
+   329→                        <div class="counter-icon">
+   330→                            <i class="fas fa-trophy"></i>
+   331→                        </div>
+   332→                        <h3><span class="counter" data-target="{{ $settings['years_of_excellence'] }}">0</span>+</h3>
+   333→                        <p>Years of Excellence</p>
+   334→                    </div>
+   335→                </div>
+   336→                <div class="col-lg-3 col-md-6 col-6">
+   337→                    <div class="counter-item reveal">
+   338→                        <div class="counter-icon">
+   339→                            <i class="fas fa-university"></i>
+   340→                        </div>
+   341→                        <h3><span class="counter" data-target="{{ preg_replace('/[^0-9]/', '', $settings['university_acceptance']) }}">0</span>%</h3>
+   342→                        <p>University Acceptance</p>
+   343→                    </div>
+   344→                </div>
+   345→            </div>
+   346→        </div>
+   347→    </section>
+   348→
+   349→    <!-- ========== Features Section (Glassmorphic Cards) ========== -->
+   350→    <section class="features" id="features">
+   351→        <div class="container">
+   352→            <div class="section-header reveal">
+   353→                <span class="section-badge">Why Choose Us</span>
+   354→                <h2>{{ $settings['wcu_section_title'] }}</h2>
+   355→                <p>{{ $settings['wcu_section_subtitle'] }}</p>
+   356→            </div>
+   357→            <div class="row g-4">
+   358→                <div class="col-lg-4 col-md-6">
+   359→                    <div class="feature-card reveal">
+   360→                        <div class="feature-icon">
+   361→                            <i class="{{ $settings['wcu_1_icon'] }}"></i>
+   362→                        </div>
+   363→                        <h4>{{ $settings['wcu_1_title'] }}</h4>
+   364→                        <p>{{ $settings['wcu_1_description'] }}</p>
+   365→                    </div>
+   366→                </div>
+   367→                <div class="col-lg-4 col-md-6">
+   368→                    <div class="feature-card reveal">
+   369→                        <div class="feature-icon">
+   370→                            <i class="{{ $settings['wcu_2_icon'] }}"></i>
+   371→                        </div>
+   372→                        <h4>{{ $settings['wcu_2_title'] }}</h4>
+   373→                        <p>{{ $settings['wcu_2_description'] }}</p>
+   374→                    </div>
+   375→                </div>
+   376→                <div class="col-lg-4 col-md-6">
+   377→                    <div class="feature-card reveal">
+   378→                        <div class="feature-icon">
+   379→                            <i class="{{ $settings['wcu_3_icon'] }}"></i>
+   380→                        </div>
+   381→                        <h4>{{ $settings['wcu_3_title'] }}</h4>
+   382→                        <p>{{ $settings['wcu_3_description'] }}</p>
+   383→                    </div>
+   384→                </div>
+   385→                <div class="col-lg-4 col-md-6">
+   386→                    <div class="feature-card reveal">
+   387→                        <div class="feature-icon">
+   388→                            <i class="{{ $settings['wcu_4_icon'] }}"></i>
+   389→                        </div>
+   390→                        <h4>{{ $settings['wcu_4_title'] }}</h4>
+   391→                        <p>{{ $settings['wcu_4_description'] }}</p>
+   392→                    </div>
+   393→                </div>
+   394→                <div class="col-lg-4 col-md-6">
+   395→                    <div class="feature-card reveal">
+   396→                        <div class="feature-icon">
+   397→                            <i class="{{ $settings['wcu_5_icon'] }}"></i>
+   398→                        </div>
+   399→                        <h4>{{ $settings['wcu_5_title'] }}</h4>
+   400→                        <p>{{ $settings['wcu_5_description'] }}</p>
+   401→                    </div>
+   402→                </div>
+   403→                <div class="col-lg-4 col-md-6">
+   404→                    <div class="feature-card reveal">
+   405→                        <div class="feature-icon">
+   406→                            <i class="{{ $settings['wcu_6_icon'] }}"></i>
+   407→                        </div>
+   408→                        <h4>{{ $settings['wcu_6_title'] }}</h4>
+   409→                        <p>{{ $settings['wcu_6_description'] }}</p>
+   410→                    </div>
+   411→                </div>
+   412→            </div>
+   413→        </div>
+   414→    </section>
+   415→
+   416→    <!-- ========== About Section (Split Layout) ========== -->
+   417→    <section class="about" id="about">
+   418→        <div class="container">
+   419→            <div class="row align-items-center g-5">
+   420→                <div class="col-lg-6 about-image-col reveal-left">
+   421→                    <div class="about-image-wrapper">
+   422→                        <img src="{{ isset($settings['about_image']) && $settings['about_image'] && file_exists(public_path('storage/' . $settings['about_image'])) ? asset('storage/' . $settings['about_image']) : 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" alt="About {{ $settings['school_name'] }}">
+   423→                        <div class="about-image-badge">
+   424→                            <h3>{{ $settings['about_years_experience'] }}</h3>
+   425→                            <p>Years of<br>Excellence</p>
+   426→                        </div>
+   427→                    </div>
+   428→                </div>
+   429→                <div class="col-lg-6 about-text-col reveal-right">
+   430→                    <div class="about-content">
+   431→                        <span class="section-badge">About Our School</span>
+   432→                        <h2>A Legacy of Academic Excellence</h2>
+   433→                        <p>{{ $settings['about_description'] }}</p>
+   434→                        <p>{{ $settings['about_mission'] }}</p>
+   435→                        <ul class="about-features">
+   436→                            <li><i class="fas fa-check-circle"></i> Accredited by National Education Board</li>
+   437→                            <li><i class="fas fa-check-circle"></i> Award-winning STEM programs</li>
+   438→                            <li><i class="fas fa-check-circle"></i> Comprehensive extracurricular activities</li>
+   439→                            <li><i class="fas fa-check-circle"></i> Strong alumni network worldwide</li>
+   440→                        </ul>
+   441→                        <div class="mt-3">
+   442→                            <a href="#contact" class="btn btn-hero-primary">
+   443→                                <i class="fas fa-arrow-right me-2"></i>Discover More
+   444→                            </a>
+   445→                        </div>
+   446→                    </div>
+   447→                </div>
+   448→            </div>
+   449→        </div>
+   450→    </section>
+   451→
+   452→    <!-- ========== Programs Section (Horizontal Scroll) ========== -->
+   453→    <section class="programs" id="programs">
+   454→        <div class="container">
+   455→            <div class="section-header reveal">
+   456→                <span class="section-badge">Academic Programs</span>
+   457→                <h2>{{ $settings['programs_section_title'] }}</h2>
+   458→                <p>{{ $settings['programs_section_subtitle'] }}</p>
+   459→            </div>
+   460→            <div class="programs-scroll-wrapper reveal" id="programsScrollWrapper">
+   461→                <div class="programs-scroll-track">
+   462→                    @php
+   463→                        $programsCount = (int) ($settings['programs_count'] ?? 4);
+   464→                        $visiblePrograms = 0;
+   465→                    @endphp
+   466→                    @for ($i = 1; $i <= $programsCount; $i++)
+   467→                        @php
+   468→                            $pVisible = ($settings["program_{$i}_visible"] ?? '1') === '1';
+   469→                            $pImage = $settings["program_{$i}_image"] ?? '';
+   470→                            $pTag = $settings["program_{$i}_tag"] ?? '';
+   471→                            $pTitle = $settings["program_{$i}_title"] ?? '';
+   472→                            $pDesc = $settings["program_{$i}_description"] ?? '';
+   473→                            $hasImage = !empty($pImage) && file_exists(public_path('storage/' . $pImage));
+   474→                        @endphp
+   475→                        @if($pVisible && !empty($pTitle))
+   476→                            @php $visiblePrograms++; @endphp
+   477→                            <div class="program-card">
+   478→                                <div class="program-image" style="background-image: url('{{ $hasImage ? asset('storage/' . $pImage) : 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}')"></div>
+   479→                                <div class="program-content">
+   480→                                    <span class="program-tag">{{ $pTag }}</span>
+   481→                                    <h4>{{ $pTitle }}</h4>
+   482→                                    <p>{{ $pDesc }}</p>
+   483→                                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+   484→                                </div>
+   485→                            </div>
+   486→                        @endif
+   487→                    @endfor
+   488→                    @if($visiblePrograms === 0)
+   489→                        <div style="text-align:center;padding:3rem;color:var(--text-light);">
+   490→                            <i class="fas fa-graduation-cap" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:1rem;"></i>
+   491→                            <p>No programs configured yet. Add programs via Admin → Web Content.</p>
+   492→                        </div>
+   493→                    @endif
+   494→                </div>
+   495→            </div>
+   496→            <div class="programs-scroll-nav">
+   497→                <button id="programsScrollLeft" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+   498→                <button id="programsScrollRight" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
+   499→            </div>
+   500→        </div>
+   501→    </section>
+   502→
+   503→    <!-- ========== Gallery Section (Masonry) ========== -->
+   504→    <section class="gallery" id="gallery">
+   505→        <div class="container">
+   506→            <div class="section-header reveal">
+   507→                <span class="section-badge">Photo Gallery</span>
+   508→                <h2>Campus Life & Moments</h2>
+   509→                <p>Explore our vibrant campus through these captured moments of learning, creativity, and achievement.</p>
+   510→            </div>
+   511→            <div class="gallery-masonry reveal">
+   512→                @forelse($galleryImages as $image)
+   513→                    <div class="gallery-item">
+   514→                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $image->title ?? 'Gallery Image' }}" loading="lazy">
+   515→                        <div class="gallery-overlay">
+   516→                            <i class="fas fa-search-plus"></i>
+   517→                        </div>
+   518→                    </div>
+   519→                @empty
+   520→                    <div class="gallery-item">
+   521→                        <img src="https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Students in classroom" loading="lazy">
+   522→                        <div class="gallery-overlay">
+   523→                            <i class="fas fa-search-plus"></i>
+   524→                        </div>
+   525→                    </div>
+   526→                    <div class="gallery-item">
+   527→                        <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Science laboratory" loading="lazy">
+   528→                        <div class="gallery-overlay">
+   529→                            <i class="fas fa-search-plus"></i>
+   530→                        </div>
+   531→                    </div>
+   532→                    <div class="gallery-item">
+   533→                        <img src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="School library" loading="lazy">
+   534→                        <div class="gallery-overlay">
+   535→                            <i class="fas fa-search-plus"></i>
+   536→                        </div>
+   537→                    </div>
+   538→                    <div class="gallery-item">
+   539→                        <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Sports activities" loading="lazy">
+   540→                        <div class="gallery-overlay">
+   541→                            <i class="fas fa-search-plus"></i>
+   542→                        </div>
+   543→                    </div>
+   544→                    <div class="gallery-item">
+   545→                        <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Art class" loading="lazy">
+   546→                        <div class="gallery-overlay">
+   547→                            <i class="fas fa-search-plus"></i>
+   548→                        </div>
+   549→                    </div>
+   550→                    <div class="gallery-item">
+   551→                        <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Graduation ceremony" loading="lazy">
+   552→                        <div class="gallery-overlay">
+   553→                            <i class="fas fa-search-plus"></i>
+   554→                        </div>
+   555→                    </div>
+   556→                @endforelse
+   557→            </div>
+   558→            @if($galleryImages->count() > 0)
+   559→            <div class="text-center mt-4 reveal">
+   560→                <a href="{{ route('gallery') }}" class="btn btn-hero-primary" style="padding:0.75rem 2rem;">View Full Gallery</a>
+   561→            </div>
+   562→            @endif
+   563→        </div>
+   564→    </section>
+   565→
+   566→    <!-- ========== Video Section (NEW) ========== -->
+   567→    @isset($videos)
+   568→    @if($videos->count() > 0)
+   569→    <section class="video-section" id="videos">
+   570→        <div class="container">
+   571→            <div class="section-header reveal">
+   572→                <span class="section-badge">Video Gallery</span>
+   573→                <h2>Video Highlights</h2>
+   574→                <p>Watch our school events, educational content, and student achievements come to life.</p>
+   575→            </div>
+   576→            <div class="row g-4">
+   577→                @foreach($videos as $video)
+   578→                <div class="col-lg-4 col-md-6">
+   579→                    <div class="video-card reveal" data-video-id="{{ $video->youtube_video_id }}" onclick="openVideoModal('{{ $video->youtube_video_id }}')">
+   580→                        <div class="video-thumb">
+   581→                            @if($video->thumbnail)
+   582→                                <img src="{{ $video->thumbnail }}" alt="{{ $video->title }}" loading="lazy">
+   583→                            @else
+   584→                                <img src="https://img.youtube.com/vi/{{ $video->youtube_video_id }}/hqdefault.jpg" alt="{{ $video->title }}" loading="lazy">
+   585→                            @endif
+   586→                            <div class="video-play-btn">
+   587→                                <i class="fas fa-play"></i>
+   588→                            </div>
+   589→                        </div>
+   590→                        <div class="video-info">
+   591→                            <h5>{{ $video->title }}</h5>
+   592→                            <div class="video-meta">
+   593→                                @if($video->channel_name)
+   594→                                    <span><i class="fab fa-youtube me-1" style="color:#ff0000;"></i>{{ $video->channel_name }}</span>
+   595→                                @endif
+   596→                                @if($video->category)
+   597→                                    <span class="video-category">{{ $video->category }}</span>
+   598→                                @endif
+   599→                            </div>
+   600→                        </div>
+   601→                    </div>
+   602→                </div>
+   603→                @endforeach
+   604→            </div>
+   605→        </div>
+   606→    </section>
+   607→    @endif
+   608→    @endisset
+   609→
+   610→    {{-- Legacy video section for backward compat --}}
+   611→    @isset($websiteVideos)
+   612→    @if(isset($videos) && $videos->count() > 0)
+   613→    @elseif($websiteVideos->count() > 0 || (isset($galleryVideos) && $galleryVideos->count() > 0))
+   614→    <section class="video-section" id="videos">
+   615→        <div class="container">
+   616→            <div class="section-header reveal">
+   617→                <span class="section-badge">Video Gallery</span>
+   618→                <h2>Video Highlights</h2>
+   619→                <p>Watch our school events, educational content, and student achievements.</p>
+   620→            </div>
+   621→            <div class="row g-4">
+   622→                @foreach($websiteVideos as $video)
+   623→                <div class="col-lg-4 col-md-6">
+   624→                    <div class="video-card reveal" onclick="openVideoModal('{{ $video->youtube_video_id }}')">
+   625→                        <div class="video-thumb">
+   626→                            @if($video->thumbnail)
+   627→                                <img src="{{ $video->thumbnail }}" alt="{{ $video->title }}" loading="lazy">
+   628→                            @else
+   629→                                <img src="https://img.youtube.com/vi/{{ $video->youtube_video_id }}/hqdefault.jpg" alt="{{ $video->title }}" loading="lazy">
+   630→                            @endif
+   631→                            <div class="video-play-btn">
+   632→                                <i class="fas fa-play"></i>
+   633→                            </div>
+   634→                        </div>
+   635→                        <div class="video-info">
+   636→                            <h5>{{ $video->title }}</h5>
+   637→                            <div class="video-meta">
+   638→                                @if($video->channel_name)
+   639→                                    <span><i class="fab fa-youtube me-1" style="color:#ff0000;"></i>{{ $video->channel_name }}</span>
+   640→                                @endif
+   641→                                @if($video->category)
+   642→                                    <span class="video-category">{{ $video->category }}</span>
+   643→                                @endif
+   644→                            </div>
+   645→                        </div>
+   646→                    </div>
+   647→                </div>
+   648→                @endforeach
+   649→
+   650→                @isset($galleryVideos)
+   651→                @foreach($galleryVideos as $gv)
+   652→                @php
+   653→                    $gvVideoId = null;
+   654→                    if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/', $gv->video_url, $m)) {
+   655→                        $gvVideoId = $m[1];
+   656→                    }
+   657→                @endphp
+   658→                @if($gvVideoId)
+   659→                <div class="col-lg-4 col-md-6">
+   660→                    <div class="video-card reveal" onclick="openVideoModal('{{ $gvVideoId }}')">
+   661→                        <div class="video-thumb">
+   662→                            <img src="https://img.youtube.com/vi/{{ $gvVideoId }}/hqdefault.jpg" alt="{{ $gv->title }}" loading="lazy">
+   663→                            <div class="video-play-btn">
+   664→                                <i class="fas fa-play"></i>
+   665→                            </div>
+   666→                        </div>
+   667→                        <div class="video-info">
+   668→                            <h5>{{ $gv->title }}</h5>
+   669→                            @if($gv->description)
+   670→                            <div class="video-meta">
+   671→                                <span>{{ Str::limit($gv->description, 60) }}</span>
+   672→                            </div>
+   673→                            @endif
+   674→                        </div>
+   675→                    </div>
+   676→                </div>
+   677→                @endif
+   678→                @endforeach
+   679→                @endisset
+   680→            </div>
+   681→        </div>
+   682→    </section>
+   683→    @endif
+   684→    @endisset
+   685→
+   686→    <!-- Video Modal -->
+   687→    <div class="video-modal-overlay" id="videoModal">
+   688→        <div class="video-modal-content">
+   689→            <button class="video-modal-close" id="videoModalClose" aria-label="Close video">
+   690→                <i class="fas fa-times"></i>
+   691→            </button>
+   692→            <div class="ratio ratio-16x9">
+   693→                <iframe id="videoModalIframe" src="" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+   694→            </div>
+   695→        </div>
+   696→    </div>
+   697→
+   698→    <!-- ========== Team Section (Rounded Avatar) ========== -->
+   699→    <section class="team" id="team">
+   700→        <div class="container">
+   701→            <div class="section-header reveal">
+   702→                <span class="section-badge">Leadership Team</span>
+   703→                <h2>Meet Our Educators</h2>
+   704→                <p>Our dedicated team of experienced educators and administrators is committed to nurturing each student's potential.</p>
+   705→            </div>
+   706→            <div class="row g-4">
+   707→                @forelse($teamMembers as $member)
+   708→                    @php
+   709→                        $memberPhoto = $member->photo && file_exists(public_path('storage/' . $member->photo)) 
+   710→                            ? asset('storage/' . $member->photo) 
+   711→                            : 'https://ui-avatars.com/api/?name=' . urlencode($member->name) . '&background=1B5E20&color=D4A017&size=200&font-size=0.4&bold=true';
+   712→                    @endphp
+   713→                    <div class="col-lg-3 col-md-6">
+   714→                        <div class="team-card reveal">
+   715→                            <div class="team-avatar">
+   716→                                <img src="{{ $memberPhoto }}" alt="{{ $member->name }}" loading="lazy">
+   717→                                <div class="team-social-overlay">
+   718→                                    @if($member->email)
+   719→                                        <a href="mailto:{{ $member->email }}" title="Email"><i class="fas fa-envelope"></i></a>
+   720→                                    @endif
+   721→                                    @if($member->phone)
+   722→                                        <a href="tel:{{ $member->phone }}" title="Call"><i class="fas fa-phone"></i></a>
+   723→                                    @endif
+   724→                                </div>
+   725→                            </div>
+   726→                            <div class="team-content">
+   727→                                <h4>{{ $member->name }}</h4>
+   728→                                <p>{{ $member->designation }}</p>
+   729→                            </div>
+   730→                        </div>
+   731→                    </div>
+   732→                @empty
+   733→                    <div class="col-lg-3 col-md-6">
+   734→                        <div class="team-card reveal">
+   735→                            <div class="team-avatar">
+   736→                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Dr. Sarah Johnson">
+   737→                                <div class="team-social-overlay">
+   738→                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+   739→                                    <a href="#"><i class="fab fa-twitter"></i></a>
+   740→                                    <a href="#"><i class="fas fa-envelope"></i></a>
+   741→                                </div>
+   742→                            </div>
+   743→                            <div class="team-content">
+   744→                                <h4>Dr. Sarah Johnson</h4>
+   745→                                <p>Principal</p>
+   746→                            </div>
+   747→                        </div>
+   748→                    </div>
+   749→                    <div class="col-lg-3 col-md-6">
+   750→                        <div class="team-card reveal">
+   751→                            <div class="team-avatar">
+   752→                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Prof. Michael Chen">
+   753→                                <div class="team-social-overlay">
+   754→                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+   755→                                    <a href="#"><i class="fab fa-twitter"></i></a>
+   756→                                    <a href="#"><i class="fas fa-envelope"></i></a>
+   757→                                </div>
+   758→                            </div>
+   759→                            <div class="team-content">
+   760→                                <h4>Prof. Michael Chen</h4>
+   761→                                <p>Vice Principal - Academics</p>
+   762→                            </div>
+   763→                        </div>
+   764→                    </div>
+   765→                    <div class="col-lg-3 col-md-6">
+   766→                        <div class="team-card reveal">
+   767→                            <div class="team-avatar">
+   768→                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Ms. Emily Davis">
+   769→                                <div class="team-social-overlay">
+   770→                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+   771→                                    <a href="#"><i class="fab fa-twitter"></i></a>
+   772→                                    <a href="#"><i class="fas fa-envelope"></i></a>
+   773→                                </div>
+   774→                            </div>
+   775→                            <div class="team-content">
+   776→                                <h4>Ms. Emily Davis</h4>
+   777→                                <p>Head of Student Affairs</p>
+   778→                            </div>
+   779→                        </div>
+   780→                    </div>
+   781→                    <div class="col-lg-3 col-md-6">
+   782→                        <div class="team-card reveal">
+   783→                            <div class="team-avatar">
+   784→                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Mr. David Wilson">
+   785→                                <div class="team-social-overlay">
+   786→                                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+   787→                                    <a href="#"><i class="fab fa-twitter"></i></a>
+   788→                                    <a href="#"><i class="fas fa-envelope"></i></a>
+   789→                                </div>
+   790→                            </div>
+   791→                            <div class="team-content">
+   792→                                <h4>Mr. David Wilson</h4>
+   793→                                <p>Athletics Director</p>
+   794→                            </div>
+   795→                        </div>
+   796→                    </div>
+   797→                @endforelse
+   798→            </div>
+   799→        </div>
+   800→    </section>
+   801→
+   802→    <!-- ========== CTA Section (Animated Gradient) ========== -->
+   803→    <section class="cta section-divider-top" id="cta">
+   804→        <div class="container">
+   805→            <h2 class="reveal">Visit Us in Person</h2>
+   806→            <p class="reveal">Applications are accepted in person only. Visit our campus to enroll and begin your educational journey with us.</p>
+   807→            <div class="d-flex justify-content-center gap-3 flex-wrap reveal">
+   808→                <a href="#contact" class="btn btn-hero-primary">
+   809→                    <i class="fas fa-map-marker-alt me-2"></i>Find Our Campus
+   810→                </a>
+   811→                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $settings['school_phone']) }}" class="btn btn-hero-secondary">
+   812→                    <i class="fas fa-phone me-2"></i>Call Us
+   813→                </a>
+   814→            </div>
+   815→        </div>
+   816→    </section>
+   817→
+   818→    <!-- ========== Contact Section (Two-Column) ========== -->
+   819→    <section class="contact-section" id="contact">
+   820→        <div class="container">
+   821→            <div class="section-header reveal">
+   822→                <span class="section-badge">Get in Touch</span>
+   823→                <h2>Contact Us</h2>
+   824→                <p>We would love to hear from you. Reach out and let us help you on your educational journey.</p>
+   825→            </div>
+   826→            <div class="row g-5">
+   827→                <div class="col-lg-7 reveal-left">
+   828→                    <div class="contact-form-wrapper">
+   829→                        <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;margin-bottom:1.5rem;color:var(--primary-color);">Send Us a Message</h4>
+   830→                        <form action="{{ route('contact.store') }}" method="POST">
+   831→                            @csrf
+   832→                            <div class="row g-3">
+   833→                                <div class="col-md-6">
+   834→                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Full Name</label>
+   835→                                    <input type="text" name="name" class="form-control" placeholder="Your full name" required>
+   836→                                </div>
+   837→                                <div class="col-md-6">
+   838→                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Email Address</label>
+   839→                                    <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+   840→                                </div>
+   841→                                <div class="col-md-6">
+   842→                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Phone Number</label>
+   843→                                    <input type="tel" name="phone" class="form-control" placeholder="+1 234 567 890">
+   844→                                </div>
+   845→                                <div class="col-md-6">
+   846→                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Subject</label>
+   847→                                    <select name="subject" class="form-select">
+   848→                                        <option value="General Inquiry">General Inquiry</option>
+   849→                                        <option value="Admissions">Admissions</option>
+   850→                                        <option value="Academics">Academics</option>
+   851→                                        <option value="Fee Structure">Fee Structure</option>
+   852→                                        <option value="Other">Other</option>
+   853→                                    </select>
+   854→                                </div>
+   855→                                <div class="col-12">
+   856→                                    <label class="form-label" style="font-weight:500;font-size:0.9rem;">Message</label>
+   857→                                    <textarea name="message" class="form-control" rows="5" placeholder="How can we help you?" required></textarea>
+   858→                                </div>
+   859→                                <div class="col-12">
+   860→                                    <button type="submit" class="btn btn-hero-primary w-100">
+   861→                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+   862→                                    </button>
+   863→                                </div>
+   864→                            </div>
+   865→                        </form>
+   866→                    </div>
+   867→                </div>
+   868→                <div class="col-lg-5 reveal-right">
+   869→                    <div class="contact-info-cards">
+   870→                        <div class="contact-info-card">
+   871→                            <div class="info-icon">
+   872→                                <i class="fas fa-map-marker-alt"></i>
+   873→                            </div>
+   874→                            <div>
+   875→                                <h5>Our Location</h5>
+   876→                                <p>{{ $settings['school_address'] }}</p>
+   877→                            </div>
+   878→                        </div>
+   879→                        <div class="contact-info-card">
+   880→                            <div class="info-icon">
+   881→                                <i class="fas fa-phone-alt"></i>
+   882→                            </div>
+   883→                            <div>
+   884→                                <h5>Call Us</h5>
+   885→                                <p>{{ $settings['school_phone'] }}</p>
+   886→                            </div>
+   887→                        </div>
+   888→                        <div class="contact-info-card">
+   889→                            <div class="info-icon">
+   890→                                <i class="fas fa-envelope"></i>
+   891→                            </div>
+   892→                            <div>
+   893→                                <h5>Email Us</h5>
+   894→                                <p>{{ $settings['school_email'] }}</p>
+   895→                            </div>
+   896→                        </div>
+   897→                        <div class="contact-info-card">
+   898→                            <div class="info-icon">
+   899→                                <i class="fas fa-clock"></i>
+   900→                            </div>
+   901→                            <div>
+   902→                                <h5>Working Hours</h5>
+   903→                                <p>Mon - Fri: 7:30 AM - 4:00 PM</p>
+   904→                            </div>
+   905→                        </div>
+   906→                    </div>
+   907→                </div>
+   908→            </div>
+   909→        </div>
+   910→    </section>
+   911→
+   912→@endsection
+   913→
+   914→@push('scripts')
+   915→    <script src="{{ asset('js/homepage.js') }}"></script>
+   916→@endpush
+   917→
