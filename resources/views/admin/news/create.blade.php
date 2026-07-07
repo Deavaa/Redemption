@@ -256,6 +256,17 @@
         <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back</a>
     </div>
 
+    @if($errors->any())
+    <div class="alert alert-danger">
+        <strong><i class="fas fa-exclamation-triangle"></i> Validation errors:</strong>
+        <ul style="margin:0.5rem 0 0 1.5rem;">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
             <form method="POST" action="{{ route('admin.news.store') }}" enctype="multipart/form-data">
