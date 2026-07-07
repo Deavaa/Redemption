@@ -185,15 +185,18 @@
             </div>
         </div>
         @endif
+    </section>
 
-        <!-- ========== Right-Side News Splash Panel (Modern Glass) ========== -->
-        @isset($latestNews)
-        @if($latestNews->count() > 0)
+    <!-- ========== News Splash Panel (OUTSIDE hero-slider to avoid CSS conflicts) ========== -->
+    @isset($latestNews)
+    @if($latestNews->count() > 0)
+    <div class="news-splash-wrapper" id="newsSplashWrapper">
         <div class="news-splash-panel" id="newsSplashPanel" aria-label="Latest school news" role="dialog">
             <div class="news-splash-panel-header">
                 <div class="news-splash-panel-icon">
                     <i class="fas fa-newspaper"></i>
                 </div>
+                <span class="news-splash-panel-title">Latest News</span>
                 <button class="news-splash-panel-close" id="newsSplashPanelClose" aria-label="Close news panel" type="button">
                     <i class="fas fa-times"></i>
                 </button>
@@ -201,21 +204,35 @@
             <div class="news-splash-panel-body">
                 @foreach($latestNews as $newsItem)
                     @php
-                        // Use cover image if set; otherwise try to extract the first
-                        // <img src="..."> from the Summernote content as a fallback.
-                        $cardImage = $newsItem->image_path;
-                        if (!$cardImage && $newsItem->content) {
+                        // Resolve the card image:
+                        // 1. Use the dedicated cover image (image_path) if the file exists
+                        // 2. Fall back to the first <img> inside the Summernote content
+                        // 3. Fall back to null (shows a gradient placeholder block)
+                        $cardImage = null;
+                        if ($newsItem->image_path && \Storage::disk('public')->exists($newsItem->image_path)) {
+                            $cardImage = asset('storage/' . $newsItem->image_path);
+                        } elseif ($newsItem->content) {
                             if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $newsItem->content, $m)) {
-                                $cardImage = $m[1];
+                                $src = $m[1];
+                                // data: URIs, full URLs, and absolute paths are fine as-is
+                                if (Str::startsWith($src, ['http', '//', 'data:', '/'])) {
+                                    $cardImage = $src;
+                                } else {
+                                    $cardImage = asset('storage/' . $src);
+                                }
                             }
                         }
                     @endphp
                     <article class="news-splash-card">
-                        @if($cardImage)
-                            <div class="news-splash-card-img">
-                                <img src="{{ Str::startsWith($cardImage, ['http', '//', 'data:', '/']) ? $cardImage : asset('storage/' . $cardImage) }}" alt="{{ $newsItem->title }}" loading="lazy">
-                            </div>
-                        @endif
+                        <div class="news-splash-card-img">
+                            @if($cardImage)
+                                <img src="{{ $cardImage }}" alt="{{ $newsItem->title }}" loading="lazy">
+                            @else
+                                <div class="news-splash-card-img-placeholder">
+                                    <i class="fas fa-newspaper"></i>
+                                </div>
+                            @endif
+                        </div>
                         <div class="news-splash-card-body">
                             <div class="news-splash-card-meta">
                                 <span class="news-splash-card-date">
@@ -226,7 +243,7 @@
                                     <span class="news-splash-card-tag">New</span>
                                 @endif
                             </div>
-                            <h4>{{ $newsItem->title }}</h4>
+                            <h4 class="news-splash-card-title">{{ $newsItem->title }}</h4>
                             @if($newsItem->content)
                                 <p class="news-splash-card-excerpt">{{ Str::limit(strip_tags($newsItem->content), 130) }}</p>
                             @endif
@@ -235,7 +252,7 @@
                 @endforeach
             </div>
             <div class="news-splash-panel-footer">
-                <button type="button" id="newsSplashPanelDismiss" style="background:none;border:none;color:inherit;padding:0;font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                <button type="button" id="newsSplashPanelDismiss" class="news-splash-panel-dismiss-btn">
                     <i class="fas fa-check"></i> Dismiss for this session
                 </button>
             </div>
@@ -246,65 +263,65 @@
             <i class="fas fa-newspaper"></i>
             <span>News</span>
         </button>
+    </div>
 
-        <script>
-        (function(){
-            var panel  = document.getElementById('newsSplashPanel');
-            var closeBtn   = document.getElementById('newsSplashPanelClose');
-            var dismissBtn = document.getElementById('newsSplashPanelDismiss');
-            var toggleBtn  = document.getElementById('newsSplashToggle');
-            var heroSlider = document.querySelector('.hero-slider');
-            if (!panel) return;
+    <script>
+    (function(){
+        var panel  = document.getElementById('newsSplashPanel');
+        var closeBtn   = document.getElementById('newsSplashPanelClose');
+        var dismissBtn = document.getElementById('newsSplashPanelDismiss');
+        var toggleBtn  = document.getElementById('newsSplashToggle');
+        var heroSlider = document.querySelector('.hero-slider');
+        if (!panel) return;
 
-            // Tell the slider to narrow hero text when panel is open
-            function setHeroNarrow(on) {
-                if (heroSlider) {
-                    if (on) heroSlider.classList.add('has-news-panel');
-                    else   heroSlider.classList.remove('has-news-panel');
-                }
+        // Tell the slider to narrow hero text when panel is open
+        function setHeroNarrow(on) {
+            if (heroSlider) {
+                if (on) heroSlider.classList.add('has-news-panel');
+                else   heroSlider.classList.remove('has-news-panel');
             }
+        }
 
-            function openPanel() {
-                panel.classList.add('active');
-                setHeroNarrow(true);
-                if (toggleBtn) toggleBtn.classList.remove('visible');
-                sessionStorage.removeItem('news_splash_dismissed');
+        function openPanel() {
+            panel.classList.add('active');
+            setHeroNarrow(true);
+            if (toggleBtn) toggleBtn.classList.remove('visible');
+            sessionStorage.removeItem('news_splash_dismissed');
+        }
+        function closePanel(showToggle) {
+            panel.classList.remove('active');
+            setHeroNarrow(false);
+            if (showToggle && toggleBtn) toggleBtn.classList.add('visible');
+        }
+        function dismissPanel() {
+            closePanel(true);
+            sessionStorage.setItem('news_splash_dismissed', '1');
+        }
+
+        // Auto-open after 2s unless user has dismissed this session
+        setTimeout(function(){
+            if (!sessionStorage.getItem('news_splash_dismissed')) {
+                openPanel();
+            } else if (toggleBtn) {
+                // Show toggle chip so user can re-open
+                toggleBtn.classList.add('visible');
             }
-            function closePanel(showToggle) {
-                panel.classList.remove('active');
-                setHeroNarrow(false);
-                if (showToggle && toggleBtn) toggleBtn.classList.add('visible');
-            }
-            function dismissPanel() {
+        }, 1800);
+
+        if (closeBtn)   closeBtn.addEventListener('click', function(){ dismissPanel(); });
+        if (dismissBtn) dismissBtn.addEventListener('click', function(){ dismissPanel(); });
+        if (toggleBtn)  toggleBtn.addEventListener('click', function(){ openPanel(); });
+
+        // ESC closes (but does not dismiss — user can re-open via toggle)
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape' && panel.classList.contains('active')) {
                 closePanel(true);
-                sessionStorage.setItem('news_splash_dismissed', '1');
             }
-
-            // Auto-open after 2s unless user has dismissed this session
-            setTimeout(function(){
-                if (!sessionStorage.getItem('news_splash_dismissed')) {
-                    openPanel();
-                } else if (toggleBtn) {
-                    // Show toggle chip so user can re-open
-                    toggleBtn.classList.add('visible');
-                }
-            }, 1800);
-
-            if (closeBtn)   closeBtn.addEventListener('click', function(){ dismissPanel(); });
-            if (dismissBtn) dismissBtn.addEventListener('click', function(){ dismissPanel(); });
-            if (toggleBtn)  toggleBtn.addEventListener('click', function(){ openPanel(); });
-
-            // ESC closes (but does not dismiss — user can re-open via toggle)
-            document.addEventListener('keydown', function(e){
-                if (e.key === 'Escape' && panel.classList.contains('active')) {
-                    closePanel(true);
-                }
-            });
-        })();
-        </script>
-        @endif
-        @endisset
-    </section>
+        });
+    })();
+    </script>
+    @endif
+    @endisset
 
     <!-- ========== Animated Counters Section ========== -->
     <section class="counters-section section-divider-top" id="counters">
