@@ -430,10 +430,10 @@
                         $existingCoverUrl = null;
                         if ($news->image_path) {
                             $basename = basename($news->image_path);
-                            if (\Storage::disk('public')->exists($news->image_path)) {
-                                $existingCoverUrl = asset('storage/' . $news->image_path);
-                            } elseif (file_exists(public_path('news-images/' . $basename))) {
+                            if (file_exists(public_path('news-images/' . $basename))) {
                                 $existingCoverUrl = asset('news-images/' . $basename);
+                            } elseif (\Storage::disk('public')->exists($news->image_path)) {
+                                $existingCoverUrl = asset('storage/' . $news->image_path);
                             }
                         }
                     @endphp

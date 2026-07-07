@@ -205,30 +205,29 @@
                 @foreach($latestNews as $newsItem)
                     @php
                         // Resolve the card image:
-                        // 1. Use the dedicated cover image (image_path) if the file exists
-                        //    in either storage/app/public OR public/news-images/ (fallback)
+                        // 1. Use the dedicated cover image (image_path) — try public/ first
+                        //    (most reliable), then storage/ as fallback
                         // 2. Fall back to the first <img> inside the Summernote content
                         // 3. Fall back to null (shows a gradient placeholder block)
                         $cardImage = null;
                         if ($newsItem->image_path) {
                             $basename = basename($newsItem->image_path);
-                            // Primary: storage/app/public/news-images/<file>
-                            if (\Storage::disk('public')->exists($newsItem->image_path)) {
-                                $cardImage = asset('storage/' . $newsItem->image_path);
-                            }
-                            // Fallback: public/news-images/<file> (works without storage:link)
-                            elseif (file_exists(public_path('news-images/' . $basename))) {
+                            // Primary: public/news-images/<file> (directly web-accessible, no symlink needed)
+                            if (file_exists(public_path('news-images/' . $basename))) {
                                 $cardImage = asset('news-images/' . $basename);
+                            }
+                            // Fallback: storage/app/public/news-images/<file> (needs storage:link)
+                            elseif (\Storage::disk('public')->exists($newsItem->image_path)) {
+                                $cardImage = asset('storage/' . $newsItem->image_path);
                             }
                         }
                         if (!$cardImage && $newsItem->content) {
                             if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $newsItem->content, $m)) {
                                 $src = $m[1];
-                                // data: URIs, full URLs, and absolute paths are fine as-is
                                 if (Str::startsWith($src, ['http', '//', 'data:', '/'])) {
                                     $cardImage = $src;
                                 } else {
-                                    $cardImage = asset('storage/' . $src);
+                                    $cardImage = asset($src);
                                 }
                             }
                         }
