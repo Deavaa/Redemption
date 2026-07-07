@@ -202,24 +202,28 @@
             </div>
             <div class="news-splash-panel-body">
                 @foreach($latestNews as $newsItem)
-                    <a href="javascript:void(0)" class="news-splash-card" onclick="return false;">
+                    <article class="news-splash-card">
                         @if($newsItem->image_path)
                             <div class="news-splash-card-img">
                                 <img src="{{ asset('storage/' . $newsItem->image_path) }}" alt="{{ $newsItem->title }}" loading="lazy">
                             </div>
-                        @else
-                            <div class="news-splash-card-img news-splash-card-placeholder">
-                                <i class="fas fa-newspaper"></i>
-                            </div>
                         @endif
                         <div class="news-splash-card-body">
-                            <span class="news-splash-card-date">{{ $newsItem->created_at->format('M d, Y') }}</span>
+                            <div class="news-splash-card-meta">
+                                <span class="news-splash-card-date">
+                                    <i class="far fa-calendar-alt"></i>
+                                    {{ $newsItem->created_at->format('M d, Y') }}
+                                </span>
+                                @if($newsItem->created_at->gt(now()->subDays(3)))
+                                    <span class="news-splash-card-tag">New</span>
+                                @endif
+                            </div>
                             <h4>{{ $newsItem->title }}</h4>
                             @if($newsItem->content)
-                                <p>{{ Str::limit(strip_tags($newsItem->content), 110) }}</p>
+                                <p class="news-splash-card-excerpt">{!! Str::limit(strip_tags($newsItem->content), 130) !!}</p>
                             @endif
                         </div>
-                    </a>
+                    </article>
                 @endforeach
             </div>
             <div class="news-splash-panel-footer">
