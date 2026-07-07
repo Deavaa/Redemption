@@ -39,7 +39,13 @@ class AnnouncementController extends Controller
             'start_date' => 'required|date',
             'category' => 'required|in:event,holiday,deadline,meeting,other',
             'send_telegram' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $imagePath = null;
+        if ($r->hasFile('image')) {
+            $imagePath = $r->file('image')->store('announcements', 'public');
+        }
 
         $event = CalendarEvent::create([
             'title' => $r->title,
@@ -49,6 +55,7 @@ class AnnouncementController extends Controller
             'is_all_day' => true,
             'is_announcement' => true,
             'color' => CalendarEvent::categoryColors()[$r->category] ?? '#4361ee',
+            'image_path' => $imagePath,
         ]);
 
         if ($r->boolean('send_telegram')) {

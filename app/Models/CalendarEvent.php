@@ -11,6 +11,7 @@ class CalendarEvent extends Model
         'start_date', 'end_date', 'start_time', 'end_time',
         'is_all_day', 'is_announcement', 'is_approved', 'approved_by', 'approved_at',
         'academic_year_id', 'branch_id', 'exam_id', 'source_type', 'scope', 'created_by',
+        'image_path',
     ];
 
     protected $casts = [

@@ -966,35 +966,41 @@
 
         {{-- Announcement Splash Modal --}}
         @if($activeAnnouncements->count() > 0)
+        {{-- Show ONLY the last (most recent) announcement as splash --}}
+        @php $lastAnn = $activeAnnouncements->first(); @endphp
         <div class="announcement-splash-overlay" id="announcementSplash">
             <div class="announcement-splash-modal">
                 <div class="announcement-splash-header">
                     <div class="announcement-splash-icon"><i class="fas fa-bullhorn"></i></div>
-                    <h2>Announcements</h2>
-                    <span class="announcement-splash-count">{{ $activeAnnouncements->count() }} active</span>
+                    <h2>Announcement</h2>
+                    <button onclick="closeAnnouncementSplash()" class="announcement-splash-close-btn" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;margin-left:auto;padding:4px 8px;border-radius:6px;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='none'">&times;</button>
                 </div>
                 <div class="announcement-splash-body">
-                    @foreach($activeAnnouncements as $splashAnn)
-                    <div class="announcement-splash-item">
-                        <div class="announcement-splash-item-dot" style="background:{{ $splashAnn->color ?? '#4361ee' }}"></div>
+                    {{-- Show image if announcement has one --}}
+                    @if($lastAnn->image_path && file_exists(public_path('storage/' . $lastAnn->image_path)))
+                    <div style="margin:-16px -20px 0;max-height:300px;overflow:hidden;">
+                        <img src="{{ asset('storage/' . $lastAnn->image_path) }}" alt="{{ $lastAnn->title }}" style="width:100%;display:block;object-fit:cover;max-height:300px;" />
+                    </div>
+                    @endif
+                    <div class="announcement-splash-item" style="border-bottom:none;padding-top:16px;">
+                        <div class="announcement-splash-item-dot" style="background:{{ $lastAnn->color ?? '#4361ee' }}"></div>
                         <div class="announcement-splash-item-content">
-                            <div class="announcement-splash-item-title">{{ $splashAnn->title }}</div>
-                            @if($splashAnn->category)
-                            <span class="announcement-splash-item-cat" style="background:{{ $splashAnn->color ?? '#4361ee' }}20;color:{{ $splashAnn->color ?? '#4361ee' }}">{{ ucfirst($splashAnn->category) }}</span>
+                            <div class="announcement-splash-item-title" style="font-size:16px;">{{ $lastAnn->title }}</div>
+                            @if($lastAnn->category)
+                            <span class="announcement-splash-item-cat" style="background:{{ $lastAnn->color ?? '#4361ee' }}20;color:{{ $lastAnn->color ?? '#4361ee' }}">{{ ucfirst($lastAnn->category) }}</span>
                             @endif
-                            @if($splashAnn->start_date)
-                            <span class="announcement-splash-item-date"><i class="fas fa-calendar-alt"></i> {{ $splashAnn->start_date->format('M d, Y') }}</span>
+                            @if($lastAnn->start_date)
+                            <span class="announcement-splash-item-date"><i class="fas fa-calendar-alt"></i> {{ $lastAnn->start_date->format('M d, Y') }}</span>
                             @endif
-                            @if($splashAnn->description)
-                            <p class="announcement-splash-item-desc">{{ Str::limit(strip_tags($splashAnn->description), 150) }}</p>
+                            @if($lastAnn->description)
+                            <p class="announcement-splash-item-desc" style="font-size:14px;line-height:1.6;">{{ strip_tags($lastAnn->description) }}</p>
                             @endif
                         </div>
                     </div>
-                    @endforeach
                 </div>
                 <div class="announcement-splash-footer">
-                    <a href="{{ route('admin.announcements.index') }}" class="announcement-splash-viewall"><i class="fas fa-list"></i> View All Announcements</a>
-                    <button onclick="closeAnnouncementSplash()" class="announcement-splash-dismiss"><i class="fas fa-check"></i> Dismiss</button>
+                    <a href="{{ route('admin.announcements.index') }}" class="announcement-splash-viewall"><i class="fas fa-list"></i> View All</a>
+                    <button onclick="closeAnnouncementSplash()" class="announcement-splash-dismiss"><i class="fas fa-check"></i> Got it</button>
                 </div>
             </div>
         </div>

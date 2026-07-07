@@ -20,7 +20,7 @@
             <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
                 <h3 style="font-size:15px;font-weight:700;color:var(--text-dark);margin:0;"><i class="fas fa-bullhorn" style="color:var(--primary);"></i> {{ __('app.create_announcement') ?? 'Create Announcement' }}</h3>
             </div>
-            <form method="POST" action="{{ route('admin.announcements.store') }}" style="padding:16px 20px;">
+            <form method="POST" action="{{ route('admin.announcements.store') }}" enctype="multipart/form-data" style="padding:16px 20px;">
                 @csrf
                 <div style="margin-bottom:12px;">
                     <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">{{ __('app.title') ?? 'Title' }} *</label>
@@ -29,6 +29,10 @@
                 <div style="margin-bottom:12px;">
                     <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">{{ __('app.description') ?? 'Description' }}</label>
                     <textarea name="description" rows="3" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;resize:vertical;"></textarea>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Image (optional — shows in splash popup)</label>
+                    <input type="file" name="image" accept="image/*" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;">
                 </div>
                 <div style="margin-bottom:12px;">
                     <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">{{ __('app.category') ?? 'Category' }}</label>
