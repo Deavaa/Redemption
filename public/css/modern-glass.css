@@ -1,26 +1,42 @@
 /* ============================================================================
-   MODERN GLASS (LIGHT) — Header & Slider Redesign
+   MODERN GLASS (LIGHT TINTED) — Header & Slider Redesign
    ----------------------------------------------------------------------------
-   A premium LIGHT glassmorphism layer for a school website.
-   - Soft white-tinted frosted glass (not dark)
-   - Dark text on light surfaces for readability
-   - Subtle pastel gradients
+   A premium LIGHT-TINTED glassmorphism layer for a school website.
+   - Soft warm cream + light mint tints (NOT pure white)
+   - Dark slate text on tinted surfaces for readability
+   - Subtle pastel gradients with school-green accents
    - Refined micro-interactions (hover lift, focus glow)
+
+   Color palette:
+     cream       #FAF6EE  (warm ivory, primary surface)
+     mint        #EEF7F1  (cool light green, secondary surface)
+     sage        #DCE9DF  (muted green for borders)
+     ink         #1F2937  (dark slate for text)
+     primary     var(--primary-color)  (school green)
+     secondary   var(--secondary-color) (gold accent)
    ============================================================================ */
 
+:root {
+    --mg-cream:        250, 246, 238;   /* #FAF6EE */
+    --mg-mint:         238, 247, 241;   /* #EEF7F1 */
+    --mg-sage:         220, 233, 223;   /* #DCE9DF */
+    --mg-ink:          31, 41, 55;      /* #1F2937 */
+}
+
+
 /* ============================================================================
-   1. NAVBAR — Light Frosted Glass
+   1. NAVBAR — Cream Frosted Glass
    ============================================================================ */
 
 .navbar {
     background: linear-gradient(180deg,
-        rgba(255, 255, 255, 0.92) 0%,
-        rgba(255, 255, 255, 0.78) 100%) !important;
+        rgba(var(--mg-cream), 0.92) 0%,
+        rgba(var(--mg-mint), 0.85) 100%) !important;
     backdrop-filter: blur(28px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-bottom: 1px solid rgba(var(--mg-sage), 0.70) !important;
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 0 rgba(255, 255, 255, 0.55) inset,
         0 4px 24px rgba(0, 0, 0, 0.06) !important;
     padding: 0.85rem 0 !important;
     transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -34,23 +50,25 @@
     height: 1px;
     background: linear-gradient(90deg,
         transparent 0%,
-        rgba(var(--primary-rgb), 0.30) 50%,
+        rgba(var(--primary-rgb), 0.35) 50%,
         transparent 100%);
     pointer-events: none;
 }
 
 .navbar.scrolled {
-    background: rgba(255, 255, 255, 0.96) !important;
+    background: linear-gradient(180deg,
+        rgba(var(--mg-cream), 0.96) 0%,
+        rgba(var(--mg-mint), 0.92) 100%) !important;
     backdrop-filter: blur(32px) saturate(200%) !important;
     -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
     padding: 0.55rem 0 !important;
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 0 rgba(255, 255, 255, 0.65) inset,
         0 8px 30px rgba(0, 0, 0, 0.10) !important;
-    border-bottom-color: rgba(var(--primary-rgb), 0.18) !important;
+    border-bottom-color: rgba(var(--primary-rgb), 0.25) !important;
 }
 
-/* Brand — refined typography (dark text on light navbar) */
+/* Brand — refined typography (dark text on cream navbar) */
 .navbar-brand {
     position: relative;
     padding: 0.25rem 0.5rem;
@@ -58,10 +76,10 @@
     transition: background 0.3s ease;
 }
 .navbar-brand:hover {
-    background: rgba(var(--primary-rgb), 0.06);
+    background: rgba(var(--primary-rgb), 0.08);
 }
 .navbar-brand .brand-pre {
-    color: rgba(0, 0, 0, 0.55) !important;
+    color: rgba(var(--mg-ink), 0.55) !important;
     font-size: 0.65rem !important;
     letter-spacing: 1.5px !important;
     text-transform: uppercase;
@@ -82,22 +100,21 @@
     transform: scale(1.04);
 }
 
-/* Override dark-mode navbar-dark text color */
+/* Nav links — refined glassy pills on cream */
 .navbar.navbar-dark .nav-link,
 .navbar .nav-link {
-    color: rgba(0, 0, 0, 0.72) !important;
+    color: rgba(var(--mg-ink), 0.75) !important;
 }
 .navbar.navbar-dark .navbar-brand,
 .navbar .navbar-brand {
     color: var(--primary-color);
 }
 
-/* Nav links — refined light glassy pills */
 .navbar-nav .nav-item {
     position: relative;
 }
 .navbar-nav .nav-link {
-    color: rgba(0, 0, 0, 0.72) !important;
+    color: rgba(var(--mg-ink), 0.75) !important;
     font-weight: 500 !important;
     font-size: 0.92rem !important;
     margin: 0 0.25rem !important;
@@ -109,12 +126,11 @@
 }
 .navbar-nav .nav-link:hover {
     color: var(--primary-color) !important;
-    background: rgba(var(--primary-rgb), 0.08);
+    background: rgba(var(--primary-rgb), 0.10);
 }
-/* Active link — small accent dot */
 .navbar-nav .nav-link.active {
     color: var(--primary-color) !important;
-    background: rgba(var(--primary-rgb), 0.10);
+    background: rgba(var(--primary-rgb), 0.12);
 }
 .navbar-nav .nav-link.active::before {
     content: '';
@@ -128,12 +144,11 @@
     background: var(--primary-color);
     box-shadow: 0 0 8px var(--primary-color);
 }
-/* Remove the old gradient underline */
 .navbar-nav .nav-link::after {
     display: none !important;
 }
 
-/* Glass login / portal button — primary color accent */
+/* Login / portal button — primary green filled */
 .btn-nav-portal {
     background: var(--primary-color) !important;
     color: #ffffff !important;
@@ -156,13 +171,7 @@
         0 8px 22px rgba(var(--primary-rgb), 0.35) !important;
 }
 
-/* The second nav button (Login) — outlined style for variety */
-.navbar-nav .nav-item:last-child .btn-nav-portal,
-.navbar-nav .nav-item:nth-last-child(2) .btn-nav-portal {
-    /* keep both consistent — primary filled */
-}
-
-/* Mobile login pill — glass on light */
+/* Mobile login pill — primary green */
 .mobile-login-pill {
     background: var(--primary-color) !important;
     border: 1px solid var(--primary-color) !important;
@@ -175,10 +184,10 @@
     background: var(--color-primary-dark, #036B4A) !important;
 }
 
-/* Hamburger — light glass circle */
+/* Hamburger — light glass on cream */
 .hamburger-btn {
-    background: rgba(0, 0, 0, 0.05) !important;
-    border: 1px solid rgba(0, 0, 0, 0.10) !important;
+    background: rgba(var(--primary-rgb), 0.10) !important;
+    border: 1px solid rgba(var(--mg-sage), 0.80) !important;
     color: var(--primary-color) !important;
     border-radius: 12px !important;
     backdrop-filter: blur(10px);
@@ -186,7 +195,7 @@
     transition: all 0.3s ease !important;
 }
 .hamburger-btn:hover {
-    background: rgba(var(--primary-rgb), 0.10) !important;
+    background: rgba(var(--primary-rgb), 0.18) !important;
     color: var(--primary-color) !important;
 }
 
@@ -195,13 +204,13 @@
    2. HERO SLIDER — Direct-on-image text (no glass card)
    ============================================================================ */
 
-/* Light-to-transparent gradient so white text reads on the left side */
+/* Darker gradient on the left side so white text reads clearly */
 .hero-overlay {
     background: linear-gradient(105deg,
-        rgba(0, 0, 0, 0.55) 0%,
-        rgba(0, 0, 0, 0.30) 40%,
-        rgba(0, 0, 0, 0.10) 70%,
-        rgba(0, 0, 0, 0.35) 100%) !important;
+        rgba(0, 0, 0, 0.60) 0%,
+        rgba(0, 0, 0, 0.35) 40%,
+        rgba(0, 0, 0, 0.12) 70%,
+        rgba(0, 0, 0, 0.40) 100%) !important;
 }
 
 /* Bottom fade for legibility of bottom overlay content */
@@ -211,14 +220,26 @@
     bottom: 0; left: 0; right: 0;
     height: 35%;
     background: linear-gradient(to top,
-        rgba(0, 0, 0, 0.40) 0%,
+        rgba(0, 0, 0, 0.45) 0%,
         transparent 100%);
     pointer-events: none;
     z-index: 1;
 }
 
+/* Hero text column — when news panel is open, narrow it so no overlap */
+.hero-slider .col-lg-8.hero-text-reveal {
+    max-width: 640px;
+    transition: max-width 0.5s cubic-bezier(0.32, 0.72, 0.18, 1),
+                padding-right 0.5s cubic-bezier(0.32, 0.72, 0.18, 1);
+    padding-right: 1rem;
+}
+.hero-slider.has-news-panel .col-lg-8.hero-text-reveal {
+    max-width: calc(100% - 420px); /* news panel 380px + 40px gap */
+    padding-right: 2rem;
+}
+
 /* The old .hero-content glass card is REMOVED from markup.
-   These rules are kept empty so any leftover references don't break. */
+   These rules neutralize any leftover references. */
 .hero-content {
     padding: 0 !important;
     background: none !important;
@@ -229,11 +250,10 @@
     max-width: 640px;
 }
 .hero-content::before { display: none !important; }
-.hero-slider.has-news-panel .hero-content { max-width: 580px; }
 
 /* Hero badge — solid primary-color pill directly on image */
 .hero-badge {
-    background: rgba(var(--primary-rgb), 0.85) !important;
+    background: rgba(var(--primary-rgb), 0.90) !important;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.30) !important;
@@ -243,8 +263,9 @@
     font-size: 0.78rem !important;
     letter-spacing: 1.5px !important;
     text-transform: uppercase;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.20);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
     text-shadow: none !important;
+    display: inline-block;
 }
 
 /* White text directly on slider image — with shadow for readability */
@@ -255,9 +276,10 @@
     font-size: 3rem !important;
     line-height: 1.15 !important;
     text-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.55),
-        0 4px 24px rgba(0, 0, 0, 0.35) !important;
+        0 2px 8px rgba(0, 0, 0, 0.60),
+        0 4px 24px rgba(0, 0, 0, 0.40) !important;
     margin-bottom: 1.2rem !important;
+    max-width: 100%;
 }
 .hero-slider h1 span,
 .hero-content h1 span,
@@ -265,7 +287,7 @@
     color: var(--secondary-color) !important;
     text-shadow:
         0 0 18px rgba(212, 160, 23, 0.55),
-        0 2px 8px rgba(0, 0, 0, 0.55) !important;
+        0 2px 8px rgba(0, 0, 0, 0.60) !important;
 }
 .hero-slider p,
 .hero-content p,
@@ -274,10 +296,11 @@
     font-size: 1.05rem !important;
     line-height: 1.7 !important;
     margin-bottom: 1.5rem !important;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55) !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.60) !important;
+    max-width: 100%;
 }
 
-/* Hero stats — subtle inner glass for readability */
+/* Hero stats — subtle dark-glass inner panel for readability */
 .hero-stats {
     background: rgba(0, 0, 0, 0.30);
     backdrop-filter: blur(10px);
@@ -299,18 +322,18 @@
 /* Carousel controls — light glassy circles */
 .hero-slider .carousel-control-prev,
 .hero-slider .carousel-control-next {
-    background: rgba(255, 255, 255, 0.55) !important;
+    background: rgba(var(--mg-cream), 0.55) !important;
     backdrop-filter: blur(14px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.70) !important;
+    border: 1px solid rgba(var(--mg-sage), 0.80) !important;
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.60) inset,
+        0 1px 0 rgba(255, 255, 255, 0.55) inset,
         0 6px 22px rgba(0, 0, 0, 0.15) !important;
     transition: all 0.35s ease !important;
 }
 .hero-slider .carousel-control-prev:hover,
 .hero-slider .carousel-control-next:hover {
-    background: rgba(255, 255, 255, 0.80) !important;
+    background: rgba(var(--mg-cream), 0.85) !important;
     border-color: var(--primary-color) !important;
     transform: scale(1.05);
 }
@@ -348,7 +371,7 @@
    ============================================================================ */
 
 .hero-mobile-login-btn {
-    display: none; /* Hidden on desktop */
+    display: none;
     position: absolute;
     bottom: 90px;
     left: 50%;
@@ -381,6 +404,11 @@
         align-items: center;
         justify-content: center;
     }
+    /* On mobile, news panel becomes a bottom sheet — don't narrow hero text */
+    .hero-slider.has-news-panel .col-lg-8.hero-text-reveal {
+        max-width: 100%;
+        padding-right: 1rem;
+    }
 }
 @media (max-width: 575px) {
     .hero-mobile-login-btn {
@@ -392,7 +420,7 @@
 
 
 /* ============================================================================
-   4. NEWS SPLASH — Right-Side Light Glass Panel
+   4. NEWS SPLASH — Right-Side Cream Glass Panel
    ============================================================================ */
 
 .news-splash-panel {
@@ -407,17 +435,17 @@
     display: flex;
     flex-direction: column;
     background: linear-gradient(155deg,
-        rgba(255, 255, 255, 0.92) 0%,
-        rgba(255, 255, 255, 0.78) 100%);
+        rgba(var(--mg-cream), 0.95) 0%,
+        rgba(var(--mg-mint), 0.88) 100%);
     backdrop-filter: blur(28px) saturate(200%);
     -webkit-backdrop-filter: blur(28px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.70);
+    border: 1px solid rgba(var(--mg-sage), 0.85);
     border-right: none;
     border-top-left-radius: 24px;
     border-bottom-left-radius: 24px;
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.80) inset,
-        -20px 30px 60px rgba(0, 0, 0, 0.18),
+        0 1px 0 rgba(255, 255, 255, 0.65) inset,
+        -20px 30px 60px rgba(0, 0, 0, 0.22),
         0 0 0 1px rgba(0, 0, 0, 0.04);
     overflow: hidden;
     opacity: 0;
@@ -442,22 +470,22 @@
     height: 1px;
     background: linear-gradient(90deg,
         transparent 0%,
-        rgba(255, 255, 255, 0.90) 50%,
+        rgba(255, 255, 255, 0.85) 50%,
         transparent 100%);
     pointer-events: none;
     z-index: 2;
 }
 
-/* Header strip */
+/* Header strip — primary-tinted */
 .news-splash-panel-header {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 1.1rem 1.4rem;
     background: linear-gradient(135deg,
-        rgba(var(--primary-rgb), 0.12) 0%,
-        rgba(var(--primary-rgb), 0.04) 100%);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        rgba(var(--primary-rgb), 0.14) 0%,
+        rgba(var(--primary-rgb), 0.05) 100%);
+    border-bottom: 1px solid rgba(var(--mg-sage), 0.70);
     position: relative;
     z-index: 1;
 }
@@ -465,8 +493,8 @@
     width: 38px;
     height: 38px;
     border-radius: 12px;
-    background: rgba(var(--primary-rgb), 0.15);
-    border: 1px solid rgba(var(--primary-rgb), 0.30);
+    background: rgba(var(--primary-rgb), 0.18);
+    border: 1px solid rgba(var(--primary-rgb), 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -482,7 +510,7 @@
 }
 .news-splash-panel-title h3 {
     margin: 0;
-    color: #1a1a2e;
+    color: var(--mg-ink);
     font-family: 'Playfair Display', serif;
     font-size: 1.05rem;
     font-weight: 700;
@@ -491,7 +519,7 @@
 }
 .news-splash-panel-title span {
     display: block;
-    color: rgba(0, 0, 0, 0.50);
+    color: rgba(var(--mg-ink), 0.55);
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 1.2px;
@@ -501,9 +529,9 @@
     width: 32px;
     height: 32px;
     border-radius: 10px;
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    color: rgba(0, 0, 0, 0.65);
+    background: rgba(var(--mg-ink), 0.06);
+    border: 1px solid rgba(var(--mg-sage), 0.80);
+    color: rgba(var(--mg-ink), 0.65);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -513,9 +541,9 @@
     flex-shrink: 0;
 }
 .news-splash-panel-close:hover {
-    background: rgba(var(--primary-rgb), 0.12);
+    background: rgba(var(--primary-rgb), 0.14);
     color: var(--primary-color);
-    border-color: rgba(var(--primary-rgb), 0.30);
+    border-color: rgba(var(--primary-rgb), 0.35);
     transform: rotate(90deg);
 }
 
@@ -528,31 +556,31 @@
     flex-direction: column;
     gap: 0.75rem;
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.20) transparent;
+    scrollbar-color: rgba(var(--mg-ink), 0.20) transparent;
 }
 .news-splash-panel-body::-webkit-scrollbar { width: 6px; }
 .news-splash-panel-body::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.18);
+    background: rgba(var(--mg-ink), 0.20);
     border-radius: 6px;
 }
 .news-splash-panel-body::-webkit-scrollbar-track { background: transparent; }
 
-/* Each news card */
+/* Each news card — light tinted */
 .news-splash-card {
     display: flex;
     gap: 0.85rem;
     padding: 0.85rem;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.55);
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(var(--mg-sage), 0.60);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     text-decoration: none;
     color: inherit;
 }
 .news-splash-card:hover {
-    background: #ffffff;
-    border-color: rgba(var(--primary-rgb), 0.30);
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(var(--primary-rgb), 0.35);
     transform: translateX(-3px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
 }
@@ -578,13 +606,13 @@
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg,
-        rgba(var(--primary-rgb), 0.15) 0%,
-        rgba(var(--primary-rgb), 0.05) 100%);
-    border: 1px solid rgba(var(--primary-rgb), 0.20);
+        rgba(var(--primary-rgb), 0.18) 0%,
+        rgba(var(--primary-rgb), 0.06) 100%);
+    border: 1px solid rgba(var(--primary-rgb), 0.25);
 }
 .news-splash-card-placeholder i {
     font-size: 1.4rem;
-    color: rgba(var(--primary-rgb), 0.60);
+    color: rgba(var(--primary-rgb), 0.65);
 }
 .news-splash-card-body {
     flex: 1;
@@ -603,7 +631,7 @@
 }
 .news-splash-card-body h4 {
     margin: 0 0 4px 0;
-    color: #1a1a2e;
+    color: var(--mg-ink);
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
     font-size: 0.88rem;
@@ -615,7 +643,7 @@
 }
 .news-splash-card-body p {
     margin: 0;
-    color: rgba(0, 0, 0, 0.55);
+    color: rgba(var(--mg-ink), 0.60);
     font-size: 0.75rem;
     line-height: 1.5;
     display: -webkit-box;
@@ -624,11 +652,11 @@
     overflow: hidden;
 }
 
-/* Footer strip with "Dismiss" link */
+/* Footer strip */
 .news-splash-panel-footer {
     padding: 0.85rem 1.4rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    background: rgba(var(--primary-rgb), 0.04);
+    border-top: 1px solid rgba(var(--mg-sage), 0.70);
+    background: rgba(var(--primary-rgb), 0.05);
     text-align: center;
 }
 .news-splash-panel-footer button {
@@ -683,7 +711,7 @@
     gap: 6px;
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.20) inset,
-        -6px 8px 20px rgba(0, 0, 0, 0.18);
+        -6px 8px 20px rgba(0, 0, 0, 0.20);
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 0.65rem;
     font-weight: 700;
@@ -708,8 +736,6 @@
     font-size: 1rem;
     writing-mode: horizontal-tb;
 }
-
-/* When panel is open, hide the toggle */
 .news-splash-panel.active ~ .news-splash-toggle {
     opacity: 0;
     visibility: hidden;
@@ -728,7 +754,7 @@
         max-height: 70vh;
         transform: translateY(110%);
         border-radius: 24px 24px 0 0;
-        border: 1px solid rgba(255, 255, 255, 0.70);
+        border: 1px solid rgba(var(--mg-sage), 0.85);
         border-bottom: none;
     }
     .news-splash-panel.active {
@@ -738,7 +764,7 @@
 
     .news-splash-toggle {
         top: auto;
-        bottom: 160px; /* sit above the mobile login button */
+        bottom: 160px;
         right: 16px;
         transform: none;
         writing-mode: horizontal-tb;
@@ -751,11 +777,8 @@
 }
 
 @media (max-width: 575px) {
-    .hero-content {
-        padding: 1.5rem !important;
-        border-radius: 18px !important;
-    }
-    .hero-content h1 { font-size: 2rem !important; }
+    .hero-slider h1,
+    .hero-text-reveal h1 { font-size: 2rem !important; }
     .news-splash-panel-header { padding: 0.9rem 1.1rem; }
     .news-splash-panel-title h3 { font-size: 0.95rem; }
     .news-splash-card { padding: 0.7rem; }
@@ -764,7 +787,7 @@
 
 
 /* ============================================================================
-   5. ANNOUNCEMENT TICKER — Light Glass strip
+   5. ANNOUNCEMENT TICKER — Cream Glass strip
    ============================================================================ */
 #announcementTicker {
     background: linear-gradient(135deg,
@@ -787,17 +810,17 @@
         transparent 100%) !important;
 }
 .slider-bottom-label {
-    background: rgba(255, 255, 255, 0.55) !important;
+    background: rgba(var(--mg-cream), 0.65) !important;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.65) !important;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.60) inset;
+    border: 1px solid rgba(var(--mg-sage), 0.85) !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
 }
 .slider-bottom-label i {
     color: var(--secondary-color) !important;
 }
 .slider-bottom-label span {
-    color: rgba(0, 0, 0, 0.75) !important;
+    color: rgba(var(--mg-ink), 0.78) !important;
 }
 .slider-bottom-alert-item {
     backdrop-filter: blur(10px);
@@ -810,7 +833,7 @@
 
 
 /* ============================================================================
-   7. PAGE HERO (sub-pages: about, gallery, contact, team) — Light
+   7. PAGE HERO (sub-pages: about, gallery, contact, team)
    ============================================================================ */
 .page-hero {
     background: linear-gradient(135deg,
