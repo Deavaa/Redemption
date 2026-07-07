@@ -17,7 +17,6 @@
         .note-btn-group .note-btn:hover {
             background: rgba(16, 185, 129, 0.10) !important;
         }
-        .note-editor.note-airframe .note-editing-area .note-editable-content,
         .note-editable {
             padding: 14px 16px !important;
             min-height: 220px;
@@ -45,6 +44,42 @@
             font-size: 0.85em;
             color: #db2777;
         }
+        /* Upload status indicator */
+        .note-upload-status {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            color: #059669;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin: 4px 0;
+        }
+        .note-upload-status.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+        /* Cover image preview */
+        .cover-preview {
+            margin-top: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e5e7eb;
+            max-width: 300px;
+            display: none;
+        }
+        .cover-preview img { width: 100%; display: block; }
+        .cover-preview-label {
+            font-size: 0.72rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 10px;
+            background: #f9fafb;
+            display: block;
+        }
     </style>
 @endpush
 
@@ -54,83 +89,159 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         var textarea = document.querySelector('textarea[name="content"]');
-        if (textarea && window.jQuery && typeof $.fn.summernote === 'function') {
-            $(textarea).summernote({
-                height: 260,
-                minHeight: 200,
-                maxHeight: 600,
-                placeholder: 'Write the news content here. You can use bold, italic, headings, lists, links, quotes, and images...',
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
-                    ['fontname', ['fontname']],
-                    ['fontsize', ['fontsize']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph', 'height', 'blockquote']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'hr']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ],
-                fontNames: ['Inter', 'Arial', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia'],
-                fontSizes: ['8', '9', '10', '11', '12', '14', '16', '18', '20', '24', '28', '36', '48'],
-                styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'pre'],
-                dialogFade: true,
-                disableLinkTarget: false,
-                codemirror: { theme: 'monokai' },
-                // Upload images to the server instead of embedding as base64.
-                // This keeps the HTML content small and lets the news splash
-                // panel extract a real <img src="http://..."> URL for the
-                // card thumbnail.
-                callbacks: {
-                    onImageUpload: function(files) {
-                        var editor = $(this);
-                        var formData = new FormData();
-                        formData.append('file', files[0]);
-                        var csrfToken = document.querySelector('meta[name="csrf-token"]');
-                        if (!csrfToken) {
-                            alert('CSRF token meta tag not found. Image upload cannot proceed.');
-                            return;
+        if (!textarea) return;
+
+        // Wait for jQuery + Summernote to load
+        function initEditor() {
+            if (!window.jQuery || typeof $.fn.summernote !== 'function') {
+                setTimeout(initEditor, 100);
+                return;
+            }
+
+            try {
+                $(textarea).summernote({
+                    height: 260,
+                    minHeight: 200,
+                    maxHeight: 600,
+                    placeholder: 'Write the news content here. You can use bold, italic, headings, lists, links, quotes, and images...',
+                    toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
+                        ['fontname', ['fontname']],
+                        ['fontsize', ['fontsize']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph', 'height', 'blockquote']],
+                        ['table', ['table']],
+                        ['insert', ['link', 'picture', 'hr']],
+                        ['view', ['fullscreen', 'codeview', 'help']]
+                    ],
+                    fontNames: ['Inter', 'Arial', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia'],
+                    fontSizes: ['8', '9', '10', '11', '12', '14', '16', '18', '20', '24', '28', '36', '48'],
+                    styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'pre'],
+                    dialogFade: true,
+                    disableLinkTarget: false,
+                    callbacks: {
+                        onImageUpload: function(files) {
+                            handleImageUpload(files, $(this));
                         }
-                        formData.append('_token', csrfToken.getAttribute('content'));
-                        // Show a placeholder while uploading
-                        var $placeholder = $('<div class="note-image-uploading" style="padding:8px 12px;background:#ecfdf5;border-radius:6px;color:#059669;font-size:0.85rem;"><i class="fas fa-spinner fa-spin"></i> Uploading image...</div>');
-                        editor.summernote('insertNode', $placeholder[0]);
-                        var uploadUrl = '{{ route("admin.news.upload-image") }}';
-                        fetch(uploadUrl, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-                            }
-                        })
-                        .then(function(r) {
-                            if (!r.ok) {
-                                return r.text().then(function(t) {
-                                    throw new Error('HTTP ' + r.status + ': ' + t);
-                                });
-                            }
-                            return r.json();
-                        })
-                        .then(function(data) {
-                            $placeholder.remove();
-                            if (data.url) {
-                                editor.summernote('insertImage', data.url, function($image) {
-                                    $image.css('max-width', '100%');
-                                    $image.css('height', 'auto');
-                                    $image.css('border-radius', '8px');
-                                });
-                            } else {
-                                alert('Image upload failed: ' + (data.error || 'Unknown error. Check the browser console for details.'));
-                                console.error('Upload response:', data);
-                            }
-                        })
-                        .catch(function(err) {
-                            $placeholder.remove();
-                            console.error('Image upload error:', err);
-                            alert('Image upload failed: ' + err.message + '\n\nCheck that:\n1. You are logged in\n2. The route /admin/news/upload-image is registered\n3. PHP has write permission to storage/app/public/news-images/');
-                        });
                     }
+                });
+                console.log('[Summernote] Editor initialized successfully');
+            } catch (e) {
+                console.error('[Summernote] Initialization failed:', e);
+            }
+        }
+
+        function handleImageUpload(files, editor) {
+            if (!files || !files.length) return;
+            var file = files[0];
+            console.log('[News Image] Upload started:', file.name, file.type, file.size + ' bytes');
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+
+            // Show upload status
+            var $status = $('<div class="note-upload-status"><i class="fas fa-spinner fa-spin"></i> Uploading ' + file.name + '...</div>');
+            editor.summernote('insertNode', $status[0]);
+
+            // Get CSRF token
+            var csrfToken = document.querySelector('meta[name="csrf-token"]');
+            var token = csrfToken ? csrfToken.getAttribute('content') : null;
+            if (!token) {
+                $status.removeClass().addClass('note-upload-status error').html('<i class="fas fa-exclamation-triangle"></i> CSRF token not found — using inline preview');
+                // Fallback: insert as base64
+                insertAsBase64(file, editor, $status);
+                return;
+            }
+
+            // Try server upload
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('_token', token);
+
+            var uploadUrl = '{{ route("admin.news.upload-image") }}';
+            console.log('[News Image] Uploading to:', uploadUrl);
+
+            fetch(uploadUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token
+                }
+            })
+            .then(function(response) {
+                console.log('[News Image] Server response status:', response.status);
+                if (!response.ok) {
+                    return response.text().then(function(text) {
+                        throw new Error('HTTP ' + response.status + ': ' + text.substring(0, 200));
+                    });
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                console.log('[News Image] Server response data:', data);
+                $status.remove();
+                if (data.url) {
+                    // SUCCESS — insert the server-hosted image
+                    editor.summernote('insertImage', data.url);
+                    console.log('[News Image] Image inserted from server URL:', data.url);
+                } else {
+                    // Server returned an error — fall back to base64
+                    console.warn('[News Image] Server returned error:', data.error);
+                    $status.removeClass().addClass('note-upload-status error').html('<i class="fas fa-exclamation-triangle"></i> Server upload failed — using inline preview');
+                    insertAsBase64(file, editor, $status);
+                }
+            })
+            .catch(function(err) {
+                console.error('[News Image] Upload error:', err);
+                $status.removeClass().addClass('note-upload-status error').html('<i class="fas fa-exclamation-triangle"></i> Network error — using inline preview');
+                // Fallback: insert as base64 so the user at least sees the image
+                insertAsBase64(file, editor, $status);
+            });
+        }
+
+        // Fallback: convert file to base64 and insert directly into the editor.
+        // This ensures the image preview ALWAYS works, even if the server
+        // upload fails (CSRF, permissions, network, etc.).
+        function insertAsBase64(file, editor, $status) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var base64Url = e.target.result;
+                editor.summernote('insertImage', base64Url);
+                if ($status) $status.remove();
+                console.log('[News Image] Image inserted as base64 (fallback)');
+            };
+            reader.onerror = function() {
+                if ($status) {
+                    $status.removeClass().addClass('note-upload-status error').html('<i class="fas fa-times"></i> Failed to read image file');
+                }
+                alert('Failed to read the image file. Please try a different image.');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        initEditor();
+
+        // ---- Cover image preview ----
+        var coverInput = document.querySelector('input[name="image"]');
+        var coverPreview = document.getElementById('coverPreview');
+        if (coverInput && coverPreview) {
+            coverInput.addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    var reader = new FileReader();
+                    reader.onload = function(ev) {
+                        var img = coverPreview.querySelector('img');
+                        img.src = ev.target.result;
+                        coverPreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    coverPreview.style.display = 'none';
                 }
             });
         }
@@ -159,6 +270,7 @@
                         <small class="text-muted d-block mt-1">
                             <i class="fas fa-info-circle me-1"></i>
                             Rich text editor — supports bold, italic, headings, lists, links, quotes, and images.
+                            Click the <i class="fas fa-image"></i> picture icon to insert an image.
                         </small>
                     </label>
                     <textarea name="content" class="form-control" rows="6">{{ old('content') }}</textarea>
@@ -167,6 +279,10 @@
                     <label class="form-label">Cover Image</label>
                     <input type="file" name="image" class="form-control" accept="image/*">
                     <small class="text-muted">Optional — shown as a thumbnail on news cards</small>
+                    <div class="cover-preview" id="coverPreview">
+                        <span class="cover-preview-label">Preview</span>
+                        <img src="" alt="Cover preview">
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
