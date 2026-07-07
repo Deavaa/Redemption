@@ -195,7 +195,6 @@
                 <div class="news-splash-panel-icon">
                     <i class="fas fa-newspaper"></i>
                 </div>
-                <span class="news-splash-panel-label">News</span>
                 <button class="news-splash-panel-close" id="newsSplashPanelClose" aria-label="Close news panel" type="button">
                     <i class="fas fa-times"></i>
                 </button>
