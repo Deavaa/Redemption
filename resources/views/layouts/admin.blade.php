@@ -411,7 +411,7 @@
     <link href="{{ asset('css/design-tokens.css') }}" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/modern-components.css') }}" rel="stylesheet">
-    <style>html,body{overflow-x:hidden!important;max-width:100vw!important;width:100%!important;}*{box-sizing:border-box;}.admin-wrapper,.admin-main,.admin-content{max-width:100vw!important;overflow-x:hidden!important;box-sizing:border-box!important;}.admin-topbar{max-width:100vw!important;overflow:visible!important;box-sizing:border-box!important;}</style>
+    <style>html,body{overflow-x:hidden;max-width:100vw;width:100%;}*{box-sizing:border-box;}.admin-wrapper,.admin-main,.admin-content{max-width:100vw;overflow-x:hidden;box-sizing:border-box;}.admin-topbar{max-width:100vw;overflow:visible;box-sizing:border-box;}@media print{html,body,.admin-wrapper,.admin-main,.admin-content{overflow:visible!important;max-width:100%!important;margin:0!important;padding:0!important;}}</style>
     @stack('styles')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {{-- SheetJS for multi-sheet XLSX export (used by mark sheet/roster export) --}}

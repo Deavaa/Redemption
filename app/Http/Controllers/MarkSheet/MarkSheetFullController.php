@@ -112,11 +112,23 @@ class MarkSheetFullController extends Controller
 
         // Get all terms for the academic year
         $terms = Term::where('academic_year_id', $academicYearId)
-            ->orderBy('term_number')
+            ->orderBy('id', 'asc')
             ->get();
 
         $term1 = $terms->first();
-        $term2 = $terms->count() >= 2 ? $terms->skip(1)->first() : null;
+        $term2 = $terms->count() >= 2 ? $terms[1] : null;
+
+        if (!$term1) {
+            return view('admin.mark-sheet.full', compact('academicYears', 'classes', 'isTeacher'))
+                ->with('error', 'No terms found for the selected academic year. Please create terms first.');
+        }
+
+        // Ensure term1 and term2 are objects (not arrays)
+        if (is_array($term1)) $term1 = (object)$term1;
+        if ($term2 && is_array($term2)) $term2 = (object)$term2;
+
+        $term1Id = $term1->id;
+        $term2Id = $term2 ? $term2->id : null;
 
         // Query all students in the class/section
         $studentQuery = Student::where('class_id', $classId)
@@ -140,7 +152,7 @@ class MarkSheetFullController extends Controller
         $allMarks = $marksQuery->get();
 
         // Get unique subjects from marks
-        $subjects = $allMarks->pluck('subject')->filter()->unique('id')->sortBy(function($s) { return [$s->priority ?? 0, $s->name]; })->values();
+        $subjects = $allMarks->pluck('subject')->filter()->unique('id')->sortBy(function($s) { return [is_object($s) ? ($s->priority ?? 0) : 0, is_object($s) ? ($s->name ?? '') : '']; })->values();
 
         // If no marks yet, get subjects from teacher assignments
         if ($subjects->isEmpty()) {
@@ -148,6 +160,15 @@ class MarkSheetFullController extends Controller
                 $q->where('class_id', $classId);
             })->orderBy('priority')->orderBy('name')->get();
         }
+
+        // Ensure all subjects are proper objects (not arrays)
+        $subjects = $subjects->map(function($s) {
+            return is_object($s) ? $s : (object)$s;
+        });
+
+        // Helper: safely get ID from subject (may be object or array)
+        $subjId = function($s) { return is_object($s) ? $s->id : ($s['id'] ?? null); };
+        $subjName = function($s) { return is_object($s) ? ($s->name ?? '') : ($s['name'] ?? ''); };
 
         // Build the data structure: [studentId][termId][subjectId] = mark data
         $markData = [];
@@ -157,7 +178,36 @@ class MarkSheetFullController extends Controller
                 'grade'       => $entry->grade,
                 'ca_total'    => $entry->ca_total,
                 'exam_total'  => $entry->exam_total,
+                'conduct'     => $entry->conduct,
             ];
+        }
+
+        // ── Calculate aggregated conduct per student per term ──
+        // Averages the conduct scores from ALL subjects, then converts to a
+        // PERCENTILE (not raw score) so it's comparable across classes with
+        // different numbers of subjects. Conduct is out of 5, so:
+        // percentile = (avg_conduct / 5) * 100
+        // Also assigns a letter grade: A(>=80), B(>=70), C(>=60), D(>=50), F(<50)
+        $conductAgg = []; // [studentId][termId] = ['value' => 80.0, 'grade' => 'A']
+        foreach ($markData as $sId => $termData) {
+            foreach ($termData as $tId => $subjData) {
+                $conducts = [];
+                foreach ($subjData as $sKey => $data) {
+                    if (isset($data['conduct']) && $data['conduct'] !== null) {
+                        $conducts[] = floatval($data['conduct']);
+                    }
+                }
+                if (count($conducts) > 0) {
+                    $avg = array_sum($conducts) / count($conducts); // out of 5
+                    $percentile = round(($avg / 5) * 100, 1); // percentile 0-100
+                    $conductGrade = 'F';
+                    if ($percentile >= 80) $conductGrade = 'A';
+                    elseif ($percentile >= 70) $conductGrade = 'B';
+                    elseif ($percentile >= 60) $conductGrade = 'C';
+                    elseif ($percentile >= 50) $conductGrade = 'D';
+                    $conductAgg[$sId][$tId] = ['value' => $percentile, 'grade' => $conductGrade];
+                }
+            }
         }
 
         // ── Load first-term override marks for mid-year entrants ──
@@ -174,6 +224,11 @@ class MarkSheetFullController extends Controller
         // Build roster rows with Term1, Term2, and Annual calculations
         $roster = [];
         foreach ($students as $student) {
+            // Safety: skip if student is not a valid object
+            if (!is_object($student)) continue;
+
+            $studentId = $student->id;
+
             // Check if student joined in term 2 (mid-year entrant)
             $isMidYearEntrant = (int)($student->joined_term ?? 1) === 2;
 
@@ -193,16 +248,20 @@ class MarkSheetFullController extends Controller
                 'term1_avg'    => 0,
                 'term2_avg'    => 0,
                 'annual_avg'   => 0,
+                'conduct_t1'   => isset($conductAgg[$studentId][$term1Id]) ? $conductAgg[$studentId][$term1Id]['grade'] : null,
+                'conduct_t1_val' => isset($conductAgg[$studentId][$term1Id]) ? $conductAgg[$studentId][$term1Id]['value'] : null,
+                'conduct_t2'   => $term2Id ? (isset($conductAgg[$studentId][$term2Id]) ? $conductAgg[$studentId][$term2Id]['grade'] : null) : null,
+                'conduct_t2_val' => $term2Id ? (isset($conductAgg[$studentId][$term2Id]) ? $conductAgg[$studentId][$term2Id]['value'] : null) : null,
             ];
 
             // ── MID-YEAR ENTRANT: use per-subject override marks for Term 1 ──
             if ($isMidYearEntrant) {
                 // Load per-subject first-term overrides from the first_term_overrides table
                 foreach ($subjects as $subj) {
-                    $overrideKey = (string)$student->id . '_' . (string)$subj->id;
+                    $overrideKey = (string)$studentId . '_' . (string)$subjId($subj);
                     $override = $overrideMap[$overrideKey] ?? null;
                     if ($override && $override->grand_total !== null) {
-                        $row['term1'][$subj->id] = [
+                        $row['term1'][$subjId($subj)] = [
                             'grand_total' => floatval($override->grand_total),
                             'grade'       => $override->grade ?? $this->calcGrade(floatval($override->grand_total)),
                             'ca_total'    => null,
@@ -212,7 +271,7 @@ class MarkSheetFullController extends Controller
                         $row['term1_total'] += floatval($override->grand_total);
                         $row['term1_count']++;
                     } else {
-                        $row['term1'][$subj->id] = null;
+                        $row['term1'][$subjId($subj)] = null;
                     }
                 }
             }
@@ -220,8 +279,8 @@ class MarkSheetFullController extends Controller
             foreach ($subjects as $subj) {
                 // Term 1 (skip for mid-year entrants — already set above)
                 if (!$isMidYearEntrant) {
-                    $t1 = $markData[$student->id][$term1->id][$subj->id] ?? null;
-                    $row['term1'][$subj->id] = $t1;
+                    $t1 = $markData[$studentId][$term1Id][$subjId($subj)] ?? null;
+                    $row['term1'][$subjId($subj)] = $t1;
                     if ($t1 && $t1['grand_total'] !== null) {
                         $row['term1_total'] += floatval($t1['grand_total']);
                         $row['term1_count']++;
@@ -231,9 +290,9 @@ class MarkSheetFullController extends Controller
                 // Term 2
                 $t2 = null;
                 if ($term2) {
-                    $t2 = $markData[$student->id][$term2->id][$subj->id] ?? null;
+                    $t2 = $markData[$studentId][$term2Id][$subjId($subj)] ?? null;
                 }
-                $row['term2'][$subj->id] = $t2;
+                $row['term2'][$subjId($subj)] = $t2;
                 if ($t2 && $t2['grand_total'] !== null) {
                     $row['term2_total'] += floatval($t2['grand_total']);
                     $row['term2_count']++;
@@ -246,41 +305,41 @@ class MarkSheetFullController extends Controller
                     // Term 1 override mark is display-only and does NOT affect
                     // the annual calculation or other students' annual ranks.
                     if ($t2 && $t2['grand_total'] !== null) {
-                        $row['annual'][$subj->id] = [
+                        $row['annual'][$subjId($subj)] = [
                             'grand_total' => $t2['grand_total'],
                             'grade'       => $t2['grade'],
                         ];
                         $row['annual_total'] += floatval($t2['grand_total']);
                         $row['annual_count']++;
                     } else {
-                        $row['annual'][$subj->id] = null;
+                        $row['annual'][$subjId($subj)] = null;
                     }
                 } else {
                     // ── REGULAR STUDENT: annual = average of Term1 and Term2 ──
                     if ($t1 && $t2 && $t1['grand_total'] !== null && $t2['grand_total'] !== null) {
                         $annualMark = round((floatval($t1['grand_total']) + floatval($t2['grand_total'])) / 2, 1);
-                        $row['annual'][$subj->id] = [
+                        $row['annual'][$subjId($subj)] = [
                             'grand_total' => $annualMark,
                             'grade'       => $this->calcGrade($annualMark),
                         ];
                         $row['annual_total'] += $annualMark;
                         $row['annual_count']++;
                     } elseif ($t1 && $t1['grand_total'] !== null && (!$t2 || $t2['grand_total'] === null)) {
-                        $row['annual'][$subj->id] = [
+                        $row['annual'][$subjId($subj)] = [
                             'grand_total' => $t1['grand_total'],
                             'grade'       => $t1['grade'],
                         ];
                         $row['annual_total'] += floatval($t1['grand_total']);
                         $row['annual_count']++;
                     } elseif ($t2 && $t2['grand_total'] !== null && (!$t1 || $t1['grand_total'] === null)) {
-                        $row['annual'][$subj->id] = [
+                        $row['annual'][$subjId($subj)] = [
                             'grand_total' => $t2['grand_total'],
                             'grade'       => $t2['grade'],
                         ];
                         $row['annual_total'] += floatval($t2['grand_total']);
                         $row['annual_count']++;
                     } else {
-                        $row['annual'][$subj->id] = null;
+                        $row['annual'][$subjId($subj)] = null;
                     }
                 }
             }
@@ -351,35 +410,35 @@ class MarkSheetFullController extends Controller
                 // Term1 subject average
                 $t1Sum = 0; $t1Cnt = 0;
                 foreach ($roster as $row) {
-                    $t1 = $row['term1'][$subj->id] ?? null;
+                    $t1 = $row['term1'][$subjId($subj)] ?? null;
                     if ($t1 && $t1['grand_total'] !== null) {
                         $t1Sum += floatval($t1['grand_total']);
                         $t1Cnt++;
                     }
                 }
-                $averages['term1'][$subj->id] = $t1Cnt > 0 ? round($t1Sum / $t1Cnt, 1) : null;
+                $averages['term1'][$subjId($subj)] = $t1Cnt > 0 ? round($t1Sum / $t1Cnt, 1) : null;
 
                 // Term2 subject average
                 $t2Sum = 0; $t2Cnt = 0;
                 foreach ($roster as $row) {
-                    $t2 = $row['term2'][$subj->id] ?? null;
+                    $t2 = $row['term2'][$subjId($subj)] ?? null;
                     if ($t2 && $t2['grand_total'] !== null) {
                         $t2Sum += floatval($t2['grand_total']);
                         $t2Cnt++;
                     }
                 }
-                $averages['term2'][$subj->id] = $t2Cnt > 0 ? round($t2Sum / $t2Cnt, 1) : null;
+                $averages['term2'][$subjId($subj)] = $t2Cnt > 0 ? round($t2Sum / $t2Cnt, 1) : null;
 
                 // Annual subject average
                 $aSum = 0; $aCnt = 0;
                 foreach ($roster as $row) {
-                    $ann = $row['annual'][$subj->id] ?? null;
+                    $ann = $row['annual'][$subjId($subj)] ?? null;
                     if ($ann && $ann['grand_total'] !== null) {
                         $aSum += floatval($ann['grand_total']);
                         $aCnt++;
                     }
                 }
-                $averages['annual'][$subj->id] = $aCnt > 0 ? round($aSum / $aCnt, 1) : null;
+                $averages['annual'][$subjId($subj)] = $aCnt > 0 ? round($aSum / $aCnt, 1) : null;
             }
 
             // Overall total averages
