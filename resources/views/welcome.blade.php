@@ -63,20 +63,18 @@
                             <div class="hero-dot-grid"></div>
                             <div class="container h-100">
                                 <div class="row h-100 align-items-center">
-                                    <div class="col-lg-8">
-                                        <div class="hero-content hero-text-reveal">
-                                            @if($slider->title)
-                                                <span class="hero-badge">
-                                                    <i class="fas fa-graduation-cap me-2"></i>{{ $slider->title }}
-                                                </span>
-                                            @endif
-                                            @if($slider->subtitle)
-                                                <h1>{{ $slider->subtitle }}</h1>
-                                            @endif
-                                            @if($slider->description ?? null)
-                                                <p>{{ $slider->description }}</p>
-                                            @endif
-                                        </div>
+                                    <div class="col-lg-8 hero-text-reveal">
+                                        @if($slider->title)
+                                            <span class="hero-badge">
+                                                <i class="fas fa-graduation-cap me-2"></i>{{ $slider->title }}
+                                            </span>
+                                        @endif
+                                        @if($slider->subtitle)
+                                            <h1>{{ $slider->subtitle }}</h1>
+                                        @endif
+                                        @if($slider->description ?? null)
+                                            <p>{{ $slider->description }}</p>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -90,14 +88,12 @@
                             <div class="hero-dot-grid"></div>
                             <div class="container h-100">
                                 <div class="row h-100 align-items-center">
-                                    <div class="col-lg-8">
-                                        <div class="hero-content hero-text-reveal">
-                                            <span class="hero-badge">
-                                                <i class="fas fa-graduation-cap me-2"></i>Excellence in Education
-                                            </span>
-                                            <h1>Empowering Minds, <span>Shaping Futures</span></h1>
-                                            <p>{{ $settings['school_description'] }}</p>
-                                        </div>
+                                    <div class="col-lg-8 hero-text-reveal">
+                                        <span class="hero-badge">
+                                            <i class="fas fa-graduation-cap me-2"></i>Excellence in Education
+                                        </span>
+                                        <h1>Empowering Minds, <span>Shaping Futures</span></h1>
+                                        <p>{{ $settings['school_description'] }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -110,14 +106,12 @@
                             <div class="hero-dot-grid"></div>
                             <div class="container h-100">
                                 <div class="row h-100 align-items-center">
-                                    <div class="col-lg-8">
-                                        <div class="hero-content hero-text-reveal">
-                                            <span class="hero-badge">
-                                                <i class="fas fa-book-reader me-2"></i>Excellence in Education
-                                            </span>
-                                            <h1>Where Learning <span>Becomes Discovery</span></h1>
-                                            <p>Our innovative curriculum combines academic rigor with creative exploration, preparing students to think critically and solve real-world problems with confidence.</p>
-                                        </div>
+                                    <div class="col-lg-8 hero-text-reveal">
+                                        <span class="hero-badge">
+                                            <i class="fas fa-book-reader me-2"></i>Excellence in Education
+                                        </span>
+                                        <h1>Where Learning <span>Becomes Discovery</span></h1>
+                                        <p>Our innovative curriculum combines academic rigor with creative exploration, preparing students to think critically and solve real-world problems with confidence.</p>
                                     </div>
                                 </div>
                             </div>
@@ -130,26 +124,24 @@
                             <div class="hero-dot-grid"></div>
                             <div class="container h-100">
                                 <div class="row h-100 align-items-center">
-                                    <div class="col-lg-8">
-                                        <div class="hero-content hero-text-reveal">
-                                            <span class="hero-badge">
-                                                <i class="fas fa-users me-2"></i>Join Our Community
-                                            </span>
-                                            <h1>Building <span>Tomorrow's Leaders</span></h1>
-                                            <p>With {{ $settings['total_students'] }} students, {{ $settings['total_teachers'] }} expert teachers, and a {{ $settings['university_acceptance'] }} university acceptance rate, {{ $settings['school_name'] }} is where excellence meets opportunity.</p>
-                                            <div class="hero-stats">
-                                                <div class="stat-item">
-                                                    <h3><span class="counter" data-target="{{ $settings['total_students'] }}">0</span>+</h3>
-                                                    <p>Students</p>
-                                                </div>
-                                                <div class="stat-item">
-                                                    <h3><span class="counter" data-target="{{ $settings['total_teachers'] }}">0</span>+</h3>
-                                                    <p>Expert Teachers</p>
-                                                </div>
-                                                <div class="stat-item">
-                                                    <h3><span class="counter" data-target="{{ preg_replace('/[^0-9]/', '', $settings['university_acceptance']) }}">0</span>%</h3>
-                                                    <p>University Acceptance</p>
-                                                </div>
+                                    <div class="col-lg-8 hero-text-reveal">
+                                        <span class="hero-badge">
+                                            <i class="fas fa-users me-2"></i>Join Our Community
+                                        </span>
+                                        <h1>Building <span>Tomorrow's Leaders</span></h1>
+                                        <p>With {{ $settings['total_students'] }} students, {{ $settings['total_teachers'] }} expert teachers, and a {{ $settings['university_acceptance'] }} university acceptance rate, {{ $settings['school_name'] }} is where excellence meets opportunity.</p>
+                                        <div class="hero-stats">
+                                            <div class="stat-item">
+                                                <h3><span class="counter" data-target="{{ $settings['total_students'] }}">0</span>+</h3>
+                                                <p>Students</p>
+                                            </div>
+                                            <div class="stat-item">
+                                                <h3><span class="counter" data-target="{{ $settings['total_teachers'] }}">0</span>+</h3>
+                                                <p>Expert Teachers</p>
+                                            </div>
+                                            <div class="stat-item">
+                                                <h3><span class="counter" data-target="{{ preg_replace('/[^0-9]/', '', $settings['university_acceptance']) }}">0</span>%</h3>
+                                                <p>University Acceptance</p>
                                             </div>
                                         </div>
                                     </div>
