@@ -217,7 +217,6 @@
                         value="{{ old('login', $login ?? '') }}" required autofocus
                         placeholder="{{ __('app.login_placeholder') }}"
                         autocomplete="username" autocapitalize="none">
-                    <small class="helper-text">{{ __('app.login_helper') }}</small>
                 </div>
                 <div class="form-group">
                     <label for="password-input"><i class="bi bi-lock" aria-hidden="true"></i> {{ __('app.password') }}</label>
