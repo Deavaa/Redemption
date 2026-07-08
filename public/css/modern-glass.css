@@ -870,24 +870,11 @@
 
 
 /* ============================================================================
-   7. PAGE HERO (sub-pages) — uses school primary color for consistency
+   7. PAGE HERO (sub-pages)
    ----------------------------------------------------------------------------
-   The page-hero background MUST match the rest of the page content (section
-   headers, buttons, form accents) which all use --primary-color. Previously
-   this was hardcoded to emerald→cyan which clashed with the school's actual
-   primary color. Now it uses --primary-rgb so the hero blends seamlessly
-   with the content below it.
+   The page-hero background is now set INLINE in layouts/website.blade.php
+   inside the <style> block in <head>. This ensures Blade processes the
+   school's primary_color PHP variables directly — no CSS variable
+   resolution, no external file caching issues. The inline rule uses
+   !important so it wins over any .page-hero rule in website.css.
    ============================================================================ */
-.page-hero {
-    background: linear-gradient(135deg,
-        rgba(var(--primary-rgb), 0.96) 0%,
-        rgba(var(--primary-rgb), 0.82) 100%) !important;
-}
-.page-hero h1,
-.page-hero h2 {
-    color: #ffffff !important;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
-}
-.page-hero p {
-    color: rgba(255, 255, 255, 0.92) !important;
-}

@@ -49,6 +49,15 @@
             --glass-shadow: 0 8px 32px rgba(0,0,0,0.12);
             --nav-height: 80px;
         }
+
+        /* ===== PAGE-HERO — inline so Blade processes the PHP color vars directly.
+           This bypasses all external CSS caching issues and CSS variable resolution.
+           Uses the SAME primary color as the rest of the page content. ===== */
+        .page-hero {
+            background: linear-gradient(135deg,
+                rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.96) 0%,
+                rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.82) 100%) !important;
+        }
     </style>
     <link rel="stylesheet" href="{{ asset('css/design-tokens.css') }}?v={{ filemtime(public_path('css/design-tokens.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/website.css') }}?v={{ filemtime(public_path('css/website.css')) }}">
