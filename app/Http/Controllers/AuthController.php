@@ -209,13 +209,17 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        // Verify the new password is NOT the default '123456'
-        if (Hash::check('123456', $r->password) || $r->password === '123456') {
-            return back()->withErrors(['password' => 'You cannot use the default password. Please choose a new one.'])->withInput();
+        // Verify the new password is NOT the default '123456'.
+        // NOTE: $r->password is PLAIN TEXT from the form, so we compare
+        // directly — do NOT use Hash::check() (that expects a hashed
+        // password as the second argument and throws if given plain text).
+        $plainPassword = $r->password;
+        if ($plainPassword === '123456' || $plainPassword === 'password') {
+            return back()->withErrors(['password' => 'You cannot use the default or common password. Please choose a new one.'])->withInput();
         }
 
         // Update the password (the 'hashed' cast on the User model will hash it)
-        $user->password = $r->password;
+        $user->password = $plainPassword;
         $user->must_change_password = false;
         $user->save();
 
