@@ -7,26 +7,40 @@
     /* ========== Gallery Page Styles ========== */
     .gallery-hero {
         position: relative;
-        padding: 0.8rem 0 0.5rem;
-        background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.98) 0%, rgba(var(--primary-rgb), 0.92) 100%);
+        padding: 8rem 0 2.5rem;
+        background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.96) 0%, rgba(var(--primary-rgb), 0.82) 100%);
         overflow: hidden;
+        margin-bottom: -1.5rem; /* Pull next section up to close the gap */
     }
 
     .gallery-hero::before {
-        display: none;
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: radial-gradient(rgba(217, 119, 6, 0.06) 1px, transparent 1px);
+        background-size: 30px 30px;
+        pointer-events: none;
     }
 
     .gallery-hero::after {
-        display: none;
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.04));
+        pointer-events: none;
     }
 
     .gallery-hero h1 {
-        font-size: 1rem;
+        font-size: 2.5rem;
         color: var(--white);
-        margin-bottom: 0.1rem;
-        text-shadow: none;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.35);
     }
 
     .gallery-hero h1 span {
@@ -34,9 +48,9 @@
     }
 
     .gallery-hero p {
-        color: rgba(255,255,255,0.7);
-        font-size: 0.75rem;
-        margin-bottom: 0.1rem;
+        color: rgba(255,255,255,0.85);
+        font-size: 1.05rem;
+        margin-bottom: 0.75rem;
     }
 
     .gallery-hero .breadcrumb {
@@ -314,14 +328,14 @@
     }
 
     @media (max-width: 991px) {
-        .gallery-hero h1 { font-size: 0.95rem; }
-        .gallery-hero { padding: 0.6rem 0 0.4rem; }
+        .gallery-hero h1 { font-size: 2rem; }
+        .gallery-hero { padding: 7rem 0 2rem; }
         .gallery-masonry { columns: 2; }
     }
 
     @media (max-width: 575px) {
-        .gallery-hero h1 { font-size: 0.9rem; }
-        .gallery-hero { padding: 0.5rem 0 0.3rem; }
+        .gallery-hero h1 { font-size: 1.75rem; }
+        .gallery-hero { padding: 6rem 0 1.5rem; }
         .gallery-masonry { columns: 2; }
     }
 </style>

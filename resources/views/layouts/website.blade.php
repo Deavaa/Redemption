@@ -97,9 +97,6 @@
                         <a class="nav-link @if(request()->routeIs('about')) active @endif" href="{{ route('about') }}">About</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('home') }}#programs">Programs</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link @if(request()->routeIs('gallery')) active @endif" href="{{ route('gallery') }}">Gallery</a>
                     </li>
                     <li class="nav-item">
@@ -132,7 +129,6 @@
         <ul class="mobile-nav-links">
             <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) class="active" @endif>Home</a></li>
             <li><a href="{{ route('about') }}" @if(request()->routeIs('about')) class="active" @endif>About</a></li>
-            <li><a href="{{ route('home') }}#programs">Programs</a></li>
             <li><a href="{{ route('gallery') }}" @if(request()->routeIs('gallery')) class="active" @endif>Gallery</a></li>
             <li><a href="{{ route('team') }}" @if(request()->routeIs('team')) class="active" @endif>Our Team</a></li>
             <li><a href="{{ route('contact') }}" @if(request()->routeIs('contact')) class="active" @endif>Contact</a></li>
@@ -197,14 +193,14 @@
                         <li><a href="{{ route('contact') }}"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> Contact</a></li>
                     </ul>
                 </div>
-                <!-- Programs -->
+                <!-- Quick Links -->
                 <div class="col-lg-3 col-md-6">
-                    <h5>Programs</h5>
+                    <h5>Explore</h5>
                     <ul class="footer-links">
-                        <li><a href="{{ route('home') }}#programs"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> Kindergarten</a></li>
-                        <li><a href="{{ route('home') }}#programs"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> Primary School</a></li>
-                        <li><a href="{{ route('home') }}#programs"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> Secondary School</a></li>
-                        <li><a href="{{ route('home') }}#programs"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> High School</a></li>
+                        <li><a href="{{ route('about') }}"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> About Us</a></li>
+                        <li><a href="{{ route('gallery') }}"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> Gallery</a></li>
+                        <li><a href="{{ route('team') }}"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> Our Team</a></li>
+                        <li><a href="{{ route('contact') }}"><i class="fas fa-chevron-right me-1" style="font-size:0.6rem"></i> Contact</a></li>
                     </ul>
                 </div>
                 <!-- Newsletter -->
