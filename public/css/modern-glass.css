@@ -870,13 +870,18 @@
 
 
 /* ============================================================================
-   7. PAGE HERO (sub-pages) — Vibrant gradient
+   7. PAGE HERO (sub-pages) — uses school primary color for consistency
+   ----------------------------------------------------------------------------
+   The page-hero background MUST match the rest of the page content (section
+   headers, buttons, form accents) which all use --primary-color. Previously
+   this was hardcoded to emerald→cyan which clashed with the school's actual
+   primary color. Now it uses --primary-rgb so the hero blends seamlessly
+   with the content below it.
    ============================================================================ */
 .page-hero {
     background: linear-gradient(135deg,
-        rgba(var(--mg-emerald), 0.95) 0%,
-        rgba(var(--mg-teal), 0.92) 50%,
-        rgba(var(--mg-cyan), 0.90) 100%) !important;
+        rgba(var(--primary-rgb), 0.96) 0%,
+        rgba(var(--primary-rgb), 0.82) 100%) !important;
 }
 .page-hero h1,
 .page-hero h2 {
