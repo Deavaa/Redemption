@@ -36,15 +36,14 @@
 
 .navbar {
     background: linear-gradient(135deg,
-        rgba(var(--mg-emerald), 0.92) 0%,
-        rgba(var(--mg-teal), 0.90) 50%,
-        rgba(var(--mg-cyan), 0.88) 100%) !important;
+        rgba(var(--primary-rgb), 0.96) 0%,
+        rgba(var(--primary-rgb), 0.88) 100%) !important;
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.25) inset,
-        0 6px 30px rgba(var(--mg-emerald), 0.20) !important;
+        0 6px 30px rgba(var(--primary-rgb), 0.25) !important;
     padding: 0.85rem 0 !important;
     transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
@@ -63,16 +62,13 @@
 }
 
 .navbar.scrolled {
-    background: linear-gradient(135deg,
-        rgba(var(--mg-emerald), 0.98) 0%,
-        rgba(var(--mg-teal), 0.96) 50%,
-        rgba(var(--mg-cyan), 0.94) 100%) !important;
+    background: rgba(var(--primary-rgb), 0.98) !important;
     backdrop-filter: blur(24px) saturate(200%) !important;
     -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
     padding: 0.55rem 0 !important;
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.30) inset,
-        0 10px 40px rgba(var(--mg-emerald), 0.30) !important;
+        0 10px 40px rgba(var(--primary-rgb), 0.35) !important;
 }
 
 /* Brand — white text on vibrant gradient */
