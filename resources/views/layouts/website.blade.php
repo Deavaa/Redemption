@@ -76,7 +76,7 @@
         <div class="container-fluid nav-container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
                 @if($settings['school_logo'] ?? '')
-                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 45px; opacity: 0.85;" loading="lazy" onerror="this.style.display='none'">
+                    <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 42px; width: 42px; object-fit: contain; background: #ffffff; border-radius: 10px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); opacity: 1;" loading="lazy" onerror="this.style.display='none'">
                 @endif
                 <div>
                     <span class="brand-pre">{{ Str::beforeLast($settings['school_name'] ?? 'School', ' ') }}</span>
@@ -157,7 +157,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="footer-brand d-flex align-items-center gap-2">
                         @if($settings['school_logo'] ?? '')
-                            <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 40px; opacity: 0.85;" onerror="this.style.display='none'">
+                            <img src="{{ asset('storage/' . $settings['school_logo']) }}" alt="{{ $settings['school_name'] }}" style="height: 38px; width: 38px; object-fit: contain; background: #ffffff; border-radius: 8px; padding: 3px; opacity: 1;" onerror="this.style.display='none'">
                         @endif
                         <div>
                             <span class="brand-pre">{{ Str::beforeLast($settings['school_name'] ?? 'School', ' ') }}</span>
