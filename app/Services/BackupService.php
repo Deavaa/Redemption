@@ -84,19 +84,32 @@ class BackupService
     {
         $email = $email ?? Setting::get('backup_email', config('mail.from.address', 'admin@schoolofredemption.com'));
 
-        // Check if mail is actually configured
+        // ===== Try cPanel email integration first =====
+        // If an EmailInboxSetting is marked as is_default_sender, use its SMTP
+        // credentials to send the backup email. This lets the school use their
+        // own cPanel email account (already configured for IMAP reading) for
+        // sending — no need to configure separate SMTP credentials in .env.
+        try {
+            $defaultSender = \App\Models\EmailInboxSetting::getDefaultSender();
+            if ($defaultSender) {
+                return $this->sendViaCpanelEmail($defaultSender, $filePath, $email);
+            }
+        } catch (\Throwable $e) {
+            Log::info('No cPanel default sender available, falling back to global mail config: ' . $e->getMessage());
+        }
+
+        // ===== Fall back to global mail config =====
         $mailMailer = config('mail.default', env('MAIL_MAILER', 'log'));
         if (in_array($mailMailer, ['log', 'array', 'null'])) {
-            Log::warning('Database backup email skipped: mail not configured (driver: ' . $mailMailer . ')');
+            Log::warning('Database backup email skipped: mail not configured (driver: ' . $mailMailer . '). Configure a cPanel email in Email Inbox settings or set MAIL_* in .env');
             return false;
         }
 
-        // Check if SMTP credentials are actually set (not placeholder values)
         $mailHost = config('mail.mailers.smtp.host', env('MAIL_HOST'));
         $mailUser = config('mail.mailers.smtp.username', env('MAIL_USERNAME'));
         $mailPass = config('mail.mailers.smtp.password', env('MAIL_PASSWORD'));
         if (empty($mailHost) || empty($mailUser) || empty($mailPass) || str_contains($mailUser, 'your-') || $mailPass === 'CHANGE_ME_TO_YOUR_GMAIL_APP_PASSWORD' || str_contains($mailPass, 'your-')) {
-            Log::warning('Database backup email skipped: SMTP credentials appear to be placeholder values. Please configure MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD in .env');
+            Log::warning('Database backup email skipped: SMTP credentials appear to be placeholder values. Please configure a cPanel email in Email Inbox settings OR set MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD in .env');
             return false;
         }
 
@@ -107,11 +120,66 @@ class BackupService
                 basename($filePath)
             ));
 
-            Log::info('Database backup email sent', ['email' => $email, 'file' => basename($filePath)]);
+            Log::info('Database backup email sent (global config)', ['email' => $email, 'file' => basename($filePath)]);
             return true;
         } catch (\Exception $e) {
             Log::error('Database backup email failed: ' . $e->getMessage(), [
-                'hint' => 'Check that MAIL_USERNAME and MAIL_PASSWORD in .env are valid. For Gmail, use an App Password from https://myaccount.google.com/apppasswords',
+                'hint' => 'Check that MAIL_USERNAME and MAIL_PASSWORD in .env are valid, OR configure a cPanel email in Email Inbox settings.',
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send backup email using a cPanel email account's SMTP credentials.
+     * Dynamically configures the mailer at runtime — no .env changes needed.
+     */
+    private function sendViaCpanelEmail(\App\Models\EmailInboxSetting $sender, string $filePath, string $recipientEmail): bool
+    {
+        $smtpHost = $sender->getSmtpHost();
+        $smtpPort = $sender->smtp_port ?: 465;
+        $smtpEnc  = $sender->smtp_encryption ?: 'ssl';
+        $smtpUser = $sender->getSmtpUsername();
+        $smtpPass = $sender->getSmtpPassword();
+
+        if (empty($smtpHost) || empty($smtpUser) || empty($smtpPass)) {
+            Log::warning('cPanel email sender has incomplete SMTP config', ['inbox_id' => $sender->id]);
+            return false;
+        }
+
+        // Dynamically configure the SMTP mailer for this send
+        config([
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp.host' => $smtpHost,
+            'mail.mailers.smtp.port' => $smtpPort,
+            'mail.mailers.smtp.encryption' => $smtpEnc,
+            'mail.mailers.smtp.username' => $smtpUser,
+            'mail.mailers.smtp.password' => $smtpPass,
+            'mail.mailers.smtp.timeout' => 60,
+            'mail.from.address' => $sender->email_address,
+            'mail.from.name' => $sender->branch?->name ?? config('app.name', 'School'),
+        ]);
+
+        try {
+            Mail::to($recipientEmail)->send(new DatabaseBackupMail(
+                $filePath,
+                pathinfo($filePath, PATHINFO_EXTENSION) === 'gz' ? 'sql.gz' : 'sql',
+                basename($filePath)
+            ));
+
+            Log::info('Database backup email sent via cPanel email', [
+                'inbox_id' => $sender->id,
+                'from' => $sender->email_address,
+                'to' => $recipientEmail,
+                'smtp_host' => $smtpHost . ':' . $smtpPort,
+                'file' => basename($filePath),
+            ]);
+            return true;
+        } catch (\Exception $e) {
+            Log::error('cPanel backup email failed: ' . $e->getMessage(), [
+                'inbox_id' => $sender->id,
+                'smtp_host' => $smtpHost . ':' . $smtpPort,
+                'hint' => 'Verify the cPanel email SMTP settings. Common ports: 465 (SSL), 587 (TLS), 25 (none).',
             ]);
             return false;
         }

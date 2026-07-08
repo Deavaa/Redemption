@@ -10,6 +10,7 @@ class DemoAdminSeeder extends Seeder {
             $user->update([
                 'name' => 'Admin User',
                 'password' => bcrypt('123456'),
+                'must_change_password' => true,
                 'role' => 'admin',
                 'email_verified_at' => now(),
             ]);
@@ -17,6 +18,7 @@ class DemoAdminSeeder extends Seeder {
             User::create([
                 'name' => 'Admin User',
                 'email' => 'admin@school.com',
+                'must_change_password' => true,
                 'password' => bcrypt('123456'),
                 'role' => 'admin',
                 'email_verified_at' => now(),

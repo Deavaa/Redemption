@@ -130,9 +130,18 @@ class EmailInboxController extends Controller
             'imap_username' => 'required|string',
             'imap_password' => 'required|string',
             'imap_encryption' => 'required|in:ssl,tls,none',
+            'smtp_host' => 'nullable|string',
+            'smtp_port' => 'nullable|integer',
+            'smtp_encryption' => 'nullable|in:ssl,tls,none',
+            'is_default_sender' => 'nullable|boolean',
             'folder' => 'nullable|string',
             'sync_interval_minutes' => 'nullable|integer|min:5',
         ]);
+
+        // If this inbox is marked as default sender, unset the flag on all others
+        if ($request->boolean('is_default_sender')) {
+            EmailInboxSetting::where('is_default_sender', true)->update(['is_default_sender' => false]);
+        }
 
         EmailInboxSetting::create([
             'branch_id' => $request->branch_id,
@@ -142,11 +151,15 @@ class EmailInboxController extends Controller
             'imap_username' => $request->imap_username,
             'imap_password' => Crypt::encryptString($request->imap_password),
             'imap_encryption' => $request->imap_encryption,
+            'smtp_host' => $request->smtp_host ?: $request->imap_host,
+            'smtp_port' => $request->smtp_port ?: 465,
+            'smtp_encryption' => $request->smtp_encryption ?: 'ssl',
+            'is_default_sender' => $request->boolean('is_default_sender'),
             'folder' => $request->folder ?? 'INBOX',
             'sync_interval_minutes' => $request->sync_interval_minutes ?? 15,
         ]);
 
-        return back()->with('success', 'Email inbox configured successfully.');
+        return back()->with('success', 'Email inbox configured successfully. SMTP sending is ' . ($request->boolean('is_default_sender') ? 'ENABLED' : 'disabled') . '.');
     }
 
     public function updateSettings(Request $request, EmailInboxSetting $inboxSetting)
@@ -158,15 +171,38 @@ class EmailInboxController extends Controller
             'imap_username' => 'required|string',
             'imap_password' => 'nullable|string',
             'imap_encryption' => 'required|in:ssl,tls,none',
+            'smtp_host' => 'nullable|string',
+            'smtp_port' => 'nullable|integer',
+            'smtp_encryption' => 'nullable|in:ssl,tls,none',
+            'is_default_sender' => 'nullable|boolean',
             'folder' => 'nullable|string',
             'sync_interval_minutes' => 'nullable|integer|min:5',
             'is_active' => 'nullable|boolean',
         ]);
 
+        // If this inbox is being marked as default sender, unset the flag on all others
+        if ($request->boolean('is_default_sender')) {
+            EmailInboxSetting::where('id', '!=', $inboxSetting->id)
+                ->where('is_default_sender', true)
+                ->update(['is_default_sender' => false]);
+        }
+
         $data = $request->only([
             'email_address', 'imap_host', 'imap_port', 'imap_username',
-            'imap_encryption', 'folder', 'sync_interval_minutes', 'is_active'
+            'imap_encryption', 'folder', 'sync_interval_minutes', 'is_active',
+            'smtp_host', 'smtp_port', 'smtp_encryption', 'is_default_sender'
         ]);
+
+        // Fill in SMTP defaults from IMAP if not provided
+        if (empty($data['smtp_host'])) {
+            $data['smtp_host'] = $request->imap_host;
+        }
+        if (empty($data['smtp_port'])) {
+            $data['smtp_port'] = 465;
+        }
+        if (empty($data['smtp_encryption'])) {
+            $data['smtp_encryption'] = 'ssl';
+        }
 
         if ($request->filled('imap_password')) {
             $data['imap_password'] = Crypt::encryptString($request->imap_password);
@@ -174,7 +210,7 @@ class EmailInboxController extends Controller
 
         $inboxSetting->update($data);
 
-        return back()->with('success', 'Email inbox settings updated.');
+        return back()->with('success', 'Email inbox settings updated. SMTP sending is ' . ($inboxSetting->fresh()->is_default_sender ? 'ENABLED' : 'disabled') . '.');
     }
 
     public function destroySettings(EmailInboxSetting $inboxSetting)

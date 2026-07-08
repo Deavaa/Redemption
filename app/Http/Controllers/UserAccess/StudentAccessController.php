@@ -52,6 +52,7 @@ class StudentAccessController extends Controller
             'name' => $student->full_name,
             'email' => $student->email ?? $student->admission_number . '@school.local',
             'password' => Hash::make($defaultPassword),
+            'must_change_password' => true,
             'role' => 'student',
             'phone' => $phone,
             'branch_id' => $student->branch_id,
@@ -99,6 +100,7 @@ class StudentAccessController extends Controller
                     'name' => $student->full_name,
                     'email' => $email,
                     'password' => Hash::make($defaultPassword),
+                    'must_change_password' => true,
                     'role' => 'student',
                     'branch_id' => $student->branch_id,
                     'is_active' => true,
@@ -122,6 +124,7 @@ class StudentAccessController extends Controller
 
         $user = User::findOrFail($request->user_id);
         $defaultPassword = (new EmployeeIdService())->getDefaultPassword();
+        'must_change_password' => true,
         $user->update(['password' => Hash::make($defaultPassword)]);
 
         return redirect()->back()->with('success', "Password reset to default: {$defaultPassword}");

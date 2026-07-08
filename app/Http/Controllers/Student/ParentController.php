@@ -89,6 +89,7 @@ class ParentController extends Controller
                     'name' => $displayName,
                     'email' => 'parent_' . time() . '_' . rand(100, 999) . '@redemption.edu',
                     'password' => bcrypt('123456'),
+                    'must_change_password' => true,
                     'role' => 'parent',
                     'phone' => $displayPhone,
                     'is_active' => true,

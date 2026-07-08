@@ -2277,6 +2277,25 @@ function toggleMobileMenu() {
 @stack('scripts')
 @yield('scripts')
 
+{{-- Filter persistence + default academic year/term selection --}}
+@php
+    $defaultAyId = 0;
+    $defaultTermId = 0;
+    try {
+        $ay = \App\Models\AcademicYear::getActive();
+        if ($ay) $defaultAyId = $ay->id;
+        $term = \App\Models\Term::getCurrent();
+        if ($term) $defaultTermId = $term->id;
+    } catch (\Throwable $e) {}
+@endphp
+<script>
+    window.REDEMPTION_DEFAULTS = {
+        academic_year_id: {{ $defaultAyId }},
+        term_id: {{ $defaultTermId }}
+    };
+</script>
+<script src="{{ asset('js/filter-persistence.js') }}"></script>
+
 {{-- PWA Install Prompt --}}
 <script src="{{ asset('js/pwa-install.js') }}"></script>
 

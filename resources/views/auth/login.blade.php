@@ -224,6 +224,12 @@
                         placeholder="{{ __('app.enter_password') }}"
                         autocomplete="current-password">
                 </div>
+                <div class="form-check" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+                    <input type="checkbox" id="remember" name="remember" value="1" class="form-check-input" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary-color,#10b981);">
+                    <label for="remember" style="font-size:0.85rem;color:#6b7280;cursor:pointer;margin:0;display:flex;align-items:center;gap:0.35rem;">
+                        <i class="bi bi-shield-check" style="font-size:0.8rem;"></i> Keep me logged in
+                    </label>
+                </div>
                 <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
                     {{ __('app.login') }}</button>
             </form>

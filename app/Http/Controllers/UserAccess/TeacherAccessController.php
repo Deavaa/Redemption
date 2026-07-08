@@ -59,6 +59,7 @@ class TeacherAccessController extends Controller
             'name' => $teacher->full_name,
             'email' => $teacher->email,
             'password' => Hash::make($defaultPassword),
+            'must_change_password' => true,
             'role' => 'teacher',
             'phone' => $phone,
             'branch_id' => $teacher->branch_id,
@@ -106,6 +107,7 @@ class TeacherAccessController extends Controller
         $user = User::findOrFail($request->user_id);
         $defaultPassword = (new EmployeeIdService())->getDefaultPassword();
         $user->update(['password' => Hash::make($defaultPassword)]);
+'must_change_password' => true,
 
         return redirect()->back()->with('success', "Password reset to default: {$defaultPassword}");
     }

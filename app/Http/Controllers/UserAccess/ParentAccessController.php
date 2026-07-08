@@ -53,6 +53,7 @@ class ParentAccessController extends Controller
             'name' => $parent->guardian_name ?? $parent->father_name ?? 'Parent',
             'email' => $email,
             'password' => Hash::make($defaultPassword),
+            'must_change_password' => true,
             'role' => 'parent',
             'phone' => $phone,
             'is_active' => true,
@@ -77,6 +78,7 @@ class ParentAccessController extends Controller
         $user = User::findOrFail($request->user_id);
         $defaultPassword = (new EmployeeIdService())->getDefaultPassword();
         $user->update(['password' => Hash::make($defaultPassword)]);
+'must_change_password' => true,
 
         return redirect()->back()->with('success', "Password reset to default: {$defaultPassword}");
     }

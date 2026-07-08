@@ -11,7 +11,7 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
 
-    protected $fillable = ['name', 'email', 'id_number', 'employee_id', 'password', 'role', 'branch_id', 'phone', 'address', 'profile_photo', 'is_active', 'security_question', 'security_answer', 'gender', 'qualification'];
+    protected $fillable = ['name', 'email', 'id_number', 'employee_id', 'password', 'role', 'branch_id', 'phone', 'address', 'profile_photo', 'is_active', 'must_change_password', 'security_question', 'security_answer', 'gender', 'qualification'];
     protected $hidden = ['password', 'remember_token', 'security_answer', 'security_question'];
 
     protected function casts(): array
@@ -20,6 +20,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 

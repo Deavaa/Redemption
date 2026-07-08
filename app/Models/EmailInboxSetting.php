@@ -19,6 +19,10 @@ class EmailInboxSetting extends Model
         'imap_password',
         'imap_protocol',
         'imap_encryption',
+        'smtp_host',
+        'smtp_port',
+        'smtp_encryption',
+        'is_default_sender',
         'folder',
         'is_active',
         'sync_interval_minutes',
@@ -33,7 +37,9 @@ class EmailInboxSetting extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_default_sender' => 'boolean',
         'imap_port' => 'integer',
+        'smtp_port' => 'integer',
         'sync_interval_minutes' => 'integer',
         'last_synced_at' => 'datetime',
     ];
@@ -65,5 +71,42 @@ class EmailInboxSetting extends Model
     public function scopeForBranch($query, int $branchId)
     {
         return $query->where('branch_id', $branchId);
+    }
+
+    /**
+     * Get the inbox marked as the default sender (used for sending system
+     * emails like backup notifications). Returns null if none is configured.
+     */
+    public static function getDefaultSender(): ?self
+    {
+        return static::where('is_default_sender', true)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    /**
+     * Get the SMTP host — falls back to the IMAP host if smtp_host is empty
+     * (cPanel email typically uses the same host for both).
+     */
+    public function getSmtpHost(): string
+    {
+        return $this->smtp_host ?: $this->imap_host;
+    }
+
+    /**
+     * Get the SMTP username — always the same as imap_username (cPanel
+     * email uses the full email address as both IMAP and SMTP username).
+     */
+    public function getSmtpUsername(): string
+    {
+        return $this->imap_username ?: $this->email_address;
+    }
+
+    /**
+     * Get the decrypted SMTP password — same as IMAP password.
+     */
+    public function getSmtpPassword(): string
+    {
+        return $this->getDecryptedPassword();
     }
 }

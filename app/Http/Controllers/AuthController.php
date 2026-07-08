@@ -139,6 +139,16 @@ class AuthController extends Controller
         Auth::login($user, $r->boolean('remember'));
         Log::info('AuthController@login success', ['user_id' => $user->id, 'ip' => $r->ip()]);
 
+        // ── Check if user must change their password (default password detected) ──
+        // This flag is set when a user is created with the default password '123456'
+        // or when an admin resets a user's password to default. The user is
+        // redirected to a forced password-change page instead of the dashboard.
+        if ($user->must_change_password) {
+            $r->session()->regenerate();
+            return redirect()->route('password.force-change')
+                ->with('warning', 'You are using the default password. Please change it now to secure your account.');
+        }
+
         // ── IMPORTANT: Read the redirect URL BEFORE regenerating the session.
         $redirectUrl = $r->input('redirect') ?: $r->session()->get('url.intended');
 
@@ -163,6 +173,56 @@ class AuthController extends Controller
         }
 
         return redirect()->intended($this->getHomeRoute($user));
+    }
+
+    /**
+     * Show the forced password-change page.
+     * Displayed after login when must_change_password=true (user is using
+     * the default password '123456').
+     */
+    public function showForceChangePassword(Request $r)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+        return view('auth.force-change-password');
+    }
+
+    /**
+     * Handle the forced password-change form submission.
+     * Does NOT require the current password (since we know it's the default).
+     * Clears must_change_password on success.
+     */
+    public function submitForceChangePassword(Request $r)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $r->validate([
+            'password' => 'required|string|min:8|confirmed|different:current_password_hint',
+        ], [
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
+            'password.different' => 'You cannot use the default password. Please choose a new one.',
+        ]);
+
+        $user = Auth::user();
+
+        // Verify the new password is NOT the default '123456'
+        if (Hash::check('123456', $r->password) || $r->password === '123456') {
+            return back()->withErrors(['password' => 'You cannot use the default password. Please choose a new one.'])->withInput();
+        }
+
+        // Update the password (the 'hashed' cast on the User model will hash it)
+        $user->password = $r->password;
+        $user->must_change_password = false;
+        $user->save();
+
+        Log::info('User changed default password', ['user_id' => $user->id]);
+
+        return redirect($this->getHomeRoute($user))
+            ->with('success', 'Your password has been changed successfully. Welcome to the system!');
     }
 
     public function logout(Request $r) {

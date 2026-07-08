@@ -79,6 +79,7 @@ class BackfillTeacherUsers extends Command
                     'name'         => $teacher->full_name,
                     'email'        => $teacherEmail,
                     'password'     => Hash::make($defaultPassword),
+                    'must_change_password' => true,
                     'role'         => 'teacher',
                     'branch_id'    => $teacher->branch_id,
                     'phone'        => $teacher->phone,

@@ -175,7 +175,11 @@ class StaffController extends Controller
         // Default password for all new staff members
         $employeeIdService = new EmployeeIdService();
         $defaultPassword = $employeeIdService->getDefaultPassword();
+        $usingDefaultPassword = empty($validated['password']);
         $validated['password'] = Hash::make($validated['password'] ?? $defaultPassword);
+        if ($usingDefaultPassword) {
+            $validated['must_change_password'] = true;
+        }
 
         // Normalize phone number
         if (!empty($validated['phone'])) {

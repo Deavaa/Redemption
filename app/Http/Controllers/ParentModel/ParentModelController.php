@@ -71,6 +71,7 @@ class ParentModelController extends Controller
             'email'      => $email,
             'id_number'  => $idNumber,
             'password'   => bcrypt($defaultPassword),
+            'must_change_password' => true,
             'role'       => 'parent',
             'phone'      => $validated['father_phone'],
             'is_active'  => true,

@@ -38,8 +38,10 @@ class ProfileController extends Controller
         }
 
         // Update password — User model cast handles hashing.
+        // Also clear must_change_password since the user has now set their own password.
         $user->update([
             'password' => $request->password,
+            'must_change_password' => false,
         ]);
 
         return redirect()->route('admin.profile')->with('success', 'Password changed successfully.');
@@ -57,8 +59,12 @@ class ProfileController extends Controller
 
         $targetUser = User::findOrFail($request->user_id);
         $defaultPassword = (new EmployeeIdService())->getDefaultPassword();
-        // Rely on model cast for hashing.
-        $targetUser->update(['password' => $defaultPassword]);
+        // Rely on model cast for hashing. Set must_change_password=true so the
+        // user is prompted to change it on next login.
+        $targetUser->update([
+            'password' => $defaultPassword,
+            'must_change_password' => true,
+        ]);
 
         // Avoid echoing the actual password back in the flash message.
         // Admins can see the default password convention in the user-access page.

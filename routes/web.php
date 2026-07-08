@@ -270,6 +270,12 @@ Route::post('/password/email', [AuthController::class, 'sendResetLinkEmail'])->n
 Route::get('/password/reset/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
 Route::post('/password/reset-with-token', [AuthController::class, 'resetPasswordWithToken'])->name('password.reset.token')->middleware('throttle:5,1');
 
+// Forced password change (after login when must_change_password=true)
+Route::middleware('auth')->group(function () {
+    Route::get('/password/force-change', [AuthController::class, 'showForceChangePassword'])->name('password.force-change');
+    Route::post('/password/force-change', [AuthController::class, 'submitForceChangePassword'])->name('password.force-change.submit');
+});
+
 // Telegram webhook (public)
 Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
 
