@@ -142,7 +142,7 @@
     </section>
 
     <!-- ========== Team Content ========== -->
-    <section style="padding:5rem 0;background:var(--light-bg);">
+    <section style="padding:3rem 0 4rem;background:var(--light-bg);">
         <div class="container">
             <div class="section-header reveal">
                 <span class="section-badge">Leadership Team</span>

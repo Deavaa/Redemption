@@ -18,7 +18,7 @@
     </section>
 
     <!-- ========== Mission & Vision ========== -->
-    <section style="padding:5rem 0;background:var(--white);">
+    <section style="padding:3rem 0 4rem;background:var(--white);">
         <div class="container">
             <div class="row g-5 align-items-center">
                 <div class="col-lg-6 reveal-left">

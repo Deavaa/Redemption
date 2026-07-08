@@ -400,10 +400,11 @@
         /* ========== Page Hero Banner (for sub-pages) ========== */
         .page-hero {
             position: relative;
-            padding: 10rem 0 4rem;
+            padding: 8rem 0 2.5rem;
             background: linear-gradient(135deg, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.94) 0%, rgba({{ $primaryR }}, {{ $primaryG }}, {{ $primaryB }}, 0.78) 100%);
             color: var(--white);
             overflow: hidden;
+            margin-bottom: -1.5rem; /* Pull the next section up to close the gap */
         }
 
         .page-hero::before {
@@ -419,21 +420,20 @@
         }
 
         .page-hero::after {
-            content: '✦';
+            content: '';
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(13, 148, 136, 0.35);
-            font-size: 1.5rem;
-            letter-spacing: 1rem;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.04));
             pointer-events: none;
         }
 
         .page-hero h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             color: var(--white);
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             text-shadow: 0 2px 12px rgba(0,0,0,0.35);
         }
 
@@ -442,9 +442,9 @@
         }
 
         .page-hero p {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             color: rgba(255,255,255,0.85);
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
 
         .page-hero .breadcrumb {
