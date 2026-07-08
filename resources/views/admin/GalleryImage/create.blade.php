@@ -107,26 +107,68 @@
                     </div>
                     <div>
                         <h3 class="modern-form-section-title">Image Upload</h3>
-                        <p class="modern-form-section-desc">Upload the image file and set display options</p>
+                        <p class="modern-form-section-desc">Upload a single image, or switch to Batch Mode to upload multiple images at once (sharing the same group title, category, and description).</p>
                     </div>
                 </div>
                 <div class="modern-form-section-body">
-                    <div class="modern-form-grid">
+                    {{-- Upload mode toggle --}}
+                    <div class="modern-form-group" style="margin-bottom:1.25rem;">
+                        <label class="modern-form-label">Upload Mode</label>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                            <label style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;font-size:0.85rem;font-weight:600;background:#fff;">
+                                <input type="radio" name="upload_mode" value="single" checked onchange="toggleUploadMode('single')" style="margin:0;">
+                                <i class="fas fa-image" style="color:#4361ee;"></i> Single Image
+                            </label>
+                            <label style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;font-size:0.85rem;font-weight:600;background:#fff;">
+                                <input type="radio" name="upload_mode" value="batch" onchange="toggleUploadMode('batch')" style="margin:0;">
+                                <i class="fas fa-images" style="color:#10b981;"></i> Batch (Multiple Images)
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Single image upload --}}
+                    <div id="singleUploadSection" class="modern-form-grid">
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="image_path">
-                                Image File <small>(optional - upload an image)</small>
+                                Image File <small>(required in single mode)</small>
                             </label>
                             <input type="file"
                                 name="image_path"
                                 id="image_path"
                                 class="modern-input {{ $errors->has('image_path') ? 'is-invalid' : '' }}"
                                 accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
-                            <small class="text-muted mt-1">Recommended: max 5MB (jpeg, png, gif, webp)</small>
+                            <small class="text-muted mt-1">Recommended: max 10MB (jpeg, png, gif, webp)</small>
                             @error('image_path')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror
                         </div>
+                    </div>
 
+                    {{-- Batch image upload (hidden by default) --}}
+                    <div id="batchUploadSection" style="display:none;">
+                        <div class="modern-form-group" style="margin-bottom:1rem;">
+                            <label class="modern-form-label">
+                                Select Multiple Images <small>(required in batch mode)</small>
+                            </label>
+                            <input type="file"
+                                name="images[]"
+                                id="images_input"
+                                class="modern-input"
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                                multiple
+                                onchange="updateBatchFileList()">
+                            <small class="text-muted mt-1">Hold Ctrl/Cmd to select multiple files. Each image will be saved as a separate gallery entry, sharing the same group title (with "- 1", "- 2", etc. suffix) and the category/description set above.</small>
+                        </div>
+                        <div id="batchFileList" style="display:none;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;max-height:240px;overflow-y:auto;">
+                            <div style="font-size:0.82rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+                                <i class="fas fa-list"></i> Selected files (<span id="batchFileCount">0</span>):
+                            </div>
+                            <ul id="batchFileItems" style="list-style:none;padding:0;margin:0;font-size:0.78rem;color:#6b7280;"></ul>
+                        </div>
+                    </div>
+
+                    {{-- Other fields (shared by both modes) --}}
+                    <div class="modern-form-grid" style="margin-top:1.25rem;">
                         <div class="modern-form-group">
                             <label class="modern-form-label" for="sort_order">
                                 Sort Order <small>(optional)</small>
@@ -155,7 +197,7 @@
                                 </label>
                                 <div class="modern-toggle-info">
                                     <span class="modern-toggle-title">Active</span>
-                                    <span class="modern-toggle-desc">Image will be visible on the website</span>
+                                    <span class="modern-toggle-desc">Image(s) will be visible on the website</span>
                                 </div>
                             </div>
                         </div>
@@ -170,12 +212,79 @@
                 </a>
                 <button type="submit" class="btn-modern btn-modern-primary">
                     <i class="fas fa-check"></i>
-                    <span>Upload Image</span>
+                    <span id="submitBtnText">Upload Image</span>
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function toggleUploadMode(mode) {
+    var singleSection = document.getElementById('singleUploadSection');
+    var batchSection  = document.getElementById('batchUploadSection');
+    var submitBtnText = document.getElementById('submitBtnText');
+    var titleInput    = document.getElementById('title');
+    var titleLabel    = document.querySelector('label[for="title"]');
+
+    if (mode === 'batch') {
+        singleSection.style.display = 'none';
+        batchSection.style.display  = 'block';
+        submitBtnText.textContent   = 'Upload Images';
+        // Clear single file input so it doesn't get submitted
+        var singleInput = document.getElementById('image_path');
+        if (singleInput) singleInput.value = '';
+        // Update title label hint
+        if (titleLabel) titleLabel.innerHTML = 'Group Title <small>(shared by all images in batch)</small>';
+        if (titleInput) titleInput.placeholder = 'e.g. School Sports Day 2024 (used as group title)';
+    } else {
+        singleSection.style.display = 'grid';
+        batchSection.style.display  = 'none';
+        submitBtnText.textContent   = 'Upload Image';
+        // Clear batch file input
+        var batchInput = document.getElementById('images_input');
+        if (batchInput) batchInput.value = '';
+        document.getElementById('batchFileList').style.display = 'none';
+        // Restore title label
+        if (titleLabel) titleLabel.innerHTML = 'Title <small>(optional)</small>';
+        if (titleInput) titleInput.placeholder = 'e.g. School Sports Day';
+    }
+}
+
+function updateBatchFileList() {
+    var input = document.getElementById('images_input');
+    var list  = document.getElementById('batchFileItems');
+    var count = document.getElementById('batchFileCount');
+    var wrapper = document.getElementById('batchFileList');
+    if (!input || !input.files || input.files.length === 0) {
+        wrapper.style.display = 'none';
+        return;
+    }
+    count.textContent = input.files.length;
+    list.innerHTML = '';
+    var totalSize = 0;
+    for (var i = 0; i < input.files.length; i++) {
+        var f = input.files[i];
+        totalSize += f.size;
+        var sizeStr = f.size < 1048576
+            ? (f.size / 1024).toFixed(1) + ' KB'
+            : (f.size / 1048576).toFixed(1) + ' MB';
+        var li = document.createElement('li');
+        li.style.cssText = 'padding:6px 0;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;gap:8px;';
+        li.innerHTML = '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><i class="fas fa-image" style="color:#10b981;margin-right:6px;"></i>' + (i + 1) + '. ' + f.name + '</span>'
+                     + '<span style="color:#10b981;font-weight:600;white-space:nowrap;">' + sizeStr + '</span>';
+        list.appendChild(li);
+    }
+    var totalLi = document.createElement('li');
+    totalLi.style.cssText = 'padding:8px 0;font-weight:700;color:#0f172a;border-bottom:none;';
+    totalLi.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i>Total: ' + input.files.length + ' file(s), '
+                      + (totalSize < 1048576 ? (totalSize / 1024).toFixed(1) + ' KB' : (totalSize / 1048576).toFixed(1) + ' MB');
+    list.appendChild(totalLi);
+    wrapper.style.display = 'block';
+}
+</script>
+@endpush
 
 @push('styles')
 <style>

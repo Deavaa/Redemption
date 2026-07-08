@@ -67,7 +67,7 @@
     .hero-deco-1 { display: none; }
     .hero-deco-2 { display: none; }
 
-    /* Video Highlights */
+    /* Video Gallery */
     .video-highlights {
         padding: 5rem 0;
         background: var(--light-bg);
@@ -131,7 +131,7 @@
         border: 1px solid rgba(212, 160, 23, 0.2);
     }
 
-    /* Photo Gallery */
+    /* Gallery */
     .photo-gallery {
         padding: 5rem 0;
         background: var(--white);
@@ -344,12 +344,12 @@
         </div>
     </section>
 
-    {{-- Video Highlights Section --}}
+    {{-- Video Gallery Section --}}
     @if($websiteVideos->count() > 0 || $galleryVideos->count() > 0)
     <section class="video-highlights">
         <div class="container">
             <div class="section-header reveal">
-                <span class="section-badge"><i class="fas fa-video me-2"></i>Video Highlights</span>
+                <span class="section-badge"><i class="fas fa-video me-2"></i>Video Gallery</span>
                 <h2>Watch Our Stories</h2>
                 <p>Catch a glimpse of our school events, educational content, and student achievements.</p>
             </div>
@@ -415,12 +415,12 @@
     </section>
     @endif
 
-    {{-- Photo Gallery Section --}}
+    {{-- Gallery Section --}}
     <section class="photo-gallery">
         <div class="container">
             <div class="section-header reveal">
-                <span class="section-badge"><i class="fas fa-images me-2"></i>Photo Gallery</span>
-                <h2>Campus Life & Moments</h2>
+                <span class="section-badge"><i class="fas fa-images me-2"></i>Gallery</span>
+                <h2>Gallery</h2>
                 <p>Explore our vibrant campus through these captured moments of learning, creativity, and achievement.</p>
             </div>
 
@@ -428,8 +428,21 @@
             <div class="gallery-masonry">
                 @foreach($galleryImages as $image)
                 <div class="gallery-photo-item reveal" onclick="openLightbox(this)">
-                    @if($image->image_path && file_exists(public_path('storage/' . $image->image_path)))
-                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $image->title ?? 'Gallery' }}" loading="lazy">
+                    @php
+                        // Resolve image URL — try public/gallery/ first (no symlink needed),
+                        // then fall back to storage/
+                        $imgUrl = null;
+                        if ($image->image_path) {
+                            $basename = basename($image->image_path);
+                            if (file_exists(public_path('gallery/' . $basename))) {
+                                $imgUrl = asset('gallery/' . $basename);
+                            } elseif (file_exists(public_path('storage/' . $image->image_path))) {
+                                $imgUrl = asset('storage/' . $image->image_path);
+                            }
+                        }
+                    @endphp
+                    @if($imgUrl)
+                    <img src="{{ $imgUrl }}" alt="{{ $image->title ?? 'Gallery' }}" loading="lazy">
                     @else
                     <div style="height:200px;background:linear-gradient(135deg,var(--primary-color),#0D3B12);display:flex;align-items:center;justify-content:center;">
                         <i class="fas fa-image" style="font-size:2rem;color:var(--secondary-color);"></i>

@@ -447,6 +447,22 @@
                 </ul>
             </li>
             @elseif(($menuLevel ?? 'full') === 'branch_principal')
+            {{-- Branch principals get a limited Website Content submenu:
+                 Gallery Images, Gallery Videos, and News only (no branches,
+                 web content, sliders, or contact messages — those are
+                 admin/general_manager only). --}}
+            <li class="menu-header" data-section="website">WEBSITE</li>
+            <li class="{{ ($isWebsiteActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="website-content">
+                <a href="#websiteContentSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
+                    <i class="fas fa-globe"></i><span>Website Content</span>
+                    <i class="fas fa-chevron-down sidebar-chevron"></i>
+                </a>
+                <ul class="collapse {{ ($isWebsiteActive ?? false) ? 'show' : '' }}" id="websiteContentSubmenu">
+                    <li><a href="{{ route('admin.gallery-images.index') }}" class="{{ request()->routeIs('admin.gallery-images.*') ? 'active' : '' }}"><i class="fas fa-image"></i> Gallery Images</a></li>
+                    <li><a href="{{ route('admin.gallery-videos.index') }}" class="{{ request()->routeIs('admin.gallery-videos.*') ? 'active' : '' }}"><i class="fas fa-video"></i> Gallery Videos</a></li>
+                    <li><a href="{{ route('admin.news.index') }}" class="{{ request()->routeIs('admin.news.*') ? 'active' : '' }}"><i class="fas fa-newspaper"></i> News</a></li>
+                </ul>
+            </li>
             <li class="menu-header" data-section="transfers">TRANSFERS</li>
             <li data-menu-item="transfer">
                 <a href="{{ route('admin.students.index') }}?filter=transfer" class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}">

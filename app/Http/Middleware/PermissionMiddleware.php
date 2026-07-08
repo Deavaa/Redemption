@@ -145,6 +145,10 @@ class PermissionMiddleware
                 'enrollments.view', 'enrollments.manage',
                 // Fees (view only for own branch)
                 'fees.view', 'fee_payments.view',
+                // Website content — branch principals can upload gallery images,
+                // gallery videos, and news for their branch
+                'gallery.view',
+                'news.manage',
             ];
 
             if (!empty($permissions)) {

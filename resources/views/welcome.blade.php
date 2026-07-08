@@ -538,14 +538,27 @@
     <section class="gallery" id="gallery">
         <div class="container">
             <div class="section-header reveal">
-                <span class="section-badge">Photo Gallery</span>
-                <h2>Campus Life & Moments</h2>
+                <span class="section-badge">Gallery</span>
+                <h2>Gallery</h2>
                 <p>Explore our vibrant campus through these captured moments of learning, creativity, and achievement.</p>
             </div>
             <div class="gallery-masonry reveal">
                 @forelse($galleryImages as $image)
+                    @php
+                        $imgUrl = null;
+                        if ($image->image_path) {
+                            $basename = basename($image->image_path);
+                            if (file_exists(public_path('gallery/' . $basename))) {
+                                $imgUrl = asset('gallery/' . $basename);
+                            } elseif (file_exists(public_path('storage/' . $image->image_path))) {
+                                $imgUrl = asset('storage/' . $image->image_path);
+                            }
+                        }
+                    @endphp
                     <div class="gallery-item">
-                        <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $image->title ?? 'Gallery Image' }}" loading="lazy">
+                        @if($imgUrl)
+                            <img src="{{ $imgUrl }}" alt="{{ $image->title ?? 'Gallery Image' }}" loading="lazy">
+                        @endif
                         <div class="gallery-overlay">
                             <i class="fas fa-search-plus"></i>
                         </div>
@@ -604,7 +617,7 @@
         <div class="container">
             <div class="section-header reveal">
                 <span class="section-badge">Video Gallery</span>
-                <h2>Video Highlights</h2>
+                <h2>Video Gallery</h2>
                 <p>Watch our school events, educational content, and student achievements come to life.</p>
             </div>
             <div class="row g-4">
@@ -649,7 +662,7 @@
         <div class="container">
             <div class="section-header reveal">
                 <span class="section-badge">Video Gallery</span>
-                <h2>Video Highlights</h2>
+                <h2>Video Gallery</h2>
                 <p>Watch our school events, educational content, and student achievements.</p>
             </div>
             <div class="row g-4">
