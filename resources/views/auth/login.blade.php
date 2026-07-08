@@ -56,185 +56,49 @@
             <div class="alert-success" role="status">{{ session('reset_success') }}</div>
         @endif
 
-        {{-- EMAIL RESET: Link sent confirmation --}}
-        @if (session('reset_link_sent'))
-            <p style="margin-bottom:15px;">{{ __('app.check_your_email') }}</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            <div class="alert-success" style="text-align:center;">
-                <i class="bi bi-envelope-check" style="font-size:24px;color:#047857;display:block;margin-bottom:8px;" aria-hidden="true"></i>
-                {!! __('app.reset_link_sent_text', ['email' => '<strong>' . e(session('reset_email_sent')) . '</strong>']) !!}<br>
-                <small style="color:#666;">{{ __('app.reset_link_expiry', ['minutes' => config('auth.passwords.users.expire', 60)]) }}</small>
-            </div>
-
-        {{-- EMAIL RESET: New password form (from email link) --}}
-        @elseif(session('show_email_reset'))
-            <p style="margin-bottom:15px;">{{ __('app.set_new_password') }}</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
-                <div class="alert" role="alert">{{ $errors->first() }}</div>
-            @endif
-            <form method="POST" action="{{ route('password.reset.token') }}">
-                @csrf
-                <input type="hidden" name="token" value="{{ session('reset_token') }}">
-                <input type="hidden" name="email" value="{{ session('reset_email') }}">
-                <div class="form-group">
-                    <label for="reset-account"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.account') }}</label>
-                    <input type="text" id="reset-account" value="{{ session('reset_user_name') }}" disabled
-                        style="background:#f9fafb;color:#6c757d;" autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="reset-password"><i class="bi bi-lock" aria-hidden="true"></i> {{ __('app.new_password') }}</label>
-                    <input type="password" id="reset-password" name="password" required
-                        placeholder="{{ __('app.enter_new_password') }}"
-                        minlength="8" autocomplete="new-password" autofocus
-                        aria-describedby="reset-password-help">
-                    <small id="reset-password-help" class="helper-text">{{ __('app.password_requirements') }}</small>
-                </div>
-                <div class="form-group">
-                    <label for="reset-password-confirm"><i class="bi bi-lock-fill" aria-hidden="true"></i> {{ __('app.confirm_password') }}</label>
-                    <input type="password" id="reset-password-confirm" name="password_confirmation" required
-                        placeholder="{{ __('app.confirm_new_password') }}"
-                        minlength="8" autocomplete="new-password">
-                </div>
-                <button type="submit" class="btn-login"><i class="bi bi-check-circle" aria-hidden="true"></i> {{ __('app.reset_password') }}</button>
-            </form>
-
-        {{-- SECURITY QUESTION RESET FORM --}}
-        @elseif(session('show_reset_form'))
-            <p style="margin-bottom:15px;">{{ __('app.reset_your_password') }}</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
-                <div class="alert" role="alert">{{ $errors->first() }}</div>
-            @endif
-            <form method="POST" action="{{ route('password.reset.submit') }}">
-                @csrf
-                <input type="hidden" name="email" value="{{ session('reset_email') }}">
-                <div class="form-group">
-                    <label for="security-account"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.account') }}</label>
-                    <input type="text" id="security-account" value="{{ session('reset_user_name') }}" disabled
-                        style="background:#f9fafb;color:#6c757d;" autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="security-password"><i class="bi bi-lock" aria-hidden="true"></i> {{ __('app.new_password') }}</label>
-                    <input type="password" id="security-password" name="password" required
-                        placeholder="{{ __('app.enter_new_password') }}"
-                        minlength="8" autocomplete="new-password"
-                        aria-describedby="security-password-help">
-                    <small id="security-password-help" class="helper-text">{{ __('app.password_requirements') }}</small>
-                </div>
-                <div class="form-group">
-                    <label for="security-password-confirm"><i class="bi bi-lock-fill" aria-hidden="true"></i> {{ __('app.confirm_password') }}</label>
-                    <input type="password" id="security-password-confirm" name="password_confirmation" required
-                        placeholder="{{ __('app.confirm_new_password') }}"
-                        minlength="8" autocomplete="new-password">
-                </div>
-                <button type="submit" class="btn-login"><i class="bi bi-check-circle" aria-hidden="true"></i> {{ __('app.reset_password') }}</button>
-            </form>
-
-        {{-- SECURITY QUESTION FORM --}}
-        @elseif(session('show_security'))
-            <p style="margin-bottom:15px;">{{ __('app.verify_your_identity') }}</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
-                <div class="alert" role="alert">{{ $errors->first() }}</div>
-            @endif
-            <form method="POST" action="{{ route('password.verify.security') }}">
-                @csrf
-                <input type="hidden" name="email" value="{{ session('security_email') }}">
-                <div class="form-group">
-                    <label for="security-answer-input"><i class="bi bi-shield-lock" aria-hidden="true"></i> {{ session('security_question') }}</label>
-                    <input type="text" id="security-answer-input" name="security_answer" required
-                        placeholder="{{ __('app.your_answer') }}" autocomplete="off" autofocus>
-                </div>
-                <button type="submit" class="btn-login"><i class="bi bi-shield-check" aria-hidden="true"></i> {{ __('app.verify') }}</button>
-            </form>
-
-        {{-- EMAIL-BASED FORGOT PASSWORD FORM --}}
-        @elseif(session('show_email_forgot'))
-            <p style="margin-bottom:15px;">{{ __('app.reset_via_email') }}</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
-                <div class="alert" role="alert">{{ $errors->first() }}</div>
-            @endif
-            <div style="text-align:center;margin-bottom:16px;">
-                <i class="bi bi-envelope" style="font-size:32px;color:var(--color-primary);" aria-hidden="true"></i>
-                <p style="font-size:13px;color:#666;margin-top:8px;">{{ __('app.reset_email_instructions') }}</p>
-            </div>
-            <form method="POST" action="{{ route('password.email.send') }}">
-                @csrf
-                <div class="form-group">
-                    <label for="email-forgot-input"><i class="bi bi-envelope" aria-hidden="true"></i> {{ __('app.email_address') }}</label>
-                    <input type="email" id="email-forgot-input" name="email" required autofocus
-                        placeholder="{{ __('app.enter_your_email') }}" autocomplete="email">
-                </div>
-                <button type="submit" class="btn-login"><i class="bi bi-send" aria-hidden="true"></i> {{ __('app.send_reset_link') }}</button>
-            </form>
-            <div style="text-align:center;margin-top:12px;">
-                <a href="{{ route('password.forgot') }}" style="color:var(--color-primary);font-size:13px;text-decoration:none;">
-                    <i class="bi bi-shield-lock" aria-hidden="true"></i> {{ __('app.reset_via_security_question') }}
-                </a>
-            </div>
-
-        {{-- FORGOT PASSWORD - FIND ACCOUNT FORM (security question) --}}
-        @elseif(session('show_forgot'))
-            <p style="margin-bottom:15px;">{{ __('app.find_your_account') }}</p>
-            <a href="{{ route('login') }}" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ __('app.back_to_login') }}</a>
-            @if (isset($errors) && is_object($errors) && method_exists($errors, "any") && $errors->any())
-                <div class="alert" role="alert">{{ $errors->first() }}</div>
-            @endif
-            <form method="POST" action="{{ route('password.forgot.submit') }}">
-                @csrf
-                <div class="form-group">
-                    <label for="find-account-input"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.email_or_id_number') }}</label>
-                    <input type="text" id="find-account-input" name="login" required autofocus
-                        placeholder="{{ __('app.enter_email_or_id') }}" autocomplete="username">
-                </div>
-                <button type="submit" class="btn-login"><i class="bi bi-search" aria-hidden="true"></i> {{ __('app.find_account') }}</button>
-            </form>
-            <div style="text-align:center;margin-top:12px;">
-                <a href="{{ route('password.email') }}" style="color:var(--color-primary);font-size:13px;text-decoration:none;">
-                    <i class="bi bi-envelope" aria-hidden="true"></i> {{ __('app.reset_via_email_instead') }}
-                </a>
-            </div>
-
         {{-- DEFAULT LOGIN FORM --}}
-        @else
-            <p>{{ __('app.sign_in') }}</p>
-            @if (session('error'))
-                <div class="alert" role="alert">{{ session('error') }}</div>
-            @endif
-            @if (isset($errors) && is_object($errors) && method_exists($errors, 'any') && $errors->any())
-                <div class="alert" role="alert">{{ $errors->first('login') ?: ($errors->first('email') ?: $errors->first()) }}</div>
-            @endif
-            <form id="login-form" method="POST" action="{{ route('login') }}">
-                @csrf
-                @if (request('redirect'))
-                    <input type="hidden" name="redirect" value="{{ request('redirect') }}">
-                @endif
-                <div class="form-group">
-                    <label for="login-input"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.email_id_phone') }}</label>
-                    <input type="text" id="login-input" name="login"
-                        value="{{ old('login', $login ?? '') }}" required autofocus
-                        placeholder="{{ __('app.login_placeholder') }}"
-                        autocomplete="username" autocapitalize="none">
-                </div>
-                <div class="form-group">
-                    <label for="password-input"><i class="bi bi-lock" aria-hidden="true"></i> {{ __('app.password') }}</label>
-                    <input type="password" id="password-input" name="password" required
-                        placeholder="{{ __('app.enter_password') }}"
-                        autocomplete="current-password">
-                </div>
-                <div class="form-check" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
-                    <input type="checkbox" id="remember" name="remember" value="1" class="form-check-input" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary-color,#10b981);">
-                    <label for="remember" style="font-size:0.85rem;color:#6b7280;cursor:pointer;margin:0;display:flex;align-items:center;gap:0.35rem;">
-                        <i class="bi bi-shield-check" style="font-size:0.8rem;"></i> Keep me logged in
-                    </label>
-                </div>
-                <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
-                    {{ __('app.login') }}</button>
-            </form>
-            <a href="{{ route('password.email') }}" class="forgot-link"><i class="bi bi-key" aria-hidden="true"></i> {{ __('app.forgot_password') }}</a>
+        <p>{{ __('app.sign_in') }}</p>
+        @if (session('error'))
+            <div class="alert" role="alert">{{ session('error') }}</div>
         @endif
+        @if (session('success'))
+            <div class="alert-success" role="status">{{ session('success') }}</div>
+        @endif
+        @if (isset($errors) && is_object($errors) && method_exists($errors, 'any') && $errors->any())
+            <div class="alert" role="alert">{{ $errors->first('login') ?: ($errors->first('email') ?: $errors->first()) }}</div>
+        @endif
+        <form id="login-form" method="POST" action="{{ route('login') }}">
+            @csrf
+            @if (request('redirect'))
+                <input type="hidden" name="redirect" value="{{ request('redirect') }}">
+            @endif
+            <div class="form-group">
+                <label for="login-input"><i class="bi bi-person" aria-hidden="true"></i> {{ __('app.email_id_phone') }}</label>
+                <input type="text" id="login-input" name="login"
+                    value="{{ old('login', $login ?? '') }}" required autofocus
+                    placeholder="{{ __('app.login_placeholder') }}"
+                    autocomplete="username" autocapitalize="none">
+            </div>
+            <div class="form-group">
+                <label for="password-input"><i class="bi bi-lock" aria-hidden="true"></i> {{ __('app.password') }}</label>
+                <input type="password" id="password-input" name="password" required
+                    placeholder="{{ __('app.enter_password') }}"
+                    autocomplete="current-password">
+            </div>
+            <div class="form-check" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+                <input type="checkbox" id="remember" name="remember" value="1" class="form-check-input" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary-color,#10b981);">
+                <label for="remember" style="font-size:0.85rem;color:#6b7280;cursor:pointer;margin:0;display:flex;align-items:center;gap:0.35rem;">
+                    <i class="bi bi-shield-check" style="font-size:0.8rem;"></i> Keep me logged in
+                </label>
+            </div>
+            <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                {{ __('app.login') }}</button>
+        </form>
+        {{-- Forgot password note — users must contact admin/branch principal --}}
+        <div style="text-align:center;margin-top:1rem;padding:0.75rem;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;font-size:0.78rem;color:#6b7280;">
+            <i class="bi bi-info-circle" style="color:#10b981;margin-right:4px;"></i>
+            Forgot your password? Please contact your <strong>Branch Principal</strong> or the <strong>Admin office</strong> to reset it.
+        </div>
     </main>
 
     {{-- PWA Service Worker Registration --}}

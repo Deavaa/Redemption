@@ -474,7 +474,7 @@
             {{-- ════════════════════════════════════════════════════════
                  ADMINISTRATION
             ════════════════════════════════════════════════════════ --}}
-            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager']))
+            @if(in_array(($menuLevel ?? 'full'), ['full', 'general_manager', 'branch_principal']))
             <li class="menu-header" data-section="administration">ADMINISTRATION</li>
             <li class="{{ ($isAdminActive ?? false) ? 'has-active-child' : '' }}" data-menu-item="admin">
                 <a href="#adminSubmenu" data-bs-toggle="collapse" class="submenu-toggle">
