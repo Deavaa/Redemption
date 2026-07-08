@@ -1,0 +1,744 @@
+     1→<?php
+     2→
+     3→namespace App\Services;
+     4→
+     5→/**
+     6→ * Lightweight IMAP client using PHP sockets.
+     7→ * No php-imap extension or external composer package required.
+     8→ *
+     9→ * Supports SSL/TLS connections via stream_socket_client.
+    10→ * Uses AUTHENTICATE PLAIN for reliable credential handling
+    11→ * (avoids quoting/escaping issues with the LOGIN command).
+    12→ */
+    13→class ImapClient
+    14→{
+    15→    private $stream = null;
+    16→    private string $host;
+    17→    private int $port;
+    18→    private string $encryption;
+    19→    private int $tagCounter = 0;
+    20→    private ?string $lastError = null;
+    21→
+    22→    public function __construct(string $host, int $port, string $encryption = 'ssl')
+    23→    {
+    24→        $this->host = $host;
+    25→        $this->port = $port;
+    26→        $this->encryption = strtolower($encryption);
+    27→    }
+    28→
+    29→    /**
+    30→     * Connect and authenticate to the IMAP server.
+    31→     */
+    32→    public function connect(string $username, string $password): bool
+    33→    {
+    34→        $this->lastError = null;
+    35→
+    36→        // Build connection string
+    37→        if ($this->encryption === 'ssl') {
+    38→            $connectionString = "ssl://{$this->host}:{$this->port}";
+    39→        } elseif ($this->encryption === 'tls') {
+    40→            $connectionString = "tcp://{$this->host}:{$this->port}";
+    41→        } else {
+    42→            $connectionString = "tcp://{$this->host}:{$this->port}";
+    43→        }
+    44→
+    45→        $errno = 0;
+    46→        $errstr = '';
+    47→
+    48→        $this->stream = @stream_socket_client(
+    49→            $connectionString,
+    50→            $errno,
+    51→            $errstr,
+    52→            30,
+    53→            STREAM_CLIENT_CONNECT
+    54→        );
+    55→
+    56→        if (!$this->stream) {
+    57→            $this->lastError = "Connection failed: {$errstr} ({$errno}). Check that the IMAP host and port are correct.";
+    58→            return false;
+    59→        }
+    60→
+    61→        stream_set_timeout($this->stream, 30);
+    62→
+    63→        // Read server greeting
+    64→        $greeting = $this->readLine();
+    65→        if ($greeting === false || !str_starts_with($greeting, '* OK')) {
+    66→            $this->lastError = "Server greeting failed: " . ($greeting ?: 'No response from server. Check host/port/encryption settings.');
+    67→            $this->disconnect();
+    68→            return false;
+    69→        }
+    70→
+    71→        // If TLS, upgrade the connection with STARTTLS
+    72→        if ($this->encryption === 'tls') {
+    73→            $response = $this->sendCommand('STARTTLS');
+    74→            if (!$this->isResponseOk($response)) {
+    75→                $this->lastError = "STARTTLS failed: {$response}";
+    76→                $this->disconnect();
+    77→                return false;
+    78→            }
+    79→
+    80→            // Enable crypto
+    81→            if (!@stream_socket_enable_crypto($this->stream, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+    82→                $this->lastError = "TLS negotiation failed. Try using SSL encryption instead of TLS.";
+    83→                $this->disconnect();
+    84→                return false;
+    85→            }
+    86→        }
+    87→
+    88→        // Authenticate using AUTHENTICATE PLAIN (SASL)
+    89→        // This is more reliable than LOGIN because it sends credentials in base64,
+    90→        // avoiding all quoting/escaping issues with special characters.
+    91→        $authResult = $this->authenticatePlain($username, $password);
+    92→
+    93→        if (!$authResult) {
+    94→            // Fallback: try LOGIN command with proper literal continuation protocol
+    95→            $authResult = $this->authenticateLogin($username, $password);
+    96→        }
+    97→
+    98→        if (!$authResult) {
+    99→            // Error is already set by the auth methods
+   100→            $this->disconnect();
+   101→            return false;
+   102→        }
+   103→
+   104→        return true;
+   105→    }
+   106→
+   107→    /**
+   108→     * Authenticate using SASL PLAIN mechanism.
+   109→     * Sends base64-encoded \0username\0password after server continuation.
+   110→     */
+   111→    private function authenticatePlain(string $username, string $password): bool
+   112→    {
+   113→        if (!$this->stream) {
+   114→            return false;
+   115→        }
+   116→
+   117→        $tag = 'TAG' . ++$this->tagCounter;
+   118→
+   119→        // Send AUTHENTICATE PLAIN
+   120→        @fwrite($this->stream, $tag . " AUTHENTICATE PLAIN\r\n");
+   121→
+   122→        // Read continuation response (+ ...)
+   123→        $line = $this->readLine();
+   124→        if ($line === false || !str_starts_with($line, '+')) {
+   125→            // Server doesn't support AUTHENTICATE PLAIN
+   126→            return false;
+   127→        }
+   128→
+   129→        // Send base64-encoded credentials: \0username\0password
+   130→        $credentials = base64_encode("\x00" . $username . "\x00" . $password);
+   131→        @fwrite($this->stream, $credentials . "\r\n");
+   132→
+   133→        // Read response
+   134→        $response = '';
+   135→        while (($line = $this->readLine()) !== false) {
+   136→            $response .= $line . "\n";
+   137→            if (str_starts_with($line, $tag . ' ')) {
+   138→                break;
+   139→            }
+   140→        }
+   141→
+   142→        if ($this->isResponseOk($response)) {
+   143→            return true;
+   144→        }
+   145→
+   146→        $this->lastError = $this->parseAuthError($response);
+   147→        return false;
+   148→    }
+   149→
+   150→    /**
+   151→     * Authenticate using LOGIN command with proper IMAP literal continuation.
+   152→     * This handles the + continuation protocol correctly.
+   153→     */
+   154→    private function authenticateLogin(string $username, string $password): bool
+   155→    {
+   156→        if (!$this->stream) {
+   157→            return false;
+   158→        }
+   159→
+   160→        $tag = 'TAG' . ++$this->tagCounter;
+   161→
+   162→        // Send LOGIN with literal for username
+   163→        @fwrite($this->stream, $tag . " LOGIN {" . strlen($username) . "}\r\n");
+   164→
+   165→        // Wait for continuation (+)
+   166→        $line = $this->readLine();
+   167→        if ($line === false || !str_starts_with($line, '+')) {
+   168→            $this->lastError = "Login failed: server does not support literal continuation.";
+   169→            return false;
+   170→        }
+   171→
+   172→        // Send username, then literal for password
+   173→        @fwrite($this->stream, $username . " {" . strlen($password) . "}\r\n");
+   174→
+   175→        // Wait for continuation (+)
+   176→        $line = $this->readLine();
+   177→        if ($line === false || !str_starts_with($line, '+')) {
+   178→            $this->lastError = "Login failed: server does not support literal continuation for password.";
+   179→            return false;
+   180→        }
+   181→
+   182→        // Send password
+   183→        @fwrite($this->stream, $password . "\r\n");
+   184→
+   185→        // Read response
+   186→        $response = '';
+   187→        while (($line = $this->readLine()) !== false) {
+   188→            $response .= $line . "\n";
+   189→            if (str_starts_with($line, $tag . ' ')) {
+   190→                break;
+   191→            }
+   192→        }
+   193→
+   194→        if ($this->isResponseOk($response)) {
+   195→            return true;
+   196→        }
+   197→
+   198→        $this->lastError = $this->parseAuthError($response);
+   199→        return false;
+   200→    }
+   201→
+   202→    /**
+   203→     * Parse an authentication error response into a user-friendly message.
+   204→     */
+   205→    private function parseAuthError(string $response): string
+   206→    {
+   207→        // Extract the error code/message from the tagged response
+   208→        $errorMsg = $response;
+   209→
+   210→        // Remove the tag prefix
+   211→        $errorMsg = preg_replace('/^TAG\d+\s+(NO|BAD)\s*/i', '', $errorMsg);
+   212→        $errorMsg = trim($errorMsg);
+   213→
+   214→        // Check for common Gmail-specific errors
+   215→        if (str_contains($errorMsg, 'AUTHENTICATIONFAILED') || str_contains($errorMsg, 'Invalid credentials')) {
+   216→            return "Authentication failed: Invalid username or password. "
+   217→                . "For Gmail, you must use an App Password (not your regular password). "
+   218→                . "Steps: 1) Enable 2-Step Verification in your Google Account, "
+   219→                . "2) Go to Security > App Passwords, "
+   220→                . "3) Generate a new App Password for 'Mail', "
+   221→                . "4) Use that 16-character password here.";
+   222→        }
+   223→
+   224→        if (str_contains($errorMsg, 'Too many login') || str_contains($errorMsg, 'temporarily locked')) {
+   225→            return "Authentication failed: Account temporarily locked due to too many failed login attempts. Please try again later.";
+   226→        }
+   227→
+   228→        if (str_contains($errorMsg, 'Application-specific password required')) {
+   229→            return "Authentication failed: You need to use an App Password. "
+   230→                . "Go to your Google Account > Security > App Passwords to generate one.";
+   231→        }
+   232→
+   233→        if (str_contains($errorMsg, 'Web login required')) {
+   234→            return "Authentication failed: Web login required. Please log in to your email account via browser first, then try again.";
+   235→        }
+   236→
+   237→        return "Login failed: {$errorMsg}";
+   238→    }
+   239→
+   240→    /**
+   241→     * Select a mailbox folder.
+   242→     */
+   243→    public function selectFolder(string $folder = 'INBOX'): ?array
+   244→    {
+   245→        $response = $this->sendCommand('SELECT "' . addcslashes($folder, '\\"') . '"');
+   246→
+   247→        if (!$this->isResponseOk($response)) {
+   248→            $this->lastError = "Failed to select folder: {$response}";
+   249→            return null;
+   250→        }
+   251→
+   252→        $info = [];
+   253→        if (preg_match('/(\d+) EXISTS/', $response, $m)) {
+   254→            $info['exists'] = (int) $m[1];
+   255→        }
+   256→        if (preg_match('/(\d+) RECENT/', $response, $m)) {
+   257→            $info['recent'] = (int) $m[1];
+   258→        }
+   259→        if (preg_match('/UNSEEN (\d+)/', $response, $m)) {
+   260→            $info['unseen'] = (int) $m[1];
+   261→        }
+   262→
+   263→        return $info;
+   264→    }
+   265→
+   266→    /**
+   267→     * Search for messages. Returns array of message sequence numbers or UIDs.
+   268→     */
+   269→    public function search(string $criteria = 'UNSEEN', bool $useUid = true): array
+   270→    {
+   271→        $command = ($useUid ? 'UID ' : '') . 'SEARCH ' . $criteria;
+   272→        $response = $this->sendCommand($command);
+   273→
+   274→        if (!$this->isResponseOk($response)) {
+   275→            $this->lastError = "Search failed: {$response}";
+   276→            return [];
+   277→        }
+   278→
+   279→        // Parse search results from * SEARCH ...
+   280→        $results = [];
+   281→        if (preg_match('/\* SEARCH\s+(.*)/i', $response, $matches)) {
+   282→            $results = array_map('intval', preg_split('/\s+/', trim($matches[1])));
+   283→        }
+   284→
+   285→        return $results;
+   286→    }
+   287→
+   288→    /**
+   289→     * Fetch message headers for a given message number/UID.
+   290→     */
+   291→    public function fetchHeaders(int $messageNum, bool $isUid = true): ?array
+   292→    {
+   293→        $prefix = $isUid ? 'UID ' : '';
+   294→        $command = $prefix . 'FETCH ' . $messageNum . ' (BODY[HEADER.FIELDS (SUBJECT FROM TO CC DATE MESSAGE-ID)])';
+   295→        $response = $this->sendCommand($command);
+   296→
+   297→        if (!$this->isResponseOk($response)) {
+   298→            return null;
+   299→        }
+   300→
+   301→        return $this->parseHeaders($response);
+   302→    }
+   303→
+   304→    /**
+   305→     * Fetch full message structure.
+   306→     */
+   307→    public function fetchStructure(int $messageNum, bool $isUid = true): ?array
+   308→    {
+   309→        $prefix = $isUid ? 'UID ' : '';
+   310→        $command = $prefix . 'FETCH ' . $messageNum . ' BODYSTRUCTURE';
+   311→        $response = $this->sendCommand($command);
+   312→
+   313→        if (!$this->isResponseOk($response)) {
+   314→            return null;
+   315→        }
+   316→
+   317→        return $this->parseStructure($response);
+   318→    }
+   319→
+   320→    /**
+   321→     * Fetch a specific body part.
+   322→     */
+   323→    public function fetchBody(int $messageNum, string $section = '1', bool $isUid = true): ?string
+   324→    {
+   325→        $prefix = $isUid ? 'UID ' : '';
+   326→        $command = $prefix . 'FETCH ' . $messageNum . ' BODY[' . $section . ']';
+   327→        $response = $this->sendCommand($command);
+   328→
+   329→        if (!$this->isResponseOk($response)) {
+   330→            return null;
+   331→        }
+   332→
+   333→        return $this->extractBodyFromResponse($response);
+   334→    }
+   335→
+   336→    /**
+   337→     * Fetch the entire message body (tries TEXT then HTML parts).
+   338→     */
+   339→    public function fetchMessageBodies(int $messageNum, bool $isUid = true): array
+   340→    {
+   341→        $prefix = $isUid ? 'UID ' : '';
+   342→
+   343→        // First get the structure to find parts
+   344→        $structure = $this->fetchStructure($messageNum, $isUid);
+   345→
+   346→        $bodies = ['html' => '', 'text' => ''];
+   347→
+   348→        if ($structure && !empty($structure['parts'])) {
+   349→            foreach ($structure['parts'] as $partNum => $part) {
+   350→                $section = (string) ($partNum + 1);
+   351→                $subtype = strtoupper($part['subtype'] ?? '');
+   352→
+   353→                if ($part['type'] === 'TEXT' && $subtype === 'PLAIN') {
+   354→                    $body = $this->fetchBody($messageNum, $section, $isUid);
+   355→                    if ($body !== null) {
+   356→                        $bodies['text'] = $this->decodeBody($body, $part['encoding'] ?? '');
+   357→                    }
+   358→                } elseif ($part['type'] === 'TEXT' && $subtype === 'HTML') {
+   359→                    $body = $this->fetchBody($messageNum, $section, $isUid);
+   360→                    if ($body !== null) {
+   361→                        $bodies['html'] = $this->decodeBody($body, $part['encoding'] ?? '');
+   362→                    }
+   363→                }
+   364→
+   365→                // Handle nested multipart
+   366→                if (($part['type'] ?? '') === 'MULTIPART' && !empty($part['parts'])) {
+   367→                    foreach ($part['parts'] as $subPartNum => $subPart) {
+   368→                        $subSection = $section . '.' . ($subPartNum + 1);
+   369→                        $subSubtype = strtoupper($subPart['subtype'] ?? '');
+   370→
+   371→                        if ($subPart['type'] === 'TEXT' && $subSubtype === 'PLAIN' && empty($bodies['text'])) {
+   372→                            $body = $this->fetchBody($messageNum, $subSection, $isUid);
+   373→                            if ($body !== null) {
+   374→                                $bodies['text'] = $this->decodeBody($body, $subPart['encoding'] ?? '');
+   375→                            }
+   376→                        } elseif ($subPart['type'] === 'TEXT' && $subSubtype === 'HTML' && empty($bodies['html'])) {
+   377→                            $body = $this->fetchBody($messageNum, $subSection, $isUid);
+   378→                            if ($body !== null) {
+   379→                                $bodies['html'] = $this->decodeBody($body, $subPart['encoding'] ?? '');
+   380→                            }
+   381→                        }
+   382→                    }
+   383→                }
+   384→            }
+   385→        } else {
+   386→            // Simple message - just fetch body section 1 or empty
+   387→            $command = $prefix . 'FETCH ' . $messageNum . ' BODY[1]';
+   388→            $response = $this->sendCommand($command);
+   389→            if ($this->isResponseOk($response)) {
+   390→                $body = $this->extractBodyFromResponse($response);
+   391→                if ($body !== null) {
+   392→                    $bodies['text'] = $this->decodeBody($body, $structure['encoding'] ?? '7BIT');
+   393→                }
+   394→            }
+   395→
+   396→            // If no text from section 1, try the whole body
+   397→            if (empty($bodies['text'])) {
+   398→                $command = $prefix . 'FETCH ' . $messageNum . ' BODY[]';
+   399→                $response = $this->sendCommand($command);
+   400→                if ($this->isResponseOk($response)) {
+   401→                    $fullBody = $this->extractBodyFromResponse($response);
+   402→                    if ($fullBody !== null) {
+   403→                        // Try to extract text after headers
+   404→                        $headerEnd = strpos($fullBody, "\r\n\r\n");
+   405→                        if ($headerEnd !== false) {
+   406→                            $fullBody = substr($fullBody, $headerEnd + 4);
+   407→                        }
+   408→                        $bodies['text'] = $fullBody;
+   409→                    }
+   410→                }
+   411→            }
+   412→        }
+   413→
+   414→        // If no plain text but have HTML, strip tags
+   415→        if (empty($bodies['text']) && !empty($bodies['html'])) {
+   416→            $bodies['text'] = strip_tags($bodies['html']);
+   417→        }
+   418→
+   419→        return $bodies;
+   420→    }
+   421→
+   422→    /**
+   423→     * Fetch message flags.
+   424→     */
+   425→    public function fetchFlags(int $messageNum, bool $isUid = true): array
+   426→    {
+   427→        $prefix = $isUid ? 'UID ' : '';
+   428→        $command = $prefix . 'FETCH ' . $messageNum . ' FLAGS';
+   429→        $response = $this->sendCommand($command);
+   430→
+   431→        $flags = [];
+   432→        if ($this->isResponseOk($response) && preg_match('/FLAGS \(([^)]+)\)/', $response, $m)) {
+   433→            $flags = array_map('trim', preg_split('/\s+/', $m[1]));
+   434→        }
+   435→
+   436→        return $flags;
+   437→    }
+   438→
+   439→    /**
+   440→     * Get all email details for syncing.
+   441→     */
+   442→    public function fetchMessageForSync(int $messageNum, bool $isUid = true): ?array
+   443→    {
+   444→        $headers = $this->fetchHeaders($messageNum, $isUid);
+   445→        if ($headers === null) {
+   446→            return null;
+   447→        }
+   448→
+   449→        $bodies = $this->fetchMessageBodies($messageNum, $isUid);
+   450→
+   451→        return [
+   452→            'message_id' => $headers['message_id'] ?? uniqid(),
+   453→            'subject' => $headers['subject'] ?? '(No Subject)',
+   454→            'from_name' => $headers['from_name'] ?? '',
+   455→            'from_email' => $headers['from_email'] ?? '',
+   456→            'to_email' => $headers['to_email'] ?? '',
+   457→            'cc' => $headers['cc'] ?? [],
+   458→            'date' => $headers['date'] ?? date('Y-m-d H:i:s'),
+   459→            'body_html' => $bodies['html'] ?? '',
+   460→            'body_text' => $bodies['text'] ?? '',
+   461→        ];
+   462→    }
+   463→
+   464→    /**
+   465→     * Test the connection without syncing. Returns folder info on success.
+   466→     */
+   467→    public function testConnection(string $username, string $password, string $folder = 'INBOX'): ?array
+   468→    {
+   469→        if (!$this->connect($username, $password)) {
+   470→            return null;
+   471→        }
+   472→
+   473→        $info = $this->selectFolder($folder);
+   474→        $this->disconnect();
+   475→
+   476→        return $info;
+   477→    }
+   478→
+   479→    /**
+   480→     * Disconnect from the IMAP server.
+   481→     */
+   482→    public function disconnect(): void
+   483→    {
+   484→        if ($this->stream) {
+   485→            $this->sendCommand('LOGOUT');
+   486→            @fclose($this->stream);
+   487→            $this->stream = null;
+   488→        }
+   489→    }
+   490→
+   491→    /**
+   492→     * Get the last error message.
+   493→     */
+   494→    public function getLastError(): ?string
+   495→    {
+   496→        return $this->lastError;
+   497→    }
+   498→
+   499→    // ─── Private helper methods ──────────────────────────────────
+   500→
+   501→    private function sendCommand(string $command): string
+   502→    {
+   503→        if (!$this->stream) {
+   504→            return '';
+   505→        }
+   506→
+   507→        $tag = 'TAG' . ++$this->tagCounter;
+   508→        $fullCommand = $tag . ' ' . $command . "\r\n";
+   509→
+   510→        @fwrite($this->stream, $fullCommand);
+   511→
+   512→        $response = '';
+   513→        while (($line = $this->readLine()) !== false) {
+   514→            $response .= $line . "\n";
+   515→            // Stop when we see the tagged response
+   516→            if (str_starts_with($line, $tag . ' ')) {
+   517→                break;
+   518→            }
+   519→        }
+   520→
+   521→        return $response;
+   522→    }
+   523→
+   524→    private function readLine(): string|false
+   525→    {
+   526→        if (!$this->stream) {
+   527→            return false;
+   528→        }
+   529→
+   530→        $line = @fgets($this->stream, 8192);
+   531→        return $line !== false ? rtrim($line, "\r\n") : false;
+   532→    }
+   533→
+   534→    private function isResponseOk(string $response): bool
+   535→    {
+   536→        return (bool) preg_match('/TAG\d+\s+OK/i', $response);
+   537→    }
+   538→
+   539→    private function parseHeaders(string $response): array
+   540→    {
+   541→        $headers = [];
+   542→
+   543→        // Extract the header block from the response
+   544→        // Look for content between {size} and the tag
+   545→        if (preg_match('/\{(\d+)\}\r?\n(.*?)TAG\d/s', $response, $m)) {
+   546→            $headerBlock = $m[2];
+   547→        } else {
+   548→            // Try to extract from * FETCH response
+   549→            $headerBlock = $response;
+   550→        }
+   551→
+   552→        // Decode MIME encoded words
+   553→        $headerBlock = $this->decodeMimeHeader($headerBlock);
+   554→
+   555→        // Parse individual header fields
+   556→        if (preg_match('/^Subject:\s*(.+)$/mi', $headerBlock, $m)) {
+   557→            $headers['subject'] = trim($m[1]);
+   558→        }
+   559→        if (preg_match('/^From:\s*(.+)$/mi', $headerBlock, $m)) {
+   560→            $parsed = $this->parseEmailAddress($m[1]);
+   561→            $headers['from_name'] = $parsed['name'];
+   562→            $headers['from_email'] = $parsed['email'];
+   563→        }
+   564→        if (preg_match('/^To:\s*(.+)$/mi', $headerBlock, $m)) {
+   565→            $parsed = $this->parseEmailAddress($m[1]);
+   566→            $headers['to_email'] = $parsed['email'];
+   567→        }
+   568→        if (preg_match('/^Cc:\s*(.+)$/mi', $headerBlock, $m)) {
+   569→            $headers['cc'] = $this->parseEmailList($m[1]);
+   570→        }
+   571→        if (preg_match('/^Date:\s*(.+)$/mi', $headerBlock, $m)) {
+   572→            $headers['date'] = date('Y-m-d H:i:s', strtotime(trim($m[1])));
+   573→        }
+   574→        if (preg_match('/^Message-ID:\s*(.+)$/mi', $headerBlock, $m)) {
+   575→            $headers['message_id'] = trim($m[1]);
+   576→        }
+   577→
+   578→        return $headers;
+   579→    }
+   580→
+   581→    private function parseStructure(string $response): array
+   582→    {
+   583→        $structure = [
+   584→            'type' => 'TEXT',
+   585→            'subtype' => 'PLAIN',
+   586→            'parts' => [],
+   587→            'encoding' => '7BIT',
+   588→        ];
+   589→
+   590→        // Try to find BODYSTRUCTURE in the response
+   591→        if (!preg_match('/BODYSTRUCTURE\s+\(/i', $response)) {
+   592→            return $structure;
+   593→        }
+   594→
+   595→        // Simple parsing - detect if multipart
+   596→        if (preg_match('/BODYSTRUCTURE\s+\(\(/i', $response)) {
+   597→            // Multipart message
+   598→            $structure['type'] = 'MULTIPART';
+   599→
+   600→            // Find the multipart subtype (usually at the end before the closing parens)
+   601→            if (preg_match('/"mixed"|"alternative"|"related"|"plain"|"html"/i', $response, $m)) {
+   602→                $structure['subtype'] = strtoupper(trim($m[0], '"'));
+   603→            }
+   604→
+   605→            // Try to extract part info
+   606→            if (preg_match_all('/"((?:PLAIN|HTML|PDF|JPEG|PNG|GIF|ZIP|OCTET-STREAM)[^"]*)"/i', $response, $subtypeMatches)) {
+   607→                $subtypes = $subtypeMatches[1];
+   608→                $encodings = [];
+   609→                if (preg_match_all('/"(7BIT|8BIT|QUOTED-PRINTABLE|BASE64|BINARY)"/i', $response, $encMatches)) {
+   610→                    $encodings = $encMatches[1];
+   611→                }
+   612→
+   613→                foreach ($subtypes as $i => $subtype) {
+   614→                    $partInfo = [
+   615→                        'type' => strtoupper($subtype) === 'HTML' || strtoupper($subtype) === 'PLAIN' ? 'TEXT' : 'APPLICATION',
+   616→                        'subtype' => strtoupper($subtype),
+   617→                        'encoding' => $encodings[$i] ?? '7BIT',
+   618→                    ];
+   619→                    $structure['parts'][] = $partInfo;
+   620→                }
+   621→            }
+   622→        } else {
+   623→            // Simple single-part message
+   624→            if (preg_match('/"((?:PLAIN|HTML)[^"]*)"/i', $response, $m)) {
+   625→                $structure['subtype'] = strtoupper($m[1]);
+   626→            }
+   627→            if (preg_match('/"(7BIT|8BIT|QUOTED-PRINTABLE|BASE64|BINARY)"/i', $response, $m)) {
+   628→                $structure['encoding'] = strtoupper($m[1]);
+   629→            }
+   630→        }
+   631→
+   632→        return $structure;
+   633→    }
+   634→
+   635→    private function extractBodyFromResponse(string $response): ?string
+   636→    {
+   637→        // The body is between {size}\n and the tag response
+   638→        if (preg_match('/\{(\d+)\}\r?\n(.*)TAG\d/s', $response, $m)) {
+   639→            $expectedLen = (int) $m[1];
+   640→            $body = $m[2];
+   641→            // Remove trailing closing parenthesis and CRLF before tag
+   642→            $body = preg_replace('/\s*\)\s*$/s', '', $body);
+   643→            return substr($body, 0, $expectedLen);
+   644→        }
+   645→
+   646→        // Fallback: try to extract between quotes or literal markers
+   647→        if (preg_match('/"((?:[^"\\\\]|\\\\.)*)"/s', $response, $m)) {
+   648→            return stripcslashes($m[1]);
+   649→        }
+   650→
+   651→        return null;
+   652→    }
+   653→
+   654→    private function decodeBody(string $body, string $encoding): string
+   655→    {
+   656→        $encoding = strtoupper($encoding);
+   657→
+   658→        if ($encoding === 'BASE64') {
+   659→            $decoded = base64_decode($body, true);
+   660→            return $decoded !== false ? $decoded : $body;
+   661→        }
+   662→
+   663→        if ($encoding === 'QUOTED-PRINTABLE') {
+   664→            return quoted_printable_decode($body);
+   665→        }
+   666→
+   667→        return $body;
+   668→    }
+   669→
+   670→    private function decodeMimeHeader(string $header): string
+   671→    {
+   672→        // Decode =?charset?B/Q?encoded_text?= patterns
+   673→        return preg_replace_callback(
+   674→            '/=\?([^?]+)\?([BQbq])\?([^?]+)\?=/',
+   675→            function ($matches) {
+   676→                $charset = $matches[1];
+   677→                $encoding = strtoupper($matches[2]);
+   678→                $text = $matches[3];
+   679→
+   680→                if ($encoding === 'B') {
+   681→                    $decoded = base64_decode($text);
+   682→                } else {
+   683→                    $decoded = quoted_printable_decode(str_replace('_', ' ', $text));
+   684→                }
+   685→
+   686→                if ($charset && $charset !== 'UTF-8') {
+   687→                    $decoded = @mb_convert_encoding($decoded, 'UTF-8', $charset);
+   688→                }
+   689→
+   690→                return $decoded;
+   691→            },
+   692→            $header
+   693→        );
+   694→    }
+   695→
+   696→    private function parseEmailAddress(string $addr): array
+   697→    {
+   698→        $addr = trim($addr);
+   699→        $name = '';
+   700→        $email = '';
+   701→
+   702→        // Format: "Name" <email@domain.com>
+   703→        if (preg_match('/^(.+?)\s*<([^>]+)>/', $addr, $m)) {
+   704→            $name = trim($m[1], '"\' ');
+   705→            $email = trim($m[2]);
+   706→        }
+   707→        // Format: <email@domain.com>
+   708→        elseif (preg_match('/<([^>]+)>/', $addr, $m)) {
+   709→            $email = trim($m[1]);
+   710→        }
+   711→        // Format: email@domain.com
+   712→        elseif (preg_match('/[\w.+-]+@[\w.-]+/', $addr, $m)) {
+   713→            $email = $m[0];
+   714→        }
+   715→
+   716→        return ['name' => $name, 'email' => $email];
+   717→    }
+   718→
+   719→    private function parseEmailList(string $list): array
+   720→    {
+   721→        $emails = [];
+   722→
+   723→        // Split by comma, parse each address
+   724→        $parts = preg_split('/,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)/', $list);
+   725→
+   726→        foreach ($parts as $part) {
+   727→            $parsed = $this->parseEmailAddress(trim($part));
+   728→            if (!empty($parsed['email'])) {
+   729→                $emails[] = $parsed['email'];
+   730→            }
+   731→        }
+   732→
+   733→        return $emails;
+   734→    }
+   735→
+   736→    /**
+   737→     * Destructor - ensure connection is closed.
+   738→     */
+   739→    public function __destruct()
+   740→    {
+   741→        $this->disconnect();
+   742→    }
+   743→}
+   744→
