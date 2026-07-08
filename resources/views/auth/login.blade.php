@@ -230,9 +230,6 @@
             </form>
             <a href="{{ route('password.email') }}" class="forgot-link"><i class="bi bi-key" aria-hidden="true"></i> {{ __('app.forgot_password') }}</a>
         @endif
-        <a href="{{ route('app.download') }}" class="app-download-link">
-            <i class="bi bi-phone" aria-hidden="true"></i> {{ __('app.download_mobile_app') }}
-        </a>
     </main>
 
     {{-- PWA Service Worker Registration --}}
