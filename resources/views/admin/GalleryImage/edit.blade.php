@@ -125,7 +125,7 @@
                                 name="image_path"
                                 id="image_path"
                                 class="modern-input {{ $errors->has('image_path') ? 'is-invalid' : '' }}"
-                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" data-compress="1920" data-maxsize="1500">
                             <small class="text-muted mt-1">Recommended: max 5MB (jpeg, png, gif, webp)</small>
                             @error('image_path')
                                 <span class="modern-form-error">{{ $message }}</span>

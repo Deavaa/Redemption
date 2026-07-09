@@ -136,7 +136,7 @@
                                 name="image_path"
                                 id="image_path"
                                 class="modern-input {{ $errors->has('image_path') ? 'is-invalid' : '' }}"
-                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" data-compress="1920" data-maxsize="1500">
                             <small class="text-muted mt-1">Images are automatically compressed to ~2MB. Large photos (up to 50MB) are accepted.</small>
                             @error('image_path')
                                 <span class="modern-form-error">{{ $message }}</span>
@@ -156,6 +156,8 @@
                                 class="modern-input"
                                 accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
                                 multiple
+                                data-compress="1920"
+                                data-maxsize="1500"
                                 onchange="updateBatchFileList()">
                             <small class="text-muted mt-1">Hold Ctrl/Cmd to select multiple files. Each image will be saved as a separate gallery entry, sharing the same group title (with "- 1", "- 2", etc. suffix) and the category/description set above.</small>
                         </div>
