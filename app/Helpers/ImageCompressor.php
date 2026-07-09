@@ -32,7 +32,22 @@ class ImageCompressor
      */
     public static function compressAndStore(UploadedFile $file, string $directory, int $maxSizeKB = 2048, int $maxDimension = 1920): ?string
     {
+        Log::info('ImageCompressor: START', [
+            'directory' => $directory,
+            'maxSizeKB' => $maxSizeKB,
+            'maxDimension' => $maxDimension,
+            'file_valid' => $file ? $file->isValid() : 'no file',
+            'file_error' => $file ? $file->getError() : 'n/a',
+            'file_error_msg' => $file ? $file->getErrorMessage() : 'n/a',
+            'original_name' => $file ? $file->getClientOriginalName() : 'n/a',
+            'mime' => $file ? $file->getMimeType() : 'n/a',
+            'size' => $file ? $file->getSize() : 'n/a',
+            'real_path' => $file ? $file->getRealPath() : 'n/a',
+            'gd_loaded' => extension_loaded('gd'),
+        ]);
+
         if (!$file || !$file->isValid()) {
+            Log::error('ImageCompressor: file is null or invalid');
             return null;
         }
 
@@ -44,6 +59,15 @@ class ImageCompressor
 
         $mimeType = $file->getMimeType();
         $originalSizeKB = round($file->getSize() / 1024);
+        $sourcePath = $file->getRealPath();
+
+        Log::info('ImageCompressor: file details', [
+            'mime' => $mimeType,
+            'size_kb' => $originalSizeKB,
+            'source_path' => $sourcePath,
+            'source_exists' => file_exists($sourcePath),
+            'source_readable' => is_readable($sourcePath),
+        ]);
 
         // Only process image types GD can handle
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -58,16 +82,22 @@ class ImageCompressor
         $relativePath = $directory . '/' . $filename;
 
         // Create the source image resource
-        $sourcePath = $file->getRealPath();
         $image = self::createImageResource($sourcePath, $mimeType);
         if (!$image) {
-            Log::error('ImageCompressor: failed to create image resource', ['path' => $sourcePath]);
+            Log::error('ImageCompressor: failed to create GD image resource', [
+                'path' => $sourcePath,
+                'mime' => $mimeType,
+                'gd_error' => error_get_last(),
+            ]);
             return self::storeOriginal($file, $directory);
         }
+
+        Log::info('ImageCompressor: GD resource created', ['resource_type' => gettype($image)]);
 
         // Get original dimensions
         $origWidth = imagesx($image);
         $origHeight = imagesy($image);
+        Log::info('ImageCompressor: dimensions', ['w' => $origWidth, 'h' => $origHeight]);
 
         // Resize if exceeds max dimension (maintain aspect ratio)
         $newWidth = $origWidth;
@@ -150,7 +180,12 @@ class ImageCompressor
             @mkdir($storageDir, 0777, true);
         }
         $storagePath = $storageDir . '/' . $filename;
-        @file_put_contents($storagePath, $compressedData);
+        $storageWritten = @file_put_contents($storagePath, $compressedData);
+        Log::info('ImageCompressor: storage write', [
+            'path' => $storagePath,
+            'written' => $storageWritten !== false ? $storageWritten . ' bytes' : 'FAILED',
+            'exists' => file_exists($storagePath),
+        ]);
 
         // Location 2: public/
         $publicDir = public_path($directory);
@@ -158,10 +193,20 @@ class ImageCompressor
             @mkdir($publicDir, 0777, true);
         }
         $publicPath = $publicDir . '/' . $filename;
-        @file_put_contents($publicPath, $compressedData);
+        $publicWritten = @file_put_contents($publicPath, $compressedData);
+        Log::info('ImageCompressor: public write', [
+            'path' => $publicPath,
+            'written' => $publicWritten !== false ? $publicWritten . ' bytes' : 'FAILED',
+            'exists' => file_exists($publicPath),
+        ]);
 
         if (!file_exists($publicPath) && !file_exists($storagePath)) {
-            Log::error('ImageCompressor: failed to write file to either location');
+            Log::error('ImageCompressor: failed to write file to either location', [
+                'storage_path' => $storagePath,
+                'public_path' => $publicPath,
+                'storage_dir_writable' => is_writable($storageDir),
+                'public_dir_writable' => is_writable($publicDir),
+            ]);
             return null;
         }
 
