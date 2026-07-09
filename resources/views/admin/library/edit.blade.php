@@ -98,7 +98,7 @@
                         </div>
                         @endif
                         <div class="form-text" style="font-size:0.75rem;">Leave empty to keep the current cover</div>
-                        <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp" class="form-control mt-2" style="border-radius:10px;border:1.5px solid #e5e7eb;padding:0.55rem 1rem;">
+                        <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp" class="form-control mt-2" style="border-radius:10px;border:1.5px solid #e5e7eb;padding:0.55rem 1rem;" data-compress="1920" data-maxsize="1500">
                     </div>
 
                     <div class="col-md-4">
@@ -152,5 +152,8 @@
 }
 .btn-modern-outline:hover { border-color: #2d2d3a; color: #2d2d3a; background: #f9fafb; }
 </style>
+@endpush
+@push('scripts')
+    <script src="{{ asset('js/client-compress.js') }}"></script>
 @endpush
 @endsection

@@ -222,5 +222,8 @@ document.getElementById('mapUrl').addEventListener('paste', function() {
     });
 });
 </script>
+@push('scripts')
+    <script src="{{ asset('js/client-compress.js') }}"></script>
+@endpush
 @endsection
 @endsection

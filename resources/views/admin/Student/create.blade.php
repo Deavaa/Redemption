@@ -158,7 +158,7 @@
                                     </label>
                                     <input type="file" name="photo" id="photoInput"
                                         class="modern-photo-file"
-                                        accept="image/*">
+                                        accept="image/*" data-compress="1920" data-maxsize="1500">
                                     @error('photo')
                                         <span class="modern-form-error">{{ $message }}</span>
                                     @enderror

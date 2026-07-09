@@ -32,7 +32,7 @@
                 </div>
                 <div style="margin-bottom:12px;">
                     <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Image (optional — shows in splash popup)</label>
-                    <input type="file" name="image" accept="image/*" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;">
+                    <input type="file" name="image" accept="image/*" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;" data-compress="1920" data-maxsize="1500">
                 </div>
                 <div style="margin-bottom:12px;">
                     <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">{{ __('app.category') ?? 'Category' }}</label>
@@ -253,5 +253,8 @@
     }
 }
 </style>
+@endpush
+@push('scripts')
+    <script src="{{ asset('js/client-compress.js') }}"></script>
 @endpush
 @endsection

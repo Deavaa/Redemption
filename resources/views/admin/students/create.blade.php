@@ -214,7 +214,7 @@
                     </div>
                     <div class="stu-form-group">
                         <label class="stu-form-label">Student Photo</label>
-                        <input type="file" name="photo" class="stu-form-input" accept="image/*">
+                        <input type="file" name="photo" class="stu-form-input" accept="image/*" data-compress="1920" data-maxsize="1500">
                     </div>
                 </div>
             </div>

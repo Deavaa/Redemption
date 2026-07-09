@@ -207,4 +207,7 @@
 }
 </style>
 @endpush
+@push('scripts')
+    <script src="{{ asset('js/client-compress.js') }}"></script>
+@endpush
 @endsection

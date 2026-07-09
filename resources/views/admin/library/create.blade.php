@@ -114,7 +114,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Cover Image (Optional)</label>
                         <div class="upload-zone" id="coverZone">
-                            <input type="file" name="cover_image" id="coverImage" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                            <input type="file" name="cover_image" id="coverImage" accept="image/jpeg,image/png,image/webp" style="display:none;" data-compress="1920" data-maxsize="1500">
                             <div class="upload-zone-content" onclick="document.getElementById('coverImage').click()">
                                 <i class="fas fa-image"></i>
                                 <p>Click to select cover image</p>
