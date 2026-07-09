@@ -109,6 +109,96 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
 
 // ============================================================
+// TEMPORARY SETUP ROUTE — visit /setup once to run migrations,
+// then DELETE this route block immediately after.
+// Useful when cPanel has no Terminal/SSH access.
+// ============================================================
+Route::get('/setup', function () {
+    $output = '<h1>Setup / Migration Runner</h1><pre style="background:#f4f4f4;padding:1rem;border-radius:8px;overflow-x:auto;font-size:12px;">';
+
+    // 1. Run migrations
+    $output .= "=== RUNNING MIGRATIONS ===\n";
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output .= \Illuminate\Support\Facades\Artisan::output();
+        $output .= "\n✓ Migrations completed.\n\n";
+    } catch (\Throwable $e) {
+        $output .= "✗ Migration error: " . $e->getMessage() . "\n\n";
+    }
+
+    // 2. Generate key if missing
+    $output .= "=== APP KEY ===\n";
+    if (empty(config('app.key'))) {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('key:generate');
+            $output .= \Illuminate\Support\Facades\Artisan::output();
+        } catch (\Throwable $e) {
+            $output .= "✗ " . $e->getMessage() . "\n";
+        }
+    } else {
+        $output .= "✓ App key already set.\n";
+    }
+    $output .= "\n";
+
+    // 3. Storage link
+    $output .= "=== STORAGE LINK ===\n";
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        $output .= \Illuminate\Support\Facades\Artisan::output();
+        $output .= "✓ Storage link created.\n";
+    } catch (\Throwable $e) {
+        $output .= "⚠ " . $e->getMessage() . "\n";
+        // Try manual symlink
+        $target = storage_path('app/public');
+        $link = public_path('storage');
+        if (!file_exists($link) && is_dir($target)) {
+            @symlink($target, $link);
+            $output .= "  → Manual symlink attempted.\n";
+        }
+    }
+    $output .= "\n";
+
+    // 4. Clear caches
+    $output .= "=== CLEARING CACHES ===\n";
+    try {
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        $output .= "✓ Config, route, and view caches cleared.\n";
+    } catch (\Throwable $e) {
+        $output .= "⚠ " . $e->getMessage() . "\n";
+    }
+    $output .= "\n";
+
+    // 5. Check users table columns
+    $output .= "=== USERS TABLE COLUMNS ===\n";
+    try {
+        $columns = \DB::getSchemaBuilder()->getColumnListing('users');
+        $output .= "Columns: " . implode(', ', $columns) . "\n";
+        $output .= "Has deleted_at: " . (in_array('deleted_at', $columns) ? 'YES ✓' : 'NO ✗') . "\n";
+        $output .= "Has must_change_password: " . (in_array('must_change_password', $columns) ? 'YES ✓' : 'NO ✗') . "\n";
+    } catch (\Throwable $e) {
+        $output .= "✗ " . $e->getMessage() . "\n";
+    }
+    $output .= "\n";
+
+    // 6. Count users
+    $output .= "=== USER COUNT ===\n";
+    try {
+        $count = \DB::table('users')->count();
+        $output .= "Total users: {$count}\n";
+    } catch (\Throwable $e) {
+        $output .= "✗ " . $e->getMessage() . "\n";
+    }
+
+    $output .= "\n=== DONE ===\n";
+    $output .= "⚠ IMPORTANT: Delete the /setup route from routes/web.php NOW for security!\n";
+    $output .= "</pre>";
+
+    return response($output);
+})->name('setup');
+
+// ============================================================
 // NEWS IMAGE DEBUG ROUTE — temporary diagnostic tool.
 // Visit /news-debug to see exactly where news images are stored,
 // whether the storage symlink works, and which URL the website
