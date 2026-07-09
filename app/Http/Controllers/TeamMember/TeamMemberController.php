@@ -80,7 +80,6 @@ class TeamMemberController extends Controller
         ]);
 
         // Only include fields that actually exist as columns on the table
-        // — prevents "column not found" errors on incomplete cPanel databases
         $allFields = ['name','designation','department','qualification','experience','phone','email','bio','sort_order'];
         $data = [];
         foreach ($allFields as $field) {
@@ -90,12 +89,63 @@ class TeamMemberController extends Controller
         }
         $data['is_active'] = $r->has('is_active') ? 1 : 0;
 
-        // Handle photo upload — only if a file was actually uploaded
-        if ($r->hasFile('photo') && $r->file('photo')->isValid()) {
-            try {
-                $data['photo'] = ImageCompressor::compressAndStore($r->file('photo'), 'team-photos', 2048, 1200);
-            } catch (\Throwable $e) {
-                \Log::error('TeamMember photo upload failed: ' . $e->getMessage());
+        // Handle photo upload with DETAILED error reporting
+        if ($r->hasFile('photo')) {
+            $file = $r->file('photo');
+
+            // Check if the upload itself failed (PHP upload error)
+            if (!$file->isValid()) {
+                $errorMsg = 'The photo failed to upload. Error: ' . $file->getErrorMessage();
+                \Log::error('TeamMember photo upload failed (invalid)', [
+                    'error' => $file->getError(),
+                    'message' => $file->getErrorMessage(),
+                    'original_name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType(),
+                ]);
+                return back()->with('error', $errorMsg)->withInput();
+            }
+
+            // Check GD extension
+            if (!extension_loaded('gd')) {
+                \Log::warning('GD extension not loaded — storing original photo without compression');
+                // Fall back to storing the original file
+                try {
+                    $path = $file->store('team-photos', 'public');
+                    $this->copyToPublicFallback($path);
+                    $data['photo'] = $path;
+                } catch (\Throwable $e) {
+                    \Log::error('TeamMember photo store failed (no GD): ' . $e->getMessage());
+                    return back()->with('error', 'Photo upload failed: ' . $e->getMessage())->withInput();
+                }
+            } else {
+                // Use ImageCompressor
+                try {
+                    $compressedPath = ImageCompressor::compressAndStore($file, 'team-photos', 2048, 1200);
+                    if ($compressedPath) {
+                        $data['photo'] = $compressedPath;
+                        \Log::info('TeamMember photo compressed', ['path' => $compressedPath]);
+                    } else {
+                        \Log::error('TeamMember photo: ImageCompressor returned null');
+                        // Fall back to storing the original
+                        $path = $file->store('team-photos', 'public');
+                        $this->copyToPublicFallback($path);
+                        $data['photo'] = $path;
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error('TeamMember photo compression failed: ' . $e->getMessage(), [
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    // Fall back to storing the original — don't block the update
+                    try {
+                        $path = $file->store('team-photos', 'public');
+                        $this->copyToPublicFallback($path);
+                        $data['photo'] = $path;
+                        \Log::info('TeamMember photo stored as fallback (compression failed)', ['path' => $path]);
+                    } catch (\Throwable $e2) {
+                        return back()->with('error', 'Photo upload failed: ' . $e2->getMessage())->withInput();
+                    }
+                }
             }
         }
 
@@ -109,6 +159,26 @@ class TeamMemberController extends Controller
                 'data' => $data,
             ]);
             return back()->with('error', 'Update failed: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * Copy a file from storage/app/public/ to public/ as a fallback.
+     */
+    private function copyToPublicFallback($relativePath)
+    {
+        try {
+            $sourcePath = storage_path('app/public/' . $relativePath);
+            $destPath = public_path($relativePath);
+            $destDir = dirname($destPath);
+            if (!is_dir($destDir)) {
+                @mkdir($destDir, 0777, true);
+            }
+            if (file_exists($sourcePath)) {
+                @copy($sourcePath, $destPath);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('copyToPublicFallback failed: ' . $e->getMessage());
         }
     }
 
