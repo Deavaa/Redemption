@@ -136,65 +136,36 @@
     margin:6mm;
 }
 @media print{
-    /* Fit-to-page: scale content to fit A4 landscape width */
+    /* ── HIDE ALL admin chrome — only show the report ── */
+    .admin-wrapper,.admin-sidebar,.sidebar-backdrop,.admin-topbar,
+    .sidebar-footer,.sidebar-toggle,.sidebar-menu,.sidebar-user,
+    .admin-main > *:not(.admin-content),
+    .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,
+    #adminAnnouncementBar,.navbar,.footer,.back-to-top,
+    .mobile-drawer,.mobile-drawer-overlay,
+    .cursor-dot,.cursor-ring,
+    #pwaInstallPrompt,.pwa-install-banner,
+    .modal,.modal-backdrop{
+        display:none!important;
+    }
+    *{margin:0!important;padding:0!important;}
     html,body{
-        zoom:1!important;
-        font-size:105%!important;
+        margin:0!important;padding:0!important;
+        width:100%!important;background:#fff!important;
+        font-size:105%!important;overflow:visible!important
     }
-    .mr-page{
-        width:100%!important;
-        max-width:297mm!important;  /* A4 landscape width */
-        margin:0!important;
-        padding:0!important;
-        overflow:visible!important
-    }
-    /* Reset all layout containers to full width - override sidebar offset */
-    .admin-wrapper{
-        margin:0!important;
-        padding:0!important;
-        display:block!important;
-        box-sizing:border-box!important
-    }
-    .admin-main{
-        margin:0!important;
-        margin-left:0!important;
-        padding:0!important;
-        overflow:visible!important;
-        max-width:100%!important;
-        width:100%!important;
-        display:block!important;
-        box-sizing:border-box!important
-    }
-    .admin-content{
-        margin:0!important;
-        padding:0!important;
-        overflow:visible!important;
-        max-width:100%!important;
-        width:100%!important;
-        display:block!important;
-        box-sizing:border-box!important
-    }
-    body,html{
-        background:#fff!important;
-        margin:0!important;
-        padding:0!important;
-        width:100%!important;
-        overflow:visible!important
-    }
-    .mr-page{
-        width:100%!important;
-        max-width:100%!important;
-        padding:0!important;
-        margin:0!important;
-        overflow:visible!important
+    .admin-wrapper{display:block!important;margin:0!important;padding:0!important;}
+    .admin-main{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;}
+    .admin-content{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;overflow:visible!important;}
+
+    .mr-page{width:100%!important;max-width:100%!important;padding:0!important;margin:0!important;overflow:visible!important;animation:none!important;}
+    .mr-header,.mr-filter-card,.mr-actions,.mr-btn,.mr-card-head,.mr-card-body{
+        display:none!important;
     }
     .print-only { display: block !important; }
-    /* Hide the screen-only report header on print (print-only header takes over) */
     .mr-report-header { display: none !important; }
-    /* Print-only school header row in each table thead (repeats on each page) */
     .mr-print-school-header { display: table-row !important; }
     .mr-print-school-header th { background: #fff !important; color: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    /* Watermark — logo centered on each page */
     .mr-watermark {
         position: fixed !important;
         top: 50% !important;
@@ -209,21 +180,16 @@
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
-    .mr-header,.mr-filter-card,.mr-actions,.mr-btn,
-    .admin-sidebar,.sidebar-backdrop,.admin-topbar,.sidebar-footer,.sidebar-toggle,
-    .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{display:none!important}
-    .mr-page{animation:none!important}
     .mr-subject-section{page-break-after:always;break-after:page}
     .mr-subject-section:last-child{page-break-after:auto;break-after:auto}
     .mr-subject-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0!important;padding:4px 8px!important;font-size:11pt!important}
     .mr-table{font-size:9pt;width:100%!important;border-collapse:collapse!important}
     .mr-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important}
-    .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact;border:1px solid #333!important}
+    .mr-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact;border:1px solid #333!important;background:#f9fafb!important;}
     .mr-table .rot-th{height:65px;font-size:7.5pt;white-space:normal!important;word-break:break-word!important;overflow-wrap:break-word!important}
     .mr-table td{padding:2px 5px!important;font-size:9pt!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     .mr-table .stu-name{font-size:9pt!important;white-space:nowrap!important;width:auto!important;min-width:150px!important;max-width:none!important;overflow:visible!important;padding:2px 8px!important;position:static!important}
     .mr-table .stu-serial{position:static!important;width:32px!important;min-width:32px!important}
-    /* Each student row stays together — don't split across pages */
     .mr-table tbody tr{page-break-inside:avoid!important;break-inside:avoid!important;}
     .mr-table thead{display:table-header-group!important}
     .group-ca th,.group-exam th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -239,7 +205,7 @@
 
 @section('content')
 <div class="mr-page">
-    <div class="mr-header">
+    <div class="mr-header no-print">
         <div class="mr-header-left">
             <nav aria-label="breadcrumb" class="mr-breadcrumb"><ol><li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li><li class="active">Mark List</li></ol></nav>
             <h1 class="mr-title">Mark List</h1>
@@ -248,7 +214,7 @@
     </div>
 
     {{-- Filter Card --}}
-    <div class="mr-card mr-filter-card">
+    <div class="mr-card mr-filter-card no-print">
         <div class="mr-card-head">
             <div class="mr-card-icon blue"><i class="fas fa-filter"></i></div>
             <div><h3 class="mr-card-title">Select Filters</h3><p class="mr-card-desc">Choose academic year, term, and class</p></div>
@@ -295,7 +261,7 @@
     </div>
 
     {{-- Summary Mark List (3 rows per student) --}}
-    <div class="mr-card mr-filter-card" style="margin-top:1rem;">
+    <div class="mr-card mr-filter-card no-print" style="margin-top:1rem;">
         <div class="mr-card-head">
             <div class="mr-card-icon green"><i class="fas fa-list-ol"></i></div>
             <div><h3 class="mr-card-title">Summary Mark List</h3><p class="mr-card-desc">3 rows per student (Term 1, Term 2, Annual) with subjects as columns</p></div>

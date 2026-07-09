@@ -28,28 +28,64 @@
 .ms-table .mark-green{color:#059669;font-weight:700;}
 @page{size:A4 landscape;margin:6mm;}
 @media print{
-    html,body{margin:0!important;padding:0!important;width:100%!important;font-size:105%!important;}
-    .admin-wrapper,.admin-sidebar,.admin-topbar,.sidebar-backdrop,.sidebar-footer,.sidebar-toggle,
-    .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar{display:none!important;}
+    /* ── HIDE EVERYTHING that isn't the report ── */
+    /* Hide the entire admin layout chrome */
+    .admin-wrapper,.admin-sidebar,.sidebar-backdrop,.admin-topbar,
+    .sidebar-footer,.sidebar-toggle,.sidebar-menu,.sidebar-user,
+    .admin-main > *:not(.admin-content),
+    .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,
+    #adminAnnouncementBar,.navbar,.footer,.back-to-top,
+    .mobile-drawer,.mobile-drawer-overlay,
+    .cursor-dot,.cursor-ring,
+    /* Hide any PWA elements */
+    #pwaInstallPrompt,.pwa-install-banner,
+    /* Hide any modals */
+    .modal,.modal-backdrop{
+        display:none!important;
+    }
+    /* Reset all layout containers to full width */
+    *{margin:0!important;padding:0!important;}
+    html,body{
+        margin:0!important;padding:0!important;
+        width:100%!important;background:#fff!important;
+        font-size:105%!important;overflow:visible!important;
+    }
     .admin-wrapper{display:block!important;margin:0!important;padding:0!important;}
     .admin-main{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;}
     .admin-content{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;overflow:visible!important;}
-    .ms-page{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;}
-    .ms-card{box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;}
-    .ms-card-head,.ms-card-body{padding:2mm!important;}
+
+    /* Report page fills the page */
+    .ms-page{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;animation:none!important;}
+
+    /* Cards become flat */
+    .ms-card{box-shadow:none!important;border:none!important;margin:0 0 4mm 0!important;padding:0!important;border-radius:0!important;}
+    .ms-card-head,.ms-card-body{padding:2mm!important;border-radius:0!important;}
+
+    /* Table fits A4 landscape */
     .ms-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important;border:none!important;max-height:none!important;}
     .ms-table{font-size:8pt!important;width:100%!important;border-collapse:collapse!important;}
-    .ms-table th{padding:3px 5px!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table th{padding:3px 5px!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;background:#f9fafb!important;}
     .ms-table td{padding:2px 5px!important;font-size:8pt!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     .ms-table .stu-name{white-space:nowrap!important;width:auto!important;min-width:150px!important;max-width:none!important;overflow:visible!important;position:static!important;}
     .ms-table .term-label{white-space:nowrap!important;width:auto!important;}
     .ms-table thead{display:table-header-group!important;}
+
+    /* Keep student groups together */
     .ms-table .student-group{page-break-inside:avoid!important;break-inside:avoid!important;}
     .ms-table .student-group.page-break-after{page-break-after:always!important;break-after:page!important;}
-    /* Stats table: show on first page only, hide on subsequent pages */
+
+    /* Stats table on first page only */
     .ms-stats-table{page-break-inside:avoid!important;break-inside:avoid!important;}
-    /* Hide web-only elements in print */
-    .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:300px!important;height:300px!important;opacity:0.06!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+
+    /* Watermark */
+    .ms-watermark{
+        position:fixed!important;top:50%!important;left:50%!important;
+        transform:translate(-50%,-50%)!important;
+        width:300px!important;height:300px!important;
+        opacity:0.06!important;z-index:-1!important;
+        pointer-events:none!important;object-fit:contain!important;
+        -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+    }
 }
 </style>
 @endpush
