@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Helpers\ImageCompressor;
 
 class NewsController extends Controller
 {
@@ -32,130 +33,27 @@ class NewsController extends Controller
     }
 
     /**
-     * Helper: Store an uploaded image file to public/news-images/ with
-     * BULLETPROOF multi-method fallback. Logs every attempt so failures
-     * are visible in storage/logs/laravel.log.
-     *
-     * Returns the relative path "news-images/<filename>" on success, null on failure.
+     * Store an uploaded image — uses ImageCompressor to automatically
+     * compress images larger than 2MB before saving.
      */
     private function storeNewsImage($file): ?string
     {
         if (!$file || !$file->isValid()) {
             \Log::error('storeNewsImage: file invalid', [
-                'is_valid' => $file ? $file->isValid() : 'no file',
                 'error' => $file ? $file->getErrorMessage() : 'null',
             ]);
             return null;
         }
 
-        // Generate a clean unique filename
-        $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-        if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'])) {
-            $extension = 'jpg';
+        // Use the ImageCompressor helper — compresses to max 2MB, resizes to max 1920px
+        $path = ImageCompressor::compressAndStore($file, 'news-images', 2048, 1920);
+        if ($path) {
+            \Log::info('storeNewsImage: success via ImageCompressor', ['path' => $path]);
+            return $path;
         }
-        $filename = 'news_' . date('Ymd_His') . '_' . Str::random(8) . '.' . $extension;
-        $relativePath = 'news-images/' . $filename;
 
-        $sourcePath = $file->getRealPath();
-        \Log::info('storeNewsImage: starting', [
-            'filename' => $filename,
-            'source_path' => $sourcePath,
-            'source_exists' => file_exists($sourcePath),
-            'source_readable' => is_readable($sourcePath),
-            'source_size' => $sourcePath ? filesize($sourcePath) : 'n/a',
-        ]);
-
-        // ===== Location 1: public/news-images/ (PRIMARY — directly web-accessible) =====
-        $publicDir = public_path('news-images');
-        if (!is_dir($publicDir)) {
-            $made = @mkdir($publicDir, 0777, true);
-            \Log::info('storeNewsImage: mkdir public dir', [
-                'dir' => $publicDir,
-                'created' => $made ? 'YES' : 'NO',
-                'already_existed' => is_dir($publicDir) ? 'YES' : 'NO',
-            ]);
-        }
-        $publicPath = $publicDir . '/' . $filename;
-        $publicSaved = $this->saveFileWithFallback($sourcePath, $publicPath);
-
-        // ===== Location 2: storage/app/public/news-images/ (SECONDARY — for storage:link users) =====
-        $storageDir = storage_path('app/public/news-images');
-        if (!is_dir($storageDir)) {
-            @mkdir($storageDir, 0777, true);
-        }
-        $storagePath = $storageDir . '/' . $filename;
-        $storageSaved = $this->saveFileWithFallback($sourcePath, $storagePath);
-
-        \Log::info('storeNewsImage: result', [
-            'filename' => $filename,
-            'public_path' => $publicPath,
-            'public_saved' => $publicSaved ? 'YES' : 'NO',
-            'public_exists' => file_exists($publicPath) ? 'YES' : 'NO',
-            'storage_path' => $storagePath,
-            'storage_saved' => $storageSaved ? 'YES' : 'NO',
-            'storage_exists' => file_exists($storagePath) ? 'YES' : 'NO',
-        ]);
-
-        // Return success if EITHER location got the file
-        if ($publicSaved || $storageSaved) {
-            return $relativePath;
-        }
-        \Log::error('storeNewsImage: BOTH locations failed — returning null');
+        \Log::error('storeNewsImage: ImageCompressor returned null');
         return null;
-    }
-
-    /**
-     * Save a file using multiple methods (move_uploaded_file, copy, file_get/put).
-     * Returns true if any method succeeded.
-     */
-    private function saveFileWithFallback(string $source, string $destination): bool
-    {
-        // Method 1: move_uploaded_file (most reliable for HTTP uploads on PHP)
-        if (is_uploaded_file($source)) {
-            if (@move_uploaded_file($source, $destination)) {
-                \Log::info("saveFile: move_uploaded_file OK -> {$destination}");
-                return true;
-            }
-            \Log::warning("saveFile: move_uploaded_file failed -> {$destination}");
-        }
-
-        // Method 2: copy
-        if (@copy($source, $destination)) {
-            \Log::info("saveFile: copy OK -> {$destination}");
-            return true;
-        }
-        \Log::warning("saveFile: copy failed -> {$destination}");
-
-        // Method 3: file_get_contents + file_put_contents
-        $data = @file_get_contents($source);
-        if ($data !== false && strlen($data) > 0) {
-            $written = @file_put_contents($destination, $data);
-            if ($written !== false && $written > 0) {
-                \Log::info("saveFile: file_put_contents OK ({$written} bytes) -> {$destination}");
-                return true;
-            }
-            \Log::warning("saveFile: file_put_contents failed -> {$destination}");
-        } else {
-            \Log::warning("saveFile: file_get_contents failed for source {$source}");
-        }
-
-        // Method 4: stream copy
-        $src = @fopen($source, 'rb');
-        $dst = @fopen($destination, 'wb');
-        if ($src && $dst) {
-            $bytes = stream_copy_to_stream($src, $dst);
-            fclose($src);
-            fclose($dst);
-            if ($bytes > 0) {
-                \Log::info("saveFile: stream_copy OK ({$bytes} bytes) -> {$destination}");
-                return true;
-            }
-        }
-        if ($src) fclose($src);
-        if ($dst) fclose($dst);
-
-        \Log::error("saveFile: ALL METHODS FAILED -> {$destination}");
-        return false;
     }
 
     public function store(Request $request)

@@ -4,6 +4,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\GalleryImage;
 use Illuminate\Support\Str;
+use App\Helpers\ImageCompressor;
 
 class GalleryImageController extends Controller
 {
@@ -130,9 +131,8 @@ class GalleryImageController extends Controller
     public function destroy(GalleryImage $gallery_image) { $gallery_image->delete(); return back()->with('success','Image deleted successfully'); }
 
     /**
-     * Bulletproof image storage — saves to BOTH storage/app/public/gallery/
-     * AND public/gallery/ so the image is web-accessible regardless of
-     * storage:link state. Returns the relative path "gallery/<file>".
+     * Store an uploaded image — uses ImageCompressor to automatically
+     * compress images larger than 2MB before saving.
      */
     private function storeGalleryImage($file): ?string
     {
@@ -143,63 +143,14 @@ class GalleryImageController extends Controller
             return null;
         }
 
-        $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-        if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
-            $extension = 'jpg';
+        $path = ImageCompressor::compressAndStore($file, 'gallery', 2048, 1920);
+        if ($path) {
+            \Log::info('storeGalleryImage: success via ImageCompressor', ['path' => $path]);
+            return $path;
         }
-        $filename = 'gallery_' . date('Ymd_His') . '_' . Str::random(8) . '.' . $extension;
-        $relativePath = 'gallery/' . $filename;
-        $sourcePath = $file->getRealPath();
 
-        // Location 1: public/gallery/ (PRIMARY — directly web-accessible)
-        $publicDir = public_path('gallery');
-        if (!is_dir($publicDir)) {
-            @mkdir($publicDir, 0777, true);
-        }
-        $publicPath = $publicDir . '/' . $filename;
-        $publicSaved = $this->saveFileWithFallback($sourcePath, $publicPath);
-
-        // Location 2: storage/app/public/gallery/ (Laravel standard)
-        $storageDir = storage_path('app/public/gallery');
-        if (!is_dir($storageDir)) {
-            @mkdir($storageDir, 0777, true);
-        }
-        $storagePath = $storageDir . '/' . $filename;
-        $storageSaved = $this->saveFileWithFallback($sourcePath, $storagePath);
-
-        \Log::info('storeGalleryImage: result', [
-            'filename' => $filename,
-            'public_saved' => $publicSaved,
-            'storage_saved' => $storageSaved,
-        ]);
-
-        return ($publicSaved || $storageSaved) ? $relativePath : null;
-    }
-
-    /**
-     * Save a file using multiple methods. Returns true if any succeeded.
-     */
-    private function saveFileWithFallback(string $source, string $destination): bool
-    {
-        if (is_uploaded_file($source)) {
-            if (@move_uploaded_file($source, $destination)) return true;
-        }
-        if (@copy($source, $destination)) return true;
-        $data = @file_get_contents($source);
-        if ($data !== false && strlen($data) > 0) {
-            $written = @file_put_contents($destination, $data);
-            if ($written !== false && $written > 0) return true;
-        }
-        $src = @fopen($source, 'rb');
-        $dst = @fopen($destination, 'wb');
-        if ($src && $dst) {
-            $bytes = stream_copy_to_stream($src, $dst);
-            fclose($src); fclose($dst);
-            if ($bytes > 0) return true;
-        }
-        if ($src) fclose($src);
-        if ($dst) fclose($dst);
-        return false;
+        \Log::error('storeGalleryImage: ImageCompressor returned null');
+        return null;
     }
 }
 

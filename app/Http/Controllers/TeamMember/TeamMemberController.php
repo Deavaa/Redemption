@@ -3,6 +3,7 @@ namespace App\Http\Controllers\TeamMember;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TeamMember;
+use App\Helpers\ImageCompressor;
 
 class TeamMemberController extends Controller
 {
@@ -45,8 +46,7 @@ class TeamMemberController extends Controller
         $data['is_active'] = $r->has('is_active') ? 1 : 0;
         if ($r->hasFile('photo') && $r->file('photo')->isValid()) {
             try {
-                $data['photo'] = $r->file('photo')->store('team-photos', 'public');
-                $this->copyToPublicStorage($data['photo']);
+                $data['photo'] = ImageCompressor::compressAndStore($r->file('photo'), 'team-photos', 2048, 1200);
             } catch (\Throwable $e) {
                 \Log::error('TeamMember photo upload failed: ' . $e->getMessage());
             }
@@ -93,11 +93,9 @@ class TeamMemberController extends Controller
         // Handle photo upload — only if a file was actually uploaded
         if ($r->hasFile('photo') && $r->file('photo')->isValid()) {
             try {
-                $data['photo'] = $r->file('photo')->store('team-photos', 'public');
-                $this->copyToPublicStorage($data['photo']);
+                $data['photo'] = ImageCompressor::compressAndStore($r->file('photo'), 'team-photos', 2048, 1200);
             } catch (\Throwable $e) {
                 \Log::error('TeamMember photo upload failed: ' . $e->getMessage());
-                // Continue without the photo — don't block the update
             }
         }
 
@@ -115,29 +113,4 @@ class TeamMemberController extends Controller
     }
 
     public function destroy(TeamMember $team_member) { $team_member->delete(); return back()->with('success','Team member deleted successfully'); }
-
-    /**
-     * Copy a file from storage/app/public/ to public/storage/ as a fallback.
-     * This ensures images are accessible even when the symlink doesn't exist (XAMPP/cPanel).
-     */
-    private function copyToPublicStorage($relativePath)
-    {
-        try {
-            $sourcePath = storage_path('app/public/' . $relativePath);
-            $destinationPath = public_path('storage/' . $relativePath);
-
-            $destinationDir = dirname($destinationPath);
-            if (!is_dir($destinationDir)) {
-                mkdir($destinationDir, 0755, true);
-            }
-
-            if (file_exists($sourcePath)) {
-                copy($sourcePath, $destinationPath);
-                // Ensure the file is readable by web server
-                chmod($destinationPath, 0644);
-            }
-        } catch (\Exception $e) {
-            \Log::warning('Failed to copy team photo to public storage fallback: ' . $e->getMessage());
-        }
-    }
 }
