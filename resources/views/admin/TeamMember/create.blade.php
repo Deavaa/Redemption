@@ -133,7 +133,7 @@
                                 id="photo"
                                 class="modern-input {{ $errors->has('photo') ? 'is-invalid' : '' }}"
                                 accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
-                            <small class="text-muted mt-1">Recommended: max 5MB (jpeg, png, gif, webp)</small>
+                            <small class="text-muted mt-1">Images are automatically compressed. Large photos (up to 50MB) are accepted.</small>
                             @error('photo')
                                 <span class="modern-form-error">{{ $message }}</span>
                             @enderror

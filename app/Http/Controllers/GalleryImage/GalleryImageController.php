@@ -33,9 +33,9 @@ class GalleryImageController extends Controller
         $r->validate([
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'image_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'image_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:51200',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:51200',
             'category' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
@@ -111,7 +111,7 @@ class GalleryImageController extends Controller
         $r->validate([
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'image_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'image_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:51200',
             'category' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',

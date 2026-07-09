@@ -68,7 +68,7 @@ class NewsController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:51200',
             'is_active' => 'boolean',
             'show_until' => 'nullable|date',
             'priority' => 'nullable|integer',
@@ -143,7 +143,7 @@ class NewsController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:51200',
             'is_active' => 'boolean',
             'show_until' => 'nullable|date',
             'priority' => 'nullable|integer',
@@ -223,7 +223,7 @@ class NewsController extends Controller
     public function uploadImage(Request $request)
     {
         $request->validate([
-            'file' => 'required|image|max:10240',
+            'file' => 'required|image|max:51200',
         ]);
 
         if (!$request->hasFile('file')) {

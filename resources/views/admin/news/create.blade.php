@@ -416,7 +416,7 @@
                     <div class="cover-upload-zone" id="coverUploadZone">
                         <div class="cover-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                         <p class="cover-upload-title">Click to upload or drag & drop</p>
-                        <p class="cover-upload-hint">PNG, JPG, GIF, WEBP up to 10MB</p>
+                        <p class="cover-upload-hint">PNG, JPG, GIF, WEBP — auto-compressed to ~2MB (up to 50MB accepted)</p>
                         <input type="file" name="image" id="coverImageInput" accept="image/*">
                     </div>
 
