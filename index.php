@@ -17,6 +17,13 @@
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
 
+// ── UPLOAD LIMITS — force increase at runtime ──
+@ini_set('memory_limit', '256M');
+@ini_set('max_execution_time', 300);
+@ini_set('max_input_time', 120);
+@ini_set('upload_max_filesize', '60M');
+@ini_set('post_max_size', '65M');
+
 // ── AUTO-DETECT subdirectory from filesystem ──
 $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
 $currentDir = realpath(__DIR__);

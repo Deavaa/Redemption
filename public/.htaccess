@@ -5,21 +5,41 @@
 
     RewriteEngine On
 
-    # ── APK Download Support ──
-    # Allow direct download of APK files
-    <IfModule mod_mime.c>
-        AddType application/vnd.android.package-archive .apk
-    </IfModule>
-
-    # ── PHP Session Configuration ──
-    # These directives only work with mod_php (Apache module).
-    # For PHP-CGI/FPM, the .user.ini file in this directory handles overrides.
-    # The settings are duplicated in public/index.php (ini_set) for maximum coverage.
+    # ── PHP Upload Limits (try multiple methods) ──
+    # Method 1: mod_php (Apache module)
     <IfModule mod_php.c>
+        php_value upload_max_filesize 60M
+        php_value post_max_size 65M
+        php_value memory_limit 256M
+        php_value max_execution_time 300
+        php_value max_input_time 120
         php_value session.gc_maxlifetime 28800
         php_value session.gc_probability 0
         php_value session.gc_divisor 1
         php_value session.cookie_lifetime 28800
+    </IfModule>
+
+    # Method 2: mod_php7
+    <IfModule mod_php7.c>
+        php_value upload_max_filesize 60M
+        php_value post_max_size 65M
+        php_value memory_limit 256M
+        php_value max_execution_time 300
+        php_value max_input_time 120
+    </IfModule>
+
+    # Method 3: mod_php8
+    <IfModule mod_php8.c>
+        php_value upload_max_filesize 60M
+        php_value post_max_size 65M
+        php_value memory_limit 256M
+        php_value max_execution_time 300
+        php_value max_input_time 120
+    </IfModule>
+
+    # ── APK Download Support ──
+    <IfModule mod_mime.c>
+        AddType application/vnd.android.package-archive .apk
     </IfModule>
 
     # ── Browser Caching & Performance ──

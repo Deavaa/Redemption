@@ -22,6 +22,19 @@
 @ini_set('session.gc_divisor', 1);
 @ini_set('session.cookie_lifetime', 28800);
 
+// ── UPLOAD LIMITS — force increase at runtime ──
+// These ini_set calls run BEFORE Laravel boots, so the ValidatePostSize
+// middleware sees the new limits. Note: upload_max_filesize and
+// post_max_size are PHP_INI_PERDIR — they can only be set in php.ini,
+// .user.ini, or .htaccess, NOT at runtime. But we try anyway as some
+// hosts allow it. The .htaccess and .user.ini are the primary fix.
+@ini_set('memory_limit', '256M');
+@ini_set('max_execution_time', 300);
+@ini_set('max_input_time', 120);
+// These two may not work at runtime (PHP_INI_PERDIR) but we try
+@ini_set('upload_max_filesize', '60M');
+@ini_set('post_max_size', '65M');
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
