@@ -61,7 +61,6 @@ class HomeController extends Controller
         try {
             $teamMembers = TeamMember::where('is_active', true)
                 ->orderBy('sort_order')
-                ->limit(4)
                 ->get();
         } catch (\Throwable $e) {}
 
