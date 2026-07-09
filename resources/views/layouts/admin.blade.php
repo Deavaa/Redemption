@@ -2277,6 +2277,79 @@ function toggleMobileMenu() {
 @stack('scripts')
 @yield('scripts')
 
+{{-- GLOBAL client-side image compression — auto-compresses ALL image file
+   inputs before form submit. Bypasses PHP upload_max_filesize / post_max_size
+   limits entirely by compressing in the browser using HTML5 Canvas. --}}
+<script>
+(function(){
+    'use strict';
+    function compressImage(file, maxDim, maxSizeKB, cb){
+        if(!file.type.startsWith('image/')){cb(file);return;}
+        var r=new FileReader();
+        r.onload=function(e){
+            var img=new Image();
+            img.onload=function(){
+                var c=document.createElement('canvas'),ctx=c.getContext('2d');
+                var w=img.width,h=img.height;
+                if(w>maxDim||h>maxDim){var r2=Math.min(maxDim/w,maxDim/h);w=Math.round(w*r2);h=Math.round(h*r2);}
+                c.width=w;c.height=h;ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+                var q=0.85;
+                function tryQ(){
+                    c.toBlob(function(b){
+                        if(b.size/1024<=maxSizeKB||q<=0.4){cb(new File([b],file.name.replace(/\.(png|gif|webp)$/i,'.jpg'),{type:'image/jpeg',lastModified:Date.now()}));}
+                        else{q-=0.1;tryQ();}
+                    },'image/jpeg',q);
+                }
+                tryQ();
+            };
+            img.onerror=function(){cb(file);};
+            img.src=e.target.result;
+        };
+        r.onerror=function(){cb(file);};
+        r.readAsDataURL(file);
+    }
+    function init(){
+        document.querySelectorAll('form[enctype]').forEach(function(form){
+            if(form.dataset.compressInit)return;
+            form.dataset.compressInit='1';
+            form.addEventListener('submit',function(e){
+                var inputs=form.querySelectorAll('input[type="file"][accept*="image"]');
+                if(!inputs.length)return;
+                var hasFiles=false;
+                inputs.forEach(function(inp){if(inp.files&&inp.files.length)hasFiles=true;});
+                if(!hasFiles)return;
+                e.preventDefault();
+                var total=0,done=0,allDts=[];
+                inputs.forEach(function(inp){
+                    if(!inp.files||!inp.files.length)return;
+                    var dt=new DataTransfer();
+                    allDts.push({input:inp,dt:dt});
+                    total+=inp.files.length;
+                    for(var i=0;i<inp.files.length;i++){
+                        var f=inp.files[i];
+                        var maxDim=parseInt(inp.dataset.compress)||1920;
+                        var maxSize=parseInt(inp.dataset.maxsize)||1500;
+                        compressImage(f,maxDim,maxSize,function(comp){
+                            dt.items.add(comp);
+                            done++;
+                            if(done>=total){
+                                allDts.forEach(function(d){d.input.files=d.dt.files;});
+                                form.submit();
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+    else init();
+    // Re-init after dynamic content loads
+    setTimeout(init,500);
+    setTimeout(init,1500);
+})();
+</script>
+
 {{-- Filter persistence + default academic year/term selection --}}
 @php
     $defaultAyId = 0;
