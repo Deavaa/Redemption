@@ -28,10 +28,10 @@
 .ms-table .mark-green{color:#059669;font-weight:700;}
 
 /* ── PRINT LAYOUT ── */
-@page{size:A4 landscape;margin:8mm;}
+@page{size:A4 landscape;margin:8mm 8mm 35mm 8mm;}
 
 @media print{
-    /* Hide ALL admin chrome — be very specific */
+    /* Hide ALL admin chrome */
     body *{visibility:hidden;}
     .ms-page,.ms-page *{visibility:visible;}
     .ms-page{position:absolute;left:0;top:0;width:100%;}
@@ -56,14 +56,11 @@
     .admin-main{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;}
     .admin-content{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;overflow:visible!important;}
 
-    /* Report fills page */
     .ms-page{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;animation:none!important;}
-
-    /* Cards flat */
     .ms-card{box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;border-radius:0!important;}
     .ms-card-head,.ms-card-body{padding:0!important;border-radius:0!important;}
 
-    /* Table — fits A4 landscape */
+    /* Table */
     .ms-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important;border:none!important;max-height:none!important;}
     .ms-table{font-size:7.5pt!important;width:100%!important;border-collapse:collapse!important;table-layout:auto!important;}
     .ms-table th{padding:2px 3px!important;white-space:nowrap!important;border:0.5pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;background:#f9fafb!important;font-size:7pt!important;}
@@ -72,17 +69,57 @@
     .ms-table .term-label{white-space:nowrap!important;width:auto!important;}
     .ms-table thead{display:table-header-group!important;}
 
-    /* ── 5 students per page ── */
-    /* Each student-group contains 3 rows (term1, term2, annual) */
-    /* After every 5th student, force a page break */
+    /* 5 students per page */
     .ms-table .student-group{page-break-inside:avoid!important;break-inside:avoid!important;}
     .ms-table .student-group.page-break-after{page-break-after:always!important;break-after:page!important;}
 
-    /* Stats table — bottom left of first page only */
-    .ms-stats-table{page-break-inside:avoid!important;break-inside:avoid!important;position:relative!important;}
+    /* Stats table — bottom of first page, left side */
+    .ms-stats-table{page-break-inside:avoid!important;break-inside:avoid!important;}
 
-    /* Signatures — last page */
-    .ms-signatures{page-break-inside:avoid!important;break-inside:avoid!important;}
+    /* ── SIGNATURE FOOTER: fixed at bottom of EVERY page ── */
+    .ms-print-footer{
+        position:fixed!important;
+        bottom:0!important;
+        left:0!important;
+        right:0!important;
+        height:28mm!important;
+        display:flex!important;
+        justify-content:space-around!important;
+        align-items:flex-end!important;
+        padding:0 15mm 5mm 15mm!important;
+        border-top:0.5pt solid #999!important;
+        visibility:visible!important;
+        background:#fff!important;
+        z-index:9999!important;
+    }
+    .ms-print-footer .sig-block{
+        text-align:center!important;
+        min-width:180px!important;
+        visibility:visible!important;
+    }
+    .ms-print-footer .sig-label{
+        font-size:7pt!important;
+        color:#666!important;
+        margin-bottom:25px!important;
+        visibility:visible!important;
+    }
+    .ms-print-footer .sig-line{
+        border-top:0.5pt solid #333!important;
+        padding-top:2px!important;
+        font-size:7pt!important;
+        font-weight:600!important;
+        color:#1a1a2e!important;
+        visibility:visible!important;
+    }
+    .ms-print-footer .sig-date{
+        font-size:6pt!important;
+        color:#999!important;
+        margin-top:1px!important;
+        visibility:visible!important;
+    }
+
+    /* Hide the screen-only signature section (replaced by fixed footer) */
+    .ms-signatures-screen{display:none!important;}
 
     /* Watermark */
     .ms-watermark{
@@ -231,8 +268,8 @@
         </table>
     </div>
 
-    {{-- Signature Section: Homeroom + Principal only --}}
-    <div class="ms-signatures" style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
+    {{-- Signature Section (screen only — print uses fixed footer below) --}}
+    <div class="ms-signatures-screen" style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
         <div style="text-align:center;min-width:200px;">
             <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Homeroom Teacher</div>
             <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
@@ -242,6 +279,20 @@
             <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Branch Principal</div>
             <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
             <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Date: _______________</div>
+        </div>
+    </div>
+
+    {{-- Print-only fixed signature footer — shows on EVERY printed page --}}
+    <div class="ms-print-footer" style="display:none;">
+        <div class="sig-block">
+            <div class="sig-label">Homeroom Teacher</div>
+            <div class="sig-line">Name &amp; Signature</div>
+            <div class="sig-date">Date: _______________</div>
+        </div>
+        <div class="sig-block">
+            <div class="sig-label">Branch Principal</div>
+            <div class="sig-line">Name &amp; Signature</div>
+            <div class="sig-date">Date: _______________</div>
         </div>
     </div>
 </div>
