@@ -42,17 +42,26 @@
 
     .ms-table-wrap{overflow:visible!important;width:100%!important;border:none!important;}
     .ms-table{font-size:7.5pt!important;width:100%!important;border-collapse:collapse!important;}
-    .ms-table th{padding:2px 3px!important;border:0.5pt solid #333!important;background:#f9fafb!important;font-size:7pt!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-    .ms-table td{padding:1px 3px!important;font-size:7.5pt!important;border:0.5pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table th{padding:3px 4px!important;border:0.75pt solid #333!important;background:#e8eef5!important;font-size:7pt!important;font-weight:700!important;color:#1a1a2e!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table td{padding:2px 4px!important;font-size:7.5pt!important;border:0.75pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     .ms-table .stu-name{min-width:120px!important;white-space:nowrap!important;}
+    .ms-table .term1-row{background:#eff6ff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .term2-row{background:#f5f3ff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .annual-row{background:#f0fdf4!important;font-weight:700!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .total-col{background:#dbeafe!important;color:#1e40af!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .avg-col{background:#e0e7ff!important;color:#4338ca!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .rank-col{background:#d1fae5!important;color:#065f46!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .mark-red{color:#dc2626!important;font-weight:700!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .mark-amber{color:#d97706!important;font-weight:700!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .mark-green{color:#059669!important;font-weight:700!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     .ms-table thead{display:table-header-group!important;}
     .ms-table tfoot{display:table-footer-group!important;}
 
     /* Page break */
     .ms-table .page-break-row{page-break-after:always!important;break-after:page!important;}
 
-    /* Watermark */
-    .ms-watermark{position:fixed!important;top:45%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:350px!important;height:350px!important;opacity:0.07!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;visibility:visible!important;}
+    /* Watermark — logo centered behind content on every page */
+    .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:400px!important;height:400px!important;opacity:0.08!important;z-index:0!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;visibility:visible!important;display:block!important;}
 
     /* Page number — fixed at bottom-right of every page */
     .ms-page-num{position:fixed!important;bottom:5mm!important;right:10mm!important;font-size:7pt!important;color:#666!important;visibility:visible!important;z-index:9999!important;}
@@ -157,16 +166,16 @@
                             $isAnnualRow = ($termKey === 'annual');
                             $isLastStudent = ($studentNum == $totalStudents);
                             // Page break logic:
-                            // FIRST PAGE: 4 students + stats table, then break
-                            //   → NO break on student 4's annual row (stats goes after, then break)
-                            // SUBSEQUENT PAGES: 5 students, break after annual row
-                            //   → Break after students 9, 14, 19...
+                            // FIRST PAGE: 5 students + stats table, then break
+                            //   → NO break on student 5's annual row (stats goes after, then break)
+                            // SUBSEQUENT PAGES: 6 students, break after annual row
+                            //   → Break after students 11, 17, 23...
                             // Last student: NO break (prevents blank page)
                             $shouldBreak = false;
                             if ($isAnnualRow && !$isLastStudent) {
-                                // Skip student 4 (break is on stats row instead)
-                                // Break after students 9, 14, 19, 24...
-                                if ($studentNum > 4 && ($studentNum - 4) % 5 == 0) {
+                                // Skip student 5 (break is on stats row instead)
+                                // Break after students 11, 17, 23, 29...
+                                if ($studentNum > 5 && ($studentNum - 5) % 6 == 0) {
                                     $shouldBreak = true;
                                 }
                             }
@@ -196,11 +205,11 @@
                         </tr>
                         @endforeach
 
-                        {{-- Stats table after the 4th student (first page bottom) --}}
-                        {{-- Also show after last student if total <= 4 --}}
+                        {{-- Stats table after the 5th student (first page bottom) --}}
+                        {{-- Also show after last student if total <= 5 --}}
                         {{-- The stats row gets page-break-after so it stays on page 1 and page 2 starts fresh --}}
-                        @if($studentNum == 4 || ($isLastStudent && $studentNum < 4))
-                        @php $statsBreakClass = ($studentNum == 4 && !$isLastStudent) ? ' page-break-row' : ''; @endphp
+                        @if($studentNum == 5 || ($isLastStudent && $studentNum < 5))
+                        @php $statsBreakClass = ($studentNum == 5 && !$isLastStudent) ? ' page-break-row' : ''; @endphp
                         <tr class="ms-stats-inline{{ $statsBreakClass }}">
                             <td colspan="{{ $colspan }}" style="border:none;padding:8px 0 4px 0;">
                                 <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
