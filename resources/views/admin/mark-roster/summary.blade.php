@@ -11,10 +11,10 @@
 .ms-card-title{font-size:.95rem;font-weight:700;color:#1a1a2e;margin:0;}
 .ms-card-desc{font-size:.78rem;color:#9ca3af;margin:.1rem 0 0;}
 .ms-card-body{padding:1rem 1.25rem;}
-.ms-table-wrap{overflow-x:auto;max-height:calc(100vh - 300px);overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;}
+.ms-table-wrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:8px;}
 .ms-table{width:100%;border-collapse:collapse;font-size:.75rem;}
-.ms-table th{border:1px solid #e5e7eb;font-weight:700;padding:2px 4px;text-align:center;background:#f9fafb;position:sticky;top:0;z-index:5;white-space:nowrap;}
-.ms-table td{border:1px solid #e5e7eb;padding:1px 3px;text-align:right;font-variant-numeric:tabular-nums;}
+.ms-table th{border:1px solid #e5e7eb;font-weight:700;padding:4px 6px;text-align:center;background:#f9fafb;white-space:nowrap;}
+.ms-table td{border:1px solid #e5e7eb;padding:2px 4px;text-align:right;font-variant-numeric:tabular-nums;}
 .ms-table .stu-name{text-align:left;white-space:nowrap;font-weight:600;color:#1a1a2e;min-width:180px;max-width:250px;overflow:hidden;text-overflow:ellipsis;}
 .ms-table .term-label{font-size:.65rem;font-weight:700;color:#6b7280;text-align:left;min-width:55px;white-space:nowrap;}
 .ms-table .total-col{font-weight:700;background:#f0f4ff;color:#4361ee;text-align:right;}
@@ -26,56 +26,63 @@
 .ms-table .mark-red{color:#dc2626;font-weight:700;}
 .ms-table .mark-amber{color:#d97706;font-weight:700;}
 .ms-table .mark-green{color:#059669;font-weight:700;}
-@page{size:A4 landscape;margin:6mm;}
+
+/* ── PRINT LAYOUT ── */
+@page{size:A4 landscape;margin:8mm;}
+
 @media print{
-    /* ── HIDE EVERYTHING that isn't the report ── */
-    /* Hide the entire admin layout chrome */
+    /* Hide ALL admin chrome — be very specific */
+    body *{visibility:hidden;}
+    .ms-page,.ms-page *{visibility:visible;}
+    .ms-page{position:absolute;left:0;top:0;width:100%;}
+
+    /* Reset layout */
+    html,body{
+        margin:0!important;padding:0!important;
+        width:100%!important;background:#fff!important;
+        font-size:9pt!important;overflow:visible!important;
+    }
     .admin-wrapper,.admin-sidebar,.sidebar-backdrop,.admin-topbar,
     .sidebar-footer,.sidebar-toggle,.sidebar-menu,.sidebar-user,
-    .admin-main > *:not(.admin-content),
     .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,
     #adminAnnouncementBar,.navbar,.footer,.back-to-top,
     .mobile-drawer,.mobile-drawer-overlay,
     .cursor-dot,.cursor-ring,
-    /* Hide any PWA elements */
     #pwaInstallPrompt,.pwa-install-banner,
-    /* Hide any modals */
     .modal,.modal-backdrop{
         display:none!important;
-    }
-    /* Reset all layout containers to full width */
-    *{margin:0!important;padding:0!important;}
-    html,body{
-        margin:0!important;padding:0!important;
-        width:100%!important;background:#fff!important;
-        font-size:105%!important;overflow:visible!important;
     }
     .admin-wrapper{display:block!important;margin:0!important;padding:0!important;}
     .admin-main{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;}
     .admin-content{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;overflow:visible!important;}
 
-    /* Report page fills the page */
+    /* Report fills page */
     .ms-page{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;animation:none!important;}
 
-    /* Cards become flat */
-    .ms-card{box-shadow:none!important;border:none!important;margin:0 0 4mm 0!important;padding:0!important;border-radius:0!important;}
-    .ms-card-head,.ms-card-body{padding:2mm!important;border-radius:0!important;}
+    /* Cards flat */
+    .ms-card{box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;border-radius:0!important;}
+    .ms-card-head,.ms-card-body{padding:0!important;border-radius:0!important;}
 
-    /* Table fits A4 landscape */
+    /* Table — fits A4 landscape */
     .ms-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important;border:none!important;max-height:none!important;}
-    .ms-table{font-size:8pt!important;width:100%!important;border-collapse:collapse!important;}
-    .ms-table th{padding:3px 5px!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;background:#f9fafb!important;}
-    .ms-table td{padding:2px 5px!important;font-size:8pt!important;white-space:nowrap!important;border:1px solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-    .ms-table .stu-name{white-space:nowrap!important;width:auto!important;min-width:150px!important;max-width:none!important;overflow:visible!important;position:static!important;}
+    .ms-table{font-size:7.5pt!important;width:100%!important;border-collapse:collapse!important;table-layout:auto!important;}
+    .ms-table th{padding:2px 3px!important;white-space:nowrap!important;border:0.5pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;background:#f9fafb!important;font-size:7pt!important;}
+    .ms-table td{padding:1px 3px!important;font-size:7.5pt!important;white-space:nowrap!important;border:0.5pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .stu-name{white-space:nowrap!important;width:auto!important;min-width:120px!important;max-width:none!important;overflow:visible!important;position:static!important;}
     .ms-table .term-label{white-space:nowrap!important;width:auto!important;}
     .ms-table thead{display:table-header-group!important;}
 
-    /* Keep student groups together */
+    /* ── 5 students per page ── */
+    /* Each student-group contains 3 rows (term1, term2, annual) */
+    /* After every 5th student, force a page break */
     .ms-table .student-group{page-break-inside:avoid!important;break-inside:avoid!important;}
     .ms-table .student-group.page-break-after{page-break-after:always!important;break-after:page!important;}
 
-    /* Stats table on first page only */
-    .ms-stats-table{page-break-inside:avoid!important;break-inside:avoid!important;}
+    /* Stats table — bottom left of first page only */
+    .ms-stats-table{page-break-inside:avoid!important;break-inside:avoid!important;position:relative!important;}
+
+    /* Signatures — last page */
+    .ms-signatures{page-break-inside:avoid!important;break-inside:avoid!important;}
 
     /* Watermark */
     .ms-watermark{
@@ -94,15 +101,13 @@
 <div class="ms-page">
     @if(!empty($logoUrl))
     <img src="{{ $logoUrl }}" alt="" class="ms-watermark" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:350px;opacity:0.05;z-index:0;pointer-events:none;object-fit:contain;" />
-    {{-- Print-only watermark — force visible in print --}}
-    <style>@media print{.ms-watermark{display:block!important;opacity:0.06!important;}}</style>
     @endif
 
-    {{-- Report Header --}}
-    <div style="text-align:center;margin-bottom:.5rem;padding:.25rem .5rem;background:#fff;border-radius:6px;border:1px solid #e5e7eb;position:relative;">
+    {{-- Report Header (shows on screen AND print) --}}
+    <div style="text-align:center;margin-bottom:.5rem;padding:.5rem;background:#fff;border-radius:6px;border:1px solid #e5e7eb;position:relative;">
         @if(!empty($logoUrl))
-        <img src="{{ $logoUrl }}" alt="Logo" style="position:absolute;top:2px;left:4px;width:36px;height:36px;object-fit:contain;" />
-        <img src="{{ $logoUrl }}" alt="Logo" style="position:absolute;top:2px;right:4px;width:36px;height:36px;object-fit:contain;" />
+        <img src="{{ $logoUrl }}" alt="Logo" style="position:absolute;top:4px;left:8px;width:36px;height:36px;object-fit:contain;" />
+        <img src="{{ $logoUrl }}" alt="Logo" style="position:absolute;top:4px;right:8px;width:36px;height:36px;object-fit:contain;" />
         @endif
         <div style="{{ !empty($logoUrl) ? 'padding:0 44px;' : '' }}">
             <div style="font-size:1rem;font-weight:800;color:#1a1a2e;">{{ $schoolName ?? 'School of Redemption' }}</div>
@@ -115,7 +120,7 @@
         </div>
     </div>
 
-    {{-- Actions --}}
+    {{-- Actions (screen only) --}}
     <div class="ms-card no-print" style="margin-bottom:.5rem;">
         <div style="display:flex;justify-content:flex-end;gap:.5rem;padding:.4rem 1rem;">
             <a href="{{ route('admin.mark-roster.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
@@ -130,7 +135,7 @@
             <table class="ms-table" id="summaryTable">
                 <thead>
                     <tr>
-                        <th style="text-align:left;min-width:130px;position:sticky;left:0;z-index:6;background:#f9fafb;">Student Name</th>
+                        <th style="text-align:left;min-width:130px;">Student Name</th>
                         <th style="min-width:55px;">Term</th>
                         @foreach($subjects as $subj)
                         <th style="min-width:50px;">{{ $subj->name }}</th>
@@ -144,7 +149,14 @@
                     @php $studentNum = 0; @endphp
                     @foreach($roster as $studentRows)
                         @php $studentNum++; @endphp
-                        <tbody class="student-group{{ $studentNum % 5 == 0 ? ' page-break-after' : '' }}">
+                        {{-- Page break after every 5th student --}}
+                        @if($studentNum > 1 && ($studentNum - 1) % 5 == 0)
+                        {{-- Close previous group, start new page --}}
+                        </tbody>
+                        <tbody class="student-group page-break-after" style="page-break-after:always;break-after:page;">
+                        @else
+                        <tbody class="student-group">
+                        @endif
                         @foreach(['term1', 'term2', 'annual'] as $termKey)
                         <tr class="{{ $termKey }}-row">
                             <td class="stu-name">{{ $termKey === 'term1' ? ($studentRows['term1']['student']->full_name ?? '') : '' }}</td>
@@ -173,8 +185,8 @@
         </div>
     </div>
 
-    {{-- Summary Statistics: pass/fail breakdown by gender (ANNUAL ONLY) --}}
-    {{-- Print only on first page (no-print class hides on screen, page-break-after forces to first page) --}}
+    {{-- Summary Statistics: pass/fail by gender (ANNUAL ONLY) --}}
+    {{-- On print: bottom-left of first page --}}
     @php
         $stats = ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]];
         foreach ($roster as $studentRows) {
@@ -192,7 +204,7 @@
             }
         }
     @endphp
-    <div class="ms-stats-table" style="display:flex;justify-content:flex-start;margin-top:1rem;">
+    <div class="ms-stats-table" style="margin-top:1rem;">
         <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
             <thead>
                 <tr style="background:#f9fafb;">
@@ -219,8 +231,8 @@
         </table>
     </div>
 
-    {{-- Signature Section: Homeroom + Principal only (no Subject Teacher) --}}
-    <div style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
+    {{-- Signature Section: Homeroom + Principal only --}}
+    <div class="ms-signatures" style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
         <div style="text-align:center;min-width:200px;">
             <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Homeroom Teacher</div>
             <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
@@ -239,7 +251,6 @@
 function exportSummaryXLSX() {
     var table = document.getElementById('summaryTable');
     if (!table || typeof XLSX === 'undefined') {
-        // Fallback: CSV
         var csv = ['\uFEFF'];
         table.querySelectorAll('tr').forEach(function(row) {
             var cells = row.querySelectorAll('td,th');
