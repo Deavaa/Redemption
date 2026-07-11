@@ -73,8 +73,11 @@
     .ms-table .student-group{page-break-inside:avoid!important;break-inside:avoid!important;}
     .ms-table .student-group.page-break-after{page-break-after:always!important;break-after:page!important;}
 
-    /* Stats table — bottom of first page, left side */
+    /* Stats table — stays with the first page */
     .ms-stats-table{page-break-inside:avoid!important;break-inside:avoid!important;}
+    .ms-stats-row{page-break-inside:avoid!important;break-inside:avoid!important;}
+    /* Hide stats on pages after the first (only first page group has stats) */
+    .ms-stats-row.print-hide{display:none!important;}
 
     /* ── SIGNATURE FOOTER: fixed at bottom of EVERY page ── */
     .ms-print-footer{
@@ -166,7 +169,7 @@
         </div>
     </div>
 
-    {{-- Summary Table --}}
+    {{-- Summary Table + Stats Table (stats embedded inside table for first-page placement) --}}
     <div class="ms-card">
         <div class="ms-table-wrap">
             <table class="ms-table" id="summaryTable">
@@ -183,17 +186,38 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php $studentNum = 0; @endphp
+                    @php
+                        $studentNum = 0;
+                        $totalStudents = count($roster);
+
+                        // Pre-calculate stats
+                        $stats = ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]];
+                        foreach ($roster as $studentRows) {
+                            $gender = strtoupper(substr($studentRows['term1']['student']->gender ?? 'M', 0, 1));
+                            if ($gender !== 'M' && $gender !== 'F') $gender = 'M';
+                            $avg = $studentRows['annual']['average'] ?? 0;
+                            if ($avg > 0) {
+                                if ($avg >= 50) { $stats['above50'][$gender]++; $stats['above50']['total']++; }
+                                else { $stats['below50'][$gender]++; $stats['below50']['total']++; }
+                            }
+                        }
+                    @endphp
+
                     @foreach($roster as $studentRows)
                         @php $studentNum++; @endphp
-                        {{-- Page break after every 5th student --}}
-                        @if($studentNum > 1 && ($studentNum - 1) % 5 == 0)
-                        {{-- Close previous group, start new page --}}
-                        </tbody>
-                        <tbody class="student-group page-break-after" style="page-break-after:always;break-after:page;">
-                        @else
-                        <tbody class="student-group">
-                        @endif
+
+                        {{-- Each student gets exactly 3 rows in their own tbody --}}
+                        {{-- page-break-after goes on the LAST student of each 5-student group --}}
+                        {{-- BUT NOT on the very last student (prevents blank page) --}}
+                        @php
+                            $isLastInGroup = ($studentNum % 5 == 0);
+                            $isLastStudent = ($studentNum == $totalStudents);
+                            $tbodyClass = 'student-group';
+                            if ($isLastInGroup && !$isLastStudent) {
+                                $tbodyClass .= ' page-break-after';
+                            }
+                        @endphp
+                        <tbody class="{{ $tbodyClass }}">
                         @foreach(['term1', 'term2', 'annual'] as $termKey)
                         <tr class="{{ $termKey }}-row">
                             <td class="stu-name">{{ $termKey === 'term1' ? ($studentRows['term1']['student']->full_name ?? '') : '' }}</td>
@@ -216,32 +240,53 @@
                         </tr>
                         @endforeach
                         </tbody>
+
+                        {{-- Insert stats table AFTER the 5th student (end of first page) --}}
+                        {{-- Only on the FIRST page break (student 5 or last student if <5) --}}
+                        {{-- Subsequent page breaks (student 10, 15...) get print-hide class --}}
+                        @if($isLastInGroup || $isLastStudent)
+                        @php $statsHideClass = ($studentNum > 5) ? ' print-hide' : ''; @endphp
+                        <tbody class="ms-stats-row{{ $statsHideClass }}">
+                            <tr>
+                                <td colspan="{{ 3 + count($subjects) + 3 }}" style="border:none;padding:8px 0 0 0;">
+                                    <div class="ms-stats-table" style="display:inline-block;">
+                                        <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
+                                            <thead>
+                                                <tr style="background:#f9fafb;">
+                                                    <th style="border:1px solid #333;padding:3px 8px;text-align:left;">Annual Result Summary</th>
+                                                    <th style="border:1px solid #333;padding:3px 8px;">Male</th>
+                                                    <th style="border:1px solid #333;padding:3px 8px;">Female</th>
+                                                    <th style="border:1px solid #333;padding:3px 8px;">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td style="border:1px solid #333;padding:2px 8px;color:#dc2626;">Below 50% (Fail)</td>
+                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['below50']['M'] }}</td>
+                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['below50']['F'] }}</td>
+                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['below50']['total'] }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border:1px solid #333;padding:2px 8px;color:#059669;">Above 50% (Pass)</td>
+                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['M'] }}</td>
+                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['F'] }}</td>
+                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['above50']['total'] }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                        @endif
                     @endforeach
                 </tbody>
             </table>
         </div>
     </div>
 
-    {{-- Summary Statistics: pass/fail by gender (ANNUAL ONLY) --}}
-    {{-- On print: bottom-left of first page --}}
-    @php
-        $stats = ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]];
-        foreach ($roster as $studentRows) {
-            $gender = strtoupper(substr($studentRows['term1']['student']->gender ?? 'M', 0, 1));
-            if ($gender !== 'M' && $gender !== 'F') $gender = 'M';
-            $avg = $studentRows['annual']['average'] ?? 0;
-            if ($avg > 0) {
-                if ($avg >= 50) {
-                    $stats['above50'][$gender]++;
-                    $stats['above50']['total']++;
-                } else {
-                    $stats['below50'][$gender]++;
-                    $stats['below50']['total']++;
-                }
-            }
-        }
-    @endphp
-    <div class="ms-stats-table" style="margin-top:1rem;">
+    {{-- Screen-only stats table (hidden in print — stats are embedded in the main table above) --}}
+    <div class="ms-stats-table no-print" style="margin-top:1rem;">
         <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
             <thead>
                 <tr style="background:#f9fafb;">
