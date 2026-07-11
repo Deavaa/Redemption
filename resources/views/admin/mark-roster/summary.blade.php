@@ -44,6 +44,10 @@
     .ms-table{font-size:7.5pt!important;width:100%!important;border-collapse:collapse!important;}
     .ms-table th{padding:3px 4px!important;border:0.75pt solid #333!important;background:#e8eef5!important;font-size:7.35pt!important;font-weight:700!important;color:#1a1a2e!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     .ms-table td{padding:2px 4px!important;font-size:7.875pt!important;border:0.75pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    /* No border on stats row cell */
+    .ms-table .ms-stats-inline td{border:none!important;padding:8px 0 4px 0!important;}
+    /* No border on tfoot signature cell */
+    .ms-table tfoot td{border:none!important;}
     .ms-table .stu-name{min-width:120px!important;white-space:nowrap!important;}
     .ms-table .term1-row{background:#eff6ff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     .ms-table .term2-row{background:#f5f3ff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
@@ -161,20 +165,17 @@
                     @foreach($roster as $studentRows)
                         @php $studentNum++; @endphp
 
-                        @foreach(['term1', 'term2', 'annual'] as $termKey)
+                        @php
+                            $terms = ['term1', 'term2', 'annual'];
+                            $termIndex = 0;
+                        @endphp
+                        @foreach($terms as $termKey)
                         @php
                             $isAnnualRow = ($termKey === 'annual');
+                            $isFirstTerm = ($termIndex === 0);
                             $isLastStudent = ($studentNum == $totalStudents);
-                            // Page break logic:
-                            // FIRST PAGE: 5 students + stats table, then break
-                            //   → NO break on student 5's annual row (stats goes after, then break)
-                            // SUBSEQUENT PAGES: 6 students, break after annual row
-                            //   → Break after students 11, 17, 23...
-                            // Last student: NO break (prevents blank page)
                             $shouldBreak = false;
                             if ($isAnnualRow && !$isLastStudent) {
-                                // Skip student 5 (break is on stats row instead)
-                                // Break after students 11, 17, 23, 29...
                                 if ($studentNum > 5 && ($studentNum - 5) % 6 == 0) {
                                     $shouldBreak = true;
                                 }
@@ -183,9 +184,12 @@
                             if ($shouldBreak) {
                                 $rowClass .= ' page-break-row';
                             }
+                            $termIndex++;
                         @endphp
                         <tr class="{{ $rowClass }}">
-                            <td class="stu-name">{{ $termKey === 'term1' ? ($studentRows['term1']['student']->full_name ?? '') : '' }}</td>
+                            @if($isFirstTerm)
+                            <td class="stu-name" rowspan="3">{{ $studentRows['term1']['student']->full_name ?? '' }}</td>
+                            @endif
                             <td class="term-label">{{ $studentRows[$termKey]['term_label'] }}</td>
                             @foreach($subjects as $subj)
                                 @php
