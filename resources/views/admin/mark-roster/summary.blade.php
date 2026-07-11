@@ -48,12 +48,14 @@
     .ms-table thead{display:table-header-group!important;}
     .ms-table tfoot{display:table-footer-group!important;}
 
-    /* Page break after every 5th student's last row (annual row) */
+    /* Page break */
     .ms-table .page-break-row{page-break-after:always!important;break-after:page!important;}
-    /* Don't break a student's 3 rows across pages */
-    .ms-table tr.term1-row{page-break-before:auto!important;}
 
-    .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:300px!important;height:300px!important;opacity:0.06!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    /* Watermark */
+    .ms-watermark{position:fixed!important;top:45%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:350px!important;height:350px!important;opacity:0.07!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;visibility:visible!important;}
+
+    /* Page number — fixed at bottom-right of every page */
+    .ms-page-num{position:fixed!important;bottom:5mm!important;right:10mm!important;font-size:7pt!important;color:#666!important;visibility:visible!important;z-index:9999!important;}
 }
 </style>
 @endpush
@@ -63,6 +65,9 @@
     @if(!empty($logoUrl))
     <img src="{{ $logoUrl }}" alt="" class="ms-watermark" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:350px;opacity:0.05;z-index:0;pointer-events:none;object-fit:contain;" />
     @endif
+
+    {{-- Page number — shows on every printed page (bottom-right) --}}
+    <div class="ms-page-num" style="display:none;">Page <span id="pageNum"></span></div>
 
     {{-- Report Header --}}
     <div style="text-align:center;margin-bottom:.5rem;padding:.5rem;background:#fff;border-radius:6px;border:1px solid #e5e7eb;position:relative;">
@@ -150,12 +155,20 @@
                         @foreach(['term1', 'term2', 'annual'] as $termKey)
                         @php
                             $isAnnualRow = ($termKey === 'annual');
-                            $isLastInGroup = ($studentNum % 5 == 0);
                             $isLastStudent = ($studentNum == $totalStudents);
-                            // Add page-break class to the annual (3rd) row of every 5th student
-                            // BUT NOT the very last student (prevents blank page)
+                            // FIRST PAGE: 4 students (break after student 4)
+                            // SUBSEQUENT PAGES: 5 students (break after student 9, 14, 19...)
+                            // Break positions: 4, 9, 14, 19, 24... (first is 4, then every 5)
+                            $shouldBreak = false;
+                            if ($isAnnualRow && !$isLastStudent) {
+                                if ($studentNum == 4) {
+                                    $shouldBreak = true; // First page = 4 students
+                                } elseif ($studentNum > 4 && ($studentNum - 4) % 5 == 0) {
+                                    $shouldBreak = true; // Subsequent pages = 5 students
+                                }
+                            }
                             $rowClass = $termKey . '-row';
-                            if ($isAnnualRow && $isLastInGroup && !$isLastStudent) {
+                            if ($shouldBreak) {
                                 $rowClass .= ' page-break-row';
                             }
                         @endphp
@@ -180,10 +193,9 @@
                         </tr>
                         @endforeach
 
-                        {{-- Stats table after the 5th student (first page bottom) --}}
-                        @if($isLastInGroup || $isLastStudent)
-                        {{-- Only show stats on first page — hide on subsequent pages --}}
-                        @if($studentNum <= 5)
+                        {{-- Stats table after the 4th student (first page bottom) --}}
+                        {{-- Also show after last student if total <= 4 --}}
+                        @if($studentNum == 4 || ($isLastStudent && $studentNum < 4))
                         <tr class="ms-stats-inline">
                             <td colspan="{{ $colspan }}" style="border:none;padding:8px 0 4px 0;">
                                 <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
@@ -212,7 +224,6 @@
                                 </table>
                             </td>
                         </tr>
-                        @endif
                         @endif
                     @endforeach
                 </tbody>
