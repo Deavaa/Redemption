@@ -3,14 +3,8 @@
 
 @push('styles')
 <style>
-.ms-page{animation:msIn .4s ease-out;max-width:1400px;margin:0 auto;}
-@keyframes msIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.ms-page{max-width:1400px;margin:0 auto;}
 .ms-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #f0f0f0;margin-bottom:1rem;}
-.ms-card-head{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid #f0f0f0;background:#fafbfc;border-radius:12px 12px 0 0;}
-.ms-card-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;background:#eef2ff;color:#4361ee;}
-.ms-card-title{font-size:.95rem;font-weight:700;color:#1a1a2e;margin:0;}
-.ms-card-desc{font-size:.78rem;color:#9ca3af;margin:.1rem 0 0;}
-.ms-card-body{padding:1rem 1.25rem;}
 .ms-table-wrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:8px;}
 .ms-table{width:100%;border-collapse:collapse;font-size:.75rem;}
 .ms-table th{border:1px solid #e5e7eb;font-weight:700;padding:4px 6px;text-align:center;background:#f9fafb;white-space:nowrap;}
@@ -26,113 +20,40 @@
 .ms-table .mark-red{color:#dc2626;font-weight:700;}
 .ms-table .mark-amber{color:#d97706;font-weight:700;}
 .ms-table .mark-green{color:#059669;font-weight:700;}
+.ms-table .page-break-row{page-break-after:always;break-after:page;}
+.ms-stats-inline td{border:none!important;background:transparent!important;padding:8px 0 4px 0!important;}
 
-/* ── PRINT LAYOUT ── */
-@page{size:A4 landscape;margin:8mm 8mm 35mm 8mm;}
+/* PRINT */
+@page{size:A4 landscape;margin:10mm;}
 
 @media print{
-    /* Hide ALL admin chrome */
     body *{visibility:hidden;}
     .ms-page,.ms-page *{visibility:visible;}
     .ms-page{position:absolute;left:0;top:0;width:100%;}
 
-    /* Reset layout */
-    html,body{
-        margin:0!important;padding:0!important;
-        width:100%!important;background:#fff!important;
-        font-size:9pt!important;overflow:visible!important;
-    }
-    .admin-wrapper,.admin-sidebar,.sidebar-backdrop,.admin-topbar,
-    .sidebar-footer,.sidebar-toggle,.sidebar-menu,.sidebar-user,
-    .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,
-    #adminAnnouncementBar,.navbar,.footer,.back-to-top,
-    .mobile-drawer,.mobile-drawer-overlay,
-    .cursor-dot,.cursor-ring,
-    #pwaInstallPrompt,.pwa-install-banner,
-    .modal,.modal-backdrop{
-        display:none!important;
-    }
+    html,body{margin:0!important;padding:0!important;width:100%!important;background:#fff!important;font-size:9pt!important;}
+    .admin-wrapper,.admin-sidebar,.sidebar-backdrop,.admin-topbar,.sidebar-footer,.sidebar-toggle,
+    .no-print,.global-alert,.mobile-bottom-nav,.swipe-indicator,#adminAnnouncementBar,.navbar,.footer,
+    .mobile-drawer,.mobile-drawer-overlay,.cursor-dot,.cursor-ring,.ms-signatures-screen{display:none!important;}
     .admin-wrapper{display:block!important;margin:0!important;padding:0!important;}
-    .admin-main{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;}
-    .admin-content{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;overflow:visible!important;}
-
-    .ms-page{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;animation:none!important;}
+    .admin-main,.admin-content{margin:0!important;padding:0!important;width:100%!important;max-width:100%!important;display:block!important;overflow:visible!important;}
+    .ms-page{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;}
     .ms-card{box-shadow:none!important;border:none!important;margin:0!important;padding:0!important;border-radius:0!important;}
-    .ms-card-head,.ms-card-body{padding:0!important;border-radius:0!important;}
 
-    /* Table */
-    .ms-table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important;border:none!important;max-height:none!important;}
-    .ms-table{font-size:7.5pt!important;width:100%!important;border-collapse:collapse!important;table-layout:auto!important;}
-    .ms-table th{padding:2px 3px!important;white-space:nowrap!important;border:0.5pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;background:#f9fafb!important;font-size:7pt!important;}
-    .ms-table td{padding:1px 3px!important;font-size:7.5pt!important;white-space:nowrap!important;border:0.5pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-    .ms-table .stu-name{white-space:nowrap!important;width:auto!important;min-width:120px!important;max-width:none!important;overflow:visible!important;position:static!important;}
-    .ms-table .term-label{white-space:nowrap!important;width:auto!important;}
+    .ms-table-wrap{overflow:visible!important;width:100%!important;border:none!important;}
+    .ms-table{font-size:7.5pt!important;width:100%!important;border-collapse:collapse!important;}
+    .ms-table th{padding:2px 3px!important;border:0.5pt solid #333!important;background:#f9fafb!important;font-size:7pt!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table td{padding:1px 3px!important;font-size:7.5pt!important;border:0.5pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table .stu-name{min-width:120px!important;white-space:nowrap!important;}
     .ms-table thead{display:table-header-group!important;}
+    .ms-table tfoot{display:table-footer-group!important;}
 
-    /* 5 students per page */
-    .ms-table .student-group{page-break-inside:avoid!important;break-inside:avoid!important;}
-    .ms-table .student-group.page-break-after{page-break-after:always!important;break-after:page!important;}
+    /* Page break after every 5th student's last row (annual row) */
+    .ms-table .page-break-row{page-break-after:always!important;break-after:page!important;}
+    /* Don't break a student's 3 rows across pages */
+    .ms-table tr.term1-row{page-break-before:auto!important;}
 
-    /* Stats table — stays with the first page */
-    .ms-stats-table{page-break-inside:avoid!important;break-inside:avoid!important;}
-    .ms-stats-row{page-break-inside:avoid!important;break-inside:avoid!important;}
-    /* Hide stats on pages after the first (only first page group has stats) */
-    .ms-stats-row.print-hide{display:none!important;}
-
-    /* ── SIGNATURE FOOTER: fixed at bottom of EVERY page ── */
-    .ms-print-footer{
-        position:fixed!important;
-        bottom:0!important;
-        left:0!important;
-        right:0!important;
-        height:28mm!important;
-        display:flex!important;
-        justify-content:space-around!important;
-        align-items:flex-end!important;
-        padding:0 15mm 5mm 15mm!important;
-        border-top:0.5pt solid #999!important;
-        visibility:visible!important;
-        background:#fff!important;
-        z-index:9999!important;
-    }
-    .ms-print-footer .sig-block{
-        text-align:center!important;
-        min-width:180px!important;
-        visibility:visible!important;
-    }
-    .ms-print-footer .sig-label{
-        font-size:7pt!important;
-        color:#666!important;
-        margin-bottom:25px!important;
-        visibility:visible!important;
-    }
-    .ms-print-footer .sig-line{
-        border-top:0.5pt solid #333!important;
-        padding-top:2px!important;
-        font-size:7pt!important;
-        font-weight:600!important;
-        color:#1a1a2e!important;
-        visibility:visible!important;
-    }
-    .ms-print-footer .sig-date{
-        font-size:6pt!important;
-        color:#999!important;
-        margin-top:1px!important;
-        visibility:visible!important;
-    }
-
-    /* Hide the screen-only signature section (replaced by fixed footer) */
-    .ms-signatures-screen{display:none!important;}
-
-    /* Watermark */
-    .ms-watermark{
-        position:fixed!important;top:50%!important;left:50%!important;
-        transform:translate(-50%,-50%)!important;
-        width:300px!important;height:300px!important;
-        opacity:0.06!important;z-index:-1!important;
-        pointer-events:none!important;object-fit:contain!important;
-        -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
-    }
+    .ms-watermark{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:300px!important;height:300px!important;opacity:0.06!important;z-index:-1!important;pointer-events:none!important;object-fit:contain!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
 </style>
 @endpush
@@ -143,7 +64,7 @@
     <img src="{{ $logoUrl }}" alt="" class="ms-watermark" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:350px;height:350px;opacity:0.05;z-index:0;pointer-events:none;object-fit:contain;" />
     @endif
 
-    {{-- Report Header (shows on screen AND print) --}}
+    {{-- Report Header --}}
     <div style="text-align:center;margin-bottom:.5rem;padding:.5rem;background:#fff;border-radius:6px;border:1px solid #e5e7eb;position:relative;">
         @if(!empty($logoUrl))
         <img src="{{ $logoUrl }}" alt="Logo" style="position:absolute;top:4px;left:8px;width:36px;height:36px;object-fit:contain;" />
@@ -161,18 +82,33 @@
     </div>
 
     {{-- Actions (screen only) --}}
-    <div class="ms-card no-print" style="margin-bottom:.5rem;">
-        <div style="display:flex;justify-content:flex-end;gap:.5rem;padding:.4rem 1rem;">
-            <a href="{{ route('admin.mark-roster.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
-            <button onclick="window.print()" class="btn btn-sm btn-outline-primary"><i class="fas fa-print"></i> Print</button>
-            <button onclick="exportSummaryXLSX()" class="btn btn-sm btn-outline-success"><i class="fas fa-file-csv"></i> Export XLSX</button>
-        </div>
+    <div class="no-print" style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.5rem;">
+        <a href="{{ route('admin.mark-roster.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        <button onclick="window.print()" class="btn btn-sm btn-outline-primary"><i class="fas fa-print"></i> Print</button>
+        <button onclick="exportSummaryXLSX()" class="btn btn-sm btn-outline-success"><i class="fas fa-file-csv"></i> Export XLSX</button>
     </div>
 
-    {{-- Summary Table + Stats Table (stats embedded inside table for first-page placement) --}}
+    @php
+        $studentNum = 0;
+        $totalStudents = count($roster);
+        $stats = ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]];
+        foreach ($roster as $studentRows) {
+            $gender = strtoupper(substr($studentRows['term1']['student']->gender ?? 'M', 0, 1));
+            if ($gender !== 'M' && $gender !== 'F') $gender = 'M';
+            $avg = $studentRows['annual']['average'] ?? 0;
+            if ($avg > 0) {
+                if ($avg >= 50) { $stats['above50'][$gender]++; $stats['above50']['total']++; }
+                else { $stats['below50'][$gender]++; $stats['below50']['total']++; }
+            }
+        }
+        $colspan = 3 + count($subjects) + 3;
+    @endphp
+
+    {{-- Main Table — uses thead (repeats on every page) + tfoot (signatures repeat on every page) --}}
     <div class="ms-card">
         <div class="ms-table-wrap">
             <table class="ms-table" id="summaryTable">
+                {{-- Column headers — repeats on every printed page --}}
                 <thead>
                     <tr>
                         <th style="text-align:left;min-width:130px;">Student Name</th>
@@ -185,41 +121,45 @@
                         <th class="rank-col">Rank</th>
                     </tr>
                 </thead>
+
+                {{-- Signature footer — tfoot repeats on EVERY printed page automatically --}}
+                <tfoot>
+                    <tr>
+                        <td colspan="{{ $colspan }}" style="border:none!important;padding:20px 0 0 0!important;background:transparent!important;">
+                            <div style="display:flex;justify-content:space-around;gap:2rem;flex-wrap:wrap;">
+                                <div style="text-align:center;min-width:180px;">
+                                    <div style="font-size:7pt;color:#666;margin-bottom:25px;">Homeroom Teacher</div>
+                                    <div style="border-top:0.5pt solid #333;padding-top:2px;font-size:7pt;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
+                                    <div style="font-size:6pt;color:#999;margin-top:1px;">Date: _______________</div>
+                                </div>
+                                <div style="text-align:center;min-width:180px;">
+                                    <div style="font-size:7pt;color:#666;margin-bottom:25px;">Branch Principal</div>
+                                    <div style="border-top:0.5pt solid #333;padding-top:2px;font-size:7pt;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
+                                    <div style="font-size:6pt;color:#999;margin-top:1px;">Date: _______________</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tfoot>
+
+                {{-- Student data rows --}}
                 <tbody>
-                    @php
-                        $studentNum = 0;
-                        $totalStudents = count($roster);
-
-                        // Pre-calculate stats
-                        $stats = ['above50' => ['M' => 0, 'F' => 0, 'total' => 0], 'below50' => ['M' => 0, 'F' => 0, 'total' => 0]];
-                        foreach ($roster as $studentRows) {
-                            $gender = strtoupper(substr($studentRows['term1']['student']->gender ?? 'M', 0, 1));
-                            if ($gender !== 'M' && $gender !== 'F') $gender = 'M';
-                            $avg = $studentRows['annual']['average'] ?? 0;
-                            if ($avg > 0) {
-                                if ($avg >= 50) { $stats['above50'][$gender]++; $stats['above50']['total']++; }
-                                else { $stats['below50'][$gender]++; $stats['below50']['total']++; }
-                            }
-                        }
-                    @endphp
-
                     @foreach($roster as $studentRows)
                         @php $studentNum++; @endphp
 
-                        {{-- Each student gets exactly 3 rows in their own tbody --}}
-                        {{-- page-break-after goes on the LAST student of each 5-student group --}}
-                        {{-- BUT NOT on the very last student (prevents blank page) --}}
+                        @foreach(['term1', 'term2', 'annual'] as $termKey)
                         @php
+                            $isAnnualRow = ($termKey === 'annual');
                             $isLastInGroup = ($studentNum % 5 == 0);
                             $isLastStudent = ($studentNum == $totalStudents);
-                            $tbodyClass = 'student-group';
-                            if ($isLastInGroup && !$isLastStudent) {
-                                $tbodyClass .= ' page-break-after';
+                            // Add page-break class to the annual (3rd) row of every 5th student
+                            // BUT NOT the very last student (prevents blank page)
+                            $rowClass = $termKey . '-row';
+                            if ($isAnnualRow && $isLastInGroup && !$isLastStudent) {
+                                $rowClass .= ' page-break-row';
                             }
                         @endphp
-                        <tbody class="{{ $tbodyClass }}">
-                        @foreach(['term1', 'term2', 'annual'] as $termKey)
-                        <tr class="{{ $termKey }}-row">
+                        <tr class="{{ $rowClass }}">
                             <td class="stu-name">{{ $termKey === 'term1' ? ($studentRows['term1']['student']->full_name ?? '') : '' }}</td>
                             <td class="term-label">{{ $studentRows[$termKey]['term_label'] }}</td>
                             @foreach($subjects as $subj)
@@ -239,45 +179,40 @@
                             <td class="rank-col">{{ $studentRows[$termKey]['rank'] }}</td>
                         </tr>
                         @endforeach
-                        </tbody>
 
-                        {{-- Insert stats table AFTER the 5th student (end of first page) --}}
-                        {{-- Only on the FIRST page break (student 5 or last student if <5) --}}
-                        {{-- Subsequent page breaks (student 10, 15...) get print-hide class --}}
+                        {{-- Stats table after the 5th student (first page bottom) --}}
                         @if($isLastInGroup || $isLastStudent)
-                        @php $statsHideClass = ($studentNum > 5) ? ' print-hide' : ''; @endphp
-                        <tbody class="ms-stats-row{{ $statsHideClass }}">
-                            <tr>
-                                <td colspan="{{ 3 + count($subjects) + 3 }}" style="border:none;padding:8px 0 0 0;">
-                                    <div class="ms-stats-table" style="display:inline-block;">
-                                        <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
-                                            <thead>
-                                                <tr style="background:#f9fafb;">
-                                                    <th style="border:1px solid #333;padding:3px 8px;text-align:left;">Annual Result Summary</th>
-                                                    <th style="border:1px solid #333;padding:3px 8px;">Male</th>
-                                                    <th style="border:1px solid #333;padding:3px 8px;">Female</th>
-                                                    <th style="border:1px solid #333;padding:3px 8px;">Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td style="border:1px solid #333;padding:2px 8px;color:#dc2626;">Below 50% (Fail)</td>
-                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['below50']['M'] }}</td>
-                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['below50']['F'] }}</td>
-                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['below50']['total'] }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="border:1px solid #333;padding:2px 8px;color:#059669;">Above 50% (Pass)</td>
-                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['M'] }}</td>
-                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['F'] }}</td>
-                                                    <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['above50']['total'] }}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
+                        {{-- Only show stats on first page — hide on subsequent pages --}}
+                        @if($studentNum <= 5)
+                        <tr class="ms-stats-inline">
+                            <td colspan="{{ $colspan }}" style="border:none;padding:8px 0 4px 0;">
+                                <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
+                                    <thead>
+                                        <tr style="background:#f9fafb;">
+                                            <th style="border:1px solid #333;padding:3px 8px;text-align:left;">Annual Result Summary</th>
+                                            <th style="border:1px solid #333;padding:3px 8px;">Male</th>
+                                            <th style="border:1px solid #333;padding:3px 8px;">Female</th>
+                                            <th style="border:1px solid #333;padding:3px 8px;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="border:1px solid #333;padding:2px 8px;color:#dc2626;">Below 50% (Fail)</td>
+                                            <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['below50']['M'] }}</td>
+                                            <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['below50']['F'] }}</td>
+                                            <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['below50']['total'] }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border:1px solid #333;padding:2px 8px;color:#059669;">Above 50% (Pass)</td>
+                                            <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['M'] }}</td>
+                                            <td style="border:1px solid #333;padding:2px 8px;text-align:center;">{{ $stats['above50']['F'] }}</td>
+                                            <td style="border:1px solid #333;padding:2px 8px;text-align:center;font-weight:700;">{{ $stats['above50']['total'] }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        @endif
                         @endif
                     @endforeach
                 </tbody>
@@ -285,8 +220,8 @@
         </div>
     </div>
 
-    {{-- Screen-only stats table (hidden in print — stats are embedded in the main table above) --}}
-    <div class="ms-stats-table no-print" style="margin-top:1rem;">
+    {{-- Screen-only stats table (for screen view — hidden in print) --}}
+    <div class="no-print" style="margin-top:1rem;">
         <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
             <thead>
                 <tr style="background:#f9fafb;">
@@ -313,8 +248,8 @@
         </table>
     </div>
 
-    {{-- Signature Section (screen only — print uses fixed footer below) --}}
-    <div class="ms-signatures-screen" style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
+    {{-- Screen-only signatures (print uses tfoot above) --}}
+    <div class="ms-signatures-screen no-print" style="display:flex;justify-content:space-around;margin-top:2rem;padding:1.5rem 2rem;background:#fff;border-radius:10px;border:1px solid #e5e7eb;gap:2rem;flex-wrap:wrap;">
         <div style="text-align:center;min-width:200px;">
             <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Homeroom Teacher</div>
             <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
@@ -324,20 +259,6 @@
             <div style="font-size:.75rem;color:#6b7280;margin-bottom:40px;">Branch Principal</div>
             <div style="border-top:1px solid #333;padding-top:4px;font-size:.78rem;font-weight:600;color:#1a1a2e;">Name &amp; Signature</div>
             <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Date: _______________</div>
-        </div>
-    </div>
-
-    {{-- Print-only fixed signature footer — shows on EVERY printed page --}}
-    <div class="ms-print-footer" style="display:none;">
-        <div class="sig-block">
-            <div class="sig-label">Homeroom Teacher</div>
-            <div class="sig-line">Name &amp; Signature</div>
-            <div class="sig-date">Date: _______________</div>
-        </div>
-        <div class="sig-block">
-            <div class="sig-label">Branch Principal</div>
-            <div class="sig-line">Name &amp; Signature</div>
-            <div class="sig-date">Date: _______________</div>
         </div>
     </div>
 </div>
@@ -351,9 +272,7 @@ function exportSummaryXLSX() {
         table.querySelectorAll('tr').forEach(function(row) {
             var cells = row.querySelectorAll('td,th');
             var rowData = [];
-            cells.forEach(function(col) {
-                rowData.push('"' + col.innerText.trim().replace(/"/g, '""') + '"');
-            });
+            cells.forEach(function(col) { rowData.push('"' + col.innerText.trim().replace(/"/g, '""') + '"'); });
             csv.push(rowData.join(','));
         });
         var blob = new Blob([csv.join('\n')], {type: 'text/csv;charset=utf-8;'});
