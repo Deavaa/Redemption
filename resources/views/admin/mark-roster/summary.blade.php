@@ -156,15 +156,18 @@
                         @php
                             $isAnnualRow = ($termKey === 'annual');
                             $isLastStudent = ($studentNum == $totalStudents);
-                            // FIRST PAGE: 4 students (break after student 4)
-                            // SUBSEQUENT PAGES: 5 students (break after student 9, 14, 19...)
-                            // Break positions: 4, 9, 14, 19, 24... (first is 4, then every 5)
+                            // Page break logic:
+                            // FIRST PAGE: 4 students + stats table, then break
+                            //   → NO break on student 4's annual row (stats goes after, then break)
+                            // SUBSEQUENT PAGES: 5 students, break after annual row
+                            //   → Break after students 9, 14, 19...
+                            // Last student: NO break (prevents blank page)
                             $shouldBreak = false;
                             if ($isAnnualRow && !$isLastStudent) {
-                                if ($studentNum == 4) {
-                                    $shouldBreak = true; // First page = 4 students
-                                } elseif ($studentNum > 4 && ($studentNum - 4) % 5 == 0) {
-                                    $shouldBreak = true; // Subsequent pages = 5 students
+                                // Skip student 4 (break is on stats row instead)
+                                // Break after students 9, 14, 19, 24...
+                                if ($studentNum > 4 && ($studentNum - 4) % 5 == 0) {
+                                    $shouldBreak = true;
                                 }
                             }
                             $rowClass = $termKey . '-row';
@@ -195,8 +198,10 @@
 
                         {{-- Stats table after the 4th student (first page bottom) --}}
                         {{-- Also show after last student if total <= 4 --}}
+                        {{-- The stats row gets page-break-after so it stays on page 1 and page 2 starts fresh --}}
                         @if($studentNum == 4 || ($isLastStudent && $studentNum < 4))
-                        <tr class="ms-stats-inline">
+                        @php $statsBreakClass = ($studentNum == 4 && !$isLastStudent) ? ' page-break-row' : ''; @endphp
+                        <tr class="ms-stats-inline{{ $statsBreakClass }}">
                             <td colspan="{{ $colspan }}" style="border:none;padding:8px 0 4px 0;">
                                 <table style="border-collapse:collapse;font-size:.72rem;border:1px solid #333;">
                                     <thead>
