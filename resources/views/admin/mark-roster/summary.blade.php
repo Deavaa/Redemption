@@ -42,8 +42,8 @@
 
     .ms-table-wrap{overflow:visible!important;width:100%!important;border:none!important;}
     .ms-table{font-size:7.5pt!important;width:100%!important;border-collapse:collapse!important;}
-    .ms-table th{padding:3px 4px!important;border:0.75pt solid #333!important;background:#e8eef5!important;font-size:7pt!important;font-weight:700!important;color:#1a1a2e!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-    .ms-table td{padding:2px 4px!important;font-size:7.5pt!important;border:0.75pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table th{padding:3px 4px!important;border:0.75pt solid #333!important;background:#e8eef5!important;font-size:7.35pt!important;font-weight:700!important;color:#1a1a2e!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    .ms-table td{padding:2px 4px!important;font-size:7.875pt!important;border:0.75pt solid #333!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     .ms-table .stu-name{min-width:120px!important;white-space:nowrap!important;}
     .ms-table .term1-row{background:#eff6ff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     .ms-table .term2-row{background:#f5f3ff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
