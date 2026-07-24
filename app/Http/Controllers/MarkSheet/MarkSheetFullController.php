@@ -119,6 +119,8 @@ class MarkSheetFullController extends Controller
         $term2 = $terms->count() >= 2 ? $terms[1] : null;
 
         if (!$term1) {
+            $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+            $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))->orderBy('numeric_name')->orderBy('name')->get();
             return view('admin.mark-sheet.full', compact('academicYears', 'classes', 'isTeacher'))
                 ->with('error', 'No terms found for the selected academic year. Please create terms first.');
         }
