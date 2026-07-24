@@ -1,0 +1,1080 @@
+     1→<?php
+     2→
+     3→use App\Http\Controllers\AcademicYear\AcademicYearController;
+     4→use App\Http\Controllers\Admin\MarkEntryController;
+     5→use App\Http\Controllers\Admin\FirstTermOverrideController;
+     6→use App\Http\Controllers\Admin\StaffController;
+     7→use App\Http\Controllers\Admin\SubjectAssignmentController;
+     8→use App\Http\Controllers\Audit\AuditController;
+     9→use App\Http\Controllers\AuthController;
+    10→use App\Http\Controllers\Branch\BranchController;
+    11→use App\Http\Controllers\Budget\BudgetController;
+    12→use App\Http\Controllers\Budget\BudgetComparisonController;
+    13→use App\Http\Controllers\CalendarEvent\AnnouncementController;
+    14→use App\Http\Controllers\CalendarEvent\CalendarEventController;
+    15→use App\Http\Controllers\Certificate\CertificateController;
+    16→use App\Http\Controllers\Certificate\CertificateGenerateController;
+    17→use App\Http\Controllers\Certificate\CertificatePrintController;
+    18→use App\Http\Controllers\Certificate\TranscriptController;
+    19→use App\Http\Controllers\Certificate\LeavingCertificateController;
+    20→use App\Http\Controllers\Chat\ChatController;
+    21→use App\Http\Controllers\ClassAsset\ClassAssetController;
+    22→use App\Http\Controllers\Classroom\ClassroomController;
+    23→use App\Http\Controllers\ContactMessage\ContactMessageController;
+    24→use App\Http\Controllers\DashboardController;
+    25→use App\Http\Controllers\EmployeeAsset\EmployeeAssetController;
+    26→use App\Http\Controllers\Exam\ExamController;
+    27→use App\Http\Controllers\Fee\FeeController;
+    28→use App\Http\Controllers\FeePayment\FeePaymentController;
+    29→use App\Http\Controllers\FinanceStatement\FinancialComparisonController;
+    30→use App\Http\Controllers\FinanceStatement\FinanceStatementController;
+    31→use App\Http\Controllers\GalleryImage\GalleryImageController;
+    32→use App\Http\Controllers\GalleryVideo\GalleryVideoController;
+    33→use App\Http\Controllers\HomeController;
+    34→use App\Http\Controllers\IdCard\IdCardController;
+    35→use App\Http\Controllers\IdCard\IdCardGenerateController;
+    36→use App\Http\Controllers\IncomeExpense\IncomeExpenseController;
+    37→use App\Http\Controllers\Leave\LeaveController;
+    38→use App\Http\Controllers\MarkSheet\MarkRosterController;
+    39→use App\Http\Controllers\MarkSheet\MarkSheetController;
+    40→use App\Http\Controllers\MarkSheet\MarkSheetFullController;
+    41→use App\Http\Controllers\MarkSheet\ReportCardController;
+    42→use App\Http\Controllers\Media\MediaController;
+    43→use App\Http\Controllers\Notification\NotificationController;
+    44→use App\Http\Controllers\ParentModel\ParentModelController;
+    45→use App\Http\Controllers\Payroll\PayrollController;
+    46→use App\Http\Controllers\PerformanceReport\PerformanceComparisonController;
+    47→use App\Http\Controllers\Performance\PerformanceAnalysisController;
+    48→use App\Http\Controllers\PerformanceReport\PerformanceAnalysisController as PerformanceReportAnalysisController;
+    49→use App\Http\Controllers\PerformanceReport\PsychologicalAnalysisController;
+    50→use App\Http\Controllers\PerformanceReport\PerformanceReportController;
+    51→use App\Http\Controllers\ProgressReport\ProgressReportController;
+    52→use App\Http\Controllers\Role\RoleController;
+    53→use App\Http\Controllers\Section\SectionController;
+    54→use App\Http\Controllers\Setting\SettingController;
+    55→use App\Http\Controllers\Setting\WebContentController;
+    56→use App\Http\Controllers\Slider\SliderAlertController;
+    57→use App\Http\Controllers\Slider\SliderController;
+    58→use App\Http\Controllers\Student\StudentController;
+    59→use App\Http\Controllers\Student\StudentCommentController;
+    60→use App\Http\Controllers\Student\ParentController;
+    61→use App\Http\Controllers\Student\StudentDashboardController;
+    62→use App\Http\Controllers\Parent\ParentDashboardController;
+    63→use App\Http\Controllers\Subject\SubjectController;
+    64→use App\Http\Controllers\Teacher\TeacherController;
+    65→use App\Http\Controllers\TeacherAssignment\TeacherAssignmentController;
+    66→use App\Http\Controllers\TeacherReassignment\TeacherReassignmentController;
+    67→use App\Http\Controllers\TeamMember\TeamMemberController;
+    68→use App\Http\Controllers\Telegram\TelegramController;
+    69→use App\Http\Controllers\Term\TermController;
+    70→use App\Http\Controllers\LanguageController;
+    71→use App\Http\Controllers\Library\LibraryBookController;
+    72→use App\Http\Controllers\Library\VideoLibraryController;
+    73→use App\Http\Controllers\Stock\StockController;
+    74→use App\Http\Controllers\Training\TrainingController;
+    75→use App\Http\Controllers\Backup\DatabaseBackupController;
+    76→use App\Http\Controllers\UserAccess\TeacherAccessController;
+    77→use App\Http\Controllers\UserAccess\StudentAccessController;
+    78→use App\Http\Controllers\UserAccess\ParentAccessController;
+    79→use App\Http\Controllers\ReportExchange\ReportExchangeController;
+    80→use App\Http\Controllers\News\NewsController;
+    81→use App\Http\Controllers\Admin\MarkEntryLockController;
+    82→use App\Http\Controllers\Admin\MarkEntryPermissionController;
+    83→use App\Http\Controllers\Admin\PromotionController;
+    84→use App\Http\Controllers\Attendance\AttendanceController;
+    85→use App\Http\Controllers\Attendance\AttendanceDelegationController;
+    86→use App\Http\Controllers\Admin\ProfileController;
+    87→use App\Http\Controllers\LessonPlan\LessonPlanController;
+    88→use App\Http\Controllers\LessonPlan\LessonPlanFollowUpController;
+    89→use App\Http\Controllers\Report\GraphicalReportController;
+    90→use App\Http\Controllers\Email\EmailInboxController;
+    91→use App\Http\Controllers\Bank\BankIntegrationController;
+    92→use App\Http\Controllers\Club\ClubFollowUpConfigController;
+    93→use App\Http\Controllers\Exam\ExamQuestionController;
+    94→use App\Http\Controllers\Assessment\AssessmentQuestionController;
+    95→use App\Http\Controllers\ContentNote\SubjectContentNoteController;
+    96→use App\Http\Controllers\Assessment\StudentAssessmentController;
+    97→use App\Http\Controllers\Assessment\SebConfigController;
+    98→use App\Http\Controllers\Student\TeacherReviewController as StudentTeacherReviewController;
+    99→use App\Http\Controllers\Admin\TeacherReviewController as AdminTeacherReviewController;
+   100→use App\Http\Controllers\Enrollment\EnrollmentController;
+   101→use App\Http\Controllers\TeacherEfficiency\TeacherEfficiencyAssessmentController;
+   102→use App\Http\Controllers\TeacherEvaluation\TeacherEvaluationController;
+   103→use App\Http\Controllers\Admin\MarkEntryConfigController;
+   104→use App\Http\Controllers\Admin\MarkEntryDisallowalController;
+   105→use App\Http\Controllers\AppController;
+   106→use Illuminate\Support\Facades\Route;
+   107→
+   108→Route::get('/', [HomeController::class, 'index'])->name('home');
+   109→Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
+   110→
+   111→// ============================================================
+   112→// TEMPORARY SETUP ROUTE — visit /setup once to run migrations,
+   113→// then DELETE this route block immediately after.
+   114→// Useful when cPanel has no Terminal/SSH access.
+   115→// ============================================================
+   116→Route::get('/setup', function () {
+   117→    $output = '<h1>Setup / Migration Runner</h1><pre style="background:#f4f4f4;padding:1rem;border-radius:8px;overflow-x:auto;font-size:12px;">';
+   118→
+   119→    // 1. Run migrations
+   120→    $output .= "=== RUNNING MIGRATIONS ===\n";
+   121→    try {
+   122→        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+   123→        $output .= \Illuminate\Support\Facades\Artisan::output();
+   124→        $output .= "\n✓ Migrations completed.\n\n";
+   125→    } catch (\Throwable $e) {
+   126→        $output .= "✗ Migration error: " . $e->getMessage() . "\n\n";
+   127→    }
+   128→
+   129→    // 2. Generate key if missing
+   130→    $output .= "=== APP KEY ===\n";
+   131→    if (empty(config('app.key'))) {
+   132→        try {
+   133→            \Illuminate\Support\Facades\Artisan::call('key:generate');
+   134→            $output .= \Illuminate\Support\Facades\Artisan::output();
+   135→        } catch (\Throwable $e) {
+   136→            $output .= "✗ " . $e->getMessage() . "\n";
+   137→        }
+   138→    } else {
+   139→        $output .= "✓ App key already set.\n";
+   140→    }
+   141→    $output .= "\n";
+   142→
+   143→    // 3. Storage link
+   144→    $output .= "=== STORAGE LINK ===\n";
+   145→    try {
+   146→        \Illuminate\Support\Facades\Artisan::call('storage:link');
+   147→        $output .= \Illuminate\Support\Facades\Artisan::output();
+   148→        $output .= "✓ Storage link created.\n";
+   149→    } catch (\Throwable $e) {
+   150→        $output .= "⚠ " . $e->getMessage() . "\n";
+   151→        // Try manual symlink
+   152→        $target = storage_path('app/public');
+   153→        $link = public_path('storage');
+   154→        if (!file_exists($link) && is_dir($target)) {
+   155→            @symlink($target, $link);
+   156→            $output .= "  → Manual symlink attempted.\n";
+   157→        }
+   158→    }
+   159→    $output .= "\n";
+   160→
+   161→    // 4. Clear caches
+   162→    $output .= "=== CLEARING CACHES ===\n";
+   163→    try {
+   164→        \Illuminate\Support\Facades\Artisan::call('config:clear');
+   165→        \Illuminate\Support\Facades\Artisan::call('route:clear');
+   166→        \Illuminate\Support\Facades\Artisan::call('view:clear');
+   167→        $output .= "✓ Config, route, and view caches cleared.\n";
+   168→    } catch (\Throwable $e) {
+   169→        $output .= "⚠ " . $e->getMessage() . "\n";
+   170→    }
+   171→    $output .= "\n";
+   172→
+   173→    // 5. Check users table columns
+   174→    $output .= "=== USERS TABLE COLUMNS ===\n";
+   175→    try {
+   176→        $columns = \DB::getSchemaBuilder()->getColumnListing('users');
+   177→        $output .= "Columns: " . implode(', ', $columns) . "\n";
+   178→        $output .= "Has deleted_at: " . (in_array('deleted_at', $columns) ? 'YES ✓' : 'NO ✗') . "\n";
+   179→        $output .= "Has must_change_password: " . (in_array('must_change_password', $columns) ? 'YES ✓' : 'NO ✗') . "\n";
+   180→    } catch (\Throwable $e) {
+   181→        $output .= "✗ " . $e->getMessage() . "\n";
+   182→    }
+   183→    $output .= "\n";
+   184→
+   185→    // 6. Count users
+   186→    $output .= "=== USER COUNT ===\n";
+   187→    try {
+   188→        $count = \DB::table('users')->count();
+   189→        $output .= "Total users: {$count}\n";
+   190→    } catch (\Throwable $e) {
+   191→        $output .= "✗ " . $e->getMessage() . "\n";
+   192→    }
+   193→
+   194→    $output .= "\n=== DONE ===\n";
+   195→    $output .= "⚠ IMPORTANT: Delete the /setup route from routes/web.php NOW for security!\n";
+   196→    $output .= "</pre>";
+   197→
+   198→    return response($output);
+   199→})->name('setup');
+   200→
+   201→// ============================================================
+   202→// NEWS IMAGE DEBUG ROUTE — temporary diagnostic tool.
+   203→// Visit /news-debug to see exactly where news images are stored,
+   204→// whether the storage symlink works, and which URL the website
+   205→// would use to render each image.
+   206→// ============================================================
+   207→Route::get('/news-debug', function () {
+   208→    if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+   209→        return 'Please login as admin first, then visit /news-debug';
+   210→    }
+   211→
+   212→    $output = "<h1>News Image Debug</h1><pre style='background:#f4f4f4;padding:1rem;border-radius:8px;overflow-x:auto;font-size:12px;'>";
+   213→
+   214→    // 1. Storage symlink status
+   215→    $publicStorage = public_path('storage');
+   216→    $target = storage_path('app/public');
+   217→    $output .= "=== STORAGE SYMLINK STATUS ===\n";
+   218→    $output .= "public/storage exists: " . (file_exists($publicStorage) ? 'YES' : 'NO') . "\n";
+   219→    $output .= "public/storage is_link: " . (is_link($publicStorage) ? 'YES' : 'NO') . "\n";
+   220→    $output .= "public/storage is_dir: " . (is_dir($publicStorage) ? 'YES' : 'NO') . "\n";
+   221→    if (is_link($publicStorage)) {
+   222→        $output .= "public/storage link target: " . readlink($publicStorage) . "\n";
+   223→    }
+   224→    $output .= "storage/app/public exists: " . (is_dir($target) ? 'YES' : 'NO') . "\n";
+   225→    $output .= "\n";
+   226→
+   227→    // 2. PHP permissions
+   228→    $output .= "=== PERMISSIONS ===\n";
+   229→    $output .= "storage/app/public writable: " . (is_writable($target) ? 'YES' : 'NO') . "\n";
+   230→    $output .= "public/ writable: " . (is_writable(public_path()) ? 'YES' : 'NO') . "\n";
+   231→    if (!is_dir(public_path('news-images'))) {
+   232→        @mkdir(public_path('news-images'), 0775, true);
+   233→    }
+   234→    $output .= "public/news-images writable: " . (is_writable(public_path('news-images')) ? 'YES' : 'NO') . "\n";
+   235→    $output .= "\n";
+   236→
+   237→    // 3. All news records
+   238→    $output .= "=== NEWS RECORDS ===\n";
+   239→    $news = \App\Models\News::orderBy('created_at', 'desc')->limit(10)->get();
+   240→    $output .= "Total news records: " . $news->count() . "\n\n";
+   241→
+   242→    foreach ($news as $n) {
+   243→        $output .= "--- News #{$n->id}: {$n->title} ---\n";
+   244→        $output .= "  image_path (DB): " . ($n->image_path ?: '(empty)') . "\n";
+   245→        $output .= "  is_active: " . ($n->is_active ? 'YES' : 'NO') . "\n";
+   246→        $output .= "  is_approved: " . ($n->is_approved ? 'YES' : 'NO') . "\n";
+   247→        $output .= "  created_at: " . $n->created_at . "\n";
+   248→
+   249→        if ($n->image_path) {
+   250→            $basename = basename($n->image_path);
+   251→            $storageFile = storage_path('app/public/' . $n->image_path);
+   252→            $publicFile = public_path('news-images/' . $basename);
+   253→            $storageUrl = asset('storage/' . $n->image_path);
+   254→            $publicUrl = asset('news-images/' . $basename);
+   255→
+   256→            $output .= "  Storage::disk('public')->exists: " . (\Storage::disk('public')->exists($n->image_path) ? 'YES' : 'NO') . "\n";
+   257→            $output .= "  storage/app/public/{$n->image_path} exists: " . (file_exists($storageFile) ? 'YES' : 'NO') . "\n";
+   258→            $output .= "  public/news-images/{$basename} exists: " . (file_exists($publicFile) ? 'YES' : 'NO') . "\n";
+   259→            $output .= "  storage_url: {$storageUrl}\n";
+   260→            $output .= "  public_url:  {$publicUrl}\n";
+   261→
+   262→            // Which URL will the website actually use?
+   263→            if (\Storage::disk('public')->exists($n->image_path)) {
+   264→                $output .= "  >> WEBSITE WILL USE: storage_url\n";
+   265→            } elseif (file_exists($publicFile)) {
+   266→                $output .= "  >> WEBSITE WILL USE: public_url (fallback)\n";
+   267→            } else {
+   268→                $output .= "  >> WEBSITE WILL USE: placeholder (file missing in both locations!)\n";
+   269→            }
+   270→        }
+   271→
+   272→        // Check images inside content
+   273→        if ($n->content && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $n->content, $m)) {
+   274→            $output .= "  First <img> in content: " . $m[1] . "\n";
+   275→        }
+   276→        $output .= "\n";
+   277→    }
+   278→
+   279→    // 4. Files actually on disk
+   280→    $output .= "=== FILES IN storage/app/public/news-images/ ===\n";
+   281→    $dir1 = storage_path('app/public/news-images');
+   282→    if (is_dir($dir1)) {
+   283→        $files1 = array_diff(scandir($dir1), ['.', '..', '.gitignore']);
+   284→        $output .= count($files1) . " files:\n";
+   285→        foreach ($files1 as $f) { $output .= "  $f\n"; }
+   286→    } else {
+   287→        $output .= "Directory does not exist!\n";
+   288→    }
+   289→    $output .= "\n";
+   290→
+   291→    $output .= "=== FILES IN public/news-images/ ===\n";
+   292→    $dir2 = public_path('news-images');
+   293→    if (is_dir($dir2)) {
+   294→        $files2 = array_diff(scandir($dir2), ['.', '..', '.gitignore']);
+   295→        $output .= count($files2) . " files:\n";
+   296→        foreach ($files2 as $f) { $output .= "  $f\n"; }
+   297→    } else {
+   298→        $output .= "Directory does not exist!\n";
+   299→    }
+   300→    $output .= "\n";
+   301→
+   302→    // 5. Test creating a file in both locations
+   303→    $output .= "=== WRITE TEST ===\n";
+   304→    $testContent = 'test ' . date('Y-m-d H:i:s');
+   305→    $test1 = @file_put_contents($target . '/news-images/_write_test.txt', $testContent);
+   306→    $output .= "Write to storage/app/public/news-images/: " . ($test1 !== false ? 'OK (' . $test1 . ' bytes)' : 'FAILED') . "\n";
+   307→    if (!is_dir(public_path('news-images'))) {
+   308→        @mkdir(public_path('news-images'), 0775, true);
+   309→    }
+   310→    $test2 = @file_put_contents(public_path('news-images/_write_test.txt'), $testContent);
+   311→    $output .= "Write to public/news-images/: " . ($test2 !== false ? 'OK (' . $test2 . ' bytes)' : 'FAILED') . "\n";
+   312→    $output .= "\n";
+   313→
+   314→    // 6. APP_URL config
+   315→    $output .= "=== CONFIG ===\n";
+   316→    $output .= "APP_URL: " . config('app.url') . "\n";
+   317→    $output .= "asset_url: " . (config('app.asset_url') ?: '(null)') . "\n";
+   318→    $output .= "current request host: " . request()->getHost() . "\n";
+   319→    $output .= "current request scheme: " . request()->getScheme() . "\n";
+   320→    $output .= "current request path: " . request()->path() . "\n";
+   321→
+   322→    $output .= "</pre>";
+   323→    $output .= "<p style='margin-top:1rem;'><a href='" . route('admin.news.index') . "'>← Back to News Admin</a></p>";
+   324→
+   325→    return response($output);
+   326→})->name('news.debug');
+   327→Route::get('/about', [HomeController::class, 'about'])->name('about');
+   328→Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+   329→Route::get('/team', [HomeController::class, 'team'])->name('team');
+   330→
+   331→// PWA Dynamic Manifest (replaces static manifest.json for environment-aware paths)
+   332→Route::get('/manifest.webmanifest', [AppController::class, 'manifest'])->name('app.manifest');
+   333→
+   334→// App Download / Install Page
+   335→// NOTE: Route uses /mobile-app instead of /app to avoid conflict with
+   336→// the physical app/ directory which is blocked by .htaccess for security
+   337→Route::get('/mobile-app', [AppController::class, 'download'])->name('app.download');
+   338→Route::get('/mobile-app/download/apk', [AppController::class, 'downloadApk'])->name('app.download.apk');
+   339→Route::get('/mobile-app/download/training-apk', [AppController::class, 'downloadTrainingApk'])->name('app.download.training_apk');
+   340→
+   341→// Public Contact Form
+   342→Route::post('contact', [ContactMessageController::class, 'store'])->name('contact.store')->middleware('throttle:10,1');
+   343→
+   344→// Language Switcher
+   345→Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
+   346→
+   347→Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+   348→Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+   349→Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+   350→
+   351→// Password Reset (self-service — security question based)
+   352→Route::get('/password/forgot', [AuthController::class, 'showForgotPassword'])->name('password.forgot');
+   353→Route::post('/password/forgot', [AuthController::class, 'submitForgotPassword'])->name('password.forgot.submit')->middleware('throttle:5,1');
+   354→Route::post('/password/verify-security', [AuthController::class, 'verifySecurityAnswer'])->name('password.verify.security')->middleware('throttle:5,1');
+   355→Route::post('/password/reset', [AuthController::class, 'submitResetPassword'])->name('password.reset.submit')->middleware('throttle:5,1');
+   356→
+   357→// Password Reset (email-based with token)
+   358→Route::get('/password/email', [AuthController::class, 'showLinkRequestForm'])->name('password.email');
+   359→Route::post('/password/email', [AuthController::class, 'sendResetLinkEmail'])->name('password.email.send')->middleware('throttle:3,1');
+   360→Route::get('/password/reset/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+   361→Route::post('/password/reset-with-token', [AuthController::class, 'resetPasswordWithToken'])->name('password.reset.token')->middleware('throttle:5,1');
+   362→
+   363→// Forced password change (after login when must_change_password=true)
+   364→Route::middleware('auth')->group(function () {
+   365→    Route::get('/password/force-change', [AuthController::class, 'showForceChangePassword'])->name('password.force-change');
+   366→    Route::post('/password/force-change', [AuthController::class, 'submitForceChangePassword'])->name('password.force-change.submit');
+   367→});
+   368→
+   369→// Telegram webhook (public)
+   370→Route::post('telegram/webhook', [TelegramController::class, 'webhook']);
+   371→
+   372→// ── SECURITY: Public diagnostic endpoints (/session-test, /url-test) were removed.
+   373→// They leaked server variables, session IDs, DB row counts, and config values to
+   374→// unauthenticated visitors. If you need to debug sessions/URLs, use `php artisan tinker`
+   375→// or temporarily re-add the routes inside an auth+admin middleware group.
+   376→
+   377→// Media fallback route - serves storage files when symlink doesn't exist (e.g., XAMPP)
+   378→Route::get('storage/{path}', [MediaController::class, 'serve'])->where('path', '.*');
+   379→
+   380→// ── Static file fallback for subdirectory hosting ──
+   381→// When running without /public in the URL (e.g., http://localhost/redemption/css/admin.css),
+   382→// the .htaccess routes ALL requests through index.php. Laravel needs to serve static
+   383→// files (CSS, JS, images, fonts, etc.) from the public/ directory.
+   384→// This route catches requests for common static file extensions and serves them.
+   385→Route::get('/{path}', function ($path = null) {
+   386→    // Fallback route: if no path, redirect to login
+   387→    if (empty($path)) {
+   388→        return redirect()->route('login');
+   389→    }
+   390→
+   391→    $publicPath = public_path($path);
+   392→
+   393→    // Only serve if the file actually exists in public/
+   394→    if (file_exists($publicPath) && is_file($publicPath)) {
+   395→        $mimeTypes = [
+   396→            'css' => 'text/css',
+   397→            'js' => 'application/javascript',
+   398→            'png' => 'image/png',
+   399→            'jpg' => 'image/jpeg',
+   400→            'jpeg' => 'image/jpeg',
+   401→            'gif' => 'image/gif',
+   402→            'svg' => 'image/svg+xml',
+   403→            'ico' => 'image/x-icon',
+   404→            'webp' => 'image/webp',
+   405→            'woff' => 'font/woff',
+   406→            'woff2' => 'font/woff2',
+   407→            'ttf' => 'font/ttf',
+   408→            'eot' => 'application/vnd.ms-fontobject',
+   409→            'otf' => 'font/otf',
+   410→            'json' => 'application/json',
+   411→            'xml' => 'application/xml',
+   412→            'txt' => 'text/plain',
+   413→            'pdf' => 'application/pdf',
+   414→            'apk' => 'application/vnd.android.package-archive',
+   415→            'idsig' => 'application/octet-stream',
+   416→            'webmanifest' => 'application/manifest+json',
+   417→            'map' => 'application/json',
+   418→        ];
+   419→
+   420→        $ext = strtolower(pathinfo($publicPath, PATHINFO_EXTENSION));
+   421→        $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
+   422→
+   423→        return response()->file($publicPath, [
+   424→            'Content-Type' => $mime,
+   425→            'Cache-Control' => 'public, max-age=86400',
+   426→        ]);
+   427→    }
+   428→
+   429→    abort(404);
+   430→})->where('path', '.*')->fallback();
+   431→
+   432→// ── Mark Entry API routes — OUTSIDE admin group to avoid middleware redirect issues ──
+   433→// Named with 'admin.' prefix so Blade's route() helper finds them.
+   434→Route::middleware(['auth', 'web'])->group(function () {
+   435→    Route::post('admin/mark-entries/api/save', [MarkEntryController::class, 'apiSave'])->name('admin.mark-entries.api.save');
+   436→    Route::post('admin/mark-entries/api/bulk-save', [MarkEntryController::class, 'apiBulkSave'])->name('admin.mark-entries.api.bulk-save');
+   437→});
+   438→
+   439→Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-scope'])->group(function () {
+   440→    // Session Keepalive — touches session to keep it alive
+   441→    // NOTE: We do NOT regenerate the CSRF token here anymore.
+   442→    // Regenerating the token on every keepalive caused a race condition:
+   443→    // a keepalive ping could invalidate the CSRF token of an in-flight
+   444→    // mark-entry save request, leading to 419 errors.
+   445→    // The CSRF token is refreshed only when:
+   446→    //   1. A save response returns a fresh token (mark entry auto-save)
+   447→    //   2. A 419 error triggers a token refresh + retry
+   448→    Route::match(['get', 'post'], '/keepalive', function () {
+   449→        $request = request();
+   450→
+   451→        // Touch the session to keep it alive
+   452→        $request->session()->put('_last_keepalive', time());
+   453→
+   454→        // Force-save session to database immediately
+   455→        $request->session()->save();
+   456→
+   457→        return response()->json([
+   458→            'csrf_token' => csrf_token(),
+   459→            'timestamp' => time(),
+   460→            'driver' => config('session.driver'),
+   461→            'lifetime' => config('session.lifetime'),
+   462→            'ok' => true,
+   463→        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate')
+   464→          ->header('Pragma', 'no-cache')
+   465→          ->header('X-Session-Refreshed', '1');
+   466→    })->name('keepalive');
+   467→
+   468→    // Session Diagnostic — helps verify session is working correctly
+   469→    Route::get('/session-diagnostic', function () {
+   470→        $request = request();
+   471→        $sessionId = $request->session()->getId();
+   472→        $handler = $request->session()->getHandler();
+   473→        $handlerClass = get_class($handler);
+   474→
+   475→        $diagnostics = [
+   476→            'timestamp' => date('Y-m-d H:i:s'),
+   477→            'php_version' => PHP_VERSION,
+   478→            'session_id' => $sessionId,
+   479→            'session_driver_config' => config('session.driver'),
+   480→            'session_lifetime_config' => config('session.lifetime'),
+   481→            'session_cookie_config' => config('session.cookie'),
+   482→            'session_encrypt_config' => config('session.encrypt'),
+   483→            'session_lottery_config' => config('session.lottery'),
+   484→            'handler_class' => $handlerClass,
+   485→            'php_gc_maxlifetime' => ini_get('session.gc_maxlifetime'),
+   486→            'php_gc_probability' => ini_get('session.gc_probability'),
+   487→            'php_gc_divisor' => ini_get('session.gc_divisor'),
+   488→            'php_session_cookie_lifetime' => ini_get('session.cookie_lifetime'),
+   489→            'session_data_keys' => array_keys($request->session()->all()),
+   490→            'auth_user_id' => auth()->id(),
+   491→            'auth_user_role' => auth()->user()?->role,
+   492→        ];
+   493→
+   494→        // Database driver specific diagnostics
+   495→        if (config('session.driver') === 'database') {
+   496→            try {
+   497→                $dbSession = \DB::table('sessions')->where('id', $sessionId)->first();
+   498→                $diagnostics['db_session_found'] = $dbSession ? true : false;
+   499→                $diagnostics['db_session_last_activity'] = $dbSession ? $dbSession->last_activity : null;
+   500→                $diagnostics['db_session_last_activity_readable'] = $dbSession ? date('Y-m-d H:i:s', $dbSession->last_activity) : null;
+   501→                $diagnostics['db_session_user_id'] = $dbSession ? $dbSession->user_id : null;
+   502→                $diagnostics['db_session_ip'] = $dbSession ? $dbSession->ip_address : null;
+   503→                $diagnostics['db_total_sessions'] = \DB::table('sessions')->count();
+   504→                $diagnostics['db_session_age_seconds'] = $dbSession ? (time() - $dbSession->last_activity) : null;
+   505→                $diagnostics['db_session_expires_in_seconds'] = $dbSession ? (config('session.lifetime') * 60 - (time() - $dbSession->last_activity)) : null;
+   506→            } catch (\Throwable $e) {
+   507→                $diagnostics['db_error'] = $e->getMessage();
+   508→            }
+   509→        }
+   510→
+   511→        return response()->json($diagnostics, 200, [], JSON_PRETTY_PRINT);
+   512→    })->name('session-diagnostic');
+   513→
+   514→    // Dashboard
+   515→    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');
+   516→
+   517→    // Admin Profile & Password Change
+   518→    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+   519→    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+   520→    Route::post('/profile/reset-user-password', [ProfileController::class, 'resetUserPassword'])->name('profile.reset-user-password');
+   521→    Route::post('/profile/generate-employee-ids', [ProfileController::class, 'generateMissingEmployeeIds'])->name('profile.generate-employee-ids');
+   522→
+   523→    // ── Academic ──────────────────────────────────────────
+   524→    Route::resource('academic-years', AcademicYearController::class)->middleware('permission:academic_years.view');
+   525→    Route::get('academic-years/transition', [AcademicYearController::class, 'transitionForm'])->name('academic-years.transition')->middleware('permission:academic_years.manage');
+   526→    Route::post('academic-years/transition-preview', [AcademicYearController::class, 'transitionPreview'])->name('academic-years.transition-preview')->middleware('permission:academic_years.manage');
+   527→    Route::post('academic-years/transition', [AcademicYearController::class, 'processTransition'])->name('academic-years.process-transition')->middleware('permission:academic_years.manage');
+   528→    Route::resource('terms', TermController::class)->middleware('permission:terms.view');
+   529→    Route::resource('exams', ExamController::class)->middleware('permission:exams.view');
+   530→    Route::resource('subjects', SubjectController::class)->middleware('permission:subjects.view');
+   531→
+   532→    // Teacher Reassignment (bulk reassign teachers for new academic year)
+   533→    Route::get('teacher-reassignment', [TeacherReassignmentController::class, 'index'])->name('teacher-reassignment.index')->middleware('permission:teacher_assignments.view');
+   534→    Route::post('teacher-reassignment/save-homeroom', [TeacherReassignmentController::class, 'saveHomeroomTeachers'])->name('teacher-reassignment.save-homeroom')->middleware('permission:teacher_assignments.manage');
+   535→    Route::post('teacher-reassignment/save-subjects', [TeacherReassignmentController::class, 'saveSubjectTeachers'])->name('teacher-reassignment.save-subjects')->middleware('permission:teacher_assignments.manage');
+   536→    Route::post('teacher-reassignment/clear-all', [TeacherReassignmentController::class, 'clearAllTeachers'])->name('teacher-reassignment.clear-all')->middleware('permission:teacher_assignments.manage');
+   537→    Route::resource('subject-assignments', SubjectAssignmentController::class)->middleware('permission:subject_assignments.view');
+   538→    Route::delete('subject-assignments/bulk-delete', [SubjectAssignmentController::class, 'bulkDelete'])->name('subject-assignments.bulk-delete')->middleware('permission:subject_assignments.delete');
+   539→    Route::get('subject-assignments/api/classes', [SubjectAssignmentController::class, 'apiClasses'])->name('subject-assignments.api.classes');
+   540→    Route::get('subject-assignments/api/sections', [SubjectAssignmentController::class, 'apiSections'])->name('subject-assignments.api.sections');
+   541→
+   542→    // Mark Entry API routes (MUST be defined BEFORE the resource route to avoid conflicts)
+   543→    Route::get('mark-entries/api/branches', [MarkEntryController::class, 'apiBranches'])->name('mark-entries.api.branches');
+   544→    Route::get('mark-entries/api/terms', [MarkEntryController::class, 'apiTerms'])->name('mark-entries.api.terms');
+   545→    Route::get('mark-entries/api/classes', [MarkEntryController::class, 'apiClasses'])->name('mark-entries.api.classes');
+   546→    Route::get('mark-entries/api/sections', [MarkEntryController::class, 'apiSections'])->name('mark-entries.api.sections');
+   547→    Route::get('mark-entries/api/subjects', [MarkEntryController::class, 'apiSubjects'])->name('mark-entries.api.subjects')->middleware('permission:mark_entries.view');
+   548→    Route::get('mark-entries/api/students', [MarkEntryController::class, 'apiStudents'])->name('mark-entries.api.students')->middleware('permission:mark_entries.view');
+   549→    Route::get('mark-entries/api/load-students', [MarkEntryController::class, 'apiLoadStudents'])->name('mark-entries.api.load-students')->middleware('permission:mark_entries.view');
+   550→    // Save routes moved OUTSIDE admin group (above) to avoid middleware redirect issues
+   551→    Route::get('mark-entries/api/check-lock', [MarkEntryLockController::class, 'apiCheckLock'])->name('mark-entries.api.check-lock');
+   552→    // Bulk import/export (admin only)
+   553→    Route::get('mark-entries/export', [MarkEntryController::class, 'export'])->name('mark-entries.export')->middleware('permission:mark_entries.manage');
+   554→    Route::get('mark-entries/export-template', [MarkEntryController::class, 'exportTemplate'])->name('mark-entries.export-template')->middleware('permission:mark_entries.manage');
+   555→    Route::post('mark-entries/import', [MarkEntryController::class, 'import'])->name('mark-entries.import')->middleware('permission:mark_entries.manage');
+   556→    Route::resource('mark-entries', MarkEntryController::class)->middleware('permission:mark_entries.view');
+   557→
+   558→    // Mark Entry Lock Management (Branch Principal / Admin)
+   559→    Route::get('mark-entry-locks', [MarkEntryLockController::class, 'index'])->name('mark-entry-locks.index')->middleware('permission:mark_entries.view');
+   560→
+   561→    // First Term Override Marks (for mid-year entrants)
+   562→    Route::get('first-term-overrides', [FirstTermOverrideController::class, 'index'])->name('first-term-overrides.index')->middleware('permission:mark_entries.view');
+   563→    Route::post('first-term-overrides', [FirstTermOverrideController::class, 'store'])->name('first-term-overrides.store')->middleware('permission:mark_entries.manage');
+   564→    Route::post('mark-entry-locks/lock', [MarkEntryLockController::class, 'lock'])->name('mark-entry-locks.lock')->middleware('permission:mark_entries.manage');
+   565→    Route::post('mark-entry-locks/unlock', [MarkEntryLockController::class, 'unlock'])->name('mark-entry-locks.unlock')->middleware('permission:mark_entries.manage');
+   566→
+   567→    // Mark Entry Configuration (Admin only)
+   568→    Route::get('mark-entry-configs', [MarkEntryConfigController::class, 'index'])->name('mark-entry-configs.index')->middleware('permission:mark_entries.manage');
+   569→    Route::put('mark-entry-configs', [MarkEntryConfigController::class, 'update'])->name('mark-entry-configs.update')->middleware('permission:mark_entries.manage');
+   570→    Route::post('mark-entry-configs/reset', [MarkEntryConfigController::class, 'reset'])->name('mark-entry-configs.reset')->middleware('permission:mark_entries.manage');
+   571→    Route::get('mark-entry-configs/api', [MarkEntryConfigController::class, 'apiGetConfig'])->name('mark-entry-configs.api');
+   572→
+   573→    // Mark Entry Permission Management (Branch Principal / Admin)
+   574→    Route::get('mark-entry-permissions', [MarkEntryPermissionController::class, 'index'])->name('mark-entry-permissions.index')->middleware('permission:mark_entries.view');
+   575→    Route::get('mark-entry-permissions/create', [MarkEntryPermissionController::class, 'create'])->name('mark-entry-permissions.create')->middleware('permission:mark_entries.manage');
+   576→    Route::post('mark-entry-permissions', [MarkEntryPermissionController::class, 'store'])->name('mark-entry-permissions.store')->middleware('permission:mark_entries.manage');
+   577→    Route::post('mark-entry-permissions/batch', [MarkEntryPermissionController::class, 'batchStore'])->name('mark-entry-permissions.batch')->middleware('permission:mark_entries.manage');
+   578→    Route::delete('mark-entry-permissions/{id}/revoke', [MarkEntryPermissionController::class, 'revoke'])->name('mark-entry-permissions.revoke')->middleware('permission:mark_entries.manage');
+   579→    Route::get('mark-entry-permissions/api/students', [MarkEntryPermissionController::class, 'apiStudents'])->name('mark-entry-permissions.api.students');
+   580→    Route::get('mark-entry-permissions/api/teacher-subjects', [MarkEntryPermissionController::class, 'apiTeacherSubjects'])->name('mark-entry-permissions.api.teacher-subjects');
+   581→
+   582→    // Mark Entry Disallowal Management (Branch Principal / Admin)
+   583→    Route::get('mark-entry-disallowals', [MarkEntryDisallowalController::class, 'index'])->name('mark-entry-disallowals.index')->middleware('permission:mark_entries.view');
+   584→    Route::post('mark-entry-disallowals', [MarkEntryDisallowalController::class, 'store'])->name('mark-entry-disallowals.store')->middleware('permission:mark_entries.manage');
+   585→    Route::delete('mark-entry-disallowals/{id}/revoke', [MarkEntryDisallowalController::class, 'revoke'])->name('mark-entry-disallowals.revoke')->middleware('permission:mark_entries.manage');
+   586→    Route::post('mark-entry-disallowals/batch', [MarkEntryDisallowalController::class, 'batchStore'])->name('mark-entry-disallowals.batch')->middleware('permission:mark_entries.manage');
+   587→    Route::get('mark-entry-disallowals/api/teacher-assignments', [MarkEntryDisallowalController::class, 'apiTeacherAssignments'])->name('mark-entry-disallowals.api.teacher-assignments');
+   588→    Route::get('mark-entry-disallowals/api/sections', [MarkEntryDisallowalController::class, 'apiSections'])->name('mark-entry-disallowals.api.sections');
+   589→    Route::get('mark-entry-disallowals/api/subjects', [MarkEntryDisallowalController::class, 'apiSubjects'])->name('mark-entry-disallowals.api.subjects');
+   590→
+   591→    // Promotion & Detention Management
+   592→    Route::get('promotion', [PromotionController::class, 'index'])->name('promotion.index')->middleware('permission:mark_entries.view');
+   593→    Route::get('promotion/preview', [PromotionController::class, 'preview'])->name('promotion.preview')->middleware('permission:mark_entries.view');
+   594→    Route::post('promotion/process', [PromotionController::class, 'processClass'])->name('promotion.process')->middleware('permission:mark_entries.manage');
+   595→    Route::post('promotion/process-bulk', [PromotionController::class, 'processBulkPromotion'])->name('promotion.process-bulk')->middleware('permission:mark_entries.manage');
+   596→    Route::post('promotion/process-student', [PromotionController::class, 'processStudent'])->name('promotion.process-student')->middleware('permission:mark_entries.manage');
+   597→    Route::patch('promotion/override', [PromotionController::class, 'processStudent'])->name('promotion.override')->middleware('permission:mark_entries.manage');
+   598→    Route::get('promotion/{id}', [PromotionController::class, 'show'])->name('promotion.detail')->middleware('permission:mark_entries.view');
+   599→    Route::get('promotion/{id}/edit', [PromotionController::class, 'show'])->name('promotion.edit')->middleware('permission:mark_entries.manage');
+   600→    Route::get('promotion/settings/index', [PromotionController::class, 'settings'])->name('promotion.settings.index')->middleware('permission:mark_entries.manage');
+   601→    Route::post('promotion/settings', [PromotionController::class, 'storeSettings'])->name('promotion.settings.store')->middleware('permission:mark_entries.manage');
+   602→    Route::get('promotion/grade-scales/index', [PromotionController::class, 'gradeScales'])->name('promotion.grade-scales.index')->middleware('permission:mark_entries.manage');
+   603→    Route::post('promotion/grade-scales', [PromotionController::class, 'storeGradeScale'])->name('promotion.grade-scales.store')->middleware('permission:mark_entries.manage');
+   604→    Route::get('promotion/print', [PromotionController::class, 'print'])->name('promotion.print')->middleware('permission:mark_entries.view');
+   605→
+   606→    // Mark Sheet
+   607→    Route::get('mark-sheet', [MarkSheetController::class, 'index'])->name('mark-sheet.index')->middleware('permission:mark_sheets.view');
+   608→    Route::post('mark-sheet/generate', [MarkSheetController::class, 'generate'])->name('mark-sheet.generate')->middleware('permission:mark_sheets.generate');
+   609→    Route::get('mark-sheet/api/sections', [MarkSheetController::class, 'getSections'])->name('mark-sheet.sections');
+   610→    Route::get('mark-sheet/api/students', [MarkSheetController::class, 'getStudents'])->name('mark-sheet.students');
+   611→
+   612→    // Full Mark Sheet
+   613→    Route::get('mark-sheet-full', [MarkSheetFullController::class, 'index'])->name('mark-sheet-full.index')->middleware('permission:mark_sheets.view');
+   614→    Route::match(['get', 'post'], 'mark-sheet-full/generate', [MarkSheetFullController::class, 'generate'])->name('mark-sheet-full.generate')->middleware('permission:mark_sheets.generate');
+   615→    Route::get('mark-sheet-full/api/sections', [MarkSheetFullController::class, 'getSections'])->name('mark-sheet-full.sections');
+   616→
+   617→    // Mark Roster
+   618→    Route::get('mark-roster', [MarkRosterController::class, 'index'])->name('mark-roster.index')->middleware('permission:mark_sheets.view');
+   619→    Route::match(['get', 'post'], 'mark-roster/generate', [MarkRosterController::class, 'generate'])->name('mark-roster.generate')->middleware('permission:mark_sheets.generate');
+   620→    Route::match(['get', 'post'], 'mark-roster/summary', [MarkRosterController::class, 'generateSummary'])->name('mark-roster.summary')->middleware('permission:mark_sheets.generate');
+   621→    Route::get('mark-roster/api/sections', [MarkRosterController::class, 'getSections'])->name('mark-roster.sections');
+   622→
+   623→    // Report Card
+   624→    Route::get('report-card', [ReportCardController::class, 'index'])->name('report-card.index')->middleware('permission:mark_sheets.view');
+   625→    Route::match(['get', 'post'], 'report-card/generate', [ReportCardController::class, 'generate'])->name('report-card.generate')->middleware('permission:mark_sheets.generate');
+   626→    Route::get('report-card/api/sections', [ReportCardController::class, 'getSections'])->name('report-card.sections');
+   627→    Route::get('report-card/api/students', [ReportCardController::class, 'getStudents'])->name('report-card.students');
+   628→
+   629→    // Performance Analysis (Legacy - Class-based)
+   630→    Route::get('performance-analysis', [PerformanceReportAnalysisController::class, 'index'])->name('performance-analysis.index')->middleware('permission:mark_sheets.view');
+   631→    Route::match(['get', 'post'], 'performance-analysis/generate', [PerformanceReportAnalysisController::class, 'generate'])->name('performance-analysis.generate')->middleware('permission:mark_sheets.generate');
+   632→    Route::get('performance-analysis/api/sections', [PerformanceReportAnalysisController::class, 'getSections'])->name('performance-analysis.sections');
+   633→
+   634→    // ID Card Generation
+   635→    Route::get('id-card-generate', [IdCardGenerateController::class, 'index'])->name('id-card-generate.index')->middleware('permission:id_cards.generate');
+   636→    Route::post('id-card-generate', [IdCardGenerateController::class, 'generate'])->name('id-card-generate.generate')->middleware('permission:id_cards.generate');
+   637→    Route::get('id-card-generate/api/sections', [IdCardGenerateController::class, 'getSections'])->name('id-card-generate.sections');
+   638→    Route::get('id-card-generate/api/students', [IdCardGenerateController::class, 'getStudents'])->name('id-card-generate.students');
+   639→
+   640→    // Certificate Generation
+   641→    Route::get('certificate-generate', [CertificateGenerateController::class, 'index'])->name('certificate-generate.index')->middleware('permission:certificates.generate');
+   642→    Route::post('certificate-generate', [CertificateGenerateController::class, 'generate'])->name('certificate-generate.generate')->middleware('permission:certificates.generate');
+   643→    Route::get('certificate-generate/api/students', [CertificateGenerateController::class, 'getStudents'])->name('certificate-generate.students');
+   644→
+   645→    // Transcript Generation
+   646→    Route::get('transcript', [TranscriptController::class, 'index'])->name('transcript.index')->middleware('permission:certificates.generate');
+   647→    Route::get('transcript/generate', [TranscriptController::class, 'generateForm'])->name('transcript.generate-form')->middleware('permission:certificates.generate');
+   648→    Route::post('transcript/generate', [TranscriptController::class, 'generate'])->name('transcript.generate')->middleware('permission:certificates.generate');
+   649→    Route::get('transcript/api/students', [TranscriptController::class, 'getStudents'])->name('transcript.students');
+   650→
+   651→    // Leaving Certificate Generation
+   652→    Route::get('leaving-certificate', [LeavingCertificateController::class, 'index'])->name('leaving-certificate.index')->middleware('permission:certificates.generate');
+   653→    Route::post('leaving-certificate/generate', [LeavingCertificateController::class, 'generate'])->name('leaving-certificate.generate')->middleware('permission:certificates.generate');
+   654→    Route::get('leaving-certificate/api/students', [LeavingCertificateController::class, 'getStudents'])->name('leaving-certificate.students');
+   655→
+   656→    // Certificate Print on Pre-printed
+   657→    Route::get('certificate-print', [CertificatePrintController::class, 'index'])->name('certificate-print.index')->middleware('permission:certificates.generate');
+   658→    Route::post('certificate-print', [CertificatePrintController::class, 'print'])->name('certificate-print.print')->middleware('permission:certificates.generate');
+   659→    Route::get('certificate-print/api/students', [CertificatePrintController::class, 'getStudents'])->name('certificate-print.students');
+   660→
+   661→    // ── People ────────────────────────────────────────────
+   662→    // NOTE: Static sub-routes MUST come BEFORE Route::resource to avoid {student} parameter matching
+   663→    Route::get('students/generate-ids', [StudentController::class, 'generateIds'])->name('students.generateIds')->middleware('permission:students.manage');
+   664→    Route::get('students/bulk-create', [StudentController::class, 'bulkCreate'])->name('students.bulk-create')->middleware('permission:students.manage');
+   665→    Route::get('students/download-template', [StudentController::class, 'downloadTemplate'])->name('students.download-template')->middleware('permission:students.manage');
+   666→    Route::post('students/upload-students', [StudentController::class, 'uploadStudents'])->name('students.upload-students')->middleware('permission:students.manage');
+   667→    Route::post('students/bulk-store', [StudentController::class, 'bulkStore'])->name('students.bulk-store')->middleware('permission:students.manage');
+   668→    Route::post('students/bulk-transfer', [StudentController::class, 'bulkTransfer'])->name('students.bulk-transfer')->middleware('permission:students.manage');
+   669→    Route::get('students/export', [StudentController::class, 'exportCsv'])->name('students.export')->middleware('permission:students.view');
+   670→    Route::post('students/import', [StudentController::class, 'importCsv'])->name('students.import')->middleware('permission:students.manage');
+   671→    Route::get('students/roll-number-preview', [StudentController::class, 'getRollNumberPreview'])->name('students.roll-number-preview');
+   672→    Route::get('students/api/admission-preview', [StudentController::class, 'apiAdmissionPreview'])->name('students.api.admission-preview');
+   673→    Route::get('students/api/roll-preview', [StudentController::class, 'apiRollPreview'])->name('students.api.roll-preview');
+   674→    Route::get('students/api/sections/{classId}', [StudentController::class, 'getSections'])->name('students.api.sections');
+   675→    Route::get('students/api/sections-by-branch', [StudentController::class, 'apiSectionsByBranch'])->name('students.api.sections-by-branch');
+   676→    Route::get('students/api/classes-by-branch', [StudentController::class, 'apiClassesByBranch'])->name('students.api.classes-by-branch');
+   677→    Route::get('students/inactive/list', [StudentController::class, 'inactive'])->name('students.inactive')->middleware('permission:students.view');
+   678→    Route::resource('students', StudentController::class)->middleware('permission:students.view');
+   679→    Route::get('students/{student}/readmit', [StudentController::class, 'readmit'])->name('students.readmit')->middleware('permission:students.manage');
+   680→    Route::post('students/{student}/readmit', [StudentController::class, 'readmitStore'])->name('students.readmit-store')->middleware('permission:students.manage');
+   681→    Route::post('students/{student}/mark-as-left', [StudentController::class, 'markAsLeft'])->name('students.mark-as-left')->middleware('permission:students.manage');
+   682→    Route::get('students/{student}/transfer', [StudentController::class, 'transferForm'])->name('students.transfer')->middleware('permission:students.manage');
+   683→    Route::post('students/{student}/transfer', [StudentController::class, 'transfer'])->name('students.transfer-store')->middleware('permission:students.manage');
+   684→
+   685→    // ── Student Comments ──────────────────────────────────
+   686→    Route::get('students/{student}/comments', [StudentCommentController::class, 'index'])->name('students.comments.index')->middleware('permission:students.view');
+   687→    Route::post('students/{student}/comments', [StudentCommentController::class, 'store'])->name('students.comments.store')->middleware('permission:students.manage');
+   688→    Route::put('students/{student}/comments/{comment}', [StudentCommentController::class, 'update'])->name('students.comments.update')->middleware('permission:students.manage');
+   689→    Route::delete('students/{student}/comments/{comment}', [StudentCommentController::class, 'destroy'])->name('students.comments.destroy')->middleware('permission:students.manage');
+   690→    Route::get('students/{student}/report-comments', [StudentCommentController::class, 'reportComments'])->name('students.comments.report')->middleware('permission:students.view');
+   691→
+   692→    // ── Parent Search & Add ───────────────────────────────
+   693→    Route::get('parents/search', [ParentController::class, 'search'])->name('parents.search')->middleware('permission:parents.view');
+   694→    Route::post('parents/add', [ParentController::class, 'store'])->name('parents.add')->middleware('permission:parents.manage');
+   695→    Route::post('parents/link-student', [ParentController::class, 'linkToStudent'])->name('parents.link-student')->middleware('permission:parents.manage');
+   696→    Route::get('teachers/{teacher}/transfer', [TeacherController::class, 'transferForm'])->name('teachers.transfer')->middleware('permission:teachers.manage');
+   697→    Route::post('teachers/{teacher}/transfer', [TeacherController::class, 'transfer'])->name('teachers.transfer-store')->middleware('permission:teachers.manage');
+   698→    Route::get('teachers/export', [TeacherController::class, 'exportCsv'])->name('teachers.export')->middleware('permission:teachers.view');
+   699→    Route::post('teachers/import', [TeacherController::class, 'importCsv'])->name('teachers.import')->middleware('permission:teachers.manage');
+   700→    Route::resource('teachers', TeacherController::class)->middleware('permission:teachers.view');
+   701→    Route::get('staff/api/employee-id-preview', [StaffController::class, 'apiEmployeeIdPreview'])->name('staff.api.employee-id-preview')->middleware('permission:staff.view');
+   702→    Route::resource('staff', StaffController::class)->middleware('permission:staff.view');
+   703→    Route::resource('team-members', TeamMemberController::class)->middleware('permission:team_members.view');
+   704→    Route::resource('parents', ParentModelController::class)->middleware('permission:parents.view');
+   705→
+   706→    // ── Enrollment ────────────────────────────────────────
+   707→    // NOTE: Static sub-routes (bulk-enroll, api/*) MUST come BEFORE {enrollment} parameterized routes,
+   708→    // otherwise Laravel matches "bulk-enroll" or "api" as the {enrollment} parameter → 404
+   709→    Route::get('enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index')->middleware('permission:students.view');
+   710→    Route::get('enrollments/create', [EnrollmentController::class, 'create'])->name('enrollments.create')->middleware('permission:students.manage');
+   711→    Route::post('enrollments', [EnrollmentController::class, 'store'])->name('enrollments.store')->middleware('permission:students.manage');
+   712→    Route::get('enrollments/bulk-enroll', [EnrollmentController::class, 'bulkEnroll'])->name('enrollments.bulk-enroll')->middleware('permission:students.manage');
+   713→    Route::post('enrollments/bulk-enroll', [EnrollmentController::class, 'processBulkEnroll'])->name('enrollments.process-bulk-enroll')->middleware('permission:students.manage');
+   714→    Route::get('enrollments/api/sections', [EnrollmentController::class, 'apiSections'])->name('enrollments.api.sections');
+   715→    Route::get('enrollments/api/classes', [EnrollmentController::class, 'apiClasses'])->name('enrollments.api.classes');
+   716→    Route::get('enrollments/api/branches', [EnrollmentController::class, 'apiBranches'])->name('enrollments.api.branches');
+   717→    Route::get('enrollments/api/unenrolled-students', [EnrollmentController::class, 'apiUnenrolledStudents'])->name('enrollments.api.unenrolled-students');
+   718→    Route::get('enrollments/api/stats', [EnrollmentController::class, 'apiStats'])->name('enrollments.api.stats');
+   719→    Route::post('enrollments/sync', [EnrollmentController::class, 'syncEnrollments'])->name('enrollments.sync')->middleware('permission:students.manage');
+   720→    Route::get('enrollments/{enrollment}', [EnrollmentController::class, 'show'])->name('enrollments.show')->middleware('permission:students.view');
+   721→    Route::get('enrollments/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('enrollments.edit')->middleware('permission:students.manage');
+   722→    Route::put('enrollments/{enrollment}', [EnrollmentController::class, 'update'])->name('enrollments.update')->middleware('permission:students.manage');
+   723→    Route::delete('enrollments/{enrollment}', [EnrollmentController::class, 'destroy'])->name('enrollments.destroy')->middleware('permission:students.manage');
+   724→    Route::get('enrollments/{enrollment}/pay-registration-fee', [EnrollmentController::class, 'payRegistrationFee'])->name('enrollments.pay-registration-fee')->middleware('permission:fee_payments.manage');
+   725→    Route::post('enrollments/{enrollment}/pay-registration-fee', [EnrollmentController::class, 'processPayRegistrationFee'])->name('enrollments.process-pay-registration-fee')->middleware('permission:fee_payments.manage');
+   726→    Route::post('enrollments/{enrollment}/waive-registration-fee', [EnrollmentController::class, 'waiveRegistrationFee'])->name('enrollments.waive-registration-fee')->middleware('permission:fee_payments.manage');
+   727→    Route::get('enrollments/{enrollment}/withdraw', [EnrollmentController::class, 'withdraw'])->name('enrollments.withdraw')->middleware('permission:students.manage');
+   728→    Route::post('enrollments/{enrollment}/withdraw', [EnrollmentController::class, 'processWithdraw'])->name('enrollments.process-withdraw')->middleware('permission:students.manage');
+   729→
+   730→    // ── Website ───────────────────────────────────────────
+   731→    Route::resource('sliders', SliderController::class)->middleware('permission:sliders.view');
+   732→    Route::resource('slider-alerts', SliderAlertController::class)->middleware('permission:sliders.view');
+   733→    Route::post('slider-alerts/{sliderAlert}/toggle', [SliderAlertController::class, 'toggle'])->name('slider-alerts.toggle')->middleware('permission:sliders.view');
+   734→    Route::resource('gallery-images', GalleryImageController::class)->middleware('permission:gallery.view');
+   735→    Route::resource('gallery-videos', GalleryVideoController::class)->middleware('permission:gallery.view');
+   736→    Route::resource('branches', BranchController::class)->middleware('permission:branches.view');
+   737→    Route::resource('contact-messages', ContactMessageController::class)->middleware('permission:contact_messages.view');
+   738→    // News custom routes (MUST be before resource to avoid {news} parameter conflict)
+   739→    Route::post('news/{news}/approve', [NewsController::class, 'approve'])->name('news.approve')->middleware('permission:news.manage');
+   740→    Route::post('news/{news}/reject', [NewsController::class, 'reject'])->name('news.reject')->middleware('permission:news.manage');
+   741→    Route::post('news/upload-image', [NewsController::class, 'uploadImage'])->name('news.upload-image')->middleware('permission:news.manage');
+   742→    Route::resource('news', NewsController::class)->middleware('permission:news.manage');
+   743→
+   744→    // ── Classes & Sections ─────────────────────────────────
+   745→    Route::resource('classrooms', ClassroomController::class)->middleware('permission:classrooms.view');
+   746→    Route::resource('sections', SectionController::class)->middleware('permission:sections.view');
+   747→    Route::resource('class-assets', ClassAssetController::class)->middleware('permission:class_assets.view');
+   748→    Route::get('class-assets/api/sections', [ClassAssetController::class, 'apiSections'])->name('class-assets.api-sections');
+   749→    Route::resource('teacher-assignments', TeacherAssignmentController::class)->middleware('permission:subject_assignments.view');
+   750→    Route::get('teacher-assignments/api/sections', [TeacherAssignmentController::class, 'apiSections'])->name('teacher-assignments.api.sections');
+   751→    Route::get('teacher-assignments/api/subjects', [TeacherAssignmentController::class, 'apiSubjects'])->name('teacher-assignments.api.subjects');
+   752→
+   753→    // ── Lesson Plans ─────────────────────────────────────────
+   754→    // Print routes MUST be before resource to avoid {lesson_plan} matching "print"
+   755→    Route::get('lesson-plans/print/yearly', [LessonPlanController::class, 'printYearly'])->name('lesson-plans.print-yearly')->middleware('permission:lesson_plans.view');
+   756→    Route::get('lesson-plans/print/weekly', [LessonPlanController::class, 'printWeekly'])->name('lesson-plans.print-weekly')->middleware('permission:lesson_plans.view');
+   757→    Route::resource('lesson-plans', LessonPlanController::class)->middleware('permission:lesson_plans.view');
+   758→    Route::post('lesson-plans/{lessonPlan}/review', [LessonPlanController::class, 'review'])->name('lesson-plans.review')->middleware('permission:lesson_plans.review');
+   759→    Route::post('lesson-plans/{lessonPlan}/department-review', [LessonPlanController::class, 'departmentReview'])->name('lesson-plans.department-review')->middleware('permission:lesson_plans.review');
+   760→    Route::post('lesson-plans/{lessonPlan}/principal-review', [LessonPlanController::class, 'principalReview'])->name('lesson-plans.principal-review')->middleware('permission:lesson_plans.review');
+   761→    Route::post('lesson-plans/{lessonPlan}/follow-ups', [LessonPlanFollowUpController::class, 'store'])->name('lesson-plans.follow-ups.store')->middleware('permission:lesson_plans.follow_up');
+   762→    Route::put('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'update'])->name('lesson-plans.follow-ups.update')->middleware('permission:lesson_plans.follow_up');
+   763→    Route::delete('lesson-plans/{lessonPlan}/follow-ups/{followUp}', [LessonPlanFollowUpController::class, 'destroy'])->name('lesson-plans.follow-ups.destroy')->middleware('permission:lesson_plans.follow_up');
+   764→
+   765→    // ── Subject Content Note Bank ──────────────────────────────
+   766→    // Reusable teaching notes linked to lesson plans — shared across sections
+   767→    Route::get('content-notes/api/sections', [SubjectContentNoteController::class, 'apiSections'])->name('content-notes.api-sections')->middleware('permission:lesson_plans.view');
+   768→    Route::patch('content-notes/{content_note}/toggle-active', [SubjectContentNoteController::class, 'toggleActive'])->name('content-notes.toggle-active')->middleware('permission:lesson_plans.create');
+   769→    Route::patch('content-notes/{content_note}/toggle-shared', [SubjectContentNoteController::class, 'toggleShared'])->name('content-notes.toggle-shared')->middleware('permission:lesson_plans.create');
+   770→    Route::resource('content-notes', SubjectContentNoteController::class)->middleware('permission:lesson_plans.view');
+   771→
+   772→    // ── Exam Questions (Department → Principal Pipeline) ──────
+   773→    Route::get('exam-questions/api/sections-by-class', [ExamQuestionController::class, 'apiSectionsByClass'])->name('api.sections-by-class')->middleware('permission:exams.view');
+   774→    Route::get('exam-questions/api/exam-details/{exam}', [ExamQuestionController::class, 'apiExamDetails'])->name('api.exam-details')->middleware('permission:exams.view');
+   775→    Route::resource('exam-questions', ExamQuestionController::class)->middleware('permission:exams.view');
+   776→    Route::post('exam-questions/{exam_question}/department-review', [ExamQuestionController::class, 'reviewByDepartment'])->name('exam-questions.department-review')->middleware('permission:exams.manage');
+   777→    Route::post('exam-questions/{exam_question}/principal-review', [ExamQuestionController::class, 'reviewByPrincipal'])->name('exam-questions.principal-review')->middleware('permission:exams.manage');
+   778→    Route::post('exam-questions/{exam_question}/request-revision', [ExamQuestionController::class, 'requestRevision'])->name('exam-questions.request-revision')->middleware('permission:exams.manage');
+   779→
+   780→    // ── Self-Assessment Questions (Teacher creates, Student answers) ──
+   781→    // Questions are class-level: apply to ALL branches and ALL sections within the class
+   782→    // Custom routes MUST be before resource to avoid {assessment_question} conflicts
+   783→    Route::get('assessment-questions/bulk/create', [AssessmentQuestionController::class, 'bulkCreate'])->name('assessment-questions.bulk-create')->middleware('permission:lesson_plans.create');
+   784→    Route::post('assessment-questions/bulk', [AssessmentQuestionController::class, 'bulkStore'])->name('assessment-questions.bulk-store')->middleware('permission:lesson_plans.create');
+   785→    Route::post('assessment-questions/bulk/import', [AssessmentQuestionController::class, 'bulkImport'])->name('assessment-questions.bulk-import')->middleware('permission:lesson_plans.create');
+   786→    Route::get('assessment-questions/bulk/template', [AssessmentQuestionController::class, 'downloadTemplate'])->name('assessment-questions.download-template')->middleware('permission:lesson_plans.create');
+   787→    Route::get('assessment-questions/report', [AssessmentQuestionController::class, 'report'])->name('assessment-questions.report')->middleware('permission:lesson_plans.view');
+   788→    Route::resource('assessment-questions', AssessmentQuestionController::class)->middleware('permission:lesson_plans.view');
+   789→    Route::post('assessment-questions/{assessment_question}/toggle-active', [AssessmentQuestionController::class, 'toggleActive'])->name('assessment-questions.toggle-active')->middleware('permission:lesson_plans.create');
+   790→
+   791→    // ── Documents ─────────────────────────────────────────
+   792→    Route::resource('id-cards', IdCardController::class)->middleware('permission:id_cards.generate');
+   793→    Route::resource('certificates', CertificateController::class)->middleware('permission:certificates.generate');
+   794→
+   795→    // ── Attendance ────────────────────────────────────────
+   796→    Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index')->middleware('permission:attendance.view');
+   797→    Route::get('attendance/create', [AttendanceController::class, 'create'])->name('attendance.create')->middleware('permission:attendance.manage');
+   798→    Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store')->middleware('permission:attendance.manage');
+   799→    Route::get('attendance/{date}', [AttendanceController::class, 'show'])->name('attendance.show')->middleware('permission:attendance.view');
+   800→    Route::get('attendance/{date}/{classId}/edit', [AttendanceController::class, 'edit'])->name('attendance.edit')->middleware('permission:attendance.manage');
+   801→    Route::put('attendance', [AttendanceController::class, 'update'])->name('attendance.update')->middleware('permission:attendance.manage');
+   802→    Route::get('attendance-report', [AttendanceController::class, 'report'])->name('attendance.report')->middleware('permission:attendance.view');
+   803→    Route::get('attendance-api/students', [AttendanceController::class, 'apiStudents'])->name('attendance.api.students');
+   804→
+   805→    // ── Attendance Delegation ──────────────────────────────
+   806→    Route::get('attendance-delegation', [AttendanceDelegationController::class, 'index'])->name('attendance-delegation.index')->middleware('permission:attendance.manage');
+   807→    Route::post('attendance-delegation', [AttendanceDelegationController::class, 'store'])->name('attendance-delegation.store')->middleware('permission:attendance.manage');
+   808→    Route::post('attendance-delegation/{delegation}/revoke', [AttendanceDelegationController::class, 'revoke'])->name('attendance-delegation.revoke')->middleware('permission:attendance.manage');
+   809→    Route::get('attendance-delegation-api/sections/{class}', [AttendanceDelegationController::class, 'apiSections'])->name('attendance-delegation.api.sections');
+   810→
+   811→    // ── Library ───────────────────────────────────────────
+   812→    Route::resource('library', LibraryBookController::class)->middleware('permission:library.view');
+   813→    Route::get('library/{library}/read', [LibraryBookController::class, 'read'])->name('library.read')->middleware('permission:library.view');
+   814→    Route::get('library/{library}/serve', [LibraryBookController::class, 'serveBook'])->name('library.serve')->middleware('permission:library.view');
+   815→
+   816→    // ── Video Library ────────────────────────────────────
+   817→    Route::resource('video-library', VideoLibraryController::class)->middleware('permission:library.view');
+   818→    Route::get('video-library/{video_library}/embed', [VideoLibraryController::class, 'show'])->name('video-library.embed')->middleware('permission:library.view');
+   819→
+   820→    // ── Stock Management ─────────────────────────────────
+   821→    Route::resource('stock', StockController::class)->middleware('permission:settings.view');
+   822→    Route::get('stock/stock-in', [StockController::class, 'stockIn'])->name('stock.stock-in')->middleware('permission:settings.edit');
+   823→    Route::post('stock/stock-in', [StockController::class, 'storeStockIn'])->name('stock.store-stock-in')->middleware('permission:settings.edit');
+   824→    Route::get('stock/stock-out', [StockController::class, 'stockOut'])->name('stock.stock-out')->middleware('permission:settings.edit');
+   825→    Route::post('stock/stock-out', [StockController::class, 'storeStockOut'])->name('stock.store-stock-out')->middleware('permission:settings.edit');
+   826→    Route::get('stock/transactions', [StockController::class, 'transactions'])->name('stock.transactions')->middleware('permission:settings.view');
+   827→    Route::get('stock/report', [StockController::class, 'report'])->name('stock.report')->middleware('permission:settings.view');
+   828→
+   829→    // ── Training ─────────────────────────────────────────
+   830→    Route::resource('trainings', TrainingController::class)->middleware('permission:settings.view');
+   831→    Route::post('trainings/{training}/participants', [TrainingController::class, 'addParticipant'])->name('trainings.add-participant')->middleware('permission:settings.edit');
+   832→    Route::post('trainings/{training}/participants/bulk', [TrainingController::class, 'addBulkParticipants'])->name('trainings.add-bulk-participants')->middleware('permission:settings.edit');
+   833→    Route::put('trainings/{training}/participants/{participantId}', [TrainingController::class, 'updateParticipant'])->name('trainings.update-participant')->middleware('permission:settings.edit');
+   834→    Route::delete('trainings/{training}/participants/{participantId}', [TrainingController::class, 'removeParticipant'])->name('trainings.remove-participant')->middleware('permission:settings.edit');
+   835→
+   836→    // ── Finance ───────────────────────────────────────────
+   837→    Route::resource('budgets', BudgetController::class)->middleware('permission:budgets.view');
+   838→    Route::resource('income-expenses', IncomeExpenseController::class)->middleware('permission:income_expenses.view');
+   839→    Route::resource('finance-statements', FinanceStatementController::class)->middleware('permission:finance_statements.view');
+   840→    Route::resource('fees', FeeController::class)->middleware('permission:fees.view');
+   841→    Route::resource('fee-payments', FeePaymentController::class)->middleware('permission:fee_payments.view');
+   842→    Route::get('fee-payments/student/{studentId}/applicable-fees', [FeePaymentController::class, 'getApplicableFees'])->name('fee-payments.applicable-fees')->middleware('permission:fee_payments.view');
+   843→    Route::resource('payrolls', PayrollController::class)->middleware('permission:payrolls.view');
+   844→    Route::resource('leaves', LeaveController::class)->middleware('permission:leaves.view');
+   845→    Route::resource('employee-assets', EmployeeAssetController::class)->middleware('permission:employee_assets.view');
+   846→    Route::resource('performance-reports', PerformanceReportController::class)->middleware('permission:mark_sheets.view');
+   847→    Route::resource('progress-reports', ProgressReportController::class)->middleware('permission:mark_sheets.view');
+   848→    Route::resource('audits', AuditController::class)->middleware('permission:audits.view');
+   849→
+   850→    // Notifications
+   851→    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index')->middleware('permission:notifications.view');
+   852→    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead')->middleware('permission:notifications.view');
+   853→    Route::get('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read')->middleware('permission:notifications.view');
+   854→    Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy')->middleware('permission:notifications.view');
+   855→    Route::get('api/notifications/unread', [NotificationController::class, 'apiUnreadCount'])->name('notifications.api.unread');
+   856→    Route::get('api/notifications/latest', [NotificationController::class, 'apiLatest'])->name('notifications.api.latest');
+   857→
+   858→    // Academic Calendar
+   859→    Route::get('calendar', [CalendarEventController::class, 'index'])->name('calendar.index')->middleware('permission:calendar.view');
+   860→    Route::post('calendar', [CalendarEventController::class, 'store'])->name('calendar.store')->middleware('permission:calendar.manage');
+   861→    Route::get('calendar/print', [CalendarEventController::class, 'printCalendar'])->name('calendar.print')->middleware('permission:calendar.view');
+   862→    Route::put('calendar/{calendar_event}', [CalendarEventController::class, 'update'])->name('calendar.update')->middleware('permission:calendar.manage');
+   863→    Route::delete('calendar/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar.destroy')->middleware('permission:calendar.manage');
+   864→    Route::post('calendar/{calendar_event}/approve', [CalendarEventController::class, 'approve'])->name('calendar.approve')->middleware('permission:calendar.manage');
+   865→    Route::post('calendar/{calendar_event}/reject', [CalendarEventController::class, 'reject'])->name('calendar.reject')->middleware('permission:calendar.manage');
+   866→    Route::get('api/calendar/events', [CalendarEventController::class, 'apiEvents'])->name('calendar.api.events');
+   867→    Route::get('api/calendar/event/{calendar_event}', [CalendarEventController::class, 'apiEvent'])->name('calendar.api.event');
+   868→
+   869→    // Chat
+   870→    Route::get('chat', [ChatController::class, 'index'])->name('chat.index')->middleware('permission:chat.access');
+   871→    Route::post('chat', [ChatController::class, 'storeConversation'])->name('chat.store')->middleware('permission:chat.access');
+   872→    Route::get('chat/{id}', [ChatController::class, 'show'])->name('chat.show')->middleware('permission:chat.access');
+   873→    Route::post('chat/{id}/send', [ChatController::class, 'sendMessage'])->name('chat.send')->middleware('permission:chat.access');
+   874→    Route::delete('chat/{id}', [ChatController::class, 'destroyConversation'])->name('chat.destroy')->middleware('permission:chat.access');
+   875→    Route::get('chat/{id}/messages', [ChatController::class, 'getMessages'])->name('chat.messages')->middleware('permission:chat.access');
+   876→
+   877→    // Telegram
+   878→    Route::get('telegram', [TelegramController::class, 'index'])->name('telegram.index')->middleware('permission:telegram.manage');
+   879→    Route::put('telegram/settings', [TelegramController::class, 'updateSettings'])->name('telegram.update-settings')->middleware('permission:telegram.manage');
+   880→    Route::post('telegram/branch-settings', [TelegramController::class, 'updateBranchSettings'])->name('telegram.update-branch-settings')->middleware('permission:telegram.manage');
+   881→    Route::get('telegram/send', [TelegramController::class, 'send'])->name('telegram.send')->middleware('permission:telegram.manage');
+   882→    Route::post('telegram/send', [TelegramController::class, 'sendMessage'])->name('telegram.send-message')->middleware('permission:telegram.manage');
+   883→    Route::get('telegram/test', [TelegramController::class, 'testConnection'])->name('telegram.test')->middleware('permission:telegram.manage');
+   884→
+   885→    // Settings
+   886→    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index')->middleware('permission:settings.view');
+   887→    Route::post('/settings', [SettingController::class, 'store'])->name('settings.store')->middleware('permission:settings.edit');
+   888→    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update')->middleware('permission:settings.edit');
+   889→    Route::post('/settings/update-all', [SettingController::class, 'update'])->name('settings.updateAll')->middleware('permission:settings.edit');
+   890→    Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo'])->name('settings.uploadLogo')->middleware('permission:settings.edit');
+   891→    Route::post('/settings/upload-favicon', [SettingController::class, 'uploadFavicon'])->name('settings.uploadFavicon')->middleware('permission:settings.edit');
+   892→    Route::delete('/settings/{id}', [SettingController::class, 'destroy'])->name('settings.destroy')->middleware('permission:settings.edit');
+   893→
+   894→    // Roles & Permissions
+   895→    Route::resource('roles', RoleController::class)->middleware('permission:roles.view');
+   896→    Route::get('roles/{role}/users', [RoleController::class, 'users'])->name('roles.users')->middleware('permission:roles.view');
+   897→    Route::post('roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assign-users')->middleware('permission:roles.edit');
+   898→    Route::post('roles/{role}/toggle-permission', [RoleController::class, 'togglePermission'])->name('roles.toggle-permission')->middleware('permission:roles.edit');
+   899→
+   900→    // Database Backup & Export (redirects to unified backup page)
+   901→    Route::get('database-backup', fn() => redirect()->route('admin.backup.index'))->name('database-backup.index');
+   902→    Route::post('database-backup/export-send', [DatabaseBackupController::class, 'exportAndSend'])->name('database-backup.export-send')->middleware('permission:settings.edit');
+   903→    Route::post('database-backup/quick-export', [DatabaseBackupController::class, 'quickExport'])->name('database-backup.quick-export')->middleware('permission:settings.edit');
+   904→    Route::post('database-backup/download', [DatabaseBackupController::class, 'backupNow'])->name('database-backup.download')->middleware('permission:settings.edit');
+   905→
+   906→    // Scheduled Database Backup
+   907→    Route::get('backup', [DatabaseBackupController::class, 'index'])->name('backup.index')->middleware('permission:settings.view');
+   908→    Route::post('backup/now', [DatabaseBackupController::class, 'backupNow'])->name('backup.now')->middleware('permission:settings.edit');
+   909→    Route::post('backup/test-email', [DatabaseBackupController::class, 'testEmail'])->name('backup.test-email')->middleware('permission:settings.edit');
+   910→    Route::get('backup/download/{filename}', [DatabaseBackupController::class, 'download'])->name('backup.download')->middleware('permission:settings.edit')->where('filename', '[^/]+');
+   911→    Route::delete('backup/{filename}', [DatabaseBackupController::class, 'delete'])->name('backup.delete')->middleware('permission:settings.edit')->where('filename', '[^/]+');
+   912→    Route::put('backup/schedule', [DatabaseBackupController::class, 'updateSchedule'])->name('backup.schedule')->middleware('permission:settings.edit');
+   913→
+   914→    // Branch Budget Comparison
+   915→    Route::get('budget-comparison', [BudgetComparisonController::class, 'index'])->name('budget-comparison.index')->middleware('permission:budgets.view');
+   916→
+   917→    // Financial Comparison
+   918→    Route::get('financial-comparison', [FinancialComparisonController::class, 'index'])->name('financial-comparison.index')->middleware('permission:finance_statements.view');
+   919→
+   920→    // Performance Branch Comparison
+   921→    Route::get('performance-comparison', [PerformanceComparisonController::class, 'index'])->name('performance-comparison.index')->middleware('permission:mark_sheets.view');
+   922→
+   923→    // Psychological Analysis
+   924→    Route::get('psychological-analysis', [PsychologicalAnalysisController::class, 'index'])->name('psychological-analysis.index')->middleware('permission:mark_sheets.view');
+   925→    Route::post('psychological-analysis/generate', [PsychologicalAnalysisController::class, 'generate'])->name('psychological-analysis.generate')->middleware('permission:mark_sheets.generate');
+   926→
+   927→    // Performance Analysis & Suggestions
+   928→    Route::get('performance', [PerformanceAnalysisController::class, 'index'])->name('performance.index')->middleware('permission:mark_sheets.view');
+   929→    Route::get('performance/student/{id}', [PerformanceAnalysisController::class, 'studentAnalysis'])->name('performance.student')->middleware('permission:mark_sheets.view');
+   930→    Route::get('performance/class-comparison', [PerformanceAnalysisController::class, 'classComparison'])->name('performance.class-comparison')->middleware('permission:mark_sheets.view');
+   931→    Route::get('performance/branch-comparison', [PerformanceAnalysisController::class, 'branchComparison'])->name('performance.branch-comparison')->middleware('permission:mark_sheets.view');
+   932→    Route::get('performance/gender', [PerformanceAnalysisController::class, 'genderAnalysis'])->name('performance.gender')->middleware('permission:mark_sheets.view');
+   933→    Route::get('performance/at-risk', [PerformanceAnalysisController::class, 'atRiskStudents'])->name('performance.at-risk')->middleware('permission:mark_sheets.view');
+   934→    Route::get('performance/suggestions/{id}', [PerformanceAnalysisController::class, 'suggestions'])->name('performance.suggestions')->middleware('permission:mark_sheets.view');
+   935→
+   936→    // Web Content Management
+   937→    Route::get('web-content', [WebContentController::class, 'index'])->name('web-content.index')->middleware('permission:settings.view');
+   938→    Route::match(['post', 'put'], 'web-content', [WebContentController::class, 'update'])->name('web-content.update')->middleware('permission:settings.edit');
+   939→    Route::post('web-content/upload', [WebContentController::class, 'upload'])->name('web-content.upload')->middleware('permission:settings.edit');
+   940→    Route::post('web-content/add-program', [WebContentController::class, 'addProgram'])->name('web-content.add-program')->middleware('permission:settings.edit');
+   941→    Route::post('web-content/remove-program', [WebContentController::class, 'removeProgram'])->name('web-content.remove-program')->middleware('permission:settings.edit');
+   942→    Route::post('web-content/remove-program/{index}', [WebContentController::class, 'removeSpecificProgram'])->name('web-content.remove-specific-program')->middleware('permission:settings.edit');
+   943→
+   944→    // Announcements
+   945→    Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index')->middleware('permission:calendar.view');
+   946→    Route::post('announcements', [AnnouncementController::class, 'store'])->name('announcements.store')->middleware('permission:calendar.manage');
+   947→    Route::post('announcements/{id}/send-telegram', [AnnouncementController::class, 'sendToTelegram'])->name('announcements.send-telegram')->middleware('permission:telegram.manage');
+   948→    Route::delete('announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy')->middleware('permission:calendar.manage');
+   949→
+   950→    // Media Upload (admin)
+   951→    Route::post('media/upload', [MediaController::class, 'upload'])->name('media.upload')->middleware('permission:settings.edit');
+   952→
+   953→    // Report Document Exchange
+   954→    Route::get('report-exchange', [ReportExchangeController::class, 'index'])->name('report-exchange.index')->middleware('permission:settings.view');
+   955→    Route::get('report-exchange/create', [ReportExchangeController::class, 'create'])->name('report-exchange.create')->middleware('permission:settings.edit');
+   956→    Route::post('report-exchange', [ReportExchangeController::class, 'store'])->name('report-exchange.store')->middleware('permission:settings.edit');
+   957→    Route::get('report-exchange/{report_exchange}', [ReportExchangeController::class, 'show'])->name('report-exchange.show')->middleware('permission:settings.view');
+   958→    Route::get('report-exchange/{report_exchange}/edit', [ReportExchangeController::class, 'edit'])->name('report-exchange.edit')->middleware('permission:settings.edit');
+   959→    Route::put('report-exchange/{report_exchange}', [ReportExchangeController::class, 'update'])->name('report-exchange.update')->middleware('permission:settings.edit');
+   960→    Route::delete('report-exchange/{report_exchange}', [ReportExchangeController::class, 'destroy'])->name('report-exchange.destroy')->middleware('permission:settings.edit');
+   961→    Route::get('report-exchange/{report_exchange}/download', [ReportExchangeController::class, 'download'])->name('report-exchange.download')->middleware('permission:settings.view');
+   962→    Route::post('report-exchange/{report_exchange}/comment', [ReportExchangeController::class, 'addComment'])->name('report-exchange.comment')->middleware('permission:settings.edit');
+   963→    Route::get('report-exchange-api/terms', [ReportExchangeController::class, 'getTerms'])->name('report-exchange.terms');
+   964→    Route::get('report-exchange-api/period-options', [ReportExchangeController::class, 'getPeriodOptions'])->name('report-exchange.period-options');
+   965→
+   966→    // User Access Management
+   967→    Route::get('user-access/teachers', [TeacherAccessController::class, 'index'])->name('user-access.teachers');
+   968→    Route::post('user-access/teachers/create', [TeacherAccessController::class, 'createAccount'])->name('user-access.teachers.create');
+   969→    Route::post('user-access/teachers/permissions', [TeacherAccessController::class, 'assignPermissions'])->name('user-access.teachers.permissions');
+   970→    Route::post('user-access/teachers/reset-password', [TeacherAccessController::class, 'resetPassword'])->name('user-access.teachers.reset-password');
+   971→    Route::get('user-access/students', [StudentAccessController::class, 'index'])->name('user-access.students');
+   972→    Route::post('user-access/students/create', [StudentAccessController::class, 'createAccount'])->name('user-access.students.create');
+   973→    Route::post('user-access/students/bulk', [StudentAccessController::class, 'bulkCreate'])->name('user-access.students.bulk');
+   974→    Route::post('user-access/students/reset-password', [StudentAccessController::class, 'resetPassword'])->name('user-access.students.reset-password');
+   975→    Route::get('user-access/parents', [ParentAccessController::class, 'index'])->name('user-access.parents');
+   976→    Route::post('user-access/parents/create', [ParentAccessController::class, 'createAccount'])->name('user-access.parents.create');
+   977→    Route::post('user-access/parents/reset-password', [ParentAccessController::class, 'resetPassword'])->name('user-access.parents.reset-password');
+   978→
+   979→    // ── Graphical Reports ──────────────────────────────────
+   980→    Route::get('graphical-reports', [GraphicalReportController::class, 'index'])->name('graphical-reports.index')->middleware('permission:dashboard.view');
+   981→
+   982→    // ── Email Inbox (Gmail IMAP Integration) ────────────────
+   983→    Route::get('email-inbox', [EmailInboxController::class, 'index'])->name('email-inbox.index')->middleware('permission:settings.view');
+   984→    Route::get('email-inbox/{email_message}', [EmailInboxController::class, 'show'])->name('email-inbox.show')->middleware('permission:settings.view');
+   985→    Route::post('email-inbox/{email_message}/category', [EmailInboxController::class, 'updateCategory'])->name('email-inbox.update-category')->middleware('permission:settings.edit');
+   986→    Route::post('email-inbox/{email_message}/star', [EmailInboxController::class, 'toggleStar'])->name('email-inbox.toggle-star')->middleware('permission:settings.edit');
+   987→    Route::post('email-inbox/{email_message}/assign', [EmailInboxController::class, 'assign'])->name('email-inbox.assign')->middleware('permission:settings.edit');
+   988→    Route::get('email-inbox-settings', [EmailInboxController::class, 'settings'])->name('email-inbox.settings')->middleware('permission:settings.view');
+   989→    Route::post('email-inbox-settings', [EmailInboxController::class, 'storeSettings'])->name('email-inbox.settings.store')->middleware('permission:settings.edit');
+   990→    Route::put('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'updateSettings'])->name('email-inbox.settings.update')->middleware('permission:settings.edit');
+   991→    Route::delete('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'destroySettings'])->name('email-inbox.settings.destroy')->middleware('permission:settings.edit');
+   992→    Route::post('email-inbox-sync/{inboxSetting}', [EmailInboxController::class, 'syncInbox'])->name('email-inbox.sync')->middleware('permission:settings.edit');
+   993→    Route::post('email-inbox-test/{inboxSetting}', [EmailInboxController::class, 'testConnection'])->name('email-inbox.test')->middleware('permission:settings.edit');
+   994→
+   995→    // ── Teacher Reviews (by Students) ────────────────────────
+   996→    Route::get('teacher-reviews', [AdminTeacherReviewController::class, 'index'])->name('teacher-reviews.index')->middleware('permission:teachers.view');
+   997→    Route::get('teacher-reviews/summary', [AdminTeacherReviewController::class, 'teacherSummary'])->name('teacher-reviews.summary')->middleware('permission:teachers.view');
+   998→    Route::get('teacher-reviews/{teacher_review}', [AdminTeacherReviewController::class, 'show'])->name('teacher-reviews.show')->middleware('permission:teachers.view');
+   999→    Route::post('teacher-reviews/{teacher_review}/flag', [AdminTeacherReviewController::class, 'flag'])->name('teacher-reviews.flag')->middleware('permission:teachers.manage');
+  1000→    Route::post('teacher-reviews/{teacher_review}/unflag', [AdminTeacherReviewController::class, 'unflag'])->name('teacher-reviews.unflag')->middleware('permission:teachers.manage');
+  1001→    Route::delete('teacher-reviews/{teacher_review}', [AdminTeacherReviewController::class, 'destroy'])->name('teacher-reviews.destroy')->middleware('permission:teachers.manage');
+  1002→
+  1003→    // ── Bank Integration (Ethiopian Banks) ───────────────────
+  1004→    Route::get('bank-integration', [BankIntegrationController::class, 'index'])->name('bank-integration.index')->middleware('permission:fee_payments.view');
+  1005→    Route::get('bank-integration-settings', [BankIntegrationController::class, 'settings'])->name('bank-integration.settings')->middleware('permission:fees.view');
+  1006→    Route::post('bank-integration-settings', [BankIntegrationController::class, 'storeSettings'])->name('bank-integration.settings.store')->middleware('permission:fees.manage');
+  1007→    Route::delete('bank-integration-settings/{bankIntegration}', [BankIntegrationController::class, 'destroySettings'])->name('bank-integration.settings.destroy')->middleware('permission:fees.manage');
+  1008→    Route::post('bank-integration/upload-csv', [BankIntegrationController::class, 'uploadCsv'])->name('bank-integration.upload-csv')->middleware('permission:fee_payments.manage');
+  1009→    Route::post('bank-integration/{bankTransaction}/match', [BankIntegrationController::class, 'manualMatch'])->name('bank-integration.match')->middleware('permission:fee_payments.manage');
+  1010→    Route::post('bank-integration/{bankTransaction}/reject', [BankIntegrationController::class, 'rejectTransaction'])->name('bank-integration.reject')->middleware('permission:fee_payments.manage');
+  1011→    Route::post('bank-integration/{bankTransaction}/unmatched', [BankIntegrationController::class, 'markUnmatched'])->name('bank-integration.unmatched')->middleware('permission:fee_payments.manage');
+  1012→    Route::get('bank-integration-search-students', [BankIntegrationController::class, 'searchStudents'])->name('bank-integration.search-students')->middleware('permission:fee_payments.view');
+  1013→
+  1014→    // ── Club Follow-up Configuration ────────────────────────
+  1015→    Route::resource('club-follow-up-configs', ClubFollowUpConfigController::class)->middleware('permission:settings.view');
+  1016→
+  1017→    // ── Teacher Efficiency Assessment (Principal by Term) ───
+  1018→    // Summary route MUST be before resource to avoid {teacher_efficiency} parameter conflict
+  1019→    Route::get('teacher-efficiency/summary', [TeacherEfficiencyAssessmentController::class, 'summary'])->name('teacher-efficiency.summary')->middleware('permission:exams.view');
+  1020→    Route::get('api/teachers-by-branch', [TeacherEfficiencyAssessmentController::class, 'apiTeachersByBranch'])->name('api.teachers-by-branch');
+  1021→    Route::post('teacher-efficiency/{teacher_efficiency_assessment}/acknowledge', [TeacherEfficiencyAssessmentController::class, 'acknowledge'])->name('teacher-efficiency.acknowledge')->middleware('permission:exams.view');
+  1022→    Route::post('teacher-efficiency/{teacher_efficiency_assessment}/lock', [TeacherEfficiencyAssessmentController::class, 'lock'])->name('teacher-efficiency.lock')->middleware('permission:exams.manage');
+  1023→    Route::resource('teacher-efficiency', TeacherEfficiencyAssessmentController::class)->middleware('permission:exams.view')->parameter('teacher-efficiency', 'teacher_efficiency_assessment');
+  1024→
+  1025→    // ── Teacher Evaluation (General) ──────────────────────────
+  1026→    Route::get('teacher-evaluations/analysis', [TeacherEvaluationController::class, 'analysis'])->name('teacher-evaluations.analysis')->middleware('permission:exams.view');
+  1027→    Route::resource('teacher-evaluations', TeacherEvaluationController::class)->middleware('permission:exams.view');
+  1028→});
+  1029→
+  1030→// ── Student Portal ──────────────────────────────────────────
+  1031→Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->group(function () {
+  1032→    Route::get('/dashboard', [StudentDashboardController::class, 'dashboard'])->name('dashboard');
+  1033→    Route::get('/marks', [StudentDashboardController::class, 'marks'])->name('marks');
+  1034→    Route::get('/progress', [StudentDashboardController::class, 'progress'])->name('progress');
+  1035→    Route::get('/fees', [StudentDashboardController::class, 'fees'])->name('fees');
+  1036→    Route::get('/profile', [StudentDashboardController::class, 'profile'])->name('profile');
+  1037→
+  1038→    // Student Chat
+  1039→    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+  1040→    Route::post('chat', [ChatController::class, 'storeConversation'])->name('chat.store');
+  1041→    Route::get('chat/{id}', [ChatController::class, 'show'])->name('chat.show');
+  1042→    Route::post('chat/{id}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+  1043→    Route::delete('chat/{id}', [ChatController::class, 'destroyConversation'])->name('chat.destroy');
+  1044→    Route::get('chat/{id}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+  1045→
+  1046→    // Self-Assessment
+  1047→    Route::get('assessment', [StudentAssessmentController::class, 'index'])->name('assessment.index');
+  1048→    Route::get('assessment/subject/{subjectId}', [StudentAssessmentController::class, 'subjectQuestions'])->name('assessment.subject');
+  1049→    Route::get('assessment/question/{questionId}', [StudentAssessmentController::class, 'showQuestion'])->name('assessment.show');
+  1050→    Route::post('assessment/question/{questionId}', [StudentAssessmentController::class, 'submitAnswer'])->name('assessment.submit');
+  1051→    Route::get('assessment/question/{questionId}/retake', [StudentAssessmentController::class, 'retakeQuestion'])->name('assessment.retake');
+  1052→    Route::get('assessment/progress', [StudentAssessmentController::class, 'progress'])->name('assessment.progress');
+  1053→    // Safe Exam Browser routes
+  1054→    Route::get('assessment/question/{questionId}/seb-required', [SebConfigController::class, 'sebRequired'])->name('assessment.seb-required');
+  1055→    Route::get('assessment/question/{questionId}/seb-config', [SebConfigController::class, 'downloadConfig'])->name('assessment.seb-config');
+  1056→
+  1057→    // Teacher Review
+  1058→    Route::get('teacher-review', [StudentTeacherReviewController::class, 'index'])->name('teacher-review.index');
+  1059→    Route::get('teacher-review/create', [StudentTeacherReviewController::class, 'create'])->name('teacher-review.create');
+  1060→    Route::post('teacher-review', [StudentTeacherReviewController::class, 'store'])->name('teacher-review.store');
+  1061→    Route::get('teacher-review/{teacher_review}', [StudentTeacherReviewController::class, 'show'])->name('teacher-review.show');
+  1062→});
+  1063→
+  1064→// ── Parent Portal ───────────────────────────────────────────
+  1065→Route::prefix('parent')->name('parent.')->middleware(['auth', 'parent'])->group(function () {
+  1066→    Route::get('/dashboard', [ParentDashboardController::class, 'dashboard'])->name('dashboard');
+  1067→    Route::get('/child/{studentId}/marks', [ParentDashboardController::class, 'childMarks'])->name('child.marks');
+  1068→    Route::get('/child/{studentId}/progress', [ParentDashboardController::class, 'childProgress'])->name('child.progress');
+  1069→    Route::get('/child/{studentId}/fees', [ParentDashboardController::class, 'childFees'])->name('child.fees');
+  1070→    Route::get('/child/{studentId}/profile', [ParentDashboardController::class, 'childProfile'])->name('child.profile');
+  1071→
+  1072→    // Parent Chat
+  1073→    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+  1074→    Route::post('chat', [ChatController::class, 'storeConversation'])->name('chat.store');
+  1075→    Route::get('chat/{id}', [ChatController::class, 'show'])->name('chat.show');
+  1076→    Route::post('chat/{id}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+  1077→    Route::delete('chat/{id}', [ChatController::class, 'destroyConversation'])->name('chat.destroy');
+  1078→    Route::get('chat/{id}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+  1079→});
+  1080→
