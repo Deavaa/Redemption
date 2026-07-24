@@ -88,6 +88,16 @@ class StudentDashboardController extends Controller
         return view('student.marks', compact('student', 'academicYears', 'terms', 'selectedAy', 'selectedTerm', 'marks'));
     }
 
+    /**
+     * Check if ranks are published for a given term.
+     */
+    private function ranksPublished($termId): bool
+    {
+        if (!$termId) return false;
+        $term = Term::find($termId);
+        return $term ? (bool) $term->ranks_published : false;
+    }
+
     public function progress()
     {
         $student = $this->getStudent();

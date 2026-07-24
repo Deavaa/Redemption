@@ -552,6 +552,93 @@
             @endif
         </div>
     </div>
+
+    {{-- ════════════════ RANK PUBLISHING SECTION ════════════════ --}}
+    <div class="mlock-card" style="margin-top:1.5rem;">
+        <div class="mlock-card-head">
+            <div class="mlock-card-icon green"><i class="fas fa-trophy"></i></div>
+            <div>
+                <h3 class="mlock-card-title">Rank Publishing</h3>
+                <p class="mlock-card-desc">Control when class ranks are visible to students and parents. Ranks are hidden by default until you publish them.</p>
+            </div>
+        </div>
+        <div class="mlock-card-body" style="padding:1.25rem 1.5rem;">
+            @if(session('success'))
+                <div class="mlock-alert mlock-alert-success" style="margin-bottom:1rem;">
+                    <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
+                </div>
+            @endif
+            <div class="mlock-table-wrap" style="overflow-x:auto;">
+                <table class="mlock-table" style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+                    <thead>
+                        <tr style="background:#f9fafb;">
+                            <th style="padding:0.65rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Academic Year</th>
+                            <th style="padding:0.65rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Term</th>
+                            <th style="padding:0.65rem 1rem;text-align:center;border-bottom:2px solid #e5e7eb;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Rank Status</th>
+                            <th style="padding:0.65rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Published By</th>
+                            <th style="padding:0.65rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Published At</th>
+                            <th style="padding:0.65rem 1rem;text-align:right;border-bottom:2px solid #e5e7eb;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $allTerms = \App\Models\Term::with('academicYear')->orderBy('academic_year_id','desc')->orderBy('term_number')->get();
+                        @endphp
+                        @foreach($allTerms as $term)
+                        <tr>
+                            <td style="padding:0.6rem 1rem;border-bottom:1px solid #f3f4f6;">{{ $term->academicYear->name ?? 'N/A' }}</td>
+                            <td style="padding:0.6rem 1rem;border-bottom:1px solid #f3f4f6;font-weight:600;">{{ $term->name }}</td>
+                            <td style="padding:0.6rem 1rem;border-bottom:1px solid #f3f4f6;text-align:center;">
+                                @if($term->ranks_published)
+                                    <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;background:#d1fae5;color:#065f46;font-size:0.72rem;font-weight:700;">
+                                        <i class="fas fa-eye"></i> Published
+                                    </span>
+                                @else
+                                    <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;background:#fef3c7;color:#92400e;font-size:0.72rem;font-weight:700;">
+                                        <i class="fas fa-eye-slash"></i> Hidden
+                                    </span>
+                                @endif
+                            </td>
+                            <td style="padding:0.6rem 1rem;border-bottom:1px solid #f3f4f6;">
+                                @if($term->ranks_published_by)
+                                    {{ \App\Models\User::find($term->ranks_published_by)?->name ?? 'N/A' }}
+                                @else
+                                    <span style="color:#9ca3af;">—</span>
+                                @endif
+                            </td>
+                            <td style="padding:0.6rem 1rem;border-bottom:1px solid #f3f4f6;">
+                                @if($term->ranks_published_at)
+                                    {{ $term->ranks_published_at->format('M d, Y h:i A') }}
+                                @else
+                                    <span style="color:#9ca3af;">—</span>
+                                @endif
+                            </td>
+                            <td style="padding:0.6rem 1rem;border-bottom:1px solid #f3f4f6;text-align:right;">
+                                @if($term->ranks_published)
+                                    <form method="POST" action="{{ route('admin.mark-entry-locks.unpublish-ranks') }}" style="display:inline;" onsubmit="return confirm('Hide ranks for {{ $term->name }}? Students and parents will no longer see class ranks.')">
+                                        @csrf
+                                        <input type="hidden" name="term_id" value="{{ $term->id }}">
+                                        <button type="submit" style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;font-size:0.75rem;font-weight:600;cursor:pointer;">
+                                            <i class="fas fa-eye-slash"></i> Hide Ranks
+                                        </button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.mark-entry-locks.publish-ranks') }}" style="display:inline;" onsubmit="return confirm('Publish ranks for {{ $term->name }}? Students and parents will be able to see class ranks.')">
+                                        @csrf
+                                        <input type="hidden" name="term_id" value="{{ $term->id }}">
+                                        <button type="submit" style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;border:1px solid #a7f3d0;background:#ecfdf5;color:#065f46;font-size:0.75rem;font-weight:600;cursor:pointer;">
+                                            <i class="fas fa-eye"></i> Publish Ranks
+                                        </button>
+                                    </form>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- ════════════════ LOCK CONFIRMATION MODAL ════════════════ --}}

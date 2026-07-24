@@ -155,4 +155,53 @@ class MarkEntryLockController extends Controller
 
         return response()->json(['is_locked' => $isLocked]);
     }
+
+    /**
+     * Publish ranks for a term — makes ranks visible to students and parents.
+     * Called by branch principal or admin after verifying final exam marks.
+     */
+    public function publishRanks(Request $request)
+    {
+        $request->validate([
+            'term_id' => 'required|exists:terms,id',
+        ]);
+
+        $term = \App\Models\Term::findOrFail($request->term_id);
+        $term->ranks_published = true;
+        $term->ranks_published_at = now();
+        $term->ranks_published_by = auth()->id();
+        $term->save();
+
+        \Log::info('Ranks published', [
+            'term_id' => $term->id,
+            'term_name' => $term->name,
+            'published_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', "Ranks published for {$term->name}. Students and parents can now see class ranks.");
+    }
+
+    /**
+     * Unpublish ranks for a term — hides ranks from students and parents.
+     */
+    public function unpublishRanks(Request $request)
+    {
+        $request->validate([
+            'term_id' => 'required|exists:terms,id',
+        ]);
+
+        $term = \App\Models\Term::findOrFail($request->term_id);
+        $term->ranks_published = false;
+        $term->ranks_published_at = null;
+        $term->ranks_published_by = null;
+        $term->save();
+
+        \Log::info('Ranks unpublished', [
+            'term_id' => $term->id,
+            'term_name' => $term->name,
+            'unpublished_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', "Ranks hidden for {$term->name}. Students and parents will no longer see class ranks.");
+    }
 }

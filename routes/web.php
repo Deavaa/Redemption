@@ -563,6 +563,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::post('first-term-overrides', [FirstTermOverrideController::class, 'store'])->name('first-term-overrides.store')->middleware('permission:mark_entries.manage');
     Route::post('mark-entry-locks/lock', [MarkEntryLockController::class, 'lock'])->name('mark-entry-locks.lock')->middleware('permission:mark_entries.manage');
     Route::post('mark-entry-locks/unlock', [MarkEntryLockController::class, 'unlock'])->name('mark-entry-locks.unlock')->middleware('permission:mark_entries.manage');
+    // Publish/unpublish ranks for a term (branch principal + admin)
+    Route::post('mark-entry-locks/publish-ranks', [MarkEntryLockController::class, 'publishRanks'])->name('mark-entry-locks.publish-ranks')->middleware('permission:mark_entries.manage');
+    Route::post('mark-entry-locks/unpublish-ranks', [MarkEntryLockController::class, 'unpublishRanks'])->name('mark-entry-locks.unpublish-ranks')->middleware('permission:mark_entries.manage');
 
     // Mark Entry Configuration (Admin only)
     Route::get('mark-entry-configs', [MarkEntryConfigController::class, 'index'])->name('mark-entry-configs.index')->middleware('permission:mark_entries.manage');
