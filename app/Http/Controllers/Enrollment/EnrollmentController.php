@@ -284,6 +284,7 @@ class EnrollmentController extends Controller
     {
         $validated = $request->validate([
             'branch_id' => 'required|exists:branches,id',
+            'class_id' => 'required|exists:classes,id',
             'section_id' => 'required|exists:sections,id',
             'status' => 'required|in:enrolled,pending,withdrawn,graduated,transferred',
             'registration_fee' => 'required|numeric|min:0',
@@ -298,8 +299,16 @@ class EnrollmentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Use the selected class_id directly (from the dropdown)
+        // Also sync section to match the class
         $section = Section::find($validated['section_id']);
-        $validated['class_id'] = $section->class_id;
+        if ($section && $section->class_id != $validated['class_id']) {
+            // Section doesn't belong to the selected class — find first section of the class
+            $firstSection = Section::where('class_id', $validated['class_id'])->first();
+            if ($firstSection) {
+                $validated['section_id'] = $firstSection->id;
+            }
+        }
 
         $enrollment->update($validated);
 

@@ -55,6 +55,20 @@
                         </div>
 
                         <div class="sl-form-group">
+                            <label class="sl-form-label" for="class_id">Class / Grade <span class="sl-required">*</span></label>
+                            <div class="sl-input-wrap">
+                                <i class="fas fa-chalkboard sl-input-icon"></i>
+                                <select name="class_id" id="class_id" class="sl-input sl-select {{ $errors->has('class_id') ? 'is-invalid' : '' }}" required onchange="loadSectionsForClass(this.value)">
+                                    <option value="">-- Select Class --</option>
+                                    @foreach($classes as $class)
+                                        <option value="{{ $class->id }}" {{ old('class_id', $enrollment->class_id) == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @error('class_id')<span class="sl-form-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="sl-form-group">
                             <label class="sl-form-label" for="section_id">Section <span class="sl-required">*</span></label>
                             <div class="sl-input-wrap">
                                 <i class="fas fa-layer-group sl-input-icon"></i>
@@ -378,6 +392,26 @@ function updateEffectiveFee() {
     effective = Math.max(0, effective);
 }
 updateEffectiveFee();
+
+// Load sections dynamically when class changes
+function loadSectionsForClass(classId) {
+    var sectionSelect = document.getElementById('section_id');
+    if (!classId) {
+        sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+        return;
+    }
+    fetch('{{ route("admin.enrollments.api.sections") }}?class_id=' + classId, {credentials: 'same-origin'})
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+            data.forEach(function(s) {
+                sectionSelect.innerHTML += '<option value="' + s.id + '">' + s.name + '</option>';
+            });
+        })
+        .catch(function() {
+            sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+        });
+}
 </script>
 @endpush
 @endsection
