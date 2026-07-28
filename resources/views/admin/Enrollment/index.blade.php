@@ -24,6 +24,15 @@
             <a href="{{ route('admin.enrollments.bulk-enroll') }}" class="sl-btn sl-btn-outline">
                 <i class="fas fa-users"></i> Bulk Enroll
             </a>
+            <a href="{{ route('admin.enrollments.bulk-fix-class') }}" class="sl-btn sl-btn-outline">
+                <i class="fas fa-wrench"></i> Bulk Fix Class
+            </a>
+            <a href="{{ route('admin.enrollments.graduate') }}" class="sl-btn sl-btn-outline" style="color:#7c3aed;border-color:#7c3aed;">
+                <i class="fas fa-mortarboard"></i> Graduate G12
+            </a>
+            <a href="{{ route('admin.enrollments.reset') }}" class="sl-btn sl-btn-outline" style="color:#dc2626;border-color:#dc2626;">
+                <i class="fas fa-arrow-counterclockwise"></i> Reset Enrollments
+            </a>
             <a href="{{ route('admin.enrollments.create') }}" class="sl-btn sl-btn-primary">
                 <i class="fas fa-plus"></i> Enroll Student
             </a>

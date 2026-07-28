@@ -1036,6 +1036,315 @@ class EnrollmentController extends Controller
     }
 
     /**
+     * Show the "Graduate Grade 12 Students" form.
+     * Lists all currently-enrolled Grade 12 students for the selected academic year,
+     * with checkboxes to pick which ones to graduate.
+     */
+    public function graduateForm(Request $request)
+    {
+        $branchScope = $request->attributes->get('branch_scope');
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        $activeAy = AcademicYear::where('is_current', true)->first();
+        $selectedAyId = $request->filled('academic_year_id')
+            ? $request->academic_year_id
+            : ($activeAy?->id ?? ($academicYears->first()?->id ?? null));
+
+        // Find Grade 12 classes (numeric_name = 12)
+        $grade12ClassesQuery = ClassRoom::whereRaw('CAST(numeric_name AS UNSIGNED) = 12');
+        if ($branchScope) $grade12ClassesQuery->where('branch_id', $branchScope);
+        $grade12Classes = $grade12ClassesQuery->orderBy('name')->get();
+
+        // Find enrolled students in those classes for the selected AY
+        $students = collect();
+        $stats = ['total' => 0, 'already_graduated' => 0, 'eligible' => 0];
+        if ($selectedAyId && $grade12Classes->isNotEmpty()) {
+            $classIds = $grade12Classes->pluck('id')->all();
+            $enrollments = StudentEnrollment::with(['student.section', 'classroom', 'branch'])
+                ->where('academic_year_id', $selectedAyId)
+                ->whereIn('class_id', $classIds)
+                ->where('status', 'enrolled')
+                ->get();
+            // Also include students whose Student.class_id is in grade 12 (even if enrollment is missing)
+            $studentsInGrade12 = Student::with(['section', 'classroom', 'branch'])
+                ->whereIn('class_id', $classIds)
+                ->whereIn('status', ['active', 'graduated'])
+                ->get()
+                ->keyBy('id');
+
+            // Merge: prefer enrollment records, but include students without enrollment
+            $seenIds = [];
+            foreach ($enrollments as $enr) {
+                if (!$enr->student) continue;
+                $seenIds[] = $enr->student_id;
+                $students->push((object)[
+                    'student' => $enr->student,
+                    'enrollment' => $enr,
+                    'class_name' => $enr->classroom?->name ?? 'N/A',
+                    'section_name' => $enr->section?->name ?? ($enr->student?->section?->name ?? '-'),
+                    'branch_name' => $enr->branch?->name ?? '-',
+                    'already_graduated' => $enr->student?->status === 'graduated',
+                ]);
+            }
+            foreach ($studentsInGrade12 as $sid => $student) {
+                if (in_array($sid, $seenIds)) continue;
+                $students->push((object)[
+                    'student' => $student,
+                    'enrollment' => null,
+                    'class_name' => $student->classroom?->name ?? 'N/A',
+                    'section_name' => $student->section?->name ?? '-',
+                    'branch_name' => $student->branch?->name ?? '-',
+                    'already_graduated' => $student->status === 'graduated',
+                ]);
+            }
+            $stats['total'] = $students->count();
+            $stats['already_graduated'] = $students->filter(fn($s) => $s->already_graduated)->count();
+            $stats['eligible'] = $stats['total'] - $stats['already_graduated'];
+        }
+
+        $selectedAy = $selectedAyId ? AcademicYear::find($selectedAyId) : null;
+
+        return view('admin.Enrollment.graduate', compact(
+            'academicYears', 'selectedAy', 'selectedAyId',
+            'grade12Classes', 'students', 'stats'
+        ));
+    }
+
+    /**
+     * Process graduation: mark selected (or all) Grade 12 students as graduated.
+     * Sets Student.status = 'graduated', marks their enrollment rows as graduated,
+     * and auto-generates a 9-12 transcript.
+     */
+    public function processGraduate(Request $request)
+    {
+        $request->validate([
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'mode' => 'required|in:all,selected',
+            'student_ids' => 'nullable|array',
+            'student_ids.*' => 'exists:students,id',
+        ]);
+
+        $ayId = $request->academic_year_id;
+        $mode = $request->mode;
+        $branchScope = $request->attributes->get('branch_scope');
+
+        // Resolve target students
+        $grade12ClassesQuery = ClassRoom::whereRaw('CAST(numeric_name AS UNSIGNED) = 12');
+        if ($branchScope) $grade12ClassesQuery->where('branch_id', $branchScope);
+        $grade12ClassIds = $grade12ClassesQuery->pluck('id')->all();
+
+        if (empty($grade12ClassIds)) {
+            return back()->with('error', 'No Grade 12 classes found. Please create a class with numeric_name = 12 first.');
+        }
+
+        // Build query for eligible students
+        $studentQuery = Student::whereIn('class_id', $grade12ClassIds)
+            ->where('status', 'active');
+        if ($mode === 'selected') {
+            if (empty($request->student_ids)) {
+                return back()->with('error', 'No students selected. Please select at least one student, or use "Graduate All" mode.');
+            }
+            $studentQuery->whereIn('id', $request->student_ids);
+        }
+        $students = $studentQuery->get();
+
+        if ($students->isEmpty()) {
+            return back()->with('warning', 'No eligible Grade 12 students found to graduate. (Students already graduated are skipped.)');
+        }
+
+        DB::beginTransaction();
+        try {
+            $graduated = 0;
+            $transcripts = 0;
+            $enrollmentRows = 0;
+
+            foreach ($students as $student) {
+                $student->status = 'graduated';
+                $student->leave_date = now()->toDateString();
+                $student->leave_reason = 'Graduated from Grade 12';
+                $student->save();
+
+                // Mark their enrollment row for this AY as graduated
+                $enrollments = StudentEnrollment::where('student_id', $student->id)
+                    ->where('academic_year_id', $ayId)
+                    ->where('status', 'enrolled')
+                    ->get();
+                foreach ($enrollments as $enr) {
+                    $enr->status = 'graduated';
+                    $enr->save();
+                    $enrollmentRows++;
+                }
+
+                // Auto-generate transcript
+                $beforeCertCount = \App\Models\Certificate::where('student_id', $student->id)->count();
+                $this->autoGenerateTranscript($student);
+                $afterCertCount = \App\Models\Certificate::where('student_id', $student->id)->count();
+                if ($afterCertCount > $beforeCertCount) $transcripts++;
+
+                $graduated++;
+            }
+
+            DB::commit();
+
+            $msg = "Graduation complete: {$graduated} student(s) marked as graduated.";
+            if ($enrollmentRows > 0) $msg .= " {$enrollmentRows} enrollment record(s) updated.";
+            if ($transcripts > 0) $msg .= " {$transcripts} transcript(s) auto-generated.";
+
+            return redirect()->route('admin.enrollments.graduate')
+                ->with('success', $msg);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Graduation failed: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * Show the "Reset Enrollments" form — used when the current AY's enrollment
+     * data is messed up and the user wants to start over.
+     *
+     * Safety: only allows deletion of enrollment rows for the selected AY
+     * (optionally filtered by class/branch). Does NOT touch students, marks,
+     * attendance, or prior-year enrollments.
+     */
+    public function resetForm(Request $request)
+    {
+        $branchScope = $request->attributes->get('branch_scope');
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        $activeAy = AcademicYear::where('is_current', true)->first();
+        $selectedAyId = $request->filled('academic_year_id')
+            ? $request->academic_year_id
+            : ($activeAy?->id ?? null);
+
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderByRaw('CAST(numeric_name AS UNSIGNED) ASC')
+            ->orderBy('name')
+            ->get();
+
+        // Preview counts for the selected AY (with optional filters)
+        $preview = ['enrollments' => 0, 'students_in_class' => 0, 'branches' => 0];
+        $byStatus = [];
+        if ($selectedAyId) {
+            $q = StudentEnrollment::where('academic_year_id', $selectedAyId);
+            if ($branchScope) $q->where('branch_id', $branchScope);
+            if ($request->filled('class_id')) $q->where('class_id', $request->class_id);
+            if ($request->filled('branch_id')) $q->where('branch_id', $request->branch_id);
+            if ($request->filled('status')) $q->where('status', $request->status);
+
+            $preview['enrollments'] = $q->count();
+            $preview['branches'] = $q->distinct()->count('branch_id');
+            $byStatus = StudentEnrollment::where('academic_year_id', $selectedAyId)
+                ->when($branchScope, fn($qq) => $qq->where('branch_id', $branchScope))
+                ->selectRaw('status, COUNT(*) as cnt')
+                ->groupBy('status')
+                ->pluck('cnt', 'status')
+                ->all();
+        }
+
+        $branches = $branchScope
+            ? Branch::where('id', $branchScope)->get()
+            : Branch::where('is_active', true)->get();
+
+        return view('admin.Enrollment.reset', compact(
+            'academicYears', 'classes', 'branches', 'selectedAyId', 'preview', 'byStatus'
+        ));
+    }
+
+    /**
+     * Delete enrollment rows matching the filters. Optionally also resets
+     * Student.class_id / section_id / academic_year_id back to the previous AY
+     * (so students appear "not yet enrolled" in the current AY).
+     *
+     * Critical safety: requires confirmation string "RESET" typed by user.
+     */
+    public function processReset(Request $request)
+    {
+        $request->validate([
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'branch_id' => 'nullable|exists:branches,id',
+            'class_id' => 'nullable|exists:classes,id',
+            'status' => 'nullable|in:enrolled,pending,withdrawn,graduated,transferred',
+            'reset_student_class' => 'nullable|boolean',
+            'confirmation' => 'required|in:RESET',
+        ]);
+
+        $ayId = $request->academic_year_id;
+        $branchScope = $request->attributes->get('branch_scope');
+
+        $q = StudentEnrollment::where('academic_year_id', $ayId);
+        if ($branchScope) $q->where('branch_id', $branchScope);
+        if ($request->filled('branch_id')) $q->where('branch_id', $request->branch_id);
+        if ($request->filled('class_id')) $q->where('class_id', $request->class_id);
+        if ($request->filled('status')) $q->where('status', $request->status);
+
+        $enrollmentIds = $q->pluck('id')->all();
+        $studentIds = $q->pluck('student_id')->unique()->all();
+        $count = count($enrollmentIds);
+
+        if ($count === 0) {
+            return back()->with('warning', 'No enrollment rows matched the selected filters. Nothing was deleted.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Delete the enrollment rows
+            StudentEnrollment::whereIn('id', $enrollmentIds)->delete();
+
+            // 2. Optionally reset Student.class_id / academic_year_id back to previous AY
+            //    so the student appears "not yet enrolled" in this AY.
+            if ($request->boolean('reset_student_class') && !empty($studentIds)) {
+                $previousAy = AcademicYear::where('id', '<', $ayId)
+                    ->orderByDesc('id')
+                    ->first();
+                // If a previous AY exists, try to restore class/section from that year's enrollment
+                foreach ($studentIds as $sid) {
+                    $prevEnr = $previousAy
+                        ? StudentEnrollment::where('student_id', $sid)
+                            ->where('academic_year_id', $previousAy->id)
+                            ->where('status', 'enrolled')
+                            ->orderByDesc('id')
+                            ->first()
+                        : null;
+                    $student = Student::find($sid);
+                    if (!$student) continue;
+
+                    if ($prevEnr) {
+                        $student->class_id = $prevEnr->class_id;
+                        $student->section_id = $prevEnr->section_id;
+                        $student->academic_year_id = $prevEnr->academic_year_id;
+                    } else {
+                        // No prior enrollment — just clear the current-AY pointer
+                        $student->academic_year_id = $previousAy?->id ?? $student->academic_year_id;
+                    }
+                    // If the student was marked graduated by mistake during the messed-up enrollment,
+                    // re-activate them (only if their original status before the mess was active).
+                    // We are conservative: only re-activate if leave_reason mentions "Graduated from Grade 12"
+                    // AND the user explicitly chose to reset student records.
+                    if ($student->status === 'graduated'
+                        && str_contains(strtolower($student->leave_reason ?? ''), 'graduated from grade 12')) {
+                        $student->status = 'active';
+                        $student->leave_date = null;
+                        $student->leave_reason = null;
+                    }
+                    $student->save();
+                }
+            }
+
+            DB::commit();
+
+            $msg = "Reset complete: {$count} enrollment row(s) deleted for AY #{$ayId}.";
+            if ($request->boolean('reset_student_class')) {
+                $msg .= ' Student class/section pointers restored to previous AY where possible.';
+            }
+            $msg .= ' You can now re-run bulk enrollment.';
+
+            return redirect()->route('admin.enrollments.reset')
+                ->with('success', $msg);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Reset failed: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
      * Auto-generate a transcript certificate for a graduating student.
      * Covers grades 9-12 (all marks available in the system).
      */
