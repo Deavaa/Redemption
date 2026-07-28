@@ -720,6 +720,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('enrollments/api/unenrolled-students', [EnrollmentController::class, 'apiUnenrolledStudents'])->name('enrollments.api.unenrolled-students');
     Route::get('enrollments/api/stats', [EnrollmentController::class, 'apiStats'])->name('enrollments.api.stats');
     Route::post('enrollments/sync', [EnrollmentController::class, 'syncEnrollments'])->name('enrollments.sync')->middleware('permission:students.manage');
+    Route::get('enrollments/bulk-fix-class', [EnrollmentController::class, 'bulkFixClassForm'])->name('enrollments.bulk-fix-class')->middleware('permission:students.manage');
+    Route::post('enrollments/bulk-fix-class', [EnrollmentController::class, 'bulkFixClass'])->name('enrollments.process-bulk-fix-class')->middleware('permission:students.manage');
     Route::get('enrollments/{enrollment}', [EnrollmentController::class, 'show'])->name('enrollments.show')->middleware('permission:students.view');
     Route::get('enrollments/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('enrollments.edit')->middleware('permission:students.manage');
     Route::put('enrollments/{enrollment}', [EnrollmentController::class, 'update'])->name('enrollments.update')->middleware('permission:students.manage');

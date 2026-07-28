@@ -898,6 +898,135 @@ class EnrollmentController extends Controller
     }
 
     /**
+     * Bulk Fix Class/Section form — update students stuck in old grade to new grade.
+     * Shows a form to select: academic year, from-class, to-class, optional to-section.
+     * Lists affected students for preview.
+     */
+    public function bulkFixClassForm(Request $request)
+    {
+        $branchScope = $request->attributes->get('branch_scope');
+        $academicYears = AcademicYear::orderBy('id', 'desc')->get();
+        $activeAy = AcademicYear::where('is_current', true)->first();
+
+        $classes = ClassRoom::when($branchScope, fn($q) => $q->where('branch_id', $branchScope))
+            ->orderByRaw('CAST(numeric_name AS UNSIGNED) ASC')
+            ->orderBy('name')
+            ->get();
+
+        $selectedAy = $request->filled('academic_year_id') ? AcademicYear::find($request->academic_year_id) : $activeAy;
+        $fromClassId = $request->filled('from_class_id') ? $request->from_class_id : null;
+        $toClassId = $request->filled('to_class_id') ? $request->to_class_id : null;
+        $toSectionId = $request->filled('to_section_id') ? $request->section_id : null;
+
+        $previewStudents = collect();
+        $fromClassName = '';
+        $toClassName = '';
+        $toSections = collect();
+
+        if ($fromClassId && $toClassId && $selectedAy) {
+            $fromClassName = ClassRoom::find($fromClassId)?->name ?? '';
+            $toClassName = ClassRoom::find($toClassId)?->name ?? '';
+            $toSections = Section::where('class_id', $toClassId)->orderBy('name')->get();
+
+            // Find students whose class_id = from_class (stuck in old grade)
+            $previewStudents = Student::with(['section'])
+                ->where('class_id', $fromClassId)
+                ->where('status', 'active')
+                ->orderBy('full_name')
+                ->get();
+
+            // Also check enrollment records
+            $enrollmentCount = StudentEnrollment::where('class_id', $fromClassId)
+                ->where('academic_year_id', $selectedAy->id)
+                ->where('status', 'enrolled')
+                ->count();
+        }
+
+        return view('admin.Enrollment.bulk-fix-class', compact(
+            'academicYears', 'classes', 'selectedAy', 'fromClassId', 'toClassId',
+            'toSectionId', 'previewStudents', 'fromClassName', 'toClassName', 'toSections'
+        ));
+    }
+
+    /**
+     * Process bulk class/section fix — moves all students from old class to new class.
+     * Updates both Student.class_id and StudentEnrollment.class_id.
+     */
+    public function bulkFixClass(Request $request)
+    {
+        $request->validate([
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'from_class_id' => 'required|exists:classes,id',
+            'to_class_id' => 'required|exists:classes,id|different:from_class_id',
+            'section_id' => 'nullable|exists:sections,id',
+        ]);
+
+        $ayId = $request->academic_year_id;
+        $fromClassId = $request->from_class_id;
+        $toClassId = $request->to_class_id;
+        $toSectionId = $request->filled('section_id') ? $request->section_id : null;
+
+        $fromClass = ClassRoom::find($fromClassId);
+        $toClass = ClassRoom::find($toClassId);
+
+        // If no section specified, auto-assign first section of target class
+        if (!$toSectionId) {
+            $firstSection = Section::where('class_id', $toClassId)->orderBy('name')->first();
+            $toSectionId = $firstSection?->id;
+        }
+
+        DB::beginTransaction();
+        try {
+            $studentCount = 0;
+            $enrollmentCount = 0;
+
+            // 1. Update Student records (main class_id/section_id)
+            $students = Student::where('class_id', $fromClassId)
+                ->where('status', 'active')
+                ->get();
+
+            foreach ($students as $student) {
+                $student->class_id = $toClassId;
+                if ($toSectionId) {
+                    $student->section_id = $toSectionId;
+                }
+                $student->academic_year_id = $ayId;
+                $student->save();
+                $studentCount++;
+            }
+
+            // 2. Update StudentEnrollment records for this academic year
+            $enrollments = StudentEnrollment::where('class_id', $fromClassId)
+                ->where('academic_year_id', $ayId)
+                ->where('status', 'enrolled')
+                ->get();
+
+            foreach ($enrollments as $enrollment) {
+                $enrollment->class_id = $toClassId;
+                if ($toSectionId) {
+                    $enrollment->section_id = $toSectionId;
+                }
+                $enrollment->save();
+                $enrollmentCount++;
+            }
+
+            DB::commit();
+
+            $message = "Bulk fix completed: {$studentCount} student(s) moved from {$fromClass->name} to {$toClass->name}";
+            if ($enrollmentCount > 0) {
+                $message .= ", {$enrollmentCount} enrollment record(s) updated";
+            }
+
+            return redirect()->route('admin.enrollments.bulk-fix-class')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Bulk fix failed: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
      * Auto-generate a transcript certificate for a graduating student.
      * Covers grades 9-12 (all marks available in the system).
      */
