@@ -883,14 +883,17 @@
                 't1_total' => $row['term1_total'],
                 't1_avg' => $row['term1_avg'],
                 't1_rank' => $row['term1_rank'] ?? '-',
+                't1_absent' => $row['absent_t1'] ?? 0,
                 't2_subjects' => $t2,
                 't2_total' => $row['term2_total'],
                 't2_avg' => $row['term2_avg'],
                 't2_rank' => $row['term2_rank'] ?? '-',
+                't2_absent' => $row['absent_t2'] ?? 0,
                 'ann_subjects' => $ann,
                 'ann_total' => $row['annual_total'],
                 'ann_avg' => $row['annual_avg'],
                 'ann_rank' => $row['annual_rank'] ?? '-',
+                'ann_absent' => $row['absent_total'] ?? 0,
                 'conduct_t1' => $row['conduct_t1'] ?? null,
                 'conduct_t1_val' => $row['conduct_t1_val'] ?? null,
                 'conduct_t2' => $row['conduct_t2'] ?? null,
@@ -962,12 +965,12 @@ function fmsBuildExportData() {
     var header = ['Student Name', 'Gender', 'Age'];
     header.push('Conduct (T1)');
     for (var i = 0; i < FMS_SUBJECTS.length; i++) header.push(FMS_SUBJECTS[i].name + ' (T1)');
-    header.push('Total (T1)', 'Average (T1)', 'Rank (T1)', 'Comment (T1)');
+    header.push('Total (T1)', 'Average (T1)', 'Rank (T1)', 'Absent Days (T1)', 'Comment (T1)');
     header.push('Conduct (T2)');
     for (var i = 0; i < FMS_SUBJECTS.length; i++) header.push(FMS_SUBJECTS[i].name + ' (T2)');
-    header.push('Total (T2)', 'Average (T2)', 'Rank (T2)', 'Comment (T2)');
+    header.push('Total (T2)', 'Average (T2)', 'Rank (T2)', 'Absent Days (T2)', 'Comment (T2)');
     for (var i = 0; i < FMS_SUBJECTS.length; i++) header.push(FMS_SUBJECTS[i].name + ' (Annual)');
-    header.push('Total (Annual)', 'Average (Annual)', 'Rank (Annual)');
+    header.push('Total (Annual)', 'Average (Annual)', 'Rank (Annual)', 'Absent Days (Total)');
     wsData.push(header);
 
     // Data rows
@@ -976,14 +979,19 @@ function fmsBuildExportData() {
         // T1
         row.push(r.conduct_t1 !== null && r.conduct_t1 !== undefined && r.conduct_t1 !== '' ? r.conduct_t1 : '-');
         for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.t1_subjects[i] !== null ? r.t1_subjects[i] : '-');
-        row.push(r.t1_total > 0 ? r.t1_total : '-', r.t1_avg > 0 ? r.t1_avg : '-', r.t1_rank, fmsGetCommentForMark(r.t1_avg));
+        row.push(r.t1_total > 0 ? r.t1_total : '-', r.t1_avg > 0 ? r.t1_avg : '-', r.t1_rank,
+                r.t1_absent !== null && r.t1_absent !== undefined ? r.t1_absent : 0,
+                fmsGetCommentForMark(r.t1_avg));
         // T2
         row.push(r.conduct_t2 !== null && r.conduct_t2 !== undefined && r.conduct_t2 !== '' ? r.conduct_t2 : '-');
         for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.t2_subjects[i] !== null ? r.t2_subjects[i] : '-');
-        row.push(r.t2_total > 0 ? r.t2_total : '-', r.t2_avg > 0 ? r.t2_avg : '-', r.t2_rank, fmsGetCommentForMark(r.t2_avg));
+        row.push(r.t2_total > 0 ? r.t2_total : '-', r.t2_avg > 0 ? r.t2_avg : '-', r.t2_rank,
+                r.t2_absent !== null && r.t2_absent !== undefined ? r.t2_absent : 0,
+                fmsGetCommentForMark(r.t2_avg));
         // Annual
         for (var i = 0; i < FMS_SUBJECTS.length; i++) row.push(r.ann_subjects[i] !== null ? r.ann_subjects[i] : '-');
-        row.push(r.ann_total > 0 ? r.ann_total : '-', r.ann_avg > 0 ? r.ann_avg : '-', r.ann_rank);
+        row.push(r.ann_total > 0 ? r.ann_total : '-', r.ann_avg > 0 ? r.ann_avg : '-', r.ann_rank,
+                r.ann_absent !== null && r.ann_absent !== undefined ? r.ann_absent : 0);
         wsData.push(row);
     });
     return wsData;

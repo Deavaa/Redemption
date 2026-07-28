@@ -223,6 +223,44 @@ class MarkSheetFullController extends Controller
         $overrideMap = $overrideQuery->get()
             ->keyBy(function($o) { return (string)$o->student_id . '_' . (string)$o->subject_id; });
 
+        // ── Load absent-day counts per student per term (for export) ──
+        // Strategy: query `attendances` where status='absent' for this class
+        // (and section if set). Group by student_id. For each row, attribute
+        // to T1 if date falls in T1's date range, else T2 if in T2's range.
+        // If the row already has term_id set, use that directly.
+        $absentCounts = []; // [studentId][termId] = count
+        $absentBaseQ = \App\Models\Attendance::where('class_id', $classId)
+            ->where('status', 'absent');
+        if ($sectionId) {
+            $absentBaseQ->where('section_id', $sectionId);
+        }
+        // Only consider rows within the academic year (term1.start_date .. term2.end_date)
+        $yearStart = $term1->start_date ?? null;
+        $yearEnd = $term2 ? ($term2->end_date ?? null) : ($term1->end_date ?? null);
+        if ($yearStart && $yearEnd) {
+            $absentBaseQ->whereBetween('date', [$yearStart, $yearEnd]);
+        }
+        $absentRecords = $absentBaseQ->select(['student_id', 'term_id', 'date'])->get();
+        foreach ($absentRecords as $ar) {
+            $sid = $ar->student_id;
+            if (!isset($absentCounts[$sid])) $absentCounts[$sid] = [];
+            $attributedTid = $ar->term_id;
+            if ($attributedTid === null) {
+                // Attribute by date range
+                $date = \Carbon\Carbon::parse($ar->date);
+                if ($term1 && $term1->start_date && $term1->end_date
+                    && $date->between($term1->start_date, $term1->end_date)) {
+                    $attributedTid = $term1->id;
+                } elseif ($term2 && $term2->start_date && $term2->end_date
+                    && $date->between($term2->start_date, $term2->end_date)) {
+                    $attributedTid = $term2->id;
+                }
+            }
+            if ($attributedTid !== null) {
+                $absentCounts[$sid][$attributedTid] = ($absentCounts[$sid][$attributedTid] ?? 0) + 1;
+            }
+        }
+
         // Build roster rows with Term1, Term2, and Annual calculations
         $roster = [];
         foreach ($students as $student) {
@@ -254,7 +292,12 @@ class MarkSheetFullController extends Controller
                 'conduct_t1_val' => isset($conductAgg[$studentId][$term1Id]) ? $conductAgg[$studentId][$term1Id]['value'] : null,
                 'conduct_t2'   => $term2Id ? (isset($conductAgg[$studentId][$term2Id]) ? $conductAgg[$studentId][$term2Id]['grade'] : null) : null,
                 'conduct_t2_val' => $term2Id ? (isset($conductAgg[$studentId][$term2Id]) ? $conductAgg[$studentId][$term2Id]['value'] : null) : null,
+                // Absent-day counts per term (used in Excel/CSV export)
+                'absent_t1'    => $absentCounts[$studentId][$term1Id] ?? 0,
+                'absent_t2'    => $term2Id ? ($absentCounts[$studentId][$term2Id] ?? 0) : 0,
+                'absent_total' => 0, // filled in below
             ];
+            $row['absent_total'] = $row['absent_t1'] + $row['absent_t2'];
 
             // ── MID-YEAR ENTRANT: use per-subject override marks for Term 1 ──
             if ($isMidYearEntrant) {
