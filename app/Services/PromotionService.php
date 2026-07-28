@@ -223,15 +223,45 @@ class PromotionService
 
         // Capture original class BEFORE any move
         $fromClassId = $student->class_id;
+        $fromClass = ClassRoom::find($fromClassId);
+        $currentGrade = (int) ($fromClass?->numeric_name ?? 0);
+
+        // Calculate performance (needed for both graduation and promotion paths)
+        $performance = $this->calculateStudentPerformance($studentId, $academicYearId, $termId);
+
+        // ── Grade 12 students → GRADUATE instead of promoting ──
+        if ($currentGrade >= 12) {
+            $student->status = 'graduated';
+            $student->save();
+
+            $promotionResult = PromotionResult::updateOrCreate(
+                [
+                    'student_id' => $studentId,
+                    'from_class_id' => $fromClassId,
+                    'academic_year_id' => $academicYearId,
+                    'term_id' => $termId,
+                ],
+                [
+                    'status' => 'promoted',
+                    'to_class_id' => $fromClassId,
+                    'average_score' => $performance['average'] ?? null,
+                    'subjects_passed' => $performance['subjects_passed'] ?? 0,
+                    'subjects_failed' => $performance['subjects_failed'] ?? 0,
+                    'failure_reasons' => json_encode([['reason' => 'Graduated (Grade 12 completed)']]),
+                    'is_final' => true,
+                    'processed_at' => now(),
+                    'processed_by' => auth()->id(),
+                ]
+            );
+
+            return $promotionResult;
+        }
 
         // Resolve target class
         if ($toClassId === null) {
             $nextClass = $this->getNextClass($fromClassId);
             $toClassId = $nextClass?->id ?? $fromClassId;
         }
-
-        // Calculate performance
-        $performance = $this->calculateStudentPerformance($studentId, $academicYearId, $termId);
 
         // Determine promotion status
         if ($overrideStatus !== null && in_array($overrideStatus, ['promoted', 'detained', 'conditional'])) {
@@ -408,10 +438,18 @@ class PromotionService
             return null;
         }
 
-        // Find the class with the next higher numeric_name in the same branch
+        $currentGrade = (int) ($currentClass->numeric_name ?? 0);
+
+        // ── Grade 12 → no next class (student should be graduated) ──
+        if ($currentGrade >= 12) {
+            return null;
+        }
+
+        // Find the class with the next higher numeric_name using INTEGER comparison
+        // (string comparison breaks: "9" > "10" as strings)
         return ClassRoom::where('branch_id', $currentClass->branch_id)
-            ->where('numeric_name', '>', $currentClass->numeric_name)
-            ->orderBy('numeric_name', 'asc')
+            ->whereRaw('CAST(numeric_name AS UNSIGNED) > ?', [$currentGrade])
+            ->orderByRaw('CAST(numeric_name AS UNSIGNED) ASC')
             ->first();
     }
 

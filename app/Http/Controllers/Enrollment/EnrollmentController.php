@@ -387,6 +387,7 @@ class EnrollmentController extends Controller
 
         $enrolled = 0;
         $skipped = 0;
+        $graduated = 0;
         $errors = [];
         $systemErrors = [];
 
@@ -411,6 +412,23 @@ class EnrollmentController extends Controller
                 $enrollmentType = 'returning';
 
                 if ($autoPromote) {
+                    // ── Check if student is in grade 12 → graduate instead of promoting ──
+                    $currentClass = ClassRoom::find($sourceEnrollment->class_id);
+                    $currentGrade = (int) ($currentClass?->numeric_name ?? 0);
+
+                    if ($currentGrade >= 12) {
+                        // Graduate the student
+                        $student = Student::find($sourceEnrollment->student_id);
+                        if ($student) {
+                            $student->status = 'graduated';
+                            $student->save();
+                            // Also mark the source enrollment as graduated
+                            $sourceEnrollment->update(['status' => 'graduated']);
+                        }
+                        $graduated++;
+                        continue; // Skip creating a new enrollment for graduated students
+                    }
+
                     $promoted = $this->getPromotedClassSection(
                         $sourceEnrollment->class_id,
                         $sourceEnrollment->section_id,
@@ -439,6 +457,20 @@ class EnrollmentController extends Controller
                         'registration_fee_status' => $registrationFee > 0 ? 'unpaid' : 'waived',
                         'enrolled_by' => auth()->id(),
                     ]);
+
+                    // ── SYNC the student's class_id/section_id to match the new enrollment ──
+                    // This ensures the student's main record reflects the promoted class,
+                    // not just the enrollment record. Section may be null (pending assignment).
+                    $student = Student::find($sourceEnrollment->student_id);
+                    if ($student) {
+                        $student->class_id = $newClassId;
+                        // Only update section_id if we have a valid one
+                        if ($newSectionId) {
+                            $student->section_id = $newSectionId;
+                        }
+                        $student->academic_year_id = $targetAyId;
+                        $student->save();
+                    }
 
                     $enrolled++;
                 } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
@@ -480,6 +512,9 @@ class EnrollmentController extends Controller
         $message = "Bulk enrollment completed: {$enrolled} students enrolled";
         if ($skipped > 0) {
             $message .= ", {$skipped} skipped (already enrolled)";
+        }
+        if ($graduated > 0) {
+            $message .= ", {$graduated} graduated (Grade 12)";
         }
 
         return redirect()->route('admin.enrollments.index', ['academic_year_id' => $targetAyId])
@@ -704,6 +739,16 @@ class EnrollmentController extends Controller
         $currentGrade = (int) ($currentClass->numeric_name ?? 0);
         $nextGrade = $currentGrade + 1;
 
+        // ── Grade 12 (or highest grade) → GRADUATE the student ──
+        // If current grade is 12 (or there is no next grade class), mark as graduated
+        if ($currentGrade >= 12) {
+            // Graduate the student — set status to 'graduated'
+            $student = Student::where('class_id', $currentClassId)->first();
+            // Note: we return null here so the enrollment is NOT created
+            // The student should be graduated instead of re-enrolled
+            return null;
+        }
+
         // Find section letter from current section name
         $sectionLetter = 'A';
         if ($currentSection && preg_match('/([A-Z])$/i', $currentSection->name, $m)) {
@@ -713,14 +758,14 @@ class EnrollmentController extends Controller
         // Find the next grade class in the target academic year
         $nextClass = ClassRoom::where('branch_id', $branchId)
             ->where('academic_year_id', $targetAyId)
-            ->where('numeric_name', $nextGrade)
+            ->whereRaw('CAST(numeric_name AS UNSIGNED) = ?', [$nextGrade])
             ->first();
 
         if (!$nextClass) {
             // If no next grade exists, keep in same grade
             $nextClass = ClassRoom::where('branch_id', $branchId)
                 ->where('academic_year_id', $targetAyId)
-                ->where('numeric_name', $currentGrade)
+                ->whereRaw('CAST(numeric_name AS UNSIGNED) = ?', [$currentGrade])
                 ->first();
 
             if (!$nextClass) return null;
