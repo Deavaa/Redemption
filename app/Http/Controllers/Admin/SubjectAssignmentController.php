@@ -24,30 +24,55 @@ class SubjectAssignmentController extends Controller
     }
     public function create(Request $request) {
         $branchScope = $request->attributes->get('branch_scope');
-        $academicYears=AcademicYear::orderBy('id','desc')->get(); $classes=ClassRoom::with('branch')->when($branchScope,fn($q)=>$q->where('branch_id',$branchScope))->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
+        $academicYears=AcademicYear::orderBy('id','desc')->get();
+        $classes=ClassRoom::with(['branch','sections'])->when($branchScope,fn($q)=>$q->where('branch_id',$branchScope))->orderBy('numeric_name','asc')->orderBy('name','asc')->get();
         $subjects=Subject::orderBy('name','asc')->get();
         $teachers=Teacher::when($branchScope,fn($q)=>$q->where('branch_id',$branchScope))->orderBy('full_name')->select('id','full_name')->get();
         return view('admin.subject-assignments.create',compact('academicYears','classes','subjects','teachers'));
     }
     public function store(Request $request) {
-        $request->validate(['academic_year_id'=>'required|exists:academic_years,id','subject_id'=>'required|exists:subjects,id','class_ids'=>'required|array|min:1','class_ids.*'=>'exists:classes,id','teacher_id'=>'nullable|exists:teachers,id','assignment_type'=>'required|in:core,elective']);
+        $request->validate([
+            'academic_year_id'=>'required|exists:academic_years,id',
+            'class_id'=>'required|exists:classes,id',
+            'subject_ids'=>'required|array|min:1',
+            'subject_ids.*'=>'exists:subjects,id',
+            'teacher_id'=>'nullable|exists:teachers,id',
+            'assignment_type'=>'required|in:core,elective',
+        ]);
         if ($request->assignment_type==='elective') $request->validate(['section_ids'=>'required|array|min:1','section_ids.*'=>'exists:sections,id']);
-        $subject=Subject::find($request->subject_id); $ayId=$request->academic_year_id; $teacherId=$request->teacher_id;
-        $subjectId=$request->subject_id; $type=$request->assignment_type; $created=0;
-        foreach ($request->class_ids as $classId) {
-            if ($type==='core') {
-                if (!TeacherAssignment::where('academic_year_id',$ayId)->where('subject_id',$subjectId)->where('class_id',$classId)->whereNull('section_id')->exists()) {
-                    TeacherAssignment::create(['academic_year_id'=>$ayId,'subject_id'=>$subjectId,'class_id'=>$classId,'section_id'=>null,'teacher_id'=>$teacherId]); $created++;
-                }
-            } else {
-                foreach ($request->section_ids as $sectionId) {
-                    if (!TeacherAssignment::where('academic_year_id',$ayId)->where('subject_id',$subjectId)->where('class_id',$classId)->where('section_id',$sectionId)->exists()) {
-                        TeacherAssignment::create(['academic_year_id'=>$ayId,'subject_id'=>$subjectId,'class_id'=>$classId,'section_id'=>$sectionId,'teacher_id'=>$teacherId]); $created++;
-                    }
-                }
+        $ayId=$request->academic_year_id;
+        $classId=$request->class_id;
+        $teacherId=$request->teacher_id;
+        $type=$request->assignment_type;
+        $created=0;
+        $skipped=0;
+        $sectionIds=$type==='elective'?$request->section_ids:[null];
+        foreach ($request->subject_ids as $subjectId) {
+            foreach ($sectionIds as $sectionId) {
+                $exists=TeacherAssignment::where('academic_year_id',$ayId)
+                    ->where('subject_id',$subjectId)
+                    ->where('class_id',$classId)
+                    ->where(function($q)use($sectionId){
+                        if($sectionId===null)$q->whereNull('section_id');
+                        else$q->where('section_id',$sectionId);
+                    })->exists();
+                if($exists){$skipped++;continue;}
+                TeacherAssignment::create([
+                    'academic_year_id'=>$ayId,
+                    'subject_id'=>$subjectId,
+                    'class_id'=>$classId,
+                    'section_id'=>$sectionId,
+                    'teacher_id'=>$teacherId,
+                ]);
+                $created++;
             }
         }
-        $msg=$created>0?"Assigned \"$subject->name\" ($type) to $created combination(s).":"No new assignments (duplicates).";
+        if($created>0){
+            $msg="Created $created assignment(s) for class (type: $type).";
+            if($skipped>0)$msg.=" Skipped $skipped duplicate(s).";
+        }else{
+            $msg="No new assignments created (all $skipped were duplicates).";
+        }
         return redirect()->route('admin.subject-assignments.index')->with('success',$msg);
     }
     public function edit(Request $request, TeacherAssignment $subject_assignment) {
@@ -78,5 +103,12 @@ class SubjectAssignmentController extends Controller
     public function apiSections(Request $request) {
         $classId=$request->query('class_id'); if (!$classId) return response()->json([]);
         return response()->json(Section::where('class_id',$classId)->orderBy('name','asc')->get(['id','name']));
+    }
+    public function apiExisting(Request $request) {
+        $classId=$request->query('class_id');
+        $ayId=$request->query('academic_year_id');
+        if(!$classId||!$ayId) return response()->json(['existing_subject_ids'=>[]]);
+        $ids=TeacherAssignment::where('class_id',$classId)->where('academic_year_id',$ayId)->pluck('subject_id')->unique()->values()->all();
+        return response()->json(['existing_subject_ids'=>$ids]);
     }
 }

@@ -7,7 +7,7 @@
 <div class="container-fluid p-0">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div><h4 class="mb-1 fw-bold">Subject Assignments</h4><p class="text-muted mb-0">Core = all sections, Elective = specific sections.</p></div>
-        <a href="{{ route('admin.subject-assignments.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Assign Subject</a>
+        <a href="{{ route('admin.subject-assignments.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Assign Subjects</a>
     </div>
     <div class="row g-3 mb-4">
         <div class="col-md-4"><div class="card border-0 bg-primary bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 fw-bold text-primary">{{ $coreAssignments->count() }}</div><div class="text-muted small">Core (All Sections)</div></div></div></div>
@@ -17,7 +17,7 @@
     <form method="GET" action="{{ route('admin.subject-assignments.index') }}"><div class="card mb-3"><div class="card-body py-3"><div class="row g-2 align-items-end">
         <div class="col-md-4"><label class="form-label fw-semibold small">Academic Year</label><select name="academic_year_id" class="form-select form-select-sm"><option value="">All Years</option>@foreach($academicYears as $ay)<option value="{{ $ay->id }}" {{ request('academic_year_id') == $ay->id ? 'selected' : '' }}>{{ $ay->name }}</option>@endforeach</select></div>
         <div class="col-md-4"><label class="form-label fw-semibold small">Class</label><select name="class_id" class="form-select form-select-sm"><option value="">All Classes</option>@foreach($classes as $c)<option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach</select></div>
-        <div class="col-md-4 d-flex gap-2"><button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i> Filter</button><a href="{{ route('admin.subject-assignments.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle"></i></a></div>
+        <div class="col-md-4 d-flex gap-2"><button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i> Filter</button><a href="{{ route('admin.subject-assignments.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i> Reset</a></div>
     </div></div></div></form>
     <form method="POST" action="{{ route('admin.subject-assignments.bulk-delete') }}" id="bulkForm">@csrf @method('DELETE')
 
@@ -44,12 +44,12 @@
             <td><span class="{{ $isCore ? 'type-badge-core' : 'type-badge-elective' }}">{{ $isCore ? 'Core' : 'Elective' }}</span></td>
             <td>{{ $a->teacher->full_name ?? 'N/A' }}</td>
             <td class="small">{{ $a->academicYear->name ?? 'N/A' }}</td>
-            <td><div class="btn-group btn-group-sm"><a href="{{ route('admin.subject-assignments.edit', $a) }}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i></a>
-            <button type="button" class="btn btn-outline-danger btn-delete-single" data-url="{{ route('admin.subject-assignments.destroy', $a) }}"><i class="bi bi-trash"></i></button></div></td>
+            <td><div class="btn-group btn-group-sm"><a href="{{ route('admin.subject-assignments.edit', $a) }}" class="btn btn-outline-primary" title="Edit"><i class="bi bi-pencil me-1"></i>Edit</a>
+            <button type="button" class="btn btn-outline-danger btn-delete-single" data-url="{{ route('admin.subject-assignments.destroy', $a) }}" title="Delete"><i class="bi bi-trash me-1"></i>Delete</button></div></td>
         </tr>@endforeach</tbody></table>
     </div></div></div>
     @else
-    <div class="card"><div class="card-body text-center py-5"><i class="bi bi-link-45deg display-1 text-muted"></i><h5 class="mt-3 text-muted">No Subject Assignments Yet</h5><a href="{{ route('admin.subject-assignments.create') }}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-1"></i>Assign First Subject</a></div></div>
+    <div class="card"><div class="card-body text-center py-5"><i class="bi bi-link-45deg display-1 text-muted"></i><h5 class="mt-3 text-muted">No Subject Assignments Yet</h5><a href="{{ route('admin.subject-assignments.create') }}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-1"></i>Assign Subjects</a></div></div>
     @endif
     </form>
 </div>
