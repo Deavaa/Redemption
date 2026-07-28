@@ -43,8 +43,14 @@ class DatabaseBackupController extends Controller
         $mailMailer = config('mail.default', env('MAIL_MAILER', 'log'));
         $mailConfigured = !in_array($mailMailer, ['log', 'array', 'null']);
 
+        // Check if a default sender (cPanel/Gmail inbox) is configured
+        $defaultSender = null;
+        try {
+            $defaultSender = \App\Models\EmailInboxSetting::getDefaultSender();
+        } catch (\Throwable $e) {}
+
         return view('admin.backup.index', compact(
-            'backups', 'scheduleSettings', 'driver', 'database', 'mailMailer', 'mailConfigured'
+            'backups', 'scheduleSettings', 'driver', 'database', 'mailMailer', 'mailConfigured', 'defaultSender'
         ));
     }
 

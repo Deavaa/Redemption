@@ -1163,6 +1163,15 @@ class EnrollmentController extends Controller
                 $student->leave_reason = 'Graduated from Grade 12';
                 $student->save();
 
+                // ── Keep the user account active so the graduate can still log in ──
+                // Access is gated by the 'graduate_access_enabled' setting in
+                // StudentMiddleware. The admin can revoke access at any time by
+                // toggling that setting off (or by deactivating the user account).
+                if ($student->user) {
+                    $student->user->is_active = true;
+                    $student->user->save();
+                }
+
                 // Mark their enrollment row for this AY as graduated
                 $enrollments = StudentEnrollment::where('student_id', $student->id)
                     ->where('academic_year_id', $ayId)

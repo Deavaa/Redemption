@@ -30,6 +30,33 @@ class StudentDashboardController extends Controller
         $student = $this->getStudent();
         $student->load(['classroom', 'section', 'academicYear']);
 
+        // ── Graduate dashboard ──
+        // If the student has status='graduated', show a graduate-specific
+        // dashboard with transcript + certificate links instead of the
+        // active-class dashboard.
+        if ($student->status === 'graduated') {
+            $certificates = collect();
+            try {
+                $certificates = \App\Models\Certificate::where('student_id', $student->id)
+                    ->orderByDesc('created_at')
+                    ->get();
+            } catch (\Throwable $e) {}
+
+            // Graduation academic year (the AY they graduated in)
+            $graduationAy = $student->academicYear;
+
+            // All-time marks summary (for the graduate)
+            $allMarks = MarkEntry::where('student_id', $student->id)
+                ->with(['subject', 'term', 'academicYear', 'classRoom'])
+                ->orderBy('academic_year_id')
+                ->orderBy('term_id')
+                ->orderBy('subject_id')
+                ->get();
+            $marksByAy = $allMarks->groupBy('academic_year_id');
+
+            return view('student.graduate-dashboard', compact('student', 'certificates', 'graduationAy', 'allMarks', 'marksByAy'));
+        }
+
         // Get active academic year and term
         $activeAy = AcademicYear::where('is_current', true)->first();
         $activeTerm = $activeAy ? Term::where('academic_year_id', $activeAy->id)->where('is_active', true)->first() : null;

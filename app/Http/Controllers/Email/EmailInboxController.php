@@ -341,6 +341,70 @@ class EmailInboxController extends Controller
         }
     }
 
+    /**
+     * Send a test email using this inbox's SMTP credentials.
+     * Verifies that the SMTP configuration works for outgoing email.
+     */
+    public function sendTestEmail(EmailInboxSetting $inboxSetting)
+    {
+        try {
+            $host = $inboxSetting->getSmtpHost();
+            $port = $inboxSetting->smtp_port ?? 465;
+            $encryption = $inboxSetting->smtp_encryption ?? 'ssl';
+            $username = $inboxSetting->getSmtpUsername();
+            $password = $inboxSetting->getSmtpPassword();
+
+            if (empty($host) || empty($username) || empty($password)) {
+                return back()->with('error', 'SMTP credentials are incomplete. Please configure SMTP host, username (IMAP username), and password (IMAP password).');
+            }
+
+            // Temporarily override the SMTP config for this request
+            config([
+                'mail.mailers.smtp' => [
+                    'transport' => 'smtp',
+                    'host' => $host,
+                    'port' => (int) $port,
+                    'encryption' => $encryption,
+                    'username' => $username,
+                    'password' => $password,
+                    'timeout' => 30,
+                    'local_domain' => parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST),
+                ],
+                'mail.from' => [
+                    'address' => $inboxSetting->email_address,
+                    'name' => config('app.name', 'School ERP'),
+                ],
+            ]);
+
+            $testEmail = $inboxSetting->email_address;
+            $subject = 'Test Email from ' . config('app.name', 'School ERP') . ' — SMTP Configuration OK';
+            $body = "Hello,\n\n"
+                  . "This is a test email sent from your School ERP system using the SMTP credentials configured for:\n\n"
+                  . "  Email: {$inboxSetting->email_address}\n"
+                  . "  SMTP Host: {$host}:{$port}\n"
+                  . "  Encryption: {$encryption}\n"
+                  . "  Default Sender: " . ($inboxSetting->is_default_sender ? 'Yes' : 'No') . "\n\n"
+                  . "If you received this email, your SMTP configuration is working correctly. "
+                  . "Database backup emails and system notifications will be sent from this account.\n\n"
+                  . "Time sent: " . now()->toDateTimeString() . "\n";
+
+            \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($testEmail, $subject) {
+                $message->to($testEmail)->subject($subject);
+            });
+
+            return back()->with('success', "Test email sent successfully to {$testEmail} via {$host}:{$port}. Check the inbox (and spam folder) to confirm receipt.");
+        } catch (\Exception $e) {
+            $hint = '';
+            $msg = $e->getMessage();
+            if (str_contains($msg, 'Username and Password not accepted') || str_contains($msg, 'authentication')) {
+                $hint = ' — Gmail rejected the credentials. Make sure you are using a Gmail App Password (16 chars), not your regular Gmail password.';
+            } elseif (str_contains($msg, 'Connection refused') || str_contains($msg, 'timed out')) {
+                $hint = ' — Could not reach SMTP server. Check host/port/encryption. Gmail uses smtp.gmail.com:465 (SSL) or :587 (TLS).';
+            }
+            return back()->with('error', 'Test email failed: ' . $msg . $hint);
+        }
+    }
+
     private function autoCategorize(string $subject, string $body): string
     {
         $subjectLower = strtolower($subject);

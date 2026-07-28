@@ -82,17 +82,73 @@
         </div>
     </div>
 
-    @if(!$mailConfigured)
+    @if(!$mailConfigured && !$defaultSender)
     <div class="modern-alert modern-alert-danger" style="margin-bottom: 1.25rem;">
         <i class="fas fa-exclamation-triangle"></i>
         <span>
-            <strong>Email not configured!</strong> The current mail driver is <code>{{ $mailMailer }}</code> which only writes to log files.
-            To send backups via email, configure SMTP in your <code>.env</code> file:
-            <code>MAIL_MAILER=smtp</code>, <code>MAIL_HOST</code>, <code>MAIL_USERNAME</code>, <code>MAIL_PASSWORD</code>.
-            For Gmail, use an <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:#dc2626;text-decoration:underline;">App Password</a>.
+            <strong>Email not configured!</strong> Backups will be created but <strong>NOT sent via email</strong>.
+            The easiest fix: go to <a href="{{ route('admin.email-inbox.settings') }}" style="color:#dc2626;text-decoration:underline;">Email Inbox Settings</a>,
+            add your Gmail account, and check "Use as Default Sender". No <code>.env</code> editing required.
         </span>
     </div>
     @endif
+
+    {{-- Sending Account Status Box --}}
+    <div class="modern-card" style="margin-bottom: 1.25rem;">
+        <div class="modern-form-section">
+            <div class="modern-form-section-header">
+                <div class="modern-form-section-icon" style="background:{{ $defaultSender ? '#dcfce7' : '#fee2e2' }};color:{{ $defaultSender ? '#15803d' : '#b91c1c' }};">
+                    <i class="fas {{ $defaultSender ? 'fa-paper-plane' : 'fa-exclamation-circle' }}"></i>
+                </div>
+                <div style="flex:1;">
+                    <h3 class="modern-form-section-title">Backup Email Delivery</h3>
+                    <p class="modern-form-section-desc">How automatic backups are sent to your email</p>
+                </div>
+                <a href="{{ route('admin.email-inbox.settings') }}" class="btn-modern btn-modern-outline" style="padding:0.4rem 0.9rem;font-size:0.82rem;">
+                    <i class="fas fa-cog"></i> Configure
+                </a>
+            </div>
+            <div class="modern-form-section-body" style="padding:1.25rem 2rem;">
+                @if($defaultSender)
+                    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                        <div style="flex-grow:1;min-width:250px;">
+                            <div style="font-size:0.8rem;color:#6b7280;margin-bottom:2px;">Sending via (SMTP)</div>
+                            <div style="font-weight:600;color:#15803d;font-size:1.05rem;">
+                                <i class="fas fa-check-circle me-1"></i>{{ $defaultSender->email_address }}
+                            </div>
+                            <div style="font-size:0.8rem;color:#6b7280;margin-top:4px;">
+                                Host: {{ $defaultSender->getSmtpHost() }}:{{ $defaultSender->smtp_port ?? 465 }}
+                                · Encryption: {{ $defaultSender->smtp_encryption ?? 'ssl' }}
+                                · Branch: {{ $defaultSender->branch?->name ?? 'All' }}
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:0.8rem;color:#6b7280;margin-bottom:2px;">Recipient (To)</div>
+                            <div style="font-weight:600;color:#1a1a2e;">{{ $scheduleSettings['backup_email'] }}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:0.75rem;padding:0.6rem 0.9rem;background:#f0fdf4;border-radius:8px;font-size:0.82rem;color:#15803d;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Automatic backup is <strong>{{ $scheduleSettings['backup_enabled'] === '1' ? 'ENABLED' : 'DISABLED' }}</strong>,
+                        running <strong>{{ $scheduleSettings['backup_frequency'] }}</strong> at <strong>{{ $scheduleSettings['backup_time'] }}</strong> (Africa/Addis_Ababa).
+                        Each backup will be emailed automatically to <strong>{{ $scheduleSettings['backup_email'] }}</strong> from <strong>{{ $defaultSender->email_address }}</strong>.
+                    </div>
+                @else
+                    <div style="text-align:center;padding:1rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:#dc2626;margin-bottom:0.5rem;"></i>
+                        <h5 style="margin:0 0 0.5rem;color:#dc2626;">No default sender configured</h5>
+                        <p style="margin:0 0 1rem;color:#6b7280;font-size:0.88rem;">
+                            To receive backups via email, you need to configure a Gmail (or cPanel) account and mark it as the default sender.
+                            This is the easiest method — no <code>.env</code> file editing required.
+                        </p>
+                        <a href="{{ route('admin.email-inbox.settings') }}" class="btn-modern btn-modern-primary">
+                            <i class="fas fa-plus"></i> Configure Gmail Account
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
     {{-- Mail Configuration Guide --}}
     <div class="modern-card" style="margin-bottom: 1.25rem;">

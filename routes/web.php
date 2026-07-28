@@ -1001,6 +1001,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::delete('email-inbox-settings/{inboxSetting}', [EmailInboxController::class, 'destroySettings'])->name('email-inbox.settings.destroy')->middleware('permission:settings.edit');
     Route::post('email-inbox-sync/{inboxSetting}', [EmailInboxController::class, 'syncInbox'])->name('email-inbox.sync')->middleware('permission:settings.edit');
     Route::post('email-inbox-test/{inboxSetting}', [EmailInboxController::class, 'testConnection'])->name('email-inbox.test')->middleware('permission:settings.edit');
+    Route::post('email-inbox-send-test/{inboxSetting}', [EmailInboxController::class, 'sendTestEmail'])->name('email-inbox.send-test')->middleware('permission:settings.edit');
 
     // ── Teacher Reviews (by Students) ────────────────────────
     Route::get('teacher-reviews', [AdminTeacherReviewController::class, 'index'])->name('teacher-reviews.index')->middleware('permission:teachers.view');

@@ -118,6 +118,44 @@
                             <input type="text" name="folder" class="modern-input" style="padding-left:0.75rem" value="INBOX">
                         </div>
                     </div>
+
+                    {{-- SMTP / Sending Section --}}
+                    <div style="margin-top:1.5rem;padding:1rem 1.25rem;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
+                        <h5 style="margin:0 0 0.5rem;color:#15803d;font-size:0.9rem;">
+                            <i class="fas fa-paper-plane me-1"></i>Sending (SMTP) — for sending emails & backups
+                        </h5>
+                        <p style="margin:0 0 0.75rem;font-size:0.8rem;color:#16a34a;">
+                            For Gmail, SMTP uses the same credentials as IMAP. Defaults are pre-filled for Gmail.
+                        </p>
+                        <div class="modern-form-grid">
+                            <div class="modern-form-group">
+                                <label class="modern-form-label">SMTP Host</label>
+                                <input type="text" name="smtp_host" class="modern-input" style="padding-left:0.75rem" value="smtp.gmail.com" placeholder="smtp.gmail.com">
+                            </div>
+                            <div class="modern-form-group">
+                                <label class="modern-form-label">SMTP Port</label>
+                                <input type="number" name="smtp_port" class="modern-input" style="padding-left:0.75rem" value="465" placeholder="465">
+                            </div>
+                            <div class="modern-form-group">
+                                <label class="modern-form-label">SMTP Encryption</label>
+                                <select name="smtp_encryption" class="modern-input modern-select" style="padding-left:0.75rem">
+                                    <option value="ssl" selected>SSL (recommended for Gmail port 465)</option>
+                                    <option value="tls">TLS (use port 587)</option>
+                                    <option value="none">None</option>
+                                </select>
+                            </div>
+                            <div class="modern-form-group">
+                                <label class="modern-form-label">Use as Default Sender?</label>
+                                <div class="form-check" style="padding-top:0.5rem">
+                                    <input type="checkbox" name="is_default_sender" value="1" class="form-check-input" id="isDefaultSender">
+                                    <label for="isDefaultSender" class="form-check-label" style="font-size:0.85rem;">
+                                        Yes — use this account to send <strong>backup emails</strong> and system notifications
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div style="margin-top:1rem;">
                         <button type="submit" class="btn-modern btn-modern-primary">
                             <i class="fas fa-save"></i> Save Inbox Configuration
@@ -147,7 +185,9 @@
                         <tr>
                             <th>Branch</th>
                             <th>Email</th>
-                            <th>Host</th>
+                            <th>Receive (IMAP)</th>
+                            <th>Send (SMTP)</th>
+                            <th>Default Sender</th>
                             <th>Last Synced</th>
                             <th>Status</th>
                             <th style="text-align:right;">Actions</th>
@@ -158,7 +198,15 @@
                         <tr>
                             <td>{{ $inbox->branch?->name ?? 'All Branches' }}</td>
                             <td>{{ $inbox->email_address }}</td>
-                            <td>{{ $inbox->imap_host }}:{{ $inbox->imap_port }}</td>
+                            <td><small>{{ $inbox->imap_host }}:{{ $inbox->imap_port }}</small></td>
+                            <td><small>{{ $inbox->smtp_host ?: $inbox->imap_host }}:{{ $inbox->smtp_port ?? 465 }}</small></td>
+                            <td>
+                                @if($inbox->is_default_sender)
+                                    <span class="modern-badge modern-badge-success"><i class="fas fa-check"></i> Yes</span>
+                                @else
+                                    <span class="text-muted small">No</span>
+                                @endif
+                            </td>
                             <td>{{ $inbox->last_synced_at?->format('M d, H:i') ?? 'Never' }}</td>
                             <td>
                                 <span class="modern-badge {{ $inbox->is_active ? 'modern-badge-success' : 'modern-badge-danger' }}">
@@ -168,13 +216,19 @@
                             <td style="text-align:right;">
                                 <form method="POST" action="{{ route('admin.email-inbox.test', $inbox->id) }}" style="display:inline">
                                     @csrf
-                                    <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;" title="Test Connection">
+                                    <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;" title="Test IMAP Connection">
                                         <i class="fas fa-plug"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.email-inbox.send-test', $inbox->id) }}" style="display:inline">
+                                    @csrf
+                                    <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;color:#059669;border-color:#059669;" title="Send Test Email via SMTP">
+                                        <i class="fas fa-paper-plane"></i>
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('admin.email-inbox.sync', $inbox->id) }}" style="display:inline">
                                     @csrf
-                                    <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;" title="Sync Now">
+                                    <button type="submit" class="btn-modern btn-modern-outline" style="padding:0.35rem 0.75rem;font-size:0.8rem;" title="Sync Inbox Now">
                                         <i class="fas fa-sync"></i>
                                     </button>
                                 </form>
