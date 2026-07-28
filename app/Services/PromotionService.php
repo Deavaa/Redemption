@@ -234,6 +234,9 @@ class PromotionService
             $student->status = 'graduated';
             $student->save();
 
+            // ── Auto-generate transcript for grades 9-12 ──
+            $this->generateGraduationTranscript($student, $academicYearId, $termId);
+
             $promotionResult = PromotionResult::updateOrCreate(
                 [
                     'student_id' => $studentId,
@@ -948,5 +951,77 @@ class PromotionService
             'subject_details'       => [],
             'failure_reasons'       => [['reason' => 'No mark entries found for the given period']],
         ];
+    }
+
+    /**
+     * Auto-generate a transcript certificate for a graduating student.
+     * Covers grades 9-12 (all marks available in the system).
+     */
+    protected function generateGraduationTranscript(Student $student, int $academicYearId, int $termId): void
+    {
+        try {
+            // Check if a transcript already exists for this student
+            $existing = \App\Models\Certificate::where('student_id', $student->id)
+                ->where('type', 'transcript')
+                ->exists();
+
+            if ($existing) {
+                return; // Don't create duplicate transcripts
+            }
+
+            // Generate certificate number
+            $prefix = 'TRA';
+            $year = date('Y');
+            $lastCert = \App\Models\Certificate::where('certificate_number', 'LIKE', "{$prefix}-{$year}-%")
+                ->orderByDesc('id')
+                ->first();
+            $nextNum = 1;
+            if ($lastCert) {
+                $parts = explode('-', $lastCert->certificate_number);
+                $lastNum = (int) end($parts);
+                $nextNum = $lastNum + 1;
+            }
+            $certificateNumber = $prefix . '-' . $year . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+            while (\App\Models\Certificate::where('certificate_number', $certificateNumber)->exists()) {
+                $nextNum++;
+                $certificateNumber = $prefix . '-' . $year . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+            }
+
+            // Check if the student has any marks in grades 9-12
+            $hasMarks = MarkEntry::where('student_id', $student->id)
+                ->whereHas('classRoom', function ($q) {
+                    $q->whereRaw('CAST(numeric_name AS UNSIGNED) >= 9')
+                      ->whereRaw('CAST(numeric_name AS UNSIGNED) <= 12');
+                })
+                ->exists();
+
+            if (!$hasMarks) {
+                \Log::info('Graduation transcript skipped — no marks found for grades 9-12', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->full_name,
+                ]);
+                return;
+            }
+
+            \App\Models\Certificate::create([
+                'student_id' => $student->id,
+                'type' => 'transcript',
+                'certificate_number' => $certificateNumber,
+                'issue_date' => now()->format('Y-m-d'),
+                'content' => 'Auto-generated graduation transcript (Grades 9-12) for ' . $student->full_name,
+                'template' => 'transcript',
+            ]);
+
+            \Log::info('Graduation transcript auto-generated', [
+                'student_id' => $student->id,
+                'student_name' => $student->full_name,
+                'certificate_number' => $certificateNumber,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to auto-generate graduation transcript: ' . $e->getMessage(), [
+                'student_id' => $student->id,
+            ]);
+        }
     }
 }

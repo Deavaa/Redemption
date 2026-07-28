@@ -424,6 +424,9 @@ class EnrollmentController extends Controller
                             $student->save();
                             // Also mark the source enrollment as graduated
                             $sourceEnrollment->update(['status' => 'graduated']);
+
+                            // ── Auto-generate transcript for grades 9-12 ──
+                            $this->autoGenerateTranscript($student);
                         }
                         $graduated++;
                         continue; // Skip creating a new enrollment for graduated students
@@ -892,5 +895,52 @@ class EnrollmentController extends Controller
 
         return redirect()->route('admin.enrollments.index')
             ->with('success', $message);
+    }
+
+    /**
+     * Auto-generate a transcript certificate for a graduating student.
+     * Covers grades 9-12 (all marks available in the system).
+     */
+    private function autoGenerateTranscript(Student $student): void
+    {
+        try {
+            $existing = \App\Models\Certificate::where('student_id', $student->id)
+                ->where('type', 'transcript')->exists();
+            if ($existing) return;
+
+            $hasMarks = MarkEntry::where('student_id', $student->id)
+                ->whereHas('classRoom', function ($q) {
+                    $q->whereRaw('CAST(numeric_name AS UNSIGNED) >= 9')
+                      ->whereRaw('CAST(numeric_name AS UNSIGNED) <= 12');
+                })->exists();
+            if (!$hasMarks) return;
+
+            $prefix = 'TRA';
+            $year = date('Y');
+            $lastCert = \App\Models\Certificate::where('certificate_number', 'LIKE', "{$prefix}-{$year}-%")
+                ->orderByDesc('id')->first();
+            $nextNum = $lastCert ? ((int) end(explode('-', $lastCert->certificate_number))) + 1 : 1;
+            $certNum = $prefix . '-' . $year . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+            while (\App\Models\Certificate::where('certificate_number', $certNum)->exists()) {
+                $nextNum++;
+                $certNum = $prefix . '-' . $year . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+            }
+
+            \App\Models\Certificate::create([
+                'student_id' => $student->id,
+                'type' => 'transcript',
+                'certificate_number' => $certNum,
+                'issue_date' => now()->format('Y-m-d'),
+                'content' => 'Auto-generated graduation transcript (Grades 9-12) for ' . $student->full_name,
+                'template' => 'transcript',
+            ]);
+
+            \Log::info('Graduation transcript auto-generated', [
+                'student_id' => $student->id,
+                'certificate_number' => $certNum,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Auto-generate transcript failed: ' . $e->getMessage());
+        }
     }
 }

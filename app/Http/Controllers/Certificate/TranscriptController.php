@@ -61,8 +61,13 @@ class TranscriptController extends Controller
         ])->findOrFail($r->student_id);
 
         // Get ALL mark entries across ALL academic years
+        // Filter to grades 9-12 only (for graduating students' transcripts)
         $allMarks = MarkEntry::with(['subject', 'term', 'academicYear', 'classRoom'])
             ->where('student_id', $student->id)
+            ->whereHas('classRoom', function ($q) {
+                $q->whereRaw('CAST(numeric_name AS UNSIGNED) >= 9')
+                  ->whereRaw('CAST(numeric_name AS UNSIGNED) <= 12');
+            })
             ->orderBy('academic_year_id')
             ->orderBy('term_id')
             ->orderBy('subject_id')
