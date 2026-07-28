@@ -650,6 +650,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'branch-sco
     Route::get('transcript', [TranscriptController::class, 'index'])->name('transcript.index')->middleware('permission:certificates.generate');
     Route::get('transcript/generate', [TranscriptController::class, 'generateForm'])->name('transcript.generate-form')->middleware('permission:certificates.generate');
     Route::post('transcript/generate', [TranscriptController::class, 'generate'])->name('transcript.generate')->middleware('permission:certificates.generate');
+    Route::post('transcript/bulk-generate', [TranscriptController::class, 'bulkGenerate'])->name('transcript.bulk-generate')->middleware('permission:certificates.generate');
+    Route::get('transcript/show/{certificate}', [TranscriptController::class, 'show'])->name('transcript.show')->middleware('permission:certificates.generate');
     Route::get('transcript/api/students', [TranscriptController::class, 'getStudents'])->name('transcript.students');
 
     // Leaving Certificate Generation

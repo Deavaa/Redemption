@@ -16,20 +16,35 @@ class TranscriptController extends Controller
 {
     public function index()
     {
-        $classes = ClassRoom::orderBy('numeric_name')->orderBy('name')->get();
+        $branchScope = request()->attributes->get('branch_scope');
+
+        // Load all classes (grades) ordered by numeric_name (grade level)
+        $classesQuery = ClassRoom::with(['branch', 'sections'])
+            ->withCount(['students' => function ($q) {
+                $q->whereIn('status', ['active', 'graduated']);
+            }]);
+        if ($branchScope) $classesQuery->where('branch_id', $branchScope);
+        $classes = $classesQuery
+            ->orderByRaw('CAST(numeric_name AS UNSIGNED) ASC')
+            ->orderBy('name')
+            ->get();
+
+        // Group classes by grade level (numeric_name) for the multi-select grid
+        $classesByGrade = $classes->groupBy(function ($c) {
+            return $c->numeric_name ?: 'Other';
+        });
 
         // If student_id is provided, directly generate the transcript
         $preselectedStudentId = request()->query('student_id');
         if ($preselectedStudentId) {
             $student = Student::with(['classroom', 'section', 'branch', 'parents'])->find($preselectedStudentId);
             if ($student) {
-                // Simulate a generate request
                 $request = new Request(['student_id' => $preselectedStudentId]);
                 return $this->generate($request);
             }
         }
 
-        return view('admin.certificate-generate.transcript-index', compact('classes'));
+        return view('admin.certificate-generate.transcript-index', compact('classes', 'classesByGrade'));
     }
 
     /**
@@ -44,22 +59,51 @@ class TranscriptController extends Controller
     public function getStudents(Request $r)
     {
         $query = Student::with('classroom', 'section');
-        if ($r->filled('class_id')) $query->where('class_id', $r->class_id);
+
+        // Single class_id (legacy) OR multiple class_ids (bulk generate page)
+        if ($r->filled('class_id')) {
+            $query->where('class_id', $r->class_id);
+        } elseif ($r->filled('class_ids')) {
+            $classIds = explode(',', $r->class_ids);
+            $query->whereIn('class_id', $classIds);
+        }
         if ($r->filled('section_id')) $query->where('section_id', $r->section_id);
-        return response()->json($query->orderBy('full_name')->get());
+
+        // Only include active + graduated students (skip inactive/transferred)
+        $query->whereIn('status', ['active', 'graduated']);
+
+        $students = $query->orderBy('full_name')->get();
+
+        // If requested, add a flag indicating whether each student has any
+        // grades 9-12 marks (used to disable students without transcript data)
+        if ($r->filled('include_marks_check')) {
+            $studentIds = $students->pluck('id')->all();
+            $studentsWithMarks = MarkEntry::whereIn('student_id', $studentIds)
+                ->whereHas('classRoom', function ($q) {
+                    $q->whereRaw('CAST(numeric_name AS UNSIGNED) >= 9')
+                      ->whereRaw('CAST(numeric_name AS UNSIGNED) <= 12');
+                })
+                ->pluck('student_id')
+                ->unique()
+                ->all();
+            $studentsWithMarksSet = array_flip($studentsWithMarks);
+            $students = $students->map(function ($s) use ($studentsWithMarksSet) {
+                $s->has_grades_9_12_marks = isset($studentsWithMarksSet[$s->id]);
+                return $s;
+            });
+        }
+
+        return response()->json($students);
     }
 
-    public function generate(Request $r)
+    /**
+     * Build the transcript data structure for a single student.
+     * Shared between generate() (single) and show() (re-render existing cert).
+     *
+     * @return array{yearColumns, subjectRows, yearTotals, yearAverages, yearRanks, allTermNames, termCount, feeSummary}
+     */
+    private function buildTranscriptData(Student $student): array
     {
-        $r->validate([
-            'student_id' => 'required|exists:students,id',
-        ]);
-
-        $student = Student::with([
-            'classroom', 'section', 'branch',
-            'parents',
-        ])->findOrFail($r->student_id);
-
         // Get ALL mark entries across ALL academic years
         // Filter to grades 9-12 only (for graduating students' transcripts)
         $allMarks = MarkEntry::with(['subject', 'term', 'academicYear', 'classRoom'])
@@ -73,17 +117,13 @@ class TranscriptController extends Controller
             ->orderBy('subject_id')
             ->get();
 
-        // ── Build the new data structure ──
-        // Goal: one row per subject, columns = academic years, each year has Term1 | Term2 | Annual
-        // Also need to track all unique terms (could be 2 or 3 per year)
-
-        $yearColumns = [];   // ordered list of year info
-        $subjectRows  = [];  // [subjectName => [yearIndex => [term1 => score, term2 => score, ..., annual => score]]]
-        $yearTotals   = [];  // [yearIndex => [term1 => sum, term2 => sum, ..., annual => sum, count => n]]
+        $yearColumns = [];
+        $subjectRows  = [];
+        $yearTotals   = [];
         $yearAverages = [];
         $yearRanks    = [];
 
-        // 1) Identify all unique terms across all years (e.g. Term 1, Term 2, Term 3)
+        // 1) Identify all unique terms across all years
         $allTermNames = [];
         $allMarks->each(function ($m) use (&$allTermNames) {
             $tName = $m->term ? $m->term->name : 'Term';
@@ -91,7 +131,6 @@ class TranscriptController extends Controller
                 $allTermNames[] = $tName;
             }
         });
-        // Sort term names naturally (Term 1, Term 2, Term 3...)
         natsort($allTermNames);
         $allTermNames = array_values($allTermNames);
         $termCount = count($allTermNames);
@@ -109,16 +148,12 @@ class TranscriptController extends Controller
                 'class_name' => $classRoom ? $classRoom->name : '-',
             ];
 
-            // Initialize totals for this year
             $yearTotals[$yearIndex] = array_fill_keys($allTermNames, 0);
             $yearTotals[$yearIndex]['annual'] = 0;
             $yearTotals[$yearIndex]['count'] = 0;
 
-            // Group by term within this year
             $terms = $yearMarks->groupBy('term_id');
 
-            // Build a map: termName => [subjectId => bestGrandTotal]
-            $termSubjectScores = [];
             foreach ($terms as $termId => $termMarks) {
                 $term = $termMarks->first()->term;
                 $tName = $term ? $term->name : 'Term';
@@ -129,7 +164,6 @@ class TranscriptController extends Controller
                     $sName = $subject ? $subject->name : 'Unknown';
                     $bestMark = $marks->sortByDesc('grand_total')->first();
 
-                    // Store in subjectRows
                     if (!isset($subjectRows[$sName])) {
                         $subjectRows[$sName] = [];
                     }
@@ -140,7 +174,6 @@ class TranscriptController extends Controller
                     $score = $bestMark->grand_total ?? 0;
                     $subjectRows[$sName][$yearIndex][$tName] = $score;
 
-                    // Track for totals
                     $yearTotals[$yearIndex][$tName] = ($yearTotals[$yearIndex][$tName] ?? 0) + $score;
                 }
             }
@@ -161,7 +194,7 @@ class TranscriptController extends Controller
             }
             unset($yearData);
 
-            // Calculate year totals for annual column
+            // Year totals for annual column
             $annualSum = 0;
             $subjectCountForYear = 0;
             foreach ($subjectRows as $sName => $yearData) {
@@ -189,10 +222,8 @@ class TranscriptController extends Controller
             $yearRanks[$yearIndex] = $classRank;
         }
 
-        // Sort subjects alphabetically
         ksort($subjectRows);
 
-        // Get fee payment summary (join with fees table to get total amount)
         $feeSummary = FeePayment::join('fees', 'fee_payments.fee_id', '=', 'fees.id')
             ->where('fee_payments.student_id', $student->id)
             ->selectRaw('
@@ -203,7 +234,23 @@ class TranscriptController extends Controller
             ')
             ->first();
 
-        // Auto-create certificate record
+        return [
+            'yearColumns'   => $yearColumns,
+            'subjectRows'   => $subjectRows,
+            'yearTotals'    => $yearTotals,
+            'yearAverages'  => $yearAverages,
+            'yearRanks'     => $yearRanks,
+            'allTermNames'  => $allTermNames,
+            'termCount'     => $termCount,
+            'feeSummary'    => $feeSummary,
+        ];
+    }
+
+    /**
+     * Generate the next transcript certificate number (TRA-YYYY-NNNN).
+     */
+    private function nextCertificateNumber(): string
+    {
         $prefix = 'TRA';
         $year = date('Y');
         $lastCert = Certificate::where('certificate_number', 'LIKE', "{$prefix}-{$year}-%")
@@ -221,11 +268,27 @@ class TranscriptController extends Controller
             $nextNum++;
             $certificateNumber = $prefix . '-' . $year . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
         }
+        return $certificateNumber;
+    }
 
+    public function generate(Request $r)
+    {
+        $r->validate([
+            'student_id' => 'required|exists:students,id',
+        ]);
+
+        $student = Student::with([
+            'classroom', 'section', 'branch',
+            'parents',
+        ])->findOrFail($r->student_id);
+
+        $data = $this->buildTranscriptData($student);
+
+        // Auto-create certificate record
         $cert = Certificate::create([
             'student_id' => $student->id,
             'type' => 'transcript',
-            'certificate_number' => $certificateNumber,
+            'certificate_number' => $this->nextCertificateNumber(),
             'issue_date' => now()->format('Y-m-d'),
             'content' => 'Academic transcript for ' . $student->full_name,
             'template' => 'transcript',
@@ -235,6 +298,117 @@ class TranscriptController extends Controller
             'student', 'cert', 'feeSummary',
             'yearColumns', 'subjectRows', 'yearTotals', 'yearAverages', 'yearRanks',
             'allTermNames', 'termCount'
+        ), $data);
+    }
+
+    /**
+     * Show an existing transcript by certificate ID — does NOT create a new
+     * certificate record. Used for re-viewing already-generated transcripts.
+     */
+    public function show(Certificate $certificate)
+    {
+        if ($certificate->type !== 'transcript') {
+            abort(404, 'Certificate is not a transcript.');
+        }
+
+        $student = Student::with([
+            'classroom', 'section', 'branch', 'parents',
+        ])->findOrFail($certificate->student_id);
+
+        $data = $this->buildTranscriptData($student);
+        $cert = $certificate;
+
+        return view('admin.certificate-generate.transcript', compact(
+            'student', 'cert', 'feeSummary',
+            'yearColumns', 'subjectRows', 'yearTotals', 'yearAverages', 'yearRanks',
+            'allTermNames', 'termCount'
+        ), $data);
+    }
+
+    /**
+     * Bulk generate transcripts for multiple students at once.
+     * Creates certificate records for each, then shows a results page
+     * with view links.
+     */
+    public function bulkGenerate(Request $r)
+    {
+        $r->validate([
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'exists:students,id',
+        ]);
+
+        $studentIds = array_unique($r->student_ids);
+        $students = Student::with(['classroom', 'section', 'branch'])
+            ->whereIn('id', $studentIds)
+            ->orderBy('full_name')
+            ->get();
+
+        $generated = [];
+        $skipped = [];
+        $errors = [];
+
+        foreach ($students as $student) {
+            try {
+                // Check for existing transcript cert — if one already exists for
+                // this student today, reuse it instead of creating a duplicate.
+                $existing = Certificate::where('student_id', $student->id)
+                    ->where('type', 'transcript')
+                    ->whereDate('issue_date', now()->toDateString())
+                    ->first();
+
+                if ($existing) {
+                    // Quick sanity check: does the student have any grade 9-12 marks?
+                    $hasMarks = MarkEntry::where('student_id', $student->id)
+                        ->whereHas('classRoom', function ($q) {
+                            $q->whereRaw('CAST(numeric_name AS UNSIGNED) >= 9')
+                              ->whereRaw('CAST(numeric_name AS UNSIGNED) <= 12');
+                        })->exists();
+
+                    if (!$hasMarks) {
+                        $skipped[] = ['student' => $student, 'reason' => 'No grades 9-12 marks found'];
+                        continue;
+                    }
+
+                    $generated[] = [
+                        'student' => $student,
+                        'certificate' => $existing,
+                        'reused' => true,
+                    ];
+                    continue;
+                }
+
+                $hasMarks = MarkEntry::where('student_id', $student->id)
+                    ->whereHas('classRoom', function ($q) {
+                        $q->whereRaw('CAST(numeric_name AS UNSIGNED) >= 9')
+                          ->whereRaw('CAST(numeric_name AS UNSIGNED) <= 12');
+                    })->exists();
+
+                if (!$hasMarks) {
+                    $skipped[] = ['student' => $student, 'reason' => 'No grades 9-12 marks found'];
+                    continue;
+                }
+
+                $cert = Certificate::create([
+                    'student_id' => $student->id,
+                    'type' => 'transcript',
+                    'certificate_number' => $this->nextCertificateNumber(),
+                    'issue_date' => now()->format('Y-m-d'),
+                    'content' => 'Academic transcript for ' . $student->full_name,
+                    'template' => 'transcript',
+                ]);
+
+                $generated[] = [
+                    'student' => $student,
+                    'certificate' => $cert,
+                    'reused' => false,
+                ];
+            } catch (\Exception $e) {
+                $errors[] = ['student' => $student, 'error' => $e->getMessage()];
+            }
+        }
+
+        return view('admin.certificate-generate.transcript-bulk-results', compact(
+            'generated', 'skipped', 'errors'
         ));
     }
 }

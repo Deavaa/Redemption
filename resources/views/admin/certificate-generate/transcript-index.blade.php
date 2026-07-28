@@ -1,10 +1,61 @@
 @extends('layouts.admin')
-@section('title', 'Academic Transcript')
+@section('title', 'Academic Transcript — Bulk Generate')
+
+@push('styles')
+<style>
+.ti-page-header { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap; }
+.ti-page-header-left { display:flex;align-items:center;gap:10px;flex-wrap:wrap; }
+.ti-page-title { font-size:0.95rem;font-weight:700;color:var(--text-dark);margin:0; }
+.ti-stats { display:flex;gap:8px;flex-wrap:wrap; }
+.ti-stat-pill { background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:0.78rem;color:var(--text-muted); }
+.ti-stat-pill strong { color:var(--text-dark);font-weight:700; }
+
+.ti-grade-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px; }
+.ti-grade-card { position:relative;padding:10px 12px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;background:var(--card-bg); }
+.ti-grade-card:hover { border-color:var(--primary);background:var(--primary-light); }
+.ti-grade-card.active { border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 2px rgba(99,102,241,0.15); }
+.ti-grade-card .grade-num { font-size:1.4rem;font-weight:700;color:var(--text-dark);line-height:1; }
+.ti-grade-card.active .grade-num { color:var(--primary); }
+.ti-grade-card .grade-meta { font-size:0.72rem;color:var(--text-muted);margin-top:4px; }
+.ti-grade-card .grade-check { position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:var(--card-bg);transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent; }
+.ti-grade-card.active .grade-check { border-color:var(--primary);background:var(--primary);color:#fff; }
+
+.ti-student-toolbar { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap; }
+.ti-student-toolbar-left { display:flex;align-items:center;gap:10px; }
+.ti-student-count { font-size:0.78rem;color:var(--text-muted); }
+.ti-student-count strong { color:var(--primary);font-weight:700; }
+.ti-search { position:relative;width:220px; }
+.ti-search-input { width:100%;border:1px solid var(--border);border-radius:8px;padding:5px 10px 5px 28px;font-size:0.82rem;font-family:var(--font); }
+.ti-search-input:focus { outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-light); }
+.ti-search-icon { position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:0.7rem;color:var(--text-muted); }
+
+.ti-student-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;max-height:480px;overflow-y:auto;padding:8px 14px; }
+.ti-student-card { display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .12s;background:var(--card-bg); }
+.ti-student-card:hover { border-color:var(--primary);background:var(--primary-light); }
+.ti-student-card.active { border-color:var(--primary);background:var(--primary-light); }
+.ti-student-card.has-no-marks { opacity:0.5;cursor:not-allowed;background:#f9fafb; }
+.ti-student-avatar { width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--primary-light),#e0e7ff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:var(--primary);flex-shrink:0;overflow:hidden; }
+.ti-student-info { flex:1;min-width:0; }
+.ti-student-name { font-size:0.82rem;font-weight:600;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.ti-student-meta { font-size:0.7rem;color:var(--text-muted);display:flex;gap:6px;flex-wrap:wrap; }
+.ti-student-check { width:18px;height:18px;accent-color:var(--primary); }
+
+.ti-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;color:var(--text-muted);grid-column:1/-1; }
+.ti-empty i { font-size:28px;opacity:0.3;margin-bottom:8px; }
+
+.ti-actions { display:flex;gap:8px;align-items:center;flex-wrap:wrap; }
+.ti-btn-primary { background:var(--primary);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-weight:600;font-size:0.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s; }
+.ti-btn-primary:hover { background:var(--primary-dark); }
+.ti-btn-primary:disabled { background:var(--text-muted);cursor:not-allowed;opacity:0.6; }
+.ti-btn-outline { background:transparent;color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:8px;font-weight:600;font-size:0.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px; }
+.ti-btn-outline:hover { background:var(--bg-hover); }
+</style>
+@endpush
 
 @section('content')
 <div class="modern-page">
-    <div class="modern-page-header" style="margin-bottom:0.75rem;">
-        <div class="modern-page-header-left" style="display:flex;align-items:center;gap:10px;">
+    <div class="ti-page-header">
+        <div class="ti-page-header-left">
             <nav aria-label="breadcrumb" class="modern-breadcrumb" style="margin:0;">
                 <ol style="margin:0;">
                     <li><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i></a></li>
@@ -12,232 +63,315 @@
                     <li class="active">Academic Transcript</li>
                 </ol>
             </nav>
-            <span style="color:var(--border);font-size:0.65rem;">|</span>
-            <h1 style="font-size:0.85rem;font-weight:700;color:var(--text-dark);margin:0;">Academic Transcript</h1>
+            <span style="color:var(--border);">|</span>
+            <h1 class="ti-page-title">Academic Transcript — Bulk Generate</h1>
         </div>
-        <div class="modern-page-header-right">
-            <a href="{{ route('admin.certificate-generate.index') }}" class="btn-modern btn-modern-ghost" style="font-size:0.7rem;padding:4px 10px;"><i class="fas fa-arrow-left"></i> Back</a>
-            <button type="submit" class="btn-modern btn-modern-primary" id="generateBtnTop" disabled form="transcriptForm" style="font-size:0.7rem;padding:4px 12px;">
-                <i class="fas fa-scroll"></i> Generate Transcript
-            </button>
+        <div class="ti-stats">
+            <span class="ti-stat-pill"><strong>{{ $classes->count() }}</strong> classes</span>
+            <span class="ti-stat-pill"><strong>{{ $classes->sum('students_count') }}</strong> students</span>
+            <span class="ti-stat-pill"><strong id="selectedCount">0</strong> selected</span>
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.transcript.generate') }}" target="_blank" id="transcriptForm">
+    <form method="POST" action="{{ route('admin.transcript.bulk-generate') }}" id="transcriptForm" target="_blank">
         @csrf
 
-        {{-- Step 1: Select Class --}}
-        <div class="modern-card" style="margin-bottom:10px;">
-            <div class="certgen-toolbar">
-                <span class="certgen-toolbar-label">Select Class</span>
-            </div>
-            <div style="padding:8px 14px;">
-                <div class="gen-class-grid" id="classGrid">
-                    <button type="button" class="gen-class-card" data-class-id="">
-                        <i class="fas fa-th-large"></i>
-                        <span>All</span>
+        {{-- Step 1: Select Grades/Classes (multi-select) --}}
+        <div class="modern-card" style="margin-bottom:12px;">
+            <div class="ti-student-toolbar">
+                <div class="ti-student-toolbar-left">
+                    <span style="font-size:0.72rem;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:0.4px;">
+                        <i class="fas fa-graduation-cap me-1"></i>Step 1: Select Classes / Grades
+                    </span>
+                </div>
+                <div class="ti-actions">
+                    <button type="button" class="ti-btn-outline" id="selectAllGrades" style="padding:4px 10px;font-size:0.78rem;">
+                        <i class="fas fa-check-double"></i> Select All
                     </button>
-                    @foreach($classes as $c)
-                        <button type="button" class="gen-class-card" data-class-id="{{ $c->id }}">
-                            <i class="fas fa-chalkboard"></i>
-                            <span>{{ $c->name }}</span>
-                        </button>
+                    <button type="button" class="ti-btn-outline" id="clearGrades" style="padding:4px 10px;font-size:0.78rem;">
+                        <i class="fas fa-times-circle"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div style="padding:12px 14px;">
+                <div class="ti-grade-grid" id="gradeGrid">
+                    @foreach($classesByGrade as $gradeNum => $gradeClasses)
+                        @php
+                            $gradeStudentCount = $gradeClasses->sum('students_count');
+                            $firstClass = $gradeClasses->first();
+                        @endphp
+                        @foreach($gradeClasses as $idx => $class)
+                            <div class="ti-grade-card {{ $gradeClasses->count() === 1 ? 'active' : '' }}"
+                                 data-class-id="{{ $class->id }}"
+                                 data-grade="{{ $gradeNum }}"
+                                 data-student-count="{{ $class->students_count }}"
+                                 data-class-name="{{ $class->name }}"
+                                 data-branch-name="{{ $class->branch?->name ?? '' }}"
+                                 onclick="toggleClass({{ $class->id }})">
+                                <div class="grade-check"><i class="fas fa-check"></i></div>
+                                <div class="grade-num">Grade {{ $gradeNum }}</div>
+                                <div class="grade-meta">
+                                    {{ $class->name }}
+                                    @if($class->branch) · {{ $class->branch->name }}@endif
+                                    <br>{{ $class->students_count }} student(s)
+                                </div>
+                            </div>
+                        @endforeach
                     @endforeach
+
+                    @if($classes->isEmpty())
+                        <div class="ti-empty">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>No classes found. Please create classes first.</p>
+                        </div>
+                    @endif
                 </div>
-                <input type="hidden" name="class_id" id="selectedClassId" value="">
+                <input type="hidden" name="class_ids" id="selectedClassIds" value="">
             </div>
         </div>
 
-        {{-- Step 2: Select Student --}}
-        <div class="modern-card" style="margin-bottom:10px;">
-            <div class="certgen-toolbar">
-                <span class="certgen-toolbar-label">Select Student</span>
-                <div class="gen-search-box">
-                    <i class="fas fa-search gen-search-icon"></i>
-                    <input type="text" id="studentSearch" class="gen-search-input" placeholder="Search students...">
+        {{-- Step 2: Students (loaded dynamically via AJAX) --}}
+        <div class="modern-card" style="margin-bottom:12px;">
+            <div class="ti-student-toolbar">
+                <div class="ti-student-toolbar-left">
+                    <span style="font-size:0.72rem;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:0.4px;">
+                        <i class="fas fa-users me-1"></i>Step 2: Select Students
+                    </span>
+                    <span class="ti-student-count"><strong id="visibleCount">0</strong> shown · <strong id="totalStudentCount">0</strong> total</span>
                 </div>
-            </div>
-            <div style="padding:8px 14px;">
-                <div id="studentListContainer" class="gen-student-grid">
-                    <div class="gen-empty-state">
-                        <i class="fas fa-users"></i>
-                        <p>Select a class to load students</p>
+                <div class="ti-actions">
+                    <div class="ti-search">
+                        <i class="fas fa-search ti-search-icon"></i>
+                        <input type="text" id="studentSearch" class="ti-search-input" placeholder="Search students...">
                     </div>
+                    <button type="button" class="ti-btn-outline" id="selectAllStudents" style="padding:4px 10px;font-size:0.78rem;">
+                        <i class="fas fa-check-double"></i> Select All Visible
+                    </button>
+                    <button type="button" class="ti-btn-outline" id="clearStudents" style="padding:4px 10px;font-size:0.78rem;">
+                        <i class="fas fa-times-circle"></i> Clear
+                    </button>
                 </div>
-                <input type="hidden" name="student_id" id="selectedStudentId" value="">
+            </div>
+            <div id="studentGrid" class="ti-student-grid">
+                <div class="ti-empty">
+                    <i class="fas fa-arrow-up"></i>
+                    <p>Select classes above to load students</p>
+                </div>
             </div>
         </div>
 
-        {{-- Selected Student Preview --}}
-        <div class="modern-card gen-preview-card" id="studentPreviewCard" style="margin-bottom:10px;display:none;">
-            <div class="gen-preview-body" style="padding:10px 14px;">
-                <div class="gen-preview-avatar" id="previewAvatar" style="width:36px;height:36px;font-size:14px;">?</div>
-                <div class="gen-preview-info">
-                    <h4 id="previewName" style="font-size:13px;">-</h4>
-                    <div class="gen-preview-details" style="gap:10px;">
-                        <span style="font-size:10px;"><i class="fas fa-hashtag" style="font-size:8px;"></i> <span id="previewRoll">-</span></span>
-                        <span style="font-size:10px;"><i class="fas fa-building" style="font-size:8px;"></i> <span id="previewClass">-</span></span>
-                        <span style="font-size:10px;"><i class="fas fa-layer-group" style="font-size:8px;"></i> <span id="previewSection">-</span></span>
-                    </div>
-                </div>
-                <button type="button" class="gen-preview-remove" id="removeStudent" style="width:26px;height:26px;font-size:10px;" title="Remove">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-
-        {{-- Actions --}}
+        {{-- Step 3: Actions --}}
         <div class="modern-card">
-            <div class="modern-form-actions">
-                <a href="{{ route('admin.certificate-generate.index') }}" class="btn-modern btn-modern-ghost">Cancel</a>
-                <button type="submit" class="btn-modern btn-modern-primary" id="generateBtn" disabled>
-                    <i class="fas fa-scroll"></i> Generate Transcript
-                </button>
+            <div class="ti-student-toolbar" style="border-bottom:none;">
+                <div class="ti-student-toolbar-left">
+                    <span style="font-size:0.85rem;font-weight:600;color:var(--text-dark);">
+                        <i class="fas fa-scroll me-1 text-primary"></i>
+                        Ready to generate <strong id="readyCount" class="text-primary">0</strong> transcript(s)
+                    </span>
+                </div>
+                <div class="ti-actions">
+                    <a href="{{ route('admin.certificate-generate.index') }}" class="ti-btn-outline">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                    <button type="submit" class="ti-btn-primary" id="generateBtn" disabled>
+                        <i class="fas fa-scroll"></i> Generate Selected Transcripts
+                    </button>
+                </div>
             </div>
         </div>
     </form>
 </div>
-
-@push('styles')
-<style>
-.certgen-toolbar { display:flex;align-items:center;justify-content:space-between;padding:6px 14px;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap; }
-.certgen-toolbar-label { font-size:10px;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:0.3px; }
-.gen-class-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px; }
-.gen-class-card { display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--card-bg);cursor:pointer;transition:var(--transition);font-family:var(--font);font-size:11px;font-weight:600;color:var(--text); }
-.gen-class-card i { font-size:16px;color:var(--text-muted);transition:var(--transition); }
-.gen-class-card:hover { border-color:var(--primary);background:var(--primary-light);color:var(--primary); }
-.gen-class-card:hover i { color:var(--primary); }
-.gen-class-card.active { border-color:var(--primary);background:var(--primary-light);color:var(--primary);box-shadow:0 0 0 2px rgba(99,102,241,0.12); }
-.gen-class-card.active i { color:var(--primary); }
-.gen-search-box { position:relative;width:180px; }
-.gen-search-icon { position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:10px; }
-.gen-search-input { width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px 4px 26px;font-size:11px;font-family:var(--font);color:var(--text-dark);background:var(--card-bg);transition:var(--transition); }
-.gen-search-input:focus { outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-light); }
-.gen-student-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;max-height:280px;overflow-y:auto;scrollbar-width:thin; }
-.gen-student-card { display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);background:var(--card-bg); }
-.gen-student-card:hover { border-color:var(--primary);background:var(--primary-light); }
-.gen-student-card.active { border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 2px rgba(99,102,241,0.1); }
-.gen-student-avatar { width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--primary-light),#e0e7ff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;color:var(--primary);flex-shrink:0;overflow:hidden; }
-.gen-student-avatar img { width:100%;height:100%;object-fit:cover; }
-.gen-student-info { flex:1;min-width:0; }
-.gen-student-name { font-size:11px;font-weight:600;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.gen-student-meta { font-size:9px;color:var(--text-muted); }
-.gen-student-check { width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--transition);font-size:9px;color:transparent; }
-.gen-student-card.active .gen-student-check { border-color:var(--primary);background:var(--primary);color:#fff; }
-.gen-empty-state { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;color:var(--text-muted);grid-column:1/-1; }
-.gen-empty-state i { font-size:24px;opacity:0.3;margin-bottom:6px; }
-.gen-empty-state p { font-size:12px; }
-.gen-preview-card { border-color:var(--success)!important;box-shadow:0 0 0 2px rgba(16,185,129,0.08)!important; }
-.gen-preview-body { display:flex;align-items:center;gap:10px; }
-.gen-preview-avatar { border-radius:50%;background:linear-gradient(135deg,var(--success),#34d399);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0; }
-.gen-preview-info { flex:1;min-width:0; }
-.gen-preview-info h4 { font-weight:700;color:var(--text-dark);margin:0 0 2px; }
-.gen-preview-details { display:flex;gap:10px;flex-wrap:wrap; }
-.gen-preview-details span { color:var(--text-muted);display:flex;align-items:center;gap:3px; }
-.gen-preview-details span i { color:var(--success); }
-.gen-preview-remove { border-radius:50%;border:1px solid var(--border);background:var(--card-bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:var(--transition);flex-shrink:0; }
-.gen-preview-remove:hover { background:var(--danger-light);border-color:var(--danger);color:var(--danger); }
-.modern-page-header-right { display:flex;align-items:center;gap:6px;flex-shrink:0; }
-</style>
-@endpush
+@endsection
 
 @push('scripts')
 <script>
 (function() {
-    const classGrid = document.getElementById('classGrid');
-    const classInput = document.getElementById('selectedClassId');
-    const studentContainer = document.getElementById('studentListContainer');
-    const studentInput = document.getElementById('selectedStudentId');
-    const studentSearch = document.getElementById('studentSearch');
-    const previewCard = document.getElementById('studentPreviewCard');
-    const previewAvatar = document.getElementById('previewAvatar');
-    const previewName = document.getElementById('previewName');
-    const previewRoll = document.getElementById('previewRoll');
-    const previewClass = document.getElementById('previewClass');
-    const previewSection = document.getElementById('previewSection');
-    const removeStudentBtn = document.getElementById('removeStudent');
-    const genBtn = document.getElementById('generateBtn');
-    const genBtnTop = document.getElementById('generateBtnTop');
-
+    let selectedClassIds = new Set();
     let allStudents = [];
-    let selectedClassId = '';
-    let selectedStudentId = '';
+    let selectedStudentIds = new Set();
+    let filteredStudents = [];
 
-    classGrid?.addEventListener('click', function(e) {
-        const card = e.target.closest('.gen-class-card');
+    const gradeGrid = document.getElementById('gradeGrid');
+    const studentGrid = document.getElementById('studentGrid');
+    const studentSearch = document.getElementById('studentSearch');
+    const generateBtn = document.getElementById('generateBtn');
+    const selectedCountEl = document.getElementById('selectedCount');
+    const visibleCountEl = document.getElementById('visibleCount');
+    const totalStudentCountEl = document.getElementById('totalStudentCount');
+    const readyCountEl = document.getElementById('readyCount');
+
+    // Pre-select all single-grade classes by default
+    document.querySelectorAll('.ti-grade-card.active').forEach(card => {
+        selectedClassIds.add(card.dataset.classId);
+    });
+
+    // If any pre-selected, load students for them
+    if (selectedClassIds.size > 0) {
+        loadStudents();
+    }
+
+    window.toggleClass = function(classId) {
+        const card = document.querySelector(`.ti-grade-card[data-class-id="${classId}"]`);
         if (!card) return;
-        classGrid.querySelectorAll('.gen-class-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        selectedClassId = card.dataset.classId;
-        classInput.value = selectedClassId;
-        clearStudentSelection();
+
+        if (selectedClassIds.has(classId)) {
+            selectedClassIds.delete(classId);
+            card.classList.remove('active');
+        } else {
+            selectedClassIds.add(classId);
+            card.classList.add('active');
+        }
+
+        // Deselect students from classes no longer selected
+        const studentsToRemove = allStudents.filter(s => s.class_id == classId);
+        studentsToRemove.forEach(s => selectedStudentIds.delete(s.id));
+
+        loadStudents();
+    };
+
+    document.getElementById('selectAllGrades')?.addEventListener('click', function() {
+        document.querySelectorAll('.ti-grade-card').forEach(card => {
+            selectedClassIds.add(card.dataset.classId);
+            card.classList.add('active');
+        });
         loadStudents();
     });
 
+    document.getElementById('clearGrades')?.addEventListener('click', function() {
+        selectedClassIds.clear();
+        document.querySelectorAll('.ti-grade-card').forEach(card => card.classList.remove('active'));
+        selectedStudentIds.clear();
+        allStudents = [];
+        renderStudents();
+        updateUI();
+    });
+
     function loadStudents() {
-        studentContainer.innerHTML = '<div class="gen-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>';
-        const params = new URLSearchParams();
-        if (selectedClassId) params.set('class_id', selectedClassId);
-        fetch('{{ route("admin.transcript.students") }}?' + params)
+        if (selectedClassIds.size === 0) {
+            allStudents = [];
+            renderStudents();
+            updateUI();
+            return;
+        }
+
+        studentGrid.innerHTML = '<div class="ti-empty"><i class="fas fa-spinner fa-spin"></i><p>Loading students...</p></div>';
+
+        const classIds = Array.from(selectedClassIds).join(',');
+        fetch('{{ route("admin.transcript.students") }}?class_ids=' + classIds + '&include_marks_check=1')
             .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
-            .then(data => { allStudents = Array.isArray(data) ? data : []; renderStudents(allStudents); })
-            .catch(err => { studentContainer.innerHTML = '<div class="gen-empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading students</p></div>'; });
+            .then(data => {
+                allStudents = Array.isArray(data) ? data : [];
+                renderStudents();
+                updateUI();
+            })
+            .catch(err => {
+                studentGrid.innerHTML = '<div class="ti-empty"><i class="fas fa-exclamation-triangle"></i><p>Error loading students: ' + err.message + '</p></div>';
+            });
     }
 
-    function renderStudents(students) {
-        if (!students.length) { studentContainer.innerHTML = '<div class="gen-empty-state"><i class="fas fa-user-slash"></i><p>No students found</p></div>'; return; }
-        studentContainer.innerHTML = '';
-        students.forEach(s => {
+    function renderStudents() {
+        filteredStudents = allStudents;
+
+        // Apply search filter
+        const q = studentSearch.value.toLowerCase().trim();
+        if (q) {
+            filteredStudents = allStudents.filter(s =>
+                (s.full_name || '').toLowerCase().includes(q) ||
+                (s.roll_number || '').toLowerCase().includes(q) ||
+                (s.admission_number || '').toLowerCase().includes(q)
+            );
+        }
+
+        if (filteredStudents.length === 0) {
+            studentGrid.innerHTML = '<div class="ti-empty"><i class="fas fa-user-slash"></i><p>' + (allStudents.length === 0 ? 'Select classes above to load students' : 'No students match your search') + '</p></div>';
+            return;
+        }
+
+        studentGrid.innerHTML = '';
+        filteredStudents.forEach(s => {
             const card = document.createElement('div');
-            card.className = 'gen-student-card' + (selectedStudentId == s.id ? ' active' : '');
+            const isSelected = selectedStudentIds.has(s.id);
+            const hasMarks = s.has_grades_9_12_marks !== false;
+            card.className = 'ti-student-card' + (isSelected ? ' active' : '') + (!hasMarks ? ' has-no-marks' : '');
             card.dataset.studentId = s.id;
             const initials = ((s.full_name || '?')[0]).toUpperCase();
             let avatarContent = initials;
-            if (s.photo) avatarContent = '<img src="{{ asset("storage/") }}/' + s.photo + '" alt="">';
-            card.innerHTML = `<div class="gen-student-avatar">${avatarContent}</div><div class="gen-student-info"><div class="gen-student-name">${s.full_name}</div><div class="gen-student-meta">${s.roll_number ? '#' + s.roll_number : ''} ${s.classroom ? s.classroom.name : ''}</div></div><div class="gen-student-check"><i class="fas fa-check"></i></div>`;
-            card.addEventListener('click', () => selectStudent(s, card));
-            studentContainer.appendChild(card);
+            if (s.photo) avatarContent = '<img src="{{ asset("storage/") }}/' + s.photo + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
+
+            card.innerHTML = `
+                <input type="checkbox" class="ti-student-check" name="student_ids[]" value="${s.id}" id="stu_${s.id}" ${isSelected ? 'checked' : ''} ${!hasMarks ? 'disabled' : ''}>
+                <div class="ti-student-avatar">${avatarContent}</div>
+                <div class="ti-student-info">
+                    <div class="ti-student-name">${s.full_name}</div>
+                    <div class="ti-student-meta">
+                        ${s.roll_number ? '#' + s.roll_number : ''}
+                        ${s.classroom ? '· ' + s.classroom.name : ''}
+                        ${s.status === 'graduated' ? '· <span style="color:#7c3aed;font-weight:600;">Graduated</span>' : ''}
+                        ${!hasMarks ? '· <span style="color:#dc2626;">no G9-12 marks</span>' : ''}
+                    </div>
+                </div>
+            `;
+            card.addEventListener('click', function(e) {
+                if (e.target.tagName === 'INPUT') return;
+                if (!hasMarks) return;
+                const cb = card.querySelector('.ti-student-check');
+                cb.checked = !cb.checked;
+                cb.dispatchEvent(new Event('change'));
+            });
+            card.querySelector('.ti-student-check').addEventListener('change', function() {
+                if (this.checked) {
+                    selectedStudentIds.add(s.id);
+                    card.classList.add('active');
+                } else {
+                    selectedStudentIds.delete(s.id);
+                    card.classList.remove('active');
+                }
+                updateUI();
+            });
+            studentGrid.appendChild(card);
         });
     }
 
-    function selectStudent(student, card) {
-        studentContainer.querySelectorAll('.gen-student-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        selectedStudentId = student.id;
-        studentInput.value = student.id;
-        genBtn.disabled = false;
-        if (genBtnTop) genBtnTop.disabled = false;
-        const initials = ((student.full_name || '?')[0]).toUpperCase();
-        previewAvatar.textContent = student.photo ? '' : initials;
-        previewName.textContent = student.full_name;
-        previewRoll.textContent = student.roll_number || '-';
-        previewClass.textContent = student.classroom?.name || '-';
-        previewSection.textContent = student.section?.name || '-';
-        previewCard.style.display = '';
-    }
-
-    function clearStudentSelection() {
-        selectedStudentId = '';
-        studentInput.value = '';
-        previewCard.style.display = 'none';
-        studentContainer.querySelectorAll('.gen-student-card').forEach(c => c.classList.remove('active'));
-        genBtn.disabled = true;
-        if (genBtnTop) genBtnTop.disabled = true;
-    }
-
-    removeStudentBtn?.addEventListener('click', clearStudentSelection);
-
-    studentSearch?.addEventListener('input', function() {
-        const q = this.value.toLowerCase().trim();
-        if (!q) { renderStudents(allStudents); return; }
-        const filtered = allStudents.filter(s => (s.full_name).toLowerCase().includes(q) || (s.roll_number || '').toLowerCase().includes(q) || (s.admission_number || '').toLowerCase().includes(q));
-        renderStudents(filtered);
+    document.getElementById('selectAllStudents')?.addEventListener('click', function() {
+        filteredStudents.forEach(s => {
+            if (s.has_grades_9_12_marks !== false) {
+                selectedStudentIds.add(s.id);
+            }
+        });
+        renderStudents();
+        updateUI();
     });
+
+    document.getElementById('clearStudents')?.addEventListener('click', function() {
+        selectedStudentIds.clear();
+        renderStudents();
+        updateUI();
+    });
+
+    studentSearch?.addEventListener('input', renderStudents);
+
+    function updateUI() {
+        const selected = selectedStudentIds.size;
+        selectedCountEl.textContent = selected;
+        visibleCountEl.textContent = filteredStudents.length;
+        totalStudentCountEl.textContent = allStudents.length;
+        readyCountEl.textContent = selected;
+        generateBtn.disabled = selected === 0;
+    }
 
     document.getElementById('transcriptForm')?.addEventListener('submit', function(e) {
-        if (!selectedStudentId) { e.preventDefault(); alert('Please select a student first'); }
+        if (selectedStudentIds.size === 0) {
+            e.preventDefault();
+            alert('Please select at least one student.');
+            return;
+        }
+        // Confirmation
+        if (!confirm('Generate transcripts for ' + selectedStudentIds.size + ' student(s)? This will create certificate records for each.')) {
+            e.preventDefault();
+        }
     });
+
+    updateUI();
 })();
 </script>
 @endpush
-@endsection
