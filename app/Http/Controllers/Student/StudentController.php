@@ -48,12 +48,30 @@ class StudentController extends Controller
                 $q->where('full_name', 'LIKE', "%{$search}%")
                     ->orWhere('admission_number', 'LIKE', "%{$search}%")
                     ->orWhere('roll_number', 'LIKE', "%{$search}%")
-                    ->orWhere('phone', 'LIKE', "%{$search}%");
+                    ->orWhere('phone', 'LIKE', "%{$search}%")
+                    ->orWhere('id_number', 'LIKE', "%{$search}%")
+                    ->orWhere('father_name', 'LIKE', "%{$search}%")
+                    ->orWhere('mother_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('gender', 'LIKE', "%{$search}%")
+                    ->orWhereHas('classroom', function ($cq) use ($search) {
+                        $cq->where('name', 'LIKE', "%{$search}%")
+                          ->orWhere('numeric_name', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('section', function ($sq) use ($search) {
+                        $sq->where('name', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('branch', function ($bq) use ($search) {
+                        $bq->where('name', 'LIKE', "%{$search}%");
+                    });
             });
         }
 
         if ($statusFilter && in_array($statusFilter, ['active', 'inactive', 'transferred', 'graduated'])) {
             $query->where('status', $statusFilter);
+        } else {
+            // Default: show ALL statuses (not just active) so search finds everyone
+            // Only filter by status when explicitly selected
         }
 
         // Filter by branch
